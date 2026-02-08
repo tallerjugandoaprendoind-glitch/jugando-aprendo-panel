@@ -372,7 +372,7 @@ export default function LandingPage() {
               {[
                 {
                   q: "¿A qué edad pueden empezar las terapias?",
-                  a: "Atendemos niños desde los 2 años en adelante. La intervención temprana es clave para obtener mejores resultados. Nuestro equipo especializado adapta las sesiones según la edad y necesidades específicas de cada niño."
+                  a: "Atendemos niños desde los 1 año en adelante. La intervención temprana es clave para obtener mejores resultados. Nuestro equipo especializado adapta las sesiones según la edad y necesidades específicas de cada niño."
                 },
                 {
                   q: "¿Cómo puedo conocer el progreso de mi hijo?",
@@ -383,8 +383,8 @@ export default function LandingPage() {
                   a: "Trabajamos con la metodología ABA (Applied Behavior Analysis), reconocida mundialmente como el enfoque más efectivo basado en evidencia científica para el tratamiento de la neurodivergencia."
                 },
                 {
-                  q: "¿Aceptan seguros médicos?",
-                  a: "Actualmente trabajamos de forma particular, pero emitimos todos los documentos necesarios para reembolsos si tu seguro lo contempla. Contamos con recibos por honorarios y boletas electrónicas."
+                  q: "¿Qué es la terapia ABA y por qué la usamos?",
+                  a: "Es el Análisis Conductual Aplicado, un método con respaldo científico que ayuda a mejorar conductas y facilitar el aprendizaje. En nuestra App, registramos cada pequeño avance bajo este modelo para medir el progreso real de tu hijo y adaptar sus objetivos semana a semana."
                 }
               ].map((faq, i) => (
                 <div 
