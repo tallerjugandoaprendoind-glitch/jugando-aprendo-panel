@@ -1,63 +1,108 @@
 // ============================================================================
-// ARCHIVO: middleware.ts
+// ARCHIVO: middleware.ts (VERSIÓN CORREGIDA)
 // ============================================================================
 // UBICACIÓN: Raíz del proyecto (mismo nivel que app/)
-// INSTRUCCIONES: 
-// 1. Crear archivo: middleware.ts (en la RAÍZ del proyecto)
-// 2. Copiar y pegar este código
-// 3. Guardar
+// COMPATIBLE CON: Next.js 13+ App Router + @supabase/supabase-js
 // ============================================================================
 
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
 
   // Obtener sesión del usuario
   const {
-    data: { session },
-  } = await supabase.auth.getSession()
+    data: { user },
+  } = await supabase.auth.getUser()
 
-  // Rutas que requieren autenticación
-  const protectedRoutes = ['/admin', '/padre']
-  const isProtectedRoute = protectedRoutes.some(route => 
-    req.nextUrl.pathname.startsWith(route)
-  )
+  // Rutas protegidas
+  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
+  const isPadreRoute = request.nextUrl.pathname.startsWith('/padre')
+  const isProtectedRoute = isAdminRoute || isPadreRoute
 
-  // Si es ruta protegida y NO hay sesión → Redirigir a login
-  if (isProtectedRoute && !session) {
-    const loginUrl = new URL('/login', req.url)
-    // Guardar la URL a la que intentaba acceder para redirigir después del login
-    loginUrl.searchParams.set('redirectTo', req.nextUrl.pathname)
+  // Si NO hay usuario y está intentando acceder a ruta protegida → Login
+  if (!user && isProtectedRoute) {
+    const loginUrl = new URL('/login', request.url)
+    loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Si está autenticado, verificar rol
-  if (session && isProtectedRoute) {
+  // Si hay usuario, verificar rol
+  if (user && isProtectedRoute) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
-      .eq('id', session.user.id)
+      .eq('id', user.id)
       .single()
 
-    // Si es admin pero no tiene rol admin → Bloquear
-    if (req.nextUrl.pathname.startsWith('/admin') && profile?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/padre', req.url))
+    // Admin intentando acceder a admin → OK
+    // Padre intentando acceder a padre → OK
+    // Admin intentando acceder a padre → Redirigir a admin
+    // Padre intentando acceder a admin → Redirigir a padre
+    
+    if (isAdminRoute && profile?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/padre', request.url))
     }
 
-    // Si es padre pero no tiene rol padre → Bloquear
-    if (req.nextUrl.pathname.startsWith('/padre') && profile?.role !== 'padre') {
-      return NextResponse.redirect(new URL('/admin', req.url))
+    if (isPadreRoute && profile?.role !== 'padre') {
+      return NextResponse.redirect(new URL('/admin', request.url))
     }
   }
 
-  return res
+  return response
 }
 
-// Configurar qué rutas ejecutan el middleware
 export const config = {
   matcher: [
     '/admin/:path*',
