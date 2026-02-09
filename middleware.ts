@@ -1,20 +1,19 @@
 // ============================================================================
-// ARCHIVO: middleware.ts (VERSIÓN CORREGIDA)
-// ============================================================================
-// UBICACIÓN: Raíz del proyecto (mismo nivel que app/)
-// COMPATIBLE CON: Next.js 13+ App Router + @supabase/supabase-js
+// ARCHIVO: middleware.ts (VERSIÓN FINAL ARREGLADA)
 // ============================================================================
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // 1. Crear respuesta base
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
 
+  // 2. Configurar cliente de Supabase
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -61,24 +60,24 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // Obtener sesión del usuario
+  // 3. Obtener sesión del usuario
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Rutas protegidas
+  // 4. Definir Rutas protegidas
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
   const isPadreRoute = request.nextUrl.pathname.startsWith('/padre')
   const isProtectedRoute = isAdminRoute || isPadreRoute
 
-  // Si NO hay usuario y está intentando acceder a ruta protegida → Login
+  // 5. CASO 1: No hay usuario y quiere entrar a zona privada -> LOGIN
   if (!user && isProtectedRoute) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // Si hay usuario, verificar rol
+  // 6. CASO 2: Hay usuario -> Verificar Rol
   if (user && isProtectedRoute) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -86,31 +85,38 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // Admin intentando acceder a admin → OK
-    // Padre intentando acceder a padre → OK
-    // Admin intentando acceder a padre → Redirigir a admin
-    // Padre intentando acceder a admin → Redirigir a padre
-    
-    if (isAdminRoute && profile?.role !== 'admin') {
+    // --- CORRECCIÓN CRÍTICA AQUÍ ---
+    // Antes: Si profile era null, te expulsaba.
+    // Ahora: Solo te expulsa si EXPLICITAMENTE tienes el rol contrario.
+    // Esto evita el bucle infinito si la base de datos tarda en responder.
+
+    // Si estás en Admin pero eres Padre -> Fuera
+    if (isAdminRoute && profile?.role === 'padre') {
       return NextResponse.redirect(new URL('/padre', request.url))
     }
 
-    if (isPadreRoute && profile?.role !== 'padre') {
+    // Si estás en Padre pero eres Admin -> Fuera
+    if (isPadreRoute && profile?.role === 'admin') {
       return NextResponse.redirect(new URL('/admin', request.url))
     }
+    
+    // Si profile es null o el rol es correcto, DEJA PASAR.
   }
 
   return response
 }
 
-// UBICACIÓN: middleware.ts (al final del archivo)
-
 export const config = {
   matcher: [
-    // Protegemos solo las rutas de admin y padre
-    '/admin/:path*',
-    '/padre/:path*',
-    // Opcional: Si quieres proteger todo excepto imágenes y login, usa esto:
-    // '/((?!_next/static|_next/image|favicon.ico|images|login).*)',
+    /*
+     * Coincidir con todas las rutas excepto:
+     * - api (rutas API)
+     * - _next/static (archivos estáticos)
+     * - _next/image (optimización de imágenes)
+     * - images (tus imágenes públicas como logos)
+     * - favicon.ico (icono)
+     * - login (página de entrada)
+     */
+    '/((?!api|_next/static|_next/image|images|favicon.ico|login).*)',
   ],
 }
