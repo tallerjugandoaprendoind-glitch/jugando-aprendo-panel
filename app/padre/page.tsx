@@ -1,6 +1,5 @@
 'use client'
-
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
@@ -15,11 +14,6 @@ import {
 // ==============================================================================
 // 1. UTILIDADES Y CONFIGURACIÓN
 // ==============================================================================
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
 
 const generateTimeSlots = () => {
   const slots = []
