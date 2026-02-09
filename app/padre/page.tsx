@@ -1,4 +1,5 @@
 'use client'
+
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -48,14 +49,20 @@ const calculateAge = (birthDate: string) => {
 // ==============================================================================
 export default function ParentDashboard() {
   const router = useRouter()
-  
+   
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
+  
+  // --- NUEVOS ESTADOS PARA NOTIFICACIONES ---
+  const [notifications, setNotifications] = useState<any[]>([])
+  const unreadCount = notifications.filter(n => !n.is_read).length
+  // ------------------------------------------
+
   const [myChildren, setMyChildren] = useState<any[]>([])
   const [selectedChild, setSelectedChild] = useState<any>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [activeView, setActiveView] = useState('home') 
-  
+   
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [takenSlots, setTakenSlots] = useState<string[]>([])
   const [bookingLoading, setBookingLoading] = useState(false)
@@ -95,6 +102,18 @@ export default function ParentDashboard() {
 
         setProfile(parent)
 
+        // --- CARGAR NOTIFICACIONES REALES ---
+        if (session?.user?.id) {
+            const { data: notis } = await supabase
+                .from('notifications')
+                .select('*')
+                .eq('user_id', session.user.id)
+                .order('created_at', { ascending: false })
+            
+            if (notis) setNotifications(notis)
+        }
+        // ------------------------------------
+
         const { data: children } = await supabase
             .from('children')
             .select('*')
@@ -128,6 +147,29 @@ export default function ParentDashboard() {
     setShowSuccessAnimation(true)
     setTimeout(() => setShowSuccessAnimation(false), 3000)
   }
+
+  // --- FUNCIÓN PARA ABRIR Y MARCAR LEÍDAS ---
+  const handleOpenNotifications = async () => {
+    setShowNotifications(true)
+
+    // Si hay notificaciones sin leer, marcarlas como leídas visualmente y en BD
+    if (unreadCount > 0) {
+        // 1. Actualización optimista (Visual)
+        const updatedNotis = notifications.map(n => ({ ...n, is_read: true }))
+        setNotifications(updatedNotis)
+
+        // 2. Actualización en Supabase
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) {
+            await supabase
+                .from('notifications')
+                .update({ is_read: true })
+                .eq('user_id', session.user.id)
+                .eq('is_read', false)
+        }
+    }
+  }
+  // ------------------------------------------
 
   const handleBookAppointment = async (time: string) => {
     if(!profile || !selectedChild) return
@@ -193,17 +235,12 @@ export default function ParentDashboard() {
 
   const handleAddChild = async (e: any) => {
     e.preventDefault()
-    console.log("🔍 INICIANDO handleAddChild")
     
     const name = e.target.name.value
     const dob = e.target.dob.value
     const diagnosis = e.target.diagnosis?.value || 'En evaluación'
     
-    console.log("📝 Datos del formulario:", { name, dob, diagnosis })
-    console.log("👤 Profile ID:", profile?.id)
-    
     if(!profile?.id) {
-        console.error("❌ No hay profile.id")
         alert("❌ Error: No se encontró tu perfil")
         return
     }
@@ -220,8 +257,6 @@ export default function ParentDashboard() {
 
     try {
         const age = calculateAge(dob)
-        console.log("📊 Edad calculada:", age)
-        console.log("🚀 Intentando insertar en Supabase...")
 
         const { data, error } = await supabase.from('children').insert([{
             parent_id: profile.id, 
@@ -231,21 +266,16 @@ export default function ParentDashboard() {
             diagnosis: diagnosis || 'En evaluación'
         }]).select()
 
-        console.log("📊 Respuesta Supabase:", { data, error })
-
         if (error) {
-            console.error("❌ Error de Supabase:", error)
             alert("❌ Error al guardar: " + error.message)
             return
         }
 
         if (!data || data.length === 0) {
-            console.error("⚠️ No se devolvió data")
             alert("⚠️ No se pudo crear el registro. Verifica los permisos en Supabase.")
             return
         }
 
-        console.log("✅ Paciente creado exitosamente:", data[0])
         setMyChildren([...myChildren, data[0]])
         if(!selectedChild) setSelectedChild(data[0])
         setShowAddChild(false)
@@ -253,7 +283,6 @@ export default function ParentDashboard() {
         setRefreshTrigger(prev => prev + 1)
 
     } catch (err: any) {
-        console.error("❌ Error inesperado:", err)
         alert("❌ Error inesperado: " + err.message)
     }
   }
@@ -414,15 +443,18 @@ export default function ParentDashboard() {
                     )}
                 </div>
                 
+                {/* BOTÓN NOTIFICACIONES SIDEBAR MEJORADO */}
                 <button 
-                    onClick={() => setShowNotifications(true)}
+                    onClick={handleOpenNotifications}
                     className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-blue-100 hover:scale-105 active:scale-95 shadow-sm hover:shadow-lg relative group"
                 >
                     <Bell size={16} className="group-hover:animate-bounce"/>
                     Ver Notificaciones
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">
-                        3
-                    </span>
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">
+                            {unreadCount}
+                        </span>
+                    )}
                 </button>
             </div>
         </aside>
@@ -445,9 +477,11 @@ export default function ParentDashboard() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setShowNotifications(true)} className="p-2 rounded-xl bg-blue-50 text-blue-600 relative hover:scale-110 active:scale-95 transition-transform">
+                    <button onClick={handleOpenNotifications} className="p-2 rounded-xl bg-blue-50 text-blue-600 relative hover:scale-110 active:scale-95 transition-transform">
                         <Bell size={18}/>
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                        {unreadCount > 0 && (
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                        )}
                     </button>
                     <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg relative group">
                         <Ticket size={14} className="text-yellow-400 group-hover:animate-spin"/> 
@@ -510,7 +544,7 @@ export default function ParentDashboard() {
                     )}
 
                     {activeView === 'chat' && (
-                         <div className="h-[calc(100vh-180px)] lg:h-[calc(100vh-120px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
+                          <div className="h-[calc(100vh-180px)] lg:h-[calc(100vh-120px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
                             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-white flex justify-between items-center z-10 shadow-lg">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
@@ -796,7 +830,7 @@ export default function ParentDashboard() {
             </div>
         )}
 
-        {/* 🔔 MODAL - NOTIFICACIONES MEJORADO */}
+        {/* 🔔 MODAL - NOTIFICACIONES MEJORADO (CON DATA REAL) */}
         {showNotifications && (
             <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-scale-in overflow-hidden">
@@ -807,7 +841,8 @@ export default function ParentDashboard() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg">Notificaciones</h3>
-                                <p className="text-xs text-blue-100">3 nuevas notificaciones</p>
+                                {/* Como ya las marcamos leídas al abrir, mostramos 0 nuevas */}
+                                <p className="text-xs text-blue-100">0 nuevas notificaciones</p>
                             </div>
                         </div>
                         <button onClick={()=>setShowNotifications(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
@@ -815,27 +850,24 @@ export default function ParentDashboard() {
                         </button>
                     </div>
                     <div className="p-6 space-y-3 max-h-96 overflow-y-auto">
-                        <NotificationItem 
-                            icon={<Calendar className="text-blue-600"/>}
-                            title="Recordatorio de cita"
-                            message="Tu cita está programada para mañana a las 10:00 AM"
-                            time="Hace 2 horas"
-                            isNew={true}
-                        />
-                        <NotificationItem 
-                            icon={<Star className="text-yellow-500"/>}
-                            title="Progreso destacado"
-                            message={`${selectedChild?.name} logró un nuevo objetivo en comunicación`}
-                            time="Hace 1 día"
-                            isNew={true}
-                        />
-                        <NotificationItem 
-                            icon={<Heart className="text-pink-500"/>}
-                            title="Nueva tarea en casa"
-                            message="Revisa las actividades recomendadas para esta semana"
-                            time="Hace 2 días"
-                            isNew={false}
-                        />
+                        {notifications.length === 0 ? (
+                            <p className="text-center text-slate-400 text-sm py-8 italic">No tienes notificaciones nuevas</p>
+                        ) : (
+                            notifications.map((noti) => (
+                                <NotificationItem 
+                                    key={noti.id}
+                                    icon={
+                                        noti.type === 'success' ? <Star className="text-yellow-500"/> :
+                                        noti.type === 'warning' ? <AlertCircle className="text-red-500"/> :
+                                        <Calendar className="text-blue-600"/>
+                                    }
+                                    title={noti.title}
+                                    message={noti.message}
+                                    time={new Date(noti.created_at).toLocaleDateString()}
+                                    isNew={false} 
+                                />
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
@@ -1907,7 +1939,7 @@ function ObjectiveBar({ label, progress, color, icon }: any) {
                 <span className="text-sm font-black text-slate-800">{progress}%</span>
             </div>
             <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                <div
+                <div 
                     className={`h-full rounded-full ${color} transition-all duration-1000 ease-out relative group-hover:shadow-lg`}
                     style={{ width: `${progress}%` }}
                 >
@@ -1946,7 +1978,7 @@ function TimeSlotBtn({ time, isTaken, loading, onClick, isPast }: any) {
 function ChatInterface({ childId, childName }: any) {
     const [messages, setMessages] = useState<any[]>([
         {
-            role:'ai',
+            role:'ai', 
             text: `¡Hola! 👋 Soy tu Asistente Clínico Inteligente. He revisado el historial completo de ${childName || 'tu hijo/a'} y estoy aquí para apoyarte en todo momento.\n\n¿En qué puedo ayudarte hoy? Puedo:\n• Explicarte los reportes de las sesiones\n• Darte consejos para actividades en casa\n• Responder dudas sobre el desarrollo\n• Apoyarte emocionalmente en este proceso`
         }
     ])

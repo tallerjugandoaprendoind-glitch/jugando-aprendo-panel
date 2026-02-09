@@ -19,6 +19,42 @@ import {
 // 1. CONFIGURACIÓN DE DATOS - FORMULARIOS 
 // ==============================================================================
 
+export const FORM_TABLE_MAPPING = {
+  'brief2': 'evaluacion_brief2',
+  'ados2': 'evaluacion_ados2',
+  'vineland3': 'evaluacion_vineland3',
+  'wiscv': 'evaluacion_wiscv',
+  'basc3': 'evaluacion_basc3'
+};
+
+export const EVALUATION_COLORS = {
+  'brief2': {
+    primary: 'from-indigo-500 to-indigo-600',
+    light: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+    hover: 'hover:border-indigo-400'
+  },
+  'ados2': {
+    primary: 'from-teal-500 to-teal-600',
+    light: 'bg-teal-50 text-teal-700 border-teal-200',
+    hover: 'hover:border-teal-400'
+  },
+  'vineland3': {
+    primary: 'from-emerald-500 to-emerald-600',
+    light: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    hover: 'hover:border-emerald-400'
+  },
+  'wiscv': {
+    primary: 'from-violet-500 to-violet-600',
+    light: 'bg-violet-50 text-violet-700 border-violet-200',
+    hover: 'hover:border-violet-400'
+  },
+  'basc3': {
+    primary: 'from-rose-500 to-rose-600',
+    light: 'bg-rose-50 text-rose-700 border-rose-200',
+    hover: 'hover:border-rose-400'
+  }
+};
+
 const ANAMNESIS_DATA = [
   {
     title: "1. Datos de Filiación",
@@ -229,7 +265,7 @@ const ABA_DATA = [
     ]
   }
 ]
-
+;
 const ENTORNO_HOGAR_DATA = [
   {
     title: "1. Información General de la Visita",
@@ -315,8 +351,424 @@ const ENTORNO_HOGAR_DATA = [
       { id: "seguimiento_requerido", label: "¿Requiere seguimiento o nueva visita?", type: "radio", options: ["Sí, en 1 mes", "Sí, en 3 meses", "No necesario por ahora"] },
     ]
   }
-]
+  ]
+  export const BRIEF2_DATA = [
+  {
+    title: "1. Información de la Evaluación",
+    icon: <Brain size={20}/>,
+    questions: [
+      { id: "fecha_evaluacion", label: "Fecha de evaluación", type: "date", required: true },
+      { id: "evaluador", label: "Nombre del evaluador", type: "text", required: true },
+      { id: "informante", label: "Informante", type: "select", options: ["Madre", "Padre", "Ambos padres", "Maestro/a", "Terapeuta", "Otro"] },
+      { id: "edad_evaluado", label: "Edad del niño (años)", type: "number", min: 2, max: 18 },
+      { id: "motivo_evaluacion", label: "Motivo de la evaluación", type: "textarea", placeholder: "Por qué se realiza esta evaluación..." },
+    ]
+  },
+  {
+    title: "2. Índice de Inhibición",
+    description: "Capacidad para resistir impulsos y detener comportamiento en el momento apropiado",
+    icon: <Activity size={20}/>,
+    questions: [
+      { id: "inhibe_1", label: "Tiene problemas para esperar su turno", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "inhibe_2", label: "Actúa de manera más salvaje o ruidosa que otros niños", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "inhibe_3", label: "Interrumpe conversaciones de otros", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "inhibe_4", label: "Reacciona de manera exagerada ante pequeños problemas", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "inhibe_5", label: "Tiene problemas para controlar sus emociones", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "inhibe_6", label: "Tiene arrebatos de ira desproporcionados", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "inhibe_notas", label: "Observaciones sobre inhibición", type: "textarea", placeholder: "Ejemplos específicos, contextos donde mejora/empeora..." },
+    ]
+  },
+  {
+    title: "3. Índice de Flexibilidad Cognitiva",
+    description: "Capacidad para cambiar de actividad, revisar planes y adaptarse a nuevas situaciones",
+    icon: <Target size={20}/>,
+    questions: [
+      { id: "flex_1", label: "Se resiste a cambios de rutina, comida, lugares", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "flex_2", label: "Se altera por situaciones inesperadas", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "flex_3", label: "Persiste en la misma respuesta aunque no funcione", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "flex_4", label: "Tiene problemas aceptando diferentes formas de resolver problemas", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "flex_5", label: "Se queda atascado en un tema o actividad", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "flex_6", label: "Le cuesta pasar de una actividad a otra", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "flex_notas", label: "Observaciones sobre flexibilidad", type: "textarea", placeholder: "Situaciones de rigidez, estrategias que funcionan..." },
+    ]
+  },
+  {
+    title: "4. Control Emocional",
+    description: "Capacidad para modular respuestas emocionales apropiadamente",
+    icon: <Heart size={20}/>,
+    questions: [
+      { id: "emocional_1", label: "Tiene estallidos emocionales por razones mínimas", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "emocional_2", label: "Las pequeñas cosas provocan grandes reacciones", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "emocional_3", label: "Cambia de humor rápidamente", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "emocional_4", label: "Se altera fácilmente", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "emocional_5", label: "Reacciona más emocionalmente que otros niños de su edad", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "emocional_notas", label: "Observaciones sobre control emocional", type: "textarea", placeholder: "Desencadenantes, duración de episodios, recuperación..." },
+    ]
+  },
+  {
+    title: "5. Memoria de Trabajo",
+    description: "Capacidad para mantener información en la mente para completar una tarea",
+    icon: <Brain size={20}/>,
+    questions: [
+      { id: "memoria_1", label: "Olvida lo que debía hacer", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "memoria_2", label: "Tiene problemas recordando instrucciones", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "memoria_3", label: "Pierde el hilo de lo que está haciendo", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "memoria_4", label: "Tiene problemas recordando lo que acaba de escuchar", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "memoria_5", label: "Necesita que le repitan las cosas varias veces", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "memoria_notas", label: "Observaciones sobre memoria", type: "textarea", placeholder: "Estrategias de compensación, apoyos visuales..." },
+    ]
+  },
+  {
+    title: "6. Planificación y Organización",
+    description: "Capacidad para manejar tareas presentes y futuras",
+    icon: <Target size={20}/>,
+    questions: [
+      { id: "plan_1", label: "No planifica con anticipación las tareas", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "plan_2", label: "Tiene problemas para organizar actividades", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "plan_3", label: "Subestima el tiempo necesario para completar tareas", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "plan_4", label: "Deja las cosas desordenadas", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "plan_5", label: "Tiene problemas para priorizar actividades", type: "range", min: 1, max: 3, labels: ["Nunca", "A veces", "Con frecuencia"] },
+      { id: "plan_notas", label: "Observaciones sobre planificación", type: "textarea", placeholder: "Estrategias compensatorias..." },
+    ]
+  },
+  {
+    title: "7. Análisis y Conclusiones (IA)",
+    icon: <Sparkles size={20}/>,
+    hasIA: true,
+    questions: [
+      { id: "analisis_ia", label: "Análisis Integral IA", type: "textarea", placeholder: "Análisis completo generado por IA...", aiGenerated: true },
+      { id: "recomendaciones_ia", label: "Recomendaciones Terapéuticas", type: "textarea", placeholder: "Recomendaciones específicas...", aiGenerated: true },
+      { id: "informe_padres", label: "Informe para Padres", type: "textarea", placeholder: "Informe comprensible para la familia...", aiGenerated: true },
+    ]
+  }
+];
 
+// ==============================================================================
+// 2. ADOS-2 - Escala de Observación Diagnóstica del Autismo
+// ==============================================================================
+export const ADOS2_DATA = [
+  {
+    title: "1. Datos de la Evaluación",
+    icon: <Eye size={20}/>,
+    questions: [
+      { id: "fecha_eval", label: "Fecha de evaluación", type: "date", required: true },
+      { id: "modulo_aplicado", label: "Módulo aplicado", type: "select", options: ["Módulo 1 (Sin lenguaje)", "Módulo 2 (Frases)", "Módulo 3 (Fluente)", "Módulo 4 (Adolescente/Adulto)"] },
+      { id: "duracion_eval", label: "Duración de la evaluación (minutos)", type: "number", min: 30, max: 90 },
+      { id: "evaluador_certificado", label: "Evaluador certificado ADOS-2", type: "text" },
+    ]
+  },
+  {
+    title: "2. Comunicación Social",
+    description: "Evaluación de habilidades comunicativas y sociales",
+    icon: <MessageCircle size={20}/>,
+    questions: [
+      { id: "contacto_visual", label: "Contacto visual durante la interacción social", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "expresiones_faciales", label: "Expresiones faciales dirigidas a otros", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "integracion_mirada", label: "Integración de mirada y otras conductas sociales", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "sonrisa_social", label: "Sonrisa social compartida", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "comunicacion_afectiva", label: "Rango de comunicación afectiva", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "atencion_conjunta", label: "Respuesta a atención conjunta", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "inicio_atencion", label: "Iniciativa de atención conjunta", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "notas_comunicacion", label: "Observaciones comunicación", type: "textarea" },
+    ]
+  },
+  {
+    title: "3. Interacción Social Recíproca",
+    description: "Calidad de las interacciones sociales bidireccionales",
+    icon: <Users size={20}/>,
+    questions: [
+      { id: "busqueda_compartir", label: "Búsqueda de compartir experiencias", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "ofrecimiento_consuelo", label: "Ofrecimiento de consuelo", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "respuesta_nombre", label: "Respuesta al nombre", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "reciprocidad_social", label: "Calidad de reciprocidad social", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "interes_otros", label: "Interés en otros niños", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "notas_interaccion", label: "Observaciones interacción", type: "textarea" },
+    ]
+  },
+  {
+    title: "4. Juego e Imaginación",
+    description: "Evaluación de juego simbólico y creatividad",
+    icon: <Activity size={20}/>,
+    questions: [
+      { id: "juego_funcional", label: "Juego funcional con objetos", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "juego_imaginativo", label: "Juego imaginativo/creativo", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "juego_imitativo", label: "Juego imitativo social", type: "range", min: 0, max: 3, labels: ["Apropiado", "Leve", "Marcado", "Ausente"] },
+      { id: "notas_juego", label: "Observaciones sobre juego", type: "textarea" },
+    ]
+  },
+  {
+    title: "5. Conductas Restringidas y Repetitivas",
+    description: "Patrones de comportamiento estereotipados",
+    icon: <Target size={20}/>,
+    questions: [
+      { id: "estereotipias_motoras", label: "Estereotipias motoras", type: "range", min: 0, max: 2, labels: ["Ausente", "Presente", "Frecuente"] },
+      { id: "manipulacion_objetos", label: "Uso repetitivo de objetos", type: "range", min: 0, max: 2, labels: ["Ausente", "Presente", "Frecuente"] },
+      { id: "intereses_restringidos", label: "Intereses restringidos intensos", type: "range", min: 0, max: 2, labels: ["Ausente", "Presente", "Frecuente"] },
+      { id: "rituales_compulsiones", label: "Rituales o compulsiones", type: "range", min: 0, max: 2, labels: ["Ausente", "Presente", "Frecuente"] },
+      { id: "sensibilidad_sensorial", label: "Sensibilidad sensorial inusual", type: "range", min: 0, max: 2, labels: ["Ausente", "Presente", "Frecuente"] },
+      { id: "notas_conductas", label: "Observaciones conductas", type: "textarea" },
+    ]
+  },
+  {
+    title: "6. Análisis Diagnóstico (IA)",
+    icon: <Sparkles size={20}/>,
+    hasIA: true,
+    questions: [
+      { id: "puntuacion_total", label: "Puntuación total calculada", type: "number", readonly: true },
+      { id: "nivel_severidad", label: "Nivel de severidad", type: "text", readonly: true },
+      { id: "analisis_diagnostico_ia", label: "Análisis Diagnóstico IA", type: "textarea", aiGenerated: true },
+      { id: "recomendaciones_intervencion", label: "Recomendaciones de Intervención", type: "textarea", aiGenerated: true },
+      { id: "informe_familia_ados", label: "Informe para Familia", type: "textarea", aiGenerated: true },
+    ]
+  }
+];
+
+// ==============================================================================
+// 3. VINELAND-3 - Conducta Adaptativa
+// ==============================================================================
+export const VINELAND3_DATA = [
+  {
+    title: "1. Información General",
+    icon: <Users size={20}/>,
+    questions: [
+      { id: "fecha_eval_vineland", label: "Fecha de evaluación", type: "date", required: true },
+      { id: "informante_vineland", label: "Informante", type: "select", options: ["Madre", "Padre", "Ambos", "Cuidador primario", "Maestro"] },
+      { id: "forma_aplicacion", label: "Forma de aplicación", type: "select", options: ["Entrevista semi-estructurada", "Formulario para padres", "Formulario para maestros"] },
+    ]
+  },
+  {
+    title: "2. Dominio de Comunicación",
+    description: "Habilidades receptivas, expresivas y escritas",
+    icon: <MessageCircle size={20}/>,
+    questions: [
+      { id: "com_receptiva", label: "¿Entiende cuando se le dice 'no'?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "com_sigue_instrucciones", label: "¿Sigue instrucciones simples?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "com_entiende_2pasos", label: "¿Sigue instrucciones de 2 pasos?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "com_expresiva_palabras", label: "¿Usa palabras para pedir cosas?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "com_frases_completas", label: "¿Usa frases completas de 4+ palabras?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "com_cuenta_experiencias", label: "¿Cuenta experiencias con detalle?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "com_escrita", label: "¿Escribe su nombre?", type: "radio", options: ["Usualmente", "A veces", "Nunca", "N/A"] },
+      { id: "com_notas", label: "Observaciones comunicación", type: "textarea" },
+    ]
+  },
+  {
+    title: "3. Dominio de Vida Diaria",
+    description: "Autonomía personal, doméstica y comunitaria",
+    icon: <Home size={20}/>,
+    questions: [
+      { id: "vida_come_solo", label: "¿Come solo con cuchara/tenedor?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "vida_bebe_vaso", label: "¿Bebe de un vaso sin derramar?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "vida_lava_manos", label: "¿Se lava las manos solo?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "vida_viste_superior", label: "¿Se pone ropa superior solo?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "vida_bano", label: "¿Usa el baño independientemente?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "vida_tareas_casa", label: "¿Ayuda en tareas domésticas simples?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "vida_dinero", label: "¿Entiende el concepto de dinero?", type: "radio", options: ["Usualmente", "A veces", "Nunca", "N/A"] },
+      { id: "vida_notas", label: "Observaciones vida diaria", type: "textarea" },
+    ]
+  },
+  {
+    title: "4. Dominio de Socialización",
+    description: "Relaciones interpersonales, juego y manejo emocional",
+    icon: <Heart size={20}/>,
+    questions: [
+      { id: "soc_sonrie_familiar", label: "¿Sonríe a personas familiares?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "soc_muestra_afecto", label: "¿Muestra afecto a cuidadores?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "soc_juega_otros", label: "¿Juega interactivamente con otros niños?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "soc_comparte", label: "¿Comparte juguetes espontáneamente?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "soc_respeta_turnos", label: "¿Respeta turnos en juegos?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "soc_empatia", label: "¿Muestra preocupación por otros?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "soc_amistad", label: "¿Tiene amigos cercanos?", type: "radio", options: ["Usualmente", "A veces", "Nunca", "N/A"] },
+      { id: "soc_notas", label: "Observaciones socialización", type: "textarea" },
+    ]
+  },
+  {
+    title: "5. Dominio de Habilidades Motoras",
+    description: "Motricidad gruesa y fina",
+    icon: <Activity size={20}/>,
+    questions: [
+      { id: "motor_camina", label: "¿Camina sin ayuda?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "motor_corre", label: "¿Corre coordinadamente?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "motor_salta", label: "¿Salta con ambos pies?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "motor_pelota", label: "¿Atrapa una pelota?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "motor_pinza", label: "¿Usa pinza digital (pulgar-índice)?", type: "radio", options: ["Usualmente", "A veces", "Nunca"] },
+      { id: "motor_dibuja", label: "¿Dibuja formas reconocibles?", type: "radio", options: ["Usualmente", "A veces", "Nunca", "N/A"] },
+      { id: "motor_notas", label: "Observaciones motoras", type: "textarea" },
+    ]
+  },
+  {
+    title: "6. Análisis de Conducta Adaptativa (IA)",
+    icon: <Sparkles size={20}/>,
+    hasIA: true,
+    questions: [
+      { id: "puntuacion_comunicacion", label: "Puntuación Comunicación", type: "number", readonly: true },
+      { id: "puntuacion_vida_diaria", label: "Puntuación Vida Diaria", type: "number", readonly: true },
+      { id: "puntuacion_socializacion", label: "Puntuación Socialización", type: "number", readonly: true },
+      { id: "indice_conducta_adaptativa", label: "Índice Global de Conducta Adaptativa", type: "number", readonly: true },
+      { id: "analisis_vineland_ia", label: "Análisis Integral IA", type: "textarea", aiGenerated: true },
+      { id: "areas_fortaleza", label: "Áreas de Fortaleza", type: "textarea", aiGenerated: true },
+      { id: "areas_prioridad", label: "Áreas Prioritarias de Intervención", type: "textarea", aiGenerated: true },
+      { id: "informe_padres_vineland", label: "Informe para Padres", type: "textarea", aiGenerated: true },
+    ]
+  }
+];
+
+// ==============================================================================
+// 4. WISC-V - Escala de Inteligencia (Versión Simplificada para Registro)
+// ==============================================================================
+export const WISCV_DATA = [
+  {
+    title: "1. Información de la Evaluación",
+    icon: <Brain size={20}/>,
+    questions: [
+      { id: "fecha_eval_wisc", label: "Fecha de evaluación", type: "date", required: true },
+      { id: "evaluador_wisc", label: "Psicólogo evaluador", type: "text", required: true },
+      { id: "edad_cronologica", label: "Edad cronológica (años, meses)", type: "text", placeholder: "Ej: 7 años, 3 meses" },
+      { id: "motivo_eval_cognitiva", label: "Motivo de evaluación", type: "textarea" },
+    ]
+  },
+  {
+    title: "2. Índice de Comprensión Verbal (ICV)",
+    description: "Razonamiento verbal, formación de conceptos",
+    icon: <MessageCircle size={20}/>,
+    questions: [
+      { id: "icv_semejanzas", label: "Semejanzas - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "icv_vocabulario", label: "Vocabulario - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "icv_informacion", label: "Información - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "icv_comprension", label: "Comprensión - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "icv_total", label: "ICV Total", type: "number", readonly: true },
+      { id: "icv_percentil", label: "Percentil ICV", type: "number", readonly: true },
+      { id: "icv_notas", label: "Observaciones ICV", type: "textarea" },
+    ]
+  },
+  {
+    title: "3. Índice Visoespacial (IVE)",
+    description: "Razonamiento espacial y visual",
+    icon: <Eye size={20}/>,
+    questions: [
+      { id: "ive_cubos", label: "Cubos - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "ive_puzles", label: "Puzles visuales - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "ive_total", label: "IVE Total", type: "number", readonly: true },
+      { id: "ive_percentil", label: "Percentil IVE", type: "number", readonly: true },
+      { id: "ive_notas", label: "Observaciones IVE", type: "textarea" },
+    ]
+  },
+  {
+    title: "4. Índice de Razonamiento Fluido (IRF)",
+    description: "Razonamiento lógico y solución de problemas",
+    icon: <Target size={20}/>,
+    questions: [
+      { id: "irf_matrices", label: "Matrices - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "irf_balanzas", label: "Balanzas - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "irf_aritmetica", label: "Aritmética - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "irf_total", label: "IRF Total", type: "number", readonly: true },
+      { id: "irf_percentil", label: "Percentil IRF", type: "number", readonly: true },
+      { id: "irf_notas", label: "Observaciones IRF", type: "textarea" },
+    ]
+  },
+  {
+    title: "5. Índice de Memoria de Trabajo (IMT)",
+    description: "Memoria auditiva a corto plazo",
+    icon: <Brain size={20}/>,
+    questions: [
+      { id: "imt_digitos", label: "Dígitos - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "imt_imagenes", label: "Span de imágenes - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "imt_total", label: "IMT Total", type: "number", readonly: true },
+      { id: "imt_percentil", label: "Percentil IMT", type: "number", readonly: true },
+      { id: "imt_notas", label: "Observaciones IMT", type: "textarea" },
+    ]
+  },
+  {
+    title: "6. Índice de Velocidad de Procesamiento (IVP)",
+    description: "Velocidad y precisión perceptiva",
+    icon: <Activity size={20}/>,
+    questions: [
+      { id: "ivp_claves", label: "Claves - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "ivp_busqueda", label: "Búsqueda de símbolos - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "ivp_cancelacion", label: "Cancelación - Puntuación escalar", type: "number", min: 1, max: 19 },
+      { id: "ivp_total", label: "IVP Total", type: "number", readonly: true },
+      { id: "ivp_percentil", label: "Percentil IVP", type: "number", readonly: true },
+      { id: "ivp_notas", label: "Observaciones IVP", type: "textarea" },
+    ]
+  },
+  {
+    title: "7. Análisis Cognitivo Integral (IA)",
+    icon: <Sparkles size={20}/>,
+    hasIA: true,
+    questions: [
+      { id: "ci_total", label: "CI Total (Escala Completa)", type: "number", min: 40, max: 160, readonly: true },
+      { id: "ci_percentil", label: "Percentil CI Total", type: "number", readonly: true },
+      { id: "clasificacion_ci", label: "Clasificación Descriptiva", type: "text", readonly: true },
+      { id: "perfil_cognitivo_ia", label: "Análisis del Perfil Cognitivo", type: "textarea", aiGenerated: true },
+      { id: "fortalezas_debilidades", label: "Fortalezas y Debilidades", type: "textarea", aiGenerated: true },
+      { id: "implicaciones_educativas", label: "Implicaciones Educativas", type: "textarea", aiGenerated: true },
+      { id: "recomendaciones_cognitivas", label: "Recomendaciones Específicas", type: "textarea", aiGenerated: true },
+      { id: "informe_padres_wisc", label: "Informe para Padres", type: "textarea", aiGenerated: true },
+    ]
+  }
+];
+
+// ==============================================================================
+// 5. BASC-3 - Sistema de Evaluación de la Conducta
+// ==============================================================================
+export const BASC3_DATA = [
+  {
+    title: "1. Información de la Evaluación",
+    icon: <Activity size={20}/>,
+    questions: [
+      { id: "fecha_eval_basc", label: "Fecha de evaluación", type: "date", required: true },
+      { id: "informante_basc", label: "Informante", type: "select", options: ["Padre", "Madre", "Ambos", "Maestro", "Autoevaluación"] },
+      { id: "forma_basc", label: "Forma aplicada", type: "select", options: ["Preescolar (2-5 años)", "Niños (6-11 años)", "Adolescentes (12-21 años)"] },
+    ]
+  },
+  {
+    title: "2. Escalas Clínicas - Problemas Externalizantes",
+    description: "Conductas dirigidas hacia el exterior",
+    icon: <AlertTriangle size={20}/>,
+    questions: [
+      { id: "basc_hiperactividad", label: "Hiperactividad", type: "range", min: 1, max: 5, labels: ["Nunca", "Rara vez", "A veces", "Frecuente", "Muy frecuente"] },
+      { id: "basc_agresion", label: "Agresión", type: "range", min: 1, max: 5, labels: ["Nunca", "Rara vez", "A veces", "Frecuente", "Muy frecuente"] },
+      { id: "basc_problemas_conducta", label: "Problemas de conducta", type: "range", min: 1, max: 5, labels: ["Nunca", "Rara vez", "A veces", "Frecuente", "Muy frecuente"] },
+      { id: "basc_notas_extern", label: "Observaciones externalizantes", type: "textarea" },
+    ]
+  },
+  {
+    title: "3. Escalas Clínicas - Problemas Internalizantes",
+    description: "Conductas dirigidas hacia adentro",
+    icon: <Heart size={20}/>,
+    questions: [
+      { id: "basc_ansiedad", label: "Ansiedad", type: "range", min: 1, max: 5, labels: ["Nunca", "Rara vez", "A veces", "Frecuente", "Muy frecuente"] },
+      { id: "basc_depresion", label: "Depresión", type: "range", min: 1, max: 5, labels: ["Nunca", "Rara vez", "A veces", "Frecuente", "Muy frecuente"] },
+      { id: "basc_somatizacion", label: "Somatización", type: "range", min: 1, max: 5, labels: ["Nunca", "Rara vez", "A veces", "Frecuente", "Muy frecuente"] },
+      { id: "basc_notas_intern", label: "Observaciones internalizantes", type: "textarea" },
+    ]
+  },
+  {
+    title: "4. Escalas Adaptativas",
+    description: "Habilidades positivas y adaptativas",
+    icon: <Activity size={20}/>,
+    questions: [
+      { id: "basc_habilidades_sociales", label: "Habilidades sociales", type: "range", min: 1, max: 5, labels: ["Muy bajo", "Bajo", "Promedio", "Alto", "Muy alto"] },
+      { id: "basc_liderazgo", label: "Liderazgo", type: "range", min: 1, max: 5, labels: ["Muy bajo", "Bajo", "Promedio", "Alto", "Muy alto"] },
+      { id: "basc_habilidades_estudio", label: "Habilidades de estudio", type: "range", min: 1, max: 5, labels: ["Muy bajo", "Bajo", "Promedio", "Alto", "Muy alto"] },
+      { id: "basc_adaptabilidad", label: "Adaptabilidad", type: "range", min: 1, max: 5, labels: ["Muy bajo", "Bajo", "Promedio", "Alto", "Muy alto"] },
+      { id: "basc_notas_adapt", label: "Observaciones adaptativas", type: "textarea" },
+    ]
+  },
+  {
+    title: "5. Análisis Conductual Integral (IA)",
+    icon: <Sparkles size={20}/>,
+    hasIA: true,
+    questions: [
+      { id: "indice_sintomas_conductuales", label: "Índice de Síntomas Conductuales", type: "number", readonly: true },
+      { id: "perfil_riesgo", label: "Perfil de Riesgo", type: "text", readonly: true },
+      { id: "analisis_basc_ia", label: "Análisis Conductual IA", type: "textarea", aiGenerated: true },
+      { id: "areas_preocupacion", label: "Áreas de Preocupación", type: "textarea", aiGenerated: true },
+      { id: "fortalezas_conductuales", label: "Fortalezas Conductuales", type: "textarea", aiGenerated: true },
+      { id: "plan_intervencion_conductual", label: "Plan de Intervención", type: "textarea", aiGenerated: true },
+      { id: "informe_padres_basc", label: "Informe para Padres", type: "textarea", aiGenerated: true },
+    ]
+  }
+];
 // ==============================================================================
 // FUNCIONES AUXILIARES
 // ==============================================================================
@@ -1544,7 +1996,7 @@ function PatientsView() {
 // VISTA: EVALUACIONES CON FORMULARIO ABA MEJORADO
 // ==============================================================================
 function DynamicEvaluationsView() {
-  const [activeForm, setActiveForm] = useState<'aba' | 'anamnesis' | 'entorno_hogar' | null>(null);
+  const [activeForm, setActiveForm] = useState<'aba' | 'anamnesis' | 'entorno_hogar' | 'brief2' | 'ados2' | 'vineland3' | 'wiscv' | 'basc3' | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedChild, setSelectedChild] = useState('');
   const [listaNinos, setListaNinos] = useState<any[]>([]);
@@ -1558,7 +2010,12 @@ function DynamicEvaluationsView() {
 
   const formConfig = activeForm === 'anamnesis' ? ANAMNESIS_DATA : 
                      activeForm === 'aba' ? ABA_DATA : 
-                     activeForm === 'entorno_hogar' ? ENTORNO_HOGAR_DATA : null;
+                     activeForm === 'entorno_hogar' ? ENTORNO_HOGAR_DATA :
+                     activeForm === 'brief2' ? BRIEF2_DATA :
+                     activeForm === 'ados2' ? ADOS2_DATA :
+                     activeForm === 'vineland3' ? VINELAND3_DATA :
+                     activeForm === 'wiscv' ? WISCV_DATA :
+                     activeForm === 'basc3' ? BASC3_DATA : null;
   const currentSection = formConfig ? formConfig[currentStep] : null;
   const totalSteps = formConfig ? formConfig.length : 0;
   const progress = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;
@@ -1663,27 +2120,69 @@ function DynamicEvaluationsView() {
   const handleSave = async () => {
     if (!selectedChild) return alert("Selecciona un paciente");
     setIsSaving(true);
-    const tabla = activeForm === 'anamnesis' ? 'anamnesis_completa' : 
-                  activeForm === 'aba' ? 'registro_aba' :
-                  activeForm === 'entorno_hogar' ? 'registro_entorno_hogar' : '';
     
-    const dataToInsert = activeForm === 'entorno_hogar' ? 
-      { child_id: selectedChild, fecha_visita: respuestas['fecha_visita'] || new Date().toISOString(), datos: respuestas } :
-      activeForm === 'aba' ? { child_id: selectedChild, fecha_sesion: respuestas['fecha_sesion'] || new Date().toISOString(), datos: respuestas } :
-      { child_id: selectedChild, datos: respuestas };
-    
-    const { error } = await supabase.from(tabla).insert([dataToInsert]);
-    
-    if (error) { 
-        alert("Error: " + error.message);
-    } else { 
-        alert("✅ ¡Guardado exitosamente!"); 
-        setActiveForm(null); 
-        setCurrentStep(0); 
-        setRespuestas({}); 
-        setSelectedChild('');
+    try {
+      let tabla = '';
+      let dataToInsert: any = {};
+      
+      // Lógica existente para formularios básicos
+      if (activeForm === 'anamnesis') {
+        tabla = 'anamnesis_completa';
+        dataToInsert = { child_id: selectedChild, datos: respuestas };
+      } else if (activeForm === 'aba') {
+        tabla = 'registro_aba';
+        dataToInsert = { child_id: selectedChild, fecha_sesion: respuestas['fecha_sesion'] || new Date().toISOString(), datos: respuestas };
+      } else if (activeForm === 'entorno_hogar') {
+        tabla = 'registro_entorno_hogar';
+        dataToInsert = { child_id: selectedChild, fecha_visita: respuestas['fecha_visita'] || new Date().toISOString(), datos: respuestas };
+      } 
+      // Lógica NUEVA para usar el MAPEO que pediste
+      else if (['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].includes(activeForm || '')) {
+        
+        // Aquí usa la constante que agregamos arriba
+        tabla = FORM_TABLE_MAPPING[activeForm as keyof typeof FORM_TABLE_MAPPING];
+        
+        // Obtener datos del niño para la IA
+        const { data: child } = await supabase.from('children').select('name, age').eq('id', selectedChild).single();
+        
+        // Llamada a la IA (mantenemos tu lógica original de IA)
+        const analysisResponse = await fetch('/api/analyze-professional-evaluation', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            evaluationType: activeForm,
+            responses: respuestas,
+            childName: child?.name || 'Paciente',
+            childAge: child?.age || 0
+          })
+        });
+        
+        const analysisResult = await analysisResponse.json();
+        if (!analysisResponse.ok) throw new Error(analysisResult.error || 'Error en análisis IA');
+        
+        dataToInsert = {
+          child_id: selectedChild,
+          fecha_evaluacion: respuestas[Object.keys(respuestas).find(k => k.includes('fecha')) || ''] || new Date().toISOString(),
+          datos: { ...respuestas, ...analysisResult },
+          metricas: analysisResult.metricas,
+          // Mapeo de campos dinámicos de IA
+          ...(analysisResult.puntuacion_total && { puntuacion_total: analysisResult.puntuacion_total }),
+          ...(analysisResult.nivel_severidad && { nivel_severidad: analysisResult.nivel_severidad }),
+          ...(analysisResult.ci_total && { ci_total: analysisResult.ci_total }),
+          ...(analysisResult.indice_conducta_adaptativa && { indice_conducta_adaptativa: analysisResult.indice_conducta_adaptativa })
+        };
+      }
+      
+      const { error } = await supabase.from(tabla).insert([dataToInsert]);
+      if (error) throw error;
+      
+      alert("✅ ¡Evaluación guardada exitosamente!");
+      setActiveForm(null); setRespuestas({}); setSelectedChild(''); setCurrentStep(0);
+    } catch (error: any) {
+      alert("❌ Error: " + error.message);
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
   };
 
   const resetForm = () => {
@@ -1794,6 +2293,194 @@ function DynamicEvaluationsView() {
                 </div>
               </div>
             </button>
+
+            {['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].map((type) => (
+              <button 
+                key={type}
+                onClick={() => setActiveForm(type as any)}
+                className={`group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden hover:shadow-2xl ${EVALUATION_COLORS[type as keyof typeof EVALUATION_COLORS].hover}`}
+              >
+                <div className={`absolute inset-0 bg-gradient-to-br ${EVALUATION_COLORS[type as keyof typeof EVALUATION_COLORS].primary} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className={`w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br ${EVALUATION_COLORS[type as keyof typeof EVALUATION_COLORS].primary} text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl`}>
+                    <Brain size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
+                  </div>
+                  
+                  <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight uppercase">
+                    {type.replace(/(\d+)/, '-$1')}
+                  </h3>
+                  
+                  <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
+                    Evaluación Estandarizada
+                  </p>
+
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${EVALUATION_COLORS[type as keyof typeof EVALUATION_COLORS].light}`}>
+                        Profesional
+                    </span>
+                    <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold border border-orange-100">
+                        IA Análisis
+                    </span>
+                  </div>
+                </div>
+              </button>
+            ))}
+
+            {/* Card BRIEF-2 */}
+            <button 
+                onClick={() => setActiveForm('brief2')} 
+                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-indigo-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
+            >
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10 flex flex-col items-center">
+                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-indigo-200">
+                    <Brain size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
+                </div>
+                
+                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
+                BRIEF-2
+                </h3>
+                
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
+                Inventario de Funciones Ejecutivas - Evalúa inhibición, flexibilidad, memoria y planificación
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">
+                    Neuropsicología
+                </span>
+                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
+                    IA Análisis
+                </span>
+                </div>
+            </div>
+            </button>
+
+            {/* Card ADOS-2 */}
+            <button 
+                onClick={() => setActiveForm('ados2')} 
+                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-teal-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
+            >
+            <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10 flex flex-col items-center">
+                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-teal-200">
+                    <Eye size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
+                </div>
+                
+                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
+                ADOS-2
+                </h3>
+                
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
+                Escala Diagnóstica de Autismo - Gold standard para diagnóstico TEA
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                <span className="px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-xs font-bold">
+                    Diagnóstico
+                </span>
+                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
+                    IA Pro
+                </span>
+                </div>
+            </div>
+            </button>
+
+            {/* Card Vineland-3 */}
+            <button 
+                onClick={() => setActiveForm('vineland3')} 
+                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-emerald-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
+            >
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10 flex flex-col items-center">
+                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-emerald-200">
+                    <Users size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
+                </div>
+                
+                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
+                Vineland-3
+                </h3>
+                
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
+                Conducta Adaptativa - Mide autonomía en comunicación, vida diaria y socialización
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold">
+                    Autonomía
+                </span>
+                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
+                    IA Análisis
+                </span>
+                </div>
+            </div>
+            </button>
+
+            {/* Card WISC-V */}
+            <button 
+                onClick={() => setActiveForm('wiscv')} 
+                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-violet-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
+            >
+            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10 flex flex-col items-center">
+                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-violet-500 to-violet-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-violet-200">
+                    <Brain size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
+                </div>
+                
+                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
+                WISC-V
+                </h3>
+                
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
+                Escala de Inteligencia - Evalúa CI y perfil cognitivo completo
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                <span className="px-3 py-1 bg-violet-50 text-violet-600 rounded-full text-xs font-bold">
+                    CI Total
+                </span>
+                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
+                    IA Pro
+                </span>
+                </div>
+            </div>
+            </button>
+
+            {/* Card BASC-3 */}
+            <button 
+                onClick={() => setActiveForm('basc3')} 
+                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-rose-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
+            >
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10 flex flex-col items-center">
+                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-rose-200">
+                    <Heart size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
+                </div>
+                
+                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
+                BASC-3
+                </h3>
+                
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
+                Evaluación Conductual - Mide problemas emocionales, conductuales y habilidades adaptativas
+                </p>
+
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-full text-xs font-bold">
+                    Conductual
+                </span>
+                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
+                    IA Análisis
+                </span>
+                </div>
+            </div>
+            </button>
           </div>
         </div>
       ) : (
@@ -1849,7 +2536,7 @@ function DynamicEvaluationsView() {
                      Seleccionar Paciente
                    </label>
                    <select 
-                      className="w-full p-4 md:p-5 bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl font-bold text-base md:text-lg text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all" 
+                     className="w-full p-4 md:p-5 bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl font-bold text-base md:text-lg text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all" 
                      value={selectedChild} 
                      onChange={(e) => setSelectedChild(e.target.value)}
                    >
@@ -2144,20 +2831,66 @@ function AIReportView() {
       .select('*')
       .eq('child_id', childId)
       .order('fecha_visita', { ascending: false })
+
+    const { data: brief2 } = await supabase
+    .from('evaluacion_brief2')
+    .select('*')
+    .eq('child_id', childId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  
+  const { data: ados2 } = await supabase
+    .from('evaluacion_ados2')
+    .select('*')
+    .eq('child_id', childId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  
+  const { data: vineland3 } = await supabase
+    .from('evaluacion_vineland3')
+    .select('*')
+    .eq('child_id', childId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  
+  const { data: wiscv } = await supabase
+    .from('evaluacion_wiscv')
+    .select('*')
+    .eq('child_id', childId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
+  
+  const { data: basc3 } = await supabase
+    .from('evaluacion_basc3')
+    .select('*')
+    .eq('child_id', childId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .single();
     
-    setHistoryData({ 
-      anamnesis: anamnesis ? anamnesis.datos : null, 
-      aba: aba || [],
-      entorno: entorno || []
-    })
+     setHistoryData({ 
+    anamnesis: anamnesis ? anamnesis.datos : null, 
+    aba: aba || [],
+    entorno: entorno || [],
+    brief2: brief2 || null,
+    ados2: ados2 || null,
+    vineland3: vineland3 || null,
+    wiscv: wiscv || null,
+    basc3: basc3 || null
+  })
     
-    const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
-    
-    setMessages([{ 
-      role: 'ai', 
-      text: `✅ He cargado el historial completo de **${nombre}**.\n\n📊 Poseo:\n• ${aba?.length || 0} sesiones ABA\n• ${entorno?.length || 0} visitas domiciliarias\n• ${anamnesis ? '1 anamnesis' : 'Sin anamnesis'}\n\n¿Qué deseas analizar?` 
-    }])
-  }
+const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
+  const totalEvaluaciones = [brief2, ados2, vineland3, wiscv, basc3].filter(Boolean).length;
+      
+     setMessages([{ 
+    role: 'ai', 
+    text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${brief2 ? '✅' : '❌'} BRIEF-2\n• ${ados2 ? '✅' : '❌'} ADOS-2\n• ${vineland3 ? '✅' : '❌'} Vineland-3\n• ${wiscv ? '✅' : '❌'} WISC-V\n• ${basc3 ? '✅' : '❌'} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}\n\n¿Qué deseas analizar?`
+  }])
+}
 
   const sendMessage = async () => {
     if(!input.trim()) return;
@@ -2351,7 +3084,7 @@ function AIReportView() {
                             <span className="font-black text-sm uppercase tracking-widest">Asistente IA</span>
                             <span className="text-[10px] text-green-400 font-bold uppercase flex items-center gap-1">
                                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div> 
-                              Gemini v4.0
+                             Gemini v4.0
                             </span>
                         </div>
                     </div>
@@ -2578,9 +3311,9 @@ function MonthlyCalendarView() {
                         <div key={a.id} className="bg-white p-6 md:p-8 rounded-2xl md:rounded-[2rem] border-2 border-slate-100 hover:border-blue-400 hover:shadow-2xl transition-all group relative">
                             <div className="flex justify-between items-start mb-4 md:mb-6">
                                 <span className={`text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 md:py-1.5 rounded-full uppercase tracking-widest ${
-                                        a.is_group 
-                                        ? 'bg-purple-50 text-purple-600 border border-purple-100' 
-                                        : 'bg-blue-50 text-blue-600 border border-blue-100'
+                                    a.is_group 
+                                    ? 'bg-purple-50 text-purple-600 border border-purple-100' 
+                                    : 'bg-blue-50 text-blue-600 border border-blue-100'
                                 }`}>
                                  {a.is_group ? '👥 Grupal' : a.service_type || 'Sesión'}
                                 </span>
@@ -2700,8 +3433,8 @@ function MonthlyCalendarView() {
                                                         key={n.id}
                                                         className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${
                                                             selectedParticipants.includes(n.id) 
-                                                              ? 'bg-purple-600 text-white shadow-md' 
-                                                                : 'bg-white hover:bg-purple-50 border border-slate-200'
+                                                            ? 'bg-purple-600 text-white shadow-md' 
+                                                            : 'bg-white hover:bg-purple-50 border border-slate-200'
                                                         }`}
                                                     >
                                                         <input
