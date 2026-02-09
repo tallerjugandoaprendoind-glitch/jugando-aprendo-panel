@@ -2312,7 +2312,7 @@ function DynamicEvaluationsView() {
                   </h3>
                   
                   <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                    Evaluación Estandarizada
+                     evalúa la aptitud intelectual y el funcionamiento cognitivo en niños y adolescentes de 6 a 16 años y 11 meses
                   </p>
 
                   <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
