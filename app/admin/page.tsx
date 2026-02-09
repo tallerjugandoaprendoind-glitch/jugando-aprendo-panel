@@ -12,11 +12,11 @@ import {
   Sparkles, ChevronRight, ChevronLeft, CheckCircle2, Heart, Baby, Stethoscope, Save,
   Utensils, Smile, MessageCircle, Home, History, Upload, FileSpreadsheet, 
   ChevronDown, ChevronUp, AlertTriangle, ShieldAlert, BookOpen, Trash2, Eye, FileWarning, Send, MoreHorizontal,
-  UserPlus, Edit, Phone, Key
+  UserPlus, Edit, Phone, Key, TrendingUp, Target, Zap, Award, BarChart3
 } from 'lucide-react'
 
 // ==============================================================================
-// 1. CONFIGURACIÓN DE DATOS
+// 1. CONFIGURACIÓN DE DATOS - FORMULARIOS 
 // ==============================================================================
 
 const ANAMNESIS_DATA = [
@@ -113,36 +113,119 @@ const ANAMNESIS_DATA = [
 
 const ABA_DATA = [
   {
-    title: "1. Datos de la Sesión",
+    title: "1. Información de la Sesión",
+    icon: <Calendar size={20}/>,
     questions: [
-      { id: "fecha_sesion", label: "Fecha de la sesión", type: "date" },
-      { id: "objetivo_sesion", label: "Objetivo de la sesión", type: "textarea", placeholder: "Describe el objetivo..." },
+      { id: "fecha_sesion", label: "Fecha de la sesión", type: "date", required: true },
+      { id: "duracion_minutos", label: "Duración (minutos)", type: "number", placeholder: "45", min: 15, max: 120 },
+      { id: "tipo_sesion", label: "Tipo de sesión", type: "select", options: ["Individual", "Grupal", "Domiciliaria", "Virtual"], required: true },
+      { id: "objetivo_principal", label: "Objetivo principal de la sesión", type: "textarea", placeholder: "Describe el objetivo terapéutico...", required: true },
     ]
   },
   {
-    title: "2. Registro de Conducta (ABC - Interno)",
+    title: "2. Registro ABC (Análisis Conductual)",
+    icon: <Activity size={20}/>,
     questions: [
-      { id: "conducta", label: "Conducta Observada (Behavior)", type: "textarea", placeholder: "Describe exactamente qué hizo..." },
-      { id: "antecedente", label: "Antecedente (Antecedent)", type: "textarea", placeholder: "¿Qué pasó justo antes?" },
-      { id: "consecuencia", label: "Consecuencia (Consequence)", type: "textarea", placeholder: "¿Qué pasó justo después?" },
-      { id: "funcion_estimada", label: "Función estimada", type: "select", options: ["Acceso a Tangible", "Atención", "Escape/Evitación", "Sensorial/Automático"] },
-      { id: "intervencion", label: "Intervención aplicada", type: "textarea", placeholder: "¿Qué técnica se usó?" },
-      { id: "reforzador", label: "Tipo de reforzador utilizado", type: "text", placeholder: "Ej: Elogio social, Juguete..." },
+      { id: "antecedente", label: "Antecedente (A)", type: "textarea", placeholder: "¿Qué sucedió ANTES de la conducta? Contexto, actividad, personas presentes..." },
+      { id: "conducta", label: "Conducta Observada (B)", type: "textarea", placeholder: "Describe EXACTAMENTE qué hizo el niño (observable y medible)...", required: true },
+      { id: "consecuencia", label: "Consecuencia (C)", type: "textarea", placeholder: "¿Qué pasó DESPUÉS? Respuesta del terapeuta, del entorno..." },
+      { id: "funcion_estimada", label: "Función estimada de la conducta", type: "select", options: ["Acceso a Tangible", "Atención Social", "Escape/Evitación", "Sensorial/Automático", "Múltiple"] },
     ]
   },
   {
-    title: "3. Resultado y Observaciones (Interno)",
+    title: "3. Métricas de Desempeño",
+    icon: <TrendingUp size={20}/>,
     questions: [
-      { id: "respuesta_nino", label: "Respuesta del niño a la intervención", type: "radio", options: ["Positiva", "Neutra", "Negativa"] },
-      { id: "resultado_sesion", label: "Resultado de la sesión", type: "radio", options: ["Objetivo logrado", "Parcialmente logrado", "No logrado"] },
-      { id: "observaciones_adicionales", label: "Observaciones Técnicas", type: "textarea", placeholder: "Notas clínicas para el equipo..." },
+      { id: "nivel_atencion", label: "Nivel de atención sostenida", type: "range", min: 1, max: 5, labels: ["Muy disperso", "Disperso", "Moderado", "Bueno", "Excelente"] },
+      { id: "respuesta_instrucciones", label: "Respuesta a instrucciones", type: "range", min: 1, max: 5, labels: ["Nula", "Mínima", "Parcial", "Buena", "Inmediata"] },
+      { id: "iniciativa_comunicativa", label: "Iniciativa comunicativa", type: "range", min: 1, max: 5, labels: ["Nula", "Muy baja", "Baja", "Moderada", "Alta"] },
+      { id: "tolerancia_frustracion", label: "Tolerancia a la frustración", type: "range", min: 1, max: 5, labels: ["Muy baja", "Baja", "Moderada", "Buena", "Excelente"] },
+      { id: "interaccion_social", label: "Calidad de interacción social", type: "range", min: 1, max: 5, labels: ["Evitativa", "Mínima", "Funcional", "Buena", "Espontánea"] },
     ]
   },
   {
-    title: "4. Comunicación con la Familia (VISIBLE PARA PADRES)",
+    title: "4. Habilidades Trabajadas",
+    icon: <Target size={20}/>,
     questions: [
-      { id: "mensaje_padres", label: "Mensaje WhatsApp (Feedback Aprobado)", type: "textarea", placeholder: "Hola familia! Hoy [Nombre] estuvo muy participativo..." },
-      { id: "actividad_casa", label: "Actividad sugerida en Casa", type: "textarea", placeholder: "Recomendamos jugar a..." },
+      { id: "habilidades_objetivo", label: "Habilidades específicas trabajadas", type: "multiselect", options: [
+        "Contacto visual", "Imitación motora", "Seguimiento de instrucciones", 
+        "Comunicación funcional", "Juego simbólico", "Habilidades sociales",
+        "Autorregulación emocional", "Motricidad fina", "Motricidad gruesa",
+        "Atención conjunta", "Espera de turnos", "Flexibilidad cognitiva"
+      ]},
+      { id: "nivel_logro_objetivos", label: "Nivel de logro de objetivos", type: "select", options: [
+        "No logrado (0-25%)", "Parcialmente logrado (26-50%)", 
+        "Mayormente logrado (51-75%)", "Completamente logrado (76-100%)"
+      ]},
+      { id: "ayudas_utilizadas", label: "Nivel de ayudas proporcionadas", type: "select", options: [
+        "Independiente (sin ayuda)", "Ayuda gestual", "Ayuda verbal",
+        "Modelado", "Guía física parcial", "Guía física total"
+      ]},
+    ]
+  },
+  {
+    title: "5. Intervenciones y Estrategias",
+    icon: <Zap size={20}/>,
+    questions: [
+      { id: "tecnicas_aplicadas", label: "Técnicas ABA aplicadas", type: "multiselect", options: [
+        "Reforzamiento positivo", "Extinción", "Moldeamiento",
+        "Encadenamiento", "Análisis de tareas", "Tiempo fuera",
+        "Economía de fichas", "Contrato conductual", "Entrenamiento en comunicación funcional"
+      ]},
+      { id: "reforzadores_efectivos", label: "Reforzadores más efectivos", type: "textarea", placeholder: "Lista los reforzadores que funcionaron mejor hoy..." },
+      { id: "conductas_desafiantes", label: "Conductas desafiantes presentadas", type: "textarea", placeholder: "Describe frecuencia e intensidad..." },
+      { id: "estrategias_manejo", label: "Estrategias de manejo utilizadas", type: "textarea", placeholder: "Cómo se abordaron las conductas desafiantes..." },
+    ]
+  },
+  {
+    title: "6. Progreso y Evolución",
+    icon: <Award size={20}/>,
+    questions: [
+      { id: "avances_observados", label: "Avances observados en esta sesión", type: "textarea", placeholder: "Logros específicos, mejoras respecto a sesiones anteriores..." },
+      { id: "areas_dificultad", label: "Áreas de dificultad persistente", type: "textarea", placeholder: "Aspectos que requieren más trabajo..." },
+      { id: "patron_aprendizaje", label: "Patrón de aprendizaje observado", type: "select", options: [
+        "Aprendizaje rápido y generalización", "Aprendizaje gradual",
+        "Requiere repetición intensiva", "Dificultad para generalizar",
+        "Aprendizaje inconsistente"
+      ]},
+    ]
+  },
+  {
+    title: "7. Observaciones Clínicas (Interno)",
+    icon: <BookOpen size={20}/>,
+    questions: [
+      { id: "observaciones_tecnicas", label: "Notas técnicas para el equipo", type: "textarea", placeholder: "Análisis profesional, hipótesis clínicas, ajustes necesarios..." },
+      { id: "alertas_clinicas", label: "Alertas o banderas rojas", type: "textarea", placeholder: "Señales de preocupación, regresiones, cambios significativos..." },
+      { id: "recomendaciones_equipo", label: "Recomendaciones para el equipo", type: "textarea", placeholder: "Sugerencias para siguientes sesiones, derivaciones necesarias..." },
+      { id: "coordinacion_familia", label: "Necesidad de coordinación con familia", type: "radio", options: ["Urgente", "Necesaria", "Rutinaria", "No necesaria"] },
+    ]
+  },
+  {
+    title: "8. Tarea para Casa",
+    icon: <Home size={20}/>,
+    questions: [
+      { id: "actividad_casa", label: "Actividad sugerida para practicar en casa", type: "textarea", placeholder: "Descripción detallada de la actividad, materiales necesarios, frecuencia..." },
+      { id: "instrucciones_padres", label: "Instrucciones específicas para los padres", type: "textarea", placeholder: "Pasos claros, qué hacer y qué evitar..." },
+      { id: "objetivo_tarea", label: "Objetivo de la tarea", type: "text", placeholder: "¿Qué habilidad refuerza esta actividad?" },
+    ]
+  },
+  {
+    title: "9. Comunicación con la Familia (VISIBLE PARA PADRES)",
+    icon: <MessageCircle size={20}/>,
+    hasIA: true,
+    questions: [
+      { id: "mensaje_padres", label: "Mensaje para WhatsApp/Informe", type: "textarea", placeholder: "Este mensaje será visible para los padres. Usa lenguaje positivo y claro...", aiGenerated: true },
+      { id: "destacar_positivo", label: "Logros para destacar a los padres", type: "textarea", placeholder: "Aspectos positivos que los padres deben saber..." },
+      { id: "proximos_pasos", label: "Próximos pasos (para compartir)", type: "textarea", placeholder: "Qué viene en las siguientes sesiones..." },
+    ]
+  },
+  {
+    title: "10. Análisis y Planificación",
+    icon: <Brain size={20}/>,
+    questions: [
+      { id: "efectividad_sesion", label: "Efectividad global de la sesión", type: "range", min: 1, max: 5, labels: ["Muy baja", "Baja", "Moderada", "Alta", "Muy alta"] },
+      { id: "ajustes_proxima_sesion", label: "Ajustes para la próxima sesión", type: "textarea", placeholder: "Qué modificar, qué mantener, nuevas estrategias a probar..." },
+      { id: "necesidades_materiales", label: "Materiales o recursos necesarios", type: "text", placeholder: "Qué se necesita conseguir para próximas sesiones..." },
     ]
   }
 ]
@@ -247,7 +330,7 @@ function calcularEdad(birthDate: string | null): string | null {
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--
   }
-  return age > 0 ? `${age} años` : null
+  return age >= 0 ? `${age} años` : null
 }
 
 function calcularEdadNumerica(birthDate: string | null): number {
@@ -263,7 +346,7 @@ function calcularEdadNumerica(birthDate: string | null): number {
 }
 
 // ==============================================================================
-// 2. COMPONENTE PRINCIPAL - MEJORADO
+// 2. COMPONENTE PRINCIPAL
 // ==============================================================================
 
 export default function AdminDashboard() {
@@ -278,7 +361,6 @@ export default function AdminDashboard() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
 
-  // Obtener email del usuario al cargar
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -289,7 +371,6 @@ export default function AdminDashboard() {
     getUser()
   }, [])
 
-  // Función para cerrar sesión
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut()
@@ -301,19 +382,16 @@ export default function AdminDashboard() {
     }
   }
 
-  // Función para toggle de notificaciones
   const toggleNotifications = () => {
     setShowNotifications(!showNotifications)
     setShowProfileMenu(false)
   }
 
-  // Función para toggle de perfil
   const toggleProfileMenu = () => {
     setShowProfileMenu(!showProfileMenu)
     setShowNotifications(false)
   }
 
-  // Función para abrir modal de cambiar contraseña
   const handleOpenChangePassword = () => {
     setShowChangePassword(true)
     setShowProfileMenu(false)
@@ -321,7 +399,6 @@ export default function AdminDashboard() {
     setConfirmPassword('')
   }
 
-  // Función para cambiar contraseña
   const handleChangePassword = async () => {
     if (newPassword.length < 6) {
       alert('La contraseña debe tener al menos 6 caracteres')
@@ -333,6 +410,7 @@ export default function AdminDashboard() {
     }
 
     setChangingPassword(true)
+    
     try {
       const { error } = await supabase.auth.updateUser({
         password: newPassword
@@ -352,7 +430,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // 🆕 Navegación mejorada con acciones rápidas
   const navigateTo = (view: string) => {
     setCurrentView(view)
     setSidebarOpen(false)
@@ -360,8 +437,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="flex h-screen bg-[#F0F2F5] font-sans text-slate-600 overflow-hidden">
-      
-      {/* SIDEBAR MEJORADO */}
+      {/* SIDEBAR */}
       <aside className={`
         fixed md:relative z-40
         w-64 md:w-16 lg:w-64 
@@ -424,7 +500,6 @@ export default function AdminDashboard() {
                       <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
                     </button>
 
-                    {/* Menú de Notificaciones */}
                     {showNotifications && (
                       <div className="absolute right-14 top-12 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50">
                         <div className="flex items-center justify-between mb-4">
@@ -442,20 +517,12 @@ export default function AdminDashboard() {
                             <p className="text-xs font-bold text-purple-900">Recordatorio de sesión</p>
                             <p className="text-xs text-purple-600 mt-1">Sesión grupal en 30 minutos</p>
                           </div>
-                          <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                            <p className="text-xs font-bold text-slate-700">Sistema actualizado</p>
-                            <p className="text-xs text-slate-500 mt-1">Nuevas funciones disponibles</p>
-                          </div>
                         </div>
-                        <button className="w-full mt-4 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
-                          Ver todas
-                        </button>
                       </div>
                     )}
 
                     <button onClick={toggleProfileMenu} className="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-md shadow-blue-200 text-sm md:text-base">D</button>
 
-                    {/* Menú de Perfil */}
                     {showProfileMenu && (
                       <div className="absolute right-0 top-12 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden z-50">
                         <div className="p-4 bg-gradient-to-br from-blue-600 to-purple-600 text-white">
@@ -466,10 +533,7 @@ export default function AdminDashboard() {
                           <p className="text-center text-xs opacity-90 mt-1">{userEmail || 'directora@jugandoaprendo.com'}</p>
                         </div>
                         <div className="p-2">
-                          <button 
-                            onClick={handleOpenChangePassword}
-                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-                          >
+                          <button onClick={handleOpenChangePassword} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors">
                             <Key size={18} />
                             <span>Cambiar Contraseña</span>
                           </button>
@@ -501,10 +565,7 @@ export default function AdminDashboard() {
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-6 md:p-8 animate-fade-in-up">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-black text-slate-800">Cambiar Contraseña</h2>
-              <button 
-                onClick={() => setShowChangePassword(false)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-              >
+              <button onClick={() => setShowChangePassword(false)} className="p-2 hover:bg-slate-100 rounded-lg transition-colors">
                 <X size={20} className="text-slate-400" />
               </button>
             </div>
@@ -537,10 +598,7 @@ export default function AdminDashboard() {
               </div>
 
               <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => setShowChangePassword(false)}
-                  className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors"
-                >
+                <button onClick={() => setShowChangePassword(false)} className="flex-1 py-3 px-4 rounded-xl font-bold text-slate-600 hover:bg-slate-100 transition-colors">
                   Cancelar
                 </button>
                 <button
@@ -567,13 +625,12 @@ export default function AdminDashboard() {
 }
 
 // ==============================================================================
-// VISTA: DASHBOARD MEJORADO CON ACCIONES RÁPIDAS FUNCIONALES
+// VISTA: DASHBOARD HOME
 // ==============================================================================
 function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   const [emailBusqueda, setEmailBusqueda] = useState('')
   const [loading, setLoading] = useState(false)
   
-  // Estados para datos reales
   const [totalPacientes, setTotalPacientes] = useState(0)
   const [sesionesHoy, setSesionesHoy] = useState(0)
   const [sesionesCompletadas, setSesionesCompletadas] = useState(0)
@@ -591,7 +648,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   })
   const [horaActual, setHoraActual] = useState(new Date())
 
-  // Actualizar hora cada segundo
   useEffect(() => {
     const interval = setInterval(() => {
       setHoraActual(new Date())
@@ -599,20 +655,17 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
     return () => clearInterval(interval)
   }, [])
 
-  // Cargar TODOS los datos reales al montar el componente
   useEffect(() => {
     cargarDatosCompletos()
   }, [])
 
   const cargarDatosCompletos = async () => {
     try {
-      // 1. TOTAL DE PACIENTES
       const { data: pacientes, count: countPacientes } = await supabase
         .from('children')
         .select('*', { count: 'exact' })
       setTotalPacientes(countPacientes || 0)
 
-      // 2. SESIONES DE HOY
       const hoy = new Date().toISOString().split('T')[0]
       const { data: citasHoy } = await supabase
         .from('appointments')
@@ -620,7 +673,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         .eq('appointment_date', hoy)
       setSesionesHoy(citasHoy?.length || 0)
 
-      // Sesiones completadas hoy
       const { data: sesionesHoyRegistradas } = await supabase
         .from('registro_aba')
         .select('*')
@@ -628,7 +680,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         .lte('created_at', `${hoy}T23:59:59`)
       setSesionesCompletadas(sesionesHoyRegistradas?.length || 0)
 
-      // 3. CRÉDITOS ACTIVOS Y FAMILIAS
       const { data: profiles } = await supabase
         .from('profiles')
         .select('tokens')
@@ -638,7 +689,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
       setCreditosActivos(totalCreditos)
       setFamiliasActivas(profiles?.length || 0)
 
-      // 4. ANÁLISIS IA ESTA SEMANA
       const inicioSemana = new Date()
       inicioSemana.setDate(inicioSemana.getDate() - inicioSemana.getDay())
       inicioSemana.setHours(0, 0, 0, 0)
@@ -650,7 +700,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         .not('datos->mensaje_padres', 'is', null)
       setAnalisisIA(analisisSemanales?.length || 0)
 
-      // 5. ACTIVIDAD RECIENTE (últimas 5 sesiones)
       const { data: actividadData } = await supabase
         .from('registro_aba')
         .select('*, children(name)')
@@ -658,7 +707,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         .limit(5)
       setActividadReciente(actividadData || [])
 
-      // 6. PRÓXIMAS CITAS
       const { data: citasProximas } = await supabase
         .from('appointments')
         .select('*, children(name)')
@@ -668,7 +716,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         .limit(4)
       setProximasCitas(citasProximas || [])
 
-      // 7. ESTADÍSTICAS DE LA SEMANA
       const { data: sesionesSemanales } = await supabase
         .from('registro_aba')
         .select('*')
@@ -684,7 +731,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         .select('*')
         .gte('created_at', inicioSemana.toISOString())
 
-      // Calcular tasa de asistencia
       const { data: citasSemanales } = await supabase
         .from('appointments')
         .select('*')
@@ -753,7 +799,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
 
   return (
     <div className="space-y-6 md:space-y-8 animate-fade-in-up">
-      {/* HEADER CON SALUDO */}
+      {/* HEADER */}
       <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-3xl md:rounded-[2.5rem] p-6 md:p-8 text-white relative overflow-hidden shadow-2xl">
         <div className="relative z-10">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -786,10 +832,9 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
           </div>
         </div>
         <Sparkles className="absolute -bottom-8 -right-8 text-white opacity-10" size={200}/>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
       </div>
 
-      {/* MÉTRICAS PRINCIPALES */}
+      {/* MÉTRICAS */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
         <StatCardPremium 
           title="Total Pacientes" 
@@ -825,12 +870,11 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         />
       </div>
       
-      {/* SECCIÓN PRINCIPAL: 3 COLUMNAS */}
+      {/* 3 COLUMNAS */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8">
         
-        {/* COLUMNA 1: RECARGA RÁPIDA + ACCIONES RÁPIDAS FUNCIONALES */}
+        {/* COLUMNA 1: RECARGA + ACCIONES */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Recarga Rápida */}
           <div className="bg-white p-6 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 hover:shadow-xl transition-all">
             <h3 className="font-bold text-slate-700 mb-6 text-lg md:text-xl flex items-center gap-3">
               <div className="p-2 bg-blue-50 rounded-xl">
@@ -865,13 +909,9 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                   4 Créditos
                 </button>
               </div>
-              <div className="pt-4 border-t border-slate-100">
-                <p className="text-xs text-slate-400 font-bold">💡 TIP: Los créditos se aplican inmediatamente</p>
-              </div>
             </div>
           </div>
 
-          {/* 🆕 ACCIONES RÁPIDAS FUNCIONALES */}
           <div className="bg-white p-6 md:p-8 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200">
             <h3 className="font-bold text-slate-700 mb-6 text-lg flex items-center gap-3">
               <div className="p-2 bg-purple-50 rounded-xl">
@@ -938,8 +978,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                       <div className="flex items-center gap-2 mt-1">
                         <Clock size={12} className="text-slate-400"/>
                         <p className="text-xs text-slate-500 font-bold">{cita.appointment_time?.slice(0,5) || '00:00'}</p>
-                        <span className="text-xs text-slate-300">•</span>
-                        <p className="text-xs text-slate-400 truncate">{cita.service_type || 'Terapia'}</p>
                       </div>
                     </div>
                     <ChevronRight size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors"/>
@@ -949,7 +987,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                 <div className="text-center py-12">
                   <Calendar className="mx-auto text-slate-200 mb-4" size={48}/>
                   <p className="text-slate-400 text-sm font-bold">No hay citas próximas</p>
-                  <p className="text-slate-300 text-xs mt-2">Las citas aparecerán aquí</p>
                 </div>
               )}
             </div>
@@ -966,9 +1003,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                 </div>
                 Actividad Reciente
               </h3>
-              <span className="text-xs bg-orange-50 text-orange-600 px-3 py-1 rounded-full font-bold">
-                Últimas 5
-              </span>
             </div>
             
             <div className="space-y-3 max-h-[500px] overflow-y-auto">
@@ -981,10 +1015,10 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                     <div className="flex-1 min-w-0">
                       <h4 className="font-bold text-slate-700 text-sm truncate">{act.children?.name || 'Sin nombre'}</h4>
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                        {act.datos?.conducta || act.datos?.legacy_behavior_text || 'Sesión ABA registrada'}
+                        {act.datos?.conducta || 'Sesión registrada'}
                       </p>
                       <p className="text-[10px] text-slate-400 font-bold mt-2">
-                        {new Date(act.created_at).toLocaleDateString('es-PE')} • {new Date(act.created_at).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(act.created_at).toLocaleDateString('es-PE')}
                       </p>
                     </div>
                   </div>
@@ -993,7 +1027,6 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                 <div className="text-center py-12">
                   <Activity className="mx-auto text-slate-200 mb-4" size={48}/>
                   <p className="text-slate-400 text-sm font-bold">Sin actividad reciente</p>
-                  <p className="text-slate-300 text-xs mt-2">Las sesiones aparecerán aquí</p>
                 </div>
               )}
             </div>
@@ -1001,10 +1034,8 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         </div>
       </div>
 
-      {/* FILA INFERIOR: MONITOR + ESTADÍSTICAS */}
+      {/* FILA INFERIOR */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        
-        {/* Monitor de Sistema */}
         <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8 rounded-3xl md:rounded-[2.5rem] shadow-2xl text-white relative overflow-hidden">
           <div className="relative z-10">
             <div className="flex items-center gap-3 mb-6">
@@ -1029,14 +1060,12 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
               <span className="font-bold text-sm">Todos los servicios operativos</span>
             </div>
           </div>
-          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
         </div>
 
-        {/* Estadísticas de la Semana */}
         <div className="lg:col-span-2 bg-white p-8 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200">
           <h3 className="font-bold text-slate-700 text-xl mb-6 flex items-center gap-3">
             <div className="p-2 bg-blue-50 rounded-xl">
-              <Activity size={24} className="text-blue-600"/>
+              <BarChart3 size={24} className="text-blue-600"/>
             </div>
             Estadísticas de la Semana
           </h3>
@@ -1086,10 +1115,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   )
 }
 
-// ==============================================================================
-// COMPONENTES AUXILIARES MEJORADOS
-// ==============================================================================
-
+// Componentes auxiliares
 function StatCardPremium({ title, value, icon, color, trend, trendUp }: any) {
   return (
     <div className="bg-white p-6 rounded-3xl md:rounded-[2rem] shadow-sm border border-slate-200 hover:shadow-xl transition-all hover:-translate-y-1 group cursor-default relative overflow-hidden">
@@ -1106,7 +1132,6 @@ function StatCardPremium({ title, value, icon, color, trend, trendUp }: any) {
         <h4 className="text-4xl font-black text-slate-800 mb-2">{value}</h4>
         <p className="text-xs text-slate-500 font-bold">{trend}</p>
       </div>
-      <div className={`absolute -bottom-8 -right-8 w-32 h-32 bg-gradient-to-br ${color} opacity-5 rounded-full group-hover:scale-150 transition-transform duration-500`}></div>
     </div>
   )
 }
@@ -1154,18 +1179,10 @@ function MiniStatCard({ value, label, icon, color }: any) {
 function InfoRow({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <div className="flex items-start gap-3 py-3 border-b border-slate-50 last:border-0">
-      {icon && (
-        <div className="mt-0.5 text-slate-400">
-          {icon}
-        </div>
-      )}
+      {icon && <div className="mt-0.5 text-slate-400">{icon}</div>}
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">
-          {label}
-        </p>
-        <p className="text-sm font-bold text-slate-700 break-words">
-          {value}
-        </p>
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+        <p className="text-sm font-bold text-slate-700 break-words">{value}</p>
       </div>
     </div>
   )
@@ -1184,7 +1201,7 @@ function NavItem({ icon, label, active, onClick }: any) {
 }
 
 // ==============================================================================
-// VISTA: PACIENTES - VERSIÓN CORREGIDA SIN PARENT_EMAIL
+// VISTA: PACIENTES
 // ==============================================================================
 function PatientsView() {
     const [listaNinos, setListaNinos] = useState<any[]>([])
@@ -1194,18 +1211,16 @@ function PatientsView() {
     const [filterDiagnosis, setFilterDiagnosis] = useState('todos')
     const [sortBy, setSortBy] = useState('nombre')
     
-    // Estados para Ver Detalle y Edición
     const [selectedPatient, setSelectedPatient] = useState<any>(null)
     const [showPatientModal, setShowPatientModal] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
 
-    // Formulario de edición
     const [editForm, setEditForm] = useState({
         name: '',
         birth_date: '',
         diagnosis: '',
-        age: 0 // 🆕 Calculado automáticamente
+        age: 0
     })
 
     useEffect(() => { 
@@ -1226,7 +1241,6 @@ function PatientsView() {
         setIsLoading(false)
     }
 
-    // 🆕 Calcular edad cuando cambia la fecha de nacimiento
     const calcularEdadDesdeString = (birthDate: string): number => {
         if (!birthDate) return 0
         const today = new Date()
@@ -1239,7 +1253,6 @@ function PatientsView() {
         return age > 0 ? age : 0
     }
 
-    // 🆕 Actualizar edad automáticamente cuando cambia birth_date
     const handleBirthDateChange = (newBirthDate: string) => {
         const edad = calcularEdadDesdeString(newBirthDate)
         setEditForm({
@@ -1249,7 +1262,6 @@ function PatientsView() {
         })
     }
 
-    // Filtrado y búsqueda
     useEffect(() => {
         let resultado = [...listaNinos]
         if (searchTerm) {
@@ -1269,14 +1281,12 @@ function PatientsView() {
 
     const diagnosticosUnicos = ['todos', ...new Set(listaNinos.map(n => n.diagnosis).filter(Boolean))]
 
-    // Abrir modal (Modo Lectura)
     const verDetallePaciente = (paciente: any) => {
         setSelectedPatient(paciente)
         setIsEditing(false)
         setShowPatientModal(true)
     }
 
-    // Activar Edición
     const activarEdicion = () => {
         const edad = calcularEdadDesdeString(selectedPatient.birth_date)
         setEditForm({
@@ -1289,14 +1299,12 @@ function PatientsView() {
     }
 
     const guardarCambios = async () => {
-        // 1. Validaciones
         if (!editForm.name.trim()) return alert("❌ Nombre obligatorio");
         if (!editForm.birth_date) return alert("❌ Fecha obligatoria");
 
         setIsSaving(true);
 
         try {
-            // 2. CALCULO MANUAL
             const fechaNac = new Date(editForm.birth_date);
             const hoy = new Date();
             let edad = hoy.getFullYear() - fechaNac.getFullYear();
@@ -1305,10 +1313,6 @@ function PatientsView() {
                 edad--;
             }
             edad = Math.max(0, edad);
-
-            console.log("intentando actualizar ID:", selectedPatient.id);
-
-            // 3. ACTUALIZACIÓN CON DIAGNÓSTICO
             const { data, error } = await supabase
                 .from('children')
                 .update({
@@ -1319,23 +1323,20 @@ function PatientsView() {
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', selectedPatient.id)
-                .select(); // <--- IMPORTANTE
-
-            // 4. ANÁLISIS DEL RESULTADO
+                .select();
             if (error) {
-                alert(`❌ ERROR DE BASE DE DATOS: ${error.message}`);
+                alert(`❌ ERROR: ${error.message}`);
             } else if (!data || data.length === 0) {
-                // AQUÍ ESTÁ EL PROBLEMA SI "NO PASA NADA"
-                alert("⚠️ ALERTA: Supabase no devolvió error, pero NO actualizó nada.\n\nPosibles causas:\n1. El ID del paciente es incorrecto.\n2. Las políticas RLS siguen bloqueando (Ejecuta el SQL del Paso 1).");
+                alert("⚠️ No se actualizó ningún registro. Verifica los permisos.");
             } else {
-                alert(`✅ ¡ÉXITO! Guardado correctamente.\nEdad: ${edad} años.`);
+                alert(`✅ Guardado correctamente. Edad: ${edad} años.`);
                 await cargarPacientes();
                 setIsEditing(false);
                 setShowPatientModal(false);
             }
 
         } catch (e: any) {
-            alert("❌ Error de código: " + e.message);
+            alert("❌ Error: " + e.message);
         } finally {
             setIsSaving(false);
         }
@@ -1343,7 +1344,6 @@ function PatientsView() {
 
     return (
         <div className="bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col animate-fade-in-up">
-            {/* HEADER */}
             <div className="p-4 md:p-6 lg:p-8 border-b border-slate-100 bg-white sticky top-0 z-10 space-y-4">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
@@ -1352,11 +1352,9 @@ function PatientsView() {
                         </h3>
                         <p className="text-slate-400 text-xs md:text-sm mt-1">{listaNinosFiltrada.length} de {listaNinos.length} pacientes</p>
                     </div>
-                    <div className="flex gap-3 w-full md:w-auto">
-                        <button onClick={cargarPacientes} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm text-slate-600 transition-all flex items-center gap-2">
-                            <Activity size={16}/> <span className="hidden sm:inline">Actualizar</span>
-                        </button>
-                    </div>
+                    <button onClick={cargarPacientes} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm text-slate-600 transition-all flex items-center gap-2">
+                        <Activity size={16}/> Actualizar
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
@@ -1367,7 +1365,7 @@ function PatientsView() {
                     </div>
                     <div className="md:col-span-4">
                         <select value={filterDiagnosis} onChange={(e) => setFilterDiagnosis(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-purple-500 focus:bg-white transition-all font-bold text-slate-700">
-                            {diagnosticosUnicos.map(diag => <option key={diag} value={diag}>{diag === 'todos' ? '🔍 Todos los diagnósticos' : `📋 ${diag}`}</option>)}
+                            {diagnosticosUnicos.map(diag => <option key={diag} value={diag}>{diag === 'todos' ? '🔍 Todos' : `📋 ${diag}`}</option>)}
                         </select>
                     </div>
                     <div className="md:col-span-3">
@@ -1382,15 +1380,14 @@ function PatientsView() {
             
             <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
-                    <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-500 mb-4" size={48} /><p className="text-slate-400 font-bold">Cargando pacientes...</p></div>
+                    <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-500 mb-4" size={48} /><p className="text-slate-400 font-bold">Cargando...</p></div>
                 ) : listaNinosFiltrada.length === 0 ? (
                     <div className="p-20 text-center"><Users className="mx-auto text-slate-200 mb-4" size={64}/><p className="text-slate-400 font-bold text-lg">No se encontraron pacientes</p></div>
                 ) : (
                     <>
-                        {/* Versión móvil */}
                         <div className="md:hidden p-4 space-y-3">
                             {listaNinosFiltrada.map((nino) => (
-                                <div key={nino.id} onClick={() => verDetallePaciente(nino)} className="bg-white border-2 border-slate-200 rounded-2xl p-5 hover:border-blue-400 hover:shadow-lg transition-all active:scale-98 cursor-pointer">
+                                <div key={nino.id} onClick={() => verDetallePaciente(nino)} className="bg-white border-2 border-slate-200 rounded-2xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer">
                                     <div className="flex items-center gap-3 mb-3">
                                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg">{nino.name.charAt(0)}</div>
                                         <div className="flex-1"><h4 className="font-black text-slate-800 text-base">{nino.name}</h4></div>
@@ -1406,7 +1403,6 @@ function PatientsView() {
                             ))}
                         </div>
 
-                        {/* Versión desktop */}
                         <table className="hidden md:table w-full text-left border-collapse">
                             <thead className="bg-slate-50 sticky top-0 z-10">
                                 <tr className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
@@ -1423,7 +1419,7 @@ function PatientsView() {
                                         <td className="p-4 lg:p-6 lg:pl-10">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-md">{nino.name.charAt(0)}</div>
-                                                <div><span className="font-black text-slate-700 text-base block">{nino.name}</span></div>
+                                                <span className="font-black text-slate-700 text-base">{nino.name}</span>
                                             </div>
                                         </td>
                                         <td className="p-4 lg:p-6 text-slate-500 text-sm font-medium">
@@ -1436,7 +1432,7 @@ function PatientsView() {
                                         </td>
                                         <td className="p-4 lg:p-6"><span className="px-4 py-2 rounded-xl text-xs font-black bg-purple-50 text-purple-600 border border-purple-100 inline-block">{nino.diagnosis || "En evaluación"}</span></td>
                                         <td className="p-4 lg:p-6 text-right lg:pr-10">
-                                            <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> Ver perfil</button>
+                                            <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> Ver</button>
                                         </td>
                                     </tr>
                                 ))}
@@ -1446,11 +1442,9 @@ function PatientsView() {
                 )}
             </div>
 
-            {/* MODAL DETALLE / EDICIÓN */}
             {showPatientModal && selectedPatient && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-in">
-                        {/* Header del Modal */}
                         <div className={`p-6 text-white transition-colors ${isEditing ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-blue-600 to-blue-700'}`}>
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-4">
@@ -1459,7 +1453,7 @@ function PatientsView() {
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-black">{isEditing ? 'Editar Paciente' : selectedPatient.name}</h3>
-                                        <p className="text-white/80 text-sm font-bold">{isEditing ? 'Modificando datos del sistema' : (selectedPatient.diagnosis || "Diagnóstico pendiente")}</p>
+                                        <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || "Diagnóstico pendiente"}</p>
                                     </div>
                                 </div>
                                 <button onClick={() => {setShowPatientModal(false); setIsEditing(false)}} className="p-2 hover:bg-white/20 rounded-xl transition-colors"><X size={24}/></button>
@@ -1468,14 +1462,12 @@ function PatientsView() {
 
                         <div className="p-6 space-y-4">
                             {!isEditing ? (
-                                // MODO LECTURA
                                 <>
                                     <InfoRow label="Fecha de Nacimiento" value={selectedPatient.birth_date ? new Date(selectedPatient.birth_date).toLocaleDateString('es-PE') : "No registrada"} icon={<Calendar size={16}/>}/>
                                     <InfoRow label="Edad" value={selectedPatient.age ? `${selectedPatient.age} años` : "No disponible"} icon={<Baby size={16}/>}/>
                                     <InfoRow label="Diagnóstico" value={selectedPatient.diagnosis || "En evaluación"} icon={<Stethoscope size={16}/>}/>
                                 </>
                             ) : (
-                                // MODO EDICIÓN CON CÁLCULO AUTOMÁTICO
                                 <div className="space-y-4 animate-fade-in">
                                     <div>
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Completo</label>
@@ -1517,20 +1509,18 @@ function PatientsView() {
                                             <option value="TEA">TEA</option>
                                             <option value="TDAH">TDAH</option>
                                             <option value="Retraso del lenguaje">Retraso del lenguaje</option>
-                                            <option value="Otro">Otro</option>
                                         </select>
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Footer con Botones */}
                         <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
                             {!isEditing ? (
                                 <>
                                     <button onClick={() => setShowPatientModal(false)} className="flex-1 px-6 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-all">Cerrar</button>
                                     <button onClick={activarEdicion} className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-                                        <Edit size={18}/> Editar Perfil
+                                        <Edit size={18}/> Editar
                                     </button>
                                 </>
                             ) : (
@@ -1538,7 +1528,7 @@ function PatientsView() {
                                     <button onClick={() => setIsEditing(false)} disabled={isSaving} className="flex-1 px-6 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-all disabled:opacity-50">Cancelar</button>
                                     <button onClick={guardarCambios} disabled={isSaving} className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                                         {isSaving ? <Loader2 className="animate-spin" size={18}/> : <Save size={18}/>}
-                                        {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                                        {isSaving ? 'Guardando...' : 'Guardar'}
                                     </button>
                                 </>
                             )}
@@ -1550,9 +1540,8 @@ function PatientsView() {
     )
 }
 
-
 // ==============================================================================
-// VISTA: EVALUACIONES COMPLETAMENTE MEJORADA
+// VISTA: EVALUACIONES CON FORMULARIO ABA MEJORADO
 // ==============================================================================
 function DynamicEvaluationsView() {
   const [activeForm, setActiveForm] = useState<'aba' | 'anamnesis' | 'entorno_hogar' | null>(null);
@@ -1578,9 +1567,18 @@ function DynamicEvaluationsView() {
     setRespuestas({ ...respuestas, [id]: value });
   };
 
+  // 🆕 MANEJO DE MULTISELECT
+  const handleMultiselectChange = (id: string, option: string) => {
+    const current = respuestas[id] || [];
+    const newValue = current.includes(option)
+      ? current.filter((item: string) => item !== option)
+      : [...current, option];
+    setRespuestas({ ...respuestas, [id]: newValue });
+  };
+
   const handleGenerateEntornoIA = async () => {
     if (!respuestas['comportamiento_observado'] && !respuestas['barreras_identificadas']) {
-        return alert("⚠️ Falta información: describe el comportamiento observado o las barreras antes de usar IA.");
+        return alert("⚠️ Necesitas describir el comportamiento o las barreras antes de usar IA.");
     }
     
     setIsGenerating(true);
@@ -1596,7 +1594,6 @@ function DynamicEvaluationsView() {
                 interaccion_padres: respuestas['interaccion_padres'] || ''
             })
         });
-
         const data = await response.json();
         
         if (!response.ok || data.error) {
@@ -1611,12 +1608,10 @@ function DynamicEvaluationsView() {
             recomendaciones_rutinas: data.recomendaciones_rutinas,
             actividades_casa: data.actividades_sugeridas
         }));
-
-        alert("✨ ¡Análisis del entorno completado con IA!");
+        alert("✨ ¡Análisis completado!");
 
     } catch (e: any) {
-        console.error(e);
-        alert("Hubo un problema: " + e.message);
+        alert("Error: " + e.message);
     } finally {
         setIsGenerating(false);
     }
@@ -1624,7 +1619,7 @@ function DynamicEvaluationsView() {
 
   const handleGenerateGemini = async () => {
     if (!respuestas['conducta']) {
-        return alert("⚠️ Falta información: describe la 'Conducta' antes de solicitar el análisis.");
+        return alert("⚠️ Describe la 'Conducta' antes de solicitar análisis IA.");
     }
     
     setIsGenerating(true);
@@ -1635,35 +1630,31 @@ function DynamicEvaluationsView() {
             body: JSON.stringify({
                 antecedente: respuestas['antecedente'] || 'No especificado',
                 conducta: respuestas['conducta'],
-                consecuencia: respuestas['consecuencia'] || 'No especificado'
+                consecuencia: respuestas['consecuencia'] || 'No especificado',
+                // 🆕 Datos adicionales del nuevo formulario
+                objetivo_principal: respuestas['objetivo_principal'] || '',
+                habilidades_objetivo: respuestas['habilidades_objetivo'] || [],
+                avances_observados: respuestas['avances_observados'] || '',
+                areas_dificultad: respuestas['areas_dificultad'] || ''
             })
         });
-
         const data = await response.json();
         
         if (!response.ok || data.error) {
-            throw new Error(data.error || "Error al conectar con el servidor");
+            throw new Error(data.error || "Error al conectar");
         }
 
         setRespuestas((prev: any) => ({
             ...prev,
             mensaje_padres: data.mensaje_padres,          
-            observaciones_adicionales: data.observaciones_clinicas,
-            legacy_abc_analysis: data.analisis_abc,       
-            legacy_justification: data.justificacion,     
-            mentoring_notes: data.mentoring_interno,      
-            legacy_activity: data.actividad_realizada,    
-            legacy_red_flags: data.red_flags,             
-            legacy_barriers: data.barreras,               
-            legacy_home_task: data.tarea_hogar,
-            actividad_casa: data.tarea_hogar
+            observaciones_tecnicas: data.observaciones_clinicas,
+            alertas_clinicas: data.red_flags,
+            recomendaciones_equipo: data.mentoring_interno
         }));
-
-        alert("✨ ¡Análisis completado con IA!");
+        alert("✨ ¡Análisis IA completado!");
 
     } catch (e: any) {
-        console.error(e);
-        alert("Hubo un problema: " + e.message);
+        alert("Error: " + e.message);
     } finally {
         setIsGenerating(false);
     }
@@ -1672,25 +1663,25 @@ function DynamicEvaluationsView() {
   const handleSave = async () => {
     if (!selectedChild) return alert("Selecciona un paciente");
     setIsSaving(true);
-    
     const tabla = activeForm === 'anamnesis' ? 'anamnesis_completa' : 
                   activeForm === 'aba' ? 'registro_aba' :
                   activeForm === 'entorno_hogar' ? 'registro_entorno_hogar' : '';
     
     const dataToInsert = activeForm === 'entorno_hogar' ? 
       { child_id: selectedChild, fecha_visita: respuestas['fecha_visita'] || new Date().toISOString(), datos: respuestas } :
+      activeForm === 'aba' ? { child_id: selectedChild, fecha_sesion: respuestas['fecha_sesion'] || new Date().toISOString(), datos: respuestas } :
       { child_id: selectedChild, datos: respuestas };
-
+    
     const { error } = await supabase.from(tabla).insert([dataToInsert]);
     
     if (error) { 
-        alert("Error: " + error.message); 
+        alert("Error: " + error.message);
     } else { 
         alert("✅ ¡Guardado exitosamente!"); 
         setActiveForm(null); 
         setCurrentStep(0); 
         setRespuestas({}); 
-        setSelectedChild(''); 
+        setSelectedChild('');
     }
     setIsSaving(false);
   };
@@ -1706,10 +1697,9 @@ function DynamicEvaluationsView() {
     <div className="h-full w-full flex flex-col">
       {!activeForm ? (
         <div className="flex-1 flex items-center justify-center p-6">
-          {/* SELECTOR DE TIPO DE EVALUACIÓN - MEJORADO VISUALMENTE */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl w-full">
             
-            {/* Card ABA */}
+            {/* Card ABA MEJORADA */}
             <button 
               onClick={() => setActiveForm('aba')} 
               className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-purple-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
@@ -1726,19 +1716,20 @@ function DynamicEvaluationsView() {
                 </h3>
                 
                 <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                  Registro diario de sesiones con análisis conductual y generación IA
+                  Sistema completo con análisis ABC, métricas de desempeño y generación IA
                 </p>
 
-                <div className="flex items-center gap-2 mt-4">
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
                   <span className="px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-xs font-bold">
-                    4 Secciones
+                    10 Secciones
                   </span>
                   <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
-                    IA Integrada
+                    Métricas
+                  </span>
+                  <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
+                    IA Pro
                   </span>
                 </div>
-
-                <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-purple-200 rounded-full blur-3xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
               </div>
             </button>
 
@@ -1770,8 +1761,6 @@ function DynamicEvaluationsView() {
                     Completa
                   </span>
                 </div>
-
-                <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-blue-200 rounded-full blur-3xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
               </div>
             </button>
 
@@ -1803,14 +1792,12 @@ function DynamicEvaluationsView() {
                     IA Avanzada
                   </span>
                 </div>
-
-                <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-green-200 rounded-full blur-3xl opacity-0 group-hover:opacity-30 transition-opacity duration-500"></div>
               </div>
             </button>
           </div>
         </div>
       ) : (
-        // FORMULARIO ACTIVO - MEJORADO
+        // FORMULARIO ACTIVO
         <div className="bg-white rounded-3xl md:rounded-[2.5rem] shadow-2xl border border-slate-200 overflow-hidden flex flex-col h-full max-w-7xl mx-auto w-full my-2 md:my-4">
           
           {/* HEADER CON PROGRESO */}
@@ -1818,12 +1805,12 @@ function DynamicEvaluationsView() {
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-3 md:gap-4 overflow-hidden flex-1">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center font-black text-lg md:text-xl border border-white/20">
-                    {currentStep + 1}
+                     {currentStep + 1}
                   </div>
                   <div className="min-w-0 flex-1">
                       <p className="text-blue-300 text-[9px] md:text-[10px] font-black uppercase tracking-widest truncate mb-1">
                         {activeForm === 'anamnesis' ? '📋 EXPEDIENTE CLÍNICO' : 
-                         activeForm === 'aba' ? '🧠 PROTOCOLO ABA' : 
+                         activeForm === 'aba' ? '🧠 PROTOCOLO ABA MEJORADO' : 
                          '🏠 EVALUACIÓN DOMICILIARIA'}
                       </p>
                       <h2 className="text-base md:text-xl lg:text-2xl font-black truncate leading-tight">
@@ -1839,7 +1826,6 @@ function DynamicEvaluationsView() {
               </button>
             </div>
 
-            {/* Barra de progreso */}
             <div className="relative">
               <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
                 <div 
@@ -1856,31 +1842,32 @@ function DynamicEvaluationsView() {
           {/* CONTENIDO DEL FORMULARIO */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-50 to-white">
              <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
-                {/* Selector de Paciente - Mejorado */}
+                {/* Selector de Paciente */}
                 <div className="bg-white p-5 md:p-6 rounded-2xl md:rounded-3xl border-2 border-slate-200 shadow-sm hover:shadow-md transition-all">
                    <label className="text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest mb-3 ml-1 flex items-center gap-2">
                      <User size={16}/>
                      Seleccionar Paciente
                    </label>
                    <select 
-                     className="w-full p-4 md:p-5 bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl font-bold text-base md:text-lg text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all" 
+                      className="w-full p-4 md:p-5 bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl font-bold text-base md:text-lg text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all" 
                      value={selectedChild} 
                      onChange={(e) => setSelectedChild(e.target.value)}
                    >
                       <option value="">-- Buscar paciente --</option>
-                      {listaNinos.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                      {listaNinos.map(n=><option key={n.id} value={n.id}>{n.name}</option>)}
                    </select>
                 </div>
 
-                {/* Preguntas del Formulario - Mejoradas */}
+                {/* Preguntas del Formulario */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
                   {currentSection?.questions.map((q: any) => (
-                    <div key={q.id} className={`space-y-3 ${q.type === 'textarea' ? 'md:col-span-2' : ''}`}>
+                    <div key={q.id} className={`space-y-3 ${q.type === 'textarea' || q.type === 'multiselect' ? 'md:col-span-2' : ''}`}>
                       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                           <label className="text-sm md:text-base font-bold text-slate-700 ml-1 flex items-center gap-2">
                             {q.label}
-                            {q.id.includes('mensaje_padres') && (
-                              <span className="text-xs bg-green-50 text-green-600 px-2 py-0.5 rounded-full font-black">
+                            {q.required && <span className="text-red-500">*</span>}
+                            {q.aiGenerated && (
+                              <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-0.5 rounded-full font-black">
                                 IA
                               </span>
                             )}
@@ -1899,7 +1886,7 @@ function DynamicEvaluationsView() {
                                 ) : (
                                   <>
                                     <Sparkles size={14}/>
-                                    <span>Generar con IA</span>
+                                    <span>Generar IA</span>
                                   </>
                                 )}
                               </button>
@@ -1911,6 +1898,20 @@ function DynamicEvaluationsView() {
                         <input 
                           type="date" 
                           className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium" 
+                          value={respuestas[q.id] || ''}
+                          onChange={(e) => handleInputChange(q.id, e.target.value)} 
+                        />
+                      )}
+                      
+                      {/* Campo Number */}
+                      {q.type === 'number' && (
+                        <input 
+                          type="number"
+                          min={q.min}
+                          max={q.max}
+                          placeholder={q.placeholder}
+                          className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium" 
+                          value={respuestas[q.id] || ''}
                           onChange={(e) => handleInputChange(q.id, e.target.value)} 
                         />
                       )}
@@ -1920,6 +1921,7 @@ function DynamicEvaluationsView() {
                         <input 
                           className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium" 
                           placeholder={q.placeholder} 
+                          value={respuestas[q.id] || ''}
                           onChange={(e) => handleInputChange(q.id, e.target.value)} 
                         />
                       )}
@@ -1939,12 +1941,78 @@ function DynamicEvaluationsView() {
                         <div className="relative">
                             <select 
                               className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 appearance-none cursor-pointer font-medium pr-12" 
+                              value={respuestas[q.id] || ''}
                               onChange={(e) => handleInputChange(q.id, e.target.value)}
                             >
                                 <option value="">Seleccionar...</option>
                                 {q.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
                             </select>
                             <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20}/>
+                        </div>
+                      )}
+                      
+                      {/* 🆕 Campo Range (Escala 1-5) */}
+                      {q.type === 'range' && (
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-bold text-slate-500">
+                              {q.labels?.[0] || 'Mínimo'}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-3xl font-black text-blue-600">
+                                {respuestas[q.id] || q.min || 1}
+                              </span>
+                              <span className="text-sm text-slate-400">/ {q.max || 5}</span>
+                            </div>
+                            <span className="text-sm font-bold text-slate-500">
+                              {q.labels?.[q.labels.length - 1] || 'Máximo'}
+                            </span>
+                          </div>
+                          <input 
+                            type="range"
+                            min={q.min || 1}
+                            max={q.max || 5}
+                            step="1"
+                            value={respuestas[q.id] || q.min || 1}
+                            onChange={(e) => handleInputChange(q.id, parseInt(e.target.value))}
+                            className="w-full h-3 bg-slate-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:bg-blue-700"
+                          />
+                          {q.labels && (
+                            <p className="text-xs text-center font-bold text-slate-600 bg-blue-50 px-3 py-2 rounded-lg">
+                              {q.labels[respuestas[q.id] - 1] || q.labels[0]}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      
+                      {/* 🆕 Campo Multiselect */}
+                      {q.type === 'multiselect' && (
+                        <div className="space-y-2">
+                          <div className="flex flex-wrap gap-2">
+                            {q.options.map((opt: string) => (
+                              <label 
+                                key={opt}
+                                className={`px-4 py-2 rounded-xl border-2 cursor-pointer transition-all text-sm font-bold ${
+                                  (respuestas[q.id] || []).includes(opt)
+                                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
+                                    : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50'
+                                }`}
+                              >
+                                <input 
+                                  type="checkbox"
+                                  className="hidden"
+                                  checked={(respuestas[q.id] || []).includes(opt)}
+                                  onChange={() => handleMultiselectChange(q.id, opt)}
+                                />
+                                {opt}
+                              </label>
+                            ))}
+                          </div>
+                          {(respuestas[q.id] || []).length > 0 && (
+                            <p className="text-xs text-slate-500 font-bold">
+                              ✓ {(respuestas[q.id] || []).length} seleccionada(s)
+                            </p>
+                          )}
                         </div>
                       )}
                       
@@ -1955,7 +2023,7 @@ function DynamicEvaluationsView() {
                                 <label 
                                   key={opt} 
                                   className={`flex items-center gap-2 px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all text-sm md:text-base font-bold ${
-                                    respuestas[q.id] === opt 
+                                      respuestas[q.id] === opt 
                                       ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' 
                                       : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50'
                                   }`}
@@ -1965,6 +2033,7 @@ function DynamicEvaluationsView() {
                                       name={q.id} 
                                       value={opt} 
                                       className="hidden" 
+                                      checked={respuestas[q.id] === opt}
                                       onChange={(e) => handleInputChange(q.id, e.target.value)} 
                                     />
                                     <span>{opt}</span>
@@ -2012,7 +2081,7 @@ function DynamicEvaluationsView() {
                    ) : (
                      <>
                        <Save size={18}/>
-                       <span>Guardar Evaluación</span>
+                       <span>Guardar</span>
                      </>
                    )}
                  </button>
@@ -2025,7 +2094,7 @@ function DynamicEvaluationsView() {
 }
 
 // ==============================================================================
-// VISTA: HISTORIAL & IA - MEJORADA CON SCROLL Y REINICIO
+// VISTA: HISTORIAL & IA
 // ==============================================================================
 function AIReportView() {
   const [listaNinos, setListaNinos] = useState<any[]>([])
@@ -2044,19 +2113,16 @@ function AIReportView() {
     supabase.from('children').select('id, name').then(({ data }) => data && setListaNinos(data))
   }, [])
 
-  // 🆕 Auto-scroll del chat mejorado
   useEffect(() => {
     if (chatContainerRef.current) {
         chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [messages, typing])
 
-  // 🆕 REINICIAR CHAT AL CAMBIAR DE PACIENTE
   const handleSelectChild = async (childId: string) => {
     setSelectedChild(childId)
     setHistoryData({ anamnesis: null, aba: [], entorno: [] }) 
     
-    // 🆕 REINICIAR MENSAJES DEL CHAT
     setMessages([{ role: 'ai', text: 'Cargando historial del paciente...' }])
     
     const { data: anamnesis } = await supabase
@@ -2087,17 +2153,16 @@ function AIReportView() {
     
     const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
     
-    // 🆕 MENSAJE DE BIENVENIDA ACTUALIZADO
     setMessages([{ 
       role: 'ai', 
-      text: `✅ He cargado el historial completo de **${nombre}**.\n\n📊 Poseo:\n• ${aba?.length || 0} sesiones ABA registradas\n• ${entorno?.length || 0} visitas domiciliarias\n• ${anamnesis ? '1 anamnesis completa' : 'Sin anamnesis'}\n\n¿Qué deseas analizar?` 
+      text: `✅ He cargado el historial completo de **${nombre}**.\n\n📊 Poseo:\n• ${aba?.length || 0} sesiones ABA\n• ${entorno?.length || 0} visitas domiciliarias\n• ${anamnesis ? '1 anamnesis' : 'Sin anamnesis'}\n\n¿Qué deseas analizar?` 
     }])
   }
 
   const sendMessage = async () => {
     if(!input.trim()) return;
     if(!selectedChild) {
-        alert("Por favor selecciona un paciente primero.");
+        alert("Selecciona un paciente primero.");
         return;
     }
 
@@ -2105,7 +2170,6 @@ function AIReportView() {
     setMessages(prev => [...prev, { role: 'user', text }]);
     setInput('');
     setTyping(true);
-
     try {
         const response = await fetch('/api/admin-chat', {
             method: 'POST',
@@ -2120,7 +2184,7 @@ function AIReportView() {
         setMessages(prev => [...prev, { role: 'ai', text: data.text }]);
 
     } catch (error) {
-        setMessages(prev => [...prev, { role: 'ai', text: "❌ Error de conexión con el Asistente." }]);
+        setMessages(prev => [...prev, { role: 'ai', text: "❌ Error de conexión." }]);
     } finally {
         setTyping(false);
     }
@@ -2130,7 +2194,6 @@ function AIReportView() {
 
   return (
     <div className="h-full flex flex-col gap-4 md:gap-6 animate-fade-in-up overflow-hidden">
-      {/* HEADER CON SELECTOR */}
       <div className="bg-white p-4 md:p-6 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 flex-shrink-0">
         <h3 className="font-bold text-slate-700 text-lg md:text-xl flex items-center gap-2 md:gap-3 shrink-0">
           <div className="p-2 bg-purple-50 rounded-xl">
@@ -2151,27 +2214,27 @@ function AIReportView() {
       {selectedChild ? (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 overflow-hidden min-h-0">
             
-            {/* COL 1: ANAMNESIS - Solo desktop */}
+            {/* ANAMNESIS */}
             <div className="hidden xl:block xl:col-span-3 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col overflow-hidden">
                 <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-slate-100 font-extrabold text-slate-700 text-xs uppercase tracking-[0.2em] flex items-center gap-2 sticky top-0 z-10">
                     <FileText size={16} className="text-blue-600"/> Ficha de Ingreso
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
                     {historyData.anamnesis ? Object.entries(historyData.anamnesis).slice(0, 15).map(([key, value]: any) => (
-                        <div key={key} className="group hover:bg-slate-50 p-3 rounded-xl transition-all">
+                      <div key={key} className="group hover:bg-slate-50 p-3 rounded-xl transition-all">
                             <span className="text-[10px] font-black text-slate-400 uppercase block mb-1.5 tracking-wider">{key.replace(/_/g, ' ')}</span>
                             <p className="text-sm text-slate-700 font-bold leading-tight">{String(value)}</p>
-                        </div>
+                      </div>
                     )) : (
                         <div className="text-center py-20">
                             <FileText className="mx-auto text-slate-200 mb-3" size={48}/>
-                            <p className="text-xs text-slate-300 mt-2">No hay datos de anamnesis</p>
+                            <p className="text-xs text-slate-300 mt-2">No hay datos</p>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* COL 2: HISTORIAL - MEJORADO CON SCROLL */}
+            {/* HISTORIAL */}
             <div className="col-span-1 lg:col-span-7 xl:col-span-5 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col overflow-hidden">
                 <div className="p-4 md:p-6 bg-white border-b border-slate-100 flex justify-between items-center sticky top-0 z-10 shadow-sm">
                     <span className="font-bold text-slate-700 text-sm uppercase tracking-widest flex items-center gap-2">
@@ -2183,10 +2246,8 @@ function AIReportView() {
                     </span>
                 </div>
                 
-                {/* 🆕 CONTENEDOR CON SCROLL MEJORADO */}
                 <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-slate-50/50">
-                    {/* Visitas domiciliarias */}
-                    {historyData.entorno.map((visita: any) => {
+                   {historyData.entorno.map((visita: any) => {
                         const isExpanded = expandedCardId === `entorno-${visita.id}`
                         const d = visita.datos || {}
 
@@ -2212,15 +2273,15 @@ function AIReportView() {
                                     <div className="p-6 pt-0 border-t border-green-50 bg-white animate-fade-in">
                                         <div className="flex flex-col gap-4 mt-6">
                                             <DetailBox title="Personas Presentes" content={d.personas_presentes} icon={<Users size={14}/>} color="bg-blue-50 border-blue-100 text-blue-900" full/>
-                                            <DetailBox title="Comportamiento Observado" content={d.comportamiento_observado} icon={<Eye size={14}/>} color="bg-purple-50 border-purple-100 text-purple-900" full/>
-                                            <DetailBox title="Impresión General (IA)" content={d.impresion_general} icon={<Brain size={14}/>} color="bg-indigo-50 border-indigo-100 text-indigo-900" full/>
+                                            <DetailBox title="Comportamiento" content={d.comportamiento_observado} icon={<Eye size={14}/>} color="bg-purple-50 border-purple-100 text-purple-900" full/>
+                                            <DetailBox title="Impresión IA" content={d.impresion_general} icon={<Brain size={14}/>} color="bg-indigo-50 border-indigo-100 text-indigo-900" full/>
                                             
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <DetailBox title="Barreras" content={d.barreras_identificadas} icon={<ShieldAlert size={14}/>} color="bg-red-50 border-red-100 text-red-900"/>
                                                 <DetailBox title="Facilitadores" content={d.facilitadores} icon={<CheckCircle2 size={14}/>} color="bg-green-50 border-green-100 text-green-900"/>
                                             </div>
 
-                                            <DetailBox title="Mensaje para Padres (IA)" content={d.mensaje_padres_entorno} icon={<MessageCircle size={14}/>} color="bg-green-50 border-green-100 text-green-900" full/>
+                                            <DetailBox title="Mensaje Padres" content={d.mensaje_padres_entorno} icon={<MessageCircle size={14}/>} color="bg-green-50 border-green-100 text-green-900" full/>
                                         </div>
                                     </div>
                                 )}
@@ -2228,11 +2289,9 @@ function AIReportView() {
                         )
                     })}
 
-                    {/* Sesiones ABA */}
                     {historyData.aba.map((sesion: any) => {
                         const isExpanded = expandedCardId === `aba-${sesion.id}`
                         const d = sesion.datos || {}
-                        const hasAlerts = d.red_flags || d.legacy_red_flags;
 
                         return (
                             <div key={`aba-${sesion.id}`} className={`bg-white rounded-2xl md:rounded-[1.5rem] border-2 transition-all duration-300 ${isExpanded ? 'border-blue-400 shadow-xl ring-4 ring-blue-50' : 'border-slate-100 hover:border-blue-200'}`}>
@@ -2245,12 +2304,7 @@ function AIReportView() {
                                             <span className="text-xl font-black">{new Date(sesion.fecha_sesion).getDate() + 1}</span>
                                         </div>
                                         <div className="flex flex-col overflow-hidden">
-                                            <p className="text-sm font-black text-slate-700 truncate">{d.conducta || d.legacy_behavior_text || "Conducta"}</p>
-                                            {hasAlerts && (
-                                              <span className="text-[10px] text-red-600 font-black flex items-center gap-1 mt-1 bg-red-50 w-fit px-2 py-0.5 rounded-md uppercase tracking-tighter">
-                                                <AlertTriangle size={12}/> Alerta
-                                              </span>
-                                            )}
+                                            <p className="text-sm font-black text-slate-700 truncate">{d.conducta || "Sesión ABA"}</p>
                                         </div>
                                     </div>
                                     <div className={`p-2.5 rounded-full transition-all ${isExpanded ? 'bg-blue-600 text-white rotate-180' : 'bg-slate-50 text-slate-400'}`}>
@@ -2261,24 +2315,15 @@ function AIReportView() {
                                 {isExpanded && (
                                     <div className="p-6 pt-0 border-t border-slate-50 bg-white animate-fade-in">
                                         <div className="flex flex-col gap-4 mt-6">
-                                            <DetailBox title="Observaciones" content={d.legacy_observations || d.observaciones_adicionales} icon={<Eye size={14}/>} color="bg-slate-50 border-slate-100" full/>
-                                            <DetailBox title="ABC" content={d.legacy_abc_analysis || d.antecedente} icon={<Activity size={14}/>} color="bg-blue-50 border-blue-100 text-blue-900" full/>
-                                            <DetailBox title="Justificación" content={d.legacy_justification || d.justification} icon={<BookOpen size={14}/>} color="bg-purple-50 border-purple-100 text-purple-900" full/>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <DetailBox title="Mentoring" content={d.mentoring_notes} icon={<Brain size={14}/>} color="bg-indigo-50 border-indigo-100 text-indigo-900"/>
-                                                <DetailBox title="Actividad" content={d.legacy_activity} icon={<Sparkles size={14}/>} color="bg-cyan-50 border-cyan-100 text-cyan-900"/>
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <DetailBox title="Red Flags" content={d.legacy_red_flags || d.red_flags} icon={<AlertTriangle size={14}/>} color="bg-red-50 border-red-100 text-red-900"/>
-                                                <DetailBox title="Barreras" content={d.legacy_barriers || d.barriers} icon={<ShieldAlert size={14}/>} color="bg-orange-50 border-orange-100 text-orange-900"/>
-                                            </div>
+                                            <DetailBox title="Objetivo" content={d.objetivo_principal} icon={<Target size={14}/>} color="bg-blue-50 border-blue-100 text-blue-900" full/>
+                                            <DetailBox title="Observaciones" content={d.observaciones_tecnicas} icon={<Eye size={14}/>} color="bg-slate-50 border-slate-100" full/>
                                             
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <DetailBox title="Tarea Hogar" content={d.legacy_home_task || d.actividad_casa} icon={<Home size={14}/>} color="bg-yellow-50 border-yellow-100 text-yellow-900"/>
-                                                <DetailBox title="WhatsApp" content={d.legacy_whatsapp || d.mensaje_padres} icon={<MessageCircle size={14}/>} color="bg-green-50 border-green-100 text-green-900"/>
+                                                <DetailBox title="ABC" content={d.antecedente} icon={<Activity size={14}/>} color="bg-purple-50 border-purple-100 text-purple-900"/>
+                                                <DetailBox title="Intervención" content={d.estrategias_manejo} icon={<Zap size={14}/>} color="bg-orange-50 border-orange-100 text-orange-900"/>
                                             </div>
+
+                                            <DetailBox title="Mensaje WhatsApp" content={d.mensaje_padres} icon={<MessageCircle size={14}/>} color="bg-green-50 border-green-100 text-green-900" full/>
                                         </div>
                                     </div>
                                 )}
@@ -2287,37 +2332,34 @@ function AIReportView() {
                     })}
                     
                     {(historyData.aba.length === 0 && historyData.entorno.length === 0) && (
-                      <div className="h-full flex flex-col items-center justify-center text-slate-300 opacity-40 py-20">
+                      <div className="h-full flex flex-col items-center justify-center text-slate-300 py-20">
                         <History size={80} className="mb-6"/>
                         <p className="text-lg font-black uppercase tracking-[0.3em]">Sin Registros</p>
-                        <p className="text-sm mt-2">Los registros aparecerán aquí</p>
                       </div>
                     )}
                 </div>
             </div>
 
-            {/* COL 3: CHAT IA - CON SCROLL MEJORADO */}
-            <div className="col-span-1 lg:col-span-5 xl:col-span-4 bg-white rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-200 flex flex-col overflow-hidden ring-1 ring-black/5 relative">
-                <div className="p-4 md:p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex justify-between items-center shadow-lg relative z-10">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+            {/* CHAT IA */}
+            <div className="col-span-1 lg:col-span-5 xl:col-span-4 bg-white rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+                <div className="p-4 md:p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex justify-between items-center shadow-lg">
+                   <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
                           <Sparkles size={22}/>
                         </div>
                         <div>
-                            <span className="font-black text-sm uppercase tracking-widest block">Asistente IA</span>
-                            <span className="text-[10px] text-green-400 font-bold uppercase animate-pulse flex items-center gap-1">
-                              <div className="w-1.5 h-1.5 bg-green-400 rounded-full"></div> 
+                            <span className="font-black text-sm uppercase tracking-widest">Asistente IA</span>
+                            <span className="text-[10px] text-green-400 font-bold uppercase flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div> 
                               Gemini v4.0
                             </span>
                         </div>
                     </div>
                 </div>
                 
-                {/* 🆕 CONTENEDOR DE CHAT CON SCROLL MEJORADO */}
                 <div 
                   className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-5 bg-gradient-to-br from-slate-50 to-white" 
                   ref={chatContainerRef}
-                  style={{ scrollBehavior: 'smooth' }}
                 >
                     {messages.map((m, i) => (
                         <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
@@ -2346,8 +2388,7 @@ function AIReportView() {
                     )}
                 </div>
 
-                {/* INPUT DE CHAT */}
-                <div className="p-4 md:p-5 border-t-2 border-slate-200 bg-white flex gap-3 shadow-[0_-10px_20px_rgba(0,0,0,0.02)]">
+                <div className="p-4 md:p-5 border-t-2 border-slate-200 bg-white flex gap-3 shadow-lg">
                     <input 
                         className="flex-1 bg-slate-100 border-2 border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all" 
                         placeholder="Pregunta sobre evolución..."
@@ -2358,7 +2399,7 @@ function AIReportView() {
                     <button 
                       onClick={sendMessage} 
                       disabled={!input.trim()}
-                      className="p-4 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl hover:scale-105 active:scale-95 transition shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-4 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl hover:scale-105 active:scale-95 transition shadow-xl disabled:opacity-50"
                     >
                       <Send size={20}/>
                     </button>
@@ -2369,7 +2410,6 @@ function AIReportView() {
           <div className="flex flex-col items-center justify-center h-full text-slate-300 py-40">
               <Brain size={120} className="mb-8 text-slate-200"/>
               <p className="text-2xl font-black uppercase tracking-[0.4em] text-slate-300">Seleccionar Paciente</p>
-              <p className="text-sm text-slate-400 mt-2 font-bold tracking-widest">Análisis multidimensional con IA</p>
           </div>
       )}
     </div>
@@ -2380,11 +2420,10 @@ function DetailBox({ title, content, icon, color, full }: any) {
     const safeContent = content ? String(content) : ""; 
     const isEmpty = safeContent === "" || safeContent === "undefined";
     const finalStyle = isEmpty ? "bg-slate-50 border-slate-100 text-slate-400" : color;
-    const finalIcon = isEmpty ? "opacity-30 grayscale" : "";
 
     return (
         <div className={`p-4 rounded-2xl border ${finalStyle} shadow-sm transition-all ${full ? 'w-full' : ''}`}>
-            <p className={`font-black uppercase mb-2 flex items-center gap-2 text-[10px] tracking-widest ${finalIcon}`}>
+            <p className={`font-black uppercase mb-2 flex items-center gap-2 text-[10px] tracking-widest`}>
               {icon} {title}
             </p>
             <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">
@@ -2393,8 +2432,9 @@ function DetailBox({ title, content, icon, color, full }: any) {
         </div>
     )
 }
+
 // ==============================================================================
-// VISTA: CALENDARIO CON BOTÓN DE BORRAR AGREGADO
+// VISTA: CALENDARIO
 // ==============================================================================
 function MonthlyCalendarView() {
     const [apts, setApts] = useState<any[]>([])
@@ -2424,24 +2464,21 @@ function MonthlyCalendarView() {
         if (data) setApts(data)
     }
 
-    // 🆕 FUNCIÓN NUEVA: ELIMINAR CITA
     const eliminarCita = async (id: string, e: any) => {
-        e.stopPropagation(); // Evita que se abra la tarjeta al hacer click en borrar
-        
-        if (!confirm("¿Estás segura de que deseas ELIMINAR esta cita?")) return;
+        e.stopPropagation();
+        if (!confirm("¿Eliminar esta cita?")) return;
 
         try {
             const { error } = await supabase
                 .from('appointments')
                 .delete()
                 .eq('id', id);
-
             if (error) throw error;
 
-            alert("🗑️ Cita eliminada correctamente");
-            cargarCitas(); // Recargar la lista visualmente
+            alert("🗑️ Cita eliminada");
+            cargarCitas();
         } catch (error: any) {
-            alert("❌ Error al eliminar: " + error.message);
+            alert("❌ Error: " + error.message);
         }
     }
     
@@ -2466,7 +2503,7 @@ function MonthlyCalendarView() {
 
             const { error } = await supabase.from('appointments').insert(citas)
             if (!error) {
-                alert(`✅ Sesión grupal agendada para ${selectedParticipants.length} niños`)
+                alert(`✅ Sesión grupal agendada`)
                 resetForm()
                 cargarCitas()
             } else {
@@ -2479,14 +2516,14 @@ function MonthlyCalendarView() {
                 appointment_time: newApt.time,
                 service_type: newApt.service,
                 is_group: false
-            }])
+             }])
             
             if (!error) {
-                alert("✅ Cita agendada exitosamente")
+                alert("✅ Cita agendada")
                 resetForm()
                 cargarCitas()
             } else {
-                alert("Error: " + error.message)
+               alert("Error: " + error.message)
             }
         }
     }
@@ -2522,7 +2559,7 @@ function MonthlyCalendarView() {
                         <Calendar className="text-blue-600" size={32}/>
                         Calendario de Citas
                     </h2>
-                    <p className="text-slate-400 text-xs md:text-sm font-bold tracking-wide mt-1">
+                    <p className="text-slate-400 text-xs md:text-sm font-bold mt-1">
                         {apts.length} citas programadas
                     </p>
                 </div>
@@ -2538,24 +2575,21 @@ function MonthlyCalendarView() {
             <div className="flex-1 p-4 md:p-6 lg:p-10 overflow-y-auto bg-gradient-to-br from-slate-50 to-white">
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                     {apts.map(a => (
-                        <div key={a.id} className="bg-white p-6 md:p-8 rounded-2xl md:rounded-[2rem] border-2 border-slate-100 hover:border-blue-400 hover:shadow-2xl transition-all group cursor-pointer relative">
-                            
+                        <div key={a.id} className="bg-white p-6 md:p-8 rounded-2xl md:rounded-[2rem] border-2 border-slate-100 hover:border-blue-400 hover:shadow-2xl transition-all group relative">
                             <div className="flex justify-between items-start mb-4 md:mb-6">
-                                <span className={`text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 md:py-1.5 rounded-full uppercase tracking-widest transition-colors ${
+                                <span className={`text-[9px] md:text-[10px] font-black px-2 md:px-3 py-1 md:py-1.5 rounded-full uppercase tracking-widest ${
                                         a.is_group 
-                                        ? 'bg-purple-50 text-purple-600 border border-purple-100 group-hover:bg-purple-600 group-hover:text-white' 
-                                        : 'bg-blue-50 text-blue-600 border border-blue-100 group-hover:bg-blue-600 group-hover:text-white'
+                                        ? 'bg-purple-50 text-purple-600 border border-purple-100' 
+                                        : 'bg-blue-50 text-blue-600 border border-blue-100'
                                 }`}>
-                                    {a.is_group ? '👥 Grupal' : a.service_type || 'Sesión'}
+                                 {a.is_group ? '👥 Grupal' : a.service_type || 'Sesión'}
                                 </span>
                                 
-                                {/* 🆕 BOTÓN DE BORRAR INTEGRADO AQUÍ */}
                                 <button 
                                     onClick={(e) => eliminarCita(a.id, e)}
-                                    className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all z-20"
-                                    title="Eliminar cita"
+                                    className="p-2 rounded-xl bg-slate-50 text-slate-400 hover:text-red-500 hover:bg-red-50 border border-transparent hover:border-red-100 transition-all"
                                 >
-                                     <Trash2 size={18} className="md:w-5 md:h-5"/>
+                                     <Trash2 size={18}/>
                                 </button>
                             </div>
                             
@@ -2569,8 +2603,8 @@ function MonthlyCalendarView() {
                                 </p>
                             )}
                             
-                            <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-slate-50 flex items-center gap-2 md:gap-3 text-slate-400 font-bold text-[10px] md:text-xs uppercase tracking-tighter">
-                                <Clock size={16} className="md:w-[18px] md:h-[18px] text-blue-500"/>
+                            <div className="mt-4 md:mt-6 pt-4 md:pt-6 border-t border-slate-50 flex items-center gap-2 md:gap-3 text-slate-400 font-bold text-[10px] md:text-xs uppercase">
+                                <Clock size={16}/>
                                 <span>{a.appointment_date} • {a.appointment_time?.slice(0,5)}</span>
                             </div>
                         </div>
@@ -2586,19 +2620,17 @@ function MonthlyCalendarView() {
                 </div>
             </div>
 
-            {/* MODAL (Sin cambios) */}
             {show && (
                 <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-6">
                     <div className="bg-white p-6 md:p-10 rounded-3xl md:rounded-[3rem] w-full max-w-2xl shadow-2xl animate-scale-in max-h-[90vh] overflow-y-auto">
                         <div className="flex justify-between items-center mb-6 md:mb-10">
-                            <h3 className="font-black text-xl md:text-2xl text-slate-800 tracking-tight">Nueva Cita</h3>
+                            <h3 className="font-black text-xl md:text-2xl text-slate-800">Nueva Cita</h3>
                             <button onClick={resetForm} className="p-2 rounded-full hover:bg-slate-100">
-                                <X size={20} className="md:w-6 md:h-6"/>
+                                <X size={20}/>
                             </button>
                         </div>
 
                         <div className="space-y-6">
-                            {/* SELECTOR DE TIPO DE SESIÓN */}
                             <div className="space-y-3">
                                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">
                                     Tipo de Sesión
@@ -2627,7 +2659,6 @@ function MonthlyCalendarView() {
                                 </div>
                             </div>
 
-                            {/* SESIÓN INDIVIDUAL */}
                             {tipoSesion === 'individual' && (
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">
@@ -2644,16 +2675,15 @@ function MonthlyCalendarView() {
                                 </div>
                             )}
 
-                            {/* SESIÓN GRUPAL */}
                             {tipoSesion === 'grupal' && (
                                 <>
                                     <div className="space-y-2">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">
-                                            Nombre del Grupo (Opcional)
+                                              Nombre del Grupo
                                         </label>
                                         <input
                                             type="text"
-                                            placeholder="Ej: Grupo de habilidades sociales"
+                                            placeholder="Ej: Grupo habilidades sociales"
                                             className="w-full p-5 bg-slate-50 border-2 border-slate-200 rounded-2xl text-sm font-bold outline-none focus:ring-4 focus:ring-purple-100 focus:border-purple-500 transition-all"
                                             onChange={e=>setNewApt({...newApt, group_name: e.target.value})}
                                         />
@@ -2661,7 +2691,7 @@ function MonthlyCalendarView() {
 
                                     <div className="space-y-3">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">
-                                            Participantes ({selectedParticipants.length} seleccionados)
+                                            Participantes ({selectedParticipants.length})
                                         </label>
                                         <div className="max-h-64 overflow-y-auto bg-slate-50 rounded-2xl p-4 border-2 border-slate-200">
                                             <div className="space-y-2">
@@ -2681,8 +2711,8 @@ function MonthlyCalendarView() {
                                                             onChange={() => toggleParticipant(n.id)}
                                                         />
                                                         <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center ${
-                                                          selectedParticipants.includes(n.id) 
-                                                            ? 'bg-white border-white' 
+                                                            selectedParticipants.includes(n.id) 
+                                                                ? 'bg-white border-white' 
                                                                 : 'border-slate-300'
                                                         }`}>
                                                             {selectedParticipants.includes(n.id) && (
@@ -2698,7 +2728,6 @@ function MonthlyCalendarView() {
                                 </>
                             )}
 
-                            {/* FECHA Y HORA */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div className="space-y-2">
                                     <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">
@@ -2724,7 +2753,6 @@ function MonthlyCalendarView() {
                                 </div>
                             </div>
 
-                            {/* BOTONES */}
                             <div className="pt-6 flex gap-4">
                                 <button 
                                     onClick={resetForm} 
@@ -2740,7 +2768,7 @@ function MonthlyCalendarView() {
                                             : 'bg-purple-600 text-white shadow-purple-200 hover:bg-purple-700'
                                     }`}
                                 >
-                                    {tipoSesion === 'individual' ? 'Agendar Cita' : `Agendar Sesión Grupal`}
+                                    {tipoSesion === 'individual' ? 'Agendar' : `Agendar Grupal`}
                                 </button>
                             </div>
                         </div>
@@ -2752,7 +2780,7 @@ function MonthlyCalendarView() {
 }
 
 // ==============================================================================
-// VISTA: IMPORTACIÓN EXCEL - SIN CAMBIOS
+// VISTA: IMPORTACIÓN EXCEL
 // ==============================================================================
 function ExcelImportView() {
   const [listaNinos, setListaNinos] = useState<any[]>([])
@@ -2776,7 +2804,6 @@ function ExcelImportView() {
         const wb = XLSX.read(bstr, { type: 'array', codepage: 65001 });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rawData = XLSX.utils.sheet_to_json(ws);
-        
         const recordsToInsert = rawData.map((row: any) => {
             const c: any = {}; 
             Object.keys(row).forEach(k => c[k.trim()] = row[k]);
@@ -2802,7 +2829,7 @@ function ExcelImportView() {
         if (error) throw error;
         alert("✅ ¡Carga exitosa!");
       } catch (err: any) { 
-        alert("Error: " + err.message); 
+        alert("Error: " + err.message);
       } finally { 
         setImporting(false); 
       }
@@ -2853,7 +2880,7 @@ function ExcelImportView() {
                <span className="text-lg font-black text-slate-600">
                  {importing ? 'Sincronizando...' : 'Seleccionar Archivo'}
                </span>
-               <span className="text-xs text-slate-400 mt-2 font-bold uppercase tracking-tighter">
+               <span className="text-xs text-slate-400 mt-2 font-bold uppercase">
                  CSV (UTF-8) o XLSX
                </span>
             </div>
