@@ -345,9 +345,10 @@ const ENTORNO_HOGAR_DATA = [
   },
   {
     title: "10. Análisis e Impresión General (IA Asistida)",
+    hasIA: true,
     questions: [
       { id: "impresion_general", label: "Impresión General del Entorno", type: "textarea", placeholder: "Resumen de la visita y evaluación global..." },
-      { id: "mensaje_padres_entorno", label: "Mensaje para los Padres (Generado por IA)", type: "textarea", placeholder: "Este campo puede ser generado por IA..." },
+      { id: "mensaje_padres_entorno", label: "Mensaje para los Padres (Generado por IA)", type: "textarea", placeholder: "Este campo puede ser generado por IA...", aiGenerated: true },
       { id: "seguimiento_requerido", label: "¿Requiere seguimiento o nueva visita?", type: "radio", options: ["Sí, en 1 mes", "Sí, en 3 meses", "No necesario por ahora"] },
     ]
   }
@@ -796,7 +797,6 @@ function calcularEdadNumerica(birthDate: string | null): number {
   }
   return age
 }
-
 // ==============================================================================
 // 2. COMPONENTE PRINCIPAL
 // ==============================================================================
@@ -1991,7 +1991,6 @@ function PatientsView() {
         </div>
     )
 }
-
 // ==============================================================================
 // VISTA: EVALUACIONES CON FORMULARIO ABA MEJORADO
 // ==============================================================================
@@ -2009,13 +2008,13 @@ function DynamicEvaluationsView() {
   }, []);
 
   const formConfig = activeForm === 'anamnesis' ? ANAMNESIS_DATA : 
-                     activeForm === 'aba' ? ABA_DATA : 
-                     activeForm === 'entorno_hogar' ? ENTORNO_HOGAR_DATA :
-                     activeForm === 'brief2' ? BRIEF2_DATA :
-                     activeForm === 'ados2' ? ADOS2_DATA :
-                     activeForm === 'vineland3' ? VINELAND3_DATA :
-                     activeForm === 'wiscv' ? WISCV_DATA :
-                     activeForm === 'basc3' ? BASC3_DATA : null;
+                      activeForm === 'aba' ? ABA_DATA : 
+                      activeForm === 'entorno_hogar' ? ENTORNO_HOGAR_DATA :
+                      activeForm === 'brief2' ? BRIEF2_DATA :
+                      activeForm === 'ados2' ? ADOS2_DATA :
+                      activeForm === 'vineland3' ? VINELAND3_DATA :
+                      activeForm === 'wiscv' ? WISCV_DATA :
+                      activeForm === 'basc3' ? BASC3_DATA : null;
   const currentSection = formConfig ? formConfig[currentStep] : null;
   const totalSteps = formConfig ? formConfig.length : 0;
   const progress = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;
@@ -2033,89 +2032,60 @@ function DynamicEvaluationsView() {
     setRespuestas({ ...respuestas, [id]: newValue });
   };
 
-  const handleGenerateEntornoIA = async () => {
-    if (!respuestas['comportamiento_observado'] && !respuestas['barreras_identificadas']) {
-        return alert("⚠️ Necesitas describir el comportamiento o las barreras antes de usar IA.");
-    }
-    
-    setIsGenerating(true);
-    try {
-        const response = await fetch('/api/generate-home-environment-report', {
+  // Lógica Genérica para IA en cualquier formulario (excepto Anamnesis)
+  const handleGenerateUniversalIA = async () => {
+     // Validación básica
+     const hasEnoughData = Object.keys(respuestas).length > 2;
+     if (!hasEnoughData) {
+         return alert("⚠️ Por favor responde algunas preguntas antes de generar con IA.");
+     }
+
+     setIsGenerating(true);
+     try {
+        // Determinamos el endpoint según el tipo de formulario
+        let endpoint = '/api/generate-session-report'; // Default ABA
+        let bodyPayload: any = { ...respuestas };
+
+        if (activeForm === 'entorno_hogar') {
+            endpoint = '/api/generate-home-environment-report';
+        } else if (['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].includes(activeForm || '')) {
+             endpoint = '/api/analyze-professional-evaluation'; // Endpoint genérico para profesionales
+             const { data: child } = await supabase.from('children').select('name, age').eq('id', selectedChild).single();
+             bodyPayload = {
+                 evaluationType: activeForm,
+                 responses: respuestas,
+                 childName: child?.name || 'Paciente',
+                 childAge: child?.age || 0
+             }
+        }
+
+        const response = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                comportamiento_observado: respuestas['comportamiento_observado'] || '',
-                barreras_identificadas: respuestas['barreras_identificadas'] || '',
-                facilitadores: respuestas['facilitadores'] || '',
-                rutina_diaria: respuestas['rutina_diaria'] || '',
-                interaccion_padres: respuestas['interaccion_padres'] || ''
-            })
+            body: JSON.stringify(bodyPayload)
         });
+        
         const data = await response.json();
         
         if (!response.ok || data.error) {
-            throw new Error(data.error || "Error al conectar con el servidor");
+            throw new Error(data.error || "Error al conectar con el servidor IA");
         }
 
+        // Mapeamos la respuesta de la IA al estado (mezclamos con lo existente)
         setRespuestas((prev: any) => ({
             ...prev,
-            impresion_general: data.impresion_general,
-            mensaje_padres_entorno: data.mensaje_padres,
-            recomendaciones_espacio: data.recomendaciones_espacio,
-            recomendaciones_rutinas: data.recomendaciones_rutinas,
-            actividades_casa: data.actividades_sugeridas
+            ...data // Asume que la API devuelve las keys correctas que coinciden con los IDs del form
         }));
-        alert("✨ ¡Análisis completado!");
-
-    } catch (e: any) {
-        alert("Error: " + e.message);
-    } finally {
-        setIsGenerating(false);
-    }
-  };
-
-  const handleGenerateGemini = async () => {
-    if (!respuestas['conducta']) {
-        return alert("⚠️ Describe la 'Conducta' antes de solicitar análisis IA.");
-    }
-    
-    setIsGenerating(true);
-    try {
-        const response = await fetch('/api/generate-session-report', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                antecedente: respuestas['antecedente'] || 'No especificado',
-                conducta: respuestas['conducta'],
-                consecuencia: respuestas['consecuencia'] || 'No especificado',
-                // 🆕 Datos adicionales del nuevo formulario
-                objetivo_principal: respuestas['objetivo_principal'] || '',
-                habilidades_objetivo: respuestas['habilidades_objetivo'] || [],
-                avances_observados: respuestas['avances_observados'] || '',
-                areas_dificultad: respuestas['areas_dificultad'] || ''
-            })
-        });
-        const data = await response.json();
         
-        if (!response.ok || data.error) {
-            throw new Error(data.error || "Error al conectar");
-        }
-
-        setRespuestas((prev: any) => ({
-            ...prev,
-            mensaje_padres: data.mensaje_padres,          
-            observaciones_tecnicas: data.observaciones_clinicas,
-            alertas_clinicas: data.red_flags,
-            recomendaciones_equipo: data.mentoring_interno
-        }));
         alert("✨ ¡Análisis IA completado!");
 
-    } catch (e: any) {
-        alert("Error: " + e.message);
-    } finally {
+     } catch (e: any) {
+        alert("Error IA: " + e.message);
+     } finally {
         setIsGenerating(false);
-    }
-  };
+     }
+  }
+
 
   const handleSave = async () => {
     if (!selectedChild) return alert("Selecciona un paciente");
@@ -2142,34 +2112,11 @@ function DynamicEvaluationsView() {
         // Aquí usa la constante que agregamos arriba
         tabla = FORM_TABLE_MAPPING[activeForm as keyof typeof FORM_TABLE_MAPPING];
         
-        // Obtener datos del niño para la IA
-        const { data: child } = await supabase.from('children').select('name, age').eq('id', selectedChild).single();
-        
-        // Llamada a la IA (mantenemos tu lógica original de IA)
-        const analysisResponse = await fetch('/api/analyze-professional-evaluation', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            evaluationType: activeForm,
-            responses: respuestas,
-            childName: child?.name || 'Paciente',
-            childAge: child?.age || 0
-          })
-        });
-        
-        const analysisResult = await analysisResponse.json();
-        if (!analysisResponse.ok) throw new Error(analysisResult.error || 'Error en análisis IA');
-        
         dataToInsert = {
           child_id: selectedChild,
           fecha_evaluacion: respuestas[Object.keys(respuestas).find(k => k.includes('fecha')) || ''] || new Date().toISOString(),
-          datos: { ...respuestas, ...analysisResult },
-          metricas: analysisResult.metricas,
-          // Mapeo de campos dinámicos de IA
-          ...(analysisResult.puntuacion_total && { puntuacion_total: analysisResult.puntuacion_total }),
-          ...(analysisResult.nivel_severidad && { nivel_severidad: analysisResult.nivel_severidad }),
-          ...(analysisResult.ci_total && { ci_total: analysisResult.ci_total }),
-          ...(analysisResult.indice_conducta_adaptativa && { indice_conducta_adaptativa: analysisResult.indice_conducta_adaptativa })
+          datos: respuestas,
+          // Si tu tabla tiene columnas específicas para métricas, añádelas aquí
         };
       }
       
@@ -2198,36 +2145,20 @@ function DynamicEvaluationsView() {
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl w-full">
             
-            {/* Card ABA MEJORADA */}
+            {/* Card ABA */}
             <button 
               onClick={() => setActiveForm('aba')} 
               className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-purple-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
               <div className="relative z-10 flex flex-col items-center">
                 <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-purple-200">
                    <Activity size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
                 </div>
-                
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
-                  Registro ABA
-                </h3>
-                
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                  Sistema completo con análisis ABC, métricas de desempeño y generación IA
-                </p>
-
+                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">Registro ABA</h3>
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">Sistema completo con análisis ABC y métricas</p>
                 <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-                  <span className="px-3 py-1 bg-purple-50 text-purple-600 rounded-full text-xs font-bold">
-                    10 Secciones
-                  </span>
-                  <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
-                    Métricas
-                  </span>
-                  <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
-                    IA Pro
-                  </span>
+                  <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">IA Pro</span>
                 </div>
               </div>
             </button>
@@ -2238,28 +2169,12 @@ function DynamicEvaluationsView() {
               className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-blue-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
               <div className="relative z-10 flex flex-col items-center">
                 <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-blue-200">
                    <FileText size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
                 </div>
-                
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
-                  Anamnesis
-                </h3>
-                
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                  Expediente completo de admisión con historia clínica detallada
-                </p>
-
-                <div className="flex items-center gap-2 mt-4">
-                  <span className="px-3 py-1 bg-blue-50 text-blue-600 rounded-full text-xs font-bold">
-                    10 Secciones
-                  </span>
-                  <span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold">
-                    Completa
-                  </span>
-                </div>
+                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">Anamnesis</h3>
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">Expediente completo de admisión</p>
               </div>
             </button>
 
@@ -2269,31 +2184,19 @@ function DynamicEvaluationsView() {
               className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-green-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              
               <div className="relative z-10 flex flex-col items-center">
                 <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-green-500 to-green-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-green-200">
                    <Home size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
                 </div>
-                
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
-                  Entorno Hogar
-                </h3>
-                
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                  Análisis domiciliario con recomendaciones personalizadas por IA
-                </p>
-
-                <div className="flex items-center gap-2 mt-4">
-                  <span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold">
-                    10 Secciones
-                  </span>
-                  <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
-                    IA Avanzada
-                  </span>
+                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">Entorno Hogar</h3>
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">Análisis domiciliario</p>
+                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                  <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">IA Avanzada</span>
                 </div>
               </div>
             </button>
 
+            {/* Cards Dinámicas - AQUÍ ESTABA EL ERROR DE DUPLICIDAD, YA CORREGIDO */}
             {['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].map((type) => (
               <button 
                 key={type}
@@ -2312,7 +2215,7 @@ function DynamicEvaluationsView() {
                   </h3>
                   
                   <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                     evalúa la aptitud intelectual y el funcionamiento cognitivo en niños y adolescentes de 6 a 16 años y 11 meses
+                      Evaluación profesional estandarizada
                   </p>
 
                   <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
@@ -2327,160 +2230,6 @@ function DynamicEvaluationsView() {
               </button>
             ))}
 
-            {/* Card BRIEF-2 */}
-            <button 
-                onClick={() => setActiveForm('brief2')} 
-                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-indigo-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
-            >
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10 flex flex-col items-center">
-                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-indigo-200">
-                    <Brain size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
-                </div>
-                
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
-                BRIEF-2
-                </h3>
-                
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                Inventario de Funciones Ejecutivas - Evalúa inhibición, flexibilidad, memoria y planificación
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-                <span className="px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-xs font-bold">
-                    Neuropsicología
-                </span>
-                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
-                    IA Análisis
-                </span>
-                </div>
-            </div>
-            </button>
-
-            {/* Card ADOS-2 */}
-            <button 
-                onClick={() => setActiveForm('ados2')} 
-                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-teal-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
-            >
-            <div className="absolute inset-0 bg-gradient-to-br from-teal-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10 flex flex-col items-center">
-                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-teal-500 to-teal-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-teal-200">
-                    <Eye size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
-                </div>
-                
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
-                ADOS-2
-                </h3>
-                
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                Escala Diagnóstica de Autismo - Gold standard para diagnóstico TEA
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-                <span className="px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-xs font-bold">
-                    Diagnóstico
-                </span>
-                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
-                    IA Pro
-                </span>
-                </div>
-            </div>
-            </button>
-
-            {/* Card Vineland-3 */}
-            <button 
-                onClick={() => setActiveForm('vineland3')} 
-                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-emerald-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
-            >
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10 flex flex-col items-center">
-                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-emerald-200">
-                    <Users size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
-                </div>
-                
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
-                Vineland-3
-                </h3>
-                
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                Conducta Adaptativa - Mide autonomía en comunicación, vida diaria y socialización
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-                <span className="px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-xs font-bold">
-                    Autonomía
-                </span>
-                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
-                    IA Análisis
-                </span>
-                </div>
-            </div>
-            </button>
-
-            {/* Card WISC-V */}
-            <button 
-                onClick={() => setActiveForm('wiscv')} 
-                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-violet-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
-            >
-            <div className="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10 flex flex-col items-center">
-                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-violet-500 to-violet-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-violet-200">
-                    <Brain size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
-                </div>
-                
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
-                WISC-V
-                </h3>
-                
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                Escala de Inteligencia - Evalúa CI y perfil cognitivo completo
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-                <span className="px-3 py-1 bg-violet-50 text-violet-600 rounded-full text-xs font-bold">
-                    CI Total
-                </span>
-                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
-                    IA Pro
-                </span>
-                </div>
-            </div>
-            </button>
-
-            {/* Card BASC-3 */}
-            <button 
-                onClick={() => setActiveForm('basc3')} 
-                className="group relative bg-white rounded-3xl md:rounded-[2.5rem] border-2 border-slate-100 hover:border-rose-400 hover:shadow-2xl transition-all duration-300 p-8 md:p-12 flex flex-col items-center justify-center text-center h-[320px] md:h-[420px] overflow-hidden"
-            >
-            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10 flex flex-col items-center">
-                <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-rose-500 to-rose-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-rose-200">
-                    <Heart size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
-                </div>
-                
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">
-                BASC-3
-                </h3>
-                
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                Evaluación Conductual - Mide problemas emocionales, conductuales y habilidades adaptativas
-                </p>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
-                <span className="px-3 py-1 bg-rose-50 text-rose-600 rounded-full text-xs font-bold">
-                    Conductual
-                </span>
-                <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">
-                    IA Análisis
-                </span>
-                </div>
-            </div>
-            </button>
           </div>
         </div>
       ) : (
@@ -2496,9 +2245,7 @@ function DynamicEvaluationsView() {
                   </div>
                   <div className="min-w-0 flex-1">
                       <p className="text-blue-300 text-[9px] md:text-[10px] font-black uppercase tracking-widest truncate mb-1">
-                        {activeForm === 'anamnesis' ? '📋 EXPEDIENTE CLÍNICO' : 
-                         activeForm === 'aba' ? '🧠 PROTOCOLO ABA MEJORADO' : 
-                         '🏠 EVALUACIÓN DOMICILIARIA'}
+                        EVALUACIÓN EN CURSO
                       </p>
                       <h2 className="text-base md:text-xl lg:text-2xl font-black truncate leading-tight">
                         {currentSection?.title}
@@ -2520,15 +2267,29 @@ function DynamicEvaluationsView() {
                   style={{ width: `${progress}%` }}
                 ></div>
               </div>
-              <p className="text-xs text-blue-200 font-bold mt-2 text-center">
-                Sección {currentStep + 1} de {totalSteps} • {Math.round(progress)}% completado
-              </p>
             </div>
           </div>
 
           {/* CONTENIDO DEL FORMULARIO */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-50 to-white">
              <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
+                
+                {/* BOTON IA - Se muestra en TODO excepto Anamnesis */}
+                {activeForm !== 'anamnesis' && (
+                    <div className="flex justify-end sticky top-0 z-20 pointer-events-none">
+                        <div className="pointer-events-auto">
+                            <button 
+                                onClick={handleGenerateUniversalIA}
+                                disabled={isGenerating}
+                                className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-5 py-2.5 rounded-full font-black text-xs md:text-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isGenerating ? <Loader2 size={16} className="animate-spin"/> : <Sparkles size={16}/>}
+                                Generar IA
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 {/* Selector de Paciente */}
                 <div className="bg-white p-5 md:p-6 rounded-2xl md:rounded-3xl border-2 border-slate-200 shadow-sm hover:shadow-md transition-all">
                    <label className="text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest mb-3 ml-1 flex items-center gap-2">
@@ -2554,30 +2315,9 @@ function DynamicEvaluationsView() {
                             {q.label}
                             {q.required && <span className="text-red-500">*</span>}
                             {q.aiGenerated && (
-                              <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-0.5 rounded-full font-black">
-                                IA
-                              </span>
+                              <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-0.5 rounded-full font-black">IA</span>
                             )}
                           </label>
-                          {(q.id === 'mensaje_padres' || q.id === 'mensaje_padres_entorno') && (
-                              <button 
-                                onClick={activeForm === 'entorno_hogar' ? handleGenerateEntornoIA : handleGenerateGemini}
-                                disabled={isGenerating}
-                                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white px-4 md:px-5 py-2 md:py-2.5 rounded-full text-xs md:text-sm font-black shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed w-fit"
-                              >
-                                {isGenerating ? (
-                                  <>
-                                    <Loader2 size={14} className="animate-spin"/>
-                                    <span>Generando...</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Sparkles size={14}/>
-                                    <span>Generar IA</span>
-                                  </>
-                                )}
-                              </button>
-                          )}
                       </div>
 
                       {/* Campo Date */}
@@ -2638,7 +2378,7 @@ function DynamicEvaluationsView() {
                         </div>
                       )}
                       
-                      {/* 🆕 Campo Range (Escala 1-5) */}
+                      {/* Campo Range (Escala 1-5) */}
                       {q.type === 'range' && (
                         <div className="space-y-3">
                           <div className="flex items-center justify-between">
@@ -2672,7 +2412,7 @@ function DynamicEvaluationsView() {
                         </div>
                       )}
                       
-                      {/* 🆕 Campo Multiselect */}
+                      {/* Campo Multiselect */}
                       {q.type === 'multiselect' && (
                         <div className="space-y-2">
                           <div className="flex flex-wrap gap-2">
@@ -2871,7 +2611,7 @@ function AIReportView() {
     .order('created_at', { ascending: false })
     .limit(1)
     .single();
-    
+     
      setHistoryData({ 
     anamnesis: anamnesis ? anamnesis.datos : null, 
     aba: aba || [],
@@ -3412,7 +3152,7 @@ function MonthlyCalendarView() {
                                 <>
                                     <div className="space-y-2">
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-2">
-                                              Nombre del Grupo
+                                                Nombre del Grupo
                                         </label>
                                         <input
                                             type="text"
