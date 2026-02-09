@@ -8,7 +8,8 @@ import {
   Clock, Ticket, CheckCircle2, AlertCircle, ChevronRight, Menu, 
   Sparkles, Send, Lock, X, Loader2, TrendingUp, Activity, Heart, Brain, Trash2, RefreshCw,
   Award, Target, Smile, Book, Star, Zap, Bell, Download, Share2, Eye, Mail, Phone,
-  Settings, HelpCircle, FileText, Video, Headphones, Image as ImageIcon, ExternalLink
+  Settings, HelpCircle, FileText, Video, Headphones, Image as ImageIcon, ExternalLink,
+  Camera, Upload, Gift, PartyPopper, Flame, TrendingDown, Baby, Stethoscope, PlayCircle
 } from 'lucide-react'
 
 // ==============================================================================
@@ -45,7 +46,7 @@ const calculateAge = (birthDate: string) => {
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
     age--
   }
-  return age
+  return Math.max(0, age)
 }
 
 // ==============================================================================
@@ -71,6 +72,8 @@ export default function ParentDashboard() {
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
+  const [celebrationMessage, setCelebrationMessage] = useState('')
 
   useEffect(() => {
     const loadData = async () => {
@@ -126,6 +129,12 @@ export default function ParentDashboard() {
     fetchSlots()
   }, [selectedDate, refreshTrigger])
 
+  const triggerCelebration = (message: string) => {
+    setCelebrationMessage(message)
+    setShowSuccessAnimation(true)
+    setTimeout(() => setShowSuccessAnimation(false), 3000)
+  }
+
   const handleBookAppointment = async (time: string) => {
     if(!profile || !selectedChild) return
     if((profile.tokens || 0) <= 0) return alert("No tienes suficientes tokens para agendar.")
@@ -147,7 +156,7 @@ export default function ParentDashboard() {
         await supabase.from('profiles').update({ tokens: newTokens }).eq('id', profile.id)
         
         setProfile({...profile, tokens: newTokens})
-        alert("¡Cita agendada con éxito! Te llegará una notificación 24h antes.")
+        triggerCelebration('🎉 ¡Cita agendada exitosamente!')
         setRefreshTrigger(prev => prev + 1)
         setActiveView('home')
     } catch (error: any) {
@@ -178,7 +187,7 @@ export default function ParentDashboard() {
             alert("Cita cancelada. Ahora elige tu nuevo horario.")
             setActiveView('agenda') 
         } else {
-            alert("Cita cancelada y token reembolsado correctamente.")
+            triggerCelebration('✅ Token reembolsado correctamente')
         }
 
     } catch (error: any) {
@@ -190,24 +199,68 @@ export default function ParentDashboard() {
 
   const handleAddChild = async (e: any) => {
     e.preventDefault()
+    console.log("🔍 INICIANDO handleAddChild")
+    
     const name = e.target.name.value
     const dob = e.target.dob.value
     const diagnosis = e.target.diagnosis?.value || 'En evaluación'
-    if(!profile?.id) return;
+    
+    console.log("📝 Datos del formulario:", { name, dob, diagnosis })
+    console.log("👤 Profile ID:", profile?.id)
+    
+    if(!profile?.id) {
+        console.error("❌ No hay profile.id")
+        alert("❌ Error: No se encontró tu perfil")
+        return
+    }
 
-    const { data, error } = await supabase.from('children').insert([{
-        parent_id: profile.id, 
-        name: name, 
-        birth_date: dob, 
-        diagnosis: diagnosis
-    }]).select()
+    if(!name.trim()) {
+        alert("❌ El nombre es obligatorio")
+        return
+    }
 
-    if(!error && data) {
+    if(!dob) {
+        alert("❌ La fecha de nacimiento es obligatoria")
+        return
+    }
+
+    try {
+        const age = calculateAge(dob)
+        console.log("📊 Edad calculada:", age)
+        console.log("🚀 Intentando insertar en Supabase...")
+
+        const { data, error } = await supabase.from('children').insert([{
+            parent_id: profile.id, 
+            name: name.trim(), 
+            birth_date: dob,
+            age: age,
+            diagnosis: diagnosis || 'En evaluación'
+        }]).select()
+
+        console.log("📊 Respuesta Supabase:", { data, error })
+
+        if (error) {
+            console.error("❌ Error de Supabase:", error)
+            alert("❌ Error al guardar: " + error.message)
+            return
+        }
+
+        if (!data || data.length === 0) {
+            console.error("⚠️ No se devolvió data")
+            alert("⚠️ No se pudo crear el registro. Verifica los permisos en Supabase.")
+            return
+        }
+
+        console.log("✅ Paciente creado exitosamente:", data[0])
         setMyChildren([...myChildren, data[0]])
         if(!selectedChild) setSelectedChild(data[0])
         setShowAddChild(false)
-        alert("✅ Paciente agregado correctamente")
+        triggerCelebration(`🎊 ${name} agregado correctamente`)
         setRefreshTrigger(prev => prev + 1)
+
+    } catch (err: any) {
+        console.error("❌ Error inesperado:", err)
+        alert("❌ Error inesperado: " + err.message)
     }
   }
 
@@ -228,7 +281,7 @@ export default function ParentDashboard() {
       if (error) throw error
       
       setProfile({...profile, full_name: fullName, phone: phone})
-      alert("✅ Perfil actualizado correctamente")
+      triggerCelebration('✨ Perfil actualizado')
       setShowEditProfile(false)
       setRefreshTrigger(prev => prev + 1)
     } catch (error: any) {
@@ -255,7 +308,7 @@ export default function ParentDashboard() {
       const { error } = await supabase.auth.updateUser({ password: newPass })
       if (error) throw error
       
-      alert("✅ Contraseña actualizada exitosamente")
+      triggerCelebration('🔐 Contraseña actualizada')
       setShowChangePass(false)
     } catch (error: any) {
       alert("Error: " + error.message)
@@ -277,17 +330,40 @@ export default function ParentDashboard() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 font-sans text-slate-600 overflow-hidden">
         
+        {/* 🎉 ANIMACIÓN DE ÉXITO */}
+        {showSuccessAnimation && (
+            <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
+                <div className="bg-white/95 backdrop-blur-xl p-12 rounded-[3rem] shadow-2xl border-4 border-green-500 animate-bounce">
+                    <div className="flex flex-col items-center gap-6">
+                        <div className="relative">
+                            <PartyPopper size={80} className="text-green-500 animate-pulse"/>
+                            <div className="absolute inset-0 bg-green-400 blur-3xl opacity-50 animate-ping"></div>
+                        </div>
+                        <h2 className="text-4xl font-black text-slate-800 text-center">{celebrationMessage}</h2>
+                        <div className="flex gap-3">
+                            <Star size={32} className="text-yellow-400 animate-spin"/>
+                            <Star size={32} className="text-yellow-400 animate-spin" style={{animationDelay: '0.2s'}}/>
+                            <Star size={32} className="text-yellow-400 animate-spin" style={{animationDelay: '0.4s'}}/>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )}
+
         {/* === SIDEBAR (PC) === */}
         <aside className="hidden lg:flex w-80 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 flex-col justify-between p-7 z-20 shadow-[4px_0_40px_rgba(0,0,0,0.03)]">
             <div>
                 <div className="flex items-center gap-4 mb-12 px-2">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-blue-200/50 ring-4 ring-blue-100/50">
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-blue-200/50 ring-4 ring-blue-100/50 relative group cursor-pointer">
                         {profile?.full_name?.charAt(0) || 'F'}
+                        <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </div>
                     <div>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bienvenida</p>
                         <h2 className="font-bold text-slate-800 text-lg leading-tight">Fam. {profile?.full_name?.split(' ')[0]}</h2>
-                        <p className="text-xs text-slate-400 font-medium">Portal de padres</p>
+                        <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
+                            <Sparkles size={10}/> Portal de padres
+                        </p>
                     </div>
                 </div>
                 
@@ -301,6 +377,7 @@ export default function ParentDashboard() {
             </div>
             
             <div className="space-y-4">
+                {/* 🎯 TARJETA DE TOKENS MEJORADA */}
                 <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-7 rounded-3xl relative overflow-hidden group cursor-pointer transition-all hover:scale-[1.02] hover:shadow-2xl shadow-xl">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <Ticket size={80}/>
@@ -309,17 +386,35 @@ export default function ParentDashboard() {
                     
                     <div className="flex justify-between items-start mb-4 relative z-10">
                         <span className="text-xs font-bold uppercase text-slate-400 tracking-wider">Mis Tokens</span>
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-xl shadow-lg">
+                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-xl shadow-lg animate-pulse">
                             <Ticket size={18} className="text-yellow-400"/>
                         </div>
                     </div>
-                    <div className="text-5xl font-black relative z-10 mb-2">{profile?.tokens || 0}</div>
+                    <div className="text-5xl font-black relative z-10 mb-2 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
+                        {profile?.tokens || 0}
+                    </div>
                     <p className="text-xs text-slate-400 relative z-10 font-medium">Sesiones disponibles para agendar</p>
                     
-                    {(profile?.tokens || 0) <= 2 && (
-                        <div className="mt-4 bg-yellow-500/20 border border-yellow-500/30 rounded-xl p-3 relative z-10">
+                    {(profile?.tokens || 0) <= 2 && (profile?.tokens || 0) > 0 && (
+                        <div className="mt-4 bg-yellow-500/20 border border-yellow-500/30 rounded-xl p-3 relative z-10 animate-pulse">
                             <p className="text-xs text-yellow-200 font-bold flex items-center gap-2">
                                 <AlertCircle size={14}/> Tus tokens están por agotarse
+                            </p>
+                        </div>
+                    )}
+
+                    {(profile?.tokens || 0) === 0 && (
+                        <div className="mt-4 bg-red-500/20 border border-red-500/30 rounded-xl p-3 relative z-10">
+                            <p className="text-xs text-red-200 font-bold flex items-center gap-2">
+                                <AlertCircle size={14}/> Sin tokens disponibles
+                            </p>
+                        </div>
+                    )}
+
+                    {(profile?.tokens || 0) > 5 && (
+                        <div className="mt-4 bg-green-500/20 border border-green-500/30 rounded-xl p-3 relative z-10">
+                            <p className="text-xs text-green-200 font-bold flex items-center gap-2">
+                                <CheckCircle2 size={14}/> ¡Excelente! Tienes suficientes sesiones
                             </p>
                         </div>
                     )}
@@ -327,9 +422,13 @@ export default function ParentDashboard() {
                 
                 <button 
                     onClick={() => setShowNotifications(true)}
-                    className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-blue-100"
+                    className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-blue-100 hover:scale-105 active:scale-95 shadow-sm hover:shadow-lg relative group"
                 >
-                    <Bell size={16}/> Ver Notificaciones
+                    <Bell size={16} className="group-hover:animate-bounce"/>
+                    Ver Notificaciones
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">
+                        3
+                    </span>
                 </button>
             </div>
         </aside>
@@ -337,27 +436,33 @@ export default function ParentDashboard() {
         {/* === CONTENIDO PRINCIPAL === */}
         <div className="flex-1 flex flex-col h-full relative">
             
+            {/* 📱 HEADER MÓVIL MEJORADO */}
             <header className="lg:hidden bg-white/90 backdrop-blur-xl p-4 flex justify-between items-center border-b border-slate-200/60 sticky top-0 z-30 shadow-sm">
                 <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg">
+                    <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg relative">
                         {profile?.full_name?.charAt(0)}
+                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
                     </div>
                     <div>
                         <p className="font-bold text-slate-800 text-sm leading-tight">{profile?.full_name?.split(' ')[0]}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide">Portal Padres</p>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide flex items-center gap-1">
+                            <Sparkles size={10}/> Portal Padres
+                        </p>
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <button onClick={() => setShowNotifications(true)} className="p-2 rounded-xl bg-blue-50 text-blue-600 relative">
+                    <button onClick={() => setShowNotifications(true)} className="p-2 rounded-xl bg-blue-50 text-blue-600 relative hover:scale-110 active:scale-95 transition-transform">
                         <Bell size={18}/>
-                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></span>
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
                     </button>
-                    <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg">
-                        <Ticket size={14} className="text-yellow-400"/> {profile?.tokens || 0}
+                    <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg relative group">
+                        <Ticket size={14} className="text-yellow-400 group-hover:animate-spin"/> 
+                        <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">{profile?.tokens || 0}</span>
                     </div>
                 </div>
             </header>
 
+            {/* 👶 SELECTOR DE HIJOS MEJORADO */}
             <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 py-4 px-4 md:px-8 flex gap-3 overflow-x-auto items-center scrollbar-hide shadow-sm">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0 mr-2 flex items-center gap-2">
                     <User size={12}/> Viendo a:
@@ -365,22 +470,25 @@ export default function ParentDashboard() {
                 {myChildren.length > 0 ? myChildren.map(child => (
                     <button 
                         key={child.id} onClick={()=>setSelectedChild(child)}
-                        className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl transition-all whitespace-nowrap border-2 shadow-sm hover:shadow-md ${
+                        className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl transition-all whitespace-nowrap border-2 shadow-sm hover:shadow-md group ${
                             selectedChild?.id === child.id 
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-500 text-white shadow-blue-200' 
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-500 text-white shadow-blue-200 scale-105' 
                             : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'
                         }`}
                     >
-                        <div className={`w-2.5 h-2.5 rounded-full ${selectedChild?.id === child.id ? 'bg-white animate-pulse' : 'bg-slate-300'}`}></div>
+                        <div className={`w-2.5 h-2.5 rounded-full ${selectedChild?.id === child.id ? 'bg-white animate-pulse' : 'bg-slate-300 group-hover:bg-blue-400'}`}></div>
                         <div className="text-left">
                             <span className="font-bold text-sm block">{child.name.split(' ')[0]}</span>
-                            <span className={`text-[10px] font-semibold ${selectedChild?.id === child.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                                {calculateAge(child.birth_date)} años
+                            <span className={`text-[10px] font-semibold flex items-center gap-1 ${selectedChild?.id === child.id ? 'text-blue-100' : 'text-slate-400'}`}>
+                                <Baby size={10}/> {calculateAge(child.birth_date)} años
                             </span>
                         </div>
                     </button>
                 )) : <span className="text-xs text-slate-400 italic">Sin pacientes registrados</span>}
-                <button onClick={()=>setShowAddChild(true)} className="w-10 h-10 rounded-2xl bg-blue-50 border-2 border-dashed border-blue-200 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shrink-0">
+                <button 
+                    onClick={()=>setShowAddChild(true)} 
+                    className="w-10 h-10 rounded-2xl bg-blue-50 border-2 border-dashed border-blue-200 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shrink-0 hover:scale-110 active:scale-95 hover:rotate-90"
+                >
                     <Plus size={18}/>
                 </button>
             </div>
@@ -411,7 +519,7 @@ export default function ParentDashboard() {
                          <div className="h-[calc(100vh-180px)] lg:h-[calc(100vh-120px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
                             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-white flex justify-between items-center z-10 shadow-lg">
                                 <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
                                         <Sparkles size={24} className="text-white"/>
                                     </div>
                                     <div>
@@ -421,7 +529,7 @@ export default function ParentDashboard() {
                                         </p>
                                     </div>
                                 </div>
-                                <button className="p-2 bg-white/10 rounded-xl backdrop-blur-sm hover:bg-white/20 transition-all">
+                                <button className="p-2 bg-white/10 rounded-xl backdrop-blur-sm hover:bg-white/20 transition-all hover:rotate-180 duration-300">
                                     <RefreshCw size={18}/>
                                 </button>
                             </div>
@@ -444,19 +552,25 @@ export default function ParentDashboard() {
                 </div>
             </main>
 
+            {/* 📱 NAVEGACIÓN INFERIOR MÓVIL MEJORADA */}
             <nav className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 p-3 flex justify-around items-center fixed bottom-0 w-full z-30 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
                 <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
-                <NavBtnMobile icon={<Calendar size={22}/>} label="Agenda" active={activeView==='agenda'} onClick={()=>setActiveView('agenda')} />
+                <NavBtnMobile icon={<Calendar size={22}/>} label="Agenda" active={activeView==='agenda'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0)} />
                 <div className="relative -top-8">
                     <button 
                         onClick={()=>setActiveView('chat')} 
-                        className={`w-16 h-16 rounded-[2rem] flex items-center justify-center shadow-2xl border-[6px] border-white transition-all active:scale-95 ${
+                        className={`w-16 h-16 rounded-[2rem] flex items-center justify-center shadow-2xl border-[6px] border-white transition-all active:scale-95 relative group ${
                             activeView==='chat'
                             ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-purple-300' 
                             : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-indigo-300'
                         }`}
                     >
-                        <Sparkles size={28}/>
+                        <Sparkles size={28} className="group-hover:animate-spin"/>
+                        {activeView !== 'chat' && (
+                            <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full animate-bounce">
+                                IA
+                            </span>
+                        )}
                     </button>
                 </div>
                 <NavBtnMobile icon={<Book size={22}/>} label="Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
@@ -464,103 +578,204 @@ export default function ParentDashboard() {
             </nav>
         </div>
 
-        {/* MODALES */}
+        {/* 🎨 MODAL - AGREGAR HIJO MEJORADO */}
         {showAddChild && (
             <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in">
-                    <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h3 className="font-bold text-2xl text-slate-800">Nuevo Paciente</h3>
-                            <p className="text-sm text-slate-400 font-medium">Agrega la información del niño/a</p>
+                <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in relative overflow-hidden">
+                    {/* Decoración de fondo */}
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50"></div>
+                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-100 to-yellow-100 rounded-full blur-3xl opacity-50"></div>
+                    
+                    <div className="relative z-10">
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="flex items-center gap-3">
+                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                    <Baby size={24} className="text-white"/>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-2xl text-slate-800">Nuevo Paciente</h3>
+                                    <p className="text-sm text-slate-400 font-medium">Agrega la información del niño/a</p>
+                                </div>
+                            </div>
+                            <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
+                                <X size={22}/>
+                            </button>
                         </div>
-                        <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
-                            <X size={22}/>
-                        </button>
+
+                        <form onSubmit={handleAddChild} className="space-y-4">
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                                    <User size={14}/> Nombre Completo <span className="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    name="name" 
+                                    required 
+                                    className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all hover:bg-white" 
+                                    placeholder="Ej: María Fernanda López"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                                    <Calendar size={14}/> Fecha de Nacimiento <span className="text-red-500">*</span>
+                                </label>
+                                <input 
+                                    name="dob" 
+                                    type="date" 
+                                    required 
+                                    className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all hover:bg-white"
+                                />
+                            </div>
+                            
+                            <div>
+                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                                    <Stethoscope size={14}/> Diagnóstico (Opcional)
+                                </label>
+                                <input 
+                                    name="diagnosis" 
+                                    className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all hover:bg-white" 
+                                    placeholder="Ej: TEA Nivel 2"
+                                />
+                            </div>
+
+                            <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-4">
+                                <p className="text-xs text-blue-700 font-bold flex items-center gap-2">
+                                    <Sparkles size={14}/> La edad se calculará automáticamente
+                                </p>
+                            </div>
+                            
+                            <div className="flex gap-3 pt-4">
+                                <button 
+                                    type="button" 
+                                    onClick={()=>setShowAddChild(false)} 
+                                    className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all hover:scale-105 active:scale-95"
+                                >
+                                    Cancelar
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
+                                >
+                                    <CheckCircle2 size={18}/> Guardar
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <form onSubmit={handleAddChild} className="space-y-4">
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Nombre Completo</label>
-                            <input name="name" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder="Ej: María Fernanda López"/>
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Fecha de Nacimiento</label>
-                            <input name="dob" type="date" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all"/>
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Diagnóstico (Opcional)</label>
-                            <input name="diagnosis" className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder="Ej: TEA Nivel 2"/>
-                        </div>
-                        <div className="flex gap-3 pt-4">
-                            <button type="button" onClick={()=>setShowAddChild(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all">
-                                Cancelar
-                            </button>
-                            <button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all">
-                                Guardar
-                            </button>
-                        </div>
-                    </form>
                 </div>
             </div>
         )}
 
+        {/* 🔐 MODAL - CAMBIAR CONTRASEÑA */}
         {showChangePass && (
              <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl animate-scale-in">
                     <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h3 className="font-bold text-2xl text-slate-800">Cambiar Contraseña</h3>
-                            <p className="text-sm text-slate-400">Ingresa tu nueva clave de acceso</p>
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                <Lock size={24} className="text-white"/>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-2xl text-slate-800">Cambiar Contraseña</h3>
+                                <p className="text-sm text-slate-400">Ingresa tu nueva clave de acceso</p>
+                            </div>
                         </div>
-                        <button onClick={()=>setShowChangePass(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+                        <button onClick={()=>setShowChangePass(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
                             <X size={22}/>
                         </button>
                     </div>
                     <form onSubmit={handleChangePassword} className="space-y-4">
-                        <input name="newPassword" type="password" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-blue-400 focus:bg-white transition-all" placeholder="Nueva contraseña"/>
-                        <input name="confirmPassword" type="password" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-blue-400 focus:bg-white transition-all" placeholder="Confirmar contraseña"/>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">
+                                Nueva Contraseña
+                            </label>
+                            <input 
+                                name="newPassword" 
+                                type="password" 
+                                required 
+                                minLength={6}
+                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white transition-all" 
+                                placeholder="Mínimo 6 caracteres"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">
+                                Confirmar Contraseña
+                            </label>
+                            <input 
+                                name="confirmPassword" 
+                                type="password" 
+                                required 
+                                minLength={6}
+                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white transition-all" 
+                                placeholder="Repite la contraseña"
+                            />
+                        </div>
                         <div className="flex gap-3 pt-2">
-                            <button type="button" onClick={()=>setShowChangePass(false)} className="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl transition-all">Cancelar</button>
-                            <button type="submit" className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">Actualizar</button>
+                            <button 
+                                type="button" 
+                                onClick={()=>setShowChangePass(false)} 
+                                className="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl transition-all hover:scale-105 active:scale-95"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                type="submit" 
+                                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-purple-700 transition-all hover:scale-105 active:scale-95"
+                            >
+                                Actualizar
+                            </button>
                         </div>
                     </form>
                 </div>
              </div>
         )}
 
+        {/* ✏️ MODAL - EDITAR PERFIL */}
         {showEditProfile && (
             <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in">
                     <div className="flex justify-between items-center mb-6">
-                        <div>
-                            <h3 className="font-bold text-2xl text-slate-800">Editar Perfil</h3>
-                            <p className="text-sm text-slate-400">Actualiza tu información personal</p>
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
+                                <User size={24} className="text-white"/>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-2xl text-slate-800">Editar Perfil</h3>
+                                <p className="text-sm text-slate-400">Actualiza tu información personal</p>
+                            </div>
                         </div>
-                        <button onClick={()=>setShowEditProfile(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+                        <button onClick={()=>setShowEditProfile(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
                             <X size={22}/>
                         </button>
                     </div>
                     <form onSubmit={handleUpdateProfile} className="space-y-4">
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Nombre Completo</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                                <User size={14}/> Nombre Completo
+                            </label>
                             <input 
                                 name="fullName" 
                                 defaultValue={profile?.full_name}
                                 required 
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" 
+                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-green-400 transition-all hover:bg-white" 
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Teléfono</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                                <Phone size={14}/> Teléfono
+                            </label>
                             <input 
                                 name="phone" 
                                 type="tel"
                                 defaultValue={profile?.phone}
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" 
+                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-green-400 transition-all hover:bg-white" 
                                 placeholder="+51 924 807 183"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Email (no editable)</label>
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                                <Mail size={14}/> Email (no editable)
+                            </label>
                             <input 
                                 value={profile?.email}
                                 disabled
@@ -568,23 +783,40 @@ export default function ParentDashboard() {
                             />
                         </div>
                         <div className="flex gap-3 pt-2">
-                            <button type="button" onClick={()=>setShowEditProfile(false)} className="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl transition-all">Cancelar</button>
-                            <button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all">Guardar Cambios</button>
+                            <button 
+                                type="button" 
+                                onClick={()=>setShowEditProfile(false)} 
+                                className="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl transition-all hover:scale-105 active:scale-95"
+                            >
+                                Cancelar
+                            </button>
+                            <button 
+                                type="submit" 
+                                className="flex-1 bg-gradient-to-r from-green-600 to-teal-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
+                            >
+                                Guardar Cambios
+                            </button>
                         </div>
                     </form>
                 </div>
             </div>
         )}
 
+        {/* 🔔 MODAL - NOTIFICACIONES MEJORADO */}
         {showNotifications && (
             <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl animate-scale-in overflow-hidden">
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <Bell size={24}/>
-                            <h3 className="font-bold text-lg">Notificaciones</h3>
+                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+                                <Bell size={24}/>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg">Notificaciones</h3>
+                                <p className="text-xs text-blue-100">3 nuevas notificaciones</p>
+                            </div>
                         </div>
-                        <button onClick={()=>setShowNotifications(false)} className="p-2 hover:bg-white/10 rounded-xl">
+                        <button onClick={()=>setShowNotifications(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
                             <X size={20}/>
                         </button>
                     </div>
@@ -594,33 +826,42 @@ export default function ParentDashboard() {
                             title="Recordatorio de cita"
                             message="Tu cita está programada para mañana a las 10:00 AM"
                             time="Hace 2 horas"
+                            isNew={true}
                         />
                         <NotificationItem 
                             icon={<Star className="text-yellow-500"/>}
                             title="Progreso destacado"
                             message={`${selectedChild?.name} logró un nuevo objetivo en comunicación`}
                             time="Hace 1 día"
+                            isNew={true}
                         />
                         <NotificationItem 
                             icon={<Heart className="text-pink-500"/>}
                             title="Nueva tarea en casa"
                             message="Revisa las actividades recomendadas para esta semana"
                             time="Hace 2 días"
+                            isNew={false}
                         />
                     </div>
                 </div>
             </div>
         )}
 
+        {/* 🔒 MODAL - PRIVACIDAD */}
         {showPrivacy && (
             <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
                     <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <Lock size={24}/>
-                            <h3 className="font-bold text-lg">Privacidad y Seguridad</h3>
+                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                                <Lock size={24}/>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg">Privacidad y Seguridad</h3>
+                                <p className="text-xs text-purple-100">Tus datos están protegidos</p>
+                            </div>
                         </div>
-                        <button onClick={()=>setShowPrivacy(false)} className="p-2 hover:bg-white/10 rounded-xl">
+                        <button onClick={()=>setShowPrivacy(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
                             <X size={20}/>
                         </button>
                     </div>
@@ -653,7 +894,7 @@ export default function ParentDashboard() {
                             </p>
                         </div>
 
-                        <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all">
+                        <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
                             Leer Política Completa
                         </button>
                     </div>
@@ -661,15 +902,21 @@ export default function ParentDashboard() {
             </div>
         )}
 
+        {/* ❓ MODAL - AYUDA */}
         {showHelp && (
             <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
                 <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
                     <div className="bg-gradient-to-r from-green-600 to-teal-600 p-6 text-white flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <HelpCircle size={24}/>
-                            <h3 className="font-bold text-lg">Centro de Ayuda</h3>
+                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                                <HelpCircle size={24}/>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-lg">Centro de Ayuda</h3>
+                                <p className="text-xs text-green-100">Estamos aquí para ti</p>
+                            </div>
                         </div>
-                        <button onClick={()=>setShowHelp(false)} className="p-2 hover:bg-white/10 rounded-xl">
+                        <button onClick={()=>setShowHelp(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
                             <X size={20}/>
                         </button>
                     </div>
@@ -718,10 +965,13 @@ export default function ParentDashboard() {
 }
 
 // ==============================================================================
-// SUB-COMPONENTES
+// SUB-COMPONENTES Y VISTAS
 // ==============================================================================
 
 function AgendaView({ profile, selectedDate, setSelectedDate, takenSlots, bookingLoading, handleBookAppointment }: any) {
+    const today = new Date().toISOString().split('T')[0]
+    const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
+
     return (
         <div className="animate-fade-in">
             <div className="mb-8">
@@ -743,10 +993,18 @@ function AgendaView({ profile, selectedDate, setSelectedDate, takenSlots, bookin
                         <input 
                             type="date" 
                             value={selectedDate} 
-                            min={new Date().toISOString().split('T')[0]} 
+                            min={today} 
                             onChange={(e) => setSelectedDate(e.target.value)} 
-                            className="w-full p-5 bg-slate-50 rounded-2xl font-bold text-slate-700 outline-none border-2 border-transparent focus:border-blue-400 focus:bg-white transition-all cursor-pointer text-center text-lg shadow-inner"
+                            className="w-full p-5 bg-slate-50 rounded-2xl font-bold text-slate-700 outline-none border-2 border-transparent focus:border-blue-400 focus:bg-white transition-all cursor-pointer text-center text-lg shadow-inner hover:bg-white"
                         />
+                        
+                        {selectedDate < today && (
+                            <div className="mt-4 bg-red-50 border border-red-200 rounded-xl p-3">
+                                <p className="text-xs text-red-600 font-bold flex items-center gap-2">
+                                    <AlertCircle size={14}/> Selecciona una fecha futura
+                                </p>
+                            </div>
+                        )}
                     </div>
                     
                     <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-7 rounded-3xl text-white shadow-2xl shadow-blue-300/50 relative overflow-hidden">
@@ -763,11 +1021,12 @@ function AgendaView({ profile, selectedDate, setSelectedDate, takenSlots, bookin
                             <p className="text-blue-50 text-sm leading-relaxed mb-3">
                                 • Sesiones de 45 minutos<br/>
                                 • Cancela hasta 24h antes<br/>
-                                • Reembolso automático de tokens
+                                • Reembolso automático de tokens<br/>
+                                • Máximo 2 reprogramaciones
                             </p>
                             <div className="bg-white/10 backdrop-blur-sm p-3 rounded-xl border border-white/20">
-                                <p className="text-xs text-blue-100 font-semibold">
-                                    💡 Tip: Agenda con anticipación para mejores horarios
+                                <p className="text-xs text-blue-100 font-semibold flex items-center gap-2">
+                                    <Zap size={14}/> Tip: Agenda con anticipación para mejores horarios
                                 </p>
                             </div>
                         </div>
@@ -782,7 +1041,7 @@ function AgendaView({ profile, selectedDate, setSelectedDate, takenSlots, bookin
                                 <span className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-full font-bold flex items-center gap-1">
                                     <CheckCircle2 size={12}/> {TIME_SLOTS.length - takenSlots.length} libres
                                 </span>
-                                <span className="text-xs bg-slate-100 px-3 py-1.5 rounded-full text-slate-500 font-bold">
+                                <span className="text-xs bg-red-100 text-red-600 px-3 py-1.5 rounded-full font-bold">
                                     {takenSlots.length} ocupados
                                 </span>
                             </div>
@@ -797,7 +1056,14 @@ function AgendaView({ profile, selectedDate, setSelectedDate, takenSlots, bookin
                                     </div>
                                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                         {TIME_SLOTS.filter(t => parseInt(t.split(':')[0]) < 12).map(time => (
-                                            <TimeSlotBtn key={time} time={time} isTaken={takenSlots.includes(time)} loading={bookingLoading} onClick={() => handleBookAppointment(time)}/>
+                                            <TimeSlotBtn 
+                                                key={time} 
+                                                time={time} 
+                                                isTaken={takenSlots.includes(time)} 
+                                                loading={bookingLoading} 
+                                                onClick={() => handleBookAppointment(time)}
+                                                isPast={selectedDate === today && time < new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}
+                                            />
                                         ))}
                                     </div>
                                 </div>
@@ -808,21 +1074,35 @@ function AgendaView({ profile, selectedDate, setSelectedDate, takenSlots, bookin
                                     </div>
                                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                                         {TIME_SLOTS.filter(t => parseInt(t.split(':')[0]) >= 12).map(time => (
-                                            <TimeSlotBtn key={time} time={time} isTaken={takenSlots.includes(time)} loading={bookingLoading} onClick={() => handleBookAppointment(time)}/>
+                                            <TimeSlotBtn 
+                                                key={time} 
+                                                time={time} 
+                                                isTaken={takenSlots.includes(time)} 
+                                                loading={bookingLoading} 
+                                                onClick={() => handleBookAppointment(time)}
+                                                isPast={selectedDate === today && time < new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}
+                                            />
                                         ))}
                                     </div>
                                 </div>
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-16 text-center">
-                                <div className="p-6 bg-slate-100 rounded-3xl mb-4">
+                                <div className="p-6 bg-slate-100 rounded-3xl mb-4 relative">
                                     <Ticket size={48} className="text-slate-300"/>
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="w-20 h-20 border-4 border-red-200 rounded-full animate-ping"></div>
+                                    </div>
                                 </div>
                                 <h3 className="font-bold text-slate-700 text-lg mb-2">Sin créditos disponibles</h3>
                                 <p className="text-sm text-slate-400 max-w-xs mb-6">Necesitas tokens para visualizar y agendar citas. Contacta al centro para recargar.</p>
-                                <button className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-bold shadow-lg hover:bg-blue-700 transition-all">
-                                    Solicitar Recarga
-                                </button>
+                                <a 
+                                    href="https://wa.me/51924807183" 
+                                    target="_blank"
+                                    className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-bold shadow-lg transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+                                >
+                                    <Phone size={18}/> Solicitar Recarga
+                                </a>
                             </div>
                         )}
                     </div>
@@ -851,6 +1131,8 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
         focusArea: ''
     })
 
+    const [weeklyProgress, setWeeklyProgress] = useState(0)
+
     useEffect(() => {
         if(!child) return
         const load = async () => {
@@ -862,6 +1144,25 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
 
             const { data: history } = await supabase.from('registro_aba').select('*').eq('child_id', child.id).order('fecha_sesion', {ascending: false}).limit(20)
             setSessionHistory(history || [])
+            
+            // Calcular progreso semanal
+            const lastWeek = new Date()
+            lastWeek.setDate(lastWeek.getDate() - 7)
+            const { data: weekSessions } = await supabase
+                .from('registro_aba')
+                .select('*')
+                .eq('child_id', child.id)
+                .gte('fecha_sesion', lastWeek.toISOString())
+            
+            if (weekSessions && weekSessions.length > 0) {
+                const avgProgress = weekSessions.reduce((acc, s) => {
+                    const result = s.datos?.resultado_sesion || ""
+                    if (result.includes("logrado")) return acc + 100
+                    if (result.includes("Parcialmente")) return acc + 65
+                    return acc + 40
+                }, 0) / weekSessions.length
+                setWeeklyProgress(Math.round(avgProgress))
+            }
             
             if (history && history.length > 0) {
                 let scores = { 
@@ -935,6 +1236,7 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
 
     return (
         <div className="space-y-6 animate-fade-in">
+            {/* 🎯 HEADER HERO CON ESTADÍSTICAS */}
             <div className="bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 p-8 rounded-3xl text-white shadow-2xl shadow-blue-300/50 relative overflow-hidden">
                 <div className="absolute top-0 right-0 opacity-10">
                     <Heart size={180}/>
@@ -958,12 +1260,36 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                     {insights.trend && (
                         <div className="bg-white/10 backdrop-blur-sm p-4 rounded-2xl border border-white/20">
                             <p className="text-xs text-blue-100 font-bold uppercase tracking-wide mb-1">Tendencia</p>
-                            <p className="text-xl font-black capitalize">{insights.trend}</p>
+                            <p className="text-xl font-black capitalize flex items-center gap-2">
+                                {insights.trend === 'mejorando' && <TrendingUp size={20}/>}
+                                {insights.trend === 'estable' && <Activity size={20}/>}
+                                {insights.trend === 'requiere atención' && <TrendingDown size={20}/>}
+                                {insights.trend}
+                            </p>
                         </div>
                     )}
                 </div>
+
+                {/* Barra de progreso semanal */}
+                {weeklyProgress > 0 && (
+                    <div className="mt-6 relative z-10">
+                        <div className="flex justify-between items-center mb-2">
+                            <span className="text-xs font-bold text-blue-100">Progreso Esta Semana</span>
+                            <span className="text-sm font-black">{weeklyProgress}%</span>
+                        </div>
+                        <div className="w-full bg-white/10 rounded-full h-3 overflow-hidden backdrop-blur-sm">
+                            <div 
+                                className="bg-gradient-to-r from-green-400 to-emerald-400 h-full rounded-full transition-all duration-1000 shadow-lg relative"
+                                style={{ width: `${weeklyProgress}%` }}
+                            >
+                                <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
+            {/* 📅 PRÓXIMA CITA */}
             <div className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-xl border border-slate-200/60 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative overflow-hidden group hover:shadow-2xl transition-all">
                 <div className="absolute top-0 left-0 w-2 h-full bg-gradient-to-b from-blue-500 via-indigo-500 to-purple-500"></div>
                 
@@ -995,10 +1321,16 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                                 </span>
                             </div>
                             <div className="flex gap-3">
-                                <button onClick={() => onCancelAppointment(nextApt.id, true)} className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200 transition-all shadow-sm">
+                                <button 
+                                    onClick={() => onCancelAppointment(nextApt.id, true)} 
+                                    className="px-6 py-3 bg-slate-100 text-slate-600 rounded-2xl text-sm font-bold flex items-center gap-2 hover:bg-slate-200 transition-all shadow-sm hover:scale-105 active:scale-95"
+                                >
                                     <RefreshCw size={16}/> Reprogramar
                                 </button>
-                                <button onClick={() => onCancelAppointment(nextApt.id, false)} className="px-6 py-3 bg-red-50 text-red-600 rounded-2xl text-sm font-bold flex items-center gap-2 hover:bg-red-100 transition-all">
+                                <button 
+                                    onClick={() => onCancelAppointment(nextApt.id, false)} 
+                                    className="px-6 py-3 bg-red-50 text-red-600 rounded-2xl text-sm font-bold flex items-center gap-2 hover:bg-red-100 transition-all hover:scale-105 active:scale-95"
+                                >
                                     <Trash2 size={16}/> Cancelar
                                 </button>
                             </div>
@@ -1007,7 +1339,10 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                         <div>
                             <h2 className="text-3xl font-black text-slate-800 mb-2">Sin citas programadas</h2>
                             <p className="text-sm text-slate-400 font-medium mb-4">Agenda tu próxima sesión de terapia</p>
-                            <button onClick={()=>onChangeView('agenda')} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2">
+                            <button 
+                                onClick={()=>onChangeView('agenda')} 
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 hover:scale-105 active:scale-95"
+                            >
                                 Agendar Ahora <ChevronRight size={18}/>
                             </button>
                         </div>
@@ -1016,14 +1351,19 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
 
                 {nextApt && (
                     <div className="lg:border-l lg:border-slate-200 lg:pl-8">
-                        <button onClick={()=>onChangeView('agenda')} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 whitespace-nowrap">
+                        <button 
+                            onClick={()=>onChangeView('agenda')} 
+                            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center gap-2 whitespace-nowrap hover:scale-105 active:scale-95"
+                        >
                             Ver Calendario <ChevronRight size={18}/>
                         </button>
                     </div>
                 )}
             </div>
 
+            {/* 📊 PROGRESO POR ÁREAS + ÚLTIMO REPORTE */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Progreso por áreas */}
                 <div className="bg-white/80 backdrop-blur-sm p-8 rounded-3xl shadow-lg border border-slate-200/60">
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="font-bold text-slate-800 text-lg flex items-center gap-3">
@@ -1055,12 +1395,15 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
 
                     {insights.strongArea && (
                         <div className="mt-6 p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-                            <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-1">Área Fuerte</p>
+                            <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-1 flex items-center gap-2">
+                                <Award size={14}/> Área Fuerte
+                            </p>
                             <p className="text-sm font-bold text-blue-900">{insights.strongArea}</p>
                         </div>
                     )}
                 </div>
 
+                {/* Último reporte */}
                 <div className="bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-8 rounded-3xl border border-indigo-100 relative overflow-hidden shadow-lg">
                     <div className="absolute top-0 right-0 opacity-5">
                         <Brain size={160}/>
@@ -1077,8 +1420,8 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                         <div className="relative z-10 space-y-4">
                             <div className="bg-white p-6 rounded-2xl shadow-sm">
                                 <div className="flex items-start justify-between mb-3">
-                                    <span className="text-xs font-bold text-indigo-500 uppercase tracking-wide">
-                                        {lastSession.fecha_sesion}
+                                    <span className="text-xs font-bold text-indigo-500 uppercase tracking-wide flex items-center gap-2">
+                                        <Clock size={12}/> {lastSession.fecha_sesion}
                                     </span>
                                     <span className={`text-xs font-bold px-3 py-1 rounded-full ${
                                         lastSession.datos?.resultado_sesion?.includes('logrado') 
@@ -1095,7 +1438,9 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                             
                             {lastSession.datos?.objetivo_sesion && (
                                 <div className="bg-white/60 backdrop-blur-sm p-4 rounded-xl border border-indigo-100">
-                                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-2">Objetivo trabajado</p>
+                                    <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-2 flex items-center gap-2">
+                                        <Target size={12}/> Objetivo trabajado
+                                    </p>
                                     <p className="text-sm font-semibold text-indigo-900">{lastSession.datos.objetivo_sesion}</p>
                                 </div>
                             )}
@@ -1111,6 +1456,7 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                 </div>
             </div>
 
+            {/* 🏠 TAREA PARA CASA */}
             {lastSession?.datos?.legacy_home_task && (
                 <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-8 rounded-3xl border border-yellow-200 flex items-start gap-5 shadow-lg hover:shadow-xl transition-all group">
                     <div className="bg-yellow-200 p-4 rounded-2xl text-yellow-700 shrink-0 group-hover:scale-110 transition-transform">
@@ -1128,7 +1474,7 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                         </p>
                         <button 
                             onClick={() => setShowTaskGuide(true)}
-                            className="text-sm text-yellow-700 font-bold hover:underline flex items-center gap-2"
+                            className="text-sm text-yellow-700 font-bold hover:underline flex items-center gap-2 hover:gap-3 transition-all"
                         >
                             Ver guía completa <ChevronRight size={14}/>
                         </button>
@@ -1136,11 +1482,12 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                 </div>
             )}
 
+            {/* 📈 ESTADÍSTICAS */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard icon={<Activity className="text-blue-600"/>} label="Sesiones" value={sessionHistory.length} color="bg-blue-50" />
-                <StatCard icon={<Target className="text-green-600"/>} label="Objetivos logrados" value={sessionHistory.filter(s => s.datos?.resultado_sesion?.includes('logrado')).length} color="bg-green-50" />
-                <StatCard icon={<Clock className="text-purple-600"/>} label="Horas acumuladas" value={Math.round(sessionHistory.length * 0.75)} color="bg-purple-50" />
-                <StatCard icon={<Award className="text-yellow-600"/>} label="Nivel" value={sessionHistory.length > 20 ? 'Avanzado' : sessionHistory.length > 10 ? 'Intermedio' : 'Inicial'} color="bg-yellow-50" />
+                <StatCard icon={<Activity className="text-blue-600"/>} label="Sesiones" value={sessionHistory.length} color="bg-blue-50" trend="+3 este mes" />
+                <StatCard icon={<Target className="text-green-600"/>} label="Objetivos logrados" value={sessionHistory.filter(s => s.datos?.resultado_sesion?.includes('logrado')).length} color="bg-green-50" trend="75% tasa" />
+                <StatCard icon={<Clock className="text-purple-600"/>} label="Horas acumuladas" value={Math.round(sessionHistory.length * 0.75)} color="bg-purple-50" trend="45 min/sesión" />
+                <StatCard icon={<Award className="text-yellow-600"/>} label="Nivel" value={sessionHistory.length > 20 ? 'Avanzado' : sessionHistory.length > 10 ? 'Intermedio' : 'Inicial'} color="bg-yellow-50" trend="En progreso" />
             </div>
 
             {/* MODAL GUÍA DE TAREA */}
@@ -1149,10 +1496,15 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                     <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
                         <div className="bg-gradient-to-r from-yellow-600 to-orange-600 p-6 text-white flex justify-between items-center">
                             <div className="flex items-center gap-3">
-                                <Heart size={24}/>
-                                <h3 className="font-bold text-lg">Guía Completa de Actividad</h3>
+                                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                                    <Heart size={24}/>
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg">Guía Completa de Actividad</h3>
+                                    <p className="text-xs text-yellow-100">Para practicar en casa</p>
+                                </div>
                             </div>
-                            <button onClick={()=>setShowTaskGuide(false)} className="p-2 hover:bg-white/10 rounded-xl">
+                            <button onClick={()=>setShowTaskGuide(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
                                 <X size={20}/>
                             </button>
                         </div>
@@ -1193,17 +1545,26 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
                                     </li>
                                 </ol>
                             </div>
-
                             <div className="bg-purple-50 p-6 rounded-2xl border border-purple-200">
                                 <h4 className="font-bold text-purple-900 mb-3 flex items-center gap-2">
                                     <Sparkles size={18}/> Tips importantes
                                 </h4>
                                 <ul className="space-y-2 text-purple-800 text-sm">
-                                    <li>• Sé consistente con la frecuencia (ideal: diariamente)</li>
-                                    <li>• Mantén un ambiente libre de distracciones</li>
-                                    <li>• Celebra los pequeños avances</li>
-                                    <li>• No fuerces si hay resistencia, intenta más tarde</li>
-                                    <li>• Documenta con fotos o videos para compartir con el terapeuta</li>
+                                    <li className="flex items-start gap-2">
+                                        <Star size={14} className="mt-1 shrink-0"/> Sé consistente con la frecuencia (ideal: diariamente)
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Star size={14} className="mt-1 shrink-0"/> Mantén un ambiente libre de distracciones
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Star size={14} className="mt-1 shrink-0"/> Celebra los pequeños avances
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Star size={14} className="mt-1 shrink-0"/> No fuerces si hay resistencia, intenta más tarde
+                                    </li>
+                                    <li className="flex items-start gap-2">
+                                        <Star size={14} className="mt-1 shrink-0"/> Documenta con fotos o videos para compartir con el terapeuta
+                                    </li>
                                 </ul>
                             </div>
 
@@ -1218,7 +1579,7 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
 
                             <button 
                                 onClick={()=>setShowTaskGuide(false)}
-                                className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all"
+                                className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
                             >
                                 Entendido, ¡vamos a practicar!
                             </button>
@@ -1232,7 +1593,6 @@ function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppoi
 
 function ResourcesView() {
     const [selectedResource, setSelectedResource] = useState<any>(null)
-
     const resources = [
         {
             id: 1,
@@ -1345,7 +1705,7 @@ function ResourcesView() {
                 {resources.map((resource) => (
                     <div 
                         key={resource.id} 
-                        className={`${resource.color} p-6 rounded-3xl border-2 shadow-lg hover:shadow-xl transition-all group cursor-pointer`}
+                        className={`${resource.color} p-6 rounded-3xl border-2 shadow-lg hover:shadow-xl transition-all group cursor-pointer hover:scale-105 active:scale-95`}
                         onClick={() => setSelectedResource(resource)}
                     >
                         <div className="flex items-start justify-between mb-4">
@@ -1356,19 +1716,24 @@ function ResourcesView() {
                         </div>
                         <h3 className="font-bold text-lg text-slate-800 mb-2">{resource.title}</h3>
                         <p className="text-sm text-slate-600 font-medium mb-4">{resource.description}</p>
-                        <button className="flex items-center gap-2 text-sm font-bold text-slate-700 hover:text-slate-900 transition-colors">
+                        <button className="flex items-center gap-2 text-sm font-bold text-slate-700 hover:text-slate-900 transition-colors hover:gap-3">
                             <Eye size={16}/> Ver contenido
                         </button>
                     </div>
                 ))}
             </div>
 
-            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 rounded-3xl text-white shadow-2xl">
-                <h3 className="text-2xl font-black mb-3">¿Necesitas más apoyo?</h3>
-                <p className="text-indigo-100 mb-6 font-medium">Únete a nuestra comunidad de familias y accede a webinars exclusivos</p>
-                <button className="bg-white text-indigo-600 px-8 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all">
-                    Unirme ahora
-                </button>
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-8 rounded-3xl text-white shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 opacity-10">
+                    <Sparkles size={120}/>
+                </div>
+                <div className="relative z-10">
+                    <h3 className="text-2xl font-black mb-3">¿Necesitas más apoyo?</h3>
+                    <p className="text-indigo-100 mb-6 font-medium">Únete a nuestra comunidad de familias y accede a webinars exclusivos</p>
+                    <button className="bg-white text-indigo-600 px-8 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
+                        Unirme ahora
+                    </button>
+                </div>
             </div>
 
             {/* MODAL RECURSO */}
@@ -1383,7 +1748,7 @@ function ResourcesView() {
                                     <h3 className="font-bold text-lg">{selectedResource.title}</h3>
                                 </div>
                             </div>
-                            <button onClick={()=>setSelectedResource(null)} className="p-2 hover:bg-white/10 rounded-xl">
+                            <button onClick={()=>setSelectedResource(null)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
                                 <X size={20}/>
                             </button>
                         </div>
@@ -1417,13 +1782,13 @@ function ResourcesView() {
                             <div className="flex gap-3">
                                 <button 
                                     onClick={()=>alert('Funcionalidad de descarga próximamente')}
-                                    className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                                    className="flex-1 bg-blue-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
                                 >
                                     <Download size={18}/> Descargar {selectedResource.type}
                                 </button>
                                 <button 
                                     onClick={()=>alert('Funcionalidad de compartir próximamente')}
-                                    className="flex-1 bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                                    className="flex-1 bg-green-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 hover:scale-105 active:scale-95"
                                 >
                                     <Share2 size={18}/> Compartir
                                 </button>
@@ -1445,11 +1810,14 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
     return (
         <div className="max-w-2xl mx-auto animate-fade-in space-y-6">
              <div className="text-center">
-                <div className="w-28 h-28 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl mx-auto flex items-center justify-center text-5xl font-bold text-white shadow-2xl shadow-blue-300/50 mb-6 ring-4 ring-blue-100">
+                <div className="w-28 h-28 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl mx-auto flex items-center justify-center text-5xl font-bold text-white shadow-2xl shadow-blue-300/50 mb-6 ring-4 ring-blue-100 relative group cursor-pointer hover:scale-110 transition-transform">
                     {initial}
+                    <div className="absolute inset-0 bg-white/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
                 <h2 className="text-3xl font-black text-slate-800 mb-2">{name}</h2>
-                <p className="text-slate-400 font-semibold mb-1">{email}</p>
+                <p className="text-slate-400 font-semibold mb-1 flex items-center justify-center gap-2">
+                    <Mail size={14}/> {email}
+                </p>
                 <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
                     <Phone size={14}/> {phone}
                 </p>
@@ -1515,10 +1883,13 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
     )
 }
 
+// ====================================================================================
 // COMPONENTES AUXILIARES
-function StatCard({icon, label, value, color}: any) {
+// ====================================================================================
+
+function StatCard({icon, label, value, color, trend}: any) {
     return (
-        <div className={`${color} p-6 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all group`}>
+        <div className={`${color} p-6 rounded-2xl border border-slate-200/60 shadow-sm hover:shadow-md transition-all group cursor-default`}>
             <div className="flex items-center justify-between mb-3">
                 <div className="p-2 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform">
                     {icon}
@@ -1526,6 +1897,7 @@ function StatCard({icon, label, value, color}: any) {
             </div>
             <p className="text-3xl font-black text-slate-800 mb-1">{value}</p>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wide">{label}</p>
+            {trend && <p className="text-[10px] text-slate-400 mt-2 font-bold">{trend}</p>}
         </div>
     )
 }
@@ -1541,8 +1913,8 @@ function ObjectiveBar({ label, progress, color, icon }: any) {
                 <span className="text-sm font-black text-slate-800">{progress}%</span>
             </div>
             <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                <div 
-                    className={`h-full rounded-full ${color} transition-all duration-1000 ease-out relative group-hover:shadow-lg`} 
+                <div
+                    className={`h-full rounded-full ${color} transition-all duration-1000 ease-out relative group-hover:shadow-lg`}
                     style={{ width: `${progress}%` }}
                 >
                     <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
@@ -1552,21 +1924,26 @@ function ObjectiveBar({ label, progress, color, icon }: any) {
     )
 }
 
-function TimeSlotBtn({ time, isTaken, loading, onClick }: any) {
+function TimeSlotBtn({ time, isTaken, loading, onClick, isPast }: any) {
+    const isDisabled = isTaken || loading || isPast
     return (
         <button 
-            disabled={isTaken || loading} 
+            disabled={isDisabled} 
             onClick={onClick} 
             className={`p-5 rounded-2xl font-bold text-sm transition-all flex flex-col items-center justify-center gap-2 border-2 relative overflow-hidden group ${
-                isTaken 
+                isDisabled
                 ? 'bg-slate-50 border-slate-200 text-slate-300 cursor-not-allowed' 
-                : 'bg-white border-slate-200 text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-lg hover:scale-105'
+                : 'bg-white border-slate-200 text-slate-600 hover:border-blue-500 hover:text-blue-600 hover:shadow-lg hover:scale-105 active:scale-95'
             }`}
         >
-            {!isTaken && <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/5 group-hover:to-indigo-500/5 transition-all"></div>}
+            {!isDisabled && <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-indigo-500/0 group-hover:from-blue-500/5 group-hover:to-indigo-500/5 transition-all"></div>}
             <span className="text-lg font-black relative z-10">{time}</span>
-            <span className={`text-[9px] uppercase font-black relative z-10 ${isTaken ? 'text-slate-300' : 'text-slate-400 group-hover:text-blue-500'}`}>
-                {isTaken ? 'Ocupado' : 'Disponible'}
+            <span className={`text-[9px] uppercase font-black relative z-10 ${
+                isTaken ? 'text-slate-300' : 
+                isPast ? 'text-slate-300' :
+                'text-slate-400 group-hover:text-blue-500'
+            }`}>
+                {isTaken ? 'Ocupado' : isPast ? 'Pasado' : 'Disponible'}
             </span>
         </button>
     )
@@ -1575,14 +1952,13 @@ function TimeSlotBtn({ time, isTaken, loading, onClick }: any) {
 function ChatInterface({ childId, childName }: any) {
     const [messages, setMessages] = useState<any[]>([
         {
-            role:'ai', 
+            role:'ai',
             text: `¡Hola! 👋 Soy tu Asistente Clínico Inteligente. He revisado el historial completo de ${childName || 'tu hijo/a'} y estoy aquí para apoyarte en todo momento.\n\n¿En qué puedo ayudarte hoy? Puedo:\n• Explicarte los reportes de las sesiones\n• Darte consejos para actividades en casa\n• Responder dudas sobre el desarrollo\n• Apoyarte emocionalmente en este proceso`
         }
     ])
     const [input, setInput] = useState('')
-    const [loading, setLoading] = useState(false)
+    const [typing, setTyping] = useState(false)
     const endRef = useRef<HTMLDivElement>(null)
-
     const quickQuestions = [
         "¿Cómo le fue en la última sesión?",
         "Dame consejos para casa",
@@ -1604,7 +1980,7 @@ function ChatInterface({ childId, childName }: any) {
 
         setMessages(p => [...p, {role:'user', text: txt}])
         setInput('')
-        setLoading(true)
+        setTyping(true)
 
         try {
             const res = await fetch('/api/parent-chat', {
@@ -1628,7 +2004,7 @@ function ChatInterface({ childId, childName }: any) {
                 text: "❌ Disculpa, hubo un problema de conexión. Por favor, intenta nuevamente en unos momentos."
             }])
         } finally {
-            setLoading(false)
+            setTyping(false)
         }
     }
 
@@ -1639,7 +2015,7 @@ function ChatInterface({ childId, childName }: any) {
     useEffect(() => {
         setMessages([{
             role:'ai', 
-            text: `¡Hola! 👋 He actualizado mi información con el historial de ${childName || 'tu hijo/a'}. Ahora puedo ayudarte de manera más personalizada. ¿Qué necesitas saber?`
+            text: `✨ He actualizado mi información con el historial de ${childName || 'tu hijo/a'}. Ahora puedo ayudarte de manera más personalizada. ¿Qué necesitas saber?`
         }])
     }, [childId])
 
@@ -1666,7 +2042,7 @@ function ChatInterface({ childId, childName }: any) {
                     </div>
                 ))}
                 
-                {loading && (
+                {typing && (
                     <div className="flex items-center gap-3 ml-4">
                         <div className="p-3 bg-white rounded-2xl shadow-lg border border-slate-200">
                             <Loader2 size={18} className="animate-spin text-indigo-600"/>
@@ -1681,7 +2057,7 @@ function ChatInterface({ childId, childName }: any) {
                 <div ref={endRef}></div>
             </div>
 
-            {messages.length <= 2 && !loading && (
+            {messages.length <= 2 && !typing && (
                 <div className="px-6 pb-4">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Preguntas frecuentes:</p>
                     <div className="flex flex-wrap gap-2">
@@ -1689,7 +2065,7 @@ function ChatInterface({ childId, childName }: any) {
                             <button 
                                 key={i}
                                 onClick={() => send(q)}
-                                className="px-4 py-2 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-2xl text-xs font-semibold border border-slate-200 hover:border-blue-300 transition-all shadow-sm hover:shadow-md"
+                                className="px-4 py-2 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-600 rounded-2xl text-xs font-semibold border border-slate-200 hover:border-blue-300 transition-all shadow-sm hover:shadow-md hover:scale-105 active:scale-95"
                             >
                                 {q}
                             </button>
@@ -1703,14 +2079,14 @@ function ChatInterface({ childId, childName }: any) {
                     className="flex-1 bg-slate-50 rounded-3xl px-6 py-4 text-sm font-medium outline-none border-2 border-transparent focus:bg-white focus:border-indigo-300 transition-all placeholder:text-slate-400" 
                     value={input} 
                     onChange={e=>setInput(e.target.value)} 
-                    onKeyDown={e=>e.key==='Enter' && !loading && send()} 
+                    onKeyDown={e=>e.key==='Enter' && !typing && send()} 
                     placeholder={`Pregúntame sobre ${childName || 'tu hijo/a'}...`}
-                    disabled={loading}
+                    disabled={typing}
                 />
                 <button 
                     onClick={() => send()} 
-                    disabled={loading || !input.trim()}
-                    className="p-4 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-3xl shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
+                    disabled={typing || !input.trim()}
+                    className="p-4 bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-3xl shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed active:scale-95"
                 >
                     <Send size={20}/>
                 </button>
@@ -1719,41 +2095,32 @@ function ChatInterface({ childId, childName }: any) {
     )
 }
 
-function NavBtnDesktop({icon, label, active, onClick, badge}: any) { 
+function NavBtnDesktop({icon, label, active, onClick, badge}: any) {
     return (
-        <button onClick={onClick} className={`w-full flex items-center gap-4 p-4 px-5 rounded-2xl transition-all relative group ${
-            active 
-            ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white font-bold shadow-xl shadow-slate-300' 
-            : 'text-slate-500 hover:bg-slate-50 font-semibold hover:text-slate-700'
-        }`}>
+        <button onClick={onClick} className={`w-full flex items-center gap-4 p-4 px-5 rounded-2xl transition-all relative group ${active ? 'bg-gradient-to-r from-slate-900 to-slate-800 text-white font-bold shadow-xl shadow-slate-300 scale-105' : 'text-slate-500 hover:bg-slate-50 font-semibold hover:text-slate-700 hover:scale-105'}`}>
             <div className={`${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'} transition-colors`}>
                 {icon}
             </div>
             <span className="text-sm flex-1 text-left">{label}</span>
             {badge && (
-                <span className={`text-[10px] font-black px-2 py-1 rounded-full ${
-                    active 
-                    ? 'bg-white/20 text-white' 
-                    : typeof badge === 'number' 
-                    ? 'bg-blue-100 text-blue-600' 
-                    : 'bg-green-100 text-green-600'
-                }`}>
+                <span className={`text-[10px] font-black px-2 py-1 rounded-full ${active ? 'bg-white/20 text-white' : typeof badge === 'number' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}`}>
                     {badge}
                 </span>
             )}
         </button>
-    ) 
+    )
 }
 
-function NavBtnMobile({icon, label, active, onClick}: any) { 
+function NavBtnMobile({icon, label, active, onClick, badge}: any) {
     return (
-        <button onClick={onClick} className="flex flex-col items-center gap-1 transition-all">
-            <div className={`p-3 transition-all rounded-2xl ${
-                active 
-                ? 'text-blue-600 bg-blue-50 shadow-sm' 
-                : 'text-slate-300'
-            }`}>
+        <button onClick={onClick} className="flex flex-col items-center gap-1 transition-all hover:scale-110 active:scale-95 relative">
+            <div className={`p-3 transition-all rounded-2xl ${active ? 'text-blue-600 bg-blue-50 shadow-sm scale-110' : 'text-slate-300'}`}>
                 {icon}
+                {badge && typeof badge === 'number' && badge > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                        {badge}
+                    </span>
+                )}
             </div>
             {label && (
                 <span className={`text-[10px] font-bold ${active ? 'text-blue-600' : 'text-slate-400'}`}>
@@ -1761,20 +2128,29 @@ function NavBtnMobile({icon, label, active, onClick}: any) {
                 </span>
             )}
         </button>
-    ) 
+    )
 }
 
-function NotificationItem({icon, title, message, time}: any) {
+function NotificationItem({icon, title, message, time, isNew}: any) {
     return (
-        <div className="p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl border border-slate-200 transition-all cursor-pointer group">
+        <div className={`p-4 rounded-2xl border transition-all cursor-pointer group ${isNew ? 'bg-blue-50 border-blue-200 hover:bg-blue-100' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'}`}>
             <div className="flex gap-4">
-                <div className="p-3 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform shrink-0">
+                <div className={`p-3 rounded-xl shadow-sm group-hover:scale-110 transition-transform shrink-0 ${isNew ? 'bg-white' : 'bg-white/50'}`}>
                     {icon}
                 </div>
                 <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-800 text-sm mb-1">{title}</p>
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                        <p className="font-bold text-slate-800 text-sm">{title}</p>
+                        {isNew && (
+                            <span className="px-2 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full uppercase shrink-0 animate-pulse">
+                                Nuevo
+                            </span>
+                        )}
+                    </div>
                     <p className="text-xs text-slate-600 leading-relaxed">{message}</p>
-                    <p className="text-[10px] text-slate-400 font-semibold mt-2">{time}</p>
+                    <p className="text-[10px] text-slate-400 font-semibold mt-2 flex items-center gap-1">
+                        <Clock size={10}/> {time}
+                    </p>
                 </div>
             </div>
         </div>
@@ -1783,7 +2159,7 @@ function NotificationItem({icon, title, message, time}: any) {
 
 function HelpItem({icon, title, description}: any) {
     return (
-        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-green-300 hover:bg-green-50 transition-all group">
+        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-200 hover:border-green-300 hover:bg-green-50 transition-all group cursor-pointer hover:scale-105 active:scale-95">
             <div className="flex gap-3">
                 <div className="p-2 bg-white rounded-xl shadow-sm group-hover:scale-110 transition-transform shrink-0">
                     {icon}
@@ -1792,6 +2168,18 @@ function HelpItem({icon, title, description}: any) {
                     <h5 className="font-bold text-slate-800 text-sm mb-1">{title}</h5>
                     <p className="text-xs text-slate-600 leading-relaxed">{description}</p>
                 </div>
+            </div>
+        </div>
+    )
+}
+
+function InfoRow({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+    return (
+        <div className="flex items-start gap-3 py-3 border-b border-slate-50 last:border-0">
+            {icon && <div className="mt-0.5 text-slate-400">{icon}</div>}
+            <div className="flex-1 min-w-0">
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
+                <p className="text-sm font-bold text-slate-700 break-words">{value}</p>
             </div>
         </div>
     )
