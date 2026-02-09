@@ -103,9 +103,14 @@ export async function middleware(request: NextRequest) {
   return response
 }
 
+// UBICACIÓN: middleware.ts (al final del archivo)
+
 export const config = {
   matcher: [
+    // Protegemos solo las rutas de admin y padre
     '/admin/:path*',
-    '/padre/:path*'
-  ]
+    '/padre/:path*',
+    // Opcional: Si quieres proteger todo excepto imágenes y login, usa esto:
+    // '/((?!_next/static|_next/image|favicon.ico|images|login).*)',
+  ],
 }
