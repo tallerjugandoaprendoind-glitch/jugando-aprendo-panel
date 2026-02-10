@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 
 // ==============================================================================
-// 1. CONFIGURACIÓN DE DATOS - FORMULARIOS 
+// 1. CONFIGURACIÓN DE DATOS - FORMULARIOS ssssss
 // ==============================================================================
 
 export const FORM_TABLE_MAPPING = {
@@ -812,17 +812,16 @@ export default function AdminDashboard() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
-  const [notifications, setNotifications] = useState([]);
-
- useEffect(() => {
-  const getUser = async () => {
-     const { data: { user } } = await supabase.auth.getUser()
-     if (user?.email) {
-      setUserEmail(user.email)
-     }
-   }
-     getUser()
-    fetchNotifications() // <-- Nueva llamada
+  const [notifications, setNotifications] = useState<any[]>([]);
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.email) {
+        setUserEmail(user.email)
+      }
+    }
+    getUser()
+    fetchNotifications()
   }, [])
 
   const fetchNotifications = async () => {
@@ -834,11 +833,12 @@ export default function AdminDashboard() {
       .order('appointment_time', { ascending: true });
 
     if (!error && data) {
-       const formattedNotifications = data.map(cita => ({
+      const listaFormateada = data.map((cita) => ({
         id: cita.id,
         titulo: "Cita para hoy",
         detalle: `Paciente: ${cita.children?.name} - Hora: ${cita.appointment_time.slice(0, 5)}`,
       }));
+      setNotifications(listaFormateada);
     }
   };
   const handleLogout = async () => {
@@ -973,25 +973,25 @@ export default function AdminDashboard() {
                     {showNotifications && (
                       <div className="absolute right-14 top-12 w-80 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50">
                         <div className="flex items-center justify-between mb-4">
-                          <h3 className="font-black text-sm text-slate-800">NOTIFICACIONES</h3>
+                          <h3 className="font-black text-sm text-slate-800 uppercase tracking-tighter">Notificaciones</h3>
                           <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600">
                            <X size={18} />
                           </button>
                         </div>
                         <div className="space-y-3 max-h-64 overflow-y-auto">
                           {notifications.length > 0 ? (
-                            notifications.map((n) => (
-                              <div key={n.id} className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                                <p className="text-xs font-bold text-blue-900">{n.titulo}</p>
-                                <p className="text-xs text-blue-600 mt-1">{n.detalle}</p>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-center text-slate-400 text-xs py-4">No hay citas para hoy</p>
-                          )}
-                        </div>
+                            notifications.map((n: any) => (
+                             <div key={n.id} className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                               <p className="text-xs font-bold text-blue-900">{n.titulo}</p>
+                               <p className="text-xs text-blue-600 mt-1">{n.detalle}</p>
+                             </div>
+                          ))
+                        ) : (
+                          <p className="text-center text-slate-400 text-xs py-4">No hay citas para hoy</p>
+                        )}
                       </div>
-                    )}
+                    </div>
+                  )}
 
                     <button onClick={toggleProfileMenu} className="w-8 h-8 md:w-10 md:h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-md shadow-blue-200 text-sm md:text-base">D</button>
 
