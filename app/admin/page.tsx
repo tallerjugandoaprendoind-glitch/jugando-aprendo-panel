@@ -967,7 +967,10 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-2 md:gap-4 relative">
                     <button onClick={toggleNotifications} className="p-2 bg-white rounded-full text-slate-400 hover:text-blue-600 shadow-sm border border-slate-100 relative">
                       <Bell size={18} className="md:w-5 md:h-5"/>
-                      <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                      {/* El punto rojo solo se muestra si hay notificaciones en la lista */}
+                      {notifications.length > 0 && (
+                        <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                      )}
                     </button>
 
                     {showNotifications && (
