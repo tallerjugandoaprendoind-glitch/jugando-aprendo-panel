@@ -1525,7 +1525,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
             
             <div className="space-y-3">
               <StatusRow label="Base de Datos" status="Operativa" color="green"/>
-              <StatusRow label="IA Gemini" status="Activa" color="green"/>
+              <StatusRow label="IA Clinica" status="Activa" color="green"/>
               <StatusRow label="Almacenamiento" status="Normal" color="green"/>
               <StatusRow label="API Supabase" status="Online" color="green"/>
             </div>
@@ -2847,7 +2847,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                             <span className="font-black text-sm uppercase tracking-widest">Asistente IA</span>
                             <span className="text-[10px] text-green-400 font-bold uppercase flex items-center gap-1">
                                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div> 
-                             Gemini v4.0
+                             IA clinica v4.0
                             </span>
                         </div>
                     </div>
