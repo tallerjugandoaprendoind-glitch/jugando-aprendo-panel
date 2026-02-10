@@ -812,17 +812,35 @@ export default function AdminDashboard() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
+  const [notifications, setNotifications] = useState([]);
 
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user?.email) {
-        setUserEmail(user.email)
-      }
-    }
-    getUser()
+ useEffect(() => {
+  const getUser = async () => {
+     const { data: { user } } = await supabase.auth.getUser()
+     if (user?.email) {
+      setUserEmail(user.email)
+     }
+   }
+     getUser()
+    fetchNotifications() // <-- Nueva llamada
   }, [])
 
+  const fetchNotifications = async () => {
+    const hoy = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase
+      .from('appointments')
+      .select('*, children(name)')
+      .eq('appointment_date', hoy)
+      .order('appointment_time', { ascending: true });
+
+    if (!error && data) {
+       const formattedNotifications = data.map(cita => ({
+        id: cita.id,
+        titulo: "Cita para hoy",
+        detalle: `Paciente: ${cita.children?.name} - Hora: ${cita.appointment_time.slice(0, 5)}`,
+      }));
+    }
+  };
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut()
@@ -957,18 +975,20 @@ export default function AdminDashboard() {
                         <div className="flex items-center justify-between mb-4">
                           <h3 className="font-black text-sm text-slate-800">NOTIFICACIONES</h3>
                           <button onClick={() => setShowNotifications(false)} className="text-slate-400 hover:text-slate-600">
-                            <X size={18} />
+                           <X size={18} />
                           </button>
                         </div>
-                        <div className="space-y-3">
-                          <div className="p-3 bg-blue-50 rounded-xl border border-blue-100">
-                            <p className="text-xs font-bold text-blue-900">Nueva cita agendada</p>
-                            <p className="text-xs text-blue-600 mt-1">Paciente: María López - 14:00</p>
-                          </div>
-                          <div className="p-3 bg-purple-50 rounded-xl border border-purple-100">
-                            <p className="text-xs font-bold text-purple-900">Recordatorio de sesión</p>
-                            <p className="text-xs text-purple-600 mt-1">Sesión grupal en 30 minutos</p>
-                          </div>
+                        <div className="space-y-3 max-h-64 overflow-y-auto">
+                          {notifications.length > 0 ? (
+                            notifications.map((n) => (
+                              <div key={n.id} className="p-3 bg-blue-50 rounded-xl border border-blue-100">
+                                <p className="text-xs font-bold text-blue-900">{n.titulo}</p>
+                                <p className="text-xs text-blue-600 mt-1">{n.detalle}</p>
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-center text-slate-400 text-xs py-4">No hay citas para hoy</p>
+                          )}
                         </div>
                       </div>
                     )}
