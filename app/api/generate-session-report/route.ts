@@ -45,7 +45,7 @@ export async function POST(req: Request) {
     // 3. INVOCAR A GEMINI 2.0 FLASH (Versión estable)
     const genAI = new GoogleGenerativeAI(apiKey);
     
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+    const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
     const result = await model.generateContent(context);
     const response = await result.response;
     let text = response.text();
