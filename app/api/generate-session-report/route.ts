@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from "@google/genai";
 
 export async function POST(req: Request) {
   try {
@@ -11,20 +11,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Error de servidor: Falta la variable GEMINI_API_KEY." }, { status: 500 });
     }
 
-    // 2. VALIDACIÓN DE ENTRADA (Para no enviar datos vacíos a la IA)
+    // 2. VALIDACIÓN DE ENTRADA
     if (!antecedente || !conducta || !consecuencia) {
       return NextResponse.json({ error: "Faltan datos del registro ABC (Antecedente, Conducta o Consecuencia)." }, { status: 400 });
     }
 
-    // 3. CONFIGURACIÓN DE GEMINI (1.5 Flash + Modo JSON)
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash", // Modelo estable y gratuito
-        generationConfig: { 
-            responseMimeType: "application/json", // ESTO ES CLAVE: Fuerza respuesta JSON limpia
-            temperature: 0.4 // Temperatura baja para análisis técnico preciso
-        }
-    });
+    // 3. CONFIGURACIÓN DE GEMINI (Nueva librería)
+    const ai = new GoogleGenAI({ apiKey });
 
     // 4. CONTEXTO PARA LA IA
     const context = `
@@ -54,13 +47,22 @@ export async function POST(req: Request) {
     `;
 
     // 5. INVOCAR A GEMINI
-    const result = await model.generateContent(context);
-    
-    // Al usar responseMimeType: "application/json", no necesitamos limpiar strings manualmente.
-    // La respuesta ya viene lista para parsear.
-    const responseData = JSON.parse(result.response.text());
+    // Usamos 'config' para la temperatura y el formato JSON
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: context,
+      config: {
+        responseMimeType: "application/json",
+        temperature: 0.4 
+      }
+    });
 
-    // 6. DEVOLVER EL JSON
+    // 6. OBTENER Y PARSEAR RESPUESTA
+    // Accedemos a la propiedad .text directamente y aseguramos que no sea null
+    const responseText = response.text || "{}";
+    const responseData = JSON.parse(responseText);
+
+    // 7. DEVOLVER EL JSON
     return NextResponse.json(responseData);
 
   } catch (error: any) {

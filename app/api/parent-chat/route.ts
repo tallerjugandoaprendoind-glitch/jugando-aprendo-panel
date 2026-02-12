@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from "@google/genai"
 import { createClient } from '@supabase/supabase-js'
 
 // ============================================================================
-// API CHAT PADRES - VERSIÓN GEMINI 1.5 FLASH (CORREGIDO)
+// API CHAT PADRES - VERSIÓN ACTUALIZADA (@google/genai)
 // ============================================================================
 
 export async function POST(req: NextRequest) {
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       .limit(1)
 
     // 3. CONSTRUCCIÓN DEL PROMPT INTELIGENTE
-    let contextParts = []
+    let contextParts: string[] = []
 
     // Contexto: Paciente
     if (child) {
@@ -90,28 +90,25 @@ export async function POST(req: NextRequest) {
 
     const dataContext = contextParts.join('\n\n')
 
-    // 4. INVOCAR GEMINI 1.5 FLASH
-    const genAI = new GoogleGenerativeAI(apiKey)
+    // 4. INVOCAR GEMINI (Nueva Librería)
+    const ai = new GoogleGenAI({ apiKey })
     
-    // Configuración del modelo
-    const model = genAI.getGenerativeModel({ 
-        model: "gemini-3-flash-preview",
-        systemInstruction: `
-        ERES UN ASISTENTE CLÍNICO EXPERTO EN ABA (Análisis Conductual Aplicado).
-        
-        TU PERSONALIDAD:
-        - Empática, cálida y profesional.
-        - Hablas como una terapeuta experta que apoya a los padres.
-        - Usas emojis ocasionales (💙, ✨, 📋) para suavizar el tono.
+    // Instrucción del Sistema
+    const systemInstruction = `
+      ERES UN ASISTENTE CLÍNICO EXPERTO EN ABA (Análisis Conductual Aplicado).
+      
+      TU PERSONALIDAD:
+      - Empática, cálida y profesional.
+      - Hablas como una terapeuta experta que apoya a los padres.
+      - Usas emojis ocasionales (💙, ✨, 📋) para suavizar el tono.
 
-        TUS REGLAS:
-        1. Responde basándote EXCLUSIVAMENTE en los datos del historial proporcionado.
-        2. Si hay progreso (objetivos logrados), ¡celébralo con entusiasmo!
-        3. Si hay dificultades, valida la emoción del padre y ofrece perspectiva positiva.
-        4. Si te piden consejos, da 1 o 2 tips prácticos y breves.
-        5. Sé concisa. No escribas párrafos gigantes.
-        `
-    })
+      TUS REGLAS:
+      1. Responde basándote EXCLUSIVAMENTE en los datos del historial proporcionado.
+      2. Si hay progreso (objetivos logrados), ¡celébralo con entusiasmo!
+      3. Si hay dificultades, valida la emoción del padre y ofrece perspectiva positiva.
+      4. Si te piden consejos, da 1 o 2 tips prácticos y breves.
+      5. Sé concisa. No escribas párrafos gigantes.
+    `
 
     const prompt = `
     CONTEXTO DEL PACIENTE:
@@ -123,9 +120,17 @@ export async function POST(req: NextRequest) {
     Responde directamente a la pregunta con el tono empático definido.
     `
 
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    const text = response.text()
+    // Ejecución del modelo con la nueva sintaxis
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        systemInstruction: systemInstruction,
+      },
+    })
+
+    // Obtener texto de forma segura
+    const text = response.text || "Lo siento, no pude generar una respuesta en este momento."
 
     return NextResponse.json({ text })
 

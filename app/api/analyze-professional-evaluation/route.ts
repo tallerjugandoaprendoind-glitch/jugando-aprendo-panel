@@ -4,7 +4,7 @@
 // ==============================================================================
 
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from "@google/genai"; // [cite: 1]
 
 // Definimos interfaces para tipado básico (opcional pero recomendado)
 interface EvaluationRequest {
@@ -26,34 +26,27 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Configuración del servidor incompleta (API Key)" }, { status: 500 });
     }
 
-    // 2. Inicialización de Gemini 1.5 Flash
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash", // Modelo estable
-        generationConfig: { 
-            responseMimeType: "application/json", // Forzamos respuesta JSON pura
-            temperature: 0.4 // Temperatura baja para análisis clínico preciso
-        }
-    });
+    // 2. Inicialización según el archivo de referencia [cite: 2]
+    const ai = new GoogleGenAI({ apiKey });
 
     let analysisResult: any = {};
 
     // 3. Router de Evaluaciones
     switch (evaluationType) {
       case 'brief2':
-        analysisResult = await analyzeBRIEF2(model, responses, childName, childAge);
+        analysisResult = await analyzeBRIEF2(ai, responses, childName, childAge);
         break;
       case 'ados2':
-        analysisResult = await analyzeADOS2(model, responses, childName, childAge);
+        analysisResult = await analyzeADOS2(ai, responses, childName, childAge);
         break;
       case 'vineland3':
-        analysisResult = await analyzeVineland3(model, responses, childName, childAge);
+        analysisResult = await analyzeVineland3(ai, responses, childName, childAge);
         break;
       case 'wiscv':
-        analysisResult = await analyzeWISCV(model, responses, childName, childAge);
+        analysisResult = await analyzeWISCV(ai, responses, childName, childAge);
         break;
       case 'basc3':
-        analysisResult = await analyzeBASC3(model, responses, childName, childAge);
+        analysisResult = await analyzeBASC3(ai, responses, childName, childAge);
         break;
       default:
         return NextResponse.json({ error: `Tipo de evaluación no soportado: ${evaluationType}` }, { status: 400 });
@@ -72,7 +65,7 @@ export async function POST(req: Request) {
 // ============================================================================
 // 1. LÓGICA BRIEF-2 (Funciones Ejecutivas)
 // ============================================================================
-async function analyzeBRIEF2(model: any, responses: any, childName: string, childAge: number) {
+async function analyzeBRIEF2(ai: any, responses: any, childName: string, childAge: number) {
   // Cálculos matemáticos precisos
   const inhibicionScore = sumItems(responses, 'inhibe_', 6);
   const flexibilidadScore = sumItems(responses, 'flex_', 6);
@@ -122,8 +115,12 @@ async function analyzeBRIEF2(model: any, responses: any, childName: string, chil
     }
   `;
 
-  const result = await model.generateContent(prompt);
-  const parsed = JSON.parse(result.response.text());
+  const result = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+  });
+
+  const parsed = JSON.parse(result.text); // [cite: 3]
 
   return {
     ...parsed,
@@ -143,7 +140,7 @@ async function analyzeBRIEF2(model: any, responses: any, childName: string, chil
 // ============================================================================
 // 2. LÓGICA ADOS-2 (Diagnóstico Autismo)
 // ============================================================================
-async function analyzeADOS2(model: any, responses: any, childName: string, childAge: number) {
+async function analyzeADOS2(ai: any, responses: any, childName: string, childAge: number) {
   // Agrupación por dominios ADOS-2
   const comunicacionScore = sumItems(responses, '', ['contacto_visual', 'expresiones_faciales', 'integracion_mirada', 'sonrisa_social', 'comunicacion_afectiva', 'atencion_conjunta', 'inicio_atencion']);
   const interaccionScore = sumItems(responses, '', ['busqueda_compartir', 'ofrecimiento_consuelo', 'respuesta_nombre', 'reciprocidad_social', 'interes_otros']);
@@ -199,8 +196,12 @@ async function analyzeADOS2(model: any, responses: any, childName: string, child
     }
   `;
 
-  const result = await model.generateContent(prompt);
-  const parsed = JSON.parse(result.response.text());
+  const result = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+  });
+
+  const parsed = JSON.parse(result.text);
 
   return {
     ...parsed,
@@ -220,7 +221,7 @@ async function analyzeADOS2(model: any, responses: any, childName: string, child
 // ============================================================================
 // 3. LÓGICA VINELAND-3 (Conducta Adaptativa)
 // ============================================================================
-async function analyzeVineland3(model: any, responses: any, childName: string, childAge: number) {
+async function analyzeVineland3(ai: any, responses: any, childName: string, childAge: number) {
   // Función auxiliar interna para Vineland (0, 1, 2)
   const calcV = (keys: string[]) => calculateVinelandScore(responses, keys);
 
@@ -259,8 +260,12 @@ async function analyzeVineland3(model: any, responses: any, childName: string, c
     }
   `;
 
-  const result = await model.generateContent(prompt);
-  const parsed = JSON.parse(result.response.text());
+  const result = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+  });
+
+  const parsed = JSON.parse(result.text);
 
   return {
     ...parsed,
@@ -277,7 +282,7 @@ async function analyzeVineland3(model: any, responses: any, childName: string, c
 // ============================================================================
 // 4. LÓGICA WISC-V (Inteligencia / Cognitivo)
 // ============================================================================
-async function analyzeWISCV(model: any, responses: any, childName: string, childAge: number) {
+async function analyzeWISCV(ai: any, responses: any, childName: string, childAge: number) {
   // Suma de escalares
   const icv = sumScalars(responses, ['icv_semejanzas', 'icv_vocabulario', 'icv_informacion', 'icv_comprension']);
   const ive = sumScalars(responses, ['ive_cubos', 'ive_puzles']);
@@ -285,9 +290,8 @@ async function analyzeWISCV(model: any, responses: any, childName: string, child
   const imt = sumScalars(responses, ['imt_digitos', 'imt_imagenes']);
   const ivp = sumScalars(responses, ['ivp_claves', 'ivp_busqueda', 'ivp_cancelacion']);
 
-  // Aproximación de CI Total (Nota: Esto es una estimación programática, el WISC real usa tablas normativas)
+  // Aproximación de CI Total
   const sumaPonderada = icv + ive + irf + imt + ivp;
-  // Fórmula de regresión aproximada para simulación
   const ciTotal = Math.round(100 + ((sumaPonderada - 50) * 1.5));
   
   let clasificacion = '';
@@ -325,8 +329,12 @@ async function analyzeWISCV(model: any, responses: any, childName: string, child
     }
   `;
 
-  const result = await model.generateContent(prompt);
-  const parsed = JSON.parse(result.response.text());
+  const result = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+  });
+
+  const parsed = JSON.parse(result.text);
 
   return {
     ...parsed,
@@ -341,7 +349,7 @@ async function analyzeWISCV(model: any, responses: any, childName: string, child
 // ============================================================================
 // 5. LÓGICA BASC-3 (Conducta y Emociones)
 // ============================================================================
-async function analyzeBASC3(model: any, responses: any, childName: string, childAge: number) {
+async function analyzeBASC3(ai: any, responses: any, childName: string, childAge: number) {
   // Parseo seguro de integers
   const toInt = (k: string) => parseInt(responses[k]) || 0;
 
@@ -397,8 +405,12 @@ async function analyzeBASC3(model: any, responses: any, childName: string, child
     }
   `;
 
-  const result = await model.generateContent(prompt);
-  const parsed = JSON.parse(result.response.text());
+  const result = await ai.models.generateContent({
+    model: "gemini-3-flash-preview",
+    contents: prompt,
+  });
+
+  const parsed = JSON.parse(result.text);
 
   return {
     ...parsed,
@@ -412,7 +424,6 @@ async function analyzeBASC3(model: any, responses: any, childName: string, child
 // UTILIDADES Y AYUDANTES (Helpers)
 // ============================================================================
 
-// Suma items dinámicamente (ej. 'item_1', 'item_2'...)
 function sumItems(responses: any, prefix: string, count: number | string[]): number {
   if (Array.isArray(count)) {
     return count.reduce((sum, key) => sum + (parseInt(responses[key]) || 0), 0);
@@ -424,22 +435,19 @@ function sumItems(responses: any, prefix: string, count: number | string[]): num
   return total;
 }
 
-// Suma valores directos de un objeto
 function sumScalars(responses: any, keys: string[]): number {
   return keys.reduce((sum, key) => sum + (parseInt(responses[key]) || 0), 0);
 }
 
-// Lógica específica de Vineland (0, 1, 2)
 function calculateVinelandScore(responses: any, keys: string[]): number {
   return keys.reduce((sum, key) => {
     const val = responses[key];
     if (val === 'Usualmente' || val === 'Siempre' || val === '2') return sum + 2;
     if (val === 'A veces' || val === '1') return sum + 1;
-    return sum; // 'Nunca' o '0' suma 0
+    return sum; 
   }, 0);
 }
 
-// Generador de descripciones textuales para puntajes
 function getDescriptor(score: number, max: number): string {
   const percent = (score / max) * 100;
   if (percent < 33) return 'Bajo';

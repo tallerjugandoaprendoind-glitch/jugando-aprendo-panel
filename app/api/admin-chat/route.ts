@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// Se actualiza la importación según tu archivo de referencia
+import { GoogleGenAI } from "@google/genai";
 import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
@@ -266,19 +267,21 @@ RESPONDE AHORA:
 `;
 
     // ===========================================================================
-    // 7. INVOCAR IA CON CONTEXTO COMPLETO
+    // 7. INVOCAR IA CON CONTEXTO COMPLETO (Actualizado según tu archivo)
     // ===========================================================================
     
-    // Configuración Correcta para Node.js
-    const genAI = new GoogleGenerativeAI(apiKey);
+    // El cliente obtiene la API key automáticamente si está en el objeto de configuración
+    // o puedes pasarla directamente como en tu archivo de origen.
+    const ai = new GoogleGenAI({ apiKey });
     
-    // IMPORTANTE: Usamos 'gemini-1.5-flash' porque es el más estable para cuentas nuevas
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-    const result = await model.generateContent(context);
-    const response = await result.response;
+    // Llamada actualizada siguiendo tu sintaxis exacta: ai.models.generateContent
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: context,
+    });
     
-    return NextResponse.json({ text: response.text() });
+    // Se retorna la respuesta usando response.text
+    return NextResponse.json({ text: response.text });
 
   } catch (error: any) {
     console.error("Error Admin Chat:", error);

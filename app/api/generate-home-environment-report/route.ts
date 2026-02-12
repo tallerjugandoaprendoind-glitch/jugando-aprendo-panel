@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from "@google/genai";
 
 // ============================================================================
 // INTERFACES (Tipado fuerte para seguridad)
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Construcción del Prompt (Ingeniería de Prompt Detallada)
+    // 3. Construcción del Prompt (Ingeniería de Prompt Detallada - MANTENIDO COMPLETO)
     const prompt = `
       ACTÚA COMO: Terapeuta Senior especializado en Análisis Conductual Aplicado (ABA) y Desarrollo Infantil.
       TAREA: Evaluar el entorno del hogar de un niño en terapia y generar un reporte de intervención.
@@ -81,22 +81,22 @@ export async function POST(request: NextRequest) {
       Genera un análisis clínico estructurado en formato JSON con los siguientes campos:
 
       1. "impresion_general": (2-3 párrafos)
-         Resumen clínico profesional. Evalúa cómo el entorno físico y la dinámica familiar están impactando (positiva o negativamente) el desarrollo del niño. Identifica patrones clave.
+          Resumen clínico profesional. Evalúa cómo el entorno físico y la dinámica familiar están impactando (positiva o negativamente) el desarrollo del niño. Identifica patrones clave.
 
       2. "mensaje_padres": (1 párrafo)
-         Redacta un mensaje directo para enviar por WhatsApp a la familia.
-         TONO: Cálido, empático, motivador pero profesional.
-         CONTENIDO: Agradece la visita, destaca UNA fortaleza observada y menciona suavemente que trabajarán juntos en mejoras.
+          Redacta un mensaje directo para enviar por WhatsApp a la familia.
+          TONO: Cálido, empático, motivador pero profesional.
+          CONTENIDO: Agradece la visita, destaca UNA fortaleza observada y menciona suavemente que trabajarán juntos en mejoras.
 
       3. "recomendaciones_espacio": (Lista o Texto estructurado)
-         Provee 4 a 5 cambios físicos concretos y económicos para el hogar.
-         Ejemplo: "Reducir estímulos visuales en la zona de tareas", "Crear una caja de calma".
+          Provee 4 a 5 cambios físicos concretos y económicos para el hogar.
+          Ejemplo: "Reducir estímulos visuales en la zona de tareas", "Crear una caja de calma".
 
       4. "recomendaciones_rutinas": (Lista o Texto estructurado)
-         Sugiere 4 a 5 ajustes a los horarios o hábitos diarios para mejorar la regulación del niño y la predictibilidad.
+          Sugiere 4 a 5 ajustes a los horarios o hábitos diarios para mejorar la regulación del niño y la predictibilidad.
 
       5. "actividades_sugeridas": (Lista o Texto estructurado)
-         Describe 3 a 5 actividades breves que los padres pueden realizar en la rutina diaria para reforzar objetivos terapéuticos.
+          Describe 3 a 5 actividades breves que los padres pueden realizar en la rutina diaria para reforzar objetivos terapéuticos.
 
       --- FORMATO DE RESPUESTA OBLIGATORIO ---
       Responde ÚNICAMENTE con un objeto JSON válido. No uses Markdown, ni bloques de código.
@@ -109,21 +109,23 @@ export async function POST(request: NextRequest) {
       }
     `;
 
-    // 4. Inicialización de Gemini (Modelo 1.5 Flash - Estable y Rápido)
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash", // CORREGIDO: Usamos 1.5 Flash para evitar error 404/Quota
-        generationConfig: { 
-            responseMimeType: "application/json", // Fuerza respuesta JSON
-            temperature: 0.7 // Creatividad controlada para el tono empático
-        }
-    });
+    // 4. Inicialización de Gemini (Sintaxis corregida para @google/genai)
+    const ai = new GoogleGenAI({ apiKey });
 
     // 5. Ejecución del Modelo
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text();
+    // Usamos el parámetro 'config' para definir el tipo de respuesta y la temperatura
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json", // Fuerza respuesta JSON
+        temperature: 0.7, // Creatividad controlada para el tono empático
+      },
+    });
 
     // 6. Procesamiento y Limpieza de Respuesta
+    // En la nueva librería, response.text es una propiedad directa (string | null)
+    const responseText = response.text || "{}"; 
     let analysisData: AnalysisResponse;
 
     try {
@@ -132,18 +134,23 @@ export async function POST(request: NextRequest) {
     } catch (parseError) {
       console.warn("⚠️ Advertencia: JSON malformado, intentando limpieza manual...", parseError);
       
-      // Limpieza de respaldo (Fallback) por si el modo JSON falla
+      // Limpieza de respaldo (Fallback) por si el modo JSON falla o incluye Markdown
       let cleaned = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-      // Búsqueda del primer { y último }
+      
+      // Búsqueda del primer { y último } para asegurar validez
       const firstBrace = cleaned.indexOf('{');
       const lastBrace = cleaned.lastIndexOf('}');
+      
       if (firstBrace !== -1 && lastBrace !== -1) {
         cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+        analysisData = JSON.parse(cleaned);
+      } else {
+         throw new Error("No se pudo extraer un JSON válido de la respuesta de la IA.");
       }
-      analysisData = JSON.parse(cleaned);
     }
 
     // 7. Validación de Estructura de Salida
+    // Aseguramos que los campos críticos existan antes de responder al frontend
     if (!analysisData.impresion_general || !analysisData.mensaje_padres) {
       throw new Error("La IA generó una respuesta incompleta o con estructura incorrecta.");
     }
@@ -171,4 +178,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

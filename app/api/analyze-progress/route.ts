@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { GoogleGenAI } from "@google/genai";
 import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
@@ -17,13 +17,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Error de servidor: Falta API Key" }, { status: 500 });
     }
 
-    // 2. Obtener sesiones con FECHA (Vital para medir progreso)
+    // 2. Obtener sesiones con FECHA
     const { data: sessions, error: dbError } = await supabase
       .from('registro_aba')
       .select('fecha_sesion, datos') 
       .eq('child_id', childId)
-      .order('fecha_sesion', { ascending: false }) // Traemos las más recientes primero
-      .limit(10); // Analizamos las últimas 10 sesiones
+      .order('fecha_sesion', { ascending: false })
+      .limit(10);
 
     if (dbError) throw new Error(dbError.message);
 
@@ -31,48 +31,40 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No hay sesiones suficientes para analizar." });
     }
 
-    // 3. Configurar Gemini (Modelo 1.5 Flash para evitar errores de cuota)
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
-        generationConfig: { responseMimeType: "application/json" }
-    });
+    // 3. Configurar Gemini con la nueva librería
+    const ai = new GoogleGenAI({ apiKey });
 
     // 4. Prompt Estructurado
     const prompt = `
       Eres un analista clínico experto en terapia ABA.
-      
-      CONTEXTO:
-      Aquí tienes los reportes de las últimas sesiones del paciente (ordenadas de la más reciente a la más antigua):
-      ${JSON.stringify(sessions)}
-
-      TAREA:
-      Analiza la tendencia de los datos. Calcula un porcentaje de dominio/progreso actual (0 a 100) para estas 3 áreas.
-      - Si el niño cumple objetivos consistentemente en las últimas sesiones, el puntaje debe ser alto.
-      - Si hay muchas conductas disruptivas recientes, el puntaje debe bajar.
-
+      CONTEXTO: ${JSON.stringify(sessions)}
+      TAREA: Calcula progreso (0-100) en: verbal, emocional, social.
       Responde SOLAMENTE este JSON exacto:
-      {
-        "verbal": number,    // Progreso en Comunicación Verbal
-        "emocional": number, // Progreso en Regulación Emocional
-        "social": number     // Progreso en Habilidades Sociales
-      }
+      { "verbal": number, "emocional": number, "social": number }
     `;
 
-    // 5. Generar Análisis
-    const result = await model.generateContent(prompt);
-    const data = JSON.parse(result.response.text());
+    // 5. Generar Análisis - Se asegura que el modelo sea un string fijo
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview" as string,
+      contents: prompt as string,
+    });
 
-    // 6. Guardar resultados en Supabase
-    const { error: updateError } = await supabase.from('children').update({
-        progress_verbal: data.verbal,
-        progress_emotional: data.emocional,
-        progress_social: data.social
-    }).eq('id', childId);
+    // 6. Obtener y parsear el texto de la respuesta con validación
+    const responseText = response.text || "{}";
+    const data = JSON.parse(responseText);
+
+    // 7. Guardar resultados en Supabase
+    const { error: updateError } = await supabase
+      .from('children')
+      .update({
+        progress_verbal: data.verbal || 0,
+        progress_emotional: data.emocional || 0,
+        progress_social: data.social || 0
+      })
+      .eq('id', childId);
 
     if (updateError) {
       console.error("Error actualizando DB:", updateError);
-      // No detenemos la respuesta, pero lo logueamos
     }
 
     return NextResponse.json(data);
