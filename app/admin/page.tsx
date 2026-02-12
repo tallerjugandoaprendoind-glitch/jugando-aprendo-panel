@@ -12,8 +12,11 @@ import {
   Sparkles, ChevronRight, ChevronLeft, CheckCircle2, Heart, Baby, Stethoscope, Save,
   Utensils, Smile, MessageCircle, Home, History, Upload, FileSpreadsheet, 
   ChevronDown, ChevronUp, AlertTriangle, ShieldAlert, BookOpen, Trash2, Eye, FileWarning, Send, MoreHorizontal,
-  UserPlus, Edit, Phone, Key, TrendingUp, Target, Zap, Award, BarChart3
+  UserPlus, Edit, Phone, Key, TrendingUp, Target, Zap, Award, BarChart3,
+  FileDown, FileCheck, Download, RefreshCw
 } from 'lucide-react'
+
+import ReportGenerator from '@/components/ReportGenerator'
 
 // ==============================================================================
 // 1. CONFIGURACIÓN DE DATOS - FORMULARIOS ssssss
@@ -2025,6 +2028,8 @@ function DynamicEvaluationsView() {
   const [respuestas, setRespuestas] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [savedEvaluationId, setSavedEvaluationId] = useState<string | null>(null);
+  const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
     supabase.from('children').select('id, name').then(({ data }) => data && setListaNinos(data));
@@ -2171,12 +2176,22 @@ function DynamicEvaluationsView() {
       
       console.log('💾 Insertando en tabla:', tabla, 'con child_id:', dataToInsert.child_id);
       
-      const { error } = await supabase.from(tabla).insert([dataToInsert]);
+      const { data: insertedData, error } = await supabase.from(tabla).insert([dataToInsert]).select('id').single();
       if (error) throw error;
       
       console.log('✅ Guardado exitoso en tabla:', tabla);
-      alert("✅ ¡Evaluación guardada exitosamente!");
-      setActiveForm(null); setRespuestas({}); setSelectedChild(''); setCurrentStep(0);
+
+      // Guardar ID para generar reporte
+      setSavedEvaluationId(insertedData?.id || null);
+
+      // Preguntar si quiere generar reporte Word
+      const wantsReport = confirm('✅ ¡Evaluación guardada exitosamente!\n\n¿Deseas generar el Reporte Word ahora?');
+      if (wantsReport) {
+        setShowReportModal(true);
+      } else {
+        setActiveForm(null); setRespuestas({}); setSelectedChild(''); setCurrentStep(0);
+        setSavedEvaluationId(null);
+      }
     } catch (error: any) {
       console.error('❌ Error al guardar:', error);
       alert("❌ Error: " + error.message);
@@ -2190,6 +2205,8 @@ function DynamicEvaluationsView() {
     setCurrentStep(0);
     setRespuestas({});
     setSelectedChild('');
+    setSavedEvaluationId(null);
+    setShowReportModal(false);
   };
 
   return (
@@ -2249,7 +2266,7 @@ function DynamicEvaluationsView() {
               </div>
             </button>
 
-            {/* Cards Dinámicas - AQUÍ ESTABA EL ERROR DE DUPLICIDAD, YA CORREGIDO */}
+            {/* Cards Dinámicas */}
             {['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].map((type) => (
               <button 
                 key={type}
@@ -2326,25 +2343,25 @@ function DynamicEvaluationsView() {
           {/* CONTENIDO DEL FORMULARIO */}
           <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 bg-gradient-to-br from-slate-50 to-white">
              <div className="max-w-5xl mx-auto space-y-6 md:space-y-8">
-                
-                {/* BOTON IA - Se muestra en TODO excepto Anamnesis */}
-                {activeForm !== 'anamnesis' && (
-                    <div className="flex justify-end sticky top-0 z-20 pointer-events-none">
-                        <div className="pointer-events-auto">
-                            <button 
-                                onClick={handleGenerateUniversalIA}
-                                disabled={isGenerating}
-                                className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-5 py-2.5 rounded-full font-black text-xs md:text-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isGenerating ? <Loader2 size={16} className="animate-spin"/> : <Sparkles size={16}/>}
-                                Generar IA
-                            </button>
-                        </div>
-                    </div>
-                )}
+               
+               {/* BOTON IA - Se muestra en TODO excepto Anamnesis */}
+               {activeForm !== 'anamnesis' && (
+                   <div className="flex justify-end sticky top-0 z-20 pointer-events-none">
+                       <div className="pointer-events-auto">
+                           <button 
+                               onClick={handleGenerateUniversalIA}
+                               disabled={isGenerating}
+                               className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white px-5 py-2.5 rounded-full font-black text-xs md:text-sm shadow-xl hover:shadow-2xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                           >
+                               {isGenerating ? <Loader2 size={16} className="animate-spin"/> : <Sparkles size={16}/>}
+                               Generar IA
+                           </button>
+                       </div>
+                   </div>
+               )}
 
-                {/* Selector de Paciente */}
-                <div className="bg-white p-5 md:p-6 rounded-2xl md:rounded-3xl border-2 border-slate-200 shadow-sm hover:shadow-md transition-all">
+               {/* Selector de Paciente */}
+               <div className="bg-white p-5 md:p-6 rounded-2xl md:rounded-3xl border-2 border-slate-200 shadow-sm hover:shadow-md transition-all">
                    <label className="text-xs md:text-sm font-black text-slate-500 uppercase tracking-widest mb-3 ml-1 flex items-center gap-2">
                      <User size={16}/>
                      Seleccionar Paciente
@@ -2357,189 +2374,189 @@ function DynamicEvaluationsView() {
                       <option value="">-- Buscar paciente --</option>
                       {listaNinos.map(n=><option key={n.id} value={n.id}>{n.name}</option>)}
                    </select>
-                </div>
+               </div>
 
-                {/* Preguntas del Formulario */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
-                  {currentSection?.questions.map((q: any) => (
-                    <div key={q.id} className={`space-y-3 ${q.type === 'textarea' || q.type === 'multiselect' ? 'md:col-span-2' : ''}`}>
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                          <label className="text-sm md:text-base font-bold text-slate-700 ml-1 flex items-center gap-2">
-                            {q.label}
-                            {q.required && <span className="text-red-500">*</span>}
-                            {q.aiGenerated && (
-                              <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-0.5 rounded-full font-black">IA</span>
-                            )}
-                          </label>
-                      </div>
+               {/* Preguntas del Formulario */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+                 {currentSection?.questions.map((q: any) => (
+                   <div key={q.id} className={`space-y-3 ${q.type === 'textarea' || q.type === 'multiselect' ? 'md:col-span-2' : ''}`}>
+                     <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                         <label className="text-sm md:text-base font-bold text-slate-700 ml-1 flex items-center gap-2">
+                           {q.label}
+                           {q.required && <span className="text-red-500">*</span>}
+                           {q.aiGenerated && (
+                             <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-0.5 rounded-full font-black">IA</span>
+                           )}
+                         </label>
+                     </div>
 
-                      {/* Campo Date */}
-                      {q.type === 'date' && (
-                        <input 
-                          type="date" 
-                          className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium" 
-                          value={respuestas[q.id] || ''}
-                          onChange={(e) => handleInputChange(q.id, e.target.value)} 
-                        />
-                      )}
-                      
-                      {/* Campo Number */}
-                      {q.type === 'number' && (
-                        <input 
-                          type="number"
-                          min={q.min}
-                          max={q.max}
-                          placeholder={q.placeholder}
-                          className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium" 
-                          value={respuestas[q.id] || ''}
-                          onChange={(e) => handleInputChange(q.id, e.target.value)} 
-                        />
-                      )}
-                      
-                      {/* Campo Text */}
-                      {q.type === 'text' && (
-                        <input 
-                          className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium" 
-                          placeholder={q.placeholder} 
-                          value={respuestas[q.id] || ''}
-                          onChange={(e) => handleInputChange(q.id, e.target.value)} 
-                        />
-                      )}
-                      
-                      {/* Campo Textarea */}
-                      {q.type === 'textarea' && (
-                        <textarea 
-                            className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium min-h-[120px] md:min-h-[140px] resize-none leading-relaxed" 
-                            placeholder={q.placeholder} 
-                            value={respuestas[q.id] || ''} 
-                            onChange={(e) => handleInputChange(q.id, e.target.value)}
-                        ></textarea>
-                      )}
-                      
-                      {/* Campo Select */}
-                      {q.type === 'select' && (
-                        <div className="relative">
-                            <select 
-                              className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 appearance-none cursor-pointer font-medium pr-12" 
-                              value={respuestas[q.id] || ''}
-                              onChange={(e) => handleInputChange(q.id, e.target.value)}
-                            >
-                                <option value="">Seleccionar...</option>
-                                {q.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20}/>
-                        </div>
-                      )}
-                      
-                      {/* Campo Range (Escala 1-5) */}
-                      {q.type === 'range' && (
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-bold text-slate-500">
-                              {q.labels?.[0] || 'Mínimo'}
-                            </span>
-                            <div className="flex items-center gap-2">
-                              <span className="text-3xl font-black text-blue-600">
-                                {respuestas[q.id] || q.min || 1}
-                              </span>
-                              <span className="text-sm text-slate-400">/ {q.max || 5}</span>
-                            </div>
-                            <span className="text-sm font-bold text-slate-500">
-                              {q.labels?.[q.labels.length - 1] || 'Máximo'}
-                            </span>
-                          </div>
-                          <input 
-                            type="range"
-                            min={q.min || 1}
-                            max={q.max || 5}
-                            step="1"
-                            value={respuestas[q.id] || q.min || 1}
-                            onChange={(e) => handleInputChange(q.id, parseInt(e.target.value))}
-                            className="w-full h-3 bg-slate-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:bg-blue-700"
-                          />
-                          {q.labels && (
-                            <p className="text-xs text-center font-bold text-slate-600 bg-blue-50 px-3 py-2 rounded-lg">
-                              {q.labels[respuestas[q.id] - 1] || q.labels[0]}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Campo Multiselect */}
-                      {q.type === 'multiselect' && (
-                        <div className="space-y-2">
-                          <div className="flex flex-wrap gap-2">
-                            {q.options.map((opt: string) => (
-                              <label 
-                                key={opt}
-                                className={`px-4 py-2 rounded-xl border-2 cursor-pointer transition-all text-sm font-bold ${
-                                  (respuestas[q.id] || []).includes(opt)
-                                    ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
-                                    : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50'
-                                }`}
-                              >
-                                <input 
-                                  type="checkbox"
-                                  className="hidden"
-                                  checked={(respuestas[q.id] || []).includes(opt)}
-                                  onChange={() => handleMultiselectChange(q.id, opt)}
-                                />
-                                {opt}
-                              </label>
-                            ))}
-                          </div>
-                          {(respuestas[q.id] || []).length > 0 && (
-                            <p className="text-xs text-slate-500 font-bold">
-                              ✓ {(respuestas[q.id] || []).length} seleccionada(s)
-                            </p>
-                          )}
-                        </div>
-                      )}
-                      
-                      {/* Campo Radio */}
-                      {q.type === 'radio' && (
-                        <div className="flex flex-wrap gap-3">
-                            {q.options.map((opt: string) => (
-                                <label 
-                                  key={opt} 
-                                  className={`flex items-center gap-2 px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all text-sm md:text-base font-bold ${
-                                      respuestas[q.id] === opt 
-                                      ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' 
-                                      : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50'
-                                  }`}
-                                >
-                                    <input 
-                                      type="radio" 
-                                      name={q.id} 
-                                      value={opt} 
-                                      className="hidden" 
-                                      checked={respuestas[q.id] === opt}
-                                      onChange={(e) => handleInputChange(q.id, e.target.value)} 
-                                    />
-                                    <span>{opt}</span>
-                                    {respuestas[q.id] === opt && <CheckCircle2 size={18}/>}
-                                </label>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-             </div>
-          </div>
+                     {/* Campo Date */}
+                     {q.type === 'date' && (
+                       <input 
+                         type="date" 
+                         className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium" 
+                         value={respuestas[q.id] || ''}
+                         onChange={(e) => handleInputChange(q.id, e.target.value)} 
+                       />
+                     )}
+                     
+                     {/* Campo Number */}
+                     {q.type === 'number' && (
+                       <input 
+                         type="number"
+                         min={q.min}
+                         max={q.max}
+                         placeholder={q.placeholder}
+                         className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium" 
+                         value={respuestas[q.id] || ''}
+                         onChange={(e) => handleInputChange(q.id, e.target.value)} 
+                       />
+                     )}
+                     
+                     {/* Campo Text */}
+                     {q.type === 'text' && (
+                       <input 
+                         className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium" 
+                         placeholder={q.placeholder} 
+                         value={respuestas[q.id] || ''}
+                         onChange={(e) => handleInputChange(q.id, e.target.value)} 
+                       />
+                     )}
+                     
+                     {/* Campo Textarea */}
+                     {q.type === 'textarea' && (
+                       <textarea 
+                           className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all font-medium min-h-[120px] md:min-h-[140px] resize-none leading-relaxed" 
+                           placeholder={q.placeholder} 
+                           value={respuestas[q.id] || ''} 
+                           onChange={(e) => handleInputChange(q.id, e.target.value)}
+                       ></textarea>
+                     )}
+                     
+                     {/* Campo Select */}
+                     {q.type === 'select' && (
+                       <div className="relative">
+                           <select 
+                             className="w-full p-4 md:p-5 bg-white border-2 border-slate-200 rounded-xl md:rounded-2xl text-sm md:text-base outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 appearance-none cursor-pointer font-medium pr-12" 
+                             value={respuestas[q.id] || ''}
+                             onChange={(e) => handleInputChange(q.id, e.target.value)}
+                           >
+                               <option value="">Seleccionar...</option>
+                               {q.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
+                           </select>
+                           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20}/>
+                       </div>
+                     )}
+                     
+                     {/* Campo Range (Escala 1-5) */}
+                     {q.type === 'range' && (
+                       <div className="space-y-3">
+                         <div className="flex items-center justify-between">
+                           <span className="text-sm font-bold text-slate-500">
+                             {q.labels?.[0] || 'Mínimo'}
+                           </span>
+                           <div className="flex items-center gap-2">
+                             <span className="text-3xl font-black text-blue-600">
+                               {respuestas[q.id] || q.min || 1}
+                             </span>
+                             <span className="text-sm text-slate-400">/ {q.max || 5}</span>
+                           </div>
+                           <span className="text-sm font-bold text-slate-500">
+                             {q.labels?.[q.labels.length - 1] || 'Máximo'}
+                           </span>
+                         </div>
+                         <input 
+                           type="range"
+                           min={q.min || 1}
+                           max={q.max || 5}
+                           step="1"
+                           value={respuestas[q.id] || q.min || 1}
+                           onChange={(e) => handleInputChange(q.id, parseInt(e.target.value))}
+                           className="w-full h-3 bg-slate-200 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-blue-600 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:cursor-pointer hover:[&::-webkit-slider-thumb]:bg-blue-700"
+                         />
+                         {q.labels && (
+                           <p className="text-xs text-center font-bold text-slate-600 bg-blue-50 px-3 py-2 rounded-lg">
+                             {q.labels[respuestas[q.id] - 1] || q.labels[0]}
+                           </p>
+                         )}
+                       </div>
+                     )}
+                     
+                     {/* Campo Multiselect */}
+                     {q.type === 'multiselect' && (
+                       <div className="space-y-2">
+                         <div className="flex flex-wrap gap-2">
+                           {q.options.map((opt: string) => (
+                             <label 
+                               key={opt}
+                               className={`px-4 py-2 rounded-xl border-2 cursor-pointer transition-all text-sm font-bold ${
+                                 (respuestas[q.id] || []).includes(opt)
+                                   ? 'bg-blue-600 border-blue-600 text-white shadow-lg'
+                                   : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:bg-blue-50'
+                               }`}
+                             >
+                               <input 
+                                 type="checkbox"
+                                 className="hidden"
+                                 checked={(respuestas[q.id] || []).includes(opt)}
+                                 onChange={() => handleMultiselectChange(q.id, opt)}
+                               />
+                               {opt}
+                             </label>
+                           ))}
+                         </div>
+                         {(respuestas[q.id] || []).length > 0 && (
+                           <p className="text-xs text-slate-500 font-bold">
+                             ✓ {(respuestas[q.id] || []).length} seleccionada(s)
+                           </p>
+                         )}
+                       </div>
+                     )}
+                     
+                     {/* Campo Radio */}
+                     {q.type === 'radio' && (
+                       <div className="flex flex-wrap gap-3">
+                           {q.options.map((opt: string) => (
+                               <label 
+                                 key={opt} 
+                                 className={`flex items-center gap-2 px-4 md:px-5 py-3 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all text-sm md:text-base font-bold ${
+                                     respuestas[q.id] === opt 
+                                     ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200' 
+                                     : 'bg-white border-slate-200 hover:border-blue-300 hover:bg-blue-50'
+                                 }`}
+                               >
+                                   <input 
+                                     type="radio" 
+                                     name={q.id} 
+                                     value={opt} 
+                                     className="hidden" 
+                                     checked={respuestas[q.id] === opt}
+                                     onChange={(e) => handleInputChange(q.id, e.target.value)} 
+                                   />
+                                   <span>{opt}</span>
+                                   {respuestas[q.id] === opt && <CheckCircle2 size={18}/>}
+                               </label>
+                           ))}
+                       </div>
+                     )}
+                   </div>
+                 ))}
+               </div>
+            </div>
+         </div>
 
-          {/* FOOTER CON NAVEGACIÓN */}
-          <div className="p-5 md:p-6 bg-white border-t-2 border-slate-100 flex justify-between shrink-0 gap-4 shadow-lg">
-              <button 
-                disabled={currentStep === 0} 
-                onClick={() => setCurrentStep(currentStep-1)} 
-                className="px-6 md:px-8 py-3 md:py-4 font-black text-sm md:text-base text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                <ChevronLeft size={18}/>
-                Atrás
-              </button>
-              
-              {currentStep < (formConfig!.length - 1) ? (
+         {/* FOOTER CON NAVEGACIÓN */}
+         <div className="p-5 md:p-6 bg-white border-t-2 border-slate-100 flex justify-between shrink-0 gap-4 shadow-lg">
+             <button 
+               disabled={currentStep === 0} 
+               onClick={() => setCurrentStep(currentStep-1)} 
+               className="px-6 md:px-8 py-3 md:py-4 font-black text-sm md:text-base text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
+             >
+               <ChevronLeft size={18}/>
+               Atrás
+             </button>
+             
+             {currentStep < (formConfig!.length - 1) ? (
                  <button 
                    onClick={() => setCurrentStep(currentStep+1)} 
                    className="px-8 md:px-12 py-3 md:py-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-xl md:rounded-2xl font-black text-sm md:text-base hover:from-black hover:to-slate-900 transition-all flex items-center gap-2 shadow-xl"
@@ -2547,7 +2564,7 @@ function DynamicEvaluationsView() {
                    <span>Siguiente</span>
                    <ChevronRight size={18}/>
                  </button>
-              ) : (
+             ) : (
                  <button 
                    onClick={handleSave} 
                    disabled={isSaving || !selectedChild} 
@@ -2565,12 +2582,36 @@ function DynamicEvaluationsView() {
                      </>
                    )}
                  </button>
-              )}
-          </div>
-        </div>
-      )}
-    </div>
-  )
+             )}
+         </div>
+       </div>
+     )}
+
+     {/* ── MODAL REPORTE WORD (MOVIDO DENTRO DEL DIV PRINCIPAL) ─────────────────────────────────────────────── */}
+     {showReportModal && savedEvaluationId && selectedChild && activeForm && (
+       <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+         <div className="w-full max-w-xl animate-fade-in-up">
+           <ReportGenerator
+             childId={selectedChild}
+             childName={listaNinos.find(n => n.id === selectedChild)?.name || ''}
+             evaluationType={activeForm!}
+             evaluationData={respuestas}
+             evaluationId={savedEvaluationId!}  // <--- CORRECCIÓN AQUÍ (Signo !)
+             compact={false}
+             onClose={() => {
+               setShowReportModal(false);
+               setActiveForm(null);
+               setRespuestas({});
+               setSelectedChild('');
+               setCurrentStep(0);
+               setSavedEvaluationId(null);
+             }}
+           />
+         </div>
+       </div>
+     )}
+   </div>
+ )
 }
 
 // ==============================================================================
@@ -2581,6 +2622,9 @@ function AIReportView() {
   const [selectedChild, setSelectedChild] = useState('')
   const [historyData, setHistoryData] = useState<any>({ anamnesis: null, aba: [], entorno: [] })
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null)
+  const [reportesHistorial, setReportesHistorial] = useState<any[]>([])
+  const [loadingReportes, setLoadingReportes] = useState(false)
+  const [showReportPanel, setShowReportPanel] = useState(true)
   
   const [messages, setMessages] = useState<any[]>([
       { role: 'ai', text: 'Hola 👋. Selecciona un paciente para iniciar el análisis clínico.' }
@@ -2702,6 +2746,16 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
     role: 'ai', 
     text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${brief2 ? '✅' : '❌'} BRIEF-2\n• ${ados2 ? '✅' : '❌'} ADOS-2\n• ${vineland3 ? '✅' : '❌'} Vineland-3\n• ${wiscv ? '✅' : '❌'} WISC-V\n• ${basc3 ? '✅' : '❌'} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}${!anamnesis ? '\n\n⚠️ Falta Anamnesis Inicial' : ''}${(!entorno || entorno.length === 0) ? '\n⚠️ Falta Visita Domiciliaria' : ''}\n\n¿Qué deseas analizar?`
   }])
+
+    // Cargar todos los reportes Word del paciente
+    setLoadingReportes(true)
+    const { data: allReportes } = await supabase
+      .from('reportes_generados')
+      .select('id, tipo_reporte, titulo, nombre_archivo, fecha_generacion, tamano_bytes, generado_por')
+      .eq('child_id', childId)
+      .order('fecha_generacion', { ascending: false })
+    setReportesHistorial(allReportes || [])
+    setLoadingReportes(false)
 }
 
   const sendMessage = async () => {
@@ -2758,6 +2812,59 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
 
       {selectedChild ? (
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 overflow-hidden min-h-0">
+
+            {/* ── PANEL REPORTES WORD ──────────────────────────────────────────── */}
+            <div className="col-span-1 lg:col-span-12 flex-shrink-0">
+              <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+                <button
+                  onClick={() => setShowReportPanel(!showReportPanel)}
+                  className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 rounded-xl">
+                      <FileText size={18} className="text-blue-600" />
+                    </div>
+                    <span className="font-black text-slate-700 text-sm uppercase tracking-widest">
+                      Reportes Word Generados
+                    </span>
+                    {reportesHistorial.length > 0 && (
+                      <span className="text-xs bg-blue-600 text-white px-2.5 py-1 rounded-full font-black shadow-sm">
+                        {reportesHistorial.length}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown
+                    size={18}
+                    className={`text-slate-400 transition-transform duration-200 ${showReportPanel ? 'rotate-180' : ''}`}
+                  />
+                </button>
+
+                {showReportPanel && (
+                  <div className="border-t border-slate-100 p-4 md:p-5">
+                    {loadingReportes ? (
+                      <div className="flex items-center justify-center gap-2 py-6 text-slate-400">
+                        <Loader2 className="animate-spin" size={20} />
+                        <span className="text-xs font-bold">Cargando reportes...</span>
+                      </div>
+                    ) : reportesHistorial.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
+                        <FileText size={36} className="text-slate-200 mb-3" />
+                        <p className="text-sm font-black text-slate-400">Sin reportes Word generados</p>
+                        <p className="text-xs text-slate-300 mt-1.5 text-center max-w-xs">
+                          Los reportes aparecerán aquí cuando los generes desde Evaluaciones
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
+                        {reportesHistorial.map((rep) => (
+                          <ReporteHistorialCard key={rep.id} reporte={rep} />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
             
             {/* ANAMNESIS */}
             <div className="hidden xl:block xl:col-span-3 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col overflow-hidden">
@@ -2957,6 +3064,109 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
               <p className="text-2xl font-black uppercase tracking-[0.4em] text-slate-300">Seleccionar Paciente</p>
           </div>
       )}
+    </div>
+  )
+}
+
+// ==============================================================================
+// SUBCOMPONENTE: TARJETA DE REPORTE EN HISTORIAL
+// ==============================================================================
+const COLORES_REPORTE: Record<string, string> = {
+  aba:           'from-purple-500 to-purple-600',
+  anamnesis:     'from-blue-500 to-blue-600',
+  entorno_hogar: 'from-green-500 to-green-600',
+  brief2:        'from-indigo-500 to-indigo-600',
+  ados2:         'from-teal-500 to-teal-600',
+  vineland3:     'from-emerald-500 to-emerald-600',
+  wiscv:         'from-violet-500 to-violet-600',
+  basc3:         'from-rose-500 to-rose-600',
+}
+
+const BADGE_REPORTE: Record<string, string> = {
+  aba:           'bg-purple-100 text-purple-700 border-purple-200',
+  anamnesis:     'bg-blue-100 text-blue-700 border-blue-200',
+  entorno_hogar: 'bg-green-100 text-green-700 border-green-200',
+  brief2:        'bg-indigo-100 text-indigo-700 border-indigo-200',
+  ados2:         'bg-teal-100 text-teal-700 border-teal-200',
+  vineland3:     'bg-emerald-100 text-emerald-700 border-emerald-200',
+  wiscv:         'bg-violet-100 text-violet-700 border-violet-200',
+  basc3:         'bg-rose-100 text-rose-700 border-rose-200',
+}
+
+function ReporteHistorialCard({ reporte }: { reporte: any }) {
+  const handleDownload = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reportes_generados')
+        .select('file_data, nombre_archivo')
+        .eq('id', reporte.id)
+        .single()
+      if (error) throw error
+      const byteChars = atob(data.file_data)
+      const bytes = new Uint8Array(byteChars.length)
+      for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i)
+      const blob = new Blob([bytes], {
+        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url; a.download = data.nombre_archivo
+      document.body.appendChild(a); a.click()
+      URL.revokeObjectURL(url); document.body.removeChild(a)
+    } catch {
+      alert('Error al descargar el reporte')
+    }
+  }
+
+  const gradiente = COLORES_REPORTE[reporte.tipo_reporte] || 'from-slate-500 to-slate-600'
+  const badge     = BADGE_REPORTE[reporte.tipo_reporte]   || 'bg-slate-100 text-slate-600 border-slate-200'
+
+  return (
+    <div className="bg-white border-2 border-slate-100 hover:border-blue-300 hover:shadow-lg rounded-2xl overflow-hidden transition-all duration-200 group">
+      {/* Barra superior con color del tipo */}
+      <div className={`bg-gradient-to-r ${gradiente} p-4 flex items-center gap-3`}>
+        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+          <FileText size={20} className="text-white" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-white font-black text-xs truncate">{reporte.titulo}</p>
+          <p className="text-white/70 text-[10px] font-bold mt-0.5">
+            {(reporte.tamano_bytes / 1024).toFixed(0)} KB
+          </p>
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="p-3 space-y-2.5">
+        <span className={`inline-flex text-[10px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider ${badge}`}>
+          {reporte.tipo_reporte}
+        </span>
+
+        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
+          <Clock size={10} />
+          <span>
+            {new Date(reporte.fecha_generacion).toLocaleDateString('es-PE', {
+              day: '2-digit', month: 'short', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            })}
+          </span>
+        </div>
+
+        {reporte.generado_por && (
+          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
+            <User size={10} />
+            <span>{reporte.generado_por}</span>
+          </div>
+        )}
+
+        <button
+          onClick={handleDownload}
+          className={`w-full flex items-center justify-center gap-2 py-2.5 bg-gradient-to-r ${gradiente} text-white rounded-xl font-black text-xs transition-all shadow-sm hover:shadow-md hover:scale-[1.02] active:scale-95`}
+        >
+          <Download size={14} />
+          Descargar .docx
+        </button>
+      </div>
     </div>
   )
 }
