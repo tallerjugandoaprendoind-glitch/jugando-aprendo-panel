@@ -6,10 +6,11 @@ export async function POST(req: Request) {
   try {
     const { question, childId } = await req.json();
 
+    // Validaciones iniciales
     if (!childId) return NextResponse.json({ text: "⚠️ Selecciona un paciente primero." });
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return NextResponse.json({ text: "❌ Error: Falta API Key." });
+    if (!apiKey) return NextResponse.json({ text: "❌ Error: Falta API Key en las variables de entorno." });
 
     // ===========================================================================
     // 1. CARGAR DATOS DEL PACIENTE
@@ -52,7 +53,7 @@ export async function POST(req: Request) {
       .limit(5);
 
     // ===========================================================================
-    // 5. 🆕 CARGAR EVALUACIONES PROFESIONALES
+    // 5. CARGAR EVALUACIONES PROFESIONALES
     // ===========================================================================
     
     // BRIEF-2 - Funciones Ejecutivas
@@ -267,8 +268,12 @@ RESPONDE AHORA:
     // ===========================================================================
     // 7. INVOCAR IA CON CONTEXTO COMPLETO
     // ===========================================================================
+    
+    // Configuración Correcta para Node.js
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
+    
+    // IMPORTANTE: Usamos 'gemini-1.5-flash' porque es el más estable para cuentas nuevas
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const result = await model.generateContent(context);
     const response = await result.response;

@@ -3,12 +3,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createClient } from '@supabase/supabase-js'
 
 // ============================================================================
-// API CHAT PADRES - VERSIÓN GEMINI 2.5 FLASH (MEJORADO)
+// API CHAT PADRES - VERSIÓN GEMINI 1.5 FLASH (CORREGIDO)
 // ============================================================================
 
 export async function POST(req: NextRequest) {
   try {
-    const { question, childId, childName } = await req.json()
+    const { question, childId } = await req.json()
 
     // 1. Validaciones
     if (!question || !childId) {
@@ -35,28 +35,29 @@ export async function POST(req: NextRequest) {
     // A. Info del niño
     const { data: child } = await supabase
       .from('children')
-      .select('*')
+      .select('name, birth_date, diagnosis')
       .eq('id', childId)
       .single()
 
-    // B. Historial (Leemos 20 para dar mejores estadísticas)
+    // B. Historial (Leemos 5 para dar contexto reciente sin saturar)
     const { data: sessions } = await supabase
       .from('registro_aba')
-      .select('*')
+      .select('fecha_sesion, datos')
       .eq('child_id', childId)
       .order('fecha_sesion', { ascending: false })
-      .limit(20)
+      .limit(5)
 
     // C. Próximas citas
     const { data: appointments } = await supabase
       .from('appointments')
-      .select('*')
+      .select('appointment_date, appointment_time')
       .eq('child_id', childId)
       .gte('appointment_date', new Date().toISOString().split('T')[0])
       .order('appointment_date', { ascending: true })
+      .limit(1)
 
     // 3. CONSTRUCCIÓN DEL PROMPT INTELIGENTE
-    const contextParts = []
+    let contextParts = []
 
     // Contexto: Paciente
     if (child) {
@@ -67,43 +68,34 @@ export async function POST(req: NextRequest) {
 - Diagnóstico: ${child.diagnosis || 'En evaluación'}`)
     }
 
-    // Contexto: Historial y Progreso
+    // Contexto: Historial Reciente
     if (sessions && sessions.length > 0) {
-      const lastSession = sessions[0]
-      const total = sessions.length
-      // Calculamos éxito rápido para que la IA sepa si felicitar o animar
-      const logrados = sessions.filter(s => 
-        s.datos?.resultado_sesion?.toLowerCase().includes('logrado') || 
-        s.datos?.resultado_sesion?.toLowerCase().includes('excelente')
-      ).length
-
-      contextParts.push(`HISTORIAL RECIENTE (Resumen):
-- Sesiones analizadas: ${total}
-- Objetivos logrados: ${logrados} de ${total}
-- ÚLTIMA SESIÓN (${lastSession.fecha_sesion}):
-  * Objetivo: ${lastSession.datos?.objetivo_sesion || 'General'}
-  * Resultado: ${lastSession.datos?.resultado_sesion || 'No registrado'}
-  * Conducta: ${lastSession.datos?.conducta || 'No registrada'}
-  * Nota para casa: ${lastSession.datos?.legacy_home_task || 'Ninguna'}
-      `)
+      const historyText = sessions.map((s: any) => `
+      - Fecha: ${s.fecha_sesion}
+        Objetivo: ${s.datos?.objetivo_sesion || 'N/A'}
+        Resultado: ${s.datos?.resultado_sesion || 'N/A'}
+        Conducta: ${s.datos?.conducta || 'N/A'}
+      `).join('\n')
+      
+      contextParts.push(`HISTORIAL RECIENTE (Últimas 5 sesiones):\n${historyText}`)
     } else {
         contextParts.push("HISTORIAL: Aún no hay sesiones registradas.")
     }
 
-    // Contexto: Citas
+    // Contexto: Próxima Cita
     if (appointments && appointments.length > 0) {
       const next = appointments[0]
-      contextParts.push(`PRÓXIMA CITA AGENDADA: ${next.appointment_date} a las ${next.appointment_time}`)
+      contextParts.push(`PRÓXIMA CITA: ${next.appointment_date} a las ${next.appointment_time}`)
     }
 
     const dataContext = contextParts.join('\n\n')
 
-    // 4. INVOCAR GEMINI 2.5 FLASH
+    // 4. INVOCAR GEMINI 1.5 FLASH
     const genAI = new GoogleGenerativeAI(apiKey)
     
-    // Configuración específica para Gemini 2.0 Flash
+    // Configuración del modelo
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-3-flash-preview",
+        model: "gemini-1.5-flash", // CORREGIDO: Modelo estable
         systemInstruction: `
         ERES UN ASISTENTE CLÍNICO EXPERTO EN ABA (Análisis Conductual Aplicado).
         
@@ -138,7 +130,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ text })
 
   } catch (error: any) {
-    console.error('Error gemini-1.5-flash:', error)
+    console.error('Error en Chat Padres:', error)
     return NextResponse.json(
       { text: "Tuve un pequeño problema de conexión. Por favor, pregúntame de nuevo." },
       { status: 500 }
@@ -146,7 +138,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Función auxiliar
+// Función auxiliar para edad
 function calculateAge(birthDate: string): number {
   if (!birthDate) return 0
   const today = new Date()
