@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     
     // Configuración específica para Gemini 2.0 Flash
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-1.5-flash",
+        model: "gemini-1.5-flash-001",
         systemInstruction: `
         ERES UN ASISTENTE CLÍNICO EXPERTO EN ABA (Análisis Conductual Aplicado).
         

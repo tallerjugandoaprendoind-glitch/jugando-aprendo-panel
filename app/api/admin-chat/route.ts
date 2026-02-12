@@ -268,7 +268,7 @@ RESPONDE AHORA:
     // 7. INVOCAR IA CON CONTEXTO COMPLETO
     // ===========================================================================
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-001" });
 
     const result = await model.generateContent(context);
     const response = await result.response;
