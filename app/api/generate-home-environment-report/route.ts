@@ -14,7 +14,7 @@ interface HomeEnvironmentRequest {
 
 interface AnalysisResponse {
   impresion_general: string;
-  mensaje_padres: string;
+  mensaje_padres_entorno: string;
   recomendaciones_espacio: string;
   recomendaciones_rutinas: string;
   actividades_sugeridas: string;
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       1. "impresion_general": (2-3 párrafos)
           Resumen clínico profesional. Evalúa cómo el entorno físico y la dinámica familiar están impactando (positiva o negativamente) el desarrollo del niño. Identifica patrones clave.
 
-      2. "mensaje_padres": (1 párrafo)
+      2. "mensaje_padres_entorno": (1 párrafo)
           Redacta un mensaje directo para enviar por WhatsApp a la familia.
           TONO: Cálido, empático, motivador pero profesional.
           CONTENIDO: Agradece la visita, destaca UNA fortaleza observada y menciona suavemente que trabajarán juntos en mejoras.
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       Responde ÚNICAMENTE con un objeto JSON válido. No uses Markdown, ni bloques de código.
       {
         "impresion_general": "...",
-        "mensaje_padres": "...",
+        "mensaje_padres_entorno": "...",
         "recomendaciones_espacio": "...",
         "recomendaciones_rutinas": "...",
         "actividades_sugeridas": "..."
@@ -151,14 +151,14 @@ export async function POST(request: NextRequest) {
 
     // 7. Validación de Estructura de Salida
     // Aseguramos que los campos críticos existan antes de responder al frontend
-    if (!analysisData.impresion_general || !analysisData.mensaje_padres) {
+    if (!analysisData.impresion_general || !analysisData.mensaje_padres_entorno) {
       throw new Error("La IA generó una respuesta incompleta o con estructura incorrecta.");
     }
 
     // 8. Retorno Exitoso
     return NextResponse.json({
       impresion_general: analysisData.impresion_general,
-      mensaje_padres: analysisData.mensaje_padres,
+      mensaje_padres_entorno: analysisData.mensaje_padres_entorno,
       recomendaciones_espacio: analysisData.recomendaciones_espacio,
       recomendaciones_rutinas: analysisData.recomendaciones_rutinas,
       actividades_sugeridas: analysisData.actividades_sugeridas
