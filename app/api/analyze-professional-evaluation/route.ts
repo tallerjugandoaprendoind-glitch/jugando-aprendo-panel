@@ -155,7 +155,7 @@ async function analyzeBRIEF2(ai: any, responses: any, childName: string, childAg
   const result = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: prompt,
-    generationConfig: {
+    config: {
       temperature: 0.7,
       maxOutputTokens: 2000,
     }
@@ -238,9 +238,9 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
   `;
 
   const result = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-3-flash-preview",
     contents: prompt,
-    generationConfig: {
+    config: {
       temperature: 0.7,
       maxOutputTokens: 2000,
     }
@@ -310,9 +310,9 @@ async function analyzeVineland3(ai: any, responses: any, childName: string, chil
   `;
 
   const result = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-3-flash-preview",
     contents: prompt,
-    generationConfig: {
+    config: {
       temperature: 0.7,
       maxOutputTokens: 2000,
     }
@@ -388,9 +388,9 @@ async function analyzeWISCV(ai: any, responses: any, childName: string, childAge
   `;
 
   const result = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-3-flash-preview",
     contents: prompt,
-    generationConfig: {
+    config: {
       temperature: 0.7,
       maxOutputTokens: 2000,
     }
@@ -471,9 +471,9 @@ async function analyzeBASC3(ai: any, responses: any, childName: string, childAge
   `;
 
   const result = await ai.models.generateContent({
-    model: "gemini-2.0-flash-exp",
+    model: "gemini-3-flash-preview",
     contents: prompt,
-    generationConfig: {
+    config: {
       temperature: 0.7,
       maxOutputTokens: 2000,
     }
