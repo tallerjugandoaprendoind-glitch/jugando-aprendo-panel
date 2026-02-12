@@ -42,11 +42,11 @@ export async function POST(req: Request) {
       }
     `;
 
-    // 3. INVOCAR A GEMINI 2.5 FLASH (El modelo que te funcionó)
+    // 3. INVOCAR A GEMINI 2.0 FLASH (Versión estable)
     const genAI = new GoogleGenerativeAI(apiKey);
     
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.5-flash" 
+        model: "gemini-2.0-flash-001" 
     });
 
     const result = await model.generateContent(context);

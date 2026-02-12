@@ -101,9 +101,9 @@ export async function POST(req: NextRequest) {
     // 4. INVOCAR GEMINI 2.5 FLASH
     const genAI = new GoogleGenerativeAI(apiKey)
     
-    // Configuración específica para tu modelo 2.5
+    // Configuración específica para Gemini 2.0 Flash
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.5-flash", // <--- TU MODELO PREFERIDO
+        model: "gemini-2.0-flash-001", // Versión estable actualizada
         systemInstruction: `
         ERES UN ASISTENTE CLÍNICO EXPERTO EN ABA (Análisis Conductual Aplicado).
         
