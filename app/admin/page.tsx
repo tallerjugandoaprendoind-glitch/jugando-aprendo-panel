@@ -2133,10 +2133,112 @@ function DynamicEvaluationsView() {
   }
 
 
+  // =====================================================================
+  // 🔔 ENVIAR NOTIFICACIÓN AL PADRE - SE LLAMA AL GUARDAR CUALQUIER FORM
+  // =====================================================================
+  const enviarNotificacionPadre = async (childId: string, formType: string | null, datos: any) => {
+    try {
+      // 1. Obtener datos del niño y su parent_id
+      const { data: child } = await supabase
+        .from('children')
+        .select('name, parent_id')
+        .eq('id', childId)
+        .single();
+
+      if (!child?.parent_id) {
+        console.log('⚠️ Este niño no tiene padre asociado, no se envía notificación');
+        return;
+      }
+
+      // 2. Obtener el user_id del padre desde profiles
+      const { data: parentProfile } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', child.parent_id)
+        .single();
+
+      if (!parentProfile?.user_id) {
+        console.log('⚠️ No se encontró user_id del padre en profiles');
+        return;
+      }
+
+      // 3. Construir título y mensaje según tipo de formulario
+      const childName = child.name;
+      const fecha = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long' });
+      let title = '';
+      let message = '';
+
+      if (formType === 'aba') {
+        title = `📋 Nuevo reporte de sesión - ${childName}`;
+        const mensajePadres = datos.mensaje_padres || datos.destacar_positivo || datos.proximos_pasos;
+        const objetivo = datos.objetivo_principal || datos.conducta || '';
+        const tarea = datos.actividad_casa || datos.instrucciones_padres || datos.tarea_hogar || '';
+        if (mensajePadres) {
+          message = mensajePadres;
+        } else {
+          message = `Sesión del ${fecha} registrada.${objetivo ? ` Trabajamos en: ${objetivo}.` : ''}${tarea ? ` Actividad para casa: ${tarea}` : ''}`;
+        }
+      } else if (formType === 'anamnesis') {
+        title = `📝 Ficha de ingreso completada - ${childName}`;
+        const motivo = datos.motivo_principal || datos.expectativas || '';
+        message = `Hemos completado la ficha de ingreso de ${childName} el ${fecha}.${motivo ? ` Motivo: ${motivo}` : ' Pronto comenzaremos con el proceso de evaluación.'}`;
+      } else if (formType === 'entorno_hogar') {
+        title = `🏠 Reporte de visita al hogar - ${childName}`;
+        const obs = datos.mensaje_padres_entorno || datos.impresion_general || datos.recomendaciones_espacio || '';
+        message = obs || `Realizamos una visita al hogar de ${childName} el ${fecha}. Pronto recibirás el informe con nuestras recomendaciones.`;
+      } else if (formType === 'brief2') {
+        title = `🧠 Evaluación BRIEF-2 completada - ${childName}`;
+        const analisis = datos.informe_padres || datos.analisis_ia || datos.recomendaciones_ia || '';
+        message = analisis || `La evaluación BRIEF-2 de ${childName} fue completada el ${fecha}. Evalúa el funcionamiento ejecutivo (atención, memoria de trabajo, flexibilidad cognitiva).`;
+      } else if (formType === 'ados2') {
+        title = `🔬 Evaluación ADOS-2 completada - ${childName}`;
+        const informe = datos.informe_familia_ados || datos.recomendaciones_intervencion || '';
+        message = informe || `La evaluación ADOS-2 de ${childName} fue completada el ${fecha}. Te contactaremos para explicar los resultados en detalle.`;
+      } else if (formType === 'vineland3') {
+        title = `📊 Evaluación Vineland-3 completada - ${childName}`;
+        const informe = datos.informe_padres_vineland || datos.analisis_vineland_ia || '';
+        message = informe || `La evaluación de conducta adaptativa Vineland-3 de ${childName} fue completada el ${fecha}.`;
+      } else if (formType === 'wiscv') {
+        title = `🎯 Evaluación WISC-V completada - ${childName}`;
+        const informe = datos.informe_padres_wisc || datos.perfil_cognitivo_ia || '';
+        message = informe || `La evaluación cognitiva WISC-V de ${childName} fue completada el ${fecha}.`;
+      } else if (formType === 'basc3') {
+        title = `📈 Evaluación BASC-3 completada - ${childName}`;
+        const informe = datos.informe_padres_basc || datos.analisis_basc_ia || '';
+        message = informe || `La evaluación conductual BASC-3 de ${childName} fue completada el ${fecha}.`;
+      } else {
+        title = `📄 Nuevo registro clínico - ${childName}`;
+        message = `Se realizó un nuevo registro clínico para ${childName} el ${fecha}.`;
+      }
+
+      // 4. Insertar en la tabla notifications
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert([{
+          user_id: parentProfile.user_id,
+          title: title,
+          message: message,
+          type: formType || 'clinical_record',
+          is_read: false,
+          child_id: childId,
+          form_type: formType,
+        }]);
+
+      if (notifError) {
+        console.error('❌ Error al crear notificación para padre:', notifError);
+      } else {
+        console.log('✅ Notificación enviada al padre exitosamente:', title);
+      }
+    } catch (err: any) {
+      // No lanzar error para no interrumpir el guardado principal
+      console.error('❌ Error en enviarNotificacionPadre:', err);
+    }
+  };
+  // =====================================================================
+
   const handleSave = async () => {
     if (!selectedChild) return alert("Selecciona un paciente");
     
-    // 🔍 LOGGING CRÍTICO: Capturar qué ID se está usando
     console.log('🔍 GUARDANDO FORMULARIO:', {
       formulario: activeForm,
       child_id: selectedChild,
@@ -2149,7 +2251,6 @@ function DynamicEvaluationsView() {
       let tabla = '';
       let dataToInsert: any = {};
       
-      // Lógica existente para formularios básicos
       if (activeForm === 'anamnesis') {
         tabla = 'anamnesis_completa';
         dataToInsert = { child_id: selectedChild, datos: respuestas };
@@ -2159,18 +2260,12 @@ function DynamicEvaluationsView() {
       } else if (activeForm === 'entorno_hogar') {
         tabla = 'registro_entorno_hogar';
         dataToInsert = { child_id: selectedChild, fecha_visita: respuestas['fecha_visita'] || new Date().toISOString(), datos: respuestas };
-      } 
-      // Lógica NUEVA para usar el MAPEO que pediste
-      else if (['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].includes(activeForm || '')) {
-        
-        // Aquí usa la constante que agregamos arriba
+      } else if (['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].includes(activeForm || '')) {
         tabla = FORM_TABLE_MAPPING[activeForm as keyof typeof FORM_TABLE_MAPPING];
-        
         dataToInsert = {
           child_id: selectedChild,
           fecha_evaluacion: respuestas[Object.keys(respuestas).find(k => k.includes('fecha')) || ''] || new Date().toISOString(),
           datos: respuestas,
-          // Si tu tabla tiene columnas específicas para métricas, añádelas aquí
         };
       }
       
@@ -2180,11 +2275,11 @@ function DynamicEvaluationsView() {
       if (error) throw error;
       
       console.log('✅ Guardado exitoso en tabla:', tabla);
-
-      // Guardar ID para generar reporte
       setSavedEvaluationId(insertedData?.id || null);
 
-      // Preguntar si quiere generar reporte Word
+      // 🔔 NUEVO: ENVIAR NOTIFICACIÓN AL PADRE AUTOMÁTICAMENTE
+      await enviarNotificacionPadre(selectedChild, activeForm, respuestas);
+
       const wantsReport = confirm('✅ ¡Evaluación guardada exitosamente!\n\n¿Deseas generar el Reporte Word ahora?');
       if (wantsReport) {
         setShowReportModal(true);
