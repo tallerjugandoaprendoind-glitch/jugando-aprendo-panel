@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     
     // Configuración específica para Gemini 2.0 Flash
     const model = genAI.getGenerativeModel({ 
-        model: "gemini-2.0-flash-001", // Versión estable actualizada
+        model: "gemini-1.5-flash",
         systemInstruction: `
         ERES UN ASISTENTE CLÍNICO EXPERTO EN ABA (Análisis Conductual Aplicado).
         
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ text })
 
   } catch (error: any) {
-    console.error('Error Gemini 2.5:', error)
+    console.error('Error gemini-1.5-flash:', error)
     return NextResponse.json(
       { text: "Tuve un pequeño problema de conexión. Por favor, pregúntame de nuevo." },
       { status: 500 }
