@@ -63,9 +63,17 @@ export async function POST(req: Request) {
 }
 
 // ============================================================================
-// FUNCIÓN AUXILIAR PARA PARSEAR JSON DE GEMINI
+// FUNCIÓN AUXILIAR PARA PARSEAR JSON DE GEMINI (VERSIÓN MEJORADA)
 // ============================================================================
-function parseGeminiJSON(text: string): any {
+function parseGeminiJSON(text: string | undefined, context: string = "respuesta"): any {
+  // Validación inicial
+  if (!text) {
+    console.error(`❌ ${context}: La IA no devolvió texto`);
+    throw new Error("La IA no generó una respuesta. Por favor intenta de nuevo.");
+  }
+
+  console.log(`📝 ${context} - Texto recibido (primeros 200 caracteres):`, text.substring(0, 200));
+
   try {
     // 1. Intentar parsear directo
     return JSON.parse(text);
@@ -78,20 +86,28 @@ function parseGeminiJSON(text: string): any {
     cleaned = cleaned.replace(/^```\s*/i, '');
     cleaned = cleaned.replace(/\s*```$/i, '');
     
-    // Remover texto antes/después del JSON
+    // Remover posible texto antes del JSON
     const jsonStart = cleaned.indexOf('{');
     const jsonEnd = cleaned.lastIndexOf('}');
     
-    if (jsonStart !== -1 && jsonEnd !== -1) {
-      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    if (jsonStart === -1 || jsonEnd === -1) {
+      console.error(`❌ ${context}: No se encontraron llaves de JSON en el texto`);
+      console.error("Texto completo recibido:", text);
+      throw new Error("La IA no generó un JSON válido. La respuesta no contiene un objeto JSON.");
     }
+    
+    cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    
+    console.log(`🔧 ${context} - JSON limpiado (primeros 200 caracteres):`, cleaned.substring(0, 200));
     
     // 3. Intentar parsear de nuevo
     try {
       return JSON.parse(cleaned);
     } catch (e2) {
-      console.error("❌ No se pudo parsear el JSON:", text);
-      throw new Error("La IA no generó un JSON válido. Por favor intenta de nuevo.");
+      console.error(`❌ ${context}: Error al parsear JSON después de limpiar`);
+      console.error("JSON limpiado completo:", cleaned);
+      console.error("Error:", e2);
+      throw new Error("La IA generó un formato incorrecto. Por favor intenta de nuevo o contacta soporte.");
     }
   }
 }
@@ -161,7 +177,7 @@ async function analyzeBRIEF2(ai: any, responses: any, childName: string, childAg
     }
   });
 
-  const parsed = parseGeminiJSON(result.text);
+  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
   return {
     ...parsed,
@@ -208,8 +224,10 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
   }
 
   const prompt = `
+    ⚠️ INSTRUCCIÓN CRÍTICA: Responde ÚNICAMENTE con un objeto JSON válido. NO agregues texto antes o después. NO uses bloques de código markdown.
+
     ACTÚA COMO: Especialista certificado en ADOS-2 y diagnóstico diferencial de TEA.
-    TAREA: Generar interpretación diagnóstica.
+    TAREA: Generar interpretación diagnóstica en formato JSON.
 
     PACIENTE: ${childName}, ${childAge} años.
 
@@ -246,7 +264,7 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
     }
   });
 
-  const parsed = parseGeminiJSON(result.text);
+  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
   return {
     ...parsed,
@@ -318,7 +336,7 @@ async function analyzeVineland3(ai: any, responses: any, childName: string, chil
     }
   });
 
-  const parsed = parseGeminiJSON(result.text);
+  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
   return {
     ...parsed,
@@ -396,7 +414,7 @@ async function analyzeWISCV(ai: any, responses: any, childName: string, childAge
     }
   });
 
-  const parsed = parseGeminiJSON(result.text);
+  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
   return {
     ...parsed,
@@ -479,7 +497,7 @@ async function analyzeBASC3(ai: any, responses: any, childName: string, childAge
     }
   });
 
-  const parsed = parseGeminiJSON(result.text);
+  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
   return {
     ...parsed,
