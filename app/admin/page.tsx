@@ -2063,6 +2063,9 @@ function DynamicEvaluationsView() {
          return alert("⚠️ Por favor responde algunas preguntas antes de generar con IA.");
      }
 
+     console.log('🤖 Generando IA para formulario:', activeForm);
+     console.log('📝 Respuestas actuales:', respuestas);
+
      setIsGenerating(true);
      try {
         // Determinamos el endpoint según el tipo de formulario
@@ -2071,6 +2074,7 @@ function DynamicEvaluationsView() {
 
         if (activeForm === 'entorno_hogar') {
             endpoint = '/api/generate-home-environment-report';
+            console.log('🏠 Usando endpoint de entorno hogar');
         } else if (['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].includes(activeForm || '')) {
              endpoint = '/api/analyze-professional-evaluation'; // Endpoint genérico para profesionales
              const { data: child } = await supabase.from('children').select('name, age').eq('id', selectedChild).single();
@@ -2080,7 +2084,12 @@ function DynamicEvaluationsView() {
                  childName: child?.name || 'Paciente',
                  childAge: child?.age || 0
              }
+             console.log('🧠 Usando endpoint de evaluación profesional:', activeForm);
+             console.log('👤 Datos del niño:', child);
         }
+
+        console.log('📡 Llamando a:', endpoint);
+        console.log('📦 Payload:', bodyPayload);
 
         const response = await fetch(endpoint, {
             method: 'POST',
@@ -2090,19 +2099,28 @@ function DynamicEvaluationsView() {
         
         const data = await response.json();
         
+        console.log('✅ Respuesta del API:', data);
+        
         if (!response.ok || data.error) {
+            console.error('❌ Error en respuesta:', data);
             throw new Error(data.error || "Error al conectar con el servidor IA");
         }
 
         // Mapeamos la respuesta de la IA al estado (mezclamos con lo existente)
-        setRespuestas((prev: any) => ({
+        console.log('🔄 Actualizando respuestas con:', data);
+        setRespuestas((prev: any) => {
+          const newState = {
             ...prev,
-            ...data // Asume que la API devuelve las keys correctas que coinciden con los IDs del form
-        }));
+            ...data
+          };
+          console.log('📊 Nuevo estado de respuestas:', newState);
+          return newState;
+        });
         
         alert("✨ ¡Análisis IA completado!");
 
      } catch (e: any) {
+        console.error('💥 Error completo:', e);
         alert("Error IA: " + e.message);
      } finally {
         setIsGenerating(false);
@@ -2112,6 +2130,14 @@ function DynamicEvaluationsView() {
 
   const handleSave = async () => {
     if (!selectedChild) return alert("Selecciona un paciente");
+    
+    // 🔍 LOGGING CRÍTICO: Capturar qué ID se está usando
+    console.log('🔍 GUARDANDO FORMULARIO:', {
+      formulario: activeForm,
+      child_id: selectedChild,
+      nombre_nino: listaNinos.find(n => n.id === selectedChild)?.name || 'No encontrado'
+    });
+    
     setIsSaving(true);
     
     try {
@@ -2143,12 +2169,16 @@ function DynamicEvaluationsView() {
         };
       }
       
+      console.log('💾 Insertando en tabla:', tabla, 'con child_id:', dataToInsert.child_id);
+      
       const { error } = await supabase.from(tabla).insert([dataToInsert]);
       if (error) throw error;
       
+      console.log('✅ Guardado exitoso en tabla:', tabla);
       alert("✅ ¡Evaluación guardada exitosamente!");
       setActiveForm(null); setRespuestas({}); setSelectedChild(''); setCurrentStep(0);
     } catch (error: any) {
+      console.error('❌ Error al guardar:', error);
       alert("❌ Error: " + error.message);
     } finally {
       setIsSaving(false);
@@ -2575,25 +2605,36 @@ function AIReportView() {
     
     setMessages([{ role: 'ai', text: 'Cargando historial del paciente...' }])
     
-    const { data: anamnesis } = await supabase
+    console.log('🔍 Buscando datos para child_id:', childId)
+    
+    const { data: anamnesis, error: anamnesisError } = await supabase
       .from('anamnesis_completa')
       .select('*')
       .eq('child_id', childId)
       .order('created_at', { ascending: false })
       .limit(1)
-      .maybeSingle()
+      .single()
     
-    const { data: aba } = await supabase
+    if (anamnesisError) console.error('❌ Error cargando anamnesis:', anamnesisError)
+    console.log('📋 Anamnesis encontrada:', anamnesis ? 'Sí' : 'No')
+    
+    const { data: aba, error: abaError } = await supabase
       .from('registro_aba')
       .select('*')
       .eq('child_id', childId)
       .order('fecha_sesion', { ascending: false })
     
-    const { data: entorno } = await supabase
+    if (abaError) console.error('❌ Error cargando sesiones ABA:', abaError)
+    console.log('📊 Sesiones ABA encontradas:', aba?.length || 0)
+    
+    const { data: entorno, error: entornoError } = await supabase
       .from('registro_entorno_hogar')
       .select('*')
       .eq('child_id', childId)
       .order('fecha_visita', { ascending: false })
+    
+    if (entornoError) console.error('❌ Error cargando visitas hogar:', entornoError)
+    console.log('🏠 Visitas hogar encontradas:', entorno?.length || 0)
 
     const { data: brief2 } = await supabase
     .from('evaluacion_brief2')
@@ -2601,7 +2642,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .maybeSingle();
+    .single();
   
   const { data: ados2 } = await supabase
     .from('evaluacion_ados2')
@@ -2609,7 +2650,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .maybeSingle();
+    .single();
   
   const { data: vineland3 } = await supabase
     .from('evaluacion_vineland3')
@@ -2617,7 +2658,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .maybeSingle();
+    .single();
   
   const { data: wiscv } = await supabase
     .from('evaluacion_wiscv')
@@ -2625,7 +2666,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .maybeSingle();
+    .single();
   
   const { data: basc3 } = await supabase
     .from('evaluacion_basc3')
@@ -2633,7 +2674,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .maybeSingle();
+    .single();
      
      setHistoryData({ 
     anamnesis: anamnesis ? anamnesis.datos : null, 
@@ -2648,10 +2689,18 @@ function AIReportView() {
     
 const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
   const totalEvaluaciones = [brief2, ados2, vineland3, wiscv, basc3].filter(Boolean).length;
+  
+  // Añadir alertas si faltan datos críticos
+  if (!anamnesis) {
+    console.warn('⚠️ No se encontró anamnesis para este paciente')
+  }
+  if (!entorno || entorno.length === 0) {
+    console.warn('⚠️ No se encontraron visitas domiciliarias para este paciente')
+  }
       
      setMessages([{ 
     role: 'ai', 
-    text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${brief2 ? '✅' : '❌'} BRIEF-2\n• ${ados2 ? '✅' : '❌'} ADOS-2\n• ${vineland3 ? '✅' : '❌'} Vineland-3\n• ${wiscv ? '✅' : '❌'} WISC-V\n• ${basc3 ? '✅' : '❌'} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}\n\n¿Qué deseas analizar?`
+    text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${brief2 ? '✅' : '❌'} BRIEF-2\n• ${ados2 ? '✅' : '❌'} ADOS-2\n• ${vineland3 ? '✅' : '❌'} Vineland-3\n• ${wiscv ? '✅' : '❌'} WISC-V\n• ${basc3 ? '✅' : '❌'} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}${!anamnesis ? '\n\n⚠️ Falta Anamnesis Inicial' : ''}${(!entorno || entorno.length === 0) ? '\n⚠️ Falta Visita Domiciliaria' : ''}\n\n¿Qué deseas analizar?`
   }])
 }
 
