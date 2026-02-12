@@ -2581,7 +2581,7 @@ function AIReportView() {
       .eq('child_id', childId)
       .order('created_at', { ascending: false })
       .limit(1)
-      .single()
+      .maybeSingle()
     
     const { data: aba } = await supabase
       .from('registro_aba')
@@ -2601,7 +2601,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
   
   const { data: ados2 } = await supabase
     .from('evaluacion_ados2')
@@ -2609,7 +2609,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
   
   const { data: vineland3 } = await supabase
     .from('evaluacion_vineland3')
@@ -2617,7 +2617,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
   
   const { data: wiscv } = await supabase
     .from('evaluacion_wiscv')
@@ -2625,7 +2625,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
   
   const { data: basc3 } = await supabase
     .from('evaluacion_basc3')
@@ -2633,7 +2633,7 @@ function AIReportView() {
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
      
      setHistoryData({ 
     anamnesis: anamnesis ? anamnesis.datos : null, 
