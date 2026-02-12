@@ -1,12 +1,12 @@
 // ==============================================================================
-// API: ANÁLISIS IA PARA EVALUACIONES PROFESIONALES (VERSIÓN EXTENDIDA)
+// API: ANÁLISIS IA PARA EVALUACIONES PROFESIONALES (VERSIÓN CORREGIDA)
 // Ruta: /api/analyze-professional-evaluation/route.ts
 // ==============================================================================
 
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from "@google/genai"; // [cite: 1]
+import { GoogleGenAI } from "@google/genai";
 
-// Definimos interfaces para tipado básico (opcional pero recomendado)
+// Definimos interfaces para tipado básico
 interface EvaluationRequest {
   evaluationType: 'brief2' | 'ados2' | 'vineland3' | 'wiscv' | 'basc3';
   responses: any;
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Configuración del servidor incompleta (API Key)" }, { status: 500 });
     }
 
-    // 2. Inicialización según el archivo de referencia [cite: 2]
+    // 2. Inicialización
     const ai = new GoogleGenAI({ apiKey });
 
     let analysisResult: any = {};
@@ -59,6 +59,40 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
         error: error.message || "Error desconocido procesando la evaluación clínica." 
     }, { status: 500 });
+  }
+}
+
+// ============================================================================
+// FUNCIÓN AUXILIAR PARA PARSEAR JSON DE GEMINI
+// ============================================================================
+function parseGeminiJSON(text: string): any {
+  try {
+    // 1. Intentar parsear directo
+    return JSON.parse(text);
+  } catch (e) {
+    // 2. Limpiar markdown y caracteres extra
+    let cleaned = text.trim();
+    
+    // Remover bloques de código markdown
+    cleaned = cleaned.replace(/^```json\s*/i, '');
+    cleaned = cleaned.replace(/^```\s*/i, '');
+    cleaned = cleaned.replace(/\s*```$/i, '');
+    
+    // Remover texto antes/después del JSON
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+    
+    // 3. Intentar parsear de nuevo
+    try {
+      return JSON.parse(cleaned);
+    } catch (e2) {
+      console.error("❌ No se pudo parsear el JSON:", text);
+      throw new Error("La IA no generó un JSON válido. Por favor intenta de nuevo.");
+    }
   }
 }
 
@@ -106,21 +140,28 @@ async function analyzeBRIEF2(ai: any, responses: any, childName: string, childAg
     ${responses.flex_notas ? `• Flexibilidad: ${responses.flex_notas}` : ''}
     ${responses.emocional_notas ? `• Emocional: ${responses.emocional_notas}` : ''}
 
-    INSTRUCCIONES DE FORMATO (JSON):
-    Genera un JSON válido con las siguientes claves estrictas:
+    INSTRUCCIONES CRÍTICAS:
+    1. Responde SOLO con un objeto JSON válido, sin texto adicional antes o después
+    2. NO uses bloques de código markdown (\`\`\`json)
+    3. Las claves deben ser exactamente estas (sin variación):
+
     {
-      "analisis_ia": "Escribe 2 párrafos densos. Primero analiza el perfil global y el índice de regulación conductual (inhibición/emocional). Luego analiza el índice de metacognición (memoria/planificación). Usa lenguaje clínico profesional.",
-      "recomendaciones_ia": "Lista de 4 a 6 recomendaciones prácticas y específicas para escuela y casa, separadas por saltos de línea. Enfócate en las áreas con mayor puntaje de déficit.",
-      "informe_padres": "Un resumen de 150 palabras dirigido a los padres, usando tono empático, sin jerga médica compleja, explicando qué significan estos desafíos en la vida diaria."
+      "analisis_ia": "Escribe 2-3 párrafos densos. Primero analiza el perfil global y el índice de regulación conductual (inhibición/emocional). Luego analiza el índice de metacognición (memoria/planificación). Usa lenguaje clínico profesional pero comprensible.",
+      "recomendaciones_ia": "Lista de 4 a 6 recomendaciones prácticas y específicas para escuela y casa. Cada recomendación en una línea separada con guión. Enfócate en las áreas con mayor puntaje de déficit.",
+      "informe_padres": "Un resumen de 150-200 palabras dirigido a los padres, usando tono empático, sin jerga médica compleja, explicando qué significan estos desafíos en la vida diaria del niño y cómo pueden apoyar."
     }
   `;
 
   const result = await ai.models.generateContent({
     model: "gemini-3-flash-preview",
     contents: prompt,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2000,
+    }
   });
 
-  const parsed = JSON.parse(result.text); // [cite: 3]
+  const parsed = parseGeminiJSON(result.text);
 
   return {
     ...parsed,
@@ -178,42 +219,45 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
     
     DESGLOSE:
     1. Comunicación: ${comunicacionScore} (Déficits en comunicación no verbal y verbal).
-    2. Interacción Social Recíproca: ${interaccionScore} (Calidad de la relación social).
-    3. Juego e Imaginación: ${juegoScore} (Creatividad y simbolismo).
-    4. Conductas Repetitivas: ${conductasScore} (Estereotipias o intereses sensoriales).
+    2. Interacción Social: ${interaccionScore} (Reciprocidad socioemocional).
+    3. Juego e Imaginación: ${juegoScore} (Simbolización y creatividad).
+    4. Conductas Repetitivas: ${conductasScore} (Estereotipias, rigidez sensorial).
 
-    CONCLUSIÓN ALGORÍTMICA: ${clasificacionClinica} (${severidad})
+    CLASIFICACIÓN: ${severidad} - ${clasificacionClinica}
 
-    NOTAS DE OBSERVACIÓN DIRECTA:
-    ${responses.notas_comunicacion || 'No se registraron notas específicas.'}
+    INSTRUCCIONES CRÍTICAS:
+    1. Responde SOLO con un objeto JSON válido, sin texto adicional
+    2. NO uses bloques de código markdown
+    3. Las claves deben ser exactamente estas:
 
-    INSTRUCCIONES DE FORMATO (JSON):
-    Genera un JSON válido:
     {
-      "analisis_diagnostico_ia": "Redacta un análisis clínico profundo (2-3 párrafos). Correlaciona los déficits en Afecto Social con las conductas repetitivas. Menciona si el perfil sugiere autismo clásico o atípico.",
-      "recomendaciones_intervencion": "Provee una lista priorizada de intervenciones basadas en evidencia (ej. ABA, Denver/ESDM, PECS, Integración Sensorial) justificando por qué aplica a este niño.",
-      "informe_familia_ados": "Un mensaje para la devolución a padres. Debe ser extremadamente cuidadoso, claro y constructivo. Evita ser alarmista pero sé honesto sobre las necesidades de apoyo."
+      "analisis_diagnostico_ia": "Análisis clínico de 2-3 párrafos explicando el perfil de afecto social, las conductas repetitivas observadas y cómo se relaciona con los criterios DSM-5 para TEA. Menciona la severidad estimada.",
+      "recomendaciones_intervencion": "Lista de 5-7 recomendaciones terapéuticas específicas (ABA, terapia de lenguaje, habilidades sociales, integración sensorial) separadas por líneas con guión.",
+      "informe_familia_ados": "Resumen de 150-200 palabras para la familia explicando en lenguaje sencillo qué significa el diagnóstico, qué apoyos necesita el niño y un mensaje de esperanza sobre el desarrollo con intervención temprana."
     }
   `;
 
   const result = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.0-flash-exp",
     contents: prompt,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2000,
+    }
   });
 
-  const parsed = JSON.parse(result.text);
+  const parsed = parseGeminiJSON(result.text);
 
   return {
     ...parsed,
-    puntuacion_total: totalScore,
-    nivel_severidad: severidad,
     metricas: {
       comunicacion: comunicacionScore,
       interaccion: interaccionScore,
       juego: juegoScore,
-      conductas: conductasScore,
-      total: totalScore,
-      severidad
+      conductas_repetitivas: conductasScore,
+      afecto_social: totalScore,
+      severidad,
+      clasificacion: clasificacionClinica
     }
   };
 }
@@ -222,50 +266,59 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
 // 3. LÓGICA VINELAND-3 (Conducta Adaptativa)
 // ============================================================================
 async function analyzeVineland3(ai: any, responses: any, childName: string, childAge: number) {
-  // Función auxiliar interna para Vineland (0, 1, 2)
-  const calcV = (keys: string[]) => calculateVinelandScore(responses, keys);
+  // Dominios Vineland (0=Nunca, 1=A veces, 2=Siempre)
+  const comunicacionScore = calculateVinelandScore(responses, ['vineland_expresivo', 'vineland_receptivo', 'vineland_lenguaje_escrito']);
+  const vidaDiariaScore = calculateVinelandScore(responses, ['vineland_personal', 'vineland_domestico', 'vineland_comunidad']);
+  const socializacionScore = calculateVinelandScore(responses, ['vineland_relaciones', 'vineland_juego', 'vineland_afrontamiento']);
+  const motorScore = calculateVinelandScore(responses, ['vineland_motricidad_fina', 'vineland_motricidad_gruesa']);
 
-  const comunicacionScore = calcV(['com_receptiva', 'com_sigue_instrucciones', 'com_entiende_2pasos', 'com_expresiva_palabras', 'com_frases_completas', 'com_cuenta_experiencias', 'com_escrita']);
-  const vidaDiariaScore = calcV(['vida_come_solo', 'vida_bebe_vaso', 'vida_lava_manos', 'vida_viste_superior', 'vida_bano', 'vida_tareas_casa', 'vida_dinero']);
-  const socializacionScore = calcV(['soc_sonrie_familiar', 'soc_muestra_afecto', 'soc_juega_otros', 'soc_comparte', 'soc_respeta_turnos', 'soc_empatia', 'soc_amistad']);
-  const motorScore = calcV(['motor_camina', 'motor_corre', 'motor_salta', 'motor_pelota', 'motor_pinza', 'motor_dibuja']);
+  const indiceGlobal = comunicacionScore + vidaDiariaScore + socializacionScore + motorScore;
+  const maxPosible = 24; 
+  const percentGlobal = (indiceGlobal / maxPosible) * 100;
 
-  const indiceGlobal = Math.round((comunicacionScore + vidaDiariaScore + socializacionScore) / 3);
+  let nivelAdaptativo = '';
+  if (percentGlobal >= 75) nivelAdaptativo = 'Alto';
+  else if (percentGlobal >= 50) nivelAdaptativo = 'Moderado';
+  else if (percentGlobal >= 25) nivelAdaptativo = 'Bajo';
+  else nivelAdaptativo = 'Muy Bajo';
 
   const prompt = `
-    ACTÚA COMO: Terapeuta Ocupacional y Especialista en Conducta Adaptativa.
-    TAREA: Informe de funcionalidad y autonomía (Vineland-3).
+    ACTÚA COMO: Psicólogo evaluador especializado en desarrollo adaptativo.
+    TAREA: Interpretación de la escala Vineland-3.
 
     PACIENTE: ${childName}, ${childAge} años.
 
-    DOMINIOS EVALUADOS:
-    1. Comunicación (Receptiva/Expresiva): ${comunicacionScore}/14
-    2. Habilidades de la Vida Diaria (Autocuidado/Doméstico): ${vidaDiariaScore}/14
-    3. Socialización (Interpersonal/Juego): ${socializacionScore}/14
-    4. Habilidades Motoras (Gruesa/Fina): ${motorScore}/12
-    
-    ÍNDICE DE CONDUCTA ADAPTATIVA: ${indiceGlobal} (Escala referencial interna)
+    PERFIL DE DOMINIOS:
+    1. Comunicación: ${comunicacionScore}/6 (Expresión, Comprensión, Escritura).
+    2. Habilidades de Vida Diaria: ${vidaDiariaScore}/6 (Autocuidado, Tareas del hogar).
+    3. Socialización: ${socializacionScore}/6 (Relaciones, Juego, Manejo emocional).
+    4. Habilidades Motoras: ${motorScore}/6 (Fina y gruesa).
 
-    NOTAS DE CONTEXTO: 
-    ${responses.vida_notas || ''} 
-    ${responses.soc_notas || ''}
+    ÍNDICE DE COMPORTAMIENTO ADAPTATIVO: ${indiceGlobal}/24 (${percentGlobal.toFixed(1)}%) - Nivel ${nivelAdaptativo}
 
-    INSTRUCCIONES DE FORMATO (JSON):
-    Genera un JSON válido:
+    INSTRUCCIONES CRÍTICAS:
+    1. Responde SOLO con un objeto JSON válido
+    2. NO uses bloques de código markdown
+    3. Las claves deben ser exactamente estas:
+
     {
-      "analisis_vineland_ia": "Análisis narrativo del nivel de independencia del niño. Compara sus habilidades con lo esperado para su edad cronológica (${childAge} años).",
-      "areas_fortaleza": "Lista con viñetas de las habilidades que el niño YA domina.",
-      "areas_prioridad": "Lista con viñetas de las habilidades emergentes o ausentes que deben ser Objetivos Terapéuticos inmediatos.",
-      "informe_padres_vineland": "Guía para casa: Sugiere 3 actividades cotidianas (hora de comer, baño, juego) para fomentar la autonomía basándose en los déficits encontrados."
+      "analisis_vineland_ia": "Análisis de 2-3 párrafos sobre el perfil adaptativo global. ¿Cuál es el dominio más fuerte y cuál el más débil? ¿Cómo esto afecta la autonomía del niño en casa y escuela?",
+      "areas_fortaleza": "Lista de 3-4 fortalezas específicas identificadas en los dominios evaluados, separadas por líneas con guión.",
+      "areas_prioridad": "Lista de 3-5 áreas prioritarias para intervención, ordenadas por importancia, separadas por líneas con guión.",
+      "informe_padres_vineland": "Resumen de 150-200 palabras explicando a los padres qué son las conductas adaptativas, dónde está su hijo en comparación con otros de su edad, y cómo pueden fomentar mayor independencia en casa."
     }
   `;
 
   const result = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.0-flash-exp",
     contents: prompt,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2000,
+    }
   });
 
-  const parsed = JSON.parse(result.text);
+  const parsed = parseGeminiJSON(result.text);
 
   return {
     ...parsed,
@@ -274,7 +327,9 @@ async function analyzeVineland3(ai: any, responses: any, childName: string, chil
       vida_diaria: vidaDiariaScore,
       socializacion: socializacionScore,
       motor: motorScore,
-      indice_global: indiceGlobal
+      indice_global: indiceGlobal,
+      porcentaje: percentGlobal,
+      nivel: nivelAdaptativo
     }
   };
 }
@@ -318,23 +373,30 @@ async function analyzeWISCV(ai: any, responses: any, childName: string, childAge
 
     COEFICIENTE INTELECTUAL TOTAL (Estimado): ${ciTotal} - Categoría: ${clasificacion}
 
-    INSTRUCCIONES DE FORMATO (JSON):
-    Genera un JSON válido:
+    INSTRUCCIONES CRÍTICAS:
+    1. Responde SOLO con un objeto JSON válido
+    2. NO uses bloques de código markdown
+    3. Las claves deben ser exactamente estas:
+
     {
-      "perfil_cognitivo_ia": "Explica cómo procesa la información el niño. ¿Es mejor verbalmente o visualmente? ¿Su memoria de trabajo limita su inteligencia fluida? Analiza las discrepancias entre índices.",
-      "fortalezas_debilidades": "Sección clara dividida en FORTALEZAS y DEBILIDADES cognitivas.",
-      "implicaciones_educativas": "Estrategias pedagógicas para el aula. (Ej. Tiempo extra, material visual, instrucciones cortas).",
-      "recomendaciones_cognitivas": "Ejercicios de estimulación cognitiva recomendados.",
-      "informe_padres_wisc": "Explicación sencilla del CI y cómo apoyar el aprendizaje en casa."
+      "perfil_cognitivo_ia": "Explica en 2-3 párrafos cómo procesa la información el niño. ¿Es mejor verbalmente o visualmente? ¿Su memoria de trabajo limita su inteligencia fluida? Analiza las discrepancias entre índices y qué significan para el aprendizaje.",
+      "fortalezas_debilidades": "Sección clara dividida en FORTALEZAS (2-3 puntos) y DEBILIDADES (2-3 puntos) cognitivas, separadas por líneas con guión.",
+      "implicaciones_educativas": "Lista de 4-6 estrategias pedagógicas para el aula (Ej. Tiempo extra, material visual, instrucciones cortas), separadas por líneas con guión.",
+      "recomendaciones_cognitivas": "Lista de 4-5 ejercicios de estimulación cognitiva recomendados, separadas por líneas con guión.",
+      "informe_padres_wisc": "Explicación de 150-200 palabras sencilla del CI y cómo apoyar el aprendizaje en casa, con un tono positivo y empoderador."
     }
   `;
 
   const result = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.0-flash-exp",
     contents: prompt,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2000,
+    }
   });
 
-  const parsed = JSON.parse(result.text);
+  const parsed = parseGeminiJSON(result.text);
 
   return {
     ...parsed,
@@ -384,33 +446,40 @@ async function analyzeBASC3(ai: any, responses: any, childName: string, childAge
 
     DIMENSIONES CLÍNICAS (SÍNTOMAS):
     1. Externalizantes (Conducta visible): ${externalizante}/30
-       - Hiperactividad: ${hiperactividad}, Agresión: ${agresion}.
+       - Hiperactividad: ${hiperactividad}, Agresión: ${agresion}, Problemas de Conducta: ${problemasConducta}.
     2. Internalizantes (Emocional): ${internalizante}/30
        - Ansiedad: ${ansiedad}, Depresión: ${depresion}, Somatización: ${somatizacion}.
 
     DIMENSIONES ADAPTATIVAS (RECURSOS):
     - Total Recursos: ${adaptativo}/40
-    - Habilidades Sociales: ${habilidadesSociales}, Adaptabilidad: ${adaptabilidad}.
+    - Habilidades Sociales: ${habilidadesSociales}, Liderazgo: ${liderazgo}, Habilidades de Estudio: ${habilidadesEstudio}, Adaptabilidad: ${adaptabilidad}.
 
     PERFIL DE RIESGO GENERAL: ${perfilRiesgo}
 
-    INSTRUCCIONES DE FORMATO (JSON):
-    Genera un JSON válido:
+    INSTRUCCIONES CRÍTICAS:
+    1. Responde SOLO con un objeto JSON válido
+    2. NO uses bloques de código markdown
+    3. Las claves deben ser exactamente estas:
+
     {
-      "analisis_basc_ia": "Analiza la relación entre lo que el niño siente (internalizante) y cómo actúa (externalizante). ¿Tiene recursos adaptativos suficientes para enfrentar sus problemas?",
-      "areas_preocupacion": "Lista las escalas específicas que están elevadas y qué significan.",
-      "fortalezas_conductuales": "Identifica los factores protectores del niño.",
-      "plan_intervencion_conductual": "Plan de modificación de conducta y apoyo emocional.",
-      "informe_padres_basc": "Explicación sobre el bienestar emocional del niño para los padres."
+      "analisis_basc_ia": "Analiza en 2-3 párrafos la relación entre lo que el niño siente (internalizante) y cómo actúa (externalizante). ¿Tiene recursos adaptativos suficientes para enfrentar sus problemas? ¿La conducta externa puede ser una manifestación de malestar interno?",
+      "areas_preocupacion": "Lista las escalas específicas que están elevadas y qué significan en la vida diaria del niño (3-5 puntos), separadas por líneas con guión.",
+      "fortalezas_conductuales": "Identifica los factores protectores del niño (2-4 puntos), separadas por líneas con guión.",
+      "plan_intervencion_conductual": "Plan de modificación de conducta y apoyo emocional (5-7 estrategias concretas), separadas por líneas con guión.",
+      "informe_padres_basc": "Explicación de 150-200 palabras sobre el bienestar emocional del niño para los padres, con un tono comprensivo y esperanzador."
     }
   `;
 
   const result = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
+    model: "gemini-2.0-flash-exp",
     contents: prompt,
+    generationConfig: {
+      temperature: 0.7,
+      maxOutputTokens: 2000,
+    }
   });
 
-  const parsed = JSON.parse(result.text);
+  const parsed = parseGeminiJSON(result.text);
 
   return {
     ...parsed,

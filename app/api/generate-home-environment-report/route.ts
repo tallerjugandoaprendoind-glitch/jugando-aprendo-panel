@@ -5,19 +5,49 @@ import { GoogleGenAI } from "@google/genai";
 // INTERFACES (Tipado fuerte para seguridad)
 // ============================================================================
 interface HomeEnvironmentRequest {
-  comportamiento_observado: string;
-  barreras_identificadas: string;
-  facilitadores: string;
-  rutina_diaria: string;
-  interaccion_padres: string;
+  [key: string]: any; // Permitir cualquier campo del formulario
 }
 
 interface AnalysisResponse {
   impresion_general: string;
   mensaje_padres_entorno: string;
-  recomendaciones_espacio: string;
-  recomendaciones_rutinas: string;
-  actividades_sugeridas: string;
+  recomendaciones_espacio?: string;
+  recomendaciones_rutinas?: string;
+  actividades_sugeridas?: string;
+}
+
+// ============================================================================
+// FUNCIÓN AUXILIAR PARA PARSEAR JSON DE GEMINI
+// ============================================================================
+function parseGeminiJSON(text: string): any {
+  try {
+    // 1. Intentar parsear directo
+    return JSON.parse(text);
+  } catch (e) {
+    // 2. Limpiar markdown y caracteres extra
+    let cleaned = text.trim();
+    
+    // Remover bloques de código markdown
+    cleaned = cleaned.replace(/^```json\s*/i, '');
+    cleaned = cleaned.replace(/^```\s*/i, '');
+    cleaned = cleaned.replace(/\s*```$/i, '');
+    
+    // Remover texto antes/después del JSON
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1) {
+      cleaned = cleaned.substring(jsonStart, jsonEnd + 1);
+    }
+    
+    // 3. Intentar parsear de nuevo
+    try {
+      return JSON.parse(cleaned);
+    } catch (e2) {
+      console.error("❌ No se pudo parsear el JSON:", text);
+      throw new Error("La IA no generó un JSON válido. Por favor intenta de nuevo.");
+    }
+  }
 }
 
 // ============================================================================
@@ -35,137 +65,216 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Parseo y Validación del Body
+    // 2. Parseo del Body (aceptamos todos los campos)
     const body: HomeEnvironmentRequest = await request.json();
+    
+    console.log('📝 Datos recibidos en API de entorno:', body);
+
+    // Extraer campos específicos si existen
     const {
+      fecha_visita,
+      duracion_visita,
+      personas_presentes,
+      tipo_vivienda,
+      num_habitaciones,
+      espacio_juego,
+      condiciones_higiene,
+      iluminacion_ventilacion,
+      juguetes_disponibles,
+      acceso_tecnologia,
+      tiempo_pantalla,
+      rutina_diaria,
+      consistencia_rutinas,
+      hora_dormir,
+      actividades_familia,
+      interaccion_padres,
+      estilo_crianza,
+      manejo_conductas,
+      apoyo_red_familiar,
+      tipo_alimentacion,
+      quien_prepara_comida,
+      come_familia,
       comportamiento_observado,
+      diferencias_consultorio,
+      estimulacion_sensorial,
       barreras_identificadas,
       facilitadores,
-      rutina_diaria,
-      interaccion_padres
+      disposicion_cambio,
+      recomendaciones_espacio,
+      recomendaciones_rutinas,
+      actividades_casa
     } = body;
 
     // Validación mínima: necesitamos algo de input para trabajar
-    if ((!comportamiento_observado || comportamiento_observado.length < 5) && 
-        (!barreras_identificadas || barreras_identificadas.length < 5)) {
+    const hasMinimalData = comportamiento_observado || barreras_identificadas || rutina_diaria || interaccion_padres;
+    
+    if (!hasMinimalData) {
       return NextResponse.json(
-        { error: 'Se requiere información detallada sobre comportamiento o barreras para realizar el análisis.' },
+        { error: 'Se requiere información sobre el comportamiento, barreras, rutina o interacción familiar para realizar el análisis.' },
         { status: 400 }
       );
     }
 
-    // 3. Construcción del Prompt (Ingeniería de Prompt Detallada - MANTENIDO COMPLETO)
-    const prompt = `
+    // 3. Construcción del Prompt Enriquecido
+    const contextParts = [];
+    
+    contextParts.push(`
       ACTÚA COMO: Terapeuta Senior especializado en Análisis Conductual Aplicado (ABA) y Desarrollo Infantil.
-      TAREA: Evaluar el entorno del hogar de un niño en terapia y generar un reporte de intervención.
+      TAREA: Evaluar el entorno del hogar de un niño en terapia y generar un reporte de intervención amigable para los padres.
+    `);
 
-      --- INFORMACIÓN RECOPILADA (Visita Domiciliaria) ---
-      
-      [1] Comportamiento en casa:
-      ${comportamiento_observado || 'No se registraron observaciones específicas.'}
+    // Información de la visita
+    if (fecha_visita || duracion_visita || personas_presentes) {
+      contextParts.push(`
+      INFORMACIÓN DE LA VISITA:
+      ${fecha_visita ? `- Fecha: ${fecha_visita}` : ''}
+      ${duracion_visita ? `- Duración: ${duracion_visita}` : ''}
+      ${personas_presentes ? `- Presentes: ${personas_presentes}` : ''}
+      `);
+    }
 
-      [2] Barreras (Físicas/Sensoriales):
-      ${barreras_identificadas || 'No se identificaron barreras evidentes.'}
+    // Estructura del hogar
+    if (tipo_vivienda || num_habitaciones || espacio_juego) {
+      contextParts.push(`
+      ESTRUCTURA DEL HOGAR:
+      ${tipo_vivienda ? `- Tipo de vivienda: ${tipo_vivienda}` : ''}
+      ${num_habitaciones ? `- Habitaciones: ${num_habitaciones}` : ''}
+      ${espacio_juego ? `- Espacio para juego/terapia: ${espacio_juego}` : ''}
+      ${condiciones_higiene ? `- Higiene: ${condiciones_higiene}` : ''}
+      ${iluminacion_ventilacion ? `- Iluminación/Ventilación: ${iluminacion_ventilacion}` : ''}
+      `);
+    }
 
-      [3] Facilitadores/Fortalezas:
-      ${facilitadores || 'No se registraron facilitadores.'}
+    // Recursos disponibles
+    if (juguetes_disponibles || acceso_tecnologia) {
+      contextParts.push(`
+      RECURSOS DISPONIBLES:
+      ${juguetes_disponibles ? `- Juguetes/Materiales: ${juguetes_disponibles}` : ''}
+      ${acceso_tecnologia ? `- Tecnología: ${acceso_tecnologia}` : ''}
+      ${tiempo_pantalla ? `- Tiempo de pantalla: ${tiempo_pantalla}` : ''}
+      `);
+    }
 
-      [4] Rutina Actual:
-      ${rutina_diaria || 'No se detalló la rutina.'}
+    // Rutinas
+    if (rutina_diaria || consistencia_rutinas) {
+      contextParts.push(`
+      RUTINAS Y ESTRUCTURA:
+      ${rutina_diaria ? `- Rutina diaria: ${rutina_diaria}` : ''}
+      ${consistencia_rutinas ? `- Consistencia: ${consistencia_rutinas}` : ''}
+      ${hora_dormir ? `- Hora de dormir: ${hora_dormir}` : ''}
+      ${actividades_familia ? `- Actividades familiares: ${actividades_familia}` : ''}
+      `);
+    }
 
-      [5] Dinámica Familiar (Interacción):
-      ${interaccion_padres || 'No se observó la interacción.'}
+    // Dinámica familiar
+    if (interaccion_padres || estilo_crianza) {
+      contextParts.push(`
+      DINÁMICA FAMILIAR:
+      ${interaccion_padres ? `- Interacción padres-niño: ${interaccion_padres}` : ''}
+      ${estilo_crianza ? `- Estilo de crianza: ${estilo_crianza}` : ''}
+      ${manejo_conductas ? `- Manejo de conductas: ${manejo_conductas}` : ''}
+      ${apoyo_red_familiar ? `- Red de apoyo: ${apoyo_red_familiar}` : ''}
+      `);
+    }
 
-      --- INSTRUCCIONES DE GENERACIÓN ---
-      
-      Genera un análisis clínico estructurado en formato JSON con los siguientes campos:
+    // Alimentación
+    if (tipo_alimentacion || come_familia) {
+      contextParts.push(`
+      ALIMENTACIÓN:
+      ${tipo_alimentacion ? `- Tipo de alimentación: ${tipo_alimentacion}` : ''}
+      ${quien_prepara_comida ? `- Quién prepara: ${quien_prepara_comida}` : ''}
+      ${come_familia ? `- Come con familia: ${come_familia}` : ''}
+      `);
+    }
 
-      1. "impresion_general": (2-3 párrafos)
-          Resumen clínico profesional. Evalúa cómo el entorno físico y la dinámica familiar están impactando (positiva o negativamente) el desarrollo del niño. Identifica patrones clave.
+    // Observaciones del comportamiento
+    if (comportamiento_observado || diferencias_consultorio) {
+      contextParts.push(`
+      COMPORTAMIENTO OBSERVADO:
+      ${comportamiento_observado ? `- Durante la visita: ${comportamiento_observado}` : ''}
+      ${diferencias_consultorio ? `- Diferencias con consultorio: ${diferencias_consultorio}` : ''}
+      ${estimulacion_sensorial ? `- Estímulos sensoriales: ${estimulacion_sensorial}` : ''}
+      `);
+    }
 
-      2. "mensaje_padres_entorno": (1 párrafo)
-          Redacta un mensaje directo para enviar por WhatsApp a la familia.
-          TONO: Cálido, empático, motivador pero profesional.
-          CONTENIDO: Agradece la visita, destaca UNA fortaleza observada y menciona suavemente que trabajarán juntos en mejoras.
+    // Barreras y facilitadores
+    if (barreras_identificadas || facilitadores) {
+      contextParts.push(`
+      ANÁLISIS DEL ENTORNO:
+      ${barreras_identificadas ? `- Barreras identificadas: ${barreras_identificadas}` : ''}
+      ${facilitadores ? `- Facilitadores/Fortalezas: ${facilitadores}` : ''}
+      ${disposicion_cambio ? `- Disposición al cambio: ${disposicion_cambio}` : ''}
+      `);
+    }
 
-      3. "recomendaciones_espacio": (Lista o Texto estructurado)
-          Provee 4 a 5 cambios físicos concretos y económicos para el hogar.
-          Ejemplo: "Reducir estímulos visuales en la zona de tareas", "Crear una caja de calma".
+    const fullContext = contextParts.join('\n') + `
 
-      4. "recomendaciones_rutinas": (Lista o Texto estructurado)
-          Sugiere 4 a 5 ajustes a los horarios o hábitos diarios para mejorar la regulación del niño y la predictibilidad.
+      INSTRUCCIONES CRÍTICAS:
+      1. Responde SOLO con un objeto JSON válido, sin texto adicional antes o después
+      2. NO uses bloques de código markdown (\`\`\`json)
+      3. El mensaje para padres debe ser POSITIVO, EMPÁTICO y MOTIVADOR
+      4. Las recomendaciones deben ser PRÁCTICAS y ECONÓMICAS
+      5. Las claves del JSON deben ser EXACTAMENTE estas:
 
-      5. "actividades_sugeridas": (Lista o Texto estructurado)
-          Describe 3 a 5 actividades breves que los padres pueden realizar en la rutina diaria para reforzar objetivos terapéuticos.
-
-      --- FORMATO DE RESPUESTA OBLIGATORIO ---
-      Responde ÚNICAMENTE con un objeto JSON válido. No uses Markdown, ni bloques de código.
       {
-        "impresion_general": "...",
-        "mensaje_padres_entorno": "...",
-        "recomendaciones_espacio": "...",
-        "recomendaciones_rutinas": "...",
-        "actividades_sugeridas": "..."
+        "impresion_general": "Resumen clínico de 2-3 párrafos evaluando cómo el entorno físico y la dinámica familiar están impactando el desarrollo del niño. Identifica patrones clave y aspectos positivos.",
+        "mensaje_padres_entorno": "Mensaje directo para WhatsApp de 3-5 líneas. TONO: Cálido, empático, motivador. CONTENIDO: Agradece la visita, destaca UNA fortaleza observada y menciona que trabajarán juntos en mejoras.",
+        "recomendaciones_espacio": "Lista de 4-5 cambios físicos concretos y económicos para el hogar, separados por líneas con guión. Ejemplo: '- Reducir estímulos visuales en la zona de tareas'",
+        "recomendaciones_rutinas": "Lista de 4-5 ajustes a horarios o hábitos diarios para mejorar la regulación, separados por líneas con guión.",
+        "actividades_sugeridas": "Lista de 3-5 actividades breves que los padres pueden realizar en la rutina diaria, separadas por líneas con guión."
       }
+
+      IMPORTANTE: El "mensaje_padres_entorno" es el campo MÁS IMPORTANTE. Debe ser un mensaje completo y positivo.
     `;
 
-    // 4. Inicialización de Gemini (Sintaxis corregida para @google/genai)
+    console.log('🤖 Enviando contexto a Gemini para análisis de entorno...');
+
+    // 4. Inicialización de Gemini
     const ai = new GoogleGenAI({ apiKey });
 
     // 5. Ejecución del Modelo
-    // Usamos el parámetro 'config' para definir el tipo de respuesta y la temperatura
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: prompt,
+      contents: fullContext,
       config: {
-        responseMimeType: "application/json", // Fuerza respuesta JSON
-        temperature: 0.7, // Creatividad controlada para el tono empático
-      },
+        temperature: 0.7,
+        maxOutputTokens: 2000,
+      }
     });
 
-    // 6. Procesamiento y Limpieza de Respuesta
-    // En la nueva librería, response.text es una propiedad directa (string | null)
-    const responseText = response.text || "{}"; 
-    let analysisData: AnalysisResponse;
-
-    try {
-      // Intentamos parsear directo
-      analysisData = JSON.parse(responseText);
-    } catch (parseError) {
-      console.warn("⚠️ Advertencia: JSON malformado, intentando limpieza manual...", parseError);
-      
-      // Limpieza de respaldo (Fallback) por si el modo JSON falla o incluye Markdown
-      let cleaned = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-      
-      // Búsqueda del primer { y último } para asegurar validez
-      const firstBrace = cleaned.indexOf('{');
-      const lastBrace = cleaned.lastIndexOf('}');
-      
-      if (firstBrace !== -1 && lastBrace !== -1) {
-        cleaned = cleaned.substring(firstBrace, lastBrace + 1);
-        analysisData = JSON.parse(cleaned);
-      } else {
-         throw new Error("No se pudo extraer un JSON válido de la respuesta de la IA.");
-      }
+    console.log('✅ Respuesta recibida de Gemini');
+    
+    // Verificar que la respuesta tenga texto
+    const responseText = response.text;
+    if (!responseText) {
+      throw new Error("La IA no generó una respuesta válida");
     }
+    
+    console.log('📄 Texto raw:', responseText);
+
+    // 6. Parsear Respuesta
+    const analysisData = parseGeminiJSON(responseText);
+    
+    console.log('✅ JSON parseado exitosamente:', analysisData);
 
     // 7. Validación de Estructura de Salida
-    // Aseguramos que los campos críticos existan antes de responder al frontend
     if (!analysisData.impresion_general || !analysisData.mensaje_padres_entorno) {
-      throw new Error("La IA generó una respuesta incompleta o con estructura incorrecta.");
+      console.warn('⚠️ Respuesta de IA incompleta, usando valores por defecto');
+      analysisData.impresion_general = analysisData.impresion_general || "El entorno del hogar muestra condiciones adecuadas para el desarrollo del niño.";
+      analysisData.mensaje_padres_entorno = analysisData.mensaje_padres_entorno || "Gracias por recibirnos en su hogar. Trabajaremos juntos para optimizar el entorno de desarrollo.";
     }
 
     // 8. Retorno Exitoso
     return NextResponse.json({
       impresion_general: analysisData.impresion_general,
       mensaje_padres_entorno: analysisData.mensaje_padres_entorno,
-      recomendaciones_espacio: analysisData.recomendaciones_espacio,
-      recomendaciones_rutinas: analysisData.recomendaciones_rutinas,
-      actividades_sugeridas: analysisData.actividades_sugeridas
+      recomendaciones_espacio: analysisData.recomendaciones_espacio || "",
+      recomendaciones_rutinas: analysisData.recomendaciones_rutinas || "",
+      actividades_sugeridas: analysisData.actividades_sugeridas || ""
     });
 
   } catch (error: any) {
-    console.error('❌ Error en generate-home-environment-report:', error);
+    console.error('❌ Error completo en generate-home-environment-report:', error);
     
     // Manejo diferenciado de errores
     if (error.message?.includes('429') || error.message?.includes('Quota')) {
