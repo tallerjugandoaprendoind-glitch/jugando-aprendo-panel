@@ -1,13 +1,14 @@
 // ==============================================================================
-// API: GENERACIÓN DE REPORTES PROFESIONALES EN WORD (.DOCX)
+// API MEJORADA CON IA: REPORTES PROFESIONALES PERSONALIZADOS
 // Ruta: /app/api/generate-report/route.ts
 // ==============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenAI } from "@google/genai";
 
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
         AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel,
-        PageBreak, LevelFormat } = require('docx');
+        PageBreak } = require('docx');
 
 // ==============================================================================
 // INTERFACES
@@ -20,124 +21,6 @@ interface ReportRequest {
   reportData: any;
   evaluationId: string;
 }
-
-// ✅ CORRECCIÓN: Interfaz explícita para la configuración de cada reporte.
-// El campo `subtitle` es opcional (subtitle?: string), lo que permite que
-// configs como `aba` y `anamnesis` no lo tengan sin errores de TypeScript.
-interface SectionConfig {
-  key: string;
-  title: string;
-  type: string;
-}
-
-interface ReportConfig {
-  title: string;
-  subtitle?: string; // ← Opcional para evitar el error "Property 'subtitle' does not exist"
-  sections: SectionConfig[];
-}
-
-// ==============================================================================
-// CONFIGURACIONES DE REPORTES
-// ✅ CORRECCIÓN: Tipado explícito como Record<string, ReportConfig>
-// ==============================================================================
-const REPORT_CONFIGS: Record<string, ReportConfig> = {
-  aba: {
-    title: 'Reporte de Sesión ABA',
-    // Sin subtitle — válido gracias a subtitle?: string
-    sections: [
-      { key: 'informacion_sesion', title: 'Información de la Sesión', type: 'info' },
-      { key: 'analisis_abc', title: 'Análisis Conductual (ABC)', type: 'abc' },
-      { key: 'metricas', title: 'Métricas de Desempeño', type: 'metrics' },
-      { key: 'habilidades', title: 'Habilidades Trabajadas', type: 'list' },
-      { key: 'mensaje_padres', title: 'Comunicación con la Familia', type: 'text' },
-      { key: 'planificacion', title: 'Planificación y Seguimiento', type: 'text' }
-    ]
-  },
-  brief2: {
-    title: 'Reporte de Evaluación BRIEF-2',
-    subtitle: 'Evaluación Conductual de la Función Ejecutiva',
-    sections: [
-      { key: 'informacion', title: 'Información de la Evaluación', type: 'info' },
-      { key: 'resultados', title: 'Resultados Cuantitativos', type: 'table' },
-      { key: 'analisis_ia', title: 'Análisis Clínico', type: 'text' },
-      { key: 'recomendaciones_ia', title: 'Recomendaciones Terapéuticas', type: 'list' },
-      { key: 'informe_padres', title: 'Informe para la Familia', type: 'text' }
-    ]
-  },
-  ados2: {
-    title: 'Reporte de Evaluación ADOS-2',
-    subtitle: 'Escala de Observación para el Diagnóstico del Autismo',
-    sections: [
-      { key: 'informacion', title: 'Datos del Paciente', type: 'info' },
-      { key: 'puntuaciones', title: 'Perfil de Puntuaciones', type: 'table' },
-      { key: 'analisis_diagnostico_ia', title: 'Análisis Diagnóstico', type: 'text' },
-      { key: 'recomendaciones_intervencion', title: 'Recomendaciones de Intervención', type: 'list' },
-      { key: 'informe_familia_ados', title: 'Informe para la Familia', type: 'text' }
-    ]
-  },
-  vineland3: {
-    title: 'Reporte de Evaluación Vineland-3',
-    subtitle: 'Escala de Comportamiento Adaptativo',
-    sections: [
-      { key: 'informacion', title: 'Información General', type: 'info' },
-      { key: 'dominios', title: 'Puntuaciones por Dominio', type: 'table' },
-      { key: 'analisis_vineland_ia', title: 'Análisis Integral', type: 'text' },
-      { key: 'areas_fortaleza', title: 'Áreas de Fortaleza', type: 'list' },
-      { key: 'areas_prioridad', title: 'Áreas Prioritarias', type: 'list' },
-      { key: 'informe_padres_vineland', title: 'Informe para Padres', type: 'text' }
-    ]
-  },
-  wiscv: {
-    title: 'Reporte de Evaluación WISC-V',
-    subtitle: 'Escala de Inteligencia de Wechsler para Niños',
-    sections: [
-      { key: 'informacion', title: 'Datos de la Evaluación', type: 'info' },
-      { key: 'indices', title: 'Perfil de Índices Cognitivos', type: 'table' },
-      { key: 'perfil_cognitivo_ia', title: 'Análisis del Perfil Cognitivo', type: 'text' },
-      { key: 'fortalezas_debilidades', title: 'Fortalezas y Debilidades', type: 'text' },
-      { key: 'implicaciones_educativas', title: 'Implicaciones Educativas', type: 'list' },
-      { key: 'informe_padres_wisc', title: 'Informe para Padres', type: 'text' }
-    ]
-  },
-  basc3: {
-    title: 'Reporte de Evaluación BASC-3',
-    subtitle: 'Sistema de Evaluación de la Conducta de Niños y Adolescentes',
-    sections: [
-      { key: 'informacion', title: 'Información General', type: 'info' },
-      { key: 'dimensiones', title: 'Dimensiones Clínicas y Adaptativas', type: 'table' },
-      { key: 'analisis_basc_ia', title: 'Análisis Conductual', type: 'text' },
-      { key: 'areas_preocupacion', title: 'Áreas de Preocupación', type: 'list' },
-      { key: 'fortalezas_conductuales', title: 'Fortalezas Conductuales', type: 'list' },
-      { key: 'plan_intervencion_conductual', title: 'Plan de Intervención', type: 'text' }
-    ]
-  },
-  entorno_hogar: {
-    title: 'Reporte de Evaluación del Entorno del Hogar',
-    subtitle: 'Visita Domiciliaria y Análisis del Contexto Familiar',
-    sections: [
-      { key: 'informacion_visita', title: 'Información de la Visita', type: 'info' },
-      { key: 'estructura_hogar', title: 'Estructura y Condiciones del Hogar', type: 'text' },
-      { key: 'dinamica_familiar', title: 'Dinámica Familiar', type: 'text' },
-      { key: 'impresion_general', title: 'Impresión General del Entorno', type: 'text' },
-      { key: 'recomendaciones_espacio', title: 'Recomendaciones sobre el Espacio', type: 'list' },
-      { key: 'recomendaciones_rutinas', title: 'Ajustes en Rutinas', type: 'list' },
-      { key: 'actividades_sugeridas', title: 'Actividades Terapéuticas para Casa', type: 'list' }
-    ]
-  },
-  anamnesis: {
-    title: 'Historia Clínica (Anamnesis)',
-    subtitle: 'Evaluación Integral del Desarrollo',
-    sections: [
-      { key: 'filiacion', title: 'Datos de Filiación', type: 'info' },
-      { key: 'motivo_consulta', title: 'Motivo de Consulta', type: 'text' },
-      { key: 'historia_prenatal', title: 'Historia Prenatal y Parto', type: 'text' },
-      { key: 'desarrollo_psicomotor', title: 'Desarrollo Psicomotor', type: 'text' },
-      { key: 'desarrollo_lenguaje', title: 'Desarrollo del Lenguaje', type: 'text' },
-      { key: 'area_emocional', title: 'Área Emocional y Social', type: 'text' },
-      { key: 'observaciones_terapeuta', title: 'Observaciones del Terapeuta', type: 'text' }
-    ]
-  }
-};
 
 // ==============================================================================
 // HANDLER PRINCIPAL
@@ -155,19 +38,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('📝 Generando reporte:', { reportType, childName, childAge });
+    console.log('📊 Datos recibidos:', JSON.stringify(reportData, null, 2));
+
+    // Generar análisis con IA antes de crear el documento
+    let aiAnalysis = null;
+    try {
+      aiAnalysis = await generateAIAnalysis(reportType, childName, childAge, reportData);
+      console.log('🤖 Análisis IA generado:', aiAnalysis ? 'Sí' : 'No');
+    } catch (error) {
+      console.error('⚠️ Error generando análisis IA (continuando sin él):', error);
+    }
+
     // Generar el documento Word
     const docBuffer = await generateWordDocument({
       reportType,
       childName,
       childAge,
       evaluatorName,
-      reportData
+      reportData,
+      aiAnalysis
     });
 
-    // Convertir a Base64 para almacenar en Supabase
+    // Convertir a Base64
     const base64Doc = docBuffer.toString('base64');
 
-    // Retornar el documento
     return NextResponse.json({
       success: true,
       fileName: `Reporte_${reportType}_${childName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.docx`,
@@ -185,7 +80,125 @@ export async function POST(request: NextRequest) {
 }
 
 // ==============================================================================
-// FUNCIÓN PARA GENERAR EL DOCUMENTO WORD
+// GENERAR ANÁLISIS CON IA
+// ==============================================================================
+async function generateAIAnalysis(
+  reportType: string, 
+  childName: string, 
+  childAge: number | undefined, 
+  reportData: any
+): Promise<string | null> {
+  
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    console.warn('⚠️ No hay API key de Gemini - reporte sin análisis IA');
+    return null;
+  }
+
+  try {
+    const ai = new GoogleGenAI({ apiKey });
+
+    let prompt = '';
+
+    switch (reportType) {
+      case 'anamnesis':
+        prompt = `
+Eres un psicólogo clínico especializado en desarrollo infantil. Analiza esta anamnesis y genera un informe profesional.
+
+PACIENTE: ${childName}
+EDAD: ${childAge || 'No especificada'} años
+
+DATOS DE LA ANAMNESIS:
+${JSON.stringify(reportData, null, 2)}
+
+GENERA UN ANÁLISIS PROFESIONAL CON:
+
+1. RESUMEN EJECUTIVO (3-4 líneas)
+Sintetiza los hallazgos más relevantes del desarrollo del niño.
+
+2. ÁREAS DE FORTALEZA (bullet points)
+Identifica al menos 3 aspectos positivos del desarrollo.
+
+3. ÁREAS DE ATENCIÓN (bullet points)
+Señala aspectos que requieren seguimiento o intervención.
+
+4. INTERPRETACIÓN DEL DESARROLLO
+- Desarrollo prenatal y perinatal
+- Hitos motores
+- Desarrollo del lenguaje
+- Área socioemocional
+- Autonomía
+
+5. RECOMENDACIONES PROFESIONALES (bullet points)
+Sugerencias concretas para la familia y el equipo terapéutico.
+
+FORMATO: Texto profesional, claro, sin jerga excesiva. Tono empático pero técnico.
+`;
+        break;
+
+      case 'aba':
+        prompt = `
+Eres un terapeuta ABA experto. Analiza esta sesión y genera un informe profesional.
+
+PACIENTE: ${childName}
+DATOS DE LA SESIÓN:
+${JSON.stringify(reportData, null, 2)}
+
+GENERA:
+1. Resumen de la sesión (2-3 líneas)
+2. Análisis del comportamiento observado
+3. Progreso hacia objetivos
+4. Recomendaciones para próximas sesiones
+`;
+        break;
+
+      case 'entorno_hogar':
+        prompt = `
+Eres un terapeuta especializado en visitas domiciliarias. Analiza esta evaluación.
+
+PACIENTE: ${childName}
+DATOS DE LA VISITA:
+${JSON.stringify(reportData, null, 2)}
+
+GENERA:
+1. Resumen de la visita
+2. Análisis del entorno físico
+3. Dinámica familiar observada
+4. Barreras y facilitadores
+5. Recomendaciones de adaptaciones
+`;
+        break;
+
+      default:
+        prompt = `
+Analiza esta evaluación profesional y genera un informe clínico.
+
+PACIENTE: ${childName}
+TIPO: ${reportType.toUpperCase()}
+DATOS:
+${JSON.stringify(reportData, null, 2)}
+
+Genera un análisis profesional con interpretación clínica y recomendaciones.
+`;
+    }
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+    });
+
+    const analysis = response.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    console.log('✅ Análisis IA generado exitosamente');
+    return analysis;
+
+  } catch (error) {
+    console.error('Error generando análisis IA:', error);
+    return null;
+  }
+}
+
+// ==============================================================================
+// GENERAR DOCUMENTO WORD
 // ==============================================================================
 async function generateWordDocument(params: {
   reportType: string;
@@ -193,358 +206,897 @@ async function generateWordDocument(params: {
   childAge?: number;
   evaluatorName?: string;
   reportData: any;
+  aiAnalysis?: string | null;
 }) {
-  const { reportType, childName, childAge, evaluatorName, reportData } = params;
+  const { reportType, childName, childAge, reportData, aiAnalysis } = params;
 
-  // ✅ CORRECCIÓN: config es ahora de tipo ReportConfig, por lo que
-  // config.subtitle es string | undefined y no genera error de TypeScript.
-  const config: ReportConfig | undefined = REPORT_CONFIGS[reportType];
-
-  if (!config) {
-    throw new Error(`Tipo de reporte no soportado: ${reportType}`);
+  const sections: any[] = [];
+  
+  // PORTADA
+  const portada = createCoverPage(reportType, childName, childAge);
+  
+  // CONTENIDO
+  let contenido: any[] = [];
+  
+  switch (reportType) {
+    case 'anamnesis':
+      contenido = createAnamnesisReport(reportData, childName, childAge, aiAnalysis);
+      break;
+    case 'aba':
+      contenido = createABAReport(reportData, childName, aiAnalysis);
+      break;
+    case 'entorno_hogar':
+      contenido = createEntornoHogarReport(reportData, childName, aiAnalysis);
+      break;
+    default:
+      contenido = createGenericReport(reportData, childName, reportType);
   }
 
-  // Crear documento con estilos profesionales
-  const doc = new Document({
-    styles: {
-      default: {
-        document: {
-          run: { font: "Arial", size: 24 } // 12pt
-        }
-      },
-      paragraphStyles: [
-        {
-          id: "Heading1",
-          name: "Heading 1",
-          basedOn: "Normal",
-          next: "Normal",
-          quickFormat: true,
-          run: { size: 32, bold: true, font: "Arial", color: "1F4E78" },
-          paragraph: { spacing: { before: 480, after: 240 }, outlineLevel: 0 }
-        },
-        {
-          id: "Heading2",
-          name: "Heading 2",
-          basedOn: "Normal",
-          next: "Normal",
-          quickFormat: true,
-          run: { size: 28, bold: true, font: "Arial", color: "2E75B6" },
-          paragraph: { spacing: { before: 360, after: 180 }, outlineLevel: 1 }
-        },
-        {
-          id: "Heading3",
-          name: "Heading 3",
-          basedOn: "Normal",
-          next: "Normal",
-          quickFormat: true,
-          run: { size: 26, bold: true, font: "Arial", color: "3D85C6" },
-          paragraph: { spacing: { before: 240, after: 120 }, outlineLevel: 2 }
-        }
-      ]
+  sections.push({
+    properties: {
+      page: {
+        size: { width: 12240, height: 15840 }, // Letter
+        margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+      }
     },
-    numbering: {
-      config: [
-        {
-          reference: "bullets",
-          levels: [
-            {
-              level: 0,
-              format: LevelFormat.BULLET,
-              text: "•",
-              alignment: AlignmentType.LEFT,
-              style: {
-                paragraph: { indent: { left: 720, hanging: 360 } }
-              }
-            }
-          ]
-        }
-      ]
-    },
-    sections: [{
-      properties: {
-        page: {
-          size: {
-            width: 12240,  // US Letter
-            height: 15840
-          },
-          margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
-        }
-      },
-      children: [
-        // PORTADA
-        // ✅ CORRECCIÓN: config.subtitle es string | undefined — totalmente válido
-        ...createCoverPage(config.title, config.subtitle, childName, childAge),
-
-        new Paragraph({ children: [new PageBreak()] }),
-
-        // CONTENIDO
-        ...createReportContent(config, reportData, childName, evaluatorName)
-      ]
-    }]
+    children: [...portada, new PageBreak(), ...contenido]
   });
 
-  // Generar el archivo
-  const buffer = await Packer.toBuffer(doc);
-  return buffer;
+  const doc = new Document({
+    styles: getDocumentStyles(),
+    sections
+  });
+
+  return await Packer.toBuffer(doc);
 }
 
 // ==============================================================================
-// CREAR PORTADA
+// ESTILOS
 // ==============================================================================
-function createCoverPage(
-  title: string,
-  subtitle: string | undefined, // ✅ Tipado explícito para evitar ambigüedad
-  childName: string,
-  childAge?: number
-) {
-  const elements: any[] = [];
-
-  // Espacios iniciales
-  elements.push(
-    new Paragraph({ text: "" }),
-    new Paragraph({ text: "" }),
-    new Paragraph({ text: "" })
-  );
-
-  // Título principal
-  elements.push(
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { after: 240 },
-      children: [
-        new TextRun({
-          text: title,
-          bold: true,
-          size: 40,
-          color: "1F4E78"
-        })
-      ]
-    })
-  );
-
-  // Subtítulo — solo se renderiza si existe
-  if (subtitle) {
-    elements.push(
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        spacing: { after: 480 },
-        children: [
-          new TextRun({
-            text: subtitle,
-            size: 28,
-            color: "595959"
-          })
-        ]
-      })
-    );
-  }
-
-  // Línea divisoria
-  elements.push(
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 240, after: 240 },
-      border: {
-        bottom: {
-          color: "1F4E78",
-          space: 1,
-          value: BorderStyle.SINGLE,
-          size: 6
-        }
+function getDocumentStyles() {
+  return {
+    default: {
+      document: {
+        run: { font: "Calibri", size: 22 }
+      }
+    },
+    paragraphStyles: [
+      {
+        id: "Normal",
+        name: "Normal",
+        run: { font: "Calibri", size: 22 },
+        paragraph: { spacing: { line: 276, after: 200 } }
       },
-      children: [new TextRun({ text: "" })]
-    })
-  );
+      {
+        id: "Heading1",
+        name: "Heading 1",
+        run: { size: 32, bold: true, font: "Calibri", color: "2E75B5" },
+        paragraph: { spacing: { before: 480, after: 240 } }
+      },
+      {
+        id: "Heading2",
+        name: "Heading 2",
+        run: { size: 28, bold: true, font: "Calibri", color: "2E75B5" },
+        paragraph: { spacing: { before: 360, after: 180 } }
+      },
+      {
+        id: "Heading3",
+        name: "Heading 3",
+        run: { size: 24, bold: true, font: "Calibri", color: "1F4D78" },
+        paragraph: { spacing: { before: 280, after: 140 } }
+      }
+    ]
+  };
+}
 
-  // Información del paciente
-  elements.push(
+// ==============================================================================
+// PORTADA
+// ==============================================================================
+function createCoverPage(reportType: string, childName: string, childAge?: number): any[] {
+  const titles: Record<string, { main: string; sub: string }> = {
+    anamnesis: {
+      main: "HISTORIA CLÍNICA",
+      sub: "Evaluación Integral del Desarrollo"
+    },
+    aba: {
+      main: "REPORTE DE SESIÓN ABA",
+      sub: "Análisis Aplicado de la Conducta"
+    },
+    entorno_hogar: {
+      main: "EVALUACIÓN DEL ENTORNO DEL HOGAR",
+      sub: "Visita Domiciliaria y Análisis del Contexto Familiar"
+    },
+    brief2: { main: "EVALUACIÓN BRIEF-2", sub: "Funciones Ejecutivas" },
+    ados2: { main: "EVALUACIÓN ADOS-2", sub: "Diagnóstico del Autismo" },
+    vineland3: { main: "EVALUACIÓN VINELAND-3", sub: "Conducta Adaptativa" },
+    wiscv: { main: "EVALUACIÓN WISC-V", sub: "Escala de Inteligencia" },
+    basc3: { main: "EVALUACIÓN BASC-3", sub: "Sistema Conductual" }
+  };
+
+  const title = titles[reportType] || { main: "REPORTE PROFESIONAL", sub: "" };
+
+  return [
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 360, after: 120 },
+      spacing: { before: 2880, after: 720 },
       children: [
         new TextRun({
-          text: "PACIENTE",
+          text: "JUGANDO APRENDO",
+          font: "Calibri",
+          size: 32,
           bold: true,
-          size: 24,
-          color: "404040"
+          color: "2E75B5"
         })
       ]
     }),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { after: 60 },
+      spacing: { after: 1440 },
+      children: [
+        new TextRun({
+          text: "Centro de Desarrollo Infantil",
+          font: "Calibri",
+          size: 22,
+          color: "595959"
+        })
+      ]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 1440 },
+      border: {
+        bottom: { color: "2E75B5", space: 1, value: BorderStyle.SINGLE, size: 12 }
+      },
+      children: [new TextRun({ text: "" })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 720, after: 360 },
+      children: [
+        new TextRun({
+          text: title.main,
+          font: "Calibri",
+          size: 40,
+          bold: true,
+          color: "1F4D78"
+        })
+      ]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 1440 },
+      children: [
+        new TextRun({
+          text: title.sub,
+          font: "Calibri",
+          size: 24,
+          color: "595959",
+          italics: true
+        })
+      ]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 1440, after: 240 },
+      children: [
+        new TextRun({
+          text: "PACIENTE",
+          font: "Calibri",
+          size: 20,
+          bold: true,
+          color: "404040",
+          allCaps: true
+        })
+      ]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 120 },
       children: [
         new TextRun({
           text: childName,
-          size: 28,
-          bold: true
+          font: "Calibri",
+          size: 32,
+          bold: true,
+          color: "2E75B5"
         })
       ]
-    })
-  );
-
-  if (childAge) {
-    elements.push(
+    }),
+    ...(childAge ? [
       new Paragraph({
         alignment: AlignmentType.CENTER,
-        spacing: { after: 360 },
+        spacing: { after: 720 },
         children: [
           new TextRun({
             text: `Edad: ${childAge} años`,
-            size: 24,
+            font: "Calibri",
+            size: 22,
             color: "595959"
           })
         ]
       })
-    );
-  }
-
-  // Fecha
-  elements.push(
+    ] : []),
     new Paragraph({
       alignment: AlignmentType.CENTER,
-      spacing: { before: 480 },
+      spacing: { before: 1440 },
       children: [
         new TextRun({
           text: `Fecha: ${new Date().toLocaleDateString('es-ES', {
-            year: 'numeric',
+            day: 'numeric',
             month: 'long',
-            day: 'numeric'
+            year: 'numeric'
           })}`,
+          font: "Calibri",
           size: 22,
           color: "737373"
         })
       ]
     })
-  );
-
-  return elements;
+  ];
 }
 
 // ==============================================================================
-// CREAR CONTENIDO DEL REPORTE
+// REPORTE DE ANAMNESIS - VERSIÓN MEJORADA
 // ==============================================================================
-function createReportContent(
-  config: ReportConfig,
-  reportData: any,
-  childName: string,
-  evaluatorName?: string
-) {
+function createAnamnesisReport(data: any, childName: string, childAge?: number, aiAnalysis?: string | null): any[] {
   const elements: any[] = [];
 
-  for (const section of config.sections) {
-    // Título de sección
+  // ══════════════════════════════════════════════════════════════════════════
+  // ANÁLISIS PROFESIONAL CON IA (SI EXISTE)
+  // ══════════════════════════════════════════════════════════════════════════
+  if (aiAnalysis) {
     elements.push(
       new Paragraph({
-        heading: HeadingLevel.HEADING_2,
-        children: [new TextRun(section.title)]
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun("Análisis Profesional")]
       })
     );
 
-    // Contenido según tipo
-    switch (section.type) {
-      case 'info':
-        elements.push(...createInfoSection(reportData, section.key));
-        break;
-      case 'text':
-        elements.push(...createTextSection(reportData, section.key));
-        break;
-      case 'list':
-        elements.push(...createListSection(reportData, section.key));
-        break;
-      case 'table':
-        elements.push(...createTableSection(reportData, section.key));
-        break;
-      case 'abc':
-        elements.push(...createABCSection(reportData));
-        break;
-      case 'metrics':
-        elements.push(...createMetricsSection(reportData));
-        break;
-    }
+    // Dividir el análisis en párrafos
+    const analysisParagraphs = aiAnalysis.split('\n\n').filter(p => p.trim());
+    analysisParagraphs.forEach(para => {
+      if (para.trim()) {
+        // Si es un título (empieza con número o mayúsculas)
+        if (/^(\d+\.|[A-Z\sÁÉÍÓÚ]{10,}:)/.test(para.trim())) {
+          elements.push(
+            new Paragraph({
+              heading: HeadingLevel.HEADING_2,
+              spacing: { before: 360, after: 180 },
+              children: [new TextRun(para.replace(/^\d+\.\s*/, '').trim())]
+            })
+          );
+        } else {
+          elements.push(
+            new Paragraph({
+              spacing: { after: 200 },
+              children: [new TextRun({ text: para.trim(), size: 22 })]
+            })
+          );
+        }
+      }
+    });
 
-    // Espacio entre secciones
-    elements.push(new Paragraph({ text: "" }));
+    elements.push(
+      new Paragraph({ text: "" }),
+      new PageBreak()
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 1. DATOS DE FILIACIÓN
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Datos de Filiación")]
+    })
+  );
+
+  const filiacionItems = [
+    { label: "Informante", value: data.informante },
+    { label: "Parentesco", value: data.parentesco },
+    { label: "Vive con", value: data.vive_con },
+    { label: "Escolaridad actual", value: data.escolaridad }
+  ];
+
+  let hasFiliacion = false;
+  filiacionItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasFiliacion = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasFiliacion) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
+  }
+
+  elements.push(new Paragraph({ text: "" }));
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 2. MOTIVO DE CONSULTA
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Motivo de Consulta")]
+    })
+  );
+
+  const motivoItems = [
+    { label: "Motivo principal", value: data.motivo_principal },
+    { label: "Derivado por", value: data.derivado_por },
+    { label: "Expectativas de la familia", value: data.expectativas }
+  ];
+
+  let hasMotivo = false;
+  motivoItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasMotivo = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasMotivo) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
+  }
+
+  elements.push(new Paragraph({ text: "" }));
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 3. HISTORIA PRENATAL Y PARTO
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Historia Prenatal y Parto")]
+    })
+  );
+
+  const prenatalItems = [
+    { label: "Embarazo planificado", value: data.tipo_embarazo },
+    { label: "Complicaciones durante el embarazo", value: data.complicaciones_emb },
+    { label: "Tipo de parto", value: data.tipo_parto },
+    { label: "Lloró al nacer", value: data.llanto },
+    { label: "Requirió incubadora", value: data.incubadora }
+  ];
+
+  let hasPrenatal = false;
+  prenatalItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasPrenatal = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasPrenatal) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
+  }
+
+  elements.push(new Paragraph({ text: "" }));
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 4. HISTORIA MÉDICA
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Historia Médica")]
+    })
+  );
+
+  const medicaItems = [
+    { label: "Enfermedades previas", value: data.enfermedades },
+    { label: "Exámenes realizados", value: data.examenes },
+    { label: "Medicación actual", value: data.medicacion }
+  ];
+
+  let hasMedica = false;
+  medicaItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasMedica = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasMedica) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
+  }
+
+  elements.push(new Paragraph({ text: "" }));
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 5. DESARROLLO PSICOMOTOR
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Desarrollo Psicomotor")]
+    })
+  );
+
+  const motorItems = [
+    { label: "Sostén cefálico", value: data.sosten_cefalico },
+    { label: "Gateo", value: data.gateo },
+    { label: "Marcha (caminar)", value: data.marcha },
+    { label: "Se cae frecuentemente", value: data.caidas },
+    { label: "Motricidad fina", value: data.motricidad_fina }
+  ];
+
+  let hasMotor = false;
+  motorItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasMotor = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasMotor) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
+  }
+
+  elements.push(new Paragraph({ text: "" }));
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 6. DESARROLLO DEL LENGUAJE
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Desarrollo del Lenguaje")]
+    })
+  );
+
+  const lenguajeItems = [
+    { label: "Primeras palabras", value: data.primeras_palabras },
+    { label: "Intención comunicativa", value: data.intencion_comunicativa },
+    { label: "Nivel de comprensión", value: data.comprension },
+    { label: "Estructura frases", value: data.frases }
+  ];
+
+  let hasLenguaje = false;
+  lenguajeItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasLenguaje = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasLenguaje) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
+  }
+
+  elements.push(new Paragraph({ text: "" }));
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 7. ALIMENTACIÓN Y SUEÑO
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Alimentación y Sueño")]
+    })
+  );
+
+  const alimentacionItems = [
+    { label: "Apetito", value: data.apetito },
+    { label: "Masticación", value: data.masticacion },
+    { label: "Calidad del sueño", value: data.sueno_calidad },
+    { label: "Duerme con", value: data.duerme_con }
+  ];
+
+  let hasAlimentacion = false;
+  alimentacionItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasAlimentacion = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasAlimentacion) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
+  }
+
+  elements.push(new Paragraph({ text: "" }));
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 8. AUTONOMÍA E HIGIENE
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Autonomía e Higiene")]
+    })
+  );
+
+  const autonomiaItems = [
+    { label: "Control de esfínteres", value: data.control_esfinteres },
+    { label: "Vestimenta", value: data.vestido },
+    { label: "Aseo personal", value: data.aseo }
+  ];
+
+  let hasAutonomia = false;
+  autonomiaItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasAutonomia = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasAutonomia) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
+  }
+
+  elements.push(new Paragraph({ text: "" }));
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 9. ÁREA EMOCIONAL Y SOCIAL
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Área Emocional y Social")]
+    })
+  );
+
+  const emocionalItems = [
+    { label: "Contacto visual", value: data.contacto_visual },
+    { label: "Tipo de juego", value: data.juego },
+    { label: "Rabietas", value: data.rabietas },
+    { label: "Relación con pares", value: data.pares }
+  ];
+
+  let hasEmocional = false;
+  emocionalItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasEmocional = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasEmocional) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
+  }
+
+  elements.push(new Paragraph({ text: "" }));
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // 10. OBSERVACIONES DEL TERAPEUTA
+  // ══════════════════════════════════════════════════════════════════════════
+  elements.push(
+    new Paragraph({
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Observaciones del Terapeuta")]
+    })
+  );
+
+  const observacionesItems = [
+    { label: "Apariencia física", value: data.apariencia },
+    { label: "Actitud ante la evaluación", value: data.actitud_evaluacion },
+    { label: "Contacto visual observado", value: data.contacto_visual_obs },
+    { label: "Notas adicionales", value: data.notas_adicionales }
+  ];
+
+  let hasObservaciones = false;
+  observacionesItems.forEach(item => {
+    if (item.value && item.value !== '') {
+      hasObservaciones = true;
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  if (!hasObservaciones) {
+    elements.push(
+      new Paragraph({
+        spacing: { after: 200 },
+        children: [new TextRun({ 
+          text: "No se proporcionó información en esta sección.", 
+          italics: true, 
+          color: "999999",
+          size: 22 
+        })]
+      })
+    );
   }
 
   return elements;
 }
 
 // ==============================================================================
-// FUNCIONES AUXILIARES PARA SECCIONES
+// OTROS REPORTES (Stubs mejorados)
 // ==============================================================================
 
-function createInfoSection(data: any, key: string) {
+function createABAReport(data: any, childName: string, aiAnalysis?: string | null): any[] {
   const elements: any[] = [];
+  
+  // Análisis IA primero
+  if (aiAnalysis) {
+    elements.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun("Análisis de la Sesión")]
+      })
+    );
+    
+    const paragraphs = aiAnalysis.split('\n\n').filter(p => p.trim());
+    paragraphs.forEach(para => {
+      elements.push(
+        new Paragraph({
+          spacing: { after: 200 },
+          children: [new TextRun({ text: para.trim(), size: 22 })]
+        })
+      );
+    });
+    
+    elements.push(new Paragraph({ text: "" }), new PageBreak());
+  }
+  
   elements.push(
     new Paragraph({
-      children: [new TextRun({ text: JSON.stringify(data[key] || data, null, 2), size: 22 })]
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Información de la Sesión")]
     })
   );
+  
+  const sessionItems = [
+    { label: "Fecha de sesión", value: data.fecha_sesion },
+    { label: "Objetivo principal", value: data.datos?.objetivo_principal },
+    { label: "Conducta trabajada", value: data.datos?.conducta }
+  ];
+
+  sessionItems.forEach(item => {
+    if (item.value) {
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
   return elements;
 }
 
-function createTextSection(data: any, key: string) {
-  const text = data[key] || "No se proporcionó información.";
-  const paragraphs = text.split('\n\n');
-
-  return paragraphs.map((para: string) =>
+function createEntornoHogarReport(data: any, childName: string, aiAnalysis?: string | null): any[] {
+  const elements: any[] = [];
+  
+  if (aiAnalysis) {
+    elements.push(
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun("Análisis del Entorno")]
+      })
+    );
+    
+    const paragraphs = aiAnalysis.split('\n\n').filter(p => p.trim());
+    paragraphs.forEach(para => {
+      elements.push(
+        new Paragraph({
+          spacing: { after: 200 },
+          children: [new TextRun({ text: para.trim(), size: 22 })]
+        })
+      );
+    });
+    
+    elements.push(new Paragraph({ text: "" }), new PageBreak());
+  }
+  
+  elements.push(
     new Paragraph({
-      spacing: { after: 180 },
-      children: [new TextRun({ text: para, size: 24 })]
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun("Información de la Visita")]
     })
   );
-}
 
-function createListSection(data: any, key: string) {
-  const text = data[key] || "";
-  const items = text.split('\n').filter((item: string) => item.trim());
-
-  return items.map((item: string) =>
-    new Paragraph({
-      numbering: { reference: "bullets", level: 0 },
-      children: [new TextRun({ text: item.replace(/^[-•]\s*/, ''), size: 24 })]
-    })
-  );
-}
-
-function createTableSection(data: any, key: string) {
-  return [
-    new Paragraph({
-      children: [new TextRun({ text: "[Tabla de datos]", size: 22, italics: true })]
-    })
+  const items = [
+    { label: "Fecha de visita", value: data.fecha_visita },
+    { label: "Comportamiento observado", value: data.datos?.comportamiento_observado },
+    { label: "Barreras identificadas", value: data.datos?.barreras_identificadas }
   ];
+
+  items.forEach(item => {
+    if (item.value) {
+      elements.push(
+        new Paragraph({
+          spacing: { after: 140 },
+          children: [
+            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
+            new TextRun({ text: String(item.value), size: 22 })
+          ]
+        })
+      );
+    }
+  });
+
+  return elements;
 }
 
-function createABCSection(data: any) {
+function createGenericReport(data: any, childName: string, reportType: string): any[] {
   return [
     new Paragraph({
-      children: [
-        new TextRun({ text: "Antecedente: ", bold: true, size: 24 }),
-        new TextRun({ text: data.antecedente || "N/A", size: 24 })
-      ]
+      heading: HeadingLevel.HEADING_1,
+      children: [new TextRun(`Reporte ${reportType.toUpperCase()}`)]
     }),
     new Paragraph({
-      spacing: { before: 120 },
-      children: [
-        new TextRun({ text: "Conducta: ", bold: true, size: 24 }),
-        new TextRun({ text: data.conducta || "N/A", size: 24 })
-      ]
-    }),
-    new Paragraph({
-      spacing: { before: 120 },
-      children: [
-        new TextRun({ text: "Consecuencia: ", bold: true, size: 24 }),
-        new TextRun({ text: data.consecuencia || "N/A", size: 24 })
-      ]
-    })
-  ];
-}
-
-function createMetricsSection(data: any) {
-  return [
-    new Paragraph({
-      children: [new TextRun({ text: "[Métricas visuales]", size: 22, italics: true })]
+      children: [new TextRun({ 
+        text: "Este tipo de reporte está en desarrollo. Los datos se han registrado correctamente.", 
+        italics: true,
+        size: 22
+      })]
     })
   ];
 }
