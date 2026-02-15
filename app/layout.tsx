@@ -1,19 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { ToastProvider } from '@/components/Toast'
 import "./globals.css";
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
-  title: "Jugando Aprendo | Centro de Desarrollo Infantil",
-  description: "Plataforma de gestión y seguimiento para terapia infantil con IA.",
+  title: "Jugando Aprendo - Centro de Desarrollo Infantil",
+  description: "Sistema profesional de gestión terapéutica y desarrollo infantil",
 };
 
 export default function RootLayout({
@@ -22,11 +13,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+    <html lang="es">
+      <body className="antialiased">
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

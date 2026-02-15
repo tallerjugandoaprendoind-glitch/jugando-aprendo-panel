@@ -17,6 +17,8 @@ import {
 } from 'lucide-react'
 
 import ReportGenerator from '@/components/ReportGenerator'
+import AnalyticsDashboard from '@/components/AnalyticsDashboard'
+import { useToast } from '@/components/Toast'
 
 // ==============================================================================
 // 1. CONFIGURACIÓN DE DATOS - FORMULARIOS ssssss
@@ -806,7 +808,10 @@ function calcularEdadNumerica(birthDate: string | null): number {
 
 export default function AdminDashboard() {
   const router = useRouter()
+  const toast = useToast()
   const [currentView, setCurrentView] = useState('inicio')
+  const [showAnalytics, setShowAnalytics] = useState(false)
+  const [selectedChildReport, setSelectedChildReport] = useState<{id: string, name: string} | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -851,7 +856,7 @@ export default function AdminDashboard() {
       router.push('/login')
     } catch (error) {
       console.error('Error al cerrar sesión:', error)
-      alert('Hubo un error al cerrar sesión')
+      toast.error('Hubo un error al cerrar sesión')
     }
   }
 
@@ -874,11 +879,11 @@ export default function AdminDashboard() {
 
   const handleChangePassword = async () => {
     if (newPassword.length < 6) {
-      alert('La contraseña debe tener al menos 6 caracteres')
+      toast.warning('La contraseña debe tener al menos 6 caracteres')
       return
     }
     if (newPassword !== confirmPassword) {
-      alert('Las contraseñas no coinciden')
+      toast.error('Las contraseñas no coinciden')
       return
     }
 
@@ -891,13 +896,13 @@ export default function AdminDashboard() {
       
       if (error) throw error
       
-      alert('✅ Contraseña actualizada exitosamente')
+      toast.success('Contraseña actualizada exitosamente')
       setShowChangePassword(false)
       setNewPassword('')
       setConfirmPassword('')
     } catch (error: any) {
       console.error('Error al cambiar contraseña:', error)
-      alert('❌ Error al cambiar la contraseña: ' + error.message)
+      toast.error('Error al cambiar la contraseña: ' + error.message)
     } finally {
       setChangingPassword(false)
     }
@@ -968,6 +973,18 @@ export default function AdminDashboard() {
                     </div>
                 </div>
                 <div className="flex items-center gap-2 md:gap-4 relative">
+                    {/* Botón Ver Analytics - Solo visible cuando hay paciente seleccionado */}
+                    {currentView === 'reportes' && selectedChildReport && (
+                      <button
+                        onClick={() => setShowAnalytics(true)}
+                        className="flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-all hover:-translate-y-0.5 text-xs md:text-sm"
+                      >
+                        <BarChart3 className="w-4 h-4 md:w-5 md:h-5" />
+                        <span className="hidden sm:inline">Ver Analytics</span>
+                        <span className="sm:hidden">Analytics</span>
+                      </button>
+                    )}
+                    
                     <button onClick={toggleNotifications} className="p-2 bg-white rounded-full text-slate-400 hover:text-blue-600 shadow-sm border border-slate-100 relative">
                       <Bell size={18} className="md:w-5 md:h-5"/>
                       {/* El punto rojo solo se muestra si hay notificaciones en la lista */}
@@ -1031,7 +1048,7 @@ export default function AdminDashboard() {
                 {currentView === 'agenda' && <MonthlyCalendarView />}
                 {currentView === 'ninos' && <PatientsView />}
                 {currentView === 'evaluaciones' && <DynamicEvaluationsView />}
-                {currentView === 'reportes' && <AIReportView />}
+                {currentView === 'reportes' && <AIReportView onChildSelect={setSelectedChildReport} />}
                 {currentView === 'importar' && <ExcelImportView />}
             </div>
         </div>
@@ -1098,6 +1115,17 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {/* MODAL DE ANALYTICS */}
+      {/* ══════════════════════════════════════════════════════════════ */}
+      {showAnalytics && selectedChildReport && (
+        <AnalyticsDashboard
+          childId={selectedChildReport.id}
+          childName={selectedChildReport.name}
+          onClose={() => setShowAnalytics(false)}
+        />
+      )}
     </div>
   )
 }
@@ -1106,6 +1134,7 @@ export default function AdminDashboard() {
 // VISTA: DASHBOARD HOME
 // ==============================================================================
 function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
+  const toast = useToast()
   const [emailBusqueda, setEmailBusqueda] = useState('')
   const [loading, setLoading] = useState(false)
   
@@ -1234,7 +1263,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
 
   const handleCargarToken = async (cantidad: number) => {
     if (!emailBusqueda.trim()) {
-      alert("Por favor, ingresa un correo electrónico")
+      toast.warning("Por favor, ingresa un correo electrónico")
       return
     }
 
@@ -1249,7 +1278,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         .single()
 
       if (searchError || !profile) {
-        alert("❌ No se encontró ningún padre con ese correo electrónico")
+        toast.error("No se encontró ningún padre con ese correo electrónico")
         setLoading(false)
         return
       }
@@ -1261,15 +1290,15 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         .eq('id', profile.id)
 
       if (updateError) {
-        alert("❌ Error al actualizar los créditos: " + updateError.message)
+        toast.error("Error al actualizar los créditos: " + updateError.message)
       } else {
-        alert(`✅ ¡Éxito! Se cargaron ${cantidad} crédito(s) a ${cleanEmail}\n\nTotal: ${nuevosTokens} créditos`)
+        toast.success(`¡Éxito! Se cargaron ${cantidad} crédito(s) a ${cleanEmail}. Total: ${nuevosTokens} créditos`)
         setEmailBusqueda('')
         cargarDatosCompletos()
       }
     } catch (err: any) {
       console.error('Error:', err)
-      alert("❌ Error de conexión: " + err.message)
+      toast.error("Error de conexión: " + err.message)
     } finally {
       setLoading(false)
     }
@@ -2712,7 +2741,7 @@ function DynamicEvaluationsView() {
 // ==============================================================================
 // VISTA: HISTORIAL & IA
 // ==============================================================================
-function AIReportView() {
+function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, name: string} | null) => void }) {
   const [listaNinos, setListaNinos] = useState<any[]>([])
   const [selectedChild, setSelectedChild] = useState('')
   const [historyData, setHistoryData] = useState<any>({ anamnesis: null, aba: [], entorno: [] })
@@ -2740,6 +2769,10 @@ function AIReportView() {
 
   const handleSelectChild = async (childId: string) => {
     setSelectedChild(childId)
+    const selectedNino = listaNinos.find(n => n.id === childId)
+    if (onChildSelect && selectedNino) {
+      onChildSelect({ id: childId, name: selectedNino.name })
+    }
     setHistoryData({ anamnesis: null, aba: [], entorno: [] }) 
     
     setMessages([{ role: 'ai', text: 'Cargando historial del paciente...' }])
