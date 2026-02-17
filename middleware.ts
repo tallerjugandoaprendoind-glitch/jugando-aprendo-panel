@@ -1,19 +1,48 @@
 // ============================================================================
-// ARCHIVO: middleware.ts (VERSIÓN FINAL ARREGLADA)
+// MIDDLEWARE MEJORADO - middleware.ts
 // ============================================================================
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+// Rate limiting simple (en producción usar @upstash/ratelimit)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>()
+
+function checkRateLimit(ip: string, limit: number = 100, windowMs: number = 60000): boolean {
+  const now = Date.now()
+  const record = rateLimitMap.get(ip)
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + windowMs })
+    return true
+  }
+
+  if (record.count >= limit) {
+    return false
+  }
+
+  record.count++
+  return true
+}
+
 export async function middleware(request: NextRequest) {
-  // 1. Crear respuesta base
+  // 1. Rate limiting básico
+  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: 'Demasiadas solicitudes. Por favor, intenta más tarde.' },
+      { status: 429 }
+    )
+  }
+
+  // 2. Crear respuesta base
   let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   })
 
-  // 2. Configurar cliente de Supabase
+  // 3. Configurar cliente de Supabase
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -60,48 +89,98 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // 3. Obtener sesión del usuario
+  // 4. Obtener sesión del usuario
   const {
-    data: { user },
-  } = await supabase.auth.getUser()
+    data: { session },
+    error: sessionError
+  } = await supabase.auth.getSession()
 
-  // 4. Definir Rutas protegidas
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
-  const isPadreRoute = request.nextUrl.pathname.startsWith('/padre')
+  // 5. Verificar si la sesión es válida y no expirada
+  if (sessionError) {
+    console.error('Session error:', sessionError)
+    // Limpiar cookies corruptas
+    response.cookies.delete('sb-access-token')
+    response.cookies.delete('sb-refresh-token')
+  }
+
+  // 6. Definir rutas protegidas
+  const { pathname } = request.nextUrl
+  const isAdminRoute = pathname.startsWith('/admin')
+  const isPadreRoute = pathname.startsWith('/padre')
   const isProtectedRoute = isAdminRoute || isPadreRoute
 
-  // 5. CASO 1: No hay usuario y quiere entrar a zona privada -> LOGIN
-  if (!user && isProtectedRoute) {
+  // 7. CASO 1: No hay usuario y quiere entrar a zona privada -> LOGIN
+  if (!session && isProtectedRoute) {
     const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
+    loginUrl.searchParams.set('redirectTo', pathname)
     return NextResponse.redirect(loginUrl)
   }
 
-  // 6. CASO 2: Hay usuario -> Verificar Rol
-  if (user && isProtectedRoute) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
+  // 8. CASO 2: Hay usuario -> Verificar Rol y Estado
+  if (session && isProtectedRoute) {
+    try {
+      // Obtener perfil con verificación de estado activo
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('role, is_active, email')
+        .eq('id', session.user.id)
+        .single()
 
-    // --- CORRECCIÓN CRÍTICA AQUÍ ---
-    // Antes: Si profile era null, te expulsaba.
-    // Ahora: Solo te expulsa si EXPLICITAMENTE tienes el rol contrario.
-    // Esto evita el bucle infinito si la base de datos tarda en responder.
+      // Si no existe perfil, redirigir a login
+      if (profileError || !profile) {
+        console.error('Profile error:', profileError)
+        await supabase.auth.signOut()
+        return NextResponse.redirect(new URL('/login', request.url))
+      }
 
-    // Si estás en Admin pero eres Padre -> Fuera
-    if (isAdminRoute && profile?.role === 'padre') {
-      return NextResponse.redirect(new URL('/padre', request.url))
+      // Verificar que el usuario esté activo
+      if (!profile.is_active) {
+        await supabase.auth.signOut()
+        const blockedUrl = new URL('/login', request.url)
+        blockedUrl.searchParams.set('error', 'account_disabled')
+        return NextResponse.redirect(blockedUrl)
+      }
+
+      // Verificar roles específicos
+      if (isAdminRoute && profile.role !== 'admin') {
+        return NextResponse.redirect(new URL('/padre', request.url))
+      }
+
+      if (isPadreRoute && profile.role !== 'padre') {
+        return NextResponse.redirect(new URL('/admin', request.url))
+      }
+
+      // Log de acceso para auditoría (opcional)
+      if (process.env.ENABLE_AUDIT_LOG === 'true') {
+        await supabase.from('audit_log').insert({
+          user_id: session.user.id,
+          action: 'PAGE_ACCESS',
+          resource_id: pathname,
+          details: { 
+            ip, 
+            user_agent: request.headers.get('user-agent') 
+          }
+        })
+      }
+
+    } catch (error) {
+      console.error('Middleware error:', error)
+      // En caso de error, permitir continuar pero registrar
+      // (evita bloquear a usuarios legítimos por errores de BD)
     }
-
-    // Si estás en Padre pero eres Admin -> Fuera
-    if (isPadreRoute && profile?.role === 'admin') {
-      return NextResponse.redirect(new URL('/admin', request.url))
-    }
-    
-    // Si profile es null o el rol es correcto, DEJA PASAR.
   }
+
+  // 9. Headers de seguridad adicionales
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-XSS-Protection', '1; mode=block')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  
+  // CSP básico (ajustar según necesidades)
+  response.headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:;"
+  )
 
   return response
 }
@@ -110,13 +189,13 @@ export const config = {
   matcher: [
     /*
      * Coincidir con todas las rutas excepto:
-     * - api (rutas API)
+     * - api (rutas API - tienen su propia autenticación)
      * - _next/static (archivos estáticos)
      * - _next/image (optimización de imágenes)
-     * - images (tus imágenes públicas como logos)
-     * - favicon.ico (icono)
+     * - images (imágenes públicas)
+     * - favicon.ico, sitemap.xml, robots.txt
      * - login (página de entrada)
      */
-    '/((?!api|_next/static|_next/image|images|favicon.ico|login).*)',
+    '/((?!api|_next/static|_next/image|images|favicon.ico|sitemap.xml|robots.txt|login).*)',
   ],
 }

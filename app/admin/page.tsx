@@ -19,6 +19,11 @@ import {
 import ReportGenerator from '@/components/ReportGenerator'
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 import { useToast } from '@/components/Toast'
+// Imports para mejoras
+import { WISCVSchema, BRIEF2Schema } from '@/lib/validations'
+import { ClinicalAlertSystem } from '@/lib/clinical-alerts'
+import type { ClinicalAlert } from '@/types'
+
 
 // ==============================================================================
 // 1. CONFIGURACIÓN DE DATOS - FORMULARIOS ssssss
@@ -3243,7 +3248,7 @@ function ReporteHistorialCard({ reporte }: { reporte: any }) {
       URL.revokeObjectURL(url); document.body.removeChild(a)
     } catch {
       alert('Error al descargar el reporte')
-    }
+   }
   }
 
   const gradiente = COLORES_REPORTE[reporte.tipo_reporte] || 'from-slate-500 to-slate-600'
