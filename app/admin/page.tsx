@@ -7,7 +7,7 @@ import Image from 'next/image'
 
 import { 
   LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen, 
-  X, User, FileText, Loader2, Upload, Key, BarChart3
+  X, User, FileText, Loader2, Upload, Key, BarChart3, ShieldCheck
 } from 'lucide-react'
 
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
@@ -22,6 +22,7 @@ import ExcelImportView from './components/ExcelImportView'
 import UserManagementView from './components/UserManagementView'
 import EvaluacionesUnificadas from './components/EvaluacionesUnificadas'
 import ResourcesManagementView from './components/ResourcesManagementView'
+import MensajesPendientesPanel from './components/MensajesPendientesPanel'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -159,6 +160,7 @@ export default function AdminDashboard() {
             <NavItem icon={<Brain size={20}/>} label="Historial & IA" active={currentView === 'reportes'} onClick={() => navigateTo('reportes')} />
             <NavItem icon={<Key size={20}/>} label="Usuarios" active={currentView === 'usuarios'} onClick={() => navigateTo('usuarios')} />
             <NavItem icon={<BookOpen size={20}/>} label="Recursos" active={currentView === 'recursos'} onClick={() => navigateTo('recursos')} />
+            <NavItem icon={<ShieldCheck size={20}/>} label="Aprobaciones" active={currentView === 'aprobaciones'} onClick={() => navigateTo('aprobaciones')} />
             <NavItem icon={<Upload size={20}/>} label="Importar CSV" active={currentView === 'importar'} onClick={() => navigateTo('importar')} />
           </nav>
         </div>
@@ -188,7 +190,8 @@ export default function AdminDashboard() {
                         currentView === 'reportes' ? 'Historial Clínico' :
                         currentView === 'importar' ? 'Gestión Masiva' :
                         currentView === 'agenda' ? 'Calendario' : 
-                        currentView === 'evaluaciones' ? 'Evaluaciones' : 'Pacientes'}
+                        currentView === 'evaluaciones' ? 'Evaluaciones' :
+                        currentView === 'aprobaciones' ? 'Bandeja de Aprobación' : 'Pacientes'}
                         </h1>
                         <p className="text-slate-400 text-xs md:text-sm mt-0.5 md:mt-1 hidden sm:block">Jugando Aprendo - Gestión Integral</p>
                     </div>
@@ -271,6 +274,7 @@ export default function AdminDashboard() {
                 {currentView === 'importar' && <ExcelImportView />}
                 {currentView === 'usuarios' && <UserManagementView />}
                 {currentView === 'recursos' && <ResourcesManagementView />}
+                {currentView === 'aprobaciones' && <MensajesPendientesPanel />}
             </div>
         </div>
       </main>

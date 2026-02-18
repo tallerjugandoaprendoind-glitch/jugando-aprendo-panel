@@ -157,6 +157,7 @@ export default function ParentDashboard() {
     try {
         const { error: aptError } = await supabase.from('appointments').insert([{
             child_id: selectedChild.id,
+            parent_id: profile.id,
             appointment_date: selectedDate,
             appointment_time: time,
             service_type: 'Terapia ABA',
@@ -552,7 +553,7 @@ export default function ParentDashboard() {
                         </div>
                     )}
 
-                    {activeView === 'resources' && <ResourcesView />}
+                    {activeView === 'resources' && <ResourcesView profile={profile} />}
                     {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} />}
 
                     {activeView === 'profile' && (

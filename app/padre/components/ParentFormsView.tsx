@@ -251,7 +251,10 @@ function ParentFormsResourcesView({ profile, selectedChild }: { profile: any; se
 
   const handleSubmitForm = async (formId: string, responses: any) => {
     try {
-      // Save responses
+      // 1. Get the form details
+      const form = pendingForms.find(f => f.id === formId)
+      
+      // 2. Mark as completed in parent_forms
       await fetch('/api/admin/forms', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -262,6 +265,22 @@ function ParentFormsResourcesView({ profile, selectedChild }: { profile: any; se
           completed_at: new Date().toISOString(),
         }),
       })
+
+      // 3. Trigger AI analysis + generate report for admin approval
+      if (form) {
+        fetch('/api/analyze-parent-form-submission', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            formId,
+            formType: form.form_type,
+            formTitle: form.form_title,
+            responses,
+            childId: form.child_id,
+            parentId: form.parent_id || profile?.id,
+          }),
+        }).catch(e => console.error('Error generating report:', e))
+      }
       
       setActiveForm(null)
       setSuccessMsg('¡Formulario completado! El equipo terapéutico lo revisará pronto 💙')

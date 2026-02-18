@@ -362,13 +362,20 @@ function AIAnalysisPanel({ analysis }: { analysis: any }) {
         </div>
       )}
 
-      {/* Message for parents */}
+      {/* Message for parents - queued for admin approval */}
       {analysis.mensaje_padres && (
-        <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-5 text-white">
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 border-2 border-amber-200">
           <div className="flex items-center gap-2 mb-3">
-            <MessageCircle size={18} /><h4 className="font-black">Mensaje para los Padres</h4>
+            <div className="w-7 h-7 bg-amber-500 rounded-lg flex items-center justify-center">
+              <MessageCircle size={14} className="text-white"/>
+            </div>
+            <h4 className="font-black text-amber-800">Mensaje para los Padres</h4>
+            <span className="ml-auto px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full border border-amber-300 uppercase tracking-widest">⏳ Pendiente de aprobación</span>
           </div>
-          <p className="text-blue-100 text-sm leading-relaxed">{analysis.mensaje_padres}</p>
+          <p className="text-amber-700 text-sm leading-relaxed mb-3 italic">"{analysis.mensaje_padres}"</p>
+          <p className="text-amber-600 text-xs font-semibold bg-amber-100 rounded-xl px-3 py-2 border border-amber-200">
+            🔒 Este mensaje está en cola. Ve a <strong>Bandeja de Aprobación</strong> para revisarlo, editarlo y autorizar su envío al padre/madre.
+          </p>
         </div>
       )}
     </div>
@@ -554,6 +561,27 @@ function FormFillView({ form, children, onBack, toast }: any) {
         ai_analysis: aiAnalysis,
         created_at: new Date().toISOString(),
       }])
+
+      // Queue AI-generated parent message for admin approval (if it exists)
+      if (aiAnalysis?.mensaje_padres) {
+        const { data: child } = await supabase.from('children').select('parent_id').eq('id', selectedChild).single()
+        if ((child as any)?.parent_id) {
+          await fetch('/api/admin/parent-messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              child_id: selectedChild,
+              parent_id: (child as any).parent_id,
+              source: isNeurodivergent ? 'neuroforma' : 'evaluacion',
+              source_title: form.title,
+              ai_message: aiAnalysis.mensaje_padres,
+              ai_analysis: aiAnalysis,
+              session_data: { form_type: form.formKey || form.id, responses },
+            }),
+          }).catch(e => console.error('Error queueing message:', e))
+        }
+      }
+
       toast.success('✅ Guardado correctamente')
       onBack()
     } catch (err: any) {

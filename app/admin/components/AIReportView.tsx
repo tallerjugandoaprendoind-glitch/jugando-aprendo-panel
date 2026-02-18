@@ -370,7 +370,14 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                                                 <DetailBox title="Intervención" content={d.estrategias_manejo} icon={<Zap size={14}/>} color="bg-orange-50 border-orange-100 text-orange-900"/>
                                             </div>
 
-                                            <DetailBox title="Mensaje WhatsApp" content={d.mensaje_padres} icon={<MessageCircle size={14}/>} color="bg-green-50 border-green-100 text-green-900" full/>
+                                            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-3">
+                                              <div className="flex items-center gap-2 mb-2">
+                                                <MessageCircle size={12} className="text-amber-600"/>
+                                                <span className="text-xs font-black text-amber-700 uppercase tracking-widest">Mensaje Padres</span>
+                                                <span className="ml-auto px-1.5 py-0.5 bg-amber-100 text-amber-600 text-[9px] font-black rounded-full border border-amber-300">⏳ En Bandeja</span>
+                                              </div>
+                                              <p className="text-xs text-amber-700 italic">"{d.mensaje_padres}"</p>
+                                            </div>
                                         </div>
                                     </div>
                                 )}
