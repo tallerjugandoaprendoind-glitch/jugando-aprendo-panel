@@ -1,13 +1,12 @@
 // ============================================================================
-// API ROUTE: CHILDREN - app/api/children/route.ts
+// API ROUTE: CHILDREN LIST - app/api/children/route.ts
 // ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { ChildSchema } from '@/lib/validations'
-import { z } from 'zod'
 
-// GET - Obtener lista de niños
+// GET - Obtener lista de niños (NO RECIBE PARAMS AQUÍ)
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
@@ -94,7 +93,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Crear nuevo niño
+// POST - Crear nuevo niño (NO RECIBE PARAMS AQUÍ)
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createClient()

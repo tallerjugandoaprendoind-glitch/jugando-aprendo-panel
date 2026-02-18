@@ -6,8 +6,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 import { 
   WISCVSchema, 
-  BRIEF2Schema,
-  GenerateReportSchema 
+  BRIEF2Schema
 } from '@/lib/validations'
 import { ClinicalAlertSystem } from '@/lib/clinical-alerts'
 import type { EvaluationType } from '@/types'
@@ -56,14 +55,15 @@ export async function POST(request: NextRequest) {
         break
       // Agregar otros esquemas según necesidad
       default:
-        validationResult = { success: true, data: body.data }
+        validationResult = { success: true, data: body.data, error: undefined }
     }
 
     if (validationResult && !validationResult.success) {
       return NextResponse.json(
         { 
           error: 'Datos de evaluación inválidos',
-          details: validationResult.error.flatten() 
+          // CORRECCIÓN AQUÍ: Agregado el ?.
+          details: validationResult.error?.flatten() 
         },
         { status: 400 }
       )

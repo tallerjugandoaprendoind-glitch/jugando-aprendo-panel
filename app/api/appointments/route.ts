@@ -85,8 +85,6 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    console.log(`✅ Citas cargadas: ${appointments?.length || 0}`) // Debug
-
     return NextResponse.json({
       data: appointments || []
     })
@@ -111,7 +109,8 @@ export async function POST(request: NextRequest) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('role, tokens')
+      // CORRECCIÓN: Agregamos 'id' a la selección
+      .select('id, role, tokens') 
       .eq('id', session.user.id)
       .single()
 
@@ -124,7 +123,6 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    console.log('📥 Datos recibidos:', body) // Debug
 
     // Si es padre, verificar tokens
     if (profile.role === 'padre') {
@@ -161,6 +159,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // AQUÍ ES DONDE DABA EL ERROR ANTES (Ahora ya existe profile.id)
       if (profile.role === 'padre' && child.parent_id !== profile.id) {
         return NextResponse.json(
           { error: 'No puedes agendar citas para este niño' },
@@ -218,8 +217,6 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      console.log('✅ Cita individual creada:', newAppointment.id) // Debug
-
       return NextResponse.json(
         { data: newAppointment, message: 'Cita creada exitosamente' },
         { status: 201 }
@@ -265,8 +262,6 @@ export async function POST(request: NextRequest) {
           appointment_time: body.appointment_time
         }
       })
-
-      console.log('✅ Sesión grupal creada:', groupAppointments.length, 'participantes') // Debug
 
       return NextResponse.json(
         { 

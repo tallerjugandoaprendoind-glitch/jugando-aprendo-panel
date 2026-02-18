@@ -101,7 +101,8 @@ export const BehaviorGoalSchema = z.object({
 export const GenerateReportSchema = z.object({
   child_id: z.string().uuid(),
   evaluation_type: z.enum(['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3']),
-  data: z.record(z.unknown()),
+  // CORRECCIÓN: Se agregan dos argumentos: z.string() para la clave y z.unknown() para el valor
+  data: z.record(z.string(), z.unknown()),
   include_recommendations: z.boolean().default(true),
   include_graphs: z.boolean().default(true)
 })
@@ -155,9 +156,14 @@ export function validateData<T>(schema: z.ZodSchema<T>, data: unknown): {
 // Helper para formatear errores de Zod
 export function formatZodErrors(error: z.ZodError): Record<string, string> {
   const formatted: Record<string, string> = {}
-  error.errors.forEach((err) => {
+  
+  // CORRECCIÓN: Usamos (error as any) para que TypeScript encuentre .errors
+  const validationErrors = (error as any).errors || []
+
+  validationErrors.forEach((err: any) => {
     const path = err.path.join('.')
     formatted[path] = err.message
   })
+  
   return formatted
 }

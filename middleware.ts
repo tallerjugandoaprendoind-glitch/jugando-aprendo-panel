@@ -27,7 +27,9 @@ function checkRateLimit(ip: string, limit: number = 100, windowMs: number = 6000
 
 export async function middleware(request: NextRequest) {
   // 1. Rate limiting básico
-  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown'
+  // CORRECCIÓN AQUÍ: Usamos (request as any) para evitar el error de TypeScript
+  const ip = (request as any).ip || request.headers.get('x-forwarded-for') || 'unknown'
+  
   if (!checkRateLimit(ip)) {
     return NextResponse.json(
       { error: 'Demasiadas solicitudes. Por favor, intenta más tarde.' },

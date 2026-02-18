@@ -5,10 +5,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase-server'
 
+// CAMBIO 1: Definir params como una Promesa
 interface RouteParams {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export async function DELETE(
@@ -16,6 +17,9 @@ export async function DELETE(
   { params }: RouteParams
 ) {
   try {
+    // CAMBIO 2: Esperar a que se resuelva la promesa de params
+    const { id } = await params;
+
     const supabase = await createClient()
     
     const { data: { session } } = await supabase.auth.getSession()
@@ -33,7 +37,7 @@ export async function DELETE(
     const { data: appointment } = await supabase
       .from('appointments')
       .select('child_id, children!inner(parent_id)')
-      .eq('id', params.id)
+      .eq('id', id) // Usamos 'id' en lugar de params.id
       .single()
 
     if (!appointment) {
@@ -58,7 +62,7 @@ export async function DELETE(
     const { error } = await supabase
       .from('appointments')
       .delete()
-      .eq('id', params.id)
+      .eq('id', id) // Usamos 'id' en lugar de params.id
 
     if (error) {
       console.error('Error deleting appointment:', error)
@@ -72,7 +76,7 @@ export async function DELETE(
     await supabase.from('audit_log').insert({
       user_id: session.user.id,
       action: 'DELETE_APPOINTMENT',
-      resource_id: params.id
+      resource_id: id // Usamos 'id' en lugar de params.id
     })
 
     return NextResponse.json({
@@ -93,6 +97,9 @@ export async function PUT(
   { params }: RouteParams
 ) {
   try {
+    // CAMBIO 3: Esperar a que se resuelva la promesa también en PUT
+    const { id } = await params;
+
     const supabase = await createClient()
     
     const { data: { session } } = await supabase.auth.getSession()
@@ -112,7 +119,7 @@ export async function PUT(
         status: body.status,
         notes: body.notes
       })
-      .eq('id', params.id)
+      .eq('id', id) // Usamos 'id' en lugar de params.id
       .select(`
         *,
         children:child_id (
@@ -134,7 +141,7 @@ export async function PUT(
     await supabase.from('audit_log').insert({
       user_id: session.user.id,
       action: 'UPDATE_APPOINTMENT',
-      resource_id: params.id,
+      resource_id: id, // Usamos 'id' en lugar de params.id
       details: body
     })
 
