@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 // Se actualiza la importación según tu archivo de referencia
 import { GoogleGenAI } from "@google/genai";
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 export async function POST(req: Request) {
   try {

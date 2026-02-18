@@ -1,3 +1,5 @@
+'use client'
+
 // ==============================================================================
 // COMPONENTE: GENERADOR Y GESTOR DE REPORTES PROFESIONALES
 // Ubicación: components/ReportGenerator.tsx

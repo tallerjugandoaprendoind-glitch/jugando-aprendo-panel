@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from "@google/genai"
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // ============================================================================
 // API CHAT PADRES - VERSIÓN ACTUALIZADA (@google/genai)
@@ -27,10 +27,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 2. CONTEXTO RICO (Supabase)
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = supabaseAdmin
 
     // A. Info del niño
     const { data: child } = await supabase

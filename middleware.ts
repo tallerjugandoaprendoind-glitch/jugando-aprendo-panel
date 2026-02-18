@@ -5,8 +5,6 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-
-
 export async function middleware(request: NextRequest) {
   // 1. Crear respuesta base
   let response = NextResponse.next({
@@ -87,10 +85,9 @@ export async function middleware(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // --- CORRECCIÓN CRÍTICA AQUÍ ---
-    // Antes: Si profile era null, te expulsaba.
-    // Ahora: Solo te expulsa si EXPLICITAMENTE tienes el rol contrario.
-    // Esto evita el bucle infinito si la base de datos tarda en responder.
+    // CORRECCIÓN CRÍTICA:
+    // Solo redirige si EXPLÍCITAMENTE tiene el rol contrario.
+    // Evita bucle infinito si la base de datos tarda en responder.
 
     // Si estás en Admin pero eres Padre -> Fuera
     if (isAdminRoute && profile?.role === 'padre') {
@@ -101,7 +98,7 @@ export async function middleware(request: NextRequest) {
     if (isPadreRoute && profile?.role === 'admin') {
       return NextResponse.redirect(new URL('/admin', request.url))
     }
-    
+
     // Si profile es null o el rol es correcto, DEJA PASAR.
   }
 
@@ -115,7 +112,7 @@ export const config = {
      * - api (rutas API)
      * - _next/static (archivos estáticos)
      * - _next/image (optimización de imágenes)
-     * - images (tus imágenes públicas como logos)
+     * - images (imágenes públicas como logos)
      * - favicon.ico (icono)
      * - login (página de entrada)
      */

@@ -1,3 +1,5 @@
+'use client'
+
 import { Loader2, FileText, Users, Calendar, Frown, Search, Zap } from 'lucide-react';
 
 // ==============================================================================
