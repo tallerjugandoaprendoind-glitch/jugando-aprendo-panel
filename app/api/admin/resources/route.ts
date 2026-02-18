@@ -5,14 +5,19 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const parentId = searchParams.get('parent_id')
-    const global = searchParams.get('global') // resources visible to all parents
+    const childId = searchParams.get('child_id')
+    const global = searchParams.get('global')
 
     let query = supabaseAdmin
       .from('parent_resources')
       .select('*')
       .order('created_at', { ascending: false })
 
-    if (parentId) {
+    if (childId) {
+      // Resources for a specific child OR global
+      query = query.or(`child_id.eq.${childId},is_global.eq.true`)
+    } else if (parentId) {
+      // Legacy: resources for parent_id OR global
       query = query.or(`parent_id.eq.${parentId},is_global.eq.true`)
     } else if (global === 'true') {
       query = query.eq('is_global', true)
@@ -40,16 +45,18 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error
 
-    // Notify parent if it's targeted
+    // Notify parent if it's targeted (best-effort)
     if (body.parent_id && !body.is_global) {
-      await supabaseAdmin.from('notifications').insert([{
-        user_id: body.parent_id,
-        title: `📎 Nuevo material compartido`,
-        message: `${body.title} - ${body.description || ''}`,
-        type: 'resource',
-        is_read: false,
-        created_at: new Date().toISOString(),
-      }]).then(() => {})
+      try {
+        await supabaseAdmin.from('notifications').insert([{
+          user_id: body.parent_id,
+          title: `📎 Nuevo material compartido`,
+          message: `${body.title} - ${body.description || ''}`,
+          type: 'resource',
+          is_read: false,
+          created_at: new Date().toISOString(),
+        }])
+      } catch (_e) { /* best-effort */ }
     }
 
     return NextResponse.json({ data })

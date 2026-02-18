@@ -108,15 +108,29 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
     if (!profile?.id) return
     setLoading(true)
     try {
+      // Strategy: get all children of this parent, then query appointments by parent_id OR child_id IN [children_ids]
+      const { data: myChildren } = await supabase
+        .from('children')
+        .select('id')
+        .eq('parent_id', profile.id)
+
+      const childIds = (myChildren || []).map((c: any) => c.id)
+
       let query = supabase
         .from('appointments')
         .select('*, children(name, birth_date)')
-        .eq('parent_id', profile.id)
         .order('appointment_date', { ascending: false })
         .order('appointment_time', { ascending: false })
 
+      // Apply child filter if selectedChild is set
       if (selectedChild?.id) {
         query = query.eq('child_id', selectedChild.id)
+      } else if (childIds.length > 0) {
+        // Filter by parent_id OR child_id in our children list
+        const childFilter = childIds.map((id: string) => `child_id.eq.${id}`).join(',')
+        query = query.or(`parent_id.eq.${profile.id},${childFilter}`)
+      } else {
+        query = query.eq('parent_id', profile.id)
       }
 
       const { data, error } = await query

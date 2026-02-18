@@ -43,11 +43,26 @@ export default function ResourcesView({ profile }: Props) {
     if (!profile?.id) return
     setLoading(true)
     try {
-      // Load global resources + resources targeted to this parent
+      // Get children IDs for this parent
+      const { data: myChildren } = await supabase
+        .from('children')
+        .select('id')
+        .eq('parent_id', profile.id)
+      
+      const childIds = (myChildren || []).map((c: any) => c.id)
+      
+      // Load global + parent-targeted + child-targeted resources
+      let orClause = `is_global.eq.true,parent_id.eq.${profile.id}`
+      if (childIds.length > 0) {
+        childIds.forEach((cid: string) => {
+          orClause += `,child_id.eq.${cid}`
+        })
+      }
+      
       const { data, error } = await supabase
         .from('parent_resources')
         .select('*')
-        .or(`is_global.eq.true,parent_id.eq.${profile.id}`)
+        .or(orClause)
         .order('created_at', { ascending: false })
       if (!error) setResources(data || [])
     } catch (e) {

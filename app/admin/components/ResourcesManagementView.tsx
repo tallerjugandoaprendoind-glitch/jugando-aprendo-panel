@@ -26,7 +26,7 @@ const RESOURCE_TAGS = [
 export default function ResourcesManagementView() {
   const toast = useToast()
   const [resources, setResources] = useState<any[]>([])
-  const [parents, setParents] = useState<any[]>([])
+  const [patients, setPatients] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -39,7 +39,7 @@ export default function ResourcesManagementView() {
     resource_type: 'video',
     url: '',
     is_global: true,
-    parent_id: '',
+    child_id: '',
     tags: [] as string[],
   })
 
@@ -49,8 +49,8 @@ export default function ResourcesManagementView() {
       const res = await fetch('/api/admin/resources')
       const json = await res.json()
       if (!json.error) setResources(json.data || [])
-      const { data: padres } = await supabase.from('profiles').select('id, full_name, email').eq('role', 'padre')
-      if (padres) setParents(padres)
+      const { data: kids } = await supabase.from('children').select('id, name, age, diagnosis').order('name')
+      if (kids) setPatients(kids)
     } catch (err) {
       console.error(err)
     } finally {
@@ -63,22 +63,30 @@ export default function ResourcesManagementView() {
   const handleSave = async () => {
     if (!newResource.title.trim()) { toast.error('El título es obligatorio'); return }
     if (!newResource.url.trim()) { toast.error('La URL es obligatoria'); return }
-    if (!newResource.is_global && !newResource.parent_id) { toast.error('Selecciona un destinatario'); return }
+    if (!newResource.is_global && !newResource.child_id) { toast.error('Selecciona un paciente'); return }
     setIsSaving(true)
     try {
+      // Get parent_id from child if specific patient selected
+      let parentId = null
+      if (!newResource.is_global && newResource.child_id) {
+        const { data: child } = await supabase.from('children').select('parent_id').eq('id', newResource.child_id).single()
+        parentId = (child as any)?.parent_id || null
+      }
+
       const res = await fetch('/api/admin/resources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...newResource,
-          parent_id: newResource.is_global ? null : newResource.parent_id,
+          parent_id: parentId,
+          child_id: newResource.is_global ? null : newResource.child_id,
         }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
       toast.success('✅ Recurso compartido correctamente')
       setShowForm(false)
-      setNewResource({ title: '', description: '', resource_type: 'video', url: '', is_global: true, parent_id: '', tags: [] })
+      setNewResource({ title: '', description: '', resource_type: 'video', url: '', is_global: true, child_id: '', tags: [] })
       load()
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -180,7 +188,7 @@ export default function ResourcesManagementView() {
           {filtered.map(resource => {
             const typeInfo = RESOURCE_TYPES.find(t => t.id === resource.resource_type) || RESOURCE_TYPES[2]
             const IconComp = typeInfo.icon
-            const parent = parents.find(p => p.id === resource.parent_id)
+            const patient = patients.find(p => p.id === resource.child_id)
 
             return (
               <div key={resource.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-lg transition-all group">
@@ -198,7 +206,7 @@ export default function ResourcesManagementView() {
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-[9px] font-bold text-indigo-600">
-                            <User size={9}/> {parent?.full_name || 'Específico'}
+                            <User size={9}/> {patient?.name || 'Paciente específico'}
                           </span>
                         )}
                       </div>
@@ -314,14 +322,14 @@ export default function ResourcesManagementView() {
                   </button>
                   <button onClick={() => setNewResource(p => ({ ...p, is_global: false }))}
                     className={`p-4 rounded-xl border-2 flex items-center gap-3 transition-all ${!newResource.is_global ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'}`}>
-                    <User size={18}/><span className="font-bold text-sm">Familia específica</span>
+                    <User size={18}/><span className="font-bold text-sm">Paciente específico</span>
                   </button>
                 </div>
                 {!newResource.is_global && (
-                  <select value={newResource.parent_id} onChange={e => setNewResource(p => ({ ...p, parent_id: e.target.value }))}
+                  <select value={newResource.child_id} onChange={e => setNewResource(p => ({ ...p, child_id: e.target.value }))}
                     className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 transition-all">
-                    <option value="">Seleccionar familia...</option>
-                    {parents.map(p => <option key={p.id} value={p.id}>{p.full_name} ({p.email})</option>)}
+                    <option value="">Seleccionar paciente...</option>
+                    {patients.map(p => <option key={p.id} value={p.id}>{p.name}{p.age ? ` (${p.age})` : ''}</option>)}
                   </select>
                 )}
               </div>

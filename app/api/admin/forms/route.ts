@@ -49,15 +49,19 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error
 
-    // Also create a notification for the parent
-    await supabaseAdmin.from('notifications').insert([{
-      user_id: parent_id,
-      title: '📋 Nuevo formulario para completar',
-      message: `${form_title} - ${message_to_parent || 'Por favor completa este formulario.'}`,
-      type: 'form_request',
-      is_read: false,
-      created_at: new Date().toISOString(),
-    }]).then(() => {})
+    // Also create a notification for the parent (best-effort)
+    if (parent_id) {
+      try {
+        await supabaseAdmin.from('notifications').insert([{
+          user_id: parent_id,
+          title: '📋 Nuevo formulario para completar',
+          message: `${form_title} - ${message_to_parent || 'Por favor completa este formulario.'}`,
+          type: 'form_request',
+          is_read: false,
+          created_at: new Date().toISOString(),
+        }])
+      } catch (_e) { /* best-effort */ }
+    }
 
     return NextResponse.json({ data })
   } catch (error: any) {

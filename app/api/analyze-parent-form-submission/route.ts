@@ -81,18 +81,19 @@ Responde SOLO con este JSON exacto:
       created_at: new Date().toISOString(),
     }])
 
-    // Save full report to reportes_generados
-    await supabaseAdmin.from('reportes_generados').insert([{
-      child_id: childId,
-      parent_id: parentId,
-      tipo: 'formulario_padres',
-      subtipo: formType,
-      titulo: `Análisis: ${formTitle}`,
-      contenido: analysis,
-      form_id: formId,
-      status: 'pending_review',
-      created_at: new Date().toISOString(),
-    }]).then(() => {}).catch(() => {})
+    // Save full report to reportes_generados (best-effort, won't fail the main response)
+    try {
+      await supabaseAdmin.from('reportes_generados').insert([{
+        child_id: childId,
+        tipo_reporte: 'formulario_padres',
+        titulo: `Análisis: ${formTitle}`,
+        nombre_archivo: `analisis_${formType}_${childId}.json`,
+        file_data: JSON.stringify(analysis),
+        tamano_bytes: JSON.stringify(analysis).length,
+        fecha_generacion: new Date().toISOString(),
+        generado_por: 'IA',
+      }])
+    } catch (_e) { /* best-effort */ }
 
     return NextResponse.json({ success: true, analysis })
   } catch (error: any) {

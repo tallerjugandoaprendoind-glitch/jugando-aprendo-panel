@@ -261,7 +261,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
 }
 
 // ─── AI ANALYSIS DISPLAY ─────────────────────────────────────────────────────
-function AIAnalysisPanel({ analysis }: { analysis: any }) {
+function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysis: any; editableMessage?: string; onEditMessage?: (v: string) => void }) {
   if (!analysis) return null
   const alertColors: Record<string, string> = {
     bajo: 'bg-emerald-50 border-emerald-200 text-emerald-800',
@@ -362,19 +362,29 @@ function AIAnalysisPanel({ analysis }: { analysis: any }) {
         </div>
       )}
 
-      {/* Message for parents - queued for admin approval */}
-      {analysis.mensaje_padres && (
+      {/* Message for parents - editable before saving */}
+      {(analysis.mensaje_padres || editableMessage !== undefined) && (
         <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 border-2 border-amber-200">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-7 h-7 bg-amber-500 rounded-lg flex items-center justify-center">
               <MessageCircle size={14} className="text-white"/>
             </div>
             <h4 className="font-black text-amber-800">Mensaje para los Padres</h4>
-            <span className="ml-auto px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full border border-amber-300 uppercase tracking-widest">⏳ Pendiente de aprobación</span>
+            <span className="ml-auto px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full border border-amber-300 uppercase tracking-widest">✏️ Editable</span>
           </div>
-          <p className="text-amber-700 text-sm leading-relaxed mb-3 italic">"{analysis.mensaje_padres}"</p>
+          {onEditMessage ? (
+            <textarea
+              rows={4}
+              value={editableMessage !== undefined ? editableMessage : (analysis.mensaje_padres || '')}
+              onChange={e => onEditMessage(e.target.value)}
+              className="w-full p-3 bg-white/80 border-2 border-amber-200 rounded-xl text-amber-800 text-sm leading-relaxed resize-none outline-none focus:border-amber-400 transition-all font-medium mb-2"
+              placeholder="Edita el mensaje antes de guardar..."
+            />
+          ) : (
+            <p className="text-amber-700 text-sm leading-relaxed mb-3 italic">&quot;{editableMessage || analysis.mensaje_padres}&quot;</p>
+          )}
           <p className="text-amber-600 text-xs font-semibold bg-amber-100 rounded-xl px-3 py-2 border border-amber-200">
-            🔒 Este mensaje está en cola. Ve a <strong>Bandeja de Aprobación</strong> para revisarlo, editarlo y autorizar su envío al padre/madre.
+            🔒 Edita el mensaje y guarda. Irá a <strong>Bandeja de Aprobación</strong> para revisarlo antes de enviarlo al padre/madre.
           </p>
         </div>
       )}
@@ -383,17 +393,16 @@ function AIAnalysisPanel({ analysis }: { analysis: any }) {
 }
 
 // ─── SEND FORM MODAL ─────────────────────────────────────────────────────────
-function SendFormModal({ form, parents, children, onSend, onClose }: any) {
-  const [parentId, setParentId] = useState('')
+function SendFormModal({ form, children, onSend, onClose }: any) {
   const [childId, setChildId] = useState('')
   const [message, setMessage] = useState('')
   const [deadline, setDeadline] = useState('')
   const [sending, setSending] = useState(false)
 
   const handleSend = async () => {
-    if (!parentId) { alert('Selecciona un padre/madre'); return }
+    if (!childId) { alert('Selecciona un paciente'); return }
     setSending(true)
-    await onSend({ parentId, childId, message, deadline })
+    await onSend({ childId, message, deadline })
     setSending(false)
     onClose()
   }
@@ -416,20 +425,13 @@ function SendFormModal({ form, parents, children, onSend, onClose }: any) {
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Destinatario *</label>
-            <select value={parentId} onChange={e => setParentId(e.target.value)}
-              className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all">
-              <option value="">Seleccionar padre/madre...</option>
-              {parents.map((p: any) => <option key={p.id} value={p.id}>{p.full_name} ({p.email})</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Paciente (Opcional)</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Paciente *</label>
             <select value={childId} onChange={e => setChildId(e.target.value)}
               className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all">
-              <option value="">Todos los pacientes...</option>
-              {children.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <option value="">Seleccionar paciente...</option>
+              {children.map((c: any) => <option key={c.id} value={c.id}>{c.name}{c.age ? ` (${c.age})` : ''}</option>)}
             </select>
+            <p className="text-xs text-slate-400 mt-1.5">El formulario se enviará al padre/madre vinculado al paciente.</p>
           </div>
           <div>
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Mensaje</label>
@@ -444,7 +446,7 @@ function SendFormModal({ form, parents, children, onSend, onClose }: any) {
           </div>
           <div className="flex gap-3 pt-2">
             <button onClick={onClose} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl border-2 border-slate-100 transition-all">Cancelar</button>
-            <button onClick={handleSend} disabled={sending || !parentId}
+            <button onClick={handleSend} disabled={sending || !childId}
               className="flex-[2] py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
               {sending ? 'Enviando...' : 'Enviar'}
@@ -464,6 +466,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [aiAnalysis, setAiAnalysis] = useState<any>(null)
+  const [editedMessage, setEditedMessage] = useState('')
   const [isNeurodivergent] = useState(!!(form as any).isNeurodivergent)
 
   // Get sections based on form type
@@ -508,6 +511,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         const json = await res.json()
         if (json.error) throw new Error(json.error)
         setAiAnalysis(json.analysis)
+        setEditedMessage(json.analysis?.mensaje_padres || '')
       } else {
         // Formulario clínico profesional
         let endpoint = '/api/generate-session-report'
@@ -531,7 +535,9 @@ function FormFillView({ form, children, onBack, toast }: any) {
           body: JSON.stringify(payload),
         })
         const json = await res.json()
-        setAiAnalysis(json.analysis || { analisis_clinico: json.text || 'Análisis generado' })
+        const analysis = json.analysis || { analisis_clinico: json.text || 'Análisis generado' }
+        setAiAnalysis(analysis)
+        setEditedMessage(analysis?.mensaje_padres || '')
       }
       toast.success('✨ Análisis IA generado')
     } catch (err: any) {
@@ -552,7 +558,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         form.formKey === 'entorno_hogar' ? 'registro_entorno_hogar' : 'form_responses'
       )
 
-      await supabase.from(table).insert([{
+      const { data: savedRecord } = await supabase.from(table).insert([{
         child_id: selectedChild,
         form_type: form.formKey || form.id,
         form_title: form.title,
@@ -560,7 +566,51 @@ function FormFillView({ form, children, onBack, toast }: any) {
         datos: !isNeurodivergent ? responses : undefined,
         ai_analysis: aiAnalysis,
         created_at: new Date().toISOString(),
-      }])
+      }]).select().single()
+
+      // Generate Word report for clinical professional forms
+      if (!isNeurodivergent && form.formKey) {
+        try {
+          const { data: child } = await supabase.from('children').select('name, age, birth_date').eq('id', selectedChild).single()
+          const childName = (child as any)?.name || 'Paciente'
+          const childAge = (child as any)?.age || calcularEdadNumerica((child as any)?.birth_date)
+
+          const reportRes = await fetch('/api/generate-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              reportType: form.formKey,
+              childName,
+              childAge,
+              reportData: { responses, ai_analysis: aiAnalysis },
+              evaluationId: (savedRecord as any)?.id || '',
+            }),
+          })
+          const reportJson = await reportRes.json()
+
+          if (reportJson.success && reportJson.fileData) {
+            await supabase.from('reportes_generados').insert([{
+              child_id: selectedChild,
+              tipo_reporte: form.formKey,
+              titulo: `${form.title} - ${childName}`,
+              nombre_archivo: reportJson.fileName,
+              file_data: reportJson.fileData,
+              tamano_bytes: Math.round((reportJson.fileData.length * 3) / 4),
+              fecha_generacion: new Date().toISOString(),
+              generado_por: 'IA + Psicólogo',
+              source_id: (savedRecord as any)?.id || null,
+            }])
+            toast.success('✅ Guardado y Reporte Word generado')
+          } else {
+            toast.success('✅ Guardado correctamente (sin reporte Word)')
+          }
+        } catch (repErr) {
+          console.error('Error generando Word:', repErr)
+          toast.success('✅ Guardado correctamente')
+        }
+      } else {
+        toast.success('✅ Guardado correctamente')
+      }
 
       // Queue AI-generated parent message for admin approval (if it exists)
       if (aiAnalysis?.mensaje_padres) {
@@ -574,7 +624,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
               parent_id: (child as any).parent_id,
               source: isNeurodivergent ? 'neuroforma' : 'evaluacion',
               source_title: form.title,
-              ai_message: aiAnalysis.mensaje_padres,
+              ai_message: editedMessage || aiAnalysis.mensaje_padres,
               ai_analysis: aiAnalysis,
               session_data: { form_type: form.formKey || form.id, responses },
             }),
@@ -582,7 +632,6 @@ function FormFillView({ form, children, onBack, toast }: any) {
         }
       }
 
-      toast.success('✅ Guardado correctamente')
       onBack()
     } catch (err: any) {
       toast.error('Error al guardar: ' + err.message)
@@ -689,7 +738,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         {/* AI Analysis */}
         {aiAnalysis && (
           <div className="bg-white rounded-2xl shadow-sm border border-violet-100 p-6">
-            <AIAnalysisPanel analysis={aiAnalysis} />
+            <AIAnalysisPanel analysis={aiAnalysis} editableMessage={editedMessage} onEditMessage={setEditedMessage} />
           </div>
         )}
       </div>
@@ -785,14 +834,18 @@ export default function EvaluacionesUnificadas() {
     setLoading(false)
   }
 
-  const handleSendForm = async (form: any, { parentId, childId, message, deadline }: any) => {
+  const handleSendForm = async (form: any, { childId, message, deadline }: any) => {
     try {
+      // Derive parent_id from child record
+      const { data: child } = await supabase.from('children').select('parent_id').eq('id', childId).single()
+      const parentId = (child as any)?.parent_id || null
+
       const res = await fetch('/api/admin/forms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           parent_id: parentId,
-          child_id: childId || null,
+          child_id: childId,
           form_type: form.id,
           form_title: form.title,
           form_description: form.description,
@@ -995,7 +1048,6 @@ export default function EvaluacionesUnificadas() {
       {sendFormModal && (
         <SendFormModal
           form={sendFormModal}
-          parents={parents}
           children={children}
           onSend={(data: any) => handleSendForm(sendFormModal, data)}
           onClose={() => setSendFormModal(null)}
