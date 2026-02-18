@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import type { ReactElement } from 'react'
 import { supabase as supabaseClient } from '@/lib/supabase'
 import { 
   Calendar, Clock, CheckCircle, XCircle, AlertCircle, 
@@ -30,7 +31,7 @@ interface Props {
   onChangeView: (view: string) => void
 }
 
-const statusConfig: Record<string, { label: string; color: string; bg: string; icon: JSX.Element; dot: string }> = {
+const statusConfig: Record<string, { label: string; color: string; bg: string; icon: ReactElement; dot: string }> = {
   confirmed: { 
     label: 'Confirmada', 
     color: 'text-emerald-700', 
