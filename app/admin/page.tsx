@@ -20,7 +20,7 @@ import AIReportView from './components/AIReportView'
 import CalendarView from './components/CalendarView'
 import ExcelImportView from './components/ExcelImportView'
 import UserManagementView from './components/UserManagementView'
-import NeuroFormsView from './components/NeuroFormsView'
+import EvaluacionesUnificadas from './components/EvaluacionesUnificadas'
 import ResourcesManagementView from './components/ResourcesManagementView'
 
 export default function AdminDashboard() {
@@ -158,7 +158,6 @@ export default function AdminDashboard() {
             <NavItem icon={<FileText size={20}/>} label="Evaluaciones" active={currentView === 'evaluaciones'} onClick={() => navigateTo('evaluaciones')} />
             <NavItem icon={<Brain size={20}/>} label="Historial & IA" active={currentView === 'reportes'} onClick={() => navigateTo('reportes')} />
             <NavItem icon={<Key size={20}/>} label="Usuarios" active={currentView === 'usuarios'} onClick={() => navigateTo('usuarios')} />
-            <NavItem icon={<Brain size={20}/>} label="NeuroFormas" active={currentView === 'neuroformas'} onClick={() => navigateTo('neuroformas')} />
             <NavItem icon={<BookOpen size={20}/>} label="Recursos" active={currentView === 'recursos'} onClick={() => navigateTo('recursos')} />
             <NavItem icon={<Upload size={20}/>} label="Importar CSV" active={currentView === 'importar'} onClick={() => navigateTo('importar')} />
           </nav>
@@ -267,11 +266,10 @@ export default function AdminDashboard() {
                 {currentView === 'inicio' && <DashboardHome navigateTo={navigateTo} />}
                 {currentView === 'agenda' && <CalendarView />}
                 {currentView === 'ninos' && <PatientsView />}
-                {currentView === 'evaluaciones' && <EvaluationsView />}
+                {currentView === 'evaluaciones' && <EvaluacionesUnificadas />}
                 {currentView === 'reportes' && <AIReportView onChildSelect={setSelectedChildReport} />}
                 {currentView === 'importar' && <ExcelImportView />}
                 {currentView === 'usuarios' && <UserManagementView />}
-                {currentView === 'neuroformas' && <NeuroFormsView />}
                 {currentView === 'recursos' && <ResourcesManagementView />}
             </div>
         </div>

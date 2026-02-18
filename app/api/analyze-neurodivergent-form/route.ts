@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { GoogleGenAI } from "@google/genai"
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
@@ -6,7 +7,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { formType, formData, childName, childAge, diagnosis, sessionContext } = body
 
-    const systemPrompt = `Eres un neuropsicólogo clínico especializado en neurodiversidad infantil con experiencia en TEA (Trastorno del Espectro Autista), TDAH (Trastorno por Déficit de Atención e Hiperactividad), Síndrome de Down, discapacidad intelectual y otros perfiles neurodivergentes.
+    const apiKey = process.env.GEMINI_API_KEY
+    if (!apiKey) return NextResponse.json({ error: 'Falta GEMINI_API_KEY en variables de entorno' }, { status: 500 })
+
+    const systemPrompt = `Eres un neuropsicólogo clínico especializado en neurodiversidad infantil con experiencia en TEA, TDAH, Síndrome de Down, discapacidad intelectual y otros perfiles neurodivergentes.
 
 Tu rol es analizar formularios clínicos y proporcionar:
 1. Un análisis clínico profesional y detallado
@@ -41,7 +45,8 @@ Responde SIEMPRE en español y en formato JSON con esta estructura exacta:
       'conducta_padres': 'Informe de Conducta (Padres)',
     }
 
-    const userMessage = `
+    const fullPrompt = `${systemPrompt}
+
 Formulario Clínico: ${formTypeLabels[formType] || formType}
 Paciente: ${childName}, ${childAge} años${diagnosis ? `, Diagnóstico/Perfil: ${diagnosis}` : ''}
 ${sessionContext ? `Contexto: ${sessionContext}` : ''}
@@ -49,28 +54,16 @@ ${sessionContext ? `Contexto: ${sessionContext}` : ''}
 DATOS DEL FORMULARIO:
 ${JSON.stringify(formData, null, 2)}
 
-Analiza este formulario y proporciona el análisis clínico completo incluyendo indicadores específicos del perfil neurodivergente.`
+Analiza este formulario y proporciona el análisis clínico completo incluyendo indicadores específicos del perfil neurodivergente. Responde SOLO con el JSON, sin texto adicional.`
 
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY!,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-opus-4-6',
-        max_tokens: 2000,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: userMessage }],
-      }),
+    const ai = new GoogleGenAI({ apiKey })
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: fullPrompt,
     })
 
-    if (!response.ok) throw new Error('Error en API de IA')
+    const rawText = response.text || '{}'
 
-    const aiData = await response.json()
-    const rawText = aiData.content?.[0]?.text || '{}'
-    
     let parsedResult
     try {
       const jsonMatch = rawText.match(/\{[\s\S]*\}/)
@@ -79,7 +72,7 @@ Analiza este formulario y proporciona el análisis clínico completo incluyendo 
       parsedResult = { analisis_clinico: rawText, mensaje_padres: 'El análisis está disponible.' }
     }
 
-    // Save analysis to DB if form_id provided
+    // Guardar análisis en DB si se provee formId
     if (body.formId) {
       await supabaseAdmin.from('form_ai_analyses').insert([{
         form_id: body.formId,
@@ -87,11 +80,12 @@ Analiza este formulario y proporciona el análisis clínico completo incluyendo 
         child_name: childName,
         analysis: parsedResult,
         created_at: new Date().toISOString(),
-      }]).then(() => {})
+      }])
     }
 
     return NextResponse.json({ success: true, analysis: parsedResult })
   } catch (error: any) {
+    console.error('Error analyze-neurodivergent-form:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }

@@ -9,7 +9,8 @@ import {
   Sparkles, Send, Lock, X, Loader2, TrendingUp, Activity, Heart, Brain, Trash2, RefreshCw,
   Award, Target, Smile, Book, Star, Zap, Bell, Download, Share2, Eye, Mail, Phone,
   Settings, HelpCircle, FileText, Video, Headphones, Image as ImageIcon, ExternalLink,
-  Camera, Upload, Gift, PartyPopper, Flame, TrendingDown, Baby, Stethoscope, PlayCircle
+  Camera, Upload, Gift, PartyPopper, Flame, TrendingDown, Baby, Stethoscope, PlayCircle,
+  CalendarDays
 } from 'lucide-react'
 
 import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './components/shared'
@@ -17,6 +18,7 @@ import AgendaView from './components/AgendaView'
 import HomeViewInnovative from './components/HomeView'
 import ResourcesView from './components/ResourcesView'
 import ParentFormsView from './components/ParentFormsView'
+import MisCitasView from './components/MisCitasView'
 import ProfileView from './components/ProfileView'
 import ChatInterface from './components/ChatInterface'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
@@ -367,6 +369,7 @@ export default function ParentDashboard() {
                 <nav className="space-y-2">
                     <NavBtnDesktop icon={<Home size={20}/>} label="Inicio & Progreso" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                     <NavBtnDesktop icon={<Calendar size={20}/>} label="Agendar Cita" active={activeView==='agenda'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0) > 0 ? profile.tokens : null} />
+                    <NavBtnDesktop icon={<CalendarDays size={20}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                     <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
                     <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={0} />
@@ -518,6 +521,15 @@ export default function ParentDashboard() {
                         />
                     )}
 
+                    {activeView === 'miscitas' && (
+                        <MisCitasView
+                            profile={profile}
+                            selectedChild={selectedChild}
+                            onCancelAppointment={handleCancelAppointment}
+                            onChangeView={setActiveView}
+                        />
+                    )}
+
                     {activeView === 'chat' && (
                           <div className="h-[calc(100vh-180px)] lg:h-[calc(100vh-120px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
                             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-white flex justify-between items-center z-10 shadow-lg">
@@ -560,6 +572,7 @@ export default function ParentDashboard() {
             <nav className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 p-3 flex justify-around items-center fixed bottom-0 w-full z-30 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
                 <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                 <NavBtnMobile icon={<Calendar size={22}/>} label="Agenda" active={activeView==='agenda'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0)} />
+                <NavBtnMobile icon={<CalendarDays size={22}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                 <div className="relative -top-8">
                     <button 
                         onClick={()=>setActiveView('chat')} 
