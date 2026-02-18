@@ -114,6 +114,14 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
     .order('created_at', { ascending: false })
     .limit(1)
     .single();
+
+  // Load all completed NeuroForms and form_responses
+  const { data: formResponses } = await supabase
+    .from('form_responses')
+    .select('id, form_type, form_title, ai_analysis, created_at')
+    .eq('child_id', childId)
+    .order('created_at', { ascending: false })
+    .limit(20)
      
      setHistoryData({ 
     anamnesis: anamnesis ? anamnesis.datos : null, 
@@ -128,6 +136,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
     
 const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
   const totalEvaluaciones = [brief2, ados2, vineland3, wiscv, basc3].filter(Boolean).length;
+  const totalFormularios = formResponses?.length || 0;
   
   // Añadir alertas si faltan datos críticos
   if (!anamnesis) {
@@ -139,7 +148,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
       
      setMessages([{ 
     role: 'ai', 
-    text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${brief2 ? '✅' : '❌'} BRIEF-2\n• ${ados2 ? '✅' : '❌'} ADOS-2\n• ${vineland3 ? '✅' : '❌'} Vineland-3\n• ${wiscv ? '✅' : '❌'} WISC-V\n• ${basc3 ? '✅' : '❌'} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}${!anamnesis ? '\n\n⚠️ Falta Anamnesis Inicial' : ''}${(!entorno || entorno.length === 0) ? '\n⚠️ Falta Visita Domiciliaria' : ''}\n\n¿Qué deseas analizar?`
+    text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${brief2 ? '✅' : '❌'} BRIEF-2\n• ${ados2 ? '✅' : '❌'} ADOS-2\n• ${vineland3 ? '✅' : '❌'} Vineland-3\n• ${wiscv ? '✅' : '❌'} WISC-V\n• ${basc3 ? '✅' : '❌'} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}\n📝 **NeuroFormas / Formularios:** ${totalFormularios}${totalFormularios > 0 ? `\n${(formResponses || []).slice(0,5).map((f: any) => `  • ${f.form_title || f.form_type} (${new Date(f.created_at).toLocaleDateString('es-PE')})`).join('\n')}` : ''}${!anamnesis ? '\n\n⚠️ Falta Anamnesis Inicial' : ''}${(!entorno || entorno.length === 0) ? '\n⚠️ Falta Visita Domiciliaria' : ''}\n\n¿Qué deseas analizar?`
   }])
 
     // Cargar todos los reportes Word del paciente

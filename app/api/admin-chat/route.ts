@@ -103,6 +103,16 @@ export async function POST(req: Request) {
       .single();
 
     // ===========================================================================
+    // 6. CARGAR FORMULARIOS COMPLETADOS (NeuroFormas y formularios de padres)
+    // ===========================================================================
+    const { data: formResponses } = await supabase
+      .from('form_responses')
+      .select('form_type, form_title, responses, ai_analysis, created_at')
+      .eq('child_id', childId)
+      .order('created_at', { ascending: false })
+      .limit(15);
+
+    // ===========================================================================
     // 6. CONSTRUIR CONTEXTO CLÍNICO COMPLETO
     // ===========================================================================
     const context = `
@@ -224,6 +234,26 @@ ${historyEntorno && historyEntorno.length > 0 ?
   • Facilitadores: ${visita.datos?.facilitadores || 'N/A'}
   `).join('\n')
   : 'Sin visitas domiciliarias registradas'
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 5. FORMULARIOS Y NEUROFORMAS COMPLETADAS (Últimos 15)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${formResponses && formResponses.length > 0 ?
+  formResponses.map((fr, idx) => `
+  Formulario #${idx + 1}: ${fr.form_title || fr.form_type}
+  Fecha: ${new Date(fr.created_at).toLocaleDateString('es-PE')}
+  ${fr.ai_analysis ? `
+  🤖 Análisis IA:
+    • Nivel alerta: ${fr.ai_analysis.nivel_alerta || 'N/A'}
+    • Análisis: ${fr.ai_analysis.analisis_clinico || 'N/A'}
+    • Fortalezas: ${(fr.ai_analysis.areas_fortaleza || []).join(', ') || 'N/A'}
+    • Áreas trabajo: ${(fr.ai_analysis.areas_trabajo || []).join(', ') || 'N/A'}
+    • Recomendaciones: ${(fr.ai_analysis.recomendaciones || []).slice(0,2).join(' | ') || 'N/A'}
+  ` : ''}
+  📋 Respuestas destacadas: ${fr.responses ? Object.entries(fr.responses).slice(0,5).map(([k,v]) => `${k}: ${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}`).join(' | ') : 'N/A'}
+  `).join('\n')
+  : 'Sin formularios completados registrados'
 }
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

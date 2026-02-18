@@ -14,12 +14,13 @@ const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
 // INTERFACES
 // ==============================================================================
 interface ReportRequest {
-  reportType: 'aba' | 'anamnesis' | 'entorno_hogar' | 'brief2' | 'ados2' | 'vineland3' | 'wiscv' | 'basc3';
+  reportType: string; // Accepts any form type
   childName: string;
   childAge?: number;
   evaluatorName?: string;
   reportData: any;
   evaluationId: string;
+  formTitle?: string; // Optional display title for NeuroForms
 }
 
 // ==============================================================================
@@ -28,7 +29,7 @@ interface ReportRequest {
 export async function POST(request: NextRequest) {
   try {
     const body: ReportRequest = await request.json();
-    const { reportType, childName, childAge, evaluatorName, reportData, evaluationId } = body;
+    const { reportType, childName, childAge, evaluatorName, reportData, evaluationId, formTitle } = body;
 
     // Validaciones
     if (!reportType || !childName || !reportData) {
@@ -39,12 +40,11 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('📝 Generando reporte:', { reportType, childName, childAge });
-    console.log('📊 Datos recibidos:', JSON.stringify(reportData, null, 2));
 
     // Generar análisis con IA antes de crear el documento
     let aiAnalysis = null;
     try {
-      aiAnalysis = await generateAIAnalysis(reportType, childName, childAge, reportData);
+      aiAnalysis = await generateAIAnalysis(reportType, childName, childAge, reportData, formTitle);
       console.log('🤖 Análisis IA generado:', aiAnalysis ? 'Sí' : 'No');
     } catch (error) {
       console.error('⚠️ Error generando análisis IA (continuando sin él):', error);
@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
       childAge,
       evaluatorName,
       reportData,
-      aiAnalysis
+      aiAnalysis,
+      formTitle
     });
 
     // Convertir a Base64
@@ -86,7 +87,8 @@ async function generateAIAnalysis(
   reportType: string, 
   childName: string, 
   childAge: number | undefined, 
-  reportData: any
+  reportData: any,
+  formTitle?: string
 ): Promise<string | null> {
   
   const apiKey = process.env.GEMINI_API_KEY;
@@ -98,7 +100,11 @@ async function generateAIAnalysis(
   try {
     const ai = new GoogleGenAI({ apiKey });
 
+    // Pre-existing AI analysis from the form (skip re-analysis if available)
+    const existingAnalysis = reportData?.ai_analysis || reportData?.responses?.ai_analysis;
+
     let prompt = '';
+    const displayTitle = formTitle || reportType.replace(/_/g, ' ').toUpperCase();
 
     switch (reportType) {
       case 'anamnesis':
@@ -147,8 +153,10 @@ ${JSON.stringify(reportData, null, 2)}
 GENERA:
 1. Resumen de la sesión (2-3 líneas)
 2. Análisis del comportamiento observado
-3. Progreso hacia objetivos
-4. Recomendaciones para próximas sesiones
+3. Progreso hacia objetivos terapéuticos
+4. Logros destacados de la sesión
+5. Recomendaciones para próximas sesiones
+6. Estrategias sugeridas para el hogar
 `;
         break;
 
@@ -161,33 +169,106 @@ DATOS DE LA VISITA:
 ${JSON.stringify(reportData, null, 2)}
 
 GENERA:
-1. Resumen de la visita
-2. Análisis del entorno físico
+1. Resumen de la visita domiciliaria
+2. Análisis del entorno físico y su adecuación
 3. Dinámica familiar observada
-4. Barreras y facilitadores
-5. Recomendaciones de adaptaciones
+4. Barreras identificadas para el desarrollo
+5. Facilitadores y recursos del entorno
+6. Recomendaciones de adaptaciones del hogar
 `;
         break;
 
       default:
-        prompt = `
-Analiza esta evaluación profesional y genera un informe clínico.
+        // Universal prompt for ALL NeuroForms and parent forms
+        // If there's already AI analysis embedded, use it as context to generate a narrative
+        if (existingAnalysis && typeof existingAnalysis === 'object') {
+          prompt = `
+Eres un neuropsicólogo clínico especializado en neurodiversidad infantil.
 
-PACIENTE: ${childName}
-TIPO: ${reportType.toUpperCase()}
-DATOS:
-${JSON.stringify(reportData, null, 2)}
+Se completó el formulario "${displayTitle}" para el paciente ${childName} (${childAge || 'edad no especificada'} años).
 
-Genera un análisis profesional con interpretación clínica y recomendaciones.
+ANÁLISIS IA PREVIO DEL FORMULARIO:
+${JSON.stringify(existingAnalysis, null, 2)}
+
+RESPUESTAS DEL FORMULARIO:
+${JSON.stringify(reportData?.responses || reportData, null, 2)}
+
+Basándote en el análisis previo y las respuestas, genera un INFORME CLÍNICO PROFESIONAL COMPLETO con las siguientes secciones:
+
+## RESUMEN EJECUTIVO
+Párrafo de 3-4 oraciones resumiendo el estado actual del paciente según este formulario.
+
+## ANÁLISIS CLÍNICO DETALLADO
+Análisis clínico de 4-5 oraciones con terminología profesional apropiada.
+
+## ÁREAS DE FORTALEZA
+Lista de 3-4 fortalezas identificadas con explicación breve de cada una.
+
+## ÁREAS DE TRABAJO PRIORITARIAS
+Lista de 3-4 áreas que requieren intervención terapéutica, con justificación clínica.
+
+## RECOMENDACIONES TERAPÉUTICAS
+Lista de 4-5 recomendaciones concretas y aplicables para el equipo terapéutico.
+
+## ESTRATEGIAS PARA EL HOGAR
+Lista de 3-4 actividades o estrategias que los padres pueden implementar en casa.
+
+## INDICADORES DE SEGUIMIENTO
+Lista de 3 indicadores clave para monitorear el progreso en próximas evaluaciones.
+
+## PRÓXIMOS PASOS SUGERIDOS
+Una acción concreta y específica que el equipo debe tomar en la próxima sesión.
+
+NIVEL DE ALERTA CLÍNICA: ${existingAnalysis?.nivel_alerta || 'moderado'} 
+
+FORMATO: Texto profesional, claro, empático. Usa terminología clínica apropiada pero comprensible.
 `;
+        } else {
+          prompt = `
+Eres un neuropsicólogo clínico especializado en neurodiversidad infantil.
+
+Se completó el formulario "${displayTitle}" para el paciente ${childName} (${childAge || 'edad no especificada'} años).
+
+RESPUESTAS DEL FORMULARIO:
+${JSON.stringify(reportData?.responses || reportData, null, 2)}
+
+Genera un INFORME CLÍNICO PROFESIONAL COMPLETO con las siguientes secciones:
+
+## RESUMEN EJECUTIVO
+Párrafo de 3-4 oraciones resumiendo los hallazgos principales de este formulario.
+
+## ANÁLISIS CLÍNICO DETALLADO
+Análisis clínico de 4-5 oraciones con terminología profesional apropiada.
+
+## ÁREAS DE FORTALEZA
+Lista de 3-4 fortalezas identificadas con explicación breve.
+
+## ÁREAS DE TRABAJO PRIORITARIAS
+Lista de 3-4 áreas que requieren atención terapéutica con justificación.
+
+## RECOMENDACIONES TERAPÉUTICAS
+Lista de 4-5 recomendaciones concretas para el equipo terapéutico.
+
+## ESTRATEGIAS PARA EL HOGAR
+Lista de 3-4 estrategias prácticas para implementar en casa.
+
+## INDICADORES DE SEGUIMIENTO
+Lista de 3 indicadores para monitorear el progreso.
+
+## PRÓXIMOS PASOS
+Acción concreta para la próxima sesión terapéutica.
+
+FORMATO: Texto profesional, empático, claro. Terminología clínica apropiada.
+`;
+        }
     }
 
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.0-flash",
       contents: prompt,
     });
 
-    const analysis = response.candidates?.[0]?.content?.parts?.[0]?.text || null;
+    const analysis = response.candidates?.[0]?.content?.parts?.[0]?.text || response.text || null;
     console.log('✅ Análisis IA generado exitosamente');
     return analysis;
 
@@ -207,13 +288,14 @@ async function generateWordDocument(params: {
   evaluatorName?: string;
   reportData: any;
   aiAnalysis?: string | null;
+  formTitle?: string;
 }) {
-  const { reportType, childName, childAge, reportData, aiAnalysis } = params;
+  const { reportType, childName, childAge, reportData, aiAnalysis, formTitle } = params;
 
   const sections: any[] = [];
   
   // PORTADA
-  const portada = createCoverPage(reportType, childName, childAge);
+  const portada = createCoverPage(reportType, childName, childAge, formTitle);
   
   // CONTENIDO
   let contenido: any[] = [];
@@ -229,7 +311,8 @@ async function generateWordDocument(params: {
       contenido = createEntornoHogarReport(reportData, childName, aiAnalysis);
       break;
     default:
-      contenido = createGenericReport(reportData, childName, reportType);
+      // Universal professional report for ALL NeuroForms
+      contenido = createNeuroFormReport(reportData, childName, reportType, aiAnalysis, formTitle);
   }
 
   sections.push({
@@ -292,7 +375,7 @@ function getDocumentStyles() {
 // ==============================================================================
 // PORTADA
 // ==============================================================================
-function createCoverPage(reportType: string, childName: string, childAge?: number): any[] {
+function createCoverPage(reportType: string, childName: string, childAge?: number, formTitle?: string): any[] {
   const titles: Record<string, { main: string; sub: string }> = {
     anamnesis: {
       main: "HISTORIA CLÍNICA",
@@ -310,10 +393,14 @@ function createCoverPage(reportType: string, childName: string, childAge?: numbe
     ados2: { main: "EVALUACIÓN ADOS-2", sub: "Diagnóstico del Autismo" },
     vineland3: { main: "EVALUACIÓN VINELAND-3", sub: "Conducta Adaptativa" },
     wiscv: { main: "EVALUACIÓN WISC-V", sub: "Escala de Inteligencia" },
-    basc3: { main: "EVALUACIÓN BASC-3", sub: "Sistema Conductual" }
+    basc3: { main: "EVALUACIÓN BASC-3", sub: "Sistema Conductual" },
   };
 
-  const title = titles[reportType] || { main: "REPORTE PROFESIONAL", sub: "" };
+  const defaultTitle = formTitle 
+    ? { main: formTitle.toUpperCase(), sub: "Informe Clínico Especializado" }
+    : { main: "REPORTE PROFESIONAL", sub: "Evaluación Clínica" };
+
+  const title = titles[reportType] || defaultTitle;
 
   return [
     new Paragraph({
@@ -1099,4 +1186,168 @@ function createGenericReport(data: any, childName: string, reportType: string): 
       })]
     })
   ];
+}
+
+// ==============================================================================
+// UNIVERSAL PROFESSIONAL NEUROFORM REPORT (for ALL form types)
+// ==============================================================================
+function createNeuroFormReport(data: any, childName: string, formType: string, aiAnalysis?: string | null, formTitle?: string): any[] {
+  const elements: any[] = [];
+  const displayTitle = formTitle || formType.replace(/_/g, ' ');
+  const today = new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  const separator = () => new Paragraph({
+    spacing: { after: 200 },
+    border: { bottom: { color: 'CCCCCC', space: 1, value: BorderStyle.SINGLE, size: 6 } },
+    children: [new TextRun({ text: '' })]
+  });
+
+  const sectionHead = (text: string, emoji: string) => new Paragraph({
+    heading: HeadingLevel.HEADING_1,
+    spacing: { before: 480, after: 200 },
+    shading: { type: ShadingType.SOLID, color: 'EBF3FB' },
+    children: [new TextRun({ text: `${emoji}  ${text}`, size: 28, bold: true, color: '2E75B5', font: 'Calibri' })]
+  });
+
+  const subHead = (text: string) => new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    spacing: { before: 280, after: 120 },
+    children: [new TextRun({ text, size: 24, bold: true, color: '1F4D78', font: 'Calibri' })]
+  });
+
+  const bodyText = (text: string, bold = false) => new Paragraph({
+    spacing: { after: 160 },
+    children: [new TextRun({ text, size: 22, bold, font: 'Calibri', color: '333333' })]
+  });
+
+  const bulletItem = (text: string, color = '2E75B5') => new Paragraph({
+    spacing: { after: 120 },
+    indent: { left: 360 },
+    children: [
+      new TextRun({ text: '▪  ', size: 22, bold: true, color, font: 'Calibri' }),
+      new TextRun({ text, size: 22, font: 'Calibri', color: '333333' })
+    ]
+  });
+
+  // 1. HEADER
+  elements.push(
+    new Paragraph({
+      spacing: { after: 120 },
+      children: [new TextRun({ text: `Paciente: ${childName}`, size: 22, bold: true, font: 'Calibri', color: '1F4D78' })]
+    }),
+    new Paragraph({
+      spacing: { after: 120 },
+      children: [new TextRun({ text: `Evaluación: ${displayTitle}`, size: 22, font: 'Calibri', color: '595959' })]
+    }),
+    new Paragraph({
+      spacing: { after: 120 },
+      children: [new TextRun({ text: `Fecha: ${today}`, size: 22, font: 'Calibri', color: '595959' })]
+    }),
+    separator()
+  );
+
+  // 2. AI ANALYSIS
+  if (aiAnalysis) {
+    elements.push(sectionHead('Análisis Clínico Profesional', '🧠'));
+    const lines = aiAnalysis.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (trimmed.startsWith('## ')) {
+        elements.push(subHead(trimmed.replace(/^##\s*/, '')));
+      } else if (trimmed.startsWith('# ')) {
+        elements.push(sectionHead(trimmed.replace(/^#\s*/, ''), '📋'));
+      } else if (trimmed.match(/^[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{4,}$/) && trimmed.length < 60) {
+        elements.push(sectionHead(trimmed, '📋'));
+      } else if (trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('* ')) {
+        elements.push(bulletItem(trimmed.replace(/^[-•*]\s*/, '')));
+      } else if (trimmed.match(/^\d+\.\s/)) {
+        elements.push(bulletItem(trimmed.replace(/^\d+\.\s*/, ''), '1F4D78'));
+      } else if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
+        elements.push(bodyText(trimmed.replace(/\*\*/g, ''), true));
+      } else {
+        elements.push(bodyText(trimmed));
+      }
+    }
+    elements.push(separator());
+  }
+
+  // 3. RESPONSES TABLE
+  const responses = data?.responses || data;
+  if (responses && typeof responses === 'object' && !Array.isArray(responses)) {
+    elements.push(sectionHead('Respuestas del Formulario', '📝'));
+    const entries = Object.entries(responses).filter(([, v]) => v !== null && v !== undefined && v !== '');
+    if (entries.length > 0) {
+      const tableRows = entries.map(([key, value]) => {
+        const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+        const displayValue = Array.isArray(value) ? (value as any[]).join(', ') : String(value);
+        return new TableRow({
+          children: [
+            new TableCell({
+              width: { size: 35, type: WidthType.PERCENTAGE },
+              shading: { type: ShadingType.SOLID, color: 'F0F4F8' },
+              children: [new Paragraph({ children: [new TextRun({ text: displayKey, size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })]
+            }),
+            new TableCell({
+              width: { size: 65, type: WidthType.PERCENTAGE },
+              children: [new Paragraph({ children: [new TextRun({ text: displayValue, size: 20, font: 'Calibri', color: '333333' })] })]
+            })
+          ]
+        });
+      });
+      elements.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({
+              tableHeader: true,
+              children: [
+                new TableCell({ shading: { type: ShadingType.SOLID, color: '2E75B5' }, children: [new Paragraph({ children: [new TextRun({ text: 'Campo', size: 20, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+                new TableCell({ shading: { type: ShadingType.SOLID, color: '2E75B5' }, children: [new Paragraph({ children: [new TextRun({ text: 'Respuesta', size: 20, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] })
+              ]
+            }),
+            ...tableRows
+          ]
+        }),
+        new Paragraph({ text: '' })
+      );
+    }
+  }
+
+  // 4. EMBEDDED AI ANALYSIS FROM FORM
+  const embedded = data?.ai_analysis;
+  if (embedded && typeof embedded === 'object') {
+    elements.push(separator(), sectionHead('Análisis IA del Formulario', '🤖'));
+    if (embedded.nivel_alerta) {
+      const colors: Record<string, string> = { bajo: '27AE60', moderado: 'F39C12', alto: 'E74C3C' };
+      elements.push(new Paragraph({
+        spacing: { after: 200 },
+        children: [
+          new TextRun({ text: 'Nivel de Alerta: ', size: 22, bold: true, font: 'Calibri' }),
+          new TextRun({ text: embedded.nivel_alerta.toUpperCase(), size: 22, bold: true, font: 'Calibri', color: colors[embedded.nivel_alerta] || '595959' })
+        ]
+      }));
+    }
+    if (embedded.analisis_clinico) { elements.push(subHead('Análisis Clínico'), bodyText(embedded.analisis_clinico)); }
+    if (embedded.areas_fortaleza?.length) { elements.push(subHead('Fortalezas')); (embedded.areas_fortaleza as string[]).forEach((f: string) => elements.push(bulletItem(f, '27AE60'))); }
+    if (embedded.areas_trabajo?.length) { elements.push(subHead('Áreas de Trabajo')); (embedded.areas_trabajo as string[]).forEach((a: string) => elements.push(bulletItem(a, 'E67E22'))); }
+    if (embedded.recomendaciones?.length) { elements.push(subHead('Recomendaciones')); (embedded.recomendaciones as string[]).forEach((r: string) => elements.push(bulletItem(r))); }
+    if (embedded.mensaje_padres) { elements.push(subHead('Mensaje para los Padres'), bodyText(`"${embedded.mensaje_padres}"`, false)); }
+  }
+
+  // 5. FOOTER
+  elements.push(
+    separator(),
+    new Paragraph({
+      spacing: { before: 400 },
+      alignment: AlignmentType.CENTER,
+      children: [
+        new TextRun({ text: 'Informe generado con asistencia de IA · ', size: 18, italics: true, color: '999999', font: 'Calibri' }),
+        new TextRun({ text: 'Jugando Aprendo', size: 18, bold: true, italics: true, color: '2E75B5', font: 'Calibri' }),
+        new TextRun({ text: ` · ${today}`, size: 18, italics: true, color: '999999', font: 'Calibri' })
+      ]
+    })
+  );
+
+  return elements;
 }
