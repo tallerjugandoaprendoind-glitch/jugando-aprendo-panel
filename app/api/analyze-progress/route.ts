@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
-import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
