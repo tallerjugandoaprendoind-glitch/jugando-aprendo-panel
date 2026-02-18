@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
 import { 
-  LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, 
+  LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen, 
   X, User, FileText, Loader2, Upload, Key, BarChart3
 } from 'lucide-react'
 
@@ -19,6 +19,9 @@ import EvaluationsView from './components/EvaluationsView'
 import AIReportView from './components/AIReportView'
 import CalendarView from './components/CalendarView'
 import ExcelImportView from './components/ExcelImportView'
+import UserManagementView from './components/UserManagementView'
+import NeuroFormsView from './components/NeuroFormsView'
+import ResourcesManagementView from './components/ResourcesManagementView'
 
 export default function AdminDashboard() {
   const router = useRouter()
@@ -154,6 +157,9 @@ export default function AdminDashboard() {
             <NavItem icon={<Users size={20}/>} label="Pacientes" active={currentView === 'ninos'} onClick={() => navigateTo('ninos')} />
             <NavItem icon={<FileText size={20}/>} label="Evaluaciones" active={currentView === 'evaluaciones'} onClick={() => navigateTo('evaluaciones')} />
             <NavItem icon={<Brain size={20}/>} label="Historial & IA" active={currentView === 'reportes'} onClick={() => navigateTo('reportes')} />
+            <NavItem icon={<Key size={20}/>} label="Usuarios" active={currentView === 'usuarios'} onClick={() => navigateTo('usuarios')} />
+            <NavItem icon={<Brain size={20}/>} label="NeuroFormas" active={currentView === 'neuroformas'} onClick={() => navigateTo('neuroformas')} />
+            <NavItem icon={<BookOpen size={20}/>} label="Recursos" active={currentView === 'recursos'} onClick={() => navigateTo('recursos')} />
             <NavItem icon={<Upload size={20}/>} label="Importar CSV" active={currentView === 'importar'} onClick={() => navigateTo('importar')} />
           </nav>
         </div>
@@ -264,6 +270,9 @@ export default function AdminDashboard() {
                 {currentView === 'evaluaciones' && <EvaluationsView />}
                 {currentView === 'reportes' && <AIReportView onChildSelect={setSelectedChildReport} />}
                 {currentView === 'importar' && <ExcelImportView />}
+                {currentView === 'usuarios' && <UserManagementView />}
+                {currentView === 'neuroformas' && <NeuroFormsView />}
+                {currentView === 'recursos' && <ResourcesManagementView />}
             </div>
         </div>
       </main>

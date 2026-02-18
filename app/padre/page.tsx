@@ -16,6 +16,7 @@ import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './compo
 import AgendaView from './components/AgendaView'
 import HomeViewInnovative from './components/HomeView'
 import ResourcesView from './components/ResourcesView'
+import ParentFormsView from './components/ParentFormsView'
 import ProfileView from './components/ProfileView'
 import ChatInterface from './components/ChatInterface'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
@@ -368,6 +369,7 @@ export default function ParentDashboard() {
                     <NavBtnDesktop icon={<Calendar size={20}/>} label="Agendar Cita" active={activeView==='agenda'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0) > 0 ? profile.tokens : null} />
                     <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
+                    <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={0} />
                     <NavBtnDesktop icon={<User size={20}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
                 </nav>
             </div>
@@ -539,6 +541,7 @@ export default function ParentDashboard() {
                     )}
 
                     {activeView === 'resources' && <ResourcesView />}
+                    {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} />}
 
                     {activeView === 'profile' && (
                         <ProfileView 
