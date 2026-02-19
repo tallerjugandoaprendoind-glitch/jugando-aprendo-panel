@@ -398,7 +398,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysi
 // ==============================================================================
 function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerated: () => void }) {
   const [generating, setGenerating] = useState(false)
-  const { toast } = useToast()
+  const toast = useToast()
 
   const handleGenerateReport = async () => {
     setGenerating(true)
