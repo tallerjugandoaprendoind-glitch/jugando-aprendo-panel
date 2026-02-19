@@ -16,7 +16,7 @@ import {
   Zap, MessageCircle, BarChart3, RefreshCw, BookOpen, Target, Heart,
   Activity, Star, ChevronDown, ChevronUp, Save, ClipboardList,
   Filter, Users, TrendingUp, Shield, Stethoscope, Home, Baby,
-  CalendarDays, Lock, Unlock
+  CalendarDays, Lock, Unlock, Download
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
@@ -393,6 +393,129 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysi
 }
 
 // ─── SEND FORM MODAL ─────────────────────────────────────────────────────────
+// ==============================================================================
+// COMPONENTE: TARJETA DE FORMULARIO EN HISTORIAL CON BOTÓN "GENERAR REPORTE"
+// ==============================================================================
+function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerated: () => void }) {
+  const [generating, setGenerating] = useState(false)
+  const { toast } = useToast()
+
+  const handleGenerateReport = async () => {
+    setGenerating(true)
+    try {
+      // Fetch the full responses from the DB (the list query only has metadata)
+      const sourceTable = sf._source || 'form_responses'
+      const { data: fullRecord, error } = await supabase
+        .from(sourceTable)
+        .select('responses, datos, ai_analysis, form_type, form_title')
+        .eq('id', sf.id)
+        .single()
+
+      if (error) throw error
+
+      const childName = (sf as any).children?.name || 'Paciente'
+      const reportData = {
+        responses: fullRecord?.responses || fullRecord?.datos || {},
+        ai_analysis: fullRecord?.ai_analysis,
+      }
+      const reportType = fullRecord?.form_type || sf.form_type || 'formulario'
+      const formTitle  = fullRecord?.form_title  || sf.form_title  || 'Formulario'
+
+      // Call generate-report from browser (no serverless timeout issue)
+      const res = await fetch('/api/generate-report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportType,
+          childName,
+          reportData,
+          evaluationId: sf.id,
+          formTitle,
+        }),
+      })
+
+      if (!res.ok) throw new Error(`Error ${res.status}`)
+      const json = await res.json()
+      if (!json.success || !json.fileData) throw new Error(json.error || 'Sin datos')
+
+      // Save to reportes_generados
+      await supabase.from('reportes_generados').insert([{
+        child_id:         sf.child_id,
+        tipo_reporte:     reportType,
+        titulo:           `${formTitle} - ${childName}`,
+        nombre_archivo:   json.fileName,
+        file_data:        json.fileData,
+        mime_type:        json.mimeType,
+        tamano_bytes:     Math.round((json.fileData.length * 3) / 4),
+        fecha_generacion: new Date().toISOString(),
+        generado_por:     'IA + Psicólogo',
+        source_id:        sf.id,
+      }])
+
+      // Auto-download
+      const byteChars = atob(json.fileData)
+      const bytes = new Uint8Array(byteChars.length)
+      for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i)
+      const blob = new Blob([bytes], { type: json.mimeType })
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href = url; a.download = json.fileName
+      document.body.appendChild(a); a.click()
+      URL.revokeObjectURL(url); document.body.removeChild(a)
+
+      toast.success('✅ Reporte Word generado y descargado')
+      onReportGenerated()
+    } catch (err: any) {
+      console.error('Error generando reporte:', err)
+      toast.error('Error al generar reporte: ' + (err.message || 'Intenta de nuevo'))
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-all">
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
+            <p className="font-bold text-slate-800 text-sm truncate">
+              {sf.form_title || sf.form_type || 'Formulario'}
+            </p>
+            {sf._source && (
+              <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider whitespace-nowrap">
+                {sf._source === 'anamnesis_completa' ? 'Anamnesis' :
+                 sf._source === 'registro_aba' ? 'ABA' :
+                 sf._source === 'registro_entorno_hogar' ? 'Hogar' : 'NeuroForma'}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-slate-400 flex items-center gap-1">
+            <Baby size={10} /> {(sf as any).children?.name || 'Paciente'} · {new Date(sf.created_at).toLocaleDateString('es-PE')}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
+          {sf.ai_analysis && (
+            <span className="px-2 py-1 bg-violet-50 text-violet-600 rounded-full text-[10px] font-bold border border-violet-200 flex items-center gap-1">
+              <Sparkles size={9} /> Con IA
+            </span>
+          )}
+          <button
+            onClick={handleGenerateReport}
+            disabled={generating}
+            className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-sm hover:shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
+          >
+            {generating ? (
+              <><Loader2 size={12} className="animate-spin" /> Generando...</>
+            ) : (
+              <><Download size={12} /> Generar Reporte</>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function SendFormModal({ form, children, onSend, onClose }: any) {
   const [childId, setChildId] = useState('')
   const [message, setMessage] = useState('')
@@ -1052,32 +1175,11 @@ export default function EvaluacionesUnificadas() {
               <p className="font-bold text-slate-400">Sin formularios guardados</p>
             </div>
           ) : savedForms.map(sf => (
-            <div key={`${sf._source || 'form_responses'}-${sf.id}`} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
-              <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <p className="font-bold text-slate-800 text-sm truncate">
-                      {sf.form_title || sf.form_type || 'Formulario'}
-                    </p>
-                    {sf._source && (
-                      <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider whitespace-nowrap">
-                        {sf._source === 'anamnesis_completa' ? 'Anamnesis' :
-                         sf._source === 'registro_aba' ? 'ABA' :
-                         sf._source === 'registro_entorno_hogar' ? 'Hogar' : 'NeuroForma'}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                    <Baby size={10} /> {(sf as any).children?.name || 'Paciente'} · {new Date(sf.created_at).toLocaleDateString('es-PE')}
-                  </p>
-                </div>
-                {sf.ai_analysis && (
-                  <span className="px-2.5 py-1 bg-violet-50 text-violet-600 rounded-full text-xs font-bold border border-violet-200 flex items-center gap-1 flex-shrink-0">
-                    <Sparkles size={10} /> Con análisis IA
-                  </span>
-                )}
-              </div>
-            </div>
+            <HistorialFormCard
+              key={`${sf._source || 'form_responses'}-${sf.id}`}
+              sf={sf}
+              onReportGenerated={loadData}
+            />
           ))}
         </div>
       )}
