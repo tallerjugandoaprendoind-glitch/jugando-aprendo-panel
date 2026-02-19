@@ -105,10 +105,14 @@ async function generateAIAnalysis(
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
-
-    // Pre-existing AI analysis from the form (skip re-analysis if available)
+    // ⚡ SKIP Gemini call if analysis already exists (avoids timeout on Vercel)
     const existingAnalysis = reportData?.ai_analysis || reportData?.responses?.ai_analysis;
+    if (existingAnalysis && typeof existingAnalysis === 'object' && existingAnalysis.resumen_ejecutivo) {
+      console.log('⚡ Usando análisis IA existente - saltando llamada a Gemini');
+      return null; // createNeuroFormReport usa el análisis embebido directamente
+    }
+
+    const ai = new GoogleGenAI({ apiKey });
 
     let prompt = '';
     const displayTitle = formTitle || reportType.replace(/_/g, ' ').toUpperCase();
