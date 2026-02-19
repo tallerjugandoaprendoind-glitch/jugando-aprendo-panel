@@ -2,15 +2,17 @@
 // API: ANALIZAR FORMULARIO DE PADRES + GENERAR REPORTE WORD
 // Ruta: /app/api/analyze-parent-form-submission/route.ts
 //
-// FIX: Ya no llama a /api/generate-report por HTTP (falla en Vercel porque
-//      localhost:3000 no existe en producción serverless). En su lugar importa
-//      la función directamente desde la librería compartida.
+// FIX CRÍTICO: Antes llamaba a /api/generate-report via fetch(localhost:3000)
+// que falla en Vercel serverless. Ahora toda la lógica Word está INLINE aquí.
 // ==============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from "@google/genai"
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { generateReport } from '@/lib/report-generator'
+
+const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+        AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel,
+        PageBreak } = require('docx');
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +22,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Falta API Key' }, { status: 500 })
 
-    // ── 1. Obtener datos del niño ──────────────────────────────────────────
+    // ── 1. Datos del niño ──────────────────────────────────────────────────
     const { data: child } = await supabaseAdmin
       .from('children')
       .select('name, birth_date, diagnosis, age')
@@ -38,47 +40,42 @@ export async function POST(request: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey })
 
-    const prompt = `
-Eres un supervisor clínico especialista en neurodiversidad (TDAH, TEA, trastornos del desarrollo).
+    const prompt = `Eres un supervisor clínico especialista en neurodiversidad (TDAH, TEA, trastornos del desarrollo).
 
-DATOS DEL FORMULARIO COMPLETADO POR LOS PADRES:
+DATOS DEL FORMULARIO:
 - Paciente: ${childName}${childAge ? ` (${childAge} años)` : ''}
 - Diagnóstico: ${diagnosis}
 - Formulario: ${formTitle}
-- Tipo: ${formType}
 
-RESPUESTAS DE LOS PADRES:
+RESPUESTAS:
 ${responsesText}
 
-Responde SOLO con este JSON exacto (sin markdown, sin backticks):
+Responde SOLO con JSON (sin markdown ni backticks):
 {
-  "resumen_ejecutivo": "Párrafo de 3-4 oraciones resumiendo el estado actual del paciente",
-  "analisis_clinico": "Análisis clínico detallado de 4-5 oraciones con terminología profesional",
+  "resumen_ejecutivo": "3-4 oraciones",
+  "analisis_clinico": "4-5 oraciones con terminología profesional",
   "areas_fortaleza": ["Fortaleza 1", "Fortaleza 2", "Fortaleza 3"],
-  "areas_trabajo": ["Área de trabajo 1", "Área de trabajo 2", "Área de trabajo 3"],
-  "recomendaciones": ["Recomendación 1", "Recomendación 2", "Recomendación 3", "Recomendación 4"],
-  "actividades_en_casa": ["Actividad 1", "Actividad 2", "Actividad 3"],
-  "indicadores_clave": ["Indicador 1", "Indicador 2", "Indicador 3"],
-  "nivel_alerta": "bajo|moderado|alto",
-  "mensaje_padres": "Mensaje empático de 2-3 oraciones para los padres.",
-  "proximo_paso": "Una acción concreta para la próxima sesión"
+  "areas_trabajo": ["Área 1", "Área 2", "Área 3"],
+  "recomendaciones": ["Rec 1", "Rec 2", "Rec 3", "Rec 4"],
+  "actividades_en_casa": ["Act 1", "Act 2", "Act 3"],
+  "indicadores_clave": ["Ind 1", "Ind 2", "Ind 3"],
+  "nivel_alerta": "bajo",
+  "mensaje_padres": "Mensaje empático 2-3 oraciones.",
+  "proximo_paso": "Acción concreta próxima sesión"
 }`
 
-    const response = await ai.models.generateContent({
+    const aiResponse = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
       contents: prompt,
       config: { responseMimeType: 'application/json', temperature: 0.3 }
     })
 
-    const text = response.text || '{}'
+    const text = aiResponse.text || '{}'
     let analysis: any = {}
-    try {
-      analysis = JSON.parse(text.replace(/```json|```/g, '').trim())
-    } catch {
-      analysis = { resumen_ejecutivo: text }
-    }
+    try { analysis = JSON.parse(text.replace(/```json|```/g, '').trim()) }
+    catch { analysis = { resumen_ejecutivo: text } }
 
-    // ── 3. Guardar en cola de aprobación para el admin ─────────────────────
+    // ── 3. Cola de aprobación ──────────────────────────────────────────────
     await supabaseAdmin.from('parent_message_approvals').insert([{
       child_id:       childId,
       parent_id:      parentId,
@@ -92,35 +89,44 @@ Responde SOLO con este JSON exacto (sin markdown, sin backticks):
       created_at:     new Date().toISOString(),
     }])
 
-    // ── 4. Generar reporte Word directamente (sin HTTP self-call) ──────────
+    // ── 4. Generar Word INLINE (sin fetch a localhost) ─────────────────────
     try {
-      const reportResult = await generateReport({
-        reportType:  formType,
+      const normalizedData = { responses, ai_analysis: analysis }
+
+      // Análisis narrativo para el Word
+      const narrativeAnalysis = await generateNarrativeForWord(
+        formType, childName, childAge, normalizedData, formTitle, apiKey
+      )
+
+      // Documento Word
+      const docBuffer = await buildWordDocument({
+        reportType: formType,
         childName,
         childAge,
-        reportData:  { responses, ai_analysis: analysis },
-        evaluationId: formId,
+        reportData: normalizedData,
+        aiAnalysis: narrativeAnalysis,
         formTitle,
       })
 
-      if (reportResult.success && reportResult.fileData) {
-        await supabaseAdmin.from('reportes_generados').insert([{
-          child_id:        childId,
-          tipo_reporte:    formType,
-          titulo:          `${formTitle} - ${childName}`,
-          nombre_archivo:  reportResult.fileName,
-          file_data:       reportResult.fileData,
-          mime_type:       reportResult.mimeType,
-          tamano_bytes:    Math.round((reportResult.fileData.length * 3) / 4),
-          fecha_generacion: new Date().toISOString(),
-          generado_por:    'Padres + IA',
-          source_id:       formId,
-        }])
-        console.log('✅ Reporte Word generado y guardado para formulario de padres:', formTitle)
-      }
-    } catch (reportErr) {
-      // El reporte falla en silencio — el análisis igual se guarda
-      console.error('⚠️ Error generando reporte Word (el análisis se guardó):', reportErr)
+      const base64Doc = docBuffer.toString('base64')
+      const fileName  = `Reporte_${formType}_${childName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.docx`
+
+      await supabaseAdmin.from('reportes_generados').insert([{
+        child_id:         childId,
+        tipo_reporte:     formType,
+        titulo:           `${formTitle} - ${childName}`,
+        nombre_archivo:   fileName,
+        file_data:        base64Doc,
+        mime_type:        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        tamano_bytes:     Math.round((base64Doc.length * 3) / 4),
+        fecha_generacion: new Date().toISOString(),
+        generado_por:     'Padres + IA',
+        source_id:        formId,
+      }])
+      console.log('✅ Reporte Word generado:', fileName)
+
+    } catch (wordErr) {
+      console.error('⚠️ Error generando Word (análisis guardado de todas formas):', wordErr)
     }
 
     return NextResponse.json({ success: true, analysis })
@@ -129,4 +135,218 @@ Responde SOLO con este JSON exacto (sin markdown, sin backticks):
     console.error('Error analyzing parent form:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
+}
+
+// ==============================================================================
+// ANÁLISIS NARRATIVO PARA EL WORD
+// ==============================================================================
+async function generateNarrativeForWord(
+  formType: string, childName: string, childAge: number | undefined,
+  reportData: any, formTitle: string | undefined, apiKey: string
+): Promise<string | null> {
+  try {
+    const ai = new GoogleGenAI({ apiKey })
+    const existingAnalysis = reportData?.ai_analysis
+    const displayTitle = formTitle || formType.replace(/_/g, ' ').toUpperCase()
+
+    const prompt = existingAnalysis && typeof existingAnalysis === 'object'
+      ? `Eres un neuropsicólogo clínico especializado en neurodiversidad infantil.
+
+Formulario "${displayTitle}" para ${childName}${childAge ? ` (${childAge} años)` : ''}.
+
+ANÁLISIS IA PREVIO:
+${JSON.stringify(existingAnalysis, null, 2)}
+
+RESPUESTAS:
+${JSON.stringify(reportData?.responses || reportData, null, 2)}
+
+Genera un INFORME CLÍNICO PROFESIONAL con estas secciones:
+## RESUMEN EJECUTIVO
+## ANÁLISIS CLÍNICO DETALLADO
+## ÁREAS DE FORTALEZA
+## ÁREAS DE TRABAJO PRIORITARIAS
+## RECOMENDACIONES TERAPÉUTICAS
+## ESTRATEGIAS PARA EL HOGAR
+## INDICADORES DE SEGUIMIENTO
+## PRÓXIMOS PASOS SUGERIDOS
+
+NIVEL DE ALERTA: ${existingAnalysis?.nivel_alerta || 'moderado'}
+FORMATO: Profesional, empático, claro.`
+      : `Eres un neuropsicólogo clínico especializado en neurodiversidad infantil.
+
+Formulario "${displayTitle}" para ${childName}${childAge ? ` (${childAge} años)` : ''}.
+
+RESPUESTAS:
+${JSON.stringify(reportData?.responses || reportData, null, 2)}
+
+Genera un INFORME CLÍNICO PROFESIONAL con:
+## RESUMEN EJECUTIVO
+## ANÁLISIS CLÍNICO DETALLADO
+## ÁREAS DE FORTALEZA
+## ÁREAS DE TRABAJO PRIORITARIAS
+## RECOMENDACIONES TERAPÉUTICAS
+## ESTRATEGIAS PARA EL HOGAR
+## INDICADORES DE SEGUIMIENTO
+## PRÓXIMOS PASOS`
+
+    const resp = await ai.models.generateContent({ model: 'gemini-2.0-flash', contents: prompt })
+    return resp.candidates?.[0]?.content?.parts?.[0]?.text || resp.text || null
+  } catch { return null }
+}
+
+
+// ==============================================================================
+// CONSTRUCCIÓN DEL DOCUMENTO WORD
+// ==============================================================================
+async function buildWordDocument(params: {
+  reportType: string; childName: string; childAge?: number;
+  reportData: any; aiAnalysis?: string | null; formTitle?: string;
+}): Promise<Buffer> {
+  const { reportType, childName, childAge, reportData, aiAnalysis, formTitle } = params
+
+  const portada  = createCoverPage(reportType, childName, childAge, formTitle)
+  const contenido = createNeuroFormReport(reportData, childName, reportType, aiAnalysis, formTitle)
+
+  const doc = new Document({
+    styles: getDocumentStyles(),
+    sections: [{
+      properties: {
+        page: {
+          size: { width: 12240, height: 15840 },
+          margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+        }
+      },
+      children: [...portada, new PageBreak(), ...contenido]
+    }]
+  })
+  return await Packer.toBuffer(doc)
+}
+
+function getDocumentStyles() {
+  return {
+    default: { document: { run: { font: 'Calibri', size: 22 } } },
+    paragraphStyles: [
+      { id: 'Normal', name: 'Normal', run: { font: 'Calibri', size: 22 }, paragraph: { spacing: { line: 276, after: 200 } } },
+      { id: 'Heading1', name: 'Heading 1', run: { size: 32, bold: true, font: 'Calibri', color: '2E75B5' }, paragraph: { spacing: { before: 480, after: 240 } } },
+      { id: 'Heading2', name: 'Heading 2', run: { size: 28, bold: true, font: 'Calibri', color: '2E75B5' }, paragraph: { spacing: { before: 360, after: 180 } } },
+      { id: 'Heading3', name: 'Heading 3', run: { size: 24, bold: true, font: 'Calibri', color: '1F4D78' }, paragraph: { spacing: { before: 280, after: 140 } } },
+    ]
+  }
+}
+
+function createCoverPage(reportType: string, childName: string, childAge?: number, formTitle?: string): any[] {
+  const titles: Record<string, { main: string; sub: string }> = {
+    anamnesis:     { main: 'HISTORIA CLÍNICA', sub: 'Evaluación Integral del Desarrollo' },
+    aba:           { main: 'REPORTE DE SESIÓN ABA', sub: 'Análisis Aplicado de la Conducta' },
+    entorno_hogar: { main: 'EVALUACIÓN DEL ENTORNO DEL HOGAR', sub: 'Visita Domiciliaria' },
+    brief2:        { main: 'EVALUACIÓN BRIEF-2', sub: 'Funciones Ejecutivas' },
+    ados2:         { main: 'EVALUACIÓN ADOS-2', sub: 'Diagnóstico del Autismo' },
+    vineland3:     { main: 'EVALUACIÓN VINELAND-3', sub: 'Conducta Adaptativa' },
+    wiscv:         { main: 'EVALUACIÓN WISC-V', sub: 'Escala de Inteligencia' },
+    basc3:         { main: 'EVALUACIÓN BASC-3', sub: 'Sistema Conductual' },
+  }
+  const t = titles[reportType] || (formTitle
+    ? { main: formTitle.toUpperCase(), sub: 'Informe Clínico Especializado' }
+    : { main: 'REPORTE PROFESIONAL', sub: 'Evaluación Clínica' })
+
+  return [
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 2880, after: 720 }, children: [new TextRun({ text: 'JUGANDO APRENDO', font: 'Calibri', size: 32, bold: true, color: '2E75B5' })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 1440 }, children: [new TextRun({ text: 'Taller de Desarrollo Infantil', font: 'Calibri', size: 22, color: '595959' })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 1440 }, border: { bottom: { color: '2E75B5', space: 1, value: BorderStyle.SINGLE, size: 12 } }, children: [new TextRun({ text: '' })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 720, after: 360 }, children: [new TextRun({ text: t.main, font: 'Calibri', size: 40, bold: true, color: '1F4D78' })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 1440 }, children: [new TextRun({ text: t.sub, font: 'Calibri', size: 24, color: '595959', italics: true })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 1440, after: 240 }, children: [new TextRun({ text: 'PACIENTE', font: 'Calibri', size: 20, bold: true, color: '404040', allCaps: true })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 120 }, children: [new TextRun({ text: childName, font: 'Calibri', size: 32, bold: true, color: '2E75B5' })] }),
+    ...(childAge ? [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 720 }, children: [new TextRun({ text: `Edad: ${childAge} años`, font: 'Calibri', size: 22, color: '595959' })] })] : []),
+    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 1440 }, children: [new TextRun({ text: `Fecha: ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`, font: 'Calibri', size: 22, color: '737373' })] })
+  ]
+}
+
+function createNeuroFormReport(data: any, childName: string, formType: string, aiAnalysis?: string | null, formTitle?: string): any[] {
+  const elements: any[] = []
+  const displayTitle = formTitle || formType.replace(/_/g, ' ')
+  const today = new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' })
+
+  const sep = () => new Paragraph({ spacing: { after: 200 }, border: { bottom: { color: 'CCCCCC', space: 1, value: BorderStyle.SINGLE, size: 6 } }, children: [new TextRun({ text: '' })] })
+  const secHead = (txt: string, emoji: string) => new Paragraph({ heading: HeadingLevel.HEADING_1, spacing: { before: 480, after: 200 }, shading: { type: ShadingType.SOLID, color: 'EBF3FB' }, children: [new TextRun({ text: `${emoji}  ${txt}`, size: 28, bold: true, color: '2E75B5', font: 'Calibri' })] })
+  const subHead = (txt: string) => new Paragraph({ heading: HeadingLevel.HEADING_2, spacing: { before: 280, after: 120 }, children: [new TextRun({ text: txt, size: 24, bold: true, color: '1F4D78', font: 'Calibri' })] })
+  const body = (txt: string, bold = false) => new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: txt, size: 22, bold, font: 'Calibri', color: '333333' })] })
+  const bullet = (txt: string, color = '2E75B5') => new Paragraph({ spacing: { after: 120 }, indent: { left: 360 }, children: [new TextRun({ text: '▪  ', size: 22, bold: true, color, font: 'Calibri' }), new TextRun({ text: txt, size: 22, font: 'Calibri', color: '333333' })] })
+
+  // Encabezado
+  elements.push(
+    new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text: `Paciente: ${childName}`, size: 22, bold: true, font: 'Calibri', color: '1F4D78' })] }),
+    new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text: `Evaluación: ${displayTitle}`, size: 22, font: 'Calibri', color: '595959' })] }),
+    new Paragraph({ spacing: { after: 120 }, children: [new TextRun({ text: `Fecha: ${today}`, size: 22, font: 'Calibri', color: '595959' })] }),
+    sep()
+  )
+
+  // Análisis narrativo IA
+  if (aiAnalysis) {
+    elements.push(secHead('Análisis Clínico Profesional', '🧠'))
+    for (const line of aiAnalysis.split('\n')) {
+      const t = line.trim()
+      if (!t) continue
+      if (t.startsWith('## '))      elements.push(subHead(t.replace(/^##\s*/, '')))
+      else if (t.startsWith('# '))  elements.push(secHead(t.replace(/^#\s*/, ''), '📋'))
+      else if (t.startsWith('- ') || t.startsWith('• ') || t.startsWith('* ')) elements.push(bullet(t.replace(/^[-•*]\s*/, '')))
+      else if (t.match(/^\d+\.\s/)) elements.push(bullet(t.replace(/^\d+\.\s*/, ''), '1F4D78'))
+      else if (t.startsWith('**') && t.endsWith('**')) elements.push(body(t.replace(/\*\*/g, ''), true))
+      else elements.push(body(t))
+    }
+    elements.push(sep())
+  }
+
+  // Tabla de respuestas
+  const responses = data?.responses || data
+  if (responses && typeof responses === 'object' && !Array.isArray(responses)) {
+    elements.push(secHead('Respuestas del Formulario', '📝'))
+    const entries = Object.entries(responses).filter(([k, v]) => v !== null && v !== undefined && v !== '' && k !== 'ai_analysis')
+    if (entries.length > 0) {
+      elements.push(
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({ tableHeader: true, children: [
+              new TableCell({ shading: { type: ShadingType.SOLID, color: '2E75B5' }, children: [new Paragraph({ children: [new TextRun({ text: 'Campo', size: 20, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+              new TableCell({ shading: { type: ShadingType.SOLID, color: '2E75B5' }, children: [new Paragraph({ children: [new TextRun({ text: 'Respuesta', size: 20, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] })
+            ]}),
+            ...entries.map(([key, value]) => new TableRow({ children: [
+              new TableCell({ width: { size: 35, type: WidthType.PERCENTAGE }, shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: key.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()), size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
+              new TableCell({ width: { size: 65, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: Array.isArray(value) ? (value as any[]).join(', ') : String(value), size: 20, font: 'Calibri', color: '333333' })] })] })
+            ]}))
+          ]
+        }),
+        new Paragraph({ text: '' })
+      )
+    }
+  }
+
+  // Análisis IA embebido del formulario original
+  const embedded = data?.ai_analysis
+  if (embedded && typeof embedded === 'object') {
+    elements.push(sep(), secHead('Análisis IA del Formulario', '🤖'))
+    const alertColors: Record<string, string> = { bajo: '27AE60', moderado: 'F39C12', alto: 'E74C3C' }
+    if (embedded.nivel_alerta) elements.push(new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: 'Nivel de Alerta: ', size: 22, bold: true, font: 'Calibri' }), new TextRun({ text: embedded.nivel_alerta.toUpperCase(), size: 22, bold: true, font: 'Calibri', color: alertColors[embedded.nivel_alerta] || '595959' })] }))
+    if (embedded.resumen_ejecutivo) { elements.push(subHead('Resumen Ejecutivo')); elements.push(body(embedded.resumen_ejecutivo)) }
+    if (embedded.analisis_clinico)  { elements.push(subHead('Análisis Clínico')); elements.push(body(embedded.analisis_clinico)) }
+    if (embedded.areas_fortaleza?.length) { elements.push(subHead('Fortalezas')); (embedded.areas_fortaleza as string[]).forEach((f: string) => elements.push(bullet(f, '27AE60'))) }
+    if (embedded.areas_trabajo?.length)   { elements.push(subHead('Áreas de Trabajo')); (embedded.areas_trabajo as string[]).forEach((a: string) => elements.push(bullet(a, 'E67E22'))) }
+    if (embedded.recomendaciones?.length) { elements.push(subHead('Recomendaciones')); (embedded.recomendaciones as string[]).forEach((r: string) => elements.push(bullet(r))) }
+    if (embedded.actividades_en_casa?.length) { elements.push(subHead('Actividades en Casa')); (embedded.actividades_en_casa as string[]).forEach((a: string) => elements.push(bullet(a, '8E44AD'))) }
+    if (embedded.proximo_paso)  { elements.push(subHead('Próximo Paso')); elements.push(body(embedded.proximo_paso, true)) }
+    if (embedded.mensaje_padres){ elements.push(subHead('Mensaje para los Padres')); elements.push(body(`"${embedded.mensaje_padres}"`)) }
+  }
+
+  // Footer
+  elements.push(
+    sep(),
+    new Paragraph({ spacing: { before: 400 }, alignment: AlignmentType.CENTER, children: [
+      new TextRun({ text: 'Informe generado con asistencia de IA · ', size: 18, italics: true, color: '999999', font: 'Calibri' }),
+      new TextRun({ text: 'Jugando Aprendo', size: 18, bold: true, italics: true, color: '2E75B5', font: 'Calibri' }),
+      new TextRun({ text: ` · ${today}`, size: 18, italics: true, color: '999999', font: 'Calibri' })
+    ]})
+  )
+
+  return elements
 }
