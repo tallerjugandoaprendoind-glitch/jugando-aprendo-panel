@@ -105,11 +105,10 @@ async function generateAIAnalysis(
   }
 
   try {
-    // ⚡ Si ya existe análisis IA completo, no llamar Gemini de nuevo (evita timeout)
+    // Si ya existe análisis IA completo, no llamar Gemini (evita timeout)
     const existingAnalysis = reportData?.ai_analysis || reportData?.responses?.ai_analysis;
     if (existingAnalysis && typeof existingAnalysis === 'object' && existingAnalysis.resumen_ejecutivo) {
-      console.log('⚡ Análisis IA existente encontrado - saltando llamada a Gemini');
-      return null; // createNeuroFormReport usa el análisis embebido directamente
+      return null;
     }
 
     const ai = new GoogleGenAI({ apiKey });
@@ -1213,11 +1212,11 @@ function createNeuroFormReport(data: any, childName: string, formType: string, a
     children: [new TextRun({ text: '' })]
   });
 
-  const sectionHead = (text: string, emoji: string) => new Paragraph({
+  const sectionHead = (text: string, _emoji?: string) => new Paragraph({
     heading: HeadingLevel.HEADING_1,
     spacing: { before: 480, after: 200 },
     shading: { type: ShadingType.SOLID, color: 'EBF3FB' },
-    children: [new TextRun({ text: `${emoji}  ${text}`, size: 28, bold: true, color: '2E75B5', font: 'Calibri' })]
+    children: [new TextRun({ text: text, size: 28, bold: true, color: '2E75B5', font: 'Calibri' })]
   });
 
   const subHead = (text: string) => new Paragraph({
