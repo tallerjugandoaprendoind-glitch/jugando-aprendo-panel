@@ -105,10 +105,10 @@ async function generateAIAnalysis(
   }
 
   try {
-    // ⚡ SKIP Gemini call if analysis already exists (avoids timeout on Vercel)
+    // ⚡ Si ya existe análisis IA completo, no llamar Gemini de nuevo (evita timeout)
     const existingAnalysis = reportData?.ai_analysis || reportData?.responses?.ai_analysis;
     if (existingAnalysis && typeof existingAnalysis === 'object' && existingAnalysis.resumen_ejecutivo) {
-      console.log('⚡ Usando análisis IA existente - saltando llamada a Gemini');
+      console.log('⚡ Análisis IA existente encontrado - saltando llamada a Gemini');
       return null; // createNeuroFormReport usa el análisis embebido directamente
     }
 

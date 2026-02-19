@@ -93,10 +93,8 @@ Responde SOLO con JSON (sin markdown ni backticks):
     try {
       const normalizedData = { responses, ai_analysis: analysis }
 
-      // Análisis narrativo para el Word
-      const narrativeAnalysis = await generateNarrativeForWord(
-        formType, childName, childAge, normalizedData, formTitle, apiKey
-      )
+      // ⚡ NO llamamos Gemini de nuevo - el análisis JSON ya está listo
+      // createNeuroFormReport lo usa directamente desde normalizedData.ai_analysis
 
       // Documento Word
       const docBuffer = await buildWordDocument({
@@ -104,7 +102,7 @@ Responde SOLO con JSON (sin markdown ni backticks):
         childName,
         childAge,
         reportData: normalizedData,
-        aiAnalysis: narrativeAnalysis,
+        aiAnalysis: null,  // null = usa el análisis embebido en reportData.ai_analysis
         formTitle,
       })
 
