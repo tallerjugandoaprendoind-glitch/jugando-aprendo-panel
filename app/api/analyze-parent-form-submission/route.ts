@@ -1,6 +1,16 @@
+// ==============================================================================
+// API: ANALIZAR FORMULARIO DE PADRES + GENERAR REPORTE WORD
+// Ruta: /app/api/analyze-parent-form-submission/route.ts
+//
+// FIX: Ya no llama a /api/generate-report por HTTP (falla en Vercel porque
+//      localhost:3000 no existe en producción serverless). En su lugar importa
+//      la función directamente desde la librería compartida.
+// ==============================================================================
+
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from "@google/genai"
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { generateReport } from '@/lib/report-generator'
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,7 +20,7 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Falta API Key' }, { status: 500 })
 
-    // Get child info
+    // ── 1. Obtener datos del niño ──────────────────────────────────────────
     const { data: child } = await supabaseAdmin
       .from('children')
       .select('name, birth_date, diagnosis, age')
@@ -18,10 +28,10 @@ export async function POST(request: NextRequest) {
       .single()
 
     const childName = child?.name || 'Paciente'
-    const childAge = child?.age || 'N/E'
+    const childAge  = typeof child?.age === 'number' ? child.age : undefined
     const diagnosis = child?.diagnosis || 'No especificado'
 
-    // Format responses for AI
+    // ── 2. Análisis IA del formulario ──────────────────────────────────────
     const responsesText = Object.entries(responses)
       .map(([k, v]) => `- ${k}: ${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}`)
       .join('\n')
@@ -32,7 +42,7 @@ export async function POST(request: NextRequest) {
 Eres un supervisor clínico especialista en neurodiversidad (TDAH, TEA, trastornos del desarrollo).
 
 DATOS DEL FORMULARIO COMPLETADO POR LOS PADRES:
-- Paciente: ${childName} (${childAge})
+- Paciente: ${childName}${childAge ? ` (${childAge} años)` : ''}
 - Diagnóstico: ${diagnosis}
 - Formulario: ${formTitle}
 - Tipo: ${formType}
@@ -40,22 +50,19 @@ DATOS DEL FORMULARIO COMPLETADO POR LOS PADRES:
 RESPUESTAS DE LOS PADRES:
 ${responsesText}
 
-TAREA: Genera un análisis clínico profesional y completo de este formulario.
-
-Responde SOLO con este JSON exacto:
+Responde SOLO con este JSON exacto (sin markdown, sin backticks):
 {
-  "resumen_ejecutivo": "Párrafo de 3-4 oraciones resumiendo el estado actual del paciente según este formulario",
+  "resumen_ejecutivo": "Párrafo de 3-4 oraciones resumiendo el estado actual del paciente",
   "analisis_clinico": "Análisis clínico detallado de 4-5 oraciones con terminología profesional",
   "areas_fortaleza": ["Fortaleza 1", "Fortaleza 2", "Fortaleza 3"],
   "areas_trabajo": ["Área de trabajo 1", "Área de trabajo 2", "Área de trabajo 3"],
-  "recomendaciones": ["Recomendación terapéutica 1", "Recomendación terapéutica 2", "Recomendación terapéutica 3", "Recomendación terapéutica 4"],
-  "actividades_en_casa": ["Actividad práctica para hacer en casa 1", "Actividad práctica 2", "Actividad práctica 3"],
-  "indicadores_clave": ["Indicador clave de progreso 1", "Indicador clave 2", "Indicador clave 3"],
+  "recomendaciones": ["Recomendación 1", "Recomendación 2", "Recomendación 3", "Recomendación 4"],
+  "actividades_en_casa": ["Actividad 1", "Actividad 2", "Actividad 3"],
+  "indicadores_clave": ["Indicador 1", "Indicador 2", "Indicador 3"],
   "nivel_alerta": "bajo|moderado|alto",
-  "mensaje_padres": "Mensaje empático, cálido y alentador de 2-3 oraciones para los padres. En primera persona plural del equipo terapéutico. Destaca logros específicos y motiva la continuidad.",
-  "proximo_paso": "Una acción concreta y específica que el equipo debe tomar en la próxima sesión"
-}
-`
+  "mensaje_padres": "Mensaje empático de 2-3 oraciones para los padres.",
+  "proximo_paso": "Una acción concreta para la próxima sesión"
+}`
 
     const response = await ai.models.generateContent({
       model: 'gemini-2.0-flash',
@@ -65,83 +72,59 @@ Responde SOLO con este JSON exacto:
 
     const text = response.text || '{}'
     let analysis: any = {}
-    try { analysis = JSON.parse(text) } catch { analysis = { resumen_ejecutivo: text } }
+    try {
+      analysis = JSON.parse(text.replace(/```json|```/g, '').trim())
+    } catch {
+      analysis = { resumen_ejecutivo: text }
+    }
 
-    // Save to parent_message_approvals queue (admin must approve before parent sees)
+    // ── 3. Guardar en cola de aprobación para el admin ─────────────────────
     await supabaseAdmin.from('parent_message_approvals').insert([{
-      child_id: childId,
-      parent_id: parentId,
-      source: 'parent_form',
-      source_title: formTitle,
-      ai_message: analysis.mensaje_padres || 'Gracias por completar el formulario. Lo revisaremos pronto.',
-      edited_message: analysis.mensaje_padres || 'Gracias por completar el formulario. Lo revisaremos pronto.',
-      ai_analysis: analysis,
-      session_data: { form_type: formType, form_id: formId, responses },
-      status: 'pending_approval',
-      created_at: new Date().toISOString(),
+      child_id:       childId,
+      parent_id:      parentId,
+      source:         'parent_form',
+      source_title:   formTitle,
+      ai_message:     analysis.mensaje_padres || 'Gracias por completar el formulario.',
+      edited_message: analysis.mensaje_padres || 'Gracias por completar el formulario.',
+      ai_analysis:    analysis,
+      session_data:   { form_type: formType, form_id: formId, responses },
+      status:         'pending_approval',
+      created_at:     new Date().toISOString(),
     }])
 
-    // Generate Word .docx report and save to reportes_generados (best-effort)
+    // ── 4. Generar reporte Word directamente (sin HTTP self-call) ──────────
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-      const reportRes = await fetch(`${baseUrl}/api/generate-report`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reportType: formType,
-          childName,
-          childAge: typeof childAge === 'number' ? childAge : undefined,
-          reportData: { responses, ai_analysis: analysis },
-          evaluationId: formId,
-          formTitle,
-        }),
+      const reportResult = await generateReport({
+        reportType:  formType,
+        childName,
+        childAge,
+        reportData:  { responses, ai_analysis: analysis },
+        evaluationId: formId,
+        formTitle,
       })
-      const reportJson = await reportRes.json()
 
-      if (reportJson.success && reportJson.fileData) {
+      if (reportResult.success && reportResult.fileData) {
         await supabaseAdmin.from('reportes_generados').insert([{
-          child_id: childId,
-          tipo_reporte: formType,
-          titulo: `${formTitle} - ${childName}`,
-          nombre_archivo: reportJson.fileName,
-          file_data: reportJson.fileData,
-          mime_type: reportJson.mimeType,
-          tamano_bytes: Math.round((reportJson.fileData.length * 3) / 4),
+          child_id:        childId,
+          tipo_reporte:    formType,
+          titulo:          `${formTitle} - ${childName}`,
+          nombre_archivo:  reportResult.fileName,
+          file_data:       reportResult.fileData,
+          mime_type:       reportResult.mimeType,
+          tamano_bytes:    Math.round((reportResult.fileData.length * 3) / 4),
           fecha_generacion: new Date().toISOString(),
-          generado_por: 'Padres + IA',
-          source_id: formId,
+          generado_por:    'Padres + IA',
+          source_id:       formId,
         }])
-      } else {
-        // Fallback: save JSON analysis if Word generation fails
-        await supabaseAdmin.from('reportes_generados').insert([{
-          child_id: childId,
-          tipo_reporte: formType,
-          titulo: `Análisis: ${formTitle}`,
-          nombre_archivo: `analisis_${formType}_${childId}.json`,
-          file_data: JSON.stringify(analysis),
-          tamano_bytes: JSON.stringify(analysis).length,
-          fecha_generacion: new Date().toISOString(),
-          generado_por: 'IA',
-        }])
+        console.log('✅ Reporte Word generado y guardado para formulario de padres:', formTitle)
       }
-    } catch (_e) {
-      console.error('Error generando reporte Word para formulario de padres:', _e)
-      // Last-resort: save JSON
-      try {
-        await supabaseAdmin.from('reportes_generados').insert([{
-          child_id: childId,
-          tipo_reporte: formType,
-          titulo: `Análisis: ${formTitle}`,
-          nombre_archivo: `analisis_${formType}_${childId}.json`,
-          file_data: JSON.stringify(analysis),
-          tamano_bytes: JSON.stringify(analysis).length,
-          fecha_generacion: new Date().toISOString(),
-          generado_por: 'IA',
-        }])
-      } catch (_e2) { /* best-effort */ }
+    } catch (reportErr) {
+      // El reporte falla en silencio — el análisis igual se guarda
+      console.error('⚠️ Error generando reporte Word (el análisis se guardó):', reportErr)
     }
 
     return NextResponse.json({ success: true, analysis })
+
   } catch (error: any) {
     console.error('Error analyzing parent form:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
