@@ -568,47 +568,52 @@ function FormFillView({ form, children, onBack, toast }: any) {
         created_at: new Date().toISOString(),
       }]).select().single()
 
-      // Generate Word report for clinical professional forms
-      if (!isNeurodivergent && form.formKey) {
-        try {
-          const { data: child } = await supabase.from('children').select('name, age, birth_date').eq('id', selectedChild).single()
-          const childName = (child as any)?.name || 'Paciente'
-          const childAge = (child as any)?.age || calcularEdadNumerica((child as any)?.birth_date)
+      // Generate Word report for ALL forms (clinical + NeuroForms + parent forms)
+      try {
+        const { data: child } = await supabase.from('children').select('name, age, birth_date').eq('id', selectedChild).single()
+        const childName = (child as any)?.name || 'Paciente'
+        const childAge = (child as any)?.age || calcularEdadNumerica((child as any)?.birth_date)
 
-          const reportRes = await fetch('/api/generate-report', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              reportType: form.formKey,
-              childName,
-              childAge,
-              reportData: { responses, ai_analysis: aiAnalysis },
-              evaluationId: (savedRecord as any)?.id || '',
-            }),
-          })
-          const reportJson = await reportRes.json()
+        // For NeuroForms: use form.id as reportType + pass formTitle for cover page
+        // For clinical forms: use form.formKey as reportType
+        const reportType = isNeurodivergent ? (form.id || 'neuroforma') : (form.formKey || form.id)
+        const reportData = isNeurodivergent
+          ? { responses, ai_analysis: aiAnalysis }
+          : { responses, ai_analysis: aiAnalysis }
 
-          if (reportJson.success && reportJson.fileData) {
-            await supabase.from('reportes_generados').insert([{
-              child_id: selectedChild,
-              tipo_reporte: form.formKey,
-              titulo: `${form.title} - ${childName}`,
-              nombre_archivo: reportJson.fileName,
-              file_data: reportJson.fileData,
-              tamano_bytes: Math.round((reportJson.fileData.length * 3) / 4),
-              fecha_generacion: new Date().toISOString(),
-              generado_por: 'IA + Psicólogo',
-              source_id: (savedRecord as any)?.id || null,
-            }])
-            toast.success('✅ Guardado y Reporte Word generado')
-          } else {
-            toast.success('✅ Guardado correctamente (sin reporte Word)')
-          }
-        } catch (repErr) {
-          console.error('Error generando Word:', repErr)
-          toast.success('✅ Guardado correctamente')
+        const reportRes = await fetch('/api/generate-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reportType,
+            childName,
+            childAge,
+            reportData,
+            evaluationId: (savedRecord as any)?.id || '',
+            formTitle: form.title,
+          }),
+        })
+        const reportJson = await reportRes.json()
+
+        if (reportJson.success && reportJson.fileData) {
+          await supabase.from('reportes_generados').insert([{
+            child_id: selectedChild,
+            tipo_reporte: reportType,
+            titulo: `${form.title} - ${childName}`,
+            nombre_archivo: reportJson.fileName,
+            file_data: reportJson.fileData,
+            mime_type: reportJson.mimeType,
+            tamano_bytes: Math.round((reportJson.fileData.length * 3) / 4),
+            fecha_generacion: new Date().toISOString(),
+            generado_por: 'IA + Psicólogo',
+            source_id: (savedRecord as any)?.id || null,
+          }])
+          toast.success('✅ Guardado y Reporte Word generado')
+        } else {
+          toast.success('✅ Guardado correctamente (sin reporte Word)')
         }
-      } else {
+      } catch (repErr) {
+        console.error('Error generando Word:', repErr)
         toast.success('✅ Guardado correctamente')
       }
 

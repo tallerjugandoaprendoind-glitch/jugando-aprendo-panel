@@ -81,19 +81,65 @@ Responde SOLO con este JSON exacto:
       created_at: new Date().toISOString(),
     }])
 
-    // Save full report to reportes_generados (best-effort, won't fail the main response)
+    // Generate Word .docx report and save to reportes_generados (best-effort)
     try {
-      await supabaseAdmin.from('reportes_generados').insert([{
-        child_id: childId,
-        tipo_reporte: 'formulario_padres',
-        titulo: `Análisis: ${formTitle}`,
-        nombre_archivo: `analisis_${formType}_${childId}.json`,
-        file_data: JSON.stringify(analysis),
-        tamano_bytes: JSON.stringify(analysis).length,
-        fecha_generacion: new Date().toISOString(),
-        generado_por: 'IA',
-      }])
-    } catch (_e) { /* best-effort */ }
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const reportRes = await fetch(`${baseUrl}/api/generate-report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportType: formType,
+          childName,
+          childAge: typeof childAge === 'number' ? childAge : undefined,
+          reportData: { responses, ai_analysis: analysis },
+          evaluationId: formId,
+          formTitle,
+        }),
+      })
+      const reportJson = await reportRes.json()
+
+      if (reportJson.success && reportJson.fileData) {
+        await supabaseAdmin.from('reportes_generados').insert([{
+          child_id: childId,
+          tipo_reporte: formType,
+          titulo: `${formTitle} - ${childName}`,
+          nombre_archivo: reportJson.fileName,
+          file_data: reportJson.fileData,
+          mime_type: reportJson.mimeType,
+          tamano_bytes: Math.round((reportJson.fileData.length * 3) / 4),
+          fecha_generacion: new Date().toISOString(),
+          generado_por: 'Padres + IA',
+          source_id: formId,
+        }])
+      } else {
+        // Fallback: save JSON analysis if Word generation fails
+        await supabaseAdmin.from('reportes_generados').insert([{
+          child_id: childId,
+          tipo_reporte: formType,
+          titulo: `Análisis: ${formTitle}`,
+          nombre_archivo: `analisis_${formType}_${childId}.json`,
+          file_data: JSON.stringify(analysis),
+          tamano_bytes: JSON.stringify(analysis).length,
+          fecha_generacion: new Date().toISOString(),
+          generado_por: 'IA',
+        }])
+      }
+    } catch (_e) {
+      console.error('Error generando reporte Word para formulario de padres:', _e)
+      // Last-resort: save JSON
+      try {
+        await supabaseAdmin.from('reportes_generados').insert([{
+          child_id: childId,
+          tipo_reporte: formType,
+          titulo: `Análisis: ${formTitle}`,
+          nombre_archivo: `analisis_${formType}_${childId}.json`,
+          file_data: JSON.stringify(analysis),
+          tamano_bytes: JSON.stringify(analysis).length,
+          fecha_generacion: new Date().toISOString(),
+          generado_por: 'IA',
+        }])
+      } catch (_e2) { /* best-effort */ }
+    }
 
     return NextResponse.json({ success: true, analysis })
   } catch (error: any) {

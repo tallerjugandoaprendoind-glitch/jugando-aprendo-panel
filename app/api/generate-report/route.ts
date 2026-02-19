@@ -39,12 +39,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalizar reportData: algunos formularios clínicos usan 'datos' en vez de 'responses'
+    // Unificar ambos para que el generador siempre tenga acceso a las respuestas
+    const normalizedReportData = {
+      ...reportData,
+      responses: reportData?.responses || reportData?.datos || reportData,
+    }
+
     console.log('📝 Generando reporte:', { reportType, childName, childAge });
 
     // Generar análisis con IA antes de crear el documento
     let aiAnalysis = null;
     try {
-      aiAnalysis = await generateAIAnalysis(reportType, childName, childAge, reportData, formTitle);
+      aiAnalysis = await generateAIAnalysis(reportType, childName, childAge, normalizedReportData, formTitle);
       console.log('🤖 Análisis IA generado:', aiAnalysis ? 'Sí' : 'No');
     } catch (error) {
       console.error('⚠️ Error generando análisis IA (continuando sin él):', error);
@@ -56,7 +63,7 @@ export async function POST(request: NextRequest) {
       childName,
       childAge,
       evaluatorName,
-      reportData,
+      reportData: normalizedReportData,
       aiAnalysis,
       formTitle
     });
