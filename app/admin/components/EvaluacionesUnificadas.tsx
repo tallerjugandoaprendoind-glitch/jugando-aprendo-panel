@@ -405,9 +405,13 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
     try {
       // Fetch the full responses from the DB (the list query only has metadata)
       const sourceTable = sf._source || 'form_responses'
+      const isClinicalTable = ['anamnesis_completa', 'registro_aba', 'registro_entorno_hogar'].includes(sourceTable)
+      const selectFields = isClinicalTable
+        ? 'datos, ai_analysis, form_type, form_title'
+        : 'responses, ai_analysis, form_type, form_title'
       const { data: fullRecord, error } = await supabase
         .from(sourceTable)
-        .select('responses, datos, ai_analysis, form_type, form_title')
+        .select(selectFields)
         .eq('id', sf.id)
         .single()
 
