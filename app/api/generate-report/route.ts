@@ -332,7 +332,7 @@ async function generateWordDocument(params: {
         margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
       }
     },
-    children: [...portada, new PageBreak(), ...contenido]
+    children: [...portada, new Paragraph({ children: [new PageBreak()] }), ...contenido]
   });
 
   const doc = new Document({
@@ -574,8 +574,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     });
 
     elements.push(
-      new Paragraph({ text: "" }),
-      new PageBreak()
+      new Paragraph({ children: [new PageBreak()] })
     );
   }
 
@@ -626,7 +625,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     );
   }
 
-  elements.push(new Paragraph({ text: "" }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
   // ══════════════════════════════════════════════════════════════════════════
   // 2. MOTIVO DE CONSULTA
@@ -674,7 +673,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     );
   }
 
-  elements.push(new Paragraph({ text: "" }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
   // ══════════════════════════════════════════════════════════════════════════
   // 3. HISTORIA PRENATAL Y PARTO
@@ -724,7 +723,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     );
   }
 
-  elements.push(new Paragraph({ text: "" }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
   // ══════════════════════════════════════════════════════════════════════════
   // 4. HISTORIA MÉDICA
@@ -772,7 +771,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     );
   }
 
-  elements.push(new Paragraph({ text: "" }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
   // ══════════════════════════════════════════════════════════════════════════
   // 5. DESARROLLO PSICOMOTOR
@@ -822,7 +821,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     );
   }
 
-  elements.push(new Paragraph({ text: "" }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
   // ══════════════════════════════════════════════════════════════════════════
   // 6. DESARROLLO DEL LENGUAJE
@@ -871,7 +870,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     );
   }
 
-  elements.push(new Paragraph({ text: "" }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
   // ══════════════════════════════════════════════════════════════════════════
   // 7. ALIMENTACIÓN Y SUEÑO
@@ -920,7 +919,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     );
   }
 
-  elements.push(new Paragraph({ text: "" }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
   // ══════════════════════════════════════════════════════════════════════════
   // 8. AUTONOMÍA E HIGIENE
@@ -968,7 +967,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     );
   }
 
-  elements.push(new Paragraph({ text: "" }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
   // ══════════════════════════════════════════════════════════════════════════
   // 9. ÁREA EMOCIONAL Y SOCIAL
@@ -1017,7 +1016,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
     );
   }
 
-  elements.push(new Paragraph({ text: "" }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: " " })] }));
 
   // ══════════════════════════════════════════════════════════════════════════
   // 10. OBSERVACIONES DEL TERAPEUTA
@@ -1095,7 +1094,7 @@ function createABAReport(data: any, childName: string, aiAnalysis?: string | nul
       );
     });
     
-    elements.push(new Paragraph({ text: "" }), new PageBreak());
+    elements.push(new Paragraph({ children: [new PageBreak()] }));
   }
   
   elements.push(
@@ -1149,7 +1148,7 @@ function createEntornoHogarReport(data: any, childName: string, aiAnalysis?: str
       );
     });
     
-    elements.push(new Paragraph({ text: "" }), new PageBreak());
+    elements.push(new Paragraph({ children: [new PageBreak()] }));
   }
   
   elements.push(
@@ -1209,7 +1208,7 @@ function createNeuroFormReport(data: any, childName: string, formType: string, a
   const separator = () => new Paragraph({
     spacing: { after: 200 },
     border: { bottom: { color: 'CCCCCC', space: 1, value: BorderStyle.SINGLE, size: 6 } },
-    children: [new TextRun({ text: '' })]
+    children: [new TextRun({ text: ' ' })]
   });
 
   const sectionHead = (text: string, _emoji?: string) => new Paragraph({
@@ -1319,7 +1318,7 @@ function createNeuroFormReport(data: any, childName: string, formType: string, a
             ...tableRows
           ]
         }),
-        new Paragraph({ text: '' })
+        new Paragraph({ children: [new TextRun({ text: ' ' })] })
       );
     }
   }
