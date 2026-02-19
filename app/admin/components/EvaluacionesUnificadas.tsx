@@ -443,7 +443,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
       if (!json.success || !json.fileData) throw new Error(json.error || 'Sin datos')
 
       // Save to reportes_generados
-      await supabase.from('reportes_generados').insert([{
+      const { error: insertError } = await supabase.from('reportes_generados').insert([{
         child_id:         sf.child_id,
         tipo_reporte:     reportType,
         titulo:           `${formTitle} - ${childName}`,
@@ -455,6 +455,10 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         generado_por:     'IA + Psicólogo',
         source_id:        sf.id,
       }])
+      if (insertError) {
+        console.error('❌ Error guardando reporte en BD:', insertError)
+        toast.error('Reporte descargado pero no se pudo guardar en historial: ' + insertError.message)
+      }
 
       // Auto-download
       const byteChars = atob(json.fileData)
