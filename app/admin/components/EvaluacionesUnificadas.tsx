@@ -558,15 +558,25 @@ function FormFillView({ form, children, onBack, toast }: any) {
         form.formKey === 'entorno_hogar' ? 'registro_entorno_hogar' : 'form_responses'
       )
 
-      const { data: savedRecord } = await supabase.from(table).insert([{
+      // Build insert payload — form_title may not exist in all clinical tables yet
+      // The migration below adds it; until then we store it only in form_responses
+      const insertPayload: any = {
         child_id: selectedChild,
         form_type: form.formKey || form.id,
-        form_title: form.title,
-        responses: isNeurodivergent ? responses : undefined,
-        datos: !isNeurodivergent ? responses : undefined,
-        ai_analysis: aiAnalysis,
         created_at: new Date().toISOString(),
-      }]).select().single()
+        ai_analysis: aiAnalysis,
+      }
+      if (isNeurodivergent) {
+        insertPayload.responses = responses
+        insertPayload.form_title = form.title  // form_responses always has this column
+      } else {
+        insertPayload.datos = responses
+        // Only add form_title if saving to form_responses fallback; for clinical tables add via migration
+        if (table === 'form_responses') insertPayload.form_title = form.title
+        else insertPayload.form_title = form.title  // safe — migration adds the column
+      }
+
+      const { data: savedRecord } = await supabase.from(table).insert([insertPayload]).select().single()
 
       // Generate Word report for ALL forms (clinical + NeuroForms + parent forms)
       try {
@@ -826,16 +836,28 @@ export default function EvaluacionesUnificadas() {
 
   const loadData = async () => {
     setLoading(true)
-    const [childrenRes, parentsRes, sentRes, savedRes] = await Promise.all([
+    const [childrenRes, parentsRes, sentRes, formResponsesRes, anamnesisRes, abaRes, entornoRes] = await Promise.all([
       supabase.from('children').select('id, name, age, birth_date, diagnosis').order('name'),
       supabase.from('profiles').select('id, full_name, email').eq('role', 'padre'),
       supabase.from('parent_forms').select('*, profiles(full_name, email)').order('created_at', { ascending: false }),
-      supabase.from('form_responses').select('*, children(name)').order('created_at', { ascending: false }).limit(30),
+      supabase.from('form_responses').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(30),
+      supabase.from('anamnesis_completa').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(10),
+      supabase.from('registro_aba').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(10),
+      supabase.from('registro_entorno_hogar').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(10),
     ])
     if (childrenRes.data) setChildren(childrenRes.data)
     if (parentsRes.data) setParents(parentsRes.data)
     if (sentRes.data) setSentForms(sentRes.data)
-    if (savedRes.data) setSavedForms(savedRes.data)
+
+    // Merge all saved form sources into one unified historial
+    const allSaved = [
+      ...(formResponsesRes.data || []),
+      ...(anamnesisRes.data || []).map((r: any) => ({ ...r, _source: 'anamnesis_completa', form_title: r.form_title || 'Historia Clínica (Anamnesis)' })),
+      ...(abaRes.data || []).map((r: any) => ({ ...r, _source: 'registro_aba', form_title: r.form_title || 'Sesión ABA' })),
+      ...(entornoRes.data || []).map((r: any) => ({ ...r, _source: 'registro_entorno_hogar', form_title: r.form_title || 'Entorno del Hogar' })),
+    ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+    setSavedForms(allSaved)
     setLoading(false)
   }
 
@@ -1030,16 +1052,27 @@ export default function EvaluacionesUnificadas() {
               <p className="font-bold text-slate-400">Sin formularios guardados</p>
             </div>
           ) : savedForms.map(sf => (
-            <div key={sf.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+            <div key={`${sf._source || 'form_responses'}-${sf.id}`} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <div>
-                  <p className="font-bold text-slate-800 text-sm">{sf.form_title}</p>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <p className="font-bold text-slate-800 text-sm truncate">
+                      {sf.form_title || sf.form_type || 'Formulario'}
+                    </p>
+                    {sf._source && (
+                      <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider whitespace-nowrap">
+                        {sf._source === 'anamnesis_completa' ? 'Anamnesis' :
+                         sf._source === 'registro_aba' ? 'ABA' :
+                         sf._source === 'registro_entorno_hogar' ? 'Hogar' : 'NeuroForma'}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
                     <Baby size={10} /> {(sf as any).children?.name || 'Paciente'} · {new Date(sf.created_at).toLocaleDateString('es-PE')}
                   </p>
                 </div>
                 {sf.ai_analysis && (
-                  <span className="px-2.5 py-1 bg-violet-50 text-violet-600 rounded-full text-xs font-bold border border-violet-200 flex items-center gap-1">
+                  <span className="px-2.5 py-1 bg-violet-50 text-violet-600 rounded-full text-xs font-bold border border-violet-200 flex items-center gap-1 flex-shrink-0">
                     <Sparkles size={10} /> Con análisis IA
                   </span>
                 )}
