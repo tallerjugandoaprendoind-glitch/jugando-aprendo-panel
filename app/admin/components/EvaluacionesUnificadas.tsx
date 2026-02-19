@@ -591,6 +591,10 @@ function FormFillView({ form, children, onBack, toast }: any) {
   const [aiAnalysis, setAiAnalysis] = useState<any>(null)
   const [editedMessage, setEditedMessage] = useState('')
   const [isNeurodivergent] = useState(!!(form as any).isNeurodivergent)
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false)
+  const [savedRecordId, setSavedRecordId] = useState<string | null>(null)
+  const [savedChildId, setSavedChildId] = useState<string>('')
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false)
 
   // Get sections based on form type
   const getSections = () => {
@@ -701,54 +705,11 @@ function FormFillView({ form, children, onBack, toast }: any) {
 
       const { data: savedRecord } = await supabase.from(table).insert([insertPayload]).select().single()
 
-      // Generate Word report for ALL forms (clinical + NeuroForms + parent forms)
-      try {
-        const { data: child } = await supabase.from('children').select('name, age, birth_date').eq('id', selectedChild).single()
-        const childName = (child as any)?.name || 'Paciente'
-        const childAge = (child as any)?.age || calcularEdadNumerica((child as any)?.birth_date)
-
-        // For NeuroForms: use form.id as reportType + pass formTitle for cover page
-        // For clinical forms: use form.formKey as reportType
-        const reportType = isNeurodivergent ? (form.id || 'neuroforma') : (form.formKey || form.id)
-        const reportData = isNeurodivergent
-          ? { responses, ai_analysis: aiAnalysis }
-          : { responses, ai_analysis: aiAnalysis }
-
-        const reportRes = await fetch('/api/generate-report', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            reportType,
-            childName,
-            childAge,
-            reportData,
-            evaluationId: (savedRecord as any)?.id || '',
-            formTitle: form.title,
-          }),
-        })
-        const reportJson = await reportRes.json()
-
-        if (reportJson.success && reportJson.fileData) {
-          await supabase.from('reportes_generados').insert([{
-            child_id: selectedChild,
-            tipo_reporte: reportType,
-            titulo: `${form.title} - ${childName}`,
-            nombre_archivo: reportJson.fileName,
-            file_data: reportJson.fileData,
-            mime_type: reportJson.mimeType,
-            tamano_bytes: Math.round((reportJson.fileData.length * 3) / 4),
-            fecha_generacion: new Date().toISOString(),
-            generado_por: 'IA + Psicólogo',
-            source_id: (savedRecord as any)?.id || null,
-          }])
-          toast.success('✅ Guardado y Reporte Word generado')
-        } else {
-          toast.success('✅ Guardado correctamente (sin reporte Word)')
-        }
-      } catch (repErr) {
-        console.error('Error generando Word:', repErr)
-        toast.success('✅ Guardado correctamente')
-      }
+      // Guardado exitoso - mostrar pantalla de éxito con botón de reporte
+      setSavedRecordId((savedRecord as any)?.id || null)
+      setSavedChildId(selectedChild)
+      setShowSuccessScreen(true)
+      toast.success('✅ Formulario guardado correctamente')
 
       // Queue AI-generated parent message for admin approval (if it exists)
       if (aiAnalysis?.mensaje_padres) {
@@ -769,13 +730,107 @@ function FormFillView({ form, children, onBack, toast }: any) {
           }).catch(e => console.error('Error queueing message:', e))
         }
       }
-
-      onBack()
+      // No llamamos onBack() aquí - la pantalla de éxito permite al usuario descargar el reporte
     } catch (err: any) {
       toast.error('Error al guardar: ' + err.message)
     } finally {
       setIsSaving(false)
     }
+  }
+
+  // ── PANTALLA DE ÉXITO CON BOTÓN DE REPORTE ──────────────────────────────
+  if (showSuccessScreen) {
+    const handleGenerateAndDownload = async () => {
+      setIsGeneratingReport(true)
+      try {
+        const child = children.find((c: any) => c.id === savedChildId) as any
+        const childName = child?.name || 'Paciente'
+        const childAge  = child?.age  || calcularEdadNumerica(child?.birth_date)
+        const reportType = isNeurodivergent ? (form.id || 'neuroforma') : (form.formKey || form.id)
+
+        const res = await fetch('/api/generate-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reportType,
+            childName,
+            childAge,
+            reportData: { responses, ai_analysis: aiAnalysis },
+            evaluationId: savedRecordId || '',
+            formTitle: form.title,
+          }),
+        })
+        const json = await res.json()
+        if (!json.success || !json.fileData) throw new Error(json.error || 'Sin datos')
+
+        // Guardar en reportes_generados
+        await supabase.from('reportes_generados').insert([{
+          child_id:         savedChildId,
+          tipo_reporte:     reportType,
+          titulo:           `${form.title} - ${childName}`,
+          nombre_archivo:   json.fileName,
+          file_data:        json.fileData,
+          mime_type:        json.mimeType,
+          tamano_bytes:     Math.round((json.fileData.length * 3) / 4),
+          fecha_generacion: new Date().toISOString(),
+          generado_por:     'IA + Psicólogo',
+          source_id:        savedRecordId,
+        }])
+
+        // Descargar automáticamente
+        const byteChars = atob(json.fileData)
+        const bytes = new Uint8Array(byteChars.length)
+        for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i)
+        const blob = new Blob([bytes], { type: json.mimeType })
+        const url  = URL.createObjectURL(blob)
+        const a    = document.createElement('a')
+        a.href = url; a.download = json.fileName
+        document.body.appendChild(a); a.click()
+        URL.revokeObjectURL(url); document.body.removeChild(a)
+
+        toast.success('✅ Reporte Word descargado')
+      } catch (err: any) {
+        toast.error('Error generando reporte: ' + (err.message || 'Intenta de nuevo'))
+      } finally {
+        setIsGeneratingReport(false)
+      }
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8">
+        <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
+          <CheckCircle2 size={40} className="text-emerald-500" />
+        </div>
+        <div className="text-center">
+          <h2 className="text-2xl font-black text-slate-800 mb-2">¡Formulario guardado!</h2>
+          <p className="text-slate-500 font-medium">{form.title}</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+          <button
+            onClick={handleGenerateAndDownload}
+            disabled={isGeneratingReport}
+            className="flex-1 flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-black text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
+          >
+            {isGeneratingReport ? (
+              <><Loader2 size={18} className="animate-spin" /> Generando reporte...</>
+            ) : (
+              <><Download size={18} /> Generar y Descargar Reporte Word</>
+            )}
+          </button>
+          <button
+            onClick={onBack}
+            className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-black text-sm transition-all"
+          >
+            <ChevronLeft size={18} /> Volver
+          </button>
+        </div>
+        {aiAnalysis && (
+          <p className="text-xs text-violet-600 font-bold flex items-center gap-1">
+            <Sparkles size={12} /> Análisis IA disponible — se incluirá en el reporte
+          </p>
+        )}
+      </div>
+    )
   }
 
   if (!currentSection) return null
