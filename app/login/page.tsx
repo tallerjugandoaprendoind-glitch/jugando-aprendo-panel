@@ -116,7 +116,7 @@ export default function LoginPage(props: PageProps) {
         @media(min-width:900px) { .mobile-logo { display: none !important; } }
       `}</style>
 
-      <div className="login-root">
+      <div className="login-root" style={{ background: '#f5f4fe', colorScheme: 'light' }}>
 
         {/* LEFT */}
         <div className="lp-left">

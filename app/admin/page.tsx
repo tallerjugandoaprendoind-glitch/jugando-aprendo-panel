@@ -359,7 +359,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content */}
-        <div className={`flex-1 overflow-hidden p-4 md:p-6 transition-colors flex flex-col
+        <div className={`flex-1 overflow-hidden p-4 md:p-6 transition-colors flex flex-col admin-content
           ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
           {/* Views that scroll normally */}
           {currentView !== 'usuarios' && (

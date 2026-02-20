@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================================================
-   VARIABLES CSS - LIGHT & DARK MODE
+   CSS VARIABLES - LIGHT & DARK
    ============================================================ */
 :root {
   --background: #f8fafc;
@@ -15,15 +15,14 @@
   --muted: #94a3b8;
   --muted-bg: #f1f5f9;
   --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --primary-soft: #eff6ff;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #94a3b8;
 }
 
-/* Dark mode solo aplica a las clases específicas del panel admin/padre
-   NO usamos !important para no romper componentes con colores hardcodeados */
 .dark {
   --background: #0d1117;
   --foreground: #f0f6fc;
@@ -35,12 +34,12 @@
   --input-border: #30363d;
   --muted: #8b949e;
   --muted-bg: #21262d;
-  --primary: #3b82f6;
-  --primary-hover: #60a5fa;
-  --primary-soft: #1d2d44;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.30);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.40);
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.50);
+  --text-primary: #f0f6fc;
+  --text-secondary: #c9d1d9;
+  --text-muted: #6e7681;
 }
 
 body {
@@ -51,19 +50,126 @@ body {
 }
 
 /* ============================================================
-   GLASS MORPHISM
+   DARK MODE - Scoped a .admin-content para NO afectar login
    ============================================================ */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.dark .glass {
-  background: rgba(22, 27, 34, 0.80);
+
+/* Fondo base del contenido */
+.dark .admin-content {
+  background: #0d1117;
 }
 
+/* Tarjetas blancas → dark */
+.dark .admin-content .bg-white {
+  background-color: #161b22 !important;
+}
+.dark .admin-content .bg-slate-50 {
+  background-color: #0d1117 !important;
+}
+.dark .admin-content .bg-slate-50\/30,
+.dark .admin-content .bg-slate-50\/50 {
+  background-color: rgba(13, 17, 23, 0.3) !important;
+}
+
+/* Gradiente del background de calendarView */
+.dark .admin-content .bg-gradient-to-br {
+  background: #0d1117 !important;
+}
+/* Excluir gradientes azules/coloridos (botones, hero banner) */
+.dark .admin-content .from-blue-600,
+.dark .admin-content .from-purple-600,
+.dark .admin-content .from-violet-600,
+.dark .admin-content .from-indigo-600,
+.dark .admin-content .bg-blue-600,
+.dark .admin-content .bg-purple-600,
+.dark .admin-content .bg-indigo-600,
+.dark .admin-content .bg-slate-800,
+.dark .admin-content .bg-slate-900 {
+  /* Estos se quedan como están - son botones/badges intencionales */
+}
+
+/* Bordes */
+.dark .admin-content .border-slate-100 { border-color: #21262d !important; }
+.dark .admin-content .border-slate-200 { border-color: #30363d !important; }
+.dark .admin-content .border-slate-300 { border-color: #484f58 !important; }
+
+/* Texto */
+.dark .admin-content .text-slate-800 { color: #f0f6fc !important; }
+.dark .admin-content .text-slate-700 { color: #e6edf3 !important; }
+.dark .admin-content .text-slate-600 { color: #c9d1d9 !important; }
+.dark .admin-content .text-slate-500 { color: #8b949e !important; }
+.dark .admin-content .text-slate-400 { color: #6e7681 !important; }
+.dark .admin-content .text-slate-300 { color: #484f58 !important; }
+
+/* Hover backgrounds */
+.dark .admin-content .hover\:bg-slate-50:hover { background-color: #21262d !important; }
+.dark .admin-content .hover\:bg-slate-100:hover { background-color: #21262d !important; }
+.dark .admin-content .hover\:bg-blue-50:hover   { background-color: rgba(29, 45, 68, 0.5) !important; }
+
+/* Inputs y selects dentro del contenido */
+.dark .admin-content input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.dark .admin-content select,
+.dark .admin-content textarea {
+  background-color: #21262d !important;
+  border-color: #30363d !important;
+  color: #f0f6fc !important;
+}
+.dark .admin-content input::placeholder,
+.dark .admin-content textarea::placeholder {
+  color: #6e7681 !important;
+}
+
+/* Divide lines */
+.dark .admin-content .divide-slate-50 > * + * { border-color: #21262d !important; }
+.dark .admin-content .divide-y { border-color: #21262d !important; }
+
+/* Calendario específico */
+.dark .admin-content .bg-blue-50 { background-color: rgba(29, 45, 68, 0.5) !important; }
+.dark .admin-content .hover\:bg-blue-50\/50:hover { background-color: rgba(29, 45, 68, 0.3) !important; }
+
+/* Día de hoy en el calendario */
+.dark .admin-content .bg-blue-600 { background-color: #2563eb !important; }
+
+/* Celdas grises del calendario (días pasados) */
+.dark .admin-content .min-h-\[80px\].bg-slate-50\/50 { background-color: rgba(13, 17, 23, 0.5) !important; }
+
+/* Pills y badges pequeños de citas en el calendario - mantener colores */
+.dark .admin-content .bg-blue-100 { background-color: rgba(29, 78, 216, 0.25) !important; }
+.dark .admin-content .bg-purple-100 { background-color: rgba(109, 40, 217, 0.25) !important; }
+.dark .admin-content .text-blue-700 { color: #93c5fd !important; }
+.dark .admin-content .text-purple-700 { color: #c4b5fd !important; }
+
+/* Badges de estado de citas */
+.dark .admin-content .bg-emerald-50  { background-color: rgba(6, 78, 59, 0.3) !important; }
+.dark .admin-content .bg-amber-50    { background-color: rgba(78, 52, 0, 0.3) !important; }
+.dark .admin-content .bg-red-50      { background-color: rgba(69, 10, 10, 0.3) !important; }
+.dark .admin-content .border-emerald-200 { border-color: #065f46 !important; }
+.dark .admin-content .border-amber-200   { border-color: #78350f !important; }
+.dark .admin-content .border-red-200     { border-color: #7f1d1d !important; }
+.dark .admin-content .text-emerald-700 { color: #6ee7b7 !important; }
+.dark .admin-content .text-amber-700   { color: #fcd34d !important; }
+.dark .admin-content .text-red-700     { color: #fca5a5 !important; }
+
+/* Thead en tables */
+.dark .admin-content thead,
+.dark .admin-content thead th,
+.dark .admin-content .bg-slate-50.sticky { background-color: #1c2128 !important; color: #8b949e !important; }
+
+/* Shadows */
+.dark .admin-content .shadow-sm   { box-shadow: 0 1px 3px rgba(0,0,0,0.3) !important; }
+.dark .admin-content .shadow-md   { box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important; }
+.dark .admin-content .shadow-blue-200 { box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2) !important; }
+
+/* Overlay modal backdrop - debe quedar oscuro */
+.dark .admin-content .bg-slate-900\/60 { background-color: rgba(0, 0, 0, 0.75) !important; }
+
 /* ============================================================
-   CARD PROFESIONAL - usa var() así funciona automático
+   GLASS MORPHISM
+   ============================================================ */
+.glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); }
+.dark .glass { background: rgba(22, 27, 34, 0.85); }
+
+/* ============================================================
+   CARD PRO - usa CSS vars, funciona en ambos modos
    ============================================================ */
 .card-pro {
   background: var(--card);
@@ -72,37 +178,7 @@ body {
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.2s ease, transform 0.2s ease;
 }
-.card-pro:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
-
-/* ============================================================
-   DARK MODE - Solo los elementos del shell (sidebar, topbar, inputs)
-   Usamos selectores específicos para NO romper componentes internos
-   ============================================================ */
-
-/* Sidebar y topbar del admin */
-.dark-sidebar {
-  background: var(--sidebar-bg);
-  border-color: var(--sidebar-border);
-  color: var(--foreground);
-}
-
-/* Inputs en dark mode - solo dentro de .dark-form */
-.dark .dark-input {
-  background: var(--input-bg);
-  border-color: var(--input-border);
-  color: var(--foreground);
-}
-.dark .dark-input::placeholder { color: var(--muted); }
-
-/* Texto genérico */
-.dark .dark-text-primary { color: var(--foreground); }
-.dark .dark-text-muted   { color: var(--muted); }
-.dark .dark-bg-card      { background: var(--card); border-color: var(--card-border); }
-.dark .dark-bg-base      { background: var(--background); }
-.dark .dark-border       { border-color: var(--card-border); }
+.card-pro:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 
 /* ============================================================
    ANIMACIONES
@@ -112,6 +188,12 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-in { animation: fade-in 0.35s ease-out; }
+
+@keyframes fade-in-up { /* alias para CalendarView */
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fade-in-up 0.4s ease-out; }
 
 @keyframes scale-in {
   from { opacity: 0; transform: scale(0.95); }
@@ -124,12 +206,6 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 .animate-slide-up { animation: slide-up 0.4s ease-out; }
-
-@keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-.animate-slide-right { animation: slide-in-right 0.3s ease-out; }
 
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
@@ -147,45 +223,39 @@ body {
    ============================================================ */
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 999px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
 /* ============================================================
-   BADGE DE ROLES
+   BADGES DE ROLES
    ============================================================ */
 .role-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid;
-  text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 3px 10px; border-radius: 999px; border: 1px solid; text-transform: uppercase;
 }
-.role-jefe         { background: #f5f3ff; color: #6d28d9; border-color: #c4b5fd; }
-.role-especialista { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
-.role-padre        { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
-
-/* Dark mode badges */
+.role-jefe          { background: #f5f3ff; color: #6d28d9; border-color: #c4b5fd; }
+.role-especialista  { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
+.role-padre         { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
 .dark .role-jefe         { background: #2e1065; color: #c4b5fd; border-color: #6d28d9; }
 .dark .role-especialista { background: #1e3a5f; color: #93c5fd; border-color: #2563eb; }
 .dark .role-padre        { background: #064e3b; color: #6ee7b7; border-color: #059669; }
 
 /* ============================================================
-   SIDEBAR TRANSITION HELPER
+   LOGIN PAGE - Protegida de dark mode
    ============================================================ */
-.sidebar-transition {
-  transition: background 0.2s ease, border-color 0.2s ease;
+.login-root {
+  background: #f5f4fe !important;
+  color: #1e1b4b !important;
 }
-
-/* ============================================================
-   FIX: Login page - NO se ve afectada por dark mode
-   (el login usa inline styles y su propio background)
-   ============================================================ */
-.login-root { background: #f5f4fe !important; }
+.dark .login-root,
+.dark .login-root * {
+  /* Reset dark mode en el login completamente */
+  background: revert;
+  color: revert;
+  border-color: revert;
+}
+/* Re-apply login styles */
+.dark .login-root { background: #f5f4fe !important; }
