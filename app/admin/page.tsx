@@ -359,17 +359,27 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content */}
-        <div className={`flex-1 overflow-y-auto p-4 md:p-6 transition-colors
+        <div className={`flex-1 overflow-hidden p-4 md:p-6 transition-colors flex flex-col
           ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
-          {currentView === 'inicio'       && <DashboardHome navigateTo={navigateTo} />}
-          {currentView === 'agenda'       && <CalendarView />}
-          {currentView === 'ninos'        && <PatientsView />}
-          {currentView === 'evaluaciones' && <EvaluacionesUnificadas />}
-          {currentView === 'reportes'     && <AIReportView onChildSelect={setSelectedChildReport} />}
-          {currentView === 'recursos'     && <ResourcesManagementView />}
-          {currentView === 'aprobaciones' && <MensajesPendientesPanel />}
-          {currentView === 'usuarios'     && <UserManagementView />}
-          {currentView === 'importar'     && <ExcelImportView />}
+          {/* Views that scroll normally */}
+          {currentView !== 'usuarios' && (
+            <div className="flex-1 overflow-y-auto">
+              {currentView === 'inicio'       && <DashboardHome navigateTo={navigateTo} />}
+              {currentView === 'agenda'       && <CalendarView />}
+              {currentView === 'ninos'        && <PatientsView />}
+              {currentView === 'evaluaciones' && <EvaluacionesUnificadas />}
+              {currentView === 'reportes'     && <AIReportView onChildSelect={setSelectedChildReport} />}
+              {currentView === 'recursos'     && <ResourcesManagementView />}
+              {currentView === 'aprobaciones' && <MensajesPendientesPanel />}
+              {currentView === 'importar'     && <ExcelImportView />}
+            </div>
+          )}
+          {/* Usuarios: flex container que maneja su propio scroll interno */}
+          {currentView === 'usuarios' && (
+            <div className="flex-1 min-h-0">
+              <UserManagementView />
+            </div>
+          )}
         </div>
       </main>
 

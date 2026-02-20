@@ -38,7 +38,8 @@ export default function LoginPage(props: PageProps) {
         const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password })
         if (error) throw error
         const { data: profile } = await supabase.from('profiles').select('role').eq('id', authData.user.id).single()
-        router.push(profile?.role === 'admin' ? '/admin' : '/padre')
+        const adminRoles = ['admin', 'jefe', 'especialista']
+        router.push(adminRoles.includes(profile?.role) ? '/admin' : '/padre')
       }
     } catch (err: any) {
       const msg = err.message || ''

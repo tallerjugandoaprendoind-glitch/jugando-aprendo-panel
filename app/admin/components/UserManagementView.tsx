@@ -327,7 +327,7 @@ export default function UserManagementView() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in h-full flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -387,8 +387,8 @@ export default function UserManagementView() {
         </select>
       </div>
 
-      {/* Users List */}
-      <div className="space-y-3">
+      {/* Users List - scrollable */}
+      <div className="flex-1 overflow-y-auto space-y-3 pr-1">
         {filteredUsers.length === 0 && (
           <div className="card-pro p-12 text-center">
             <Users size={36} className="mx-auto text-slate-300 mb-3" />

@@ -17,13 +17,13 @@
   --primary: #2563eb;
   --primary-hover: #1d4ed8;
   --primary-soft: #eff6ff;
-  --accent-purple: #7c3aed;
-  --accent-emerald: #059669;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
 }
 
+/* Dark mode solo aplica a las clases específicas del panel admin/padre
+   NO usamos !important para no romper componentes con colores hardcodeados */
 .dark {
   --background: #0d1117;
   --foreground: #f0f6fc;
@@ -38,8 +38,6 @@
   --primary: #3b82f6;
   --primary-hover: #60a5fa;
   --primary-soft: #1d2d44;
-  --accent-purple: #a78bfa;
-  --accent-emerald: #34d399;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.30);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.40);
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.50);
@@ -51,32 +49,6 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   transition: background 0.2s ease, color 0.2s ease;
 }
-
-/* ============================================================
-   DARK MODE - UTILITY OVERRIDES
-   Estos permiten que los componentes Tailwind funcionen en dark
-   ============================================================ */
-.dark .bg-white        { background-color: var(--card) !important; }
-.dark .bg-slate-50     { background-color: #0d1117 !important; }
-.dark .bg-slate-100    { background-color: #161b22 !important; }
-.dark .bg-slate-200    { background-color: #21262d !important; }
-.dark .border-slate-100 { border-color: #21262d !important; }
-.dark .border-slate-200 { border-color: #30363d !important; }
-.dark .border-slate-300 { border-color: #484f58 !important; }
-.dark .text-slate-800  { color: #f0f6fc !important; }
-.dark .text-slate-700  { color: #e6edf3 !important; }
-.dark .text-slate-600  { color: #c9d1d9 !important; }
-.dark .text-slate-500  { color: #8b949e !important; }
-.dark .text-slate-400  { color: #6e7681 !important; }
-.dark .hover\:bg-slate-50:hover  { background-color: #161b22 !important; }
-.dark .hover\:bg-slate-100:hover { background-color: #21262d !important; }
-.dark input, .dark textarea, .dark select {
-  background-color: var(--input-bg) !important;
-  border-color: var(--input-border) !important;
-  color: var(--foreground) !important;
-}
-.dark .shadow-sm { box-shadow: var(--shadow-sm) !important; }
-.dark .shadow-md { box-shadow: var(--shadow-md) !important; }
 
 /* ============================================================
    GLASS MORPHISM
@@ -91,7 +63,7 @@ body {
 }
 
 /* ============================================================
-   CARD PROFESIONAL
+   CARD PROFESIONAL - usa var() así funciona automático
    ============================================================ */
 .card-pro {
   background: var(--card);
@@ -104,6 +76,33 @@ body {
   box-shadow: var(--shadow-md);
   transform: translateY(-1px);
 }
+
+/* ============================================================
+   DARK MODE - Solo los elementos del shell (sidebar, topbar, inputs)
+   Usamos selectores específicos para NO romper componentes internos
+   ============================================================ */
+
+/* Sidebar y topbar del admin */
+.dark-sidebar {
+  background: var(--sidebar-bg);
+  border-color: var(--sidebar-border);
+  color: var(--foreground);
+}
+
+/* Inputs en dark mode - solo dentro de .dark-form */
+.dark .dark-input {
+  background: var(--input-bg);
+  border-color: var(--input-border);
+  color: var(--foreground);
+}
+.dark .dark-input::placeholder { color: var(--muted); }
+
+/* Texto genérico */
+.dark .dark-text-primary { color: var(--foreground); }
+.dark .dark-text-muted   { color: var(--muted); }
+.dark .dark-bg-card      { background: var(--card); border-color: var(--card-border); }
+.dark .dark-bg-base      { background: var(--background); }
+.dark .dark-border       { border-color: var(--card-border); }
 
 /* ============================================================
    ANIMACIONES
@@ -131,18 +130,6 @@ body {
   to   { opacity: 1; transform: translateX(0); }
 }
 .animate-slide-right { animation: slide-in-right 0.3s ease-out; }
-
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
-.animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-8px); }
-}
-.animate-float { animation: float 3s ease-in-out infinite; }
 
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
@@ -181,33 +168,24 @@ body {
   border: 1px solid;
   text-transform: uppercase;
 }
-.role-jefe        { background: #f5f3ff; color: #6d28d9; border-color: #c4b5fd; }
+.role-jefe         { background: #f5f3ff; color: #6d28d9; border-color: #c4b5fd; }
 .role-especialista { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
-.role-padre       { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
-.dark .role-jefe        { background: #2e1065; color: #c4b5fd; border-color: #6d28d9; }
+.role-padre        { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+
+/* Dark mode badges */
+.dark .role-jefe         { background: #2e1065; color: #c4b5fd; border-color: #6d28d9; }
 .dark .role-especialista { background: #1e3a5f; color: #93c5fd; border-color: #2563eb; }
-.dark .role-padre       { background: #064e3b; color: #6ee7b7; border-color: #059669; }
+.dark .role-padre        { background: #064e3b; color: #6ee7b7; border-color: #059669; }
 
 /* ============================================================
-   BOTÓN PRIMARIO
-   ============================================================ */
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  border-radius: 10px;
-  padding: 8px 16px;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.15s ease;
-  border: none;
-  cursor: pointer;
-}
-.btn-primary:hover  { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.30); }
-.btn-primary:active { transform: translateY(0); }
-
-/* ============================================================
-   SIDEBAR TRANSITION
+   SIDEBAR TRANSITION HELPER
    ============================================================ */
 .sidebar-transition {
   transition: background 0.2s ease, border-color 0.2s ease;
 }
+
+/* ============================================================
+   FIX: Login page - NO se ve afectada por dark mode
+   (el login usa inline styles y su propio background)
+   ============================================================ */
+.login-root { background: #f5f4fe !important; }
