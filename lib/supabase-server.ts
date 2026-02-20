@@ -70,10 +70,10 @@ export async function getProfile() {
   return profile
 }
 
-// Helper para verificar si el usuario es admin
+// Helper para verificar si el usuario es admin/jefe/especialista
 export async function isAdmin() {
   const profile = await getProfile()
-  return profile?.role === 'admin'
+  return profile?.role === 'jefe' || profile?.role === 'admin' || profile?.role === 'especialista'
 }
 
 // Helper para verificar si el usuario es padre

@@ -76,7 +76,7 @@ export async function login(formData: FormData) {
   // Revalidar y redirigir según el rol
   revalidatePath('/', 'layout')
   
-  if (profile?.role === 'admin' || email === 'admin@jugandoaprendo.com') {
+  if (profile?.role === 'jefe' || profile?.role === 'admin' || profile?.role === 'especialista' || email === 'admin@jugandoaprendo.com') {
     redirect('/admin')
   } else {
     redirect('/padre')
@@ -200,6 +200,8 @@ export async function isAdmin() {
   
   if (!user) return false
   
-  return user.profile?.role === 'admin' || 
+  return user.profile?.role === 'jefe' || 
+         user.profile?.role === 'admin' || 
+         user.profile?.role === 'especialista' ||
          user.email === 'admin@jugandoaprendo.com'
 }
