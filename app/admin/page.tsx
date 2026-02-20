@@ -8,11 +8,12 @@ import Image from 'next/image'
 import {
   LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen,
   X, User, FileText, Loader2, Key, BarChart3, ShieldCheck, Upload,
-  ChevronRight, Settings
+  ChevronRight, Settings, Crown, Stethoscope
 } from 'lucide-react'
 
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
 import { useToast } from '@/components/Toast'
+import { ThemeToggleButton, useTheme } from '@/components/ThemeContext'
 import DashboardHome from './components/DashboardHome'
 import PatientsView from './components/PatientsView'
 import CalendarView from './components/CalendarView'
@@ -38,18 +39,30 @@ const SECONDARY_NAV = [
   { id: 'importar',     icon: Upload,      label: 'Importar CSV' },
 ]
 
-function SidebarLink({ icon: Icon, label, active, onClick, small }: any) {
+const ROLE_ICON: Record<string, any> = {
+  jefe: Crown,
+  admin: Crown,
+  especialista: Stethoscope,
+}
+
+function SidebarLink({ icon: Icon, label, active, onClick, small, badge }: any) {
   return (
     <button
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group text-left
         ${active
-          ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
-          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+          ? 'bg-blue-600 text-white shadow-md shadow-blue-200 dark:shadow-blue-900'
+          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'
         } ${small ? 'text-xs' : 'text-sm'}`}
     >
-      <Icon size={small ? 15 : 18} className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
-      <span className={`font-semibold truncate ${small ? 'text-xs' : ''}`}>{label}</span>
+      <Icon size={small ? 15 : 18} className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
+      <span className={`font-semibold truncate flex-1 ${small ? 'text-xs' : ''}`}>{label}</span>
+      {badge > 0 && (
+        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0
+          ${active ? 'bg-white/20 text-white' : 'bg-red-500 text-white'}`}>
+          {badge}
+        </span>
+      )}
     </button>
   )
 }
@@ -57,6 +70,7 @@ function SidebarLink({ icon: Icon, label, active, onClick, small }: any) {
 export default function AdminDashboard() {
   const router = useRouter()
   const toast = useToast()
+  const { isDark } = useTheme()
   const [currentView, setCurrentView] = useState('inicio')
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [selectedChildReport, setSelectedChildReport] = useState<{id: string, name: string} | null>(null)
@@ -64,17 +78,28 @@ export default function AdminDashboard() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [userEmail, setUserEmail] = useState('')
+  const [userProfile, setUserProfile] = useState<any>(null)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
+  const [pendingMessages, setPendingMessages] = useState(0)
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user?.email) setUserEmail(user.email)
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (user?.email) {
+        setUserEmail(user.email)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+        if (profile) setUserProfile(profile)
+      }
     })
     fetchNotifications()
+    fetchPendingCount()
   }, [])
 
   const fetchNotifications = async () => {
@@ -91,6 +116,14 @@ export default function AdminDashboard() {
         detalle: `${c.children?.name} · ${c.appointment_time?.slice(0, 5)}`,
       })))
     }
+  }
+
+  const fetchPendingCount = async () => {
+    const { count } = await supabase
+      .from('parent_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending')
+    setPendingMessages(count || 0)
   }
 
   const handleLogout = async () => {
@@ -122,26 +155,41 @@ export default function AdminDashboard() {
     usuarios: 'Usuarios', importar: 'Importar CSV',
   }
 
+  const role = userProfile?.role || 'admin'
+  const RoleIcon = ROLE_ICON[role] || User
+  const roleName = role === 'jefe' || role === 'admin' ? 'Jefe' : role === 'especialista' ? 'Especialista' : 'Usuario'
+  const userName = userProfile?.full_name || 'Usuario'
+  const userInitial = userName.charAt(0).toUpperCase()
+
   return (
-    <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
+    <div className={`flex h-screen font-sans overflow-hidden transition-colors duration-200
+      ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
 
       {/* SIDEBAR */}
       <aside className={`
-        fixed md:static z-40 h-full
-        w-60 bg-white border-r border-slate-200 flex flex-col
-        transition-transform duration-300
+        fixed md:static z-40 h-full w-60 flex flex-col sidebar-transition
+        border-r transition-transform duration-300
+        ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {/* Logo */}
-        <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-100 flex-shrink-0">
+        <div className={`flex items-center gap-3 px-5 h-16 border-b flex-shrink-0
+          ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
           <div className="relative w-8 h-8 flex-shrink-0">
             <Image src="/images/logo.png" alt="Logo" fill className="object-contain" />
           </div>
-          <div>
-            <p className="font-black text-sm text-slate-800 leading-tight">Jugando Aprendo</p>
-            <p className="text-[10px] text-slate-400 font-medium">Panel Directora</p>
+          <div className="flex-1 min-w-0">
+            <p className={`font-black text-sm leading-tight truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+              Jugando Aprendo
+            </p>
+            <p className={`text-[10px] font-medium flex items-center gap-1
+              ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              <RoleIcon size={9} />
+              Panel {roleName}
+            </p>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="ml-auto md:hidden text-slate-400 hover:text-slate-600">
+          <button onClick={() => setSidebarOpen(false)}
+            className="ml-auto md:hidden text-slate-400 hover:text-slate-600">
             <X size={18} />
           </button>
         </div>
@@ -158,8 +206,11 @@ export default function AdminDashboard() {
             />
           ))}
 
-          <div className="pt-4 mt-2 border-t border-slate-100">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3 mb-2">Configuración</p>
+          <div className={`pt-4 mt-2 border-t ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-widest px-3 mb-2
+              ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+              Configuración
+            </p>
             {SECONDARY_NAV.map(item => (
               <SidebarLink
                 key={item.id}
@@ -168,29 +219,46 @@ export default function AdminDashboard() {
                 active={currentView === item.id}
                 onClick={() => navigateTo(item.id)}
                 small
+                badge={item.id === 'aprobaciones' ? pendingMessages : 0}
               />
             ))}
           </div>
         </nav>
 
         {/* User footer */}
-        <div className="p-3 border-t border-slate-100 flex-shrink-0">
-          <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 cursor-pointer" onClick={() => setShowProfileMenu(!showProfileMenu)}>
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0">D</div>
+        <div className={`p-3 border-t flex-shrink-0 ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+          <div
+            className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-colors
+              ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-50'}`}
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+          >
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+              {userInitial}
+            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-slate-700 truncate">Directora</p>
-              <p className="text-[10px] text-slate-400 truncate">{userEmail}</p>
+              <p className={`text-xs font-bold truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                {userName}
+              </p>
+              <p className={`text-[10px] truncate ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+                {userEmail}
+              </p>
             </div>
             <Settings size={14} className="text-slate-400 flex-shrink-0" />
           </div>
           {showProfileMenu && (
-            <div className="mt-1 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden">
-              <button onClick={() => { setShowChangePassword(true); setShowProfileMenu(false) }}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+            <div className={`mt-1 rounded-xl shadow-lg overflow-hidden border
+              ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}>
+              <button
+                onClick={() => { setShowChangePassword(true); setShowProfileMenu(false) }}
+                className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors
+                  ${isDark ? 'text-slate-300 hover:bg-[#21262d]' : 'text-slate-600 hover:bg-slate-50'}`}
+              >
                 <Key size={14} /> Cambiar contraseña
               </button>
-              <button onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
                 <LogOut size={14} /> Cerrar sesión
               </button>
             </div>
@@ -198,49 +266,87 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {sidebarOpen && <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
 
       {/* MAIN */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 flex-shrink-0">
+        <header className={`h-16 flex items-center justify-between px-4 md:px-6 flex-shrink-0 border-b
+          ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
           <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 hover:bg-slate-100 rounded-lg">
-              <LayoutDashboard size={18} className="text-slate-600" />
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className={`md:hidden p-2 rounded-lg transition-colors
+                ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}
+            >
+              <LayoutDashboard size={18} />
             </button>
             <div>
-              <h1 className="text-base font-black text-slate-800">{PAGE_TITLES[currentView] || 'Panel'}</h1>
-              <p className="text-xs text-slate-400 hidden sm:block">Jugando Aprendo · Gestión Integral</p>
+              <h1 className={`text-base font-black ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                {PAGE_TITLES[currentView] || 'Panel'}
+              </h1>
+              <p className={`text-xs hidden sm:block ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+                Jugando Aprendo · Gestión Integral
+              </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Analytics shortcut */}
             {currentView === 'reportes' && selectedChildReport && (
-              <button onClick={() => setShowAnalytics(true)}
-                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-bold text-xs shadow hover:shadow-md transition-all">
+              <button
+                onClick={() => setShowAnalytics(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg font-bold text-xs shadow hover:shadow-md transition-all"
+              >
                 <BarChart3 size={14} /> Analytics
               </button>
             )}
 
+            {/* Dark mode toggle */}
+            <ThemeToggleButton />
+
+            {/* Notifications */}
             <div className="relative">
-              <button onClick={() => { setShowNotifications(!showNotifications); setShowProfileMenu(false) }}
-                className="p-2 hover:bg-slate-100 rounded-lg relative">
-                <Bell size={18} className="text-slate-500" />
-                {notifications.length > 0 && (
+              <button
+                onClick={() => { setShowNotifications(!showNotifications); setShowProfileMenu(false) }}
+                className={`p-2 rounded-lg relative transition-colors
+                  ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+              >
+                <Bell size={18} />
+                {(notifications.length > 0 || pendingMessages > 0) && (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
                 )}
               </button>
               {showNotifications && (
-                <div className="absolute right-0 top-11 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 z-50">
+                <div className={`absolute right-0 top-11 w-72 rounded-2xl shadow-2xl border p-4 z-50 animate-scale-in
+                  ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-xs font-black text-slate-700 uppercase tracking-wider">Citas de hoy</p>
-                    <button onClick={() => setShowNotifications(false)}><X size={16} className="text-slate-400" /></button>
+                    <p className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                      Citas de hoy
+                    </p>
+                    <button onClick={() => setShowNotifications(false)}>
+                      <X size={16} className="text-slate-400" />
+                    </button>
                   </div>
+                  {pendingMessages > 0 && (
+                    <button
+                      onClick={() => { navigateTo('aprobaciones'); setShowNotifications(false) }}
+                      className="w-full flex items-center gap-2 p-2.5 mb-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-xs text-amber-700 dark:text-amber-400 font-semibold hover:bg-amber-100 transition-colors"
+                    >
+                      <ShieldCheck size={12} />
+                      {pendingMessages} mensaje(s) pendiente(s) de aprobación
+                    </button>
+                  )}
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {notifications.length > 0 ? notifications.map(n => (
-                      <div key={n.id} className="flex items-start gap-3 p-3 bg-blue-50 rounded-xl">
+                      <div key={n.id} className={`flex items-start gap-3 p-3 rounded-xl
+                        ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
                         <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-                        <p className="text-xs text-slate-700 font-medium">{n.detalle}</p>
+                        <p className={`text-xs font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                          {n.detalle}
+                        </p>
                       </div>
                     )) : (
                       <p className="text-xs text-slate-400 text-center py-4">Sin citas para hoy</p>
@@ -253,7 +359,8 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto bg-slate-50 p-4 md:p-6">
+        <div className={`flex-1 overflow-y-auto p-4 md:p-6 transition-colors
+          ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
           {currentView === 'inicio'       && <DashboardHome navigateTo={navigateTo} />}
           {currentView === 'agenda'       && <CalendarView />}
           {currentView === 'ninos'        && <PatientsView />}
@@ -268,24 +375,32 @@ export default function AdminDashboard() {
 
       {/* Change Password Modal */}
       {showChangePassword && (
-        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6">
+        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className={`rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-scale-in
+            ${isDark ? 'bg-[#161b22] border border-[#30363d]' : 'bg-white'}`}>
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-black text-slate-800">Cambiar Contraseña</h2>
-              <button onClick={() => setShowChangePassword(false)} className="p-1.5 hover:bg-slate-100 rounded-lg">
+              <h2 className={`text-lg font-black ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                Cambiar Contraseña
+              </h2>
+              <button onClick={() => setShowChangePassword(false)}
+                className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">
                 <X size={18} className="text-slate-400" />
               </button>
             </div>
             <div className="space-y-3">
               <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
                 placeholder="Nueva contraseña (mín. 6 caracteres)"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500
+                  ${isDark ? 'bg-[#21262d] border-[#30363d] text-slate-200 placeholder-slate-600'
+                    : 'bg-slate-50 border-slate-200 text-slate-800'}`} />
               <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
                 placeholder="Confirmar contraseña"
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+                className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500
+                  ${isDark ? 'bg-[#21262d] border-[#30363d] text-slate-200 placeholder-slate-600'
+                    : 'bg-slate-50 border-slate-200 text-slate-800'}`} />
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setShowChangePassword(false)}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition">
                   Cancelar
                 </button>
                 <button onClick={handleChangePassword} disabled={changingPassword}

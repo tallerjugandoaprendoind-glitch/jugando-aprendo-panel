@@ -2,15 +2,64 @@
 // TYPES GLOBALES - types/index.ts
 // ============================================================================
 
-export type UserRole = 'admin' | 'padre'
+// NUEVO SISTEMA DE ROLES:
+// 'jefe'        → Acceso total (super admin): usuarios, billing, config global
+// 'especialista' → Terapeuta/clinico: pacientes, evaluaciones, reportes, agenda
+// 'padre'       → Portal de padres: solo sus hijos, citas, recursos
+export type UserRole = 'jefe' | 'especialista' | 'padre'
+
+// Compatibilidad con role anterior 'admin' → se considera igual que 'jefe'
+export type UserRoleLegacy = UserRole | 'admin'
+
+export interface RoleConfig {
+  label: string
+  description: string
+  color: string
+  bgColor: string
+  textColor: string
+  borderColor: string
+  permissions: string[]
+}
+
+export const ROLE_CONFIG: Record<UserRole, RoleConfig> = {
+  jefe: {
+    label: 'Jefe',
+    description: 'Acceso total al sistema',
+    color: 'purple',
+    bgColor: 'bg-purple-100',
+    textColor: 'text-purple-700',
+    borderColor: 'border-purple-300',
+    permissions: ['all'],
+  },
+  especialista: {
+    label: 'Especialista',
+    description: 'Terapeuta / Clínico',
+    color: 'blue',
+    bgColor: 'bg-blue-100',
+    textColor: 'text-blue-700',
+    borderColor: 'border-blue-300',
+    permissions: ['patients', 'evaluations', 'reports', 'calendar', 'resources', 'ai'],
+  },
+  padre: {
+    label: 'Padre / Tutor',
+    description: 'Portal de familias',
+    color: 'emerald',
+    bgColor: 'bg-emerald-100',
+    textColor: 'text-emerald-700',
+    borderColor: 'border-emerald-300',
+    permissions: ['own_children', 'appointments', 'forms', 'resources', 'chat'],
+  },
+}
 
 export interface Profile {
   id: string
   email: string
   full_name: string
-  role: UserRole
+  role: UserRoleLegacy
   tokens: number
   phone?: string
+  specialty?: string
+  avatar_url?: string
   is_active: boolean
   created_at: string
   updated_at: string
@@ -139,14 +188,13 @@ export interface VideoModel {
   created_at: string
 }
 
-// Validación WISC-V
 export interface WISCVScores {
-  comprensionVerbal: number // 45-155
-  visualEspacial: number // 45-155
-  razonamientoFluido: number // 45-155
-  memoriaOperacion: number // 45-155
-  velocidadProcesamiento: number // 45-155
-  ciTotal: number // 40-160
+  comprensionVerbal: number
+  visualEspacial: number
+  razonamientoFluido: number
+  memoriaOperacion: number
+  velocidadProcesamiento: number
+  ciTotal: number
 }
 
 export const WISCV_RANGES = {
@@ -154,7 +202,6 @@ export const WISCV_RANGES = {
   ciTotal: { min: 40, max: 160 }
 }
 
-// Tipos para el formulario de anamnesis
 export interface AnamnesisSection {
   title: string
   questions: AnamnesisQuestion[]
@@ -169,7 +216,6 @@ export interface AnamnesisQuestion {
   required?: boolean
 }
 
-// API Response Types
 export interface ApiResponse<T = any> {
   data?: T
   error?: string
@@ -184,9 +230,10 @@ export interface PaginatedResponse<T> {
   totalPages: number
 }
 
-// Form State Types
 export interface FormState {
   isSubmitting: boolean
   errors: Record<string, string>
   touched: Record<string, boolean>
 }
+
+export type Theme = 'light' | 'dark'

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 
 import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './components/shared'
+import { ThemeToggleButton } from '@/components/ThemeContext'
 import AgendaView from './components/AgendaView'
 import HomeViewInnovative from './components/HomeView'
 import ResourcesView from './components/ResourcesView'
@@ -456,6 +457,7 @@ export default function ParentDashboard() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
+                    <ThemeToggleButton />
                     <button onClick={handleOpenNotifications} className="p-2 rounded-xl bg-blue-50 text-blue-600 relative hover:scale-110 active:scale-95 transition-transform">
                         <Bell size={18}/>
                         {unreadCount > 0 && (

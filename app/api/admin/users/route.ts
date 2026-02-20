@@ -30,19 +30,17 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Change user password or update profile
+// POST: Manage users
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { action, userId, newPassword, tokens, email } = body
+    const { action, userId, newPassword, tokens, email, role, specialty, full_name, is_active } = body
 
     if (action === 'change_password') {
       if (!userId || !newPassword || newPassword.length < 6) {
         return NextResponse.json({ error: 'Contraseña debe tener al menos 6 caracteres' }, { status: 400 })
       }
-      const { data, error } = await supabaseAdmin.auth.admin.updateUserById(userId, {
-        password: newPassword
-      })
+      const { error } = await supabaseAdmin.auth.admin.updateUserById(userId, { password: newPassword })
       if (error) throw error
       return NextResponse.json({ success: true, message: 'Contraseña actualizada correctamente' })
     }
@@ -54,6 +52,47 @@ export async function POST(request: NextRequest) {
         .eq('id', userId)
       if (error) throw error
       return NextResponse.json({ success: true })
+    }
+
+    if (action === 'update_role') {
+      const validRoles = ['jefe', 'especialista', 'padre', 'admin']
+      if (!validRoles.includes(role)) {
+        return NextResponse.json({ error: 'Rol no válido' }, { status: 400 })
+      }
+      const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ role })
+        .eq('id', userId)
+      if (error) throw error
+      return NextResponse.json({ success: true, message: `Rol actualizado a "${role}"` })
+    }
+
+    if (action === 'update_profile') {
+      const updates: Record<string, any> = {}
+      if (full_name !== undefined) updates.full_name = full_name
+      if (specialty !== undefined) updates.specialty = specialty
+      if (is_active !== undefined) updates.is_active = is_active
+      const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq('id', userId)
+      if (error) throw error
+      return NextResponse.json({ success: true })
+    }
+
+    if (action === 'toggle_active') {
+      const { data: current } = await supabaseAdmin
+        .from('profiles')
+        .select('is_active')
+        .eq('id', userId)
+        .single()
+      const newActive = !current?.is_active
+      const { error } = await supabaseAdmin
+        .from('profiles')
+        .update({ is_active: newActive })
+        .eq('id', userId)
+      if (error) throw error
+      return NextResponse.json({ success: true, is_active: newActive })
     }
 
     if (action === 'send_reset_email') {
@@ -71,6 +110,32 @@ export async function POST(request: NextRequest) {
       })
       if (error) throw error
       return NextResponse.json({ success: true })
+    }
+
+    if (action === 'create_user') {
+      if (!email || !newPassword || !role) {
+        return NextResponse.json({ error: 'Email, contraseña y rol son requeridos' }, { status: 400 })
+      }
+      const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: newPassword,
+        email_confirm: true,
+      })
+      if (createErr) throw createErr
+      // Create profile
+      const { error: profileErr } = await supabaseAdmin
+        .from('profiles')
+        .insert({
+          id: newUser.user.id,
+          email,
+          full_name: full_name || email.split('@')[0],
+          role,
+          tokens: 0,
+          is_active: true,
+          specialty: specialty || null,
+        })
+      if (profileErr) throw profileErr
+      return NextResponse.json({ success: true, message: 'Usuario creado exitosamente' })
     }
 
     return NextResponse.json({ error: 'Acción no reconocida' }, { status: 400 })
