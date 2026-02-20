@@ -23,6 +23,7 @@ import EvaluacionesUnificadas from './components/EvaluacionesUnificadas'
 import ResourcesManagementView from './components/ResourcesManagementView'
 import MensajesPendientesPanel from './components/MensajesPendientesPanel'
 import AIReportView from './components/AIReportView'
+import AprobacionesEspecialista from './components/AprobacionesEspecialista'
 
 const NAV_ITEMS = [
   { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
@@ -120,11 +121,15 @@ export default function AdminDashboard() {
 
   const fetchPendingCount = async () => {
     try {
-      const { count } = await supabase
-        .from('parent_message_appro')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending')
-      setPendingMessages(count || 0)
+      const [msgRes, subRes] = await Promise.all([
+        supabase.from('parent_message_approvals')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending_approval'),
+        supabase.from('specialist_submissions')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending_approval'),
+      ])
+      setPendingMessages((msgRes.count || 0) + (subRes.count || 0))
     } catch { setPendingMessages(0) }
   }
 
@@ -372,7 +377,14 @@ export default function AdminDashboard() {
               {currentView === 'evaluaciones' && <EvaluacionesUnificadas />}
               {currentView === 'reportes'     && <AIReportView onChildSelect={setSelectedChildReport} />}
               {currentView === 'recursos'     && <ResourcesManagementView />}
-              {currentView === 'aprobaciones' && <MensajesPendientesPanel />}
+              {currentView === 'aprobaciones' && (
+                <div className="space-y-10">
+                  <MensajesPendientesPanel />
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} className="pt-8">
+                    <AprobacionesEspecialista />
+                  </div>
+                </div>
+              )}
               {currentView === 'importar'     && <ExcelImportView />}
             </div>
           )}

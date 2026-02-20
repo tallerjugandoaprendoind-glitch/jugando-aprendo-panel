@@ -14,11 +14,13 @@ import MisPacientes from './components/MisPacientes'
 import MisEvaluaciones from './components/MisEvaluaciones'
 import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
+import MisFormularios from './components/MisFormularios'
 
 const NAV_ITEMS = [
   { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio',       color: '#06b6d4' },
   { id: 'pacientes',    icon: Users,           label: 'Pacientes',    color: '#8b5cf6' },
-  { id: 'evaluaciones', icon: FileText,        label: 'Evaluaciones', color: '#f59e0b' },
+  { id: 'formularios',  icon: FileText,        label: 'Formularios',  color: '#f59e0b' },
+  { id: 'evaluaciones', icon: Activity,        label: 'Evaluaciones', color: '#ec4899' },
   { id: 'agenda',       icon: Calendar,        label: 'Mi Agenda',    color: '#10b981' },
   { id: 'perfil',       icon: User,            label: 'Mi Perfil',    color: '#f472b6' },
 ]
@@ -58,6 +60,7 @@ export default function EspecialistaDashboard() {
     switch (activeView) {
       case 'inicio':       return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
       case 'pacientes':    return <MisPacientes />
+      case 'formularios':  return <MisFormularios userId={profile.id} />
       case 'evaluaciones': return <MisEvaluaciones userId={profile.id} />
       case 'agenda':       return <MiAgenda />
       case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} />
