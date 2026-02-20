@@ -122,7 +122,7 @@ export default function MisPacientes() {
                   style={{ borderBottom: idx < historial.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
                   className="px-5 py-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <div style={{ background: '#06b6d420' }} className="w-1.5 h-1.5 rounded-full" style2={{ background: '#06b6d4' }} />
+                    <div style={{ background: '#06b6d4' }} className="w-1.5 h-1.5 rounded-full" />
                     <span style={{ background: '#06b6d4' }} className="w-1.5 h-1.5 rounded-full inline-block" />
                     <p style={{ color: '#475569' }} className="text-xs font-bold">
                       {new Date(h.fecha_sesion).toLocaleDateString('es-MX', { dateStyle: 'long' })}
