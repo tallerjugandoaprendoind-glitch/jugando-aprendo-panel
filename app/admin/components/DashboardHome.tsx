@@ -94,7 +94,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
       supabase.from('children').select('*', { count: 'exact', head: true }),
       supabase.from('appointments').select('*').eq('appointment_date', hoy),
       supabase.from('profiles').select('tokens').gt('tokens', 0),
-      supabase.from('registro_aba').select('*').gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).not('datos->mensaje_padres', 'is', null),
+      supabase.from('registro_aba').select('*').gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(50),
       supabase.from('appointments').select('*, children(name)').gte('appointment_date', hoy).order('appointment_date').order('appointment_time').limit(5),
       supabase.from('registro_aba').select('*, children(name)').order('created_at', { ascending: false }).limit(5),
     ])

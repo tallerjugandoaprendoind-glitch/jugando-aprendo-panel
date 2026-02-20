@@ -1,7 +1,6 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
 import type { Theme } from '@/types'
 
 interface ThemeContextValue {
@@ -18,28 +17,24 @@ const ThemeContext = createContext<ThemeContextValue>({
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('light')
-  const pathname = usePathname()
-  
-  // El dark mode NO aplica en login ni en la raíz
-  const isLoginPage = pathname === '/login' || pathname === '/'
 
   useEffect(() => {
     const stored = localStorage.getItem('app-theme') as Theme | null
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     const initial = stored || (prefersDark ? 'dark' : 'light')
     setTheme(initial)
-    // Solo aplica dark class si no estamos en login
+    // Solo aplica dark en rutas admin/padre, no en login
+    const isLoginPage = window.location.pathname === '/login' || window.location.pathname === '/'
     if (!isLoginPage) {
       document.documentElement.classList.toggle('dark', initial === 'dark')
-    } else {
-      document.documentElement.classList.remove('dark')
     }
-  }, [isLoginPage])
+  }, [])
 
   const toggleTheme = () => {
     setTheme(prev => {
       const next = prev === 'light' ? 'dark' : 'light'
       localStorage.setItem('app-theme', next)
+      const isLoginPage = window.location.pathname === '/login' || window.location.pathname === '/'
       if (!isLoginPage) {
         document.documentElement.classList.toggle('dark', next === 'dark')
       }
@@ -48,7 +43,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, isDark: theme === 'dark' && !isLoginPage }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, isDark: theme === 'dark' }}>
       {children}
     </ThemeContext.Provider>
   )

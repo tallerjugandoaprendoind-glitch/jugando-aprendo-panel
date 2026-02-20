@@ -119,11 +119,13 @@ export default function AdminDashboard() {
   }
 
   const fetchPendingCount = async () => {
-    const { count } = await supabase
-      .from('parent_messages')
-      .select('*', { count: 'exact', head: true })
-      .eq('status', 'pending')
-    setPendingMessages(count || 0)
+    try {
+      const { count } = await supabase
+        .from('parent_message_appro')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+      setPendingMessages(count || 0)
+    } catch { setPendingMessages(0) }
   }
 
   const handleLogout = async () => {
