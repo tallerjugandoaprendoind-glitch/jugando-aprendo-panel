@@ -3,10 +3,11 @@
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import {
   LayoutDashboard, Users, LogOut, Calendar, FileText,
-  User, Loader2, Menu, X, Stethoscope, ChevronRight, Shield,
-  Activity, Home
+  User, Loader2, Menu, X, Stethoscope, Activity,
+  Shield, Settings, Key, ChevronRight
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import EspecialistaHome from './components/EspecialistaHome'
@@ -17,13 +18,29 @@ import MiPerfil from './components/MiPerfil'
 import MisFormularios from './components/MisFormularios'
 
 const NAV_ITEMS = [
-  { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio',       color: '#06b6d4' },
-  { id: 'pacientes',    icon: Users,           label: 'Pacientes',    color: '#8b5cf6' },
-  { id: 'formularios',  icon: FileText,        label: 'Formularios',  color: '#f59e0b' },
-  { id: 'evaluaciones', icon: Activity,        label: 'Evaluaciones', color: '#ec4899' },
-  { id: 'agenda',       icon: Calendar,        label: 'Mi Agenda',    color: '#10b981' },
-  { id: 'perfil',       icon: User,            label: 'Mi Perfil',    color: '#f472b6' },
+  { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
+  { id: 'pacientes',    icon: Users,           label: 'Pacientes' },
+  { id: 'formularios',  icon: FileText,        label: 'Formularios' },
+  { id: 'evaluaciones', icon: Activity,        label: 'Evaluaciones' },
+  { id: 'agenda',       icon: Calendar,        label: 'Mi Agenda' },
+  { id: 'perfil',       icon: User,            label: 'Mi Perfil' },
 ]
+
+function SidebarLink({ icon: Icon, label, active, onClick }: any) {
+  return (
+    <button
+      onClick={onClick}
+      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group text-left text-sm
+        ${active
+          ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+          : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+        }`}
+    >
+      <Icon size={18} className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
+      <span className="font-semibold truncate flex-1">{label}</span>
+    </button>
+  )
+}
 
 export default function EspecialistaDashboard() {
   const router = useRouter()
@@ -32,6 +49,11 @@ export default function EspecialistaDashboard() {
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
 
   const loadProfile = async () => {
     try {
@@ -55,6 +77,19 @@ export default function EspecialistaDashboard() {
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) { toast.warning('Mínimo 6 caracteres'); return }
+    if (newPassword !== confirmPassword) { toast.error('Las contraseñas no coinciden'); return }
+    setChangingPassword(true)
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword })
+      if (error) throw error
+      toast.success('Contraseña actualizada')
+      setShowChangePassword(false)
+    } catch (e: any) { toast.error(e.message) }
+    finally { setChangingPassword(false) }
+  }
+
   const renderView = () => {
     if (!profile) return null
     switch (activeView) {
@@ -68,256 +103,205 @@ export default function EspecialistaDashboard() {
     }
   }
 
+  const PAGE_TITLES: Record<string, string> = {
+    inicio: 'Panel Principal', pacientes: 'Mis Pacientes',
+    formularios: 'Formularios Clínicos', evaluaciones: 'Mis Evaluaciones',
+    agenda: 'Mi Agenda', perfil: 'Mi Perfil',
+  }
+
   if (loading) return (
-    <div style={{ background: '#060d1a' }} className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)' }} className="w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-xl">
           <Stethoscope size={28} className="text-white" />
         </div>
-        <div className="flex gap-1.5">
-          {[0,1,2].map(i => (
-            <div key={i} style={{ animationDelay: `${i * 0.15}s`, background: '#06b6d4' }}
-              className="w-2 h-2 rounded-full animate-bounce" />
-          ))}
-        </div>
-        <p style={{ color: '#94a3b8' }} className="text-sm font-medium tracking-wide">Cargando tu espacio clínico...</p>
+        <Loader2 size={20} className="animate-spin text-blue-600" />
+        <p className="text-sm font-medium text-slate-500">Cargando panel clínico...</p>
       </div>
     </div>
   )
 
-  const activeItem = NAV_ITEMS.find(n => n.id === activeView)
+  const userName = profile?.full_name || 'Especialista'
+  const userInitial = userName.charAt(0).toUpperCase()
 
   return (
-    <div style={{ background: '#060d1a', minHeight: '100vh' }} className="flex">
+    <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
 
       {/* ── SIDEBAR DESKTOP ── */}
-      <aside
-        style={{
-          background: 'linear-gradient(180deg, #0b1628 0%, #0d1f35 60%, #091525 100%)',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
-        }}
-        className="hidden lg:flex flex-col w-64 fixed top-0 left-0 h-full z-30"
-      >
-        {/* Brand */}
-        <div className="px-6 pt-8 pb-6">
-          <div className="flex items-center gap-3 mb-1">
-            <div style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%)' }}
-              className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
-              <Stethoscope size={20} className="text-white" />
-            </div>
-            <div>
-              <p style={{ color: '#f1f5f9', fontFamily: 'system-ui', letterSpacing: '-0.02em' }}
-                className="font-black text-sm leading-tight">NeuroCare</p>
-              <p style={{ color: '#475569' }} className="text-xs font-medium">Panel Clínico</p>
-            </div>
+      <aside className={`
+        fixed md:static z-40 h-full w-60 flex flex-col
+        bg-white border-r border-slate-200
+        transition-transform duration-300
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+      `}>
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-5 h-16 border-b border-slate-100 flex-shrink-0">
+          <div className="relative w-8 h-8 flex-shrink-0">
+            <Image src="/images/logo.png" alt="Logo" fill className="object-contain" />
           </div>
-        </div>
-
-        {/* Avatar section */}
-        <div className="px-4 mb-6">
-          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-            className="rounded-2xl p-4 flex items-center gap-3">
-            <div className="relative flex-shrink-0">
-              <div style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)' }}
-                className="w-11 h-11 rounded-full flex items-center justify-center text-white font-black text-lg shadow-lg">
-                {profile?.full_name?.[0]?.toUpperCase() || 'E'}
-              </div>
-              <div style={{ background: '#10b981', border: '2px solid #0b1628' }}
-                className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full" />
-            </div>
-            <div className="min-w-0">
-              <p style={{ color: '#e2e8f0' }} className="text-sm font-bold truncate">{profile?.full_name?.split(' ')[0]}</p>
-              <p style={{ color: '#64748b' }} className="text-xs truncate">{profile?.specialty || 'Especialista Clínico'}</p>
-            </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-black text-sm leading-tight truncate text-slate-800">Jugando Aprendo</p>
+            <p className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
+              <Stethoscope size={9} /> Panel Clínico
+            </p>
           </div>
+          <button onClick={() => setSidebarOpen(false)} className="ml-auto md:hidden text-slate-400 hover:text-slate-600">
+            <X size={18} />
+          </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 space-y-1">
-          {NAV_ITEMS.map(item => {
-            const isActive = activeView === item.id
-            return (
-              <button key={item.id} onClick={() => setActiveView(item.id)}
-                style={{
-                  background: isActive ? `${item.color}18` : 'transparent',
-                  border: isActive ? `1px solid ${item.color}35` : '1px solid transparent',
-                }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group text-left">
-                <div style={{
-                  background: isActive ? item.color : 'rgba(255,255,255,0.06)',
-                  color: isActive ? '#fff' : '#64748b',
-                }}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-all duration-200 group-hover:opacity-90">
-                  <item.icon size={16} />
-                </div>
-                <span style={{ color: isActive ? '#f1f5f9' : '#94a3b8' }}
-                  className="text-sm font-semibold transition-colors duration-200 group-hover:text-slate-200">
-                  {item.label}
-                </span>
-                {isActive && (
-                  <div style={{ background: item.color }} className="ml-auto w-1.5 h-1.5 rounded-full" />
-                )}
-              </button>
-            )
-          })}
+        <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
+          {NAV_ITEMS.map(item => (
+            <SidebarLink
+              key={item.id}
+              icon={item.icon}
+              label={item.label}
+              active={activeView === item.id}
+              onClick={() => { setActiveView(item.id); setSidebarOpen(false) }}
+            />
+          ))}
         </nav>
 
-        {/* Footer */}
-        <div className="px-3 pb-6 pt-4 space-y-2">
-          <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}
-            className="flex items-center gap-2.5 px-4 py-3 rounded-xl">
-            <Shield size={13} style={{ color: '#10b981' }} className="flex-shrink-0" />
-            <div className="min-w-0">
-              <p style={{ color: '#10b981' }} className="text-xs font-bold truncate">Sesión activa</p>
-              <p style={{ color: '#059669' }} className="text-xs truncate">Rol: Especialista</p>
+        {/* User footer */}
+        <div className="p-3 border-t border-slate-100 flex-shrink-0">
+          <div
+            className="flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors"
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+          >
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+              {userInitial}
             </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold truncate text-slate-700">{userName}</p>
+              <p className="text-[10px] truncate text-slate-400">{profile?.specialty || 'Especialista Clínico'}</p>
+            </div>
+            <Settings size={14} className="text-slate-400 flex-shrink-0" />
           </div>
-          <button onClick={handleLogout}
-            style={{ color: '#ef4444' }}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 transition-colors text-sm font-semibold group">
-            <LogOut size={16} className="flex-shrink-0 group-hover:translate-x-0.5 transition-transform" />
-            Cerrar sesión
-          </button>
+          {showProfileMenu && (
+            <div className="mt-1 bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+              <button
+                onClick={() => { setShowChangePassword(true); setShowProfileMenu(false) }}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+              >
+                <Key size={14} /> Cambiar contraseña
+              </button>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
+              >
+                <LogOut size={14} /> Cerrar sesión
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
-      {/* ── SIDEBAR MOBILE OVERLAY ── */}
+      {/* Mobile sidebar overlay */}
       {sidebarOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div style={{ background: 'rgba(0,0,0,0.7)' }} className="absolute inset-0 backdrop-blur-sm"
-            onClick={() => setSidebarOpen(false)} />
-          <div style={{ background: 'linear-gradient(180deg, #0b1628 0%, #0d1f35 60%, #091525 100%)', width: 280 }}
-            className="absolute left-0 top-0 h-full flex flex-col shadow-2xl">
-            <button onClick={() => setSidebarOpen(false)}
-              style={{ color: '#64748b', background: 'rgba(255,255,255,0.05)' }}
-              className="absolute top-4 right-4 p-2 rounded-lg">
-              <X size={18} />
-            </button>
-            {/* Same sidebar content */}
-            <div className="px-6 pt-8 pb-6">
-              <div className="flex items-center gap-3">
-                <div style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%)' }}
-                  className="w-10 h-10 rounded-xl flex items-center justify-center">
-                  <Stethoscope size={20} className="text-white" />
-                </div>
-                <p style={{ color: '#f1f5f9' }} className="font-black text-sm">NeuroCare</p>
-              </div>
-            </div>
-            <div className="px-4 mb-5">
-              <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                className="rounded-2xl p-4 flex items-center gap-3">
-                <div style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)' }}
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-white font-black">
-                  {profile?.full_name?.[0]?.toUpperCase() || 'E'}
-                </div>
-                <div>
-                  <p style={{ color: '#e2e8f0' }} className="text-sm font-bold">{profile?.full_name?.split(' ')[0]}</p>
-                  <p style={{ color: '#64748b' }} className="text-xs">{profile?.specialty || 'Especialista'}</p>
-                </div>
-              </div>
-            </div>
-            <nav className="flex-1 px-3 space-y-1">
-              {NAV_ITEMS.map(item => {
-                const isActive = activeView === item.id
-                return (
-                  <button key={item.id} onClick={() => { setActiveView(item.id); setSidebarOpen(false) }}
-                    style={{ background: isActive ? `${item.color}18` : 'transparent', border: isActive ? `1px solid ${item.color}35` : '1px solid transparent' }}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all">
-                    <div style={{ background: isActive ? item.color : 'rgba(255,255,255,0.06)', color: isActive ? '#fff' : '#64748b' }}
-                      className="w-8 h-8 rounded-lg flex items-center justify-center">
-                      <item.icon size={16} />
-                    </div>
-                    <span style={{ color: isActive ? '#f1f5f9' : '#94a3b8' }} className="text-sm font-semibold">{item.label}</span>
-                  </button>
-                )
-              })}
-            </nav>
-            <div className="px-3 pb-8 pt-3">
-              <button onClick={handleLogout} style={{ color: '#ef4444' }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-red-500/10 transition-colors text-sm font-semibold">
-                <LogOut size={16} /> Cerrar sesión
-              </button>
-            </div>
-          </div>
-        </div>
+        <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* ── MAIN CONTENT ── */}
-      <main className="flex-1 lg:ml-64 flex flex-col min-h-screen">
-
+      {/* ── MAIN ── */}
+      <main className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header style={{
-          background: 'rgba(6,13,26,0.8)',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          backdropFilter: 'blur(20px)',
-        }} className="sticky top-0 z-20 px-4 lg:px-8 py-4 flex items-center gap-4">
-          <button onClick={() => setSidebarOpen(true)} style={{ color: '#64748b', background: 'rgba(255,255,255,0.05)' }}
-            className="lg:hidden p-2 rounded-xl transition-colors hover:bg-white/10">
-            <Menu size={20} />
-          </button>
-
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
-              {activeItem && (
-                <div style={{ background: `${activeItem.color}20`, color: activeItem.color }}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center">
-                  <activeItem.icon size={14} />
-                </div>
-              )}
-              <h1 style={{ color: '#f1f5f9', letterSpacing: '-0.02em' }}
-                className="font-black text-lg">{activeItem?.label || 'Panel'}</h1>
+        <header className="h-16 flex items-center justify-between px-4 md:px-6 flex-shrink-0 border-b bg-white border-slate-200">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="md:hidden p-2 rounded-lg hover:bg-slate-100 text-slate-600"
+            >
+              <Menu size={18} />
+            </button>
+            <div>
+              <h1 className="text-base font-black text-slate-800">
+                {PAGE_TITLES[activeView] || 'Panel'}
+              </h1>
+              <p className="text-xs hidden sm:block text-slate-400">
+                Jugando Aprendo · Panel Especialista
+              </p>
             </div>
-            <p style={{ color: '#334155' }} className="text-xs font-medium hidden sm:block">
-              {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
           </div>
 
-          {/* Avatar */}
-          <button onClick={() => setActiveView('perfil')}
-            className="flex items-center gap-2.5 group">
-            <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl">
-              <p style={{ color: '#94a3b8' }} className="text-xs font-medium">{profile?.full_name?.split(' ')[0]}</p>
-            </div>
-            <div style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)' }}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-lg group-hover:scale-105 transition-transform">
-              {profile?.full_name?.[0]?.toUpperCase() || 'E'}
-            </div>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveView('perfil')}
+              className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition-colors"
+            >
+              <span className="text-xs font-medium text-slate-500 hidden sm:block">{userName.split(' ')[0]}</span>
+              <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-sm font-black shadow">
+                {userInitial}
+              </div>
+            </button>
+          </div>
         </header>
 
-        {/* Page content */}
-        <div className="flex-1 p-4 lg:p-8">
-          <div className="max-w-5xl mx-auto">
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50">
+          <div className="max-w-5xl mx-auto pb-20 md:pb-6">
             {renderView()}
           </div>
         </div>
       </main>
 
       {/* ── MOBILE BOTTOM NAV ── */}
-      <nav style={{
-        background: '#0b1628',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-      }} className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-1 py-2">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center bg-white border-t border-slate-200 px-1 py-1">
         {NAV_ITEMS.map(item => {
           const isActive = activeView === item.id
           return (
             <button key={item.id} onClick={() => setActiveView(item.id)}
-              className="flex flex-col items-center gap-1 py-1 rounded-xl transition-all flex-1 min-w-0">
-              <div style={{
-                color: isActive ? item.color : '#475569',
-                background: isActive ? `${item.color}18` : 'transparent',
-              }} className="w-10 h-7 rounded-lg flex items-center justify-center transition-all">
-                <item.icon size={18} />
+              className="flex flex-col items-center gap-0.5 py-2 flex-1 min-w-0 transition-all">
+              <div className={`w-9 h-7 rounded-lg flex items-center justify-center transition-all
+                ${isActive ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>
+                <item.icon size={17} />
               </div>
-              <span style={{ color: isActive ? item.color : '#475569', fontSize: 9 }}
-                className="font-bold transition-colors truncate w-full text-center px-0.5">
+              <span className={`font-bold transition-colors truncate w-full text-center px-0.5
+                ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
+                style={{ fontSize: 9 }}>
                 {item.label.replace('Mi ', '').replace('Mis ', '')}
               </span>
             </button>
           )
         })}
       </nav>
+
+      {/* Change Password Modal */}
+      {showChangePassword && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-200">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-black text-slate-800">Cambiar Contraseña</h3>
+              <button onClick={() => setShowChangePassword(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <input
+                type="password"
+                placeholder="Nueva contraseña"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <input
+                type="password"
+                placeholder="Confirmar contraseña"
+                value={confirmPassword}
+                onChange={e => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                onClick={handleChangePassword}
+                disabled={changingPassword}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+              >
+                {changingPassword ? <Loader2 size={16} className="animate-spin" /> : null}
+                {changingPassword ? 'Actualizando...' : 'Actualizar Contraseña'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

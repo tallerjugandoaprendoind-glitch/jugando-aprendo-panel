@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import {
   FileText, Clock, CheckCircle2, XCircle, Calendar, Baby,
-  TrendingUp, AlertTriangle, ChevronRight, Activity, Sparkles, ArrowUpRight
+  AlertTriangle, ChevronRight, Activity, Sparkles, ArrowUpRight
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -42,7 +42,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           .select('*, children(name)')
           .eq('specialist_id', userId)
           .order('created_at', { ascending: false })
-          .limit(4)
+          .limit(5)
         setRecientes(rec || [])
       } finally { setLoading(false) }
     }
@@ -53,48 +53,37 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
   const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches'
 
   const STAT_CARDS = [
-    { label: 'Pacientes', value: stats.totalPacientes, accent: '#8b5cf6', glow: '#8b5cf620', view: 'pacientes', icon: Baby, trend: 'Total activos' },
-    { label: 'Citas próximas', value: stats.citasProximas, accent: '#10b981', glow: '#10b98120', view: 'agenda', icon: Calendar, trend: 'Próximas sesiones' },
-    { label: 'En revisión', value: stats.pendientes, accent: '#f59e0b', glow: '#f59e0b20', view: 'evaluaciones', icon: Clock, trend: 'Esperando al jefe' },
-    { label: 'Aprobadas', value: stats.aprobadas, accent: '#06b6d4', glow: '#06b6d420', view: 'evaluaciones', icon: CheckCircle2, trend: 'Confirmadas' },
+    { label: 'Pacientes', value: stats.totalPacientes, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', view: 'pacientes', icon: Baby, sub: 'Total activos' },
+    { label: 'Citas próximas', value: stats.citasProximas, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', view: 'agenda', icon: Calendar, sub: 'Próximas sesiones' },
+    { label: 'En revisión', value: stats.pendientes, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', view: 'evaluaciones', icon: Clock, sub: 'Esperando al jefe' },
+    { label: 'Aprobadas', value: stats.aprobadas, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', view: 'evaluaciones', icon: CheckCircle2, sub: 'Confirmadas' },
   ]
 
-  const STATUS_CFG: Record<string, { label: string; color: string; dot: string }> = {
-    pending_approval: { label: 'En revisión', color: '#f59e0b', dot: '#f59e0b' },
-    approved:         { label: 'Aprobado',    color: '#10b981', dot: '#10b981' },
-    rejected:         { label: 'Rechazado',   color: '#ef4444', dot: '#ef4444' },
+  const STATUS_CFG: Record<string, { label: string; color: string; bg: string }> = {
+    pending_approval: { label: 'En revisión', color: 'text-amber-700', bg: 'bg-amber-50 border border-amber-200' },
+    approved:         { label: 'Aprobado',    color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-200' },
+    rejected:         { label: 'Rechazado',   color: 'text-red-700', bg: 'bg-red-50 border border-red-200' },
   }
 
   return (
-    <div className="space-y-6 pb-24 lg:pb-6">
-
-      {/* ── HERO SALUDO ── */}
-      <div style={{
-        background: 'linear-gradient(135deg, #0d1f35 0%, #141f35 50%, #0d2235 100%)',
-        border: '1px solid rgba(6,182,212,0.15)',
-      }} className="relative rounded-3xl p-7 overflow-hidden">
-        {/* Decorative blobs */}
-        <div style={{ background: '#06b6d4', filter: 'blur(60px)', opacity: 0.12 }}
-          className="absolute -top-8 -right-8 w-48 h-48 rounded-full pointer-events-none" />
-        <div style={{ background: '#8b5cf6', filter: 'blur(80px)', opacity: 0.08 }}
-          className="absolute -bottom-12 -left-12 w-56 h-56 rounded-full pointer-events-none" />
-
+    <div className="space-y-6">
+      {/* Hero saludo */}
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-7 text-white relative overflow-hidden shadow-lg shadow-blue-200">
+        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-12 translate-x-12" />
+        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-10 -translate-x-8" />
         <div className="relative">
-          <p style={{ color: '#06b6d4' }} className="text-sm font-bold tracking-widest uppercase mb-1">{saludo}</p>
-          <h2 style={{ color: '#f1f5f9', letterSpacing: '-0.03em' }}
-            className="text-3xl font-black mb-1">
+          <p className="text-blue-200 text-sm font-bold uppercase tracking-widest mb-1">{saludo}</p>
+          <h2 className="text-3xl font-black mb-1 tracking-tight">
             {profile?.full_name?.split(' ')[0] || 'Especialista'}
           </h2>
-          <p style={{ color: '#475569' }} className="text-sm font-medium">
+          <p className="text-blue-200 text-sm font-medium">
             {profile?.specialty || 'Especialista Clínico'} · {new Date().toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
 
-          {/* Alertas inline */}
           <div className="mt-5 flex flex-wrap gap-3">
             {stats.citasHoy > 0 && (
               <button onClick={() => setActiveView('agenda')}
-                style={{ background: '#10b98115', border: '1px solid #10b98130', color: '#34d399' }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold hover:brightness-110 transition-all">
+                className="flex items-center gap-2 px-4 py-2 bg-white/15 hover:bg-white/25 rounded-xl text-sm font-semibold transition-all border border-white/20">
                 <Calendar size={14} />
                 {stats.citasHoy} cita{stats.citasHoy !== 1 ? 's' : ''} hoy
                 <ArrowUpRight size={13} />
@@ -102,16 +91,14 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             )}
             {stats.pendientes > 0 && (
               <button onClick={() => setActiveView('evaluaciones')}
-                style={{ background: '#f59e0b15', border: '1px solid #f59e0b30', color: '#fbbf24' }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold hover:brightness-110 transition-all">
+                className="flex items-center gap-2 px-4 py-2 bg-amber-400/20 hover:bg-amber-400/30 rounded-xl text-sm font-semibold text-amber-100 transition-all border border-amber-400/30">
                 <Clock size={14} />
                 {stats.pendientes} pendiente{stats.pendientes !== 1 ? 's' : ''} de aprobación
                 <ArrowUpRight size={13} />
               </button>
             )}
             {stats.citasHoy === 0 && stats.pendientes === 0 && (
-              <div style={{ background: '#06b6d415', border: '1px solid #06b6d430', color: '#67e8f9' }}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/15 rounded-xl text-sm font-semibold border border-white/20">
                 <Sparkles size={14} /> Todo al día ✓
               </div>
             )}
@@ -119,57 +106,46 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
         </div>
       </div>
 
-      {/* ── STAT CARDS ── */}
+      {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {STAT_CARDS.map((card) => (
+        {STAT_CARDS.map(card => (
           <button key={card.label} onClick={() => setActiveView(card.view)}
-            style={{ background: '#0d1a2d', border: `1px solid ${card.accent}25` }}
-            className="rounded-2xl p-5 text-left group hover:scale-[1.02] transition-all duration-200 hover:shadow-2xl relative overflow-hidden">
-            <div style={{ background: card.accent, filter: 'blur(40px)', opacity: 0.12 }}
-              className="absolute -bottom-4 -right-4 w-20 h-20 rounded-full pointer-events-none" />
-            <div style={{ background: `${card.accent}20`, color: card.accent }}
-              className="w-9 h-9 rounded-xl flex items-center justify-center mb-4">
-              <card.icon size={18} />
+            className={`bg-white rounded-2xl p-5 text-left group hover:shadow-md transition-all duration-200 border ${card.border} hover:scale-[1.02]`}>
+            <div className={`${card.bg} w-9 h-9 rounded-xl flex items-center justify-center mb-4`}>
+              <card.icon size={18} className={card.color} />
             </div>
-            <p style={{ color: '#f1f5f9', letterSpacing: '-0.03em' }}
-              className="text-4xl font-black mb-1 tabular-nums">
+            <p className="text-3xl font-black text-slate-800 mb-1 tabular-nums">
               {loading ? '—' : card.value}
             </p>
-            <p style={{ color: card.accent }} className="text-xs font-bold mb-0.5">{card.label}</p>
-            <p style={{ color: '#334155' }} className="text-xs">{card.trend}</p>
+            <p className={`text-xs font-bold mb-0.5 ${card.color}`}>{card.label}</p>
+            <p className="text-xs text-slate-400">{card.sub}</p>
           </button>
         ))}
       </div>
 
-      {/* ── ACTIVIDAD RECIENTE ── */}
-      <div style={{ background: '#0d1a2d', border: '1px solid rgba(255,255,255,0.06)' }}
-        className="rounded-2xl overflow-hidden">
-        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
-          className="px-6 py-4 flex items-center justify-between">
+      {/* Actividad reciente */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100">
           <div className="flex items-center gap-2">
-            <div style={{ background: '#06b6d420', color: '#06b6d4' }}
-              className="w-7 h-7 rounded-lg flex items-center justify-center">
-              <Activity size={14} />
+            <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
+              <Activity size={14} className="text-blue-600" />
             </div>
-            <h3 style={{ color: '#e2e8f0' }} className="font-bold text-sm">Actividad Reciente</h3>
+            <h3 className="font-bold text-slate-800 text-sm">Actividad Reciente</h3>
           </div>
           <button onClick={() => setActiveView('evaluaciones')}
-            style={{ color: '#06b6d4' }}
-            className="text-xs font-bold flex items-center gap-1 hover:brightness-125 transition-all">
+            className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline">
             Ver todo <ChevronRight size={13} />
           </button>
         </div>
 
         {recientes.length === 0 ? (
-          <div className="py-16 text-center">
-            <div style={{ background: 'rgba(255,255,255,0.04)' }}
-              className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <FileText size={24} style={{ color: '#334155' }} />
+          <div className="py-14 text-center">
+            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <FileText size={22} className="text-slate-400" />
             </div>
-            <p style={{ color: '#475569' }} className="text-sm font-semibold">Sin actividad reciente</p>
+            <p className="text-slate-400 text-sm font-semibold">Sin actividad reciente</p>
             <button onClick={() => setActiveView('evaluaciones')}
-              style={{ color: '#06b6d4' }}
-              className="mt-3 text-xs font-bold hover:underline">
+              className="mt-2 text-xs font-bold text-blue-600 hover:underline">
               Crear primera evaluación →
             </button>
           </div>
@@ -179,20 +155,17 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               const cfg = STATUS_CFG[r.status] || STATUS_CFG.pending_approval
               return (
                 <div key={r.id}
-                  style={{ borderBottom: idx < recientes.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
-                  className="px-6 py-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
-                  <div style={{ background: `${cfg.dot}20` }}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <FileText size={15} style={{ color: cfg.dot }} />
+                  className={`px-6 py-4 flex items-center gap-4 hover:bg-slate-50 transition-colors ${idx < recientes.length - 1 ? 'border-b border-slate-50' : ''}`}>
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
+                    <FileText size={14} className={cfg.color} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p style={{ color: '#e2e8f0' }} className="text-sm font-semibold truncate">{r.titulo}</p>
-                    <p style={{ color: '#475569' }} className="text-xs">{r.children?.name} · {new Date(r.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</p>
+                    <p className="text-sm font-semibold text-slate-800 truncate">{r.titulo}</p>
+                    <p className="text-xs text-slate-400">{r.children?.name} · {new Date(r.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}</p>
                   </div>
-                  <div style={{ background: `${cfg.dot}18`, color: cfg.color }}
-                    className="flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full">
+                  <span className={`flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.color}`}>
                     {cfg.label}
-                  </div>
+                  </span>
                 </div>
               )
             })}
@@ -200,16 +173,14 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
         )}
       </div>
 
-      {/* ── FLUJO INFO ── */}
-      <div style={{ background: 'linear-gradient(135deg, #0d1a2d, #111827)', border: '1px solid rgba(251,191,36,0.15)' }}
-        className="rounded-2xl p-5 flex gap-4">
-        <div style={{ background: '#f59e0b20', color: '#f59e0b' }}
-          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-          <AlertTriangle size={18} />
+      {/* Info flujo */}
+      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex gap-4">
+        <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+          <AlertTriangle size={17} className="text-amber-600" />
         </div>
         <div>
-          <p style={{ color: '#fbbf24' }} className="text-sm font-bold mb-1">Cómo funciona tu panel</p>
-          <p style={{ color: '#475569', lineHeight: 1.7 }} className="text-sm">
+          <p className="text-sm font-bold text-amber-800 mb-1">Cómo funciona tu panel</p>
+          <p className="text-sm text-amber-700 leading-relaxed">
             Todo lo que registres pasa primero por revisión del jefe antes de ser visible para los padres.
             Recibirás feedback cuando algo sea aprobado o necesite ajustes.
           </p>
