@@ -88,7 +88,7 @@ export default function EspecialistaDashboard() {
   const activeItem = NAV_ITEMS.find(n => n.id === activeView)
 
   return (
-    <div style={{ background: '#060d1a' }} className="min-h-screen flex">
+    <div style={{ background: '#060d1a', minHeight: '100vh' }} className="flex">
 
       {/* ── SIDEBAR DESKTOP ── */}
       <aside
@@ -296,20 +296,24 @@ export default function EspecialistaDashboard() {
 
       {/* ── MOBILE BOTTOM NAV ── */}
       <nav style={{
-        background: 'rgba(11,22,40,0.95)',
-        borderTop: '1px solid rgba(255,255,255,0.07)',
-        backdropFilter: 'blur(20px)',
-      }} className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-2 py-2 pb-safe">
+        background: '#0b1628',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+      }} className="lg:hidden fixed bottom-0 left-0 right-0 z-30 flex items-center justify-around px-1 py-2">
         {NAV_ITEMS.map(item => {
           const isActive = activeView === item.id
           return (
             <button key={item.id} onClick={() => setActiveView(item.id)}
-              className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all flex-1">
-              <div style={{ color: isActive ? item.color : '#475569' }} className="transition-colors">
-                <item.icon size={20} />
+              className="flex flex-col items-center gap-1 py-1 rounded-xl transition-all flex-1 min-w-0">
+              <div style={{
+                color: isActive ? item.color : '#475569',
+                background: isActive ? `${item.color}18` : 'transparent',
+              }} className="w-10 h-7 rounded-lg flex items-center justify-center transition-all">
+                <item.icon size={18} />
               </div>
-              <span style={{ color: isActive ? item.color : '#475569', fontSize: 10 }}
-                className="font-bold transition-colors">{item.label.split(' ')[0]}</span>
+              <span style={{ color: isActive ? item.color : '#475569', fontSize: 9 }}
+                className="font-bold transition-colors truncate w-full text-center px-0.5">
+                {item.label.replace('Mi ', '').replace('Mis ', '')}
+              </span>
             </button>
           )
         })}
