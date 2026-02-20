@@ -1,12 +1,14 @@
 // ============================================================================
-// middleware.ts — Manejo de roles: jefe | especialista | padre
+// middleware.ts — Manejo de roles: jefe | admin | especialista | padre
 // ============================================================================
 
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-// Roles que tienen acceso al panel /admin
-const ADMIN_ROLES = ['admin', 'jefe', 'especialista']
+// Roles que tienen acceso al panel /admin (jefes)
+const JEFE_ROLES = ['admin', 'jefe']
+// Roles que van al portal /especialista
+const ESPECIALISTA_ROLES = ['especialista']
 // Roles que van al portal /padre
 const PADRE_ROLES = ['padre']
 
@@ -35,9 +37,10 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
-  const isPadreRoute = request.nextUrl.pathname.startsWith('/padre')
-  const isProtectedRoute = isAdminRoute || isPadreRoute
+  const isAdminRoute        = request.nextUrl.pathname.startsWith('/admin')
+  const isPadreRoute        = request.nextUrl.pathname.startsWith('/padre')
+  const isEspecialistaRoute = request.nextUrl.pathname.startsWith('/especialista')
+  const isProtectedRoute    = isAdminRoute || isPadreRoute || isEspecialistaRoute
 
   // Sin sesión → Login
   if (!user && isProtectedRoute) {
@@ -46,7 +49,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl)
   }
 
-  // Con sesión → Verificar rol
+  // Con sesión → Verificar rol y redirigir según corresponda
   if (user && isProtectedRoute) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -56,14 +59,22 @@ export async function middleware(request: NextRequest) {
 
     const role = profile?.role || ''
 
-    // Si intenta entrar a /admin pero es padre → redirigir a /padre
-    if (isAdminRoute && PADRE_ROLES.includes(role)) {
-      return NextResponse.redirect(new URL('/padre', request.url))
+    // Proteger /admin: solo jefes/admins
+    if (isAdminRoute) {
+      if (PADRE_ROLES.includes(role))        return NextResponse.redirect(new URL('/padre', request.url))
+      if (ESPECIALISTA_ROLES.includes(role)) return NextResponse.redirect(new URL('/especialista', request.url))
     }
 
-    // Si intenta entrar a /padre pero es jefe/especialista → redirigir a /admin
-    if (isPadreRoute && ADMIN_ROLES.includes(role)) {
-      return NextResponse.redirect(new URL('/admin', request.url))
+    // Proteger /especialista: solo especialistas
+    if (isEspecialistaRoute) {
+      if (PADRE_ROLES.includes(role)) return NextResponse.redirect(new URL('/padre', request.url))
+      if (JEFE_ROLES.includes(role))  return NextResponse.redirect(new URL('/admin', request.url))
+    }
+
+    // Proteger /padre: solo padres
+    if (isPadreRoute) {
+      if (JEFE_ROLES.includes(role))         return NextResponse.redirect(new URL('/admin', request.url))
+      if (ESPECIALISTA_ROLES.includes(role)) return NextResponse.redirect(new URL('/especialista', request.url))
     }
   }
 
