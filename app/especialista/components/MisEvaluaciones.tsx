@@ -163,7 +163,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                     </div>
                     {ev.admin_comment && (
                       <div style={{ background: 'rgba(255,255,255,0.04)', borderLeft: '3px solid #06b6d4' }}
-                        className="mt-3 px-3 py-2 rounded-r-xl text-xs" style2={{ color: '#94a3b8' }}>
+                        className="mt-3 px-3 py-2 rounded-r-xl text-xs" style={{ background: 'rgba(255,255,255,0.04)', borderLeft: '3px solid #06b6d4', color: '#94a3b8' }}>
                         <p style={{ color: '#64748b' }} className="text-[10px] font-bold uppercase tracking-wide mb-0.5">Comentario del jefe</p>
                         <p style={{ color: '#94a3b8' }}>{ev.admin_comment}</p>
                       </div>
