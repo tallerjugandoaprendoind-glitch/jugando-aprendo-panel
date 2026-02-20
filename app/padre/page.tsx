@@ -47,6 +47,7 @@ export default function ParentDashboard() {
   const [showAddChild, setShowAddChild] = useState(false)
   const [showChangePass, setShowChangePass] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [selectedNoti, setSelectedNoti] = useState<any>(null)
   const [showEditProfile, setShowEditProfile] = useState(false)
   const [showPrivacy, setShowPrivacy] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
@@ -822,9 +823,9 @@ export default function ParentDashboard() {
             </div>
         )}
 
-        {/* 🔔 MODAL - NOTIFICACIONES MEJORADO (CON DATA REAL) */}
+        {/* 🔔 MODAL - NOTIFICACIONES (FIXED: iconos + modal detalle) */}
         {showNotifications && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" onClick={()=>setShowNotifications(false)}>
+            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" onClick={()=>{ setShowNotifications(false); setSelectedNoti(null) }}>
                 <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden max-h-[85vh] flex flex-col" onClick={e=>e.stopPropagation()}>
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white flex justify-between items-center">
                         <div className="flex items-center gap-3">
@@ -833,13 +834,61 @@ export default function ParentDashboard() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg">Centro de Notificaciones</h3>
-                                <p className="text-xs text-blue-100">{notifications.length} notificacion{notifications.length!==1?'es':''} · todas leídas</p>
+                                <p className="text-xs text-blue-100">{notifications.length} notificacion{notifications.length!==1?'es':''} · {unreadCount > 0 ? `${unreadCount} sin leer` : 'todas leídas'}</p>
                             </div>
                         </div>
-                        <button onClick={()=>setShowNotifications(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
+                        <button onClick={()=>{ setShowNotifications(false); setSelectedNoti(null) }} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
                             <X size={20}/>
                         </button>
                     </div>
+
+                    {/* Detalle de notificación seleccionada */}
+                    {selectedNoti ? (
+                        <div className="flex-1 overflow-y-auto p-5 space-y-4">
+                            <button onClick={()=>setSelectedNoti(null)} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">
+                                <ChevronRight size={14} className="rotate-180"/> Volver
+                            </button>
+                            {(()=>{
+                                const ft = selectedNoti.metadata?.form_type || selectedNoti.metadata?.source || selectedNoti.type || ''
+                                const cfg =
+                                    ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-700', border:'border-indigo-200', label:'Sesión ABA'} :
+                                    ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Historia Clínica'} :
+                                    ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-700',  border:'border-green-200',  label:'Entorno del Hogar'} :
+                                    ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-700', border:'border-purple-200', label:'Evaluación Clínica'} :
+                                    selectedNoti.type==='form_request'    ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-700', border:'border-orange-200', label:'Nuevo formulario'} :
+                                    selectedNoti.type==='parent_message'  ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
+                                    selectedNoti.type==='success'         ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-700', border:'border-yellow-200', label:'¡Buenas noticias!'} :
+                                    selectedNoti.type==='warning'         ? {icon:<AlertCircle size={20}/>,   bg:'bg-red-100',    text:'text-red-700',    border:'border-red-200',    label:'Aviso'} :
+                                                                             {icon:<Bell size={20}/>,           bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Notificación'}
+                                return (
+                                    <div className="space-y-4">
+                                        <div className={`flex items-center gap-3 p-4 rounded-2xl border ${cfg.border}`}>
+                                            <div className={`${cfg.bg} ${cfg.text} p-3 rounded-xl`}>{cfg.icon}</div>
+                                            <div>
+                                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{cfg.label}</p>
+                                                <p className="font-bold text-slate-800 text-sm">{selectedNoti.title}</p>
+                                            </div>
+                                        </div>
+                                        <div className="bg-slate-50 rounded-2xl p-5">
+                                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{selectedNoti.message}</p>
+                                        </div>
+                                        {selectedNoti.metadata?.source_title && (
+                                            <div className="bg-blue-50 rounded-xl p-3 flex items-center gap-2">
+                                                <FileText size={14} className="text-blue-500 flex-shrink-0"/>
+                                                <div>
+                                                    <p className="text-xs text-blue-400">Generado por</p>
+                                                    <p className="text-sm font-semibold text-blue-700">{selectedNoti.metadata.source_title}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                        <p className="text-xs text-slate-400 flex items-center gap-1">
+                                            <Clock size={11}/> {new Date(selectedNoti.created_at).toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+                                        </p>
+                                    </div>
+                                )
+                            })()}
+                        </div>
+                    ) : (
                     <div className="p-5 space-y-3 overflow-y-auto flex-1">
                         {notifications.length === 0 ? (
                             <div className="text-center py-16">
@@ -851,35 +900,43 @@ export default function ParentDashboard() {
                             </div>
                         ) : (
                             notifications.map((noti) => {
-                                const iconConfig = 
-                                    noti.form_type==='aba'         ? {icon:<Activity size={20}/>, bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-100'} :
-                                    noti.form_type==='anamnesis'   ? {icon:<FileText size={20}/>, bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-100'} :
-                                    noti.form_type==='entorno_hogar'?{icon:<Home size={20}/>,     bg:'bg-green-100',  text:'text-green-600',  border:'border-green-100'} :
-                                    noti.form_type==='brief2'||noti.form_type==='ados2'||noti.form_type==='vineland3'||noti.form_type==='wiscv'||noti.form_type==='basc3'
-                                                                   ? {icon:<Brain size={20}/>,    bg:'bg-purple-100', text:'text-purple-600', border:'border-purple-100'} :
-                                    noti.type==='success'          ? {icon:<Star size={20}/>,     bg:'bg-yellow-100', text:'text-yellow-600', border:'border-yellow-100'} :
-                                    noti.type==='warning'          ? {icon:<AlertCircle size={20}/>,bg:'bg-red-100', text:'text-red-600',   border:'border-red-100'} :
-                                                                     {icon:<Bell size={20}/>,     bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-100'}
-
+                                const ft = noti.metadata?.form_type || noti.metadata?.source || noti.type || ''
+                                const iconConfig =
+                                    ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-200', label:'Sesión ABA'} :
+                                    ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Historia Clínica'} :
+                                    ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-600',  border:'border-green-200',  label:'Entorno del Hogar'} :
+                                    ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-600', border:'border-purple-200', label:'Evaluación Clínica'} :
+                                    noti.type==='form_request'   ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-600', border:'border-orange-200', label:'Nuevo formulario'} :
+                                    noti.type==='parent_message' ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
+                                    noti.type==='success'        ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-600', border:'border-yellow-200', label:'¡Buenas noticias!'} :
+                                    noti.type==='warning'        ? {icon:<AlertCircle size={20}/>,   bg:'bg-red-100',    text:'text-red-600',    border:'border-red-200',    label:'Aviso'} :
+                                                                   {icon:<Bell size={20}/>,           bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Notificación'}
                                 return (
-                                    <div key={noti.id} className={`bg-slate-50 rounded-2xl border ${iconConfig.border} overflow-hidden hover:shadow-md transition-all`}>
+                                    <button key={noti.id} onClick={()=>setSelectedNoti(noti)}
+                                        className={`w-full text-left bg-slate-50 rounded-2xl border ${iconConfig.border} overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all`}>
                                         <div className="p-4 flex gap-3 items-start">
                                             <div className={`${iconConfig.bg} ${iconConfig.text} p-3 rounded-xl shrink-0 shadow-sm`}>
                                                 {iconConfig.icon}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-bold text-slate-800 text-sm leading-snug mb-1">{noti.title}</p>
-                                                <p className="text-slate-500 text-xs leading-relaxed line-clamp-3">{noti.message}</p>
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <p className="font-bold text-slate-800 text-sm leading-snug">{noti.title}</p>
+                                                    <ChevronRight size={14} className="text-slate-300 flex-shrink-0"/>
+                                                </div>
+                                                <p className="text-xs font-medium text-slate-400 mb-1">{iconConfig.label}</p>
+                                                <p className="text-slate-500 text-xs leading-relaxed line-clamp-2">{noti.message}</p>
                                                 <p className="text-slate-300 text-[10px] font-bold mt-2 flex items-center gap-1">
                                                     <Clock size={10}/> {new Date(noti.created_at).toLocaleDateString('es-PE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+                                                    <span className="ml-1 text-blue-400">· Toca para leer</span>
                                                 </p>
                                             </div>
                                         </div>
-                                    </div>
+                                    </button>
                                 )
                             })
                         )}
                     </div>
+                    )}
                 </div>
             </div>
         )}

@@ -3,22 +3,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   FileText, Plus, Clock, CheckCircle2, XCircle, ChevronDown,
-  ChevronUp, Loader2, Send, AlertTriangle, Eye, X, Baby, Search
+  ChevronUp, Loader2, Send, AlertTriangle, X, Baby
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
-const STATUS = {
-  pending_approval: { label: 'Pendiente de aprobación', color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800', icon: Clock },
-  approved: { label: 'Aprobado', color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800', icon: CheckCircle2 },
-  rejected: { label: 'Rechazado', color: 'text-red-700 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800', icon: XCircle },
+const STATUS: Record<string, any> = {
+  pending_approval: { label: 'En revisión', color: '#f59e0b', bg: '#f59e0b15', border: '#f59e0b30', icon: Clock },
+  approved:         { label: 'Aprobado',    color: '#10b981', bg: '#10b98115', border: '#10b98130', icon: CheckCircle2 },
+  rejected:         { label: 'Rechazado',   color: '#ef4444', bg: '#ef444415', border: '#ef444430', icon: XCircle },
 }
 
-const TIPOS_EVALUACION = [
-  { id: 'conducta', label: 'Evaluación de Conducta', desc: 'Análisis ABC y patrones conductuales' },
-  { id: 'progreso', label: 'Reporte de Progreso', desc: 'Avance en objetivos terapéuticos' },
-  { id: 'sesion', label: 'Nota de Sesión', desc: 'Registro detallado de sesión clínica' },
-  { id: 'familia', label: 'Recomendaciones para Familia', desc: 'Guías y actividades para el hogar' },
+const TIPOS = [
+  { id: 'conducta', label: 'Conducta',       desc: 'Análisis ABC', color: '#8b5cf6' },
+  { id: 'progreso', label: 'Progreso',        desc: 'Avance terapéutico', color: '#06b6d4' },
+  { id: 'sesion',   label: 'Nota de sesión',  desc: 'Registro clínico', color: '#10b981' },
+  { id: 'familia',  label: 'Para familia',    desc: 'Guías para el hogar', color: '#f59e0b' },
 ]
 
 export default function MisEvaluaciones({ userId }: { userId: string }) {
@@ -30,153 +30,159 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
   const [enviando, setEnviando] = useState(false)
   const [expandido, setExpandido] = useState<string | null>(null)
   const [filtro, setFiltro] = useState<'all' | 'pending_approval' | 'approved' | 'rejected'>('all')
-
-  const [form, setForm] = useState({
-    child_id: '',
-    tipo: 'conducta',
-    titulo: '',
-    contenido: '',
-    observaciones: '',
-    recomendaciones: '',
-  })
+  const [form, setForm] = useState({ child_id: '', tipo: 'conducta', titulo: '', contenido: '', observaciones: '', recomendaciones: '' })
 
   const cargar = useCallback(async () => {
     setLoading(true)
     try {
       const [evalRes, ninosRes] = await Promise.all([
-        supabase
-          .from('specialist_submissions')
-          .select('*, children(name)')
-          .eq('specialist_id', userId)
-          .order('created_at', { ascending: false }),
+        supabase.from('specialist_submissions').select('*, children(name)').eq('specialist_id', userId).order('created_at', { ascending: false }),
         supabase.from('children').select('id, name').eq('is_active', true).order('name')
       ])
       setEvaluaciones(evalRes.data || [])
       setNinos(ninosRes.data || [])
-    } catch (e: any) {
-      toast.error('Error: ' + e.message)
-    } finally {
-      setLoading(false)
-    }
+    } catch (e: any) { toast.error('Error: ' + e.message) }
+    finally { setLoading(false) }
   }, [userId])
 
   useEffect(() => { cargar() }, [cargar])
 
   const enviar = async () => {
-    if (!form.child_id || !form.titulo || !form.contenido) {
-      toast.error('Completa los campos requeridos')
-      return
-    }
+    if (!form.child_id || !form.titulo || !form.contenido) { toast.error('Completa los campos requeridos'); return }
     setEnviando(true)
     try {
-      const { error } = await supabase.from('specialist_submissions').insert({
-        specialist_id: userId,
-        child_id: form.child_id,
-        tipo: form.tipo,
-        titulo: form.titulo,
-        contenido: form.contenido,
-        observaciones: form.observaciones,
-        recomendaciones: form.recomendaciones,
-        status: 'pending_approval',
-      })
+      const { error } = await supabase.from('specialist_submissions').insert({ specialist_id: userId, ...form, status: 'pending_approval' })
       if (error) throw error
-      toast.success('¡Enviado para aprobación del jefe!')
+      toast.success('¡Enviado para aprobación!')
       setMostrarForm(false)
       setForm({ child_id: '', tipo: 'conducta', titulo: '', contenido: '', observaciones: '', recomendaciones: '' })
       cargar()
-    } catch (e: any) {
-      toast.error('Error al enviar: ' + e.message)
-    } finally {
-      setEnviando(false)
-    }
+    } catch (e: any) { toast.error('Error: ' + e.message) }
+    finally { setEnviando(false) }
   }
 
   const filtradas = filtro === 'all' ? evaluaciones : evaluaciones.filter(e => e.status === filtro)
+  const counts = { all: evaluaciones.length, pending_approval: evaluaciones.filter(e => e.status === 'pending_approval').length, approved: evaluaciones.filter(e => e.status === 'approved').length, rejected: evaluaciones.filter(e => e.status === 'rejected').length }
+
+  const inputCls = "w-full px-4 py-3 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 transition-all"
+  const inputStyle = { background: '#0a1628', border: '1px solid rgba(255,255,255,0.08)', color: '#e2e8f0' }
+  const inputFocusStyle = { '--tw-ring-color': '#06b6d4' } as any
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="space-y-5 pb-24 lg:pb-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Mis Evaluaciones</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Requieren aprobación del jefe antes de ser visibles</p>
+          <h2 style={{ color: '#f1f5f9', letterSpacing: '-0.02em' }} className="text-2xl font-black">Mis Evaluaciones</h2>
+          <p style={{ color: '#475569' }} className="text-sm mt-1">Requieren aprobación antes de llegar a los padres</p>
         </div>
         <button onClick={() => setMostrarForm(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors shadow-sm">
-          <Plus size={16} /> Nueva Evaluación
+          style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', boxShadow: '0 0 30px #06b6d430' }}
+          className="flex items-center gap-2 text-white text-sm font-bold px-5 py-3 rounded-xl hover:brightness-110 transition-all flex-shrink-0">
+          <Plus size={16} /> Nueva
         </button>
       </div>
 
       {/* Filtros */}
       <div className="flex gap-2 flex-wrap">
-        {(['all', 'pending_approval', 'approved', 'rejected'] as const).map(f => (
-          <button key={f} onClick={() => setFiltro(f)}
-            className={`text-xs font-medium px-3 py-1.5 rounded-full border transition-colors ${filtro === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-blue-300'}`}>
-            {f === 'all' ? 'Todas' : STATUS[f as keyof typeof STATUS]?.label}
-          </button>
-        ))}
+        {(['all', 'pending_approval', 'approved', 'rejected'] as const).map(f => {
+          const isActive = filtro === f
+          const cfg = f !== 'all' ? STATUS[f] : null
+          return (
+            <button key={f} onClick={() => setFiltro(f)}
+              style={{
+                background: isActive ? (cfg?.bg || '#06b6d415') : '#0d1a2d',
+                border: `1px solid ${isActive ? (cfg?.border || '#06b6d430') : 'rgba(255,255,255,0.06)'}`,
+                color: isActive ? (cfg?.color || '#06b6d4') : '#475569',
+              }}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full transition-all">
+              {f === 'all' ? 'Todas' : STATUS[f].label}
+              <span style={{
+                background: isActive ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.05)',
+                color: isActive ? '#fff' : '#475569',
+              }} className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black">
+                {counts[f]}
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       {/* Lista */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-blue-500" /></div>
+        <div className="flex justify-center py-20">
+          <Loader2 size={28} style={{ color: '#06b6d4' }} className="animate-spin" />
+        </div>
       ) : filtradas.length === 0 ? (
-        <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-          <FileText size={40} className="mx-auto mb-3 text-slate-300 dark:text-slate-600" />
-          <p className="text-slate-500 dark:text-slate-400 font-medium">Sin evaluaciones {filtro !== 'all' ? 'en este estado' : ''}</p>
-          <p className="text-sm text-slate-400 dark:text-slate-500">Crea una nueva para comenzar</p>
+        <div style={{ background: '#0d1a2d', border: '1px solid rgba(255,255,255,0.05)' }}
+          className="rounded-2xl py-20 text-center">
+          <div style={{ background: 'rgba(255,255,255,0.04)' }} className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <FileText size={28} style={{ color: '#334155' }} />
+          </div>
+          <p style={{ color: '#475569' }} className="text-sm font-semibold">Sin evaluaciones</p>
+          <button onClick={() => setMostrarForm(true)} style={{ color: '#06b6d4' }}
+            className="mt-3 text-xs font-bold hover:underline">
+            Crear nueva →
+          </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filtradas.map(ev => {
-            const cfg = STATUS[ev.status as keyof typeof STATUS] || STATUS.pending_approval
+            const cfg = STATUS[ev.status] || STATUS.pending_approval
             const Icon = cfg.icon
             const abierto = expandido === ev.id
+            const tipo = TIPOS.find(t => t.id === ev.tipo)
             return (
-              <div key={ev.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                <div className="p-4 flex items-start gap-4">
-                  <div className={`mt-0.5 flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${cfg.bg} border`}>
-                    <Icon size={14} className={cfg.color} />
+              <div key={ev.id}
+                style={{ background: '#0d1a2d', border: `1px solid ${abierto ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.05)'}` }}
+                className="rounded-2xl overflow-hidden transition-all">
+                <div className="p-5 flex items-start gap-4">
+                  {/* Status indicator */}
+                  <div style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon size={15} style={{ color: cfg.color }} />
                   </div>
+
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 flex-wrap">
-                      <div>
-                        <p className="font-semibold text-slate-800 dark:text-slate-100">{ev.titulo}</p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">{ev.children?.name} • {TIPOS_EVALUACION.find(t => t.id === ev.tipo)?.label}</p>
+                    <div className="flex items-start gap-3 flex-wrap">
+                      <div className="flex-1 min-w-0">
+                        <p style={{ color: '#e2e8f0' }} className="text-sm font-bold">{ev.titulo}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span style={{ color: '#64748b' }} className="text-xs">{ev.children?.name}</span>
+                          {tipo && (
+                            <span style={{ background: `${tipo.color}18`, color: tipo.color }}
+                              className="text-[10px] font-bold px-2 py-0.5 rounded-full">{tipo.label}</span>
+                          )}
+                          <span style={{ color: '#334155' }} className="text-xs">
+                            {new Date(ev.created_at).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
                       </div>
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full border ${cfg.bg} ${cfg.color} flex-shrink-0`}>
-                        {cfg.label}
-                      </span>
+                      <span style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}
+                        className="text-xs font-bold px-3 py-1 rounded-full flex-shrink-0">{cfg.label}</span>
                     </div>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">{new Date(ev.created_at).toLocaleDateString('es-MX', { dateStyle: 'medium' })}</p>
                     {ev.admin_comment && (
-                      <div className="mt-2 bg-slate-50 dark:bg-slate-700/50 rounded-lg px-3 py-2 text-xs text-slate-600 dark:text-slate-300">
-                        <span className="font-medium">Comentario del jefe:</span> {ev.admin_comment}
+                      <div style={{ background: 'rgba(255,255,255,0.04)', borderLeft: '3px solid #06b6d4' }}
+                        className="mt-3 px-3 py-2 rounded-r-xl text-xs" style2={{ color: '#94a3b8' }}>
+                        <p style={{ color: '#64748b' }} className="text-[10px] font-bold uppercase tracking-wide mb-0.5">Comentario del jefe</p>
+                        <p style={{ color: '#94a3b8' }}>{ev.admin_comment}</p>
                       </div>
                     )}
                   </div>
+
                   <button onClick={() => setExpandido(abierto ? null : ev.id)}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex-shrink-0 p-1">
-                    {abierto ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    style={{ color: '#475569', background: 'rgba(255,255,255,0.04)' }}
+                    className="p-2 rounded-lg flex-shrink-0 hover:bg-white/10 transition-colors">
+                    {abierto ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
                   </button>
                 </div>
+
                 {abierto && (
-                  <div className="border-t border-slate-100 dark:border-slate-700 px-5 py-4 space-y-3 bg-slate-50/50 dark:bg-slate-800/50">
-                    <div>
-                      <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Contenido</p>
-                      <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{ev.contenido}</p>
-                    </div>
-                    {ev.observaciones && (
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Observaciones</p>
-                        <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{ev.observaciones}</p>
-                      </div>
-                    )}
-                    {ev.recomendaciones && (
-                      <div>
-                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">Recomendaciones</p>
-                        <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{ev.recomendaciones}</p>
-                      </div>
-                    )}
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}
+                    className="px-5 py-5 space-y-4">
+                    <ExpandedSection title="Contenido" content={ev.contenido} />
+                    {ev.observaciones && <ExpandedSection title="Observaciones" content={ev.observaciones} />}
+                    {ev.recomendaciones && <ExpandedSection title="Recomendaciones" content={ev.recomendaciones} />}
                   </div>
                 )}
               </div>
@@ -185,42 +191,54 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
         </div>
       )}
 
-      {/* Modal nueva evaluación */}
+      {/* ── MODAL NUEVA EVALUACIÓN ── */}
       {mostrarForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-white dark:bg-slate-900 px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+          style={{ background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)' }}>
+          <div style={{ background: '#0b1628', border: '1px solid rgba(255,255,255,0.08)' }}
+            className="w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl">
+
+            {/* Modal header */}
+            <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'linear-gradient(180deg, #0d1f35, #0b1628)' }}
+              className="sticky top-0 px-6 py-5 flex items-center justify-between">
               <div>
-                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100">Nueva Evaluación</h3>
-                <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1 mt-0.5">
-                  <Clock size={11} /> Será enviada al jefe para aprobación
-                </p>
+                <h3 style={{ color: '#f1f5f9', letterSpacing: '-0.02em' }} className="font-black text-lg">Nueva Evaluación</h3>
+                <div style={{ background: '#f59e0b15', color: '#f59e0b', border: '1px solid #f59e0b25' }}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full mt-1.5">
+                  <Clock size={10} /> Pendiente de aprobación al enviar
+                </div>
               </div>
-              <button onClick={() => setMostrarForm(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1">
-                <X size={20} />
+              <button onClick={() => setMostrarForm(false)}
+                style={{ color: '#475569', background: 'rgba(255,255,255,0.05)' }}
+                className="p-2 rounded-xl hover:bg-white/10 transition-colors">
+                <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-5">
               {/* Paciente */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Paciente *</label>
+                <label style={{ color: '#64748b' }} className="block text-xs font-bold uppercase tracking-widest mb-2">Paciente *</label>
                 <select value={form.child_id} onChange={e => setForm(f => ({ ...f, child_id: e.target.value }))}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Seleccionar paciente...</option>
-                  {ninos.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
+                  style={{ ...inputStyle }} className={inputCls}>
+                  <option value="" style={{ background: '#0b1628' }}>Seleccionar...</option>
+                  {ninos.map(n => <option key={n.id} value={n.id} style={{ background: '#0b1628' }}>{n.name}</option>)}
                 </select>
               </div>
 
               {/* Tipo */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Tipo de Evaluación *</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {TIPOS_EVALUACION.map(t => (
+                <label style={{ color: '#64748b' }} className="block text-xs font-bold uppercase tracking-widest mb-2">Tipo *</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {TIPOS.map(t => (
                     <button key={t.id} onClick={() => setForm(f => ({ ...f, tipo: t.id }))}
-                      className={`text-left p-3 rounded-xl border transition-all ${form.tipo === t.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-300'}`}>
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-100">{t.label}</p>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{t.desc}</p>
+                      style={{
+                        background: form.tipo === t.id ? `${t.color}18` : '#0a1628',
+                        border: form.tipo === t.id ? `1px solid ${t.color}40` : '1px solid rgba(255,255,255,0.06)',
+                      }}
+                      className="text-left p-3 rounded-xl transition-all">
+                      <p style={{ color: form.tipo === t.id ? t.color : '#94a3b8' }} className="text-sm font-bold">{t.label}</p>
+                      <p style={{ color: '#475569' }} className="text-xs mt-0.5">{t.desc}</p>
                     </button>
                   ))}
                 </div>
@@ -228,51 +246,46 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
 
               {/* Título */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Título *</label>
+                <label style={{ color: '#64748b' }} className="block text-xs font-bold uppercase tracking-widest mb-2">Título *</label>
                 <input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
-                  placeholder="Ej: Evaluación de conducta - Sesión 12"
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  placeholder="Ej: Evaluación de conducta — Sesión 12"
+                  style={inputStyle} className={inputCls} />
               </div>
 
               {/* Contenido */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Contenido *</label>
+                <label style={{ color: '#64748b' }} className="block text-xs font-bold uppercase tracking-widest mb-2">Contenido *</label>
                 <textarea value={form.contenido} onChange={e => setForm(f => ({ ...f, contenido: e.target.value }))}
-                  rows={5} placeholder="Describe los hallazgos clínicos, conductas observadas, desempeño en actividades..."
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                  rows={5} placeholder="Hallazgos clínicos, conductas observadas, desempeño..."
+                  style={inputStyle} className={`${inputCls} resize-none`} />
               </div>
 
               {/* Observaciones */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Observaciones adicionales</label>
+                <label style={{ color: '#64748b' }} className="block text-xs font-bold uppercase tracking-widest mb-2">Observaciones <span style={{ color: '#334155' }}>(opcional)</span></label>
                 <textarea value={form.observaciones} onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))}
-                  rows={3} placeholder="Notas clínicas adicionales, patrones observados, alertas..."
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                  rows={3} placeholder="Notas adicionales, patrones observados, alertas..."
+                  style={inputStyle} className={`${inputCls} resize-none`} />
               </div>
 
               {/* Recomendaciones */}
               <div>
-                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5">Recomendaciones</label>
+                <label style={{ color: '#64748b' }} className="block text-xs font-bold uppercase tracking-widest mb-2">Recomendaciones <span style={{ color: '#334155' }}>(opcional)</span></label>
                 <textarea value={form.recomendaciones} onChange={e => setForm(f => ({ ...f, recomendaciones: e.target.value }))}
-                  rows={3} placeholder="Estrategias sugeridas, ajustes al plan terapéutico, actividades para casa..."
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+                  rows={3} placeholder="Estrategias, ajustes al plan, actividades para casa..."
+                  style={inputStyle} className={`${inputCls} resize-none`} />
               </div>
 
-              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 flex gap-3">
-                <AlertTriangle size={16} className="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                <div className="text-xs text-amber-700 dark:text-amber-300">
-                  <p className="font-semibold mb-0.5">Flujo de aprobación</p>
-                  <p>Esta evaluación quedará en estado <strong>Pendiente</strong> hasta que el jefe la revise y apruebe. Solo entonces será visible para el padre del paciente.</p>
-                </div>
-              </div>
-
+              {/* Buttons */}
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setMostrarForm(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                  style={{ background: 'rgba(255,255,255,0.05)', color: '#64748b', border: '1px solid rgba(255,255,255,0.08)' }}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm hover:bg-white/10 transition-colors">
                   Cancelar
                 </button>
                 <button onClick={enviar} disabled={enviando}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors">
+                  style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', boxShadow: '0 0 30px #06b6d425' }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all">
                   {enviando ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                   {enviando ? 'Enviando...' : 'Enviar para aprobación'}
                 </button>
@@ -281,6 +294,15 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function ExpandedSection({ title, content }: { title: string; content: string }) {
+  return (
+    <div>
+      <p style={{ color: '#334155' }} className="text-[10px] font-black uppercase tracking-widest mb-2">{title}</p>
+      <p style={{ color: '#94a3b8', lineHeight: 1.8 }} className="text-sm whitespace-pre-wrap">{content}</p>
     </div>
   )
 }

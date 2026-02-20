@@ -1,10 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import {
-  User, Mail, Phone, Stethoscope, Key, Eye, EyeOff,
-  Save, Loader2, Shield, CheckCircle2
-} from 'lucide-react'
+import { User, Mail, Phone, Stethoscope, Key, Eye, EyeOff, Save, Loader2, Shield, CheckCircle2, Edit3 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
@@ -14,91 +11,97 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
   const [guardando, setGuardando] = useState(false)
   const [cambioPass, setCambioPass] = useState(false)
   const [showPass, setShowPass] = useState(false)
-  const [datos, setDatos] = useState({
-    full_name: profile?.full_name || '',
-    phone: profile?.phone || '',
-    specialty: profile?.specialty || '',
-  })
+  const [datos, setDatos] = useState({ full_name: profile?.full_name || '', phone: profile?.phone || '', specialty: profile?.specialty || '' })
   const [pass, setPass] = useState({ nueva: '', confirmar: '' })
 
   const guardar = async () => {
     setGuardando(true)
     try {
-      const { error } = await supabase.from('profiles').update({
-        full_name: datos.full_name,
-        phone: datos.phone,
-        specialty: datos.specialty,
-        updated_at: new Date().toISOString(),
-      }).eq('id', profile.id)
+      const { error } = await supabase.from('profiles').update({ ...datos, updated_at: new Date().toISOString() }).eq('id', profile.id)
       if (error) throw error
-      toast.success('Perfil actualizado')
+      toast.success('Perfil actualizado ✓')
       setEditando(false)
       onUpdate()
-    } catch (e: any) {
-      toast.error('Error: ' + e.message)
-    } finally {
-      setGuardando(false)
-    }
+    } catch (e: any) { toast.error('Error: ' + e.message) }
+    finally { setGuardando(false) }
   }
 
   const cambiarPassword = async () => {
-    if (pass.nueva.length < 6) { toast.error('La contraseña debe tener al menos 6 caracteres'); return }
+    if (pass.nueva.length < 6) { toast.error('Mínimo 6 caracteres'); return }
     if (pass.nueva !== pass.confirmar) { toast.error('Las contraseñas no coinciden'); return }
     setGuardando(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: pass.nueva })
       if (error) throw error
-      toast.success('Contraseña actualizada correctamente')
+      toast.success('Contraseña actualizada ✓')
       setCambioPass(false)
       setPass({ nueva: '', confirmar: '' })
-    } catch (e: any) {
-      toast.error('Error: ' + e.message)
-    } finally {
-      setGuardando(false)
-    }
+    } catch (e: any) { toast.error('Error: ' + e.message) }
+    finally { setGuardando(false) }
   }
 
+  const inputCls = "w-full px-4 py-3 rounded-xl text-sm font-medium focus:outline-none transition-all placeholder:text-slate-700"
+  const inputStyle = { background: '#0a1628', border: '1px solid rgba(255,255,255,0.08)', color: '#e2e8f0' }
+
   return (
-    <div className="space-y-4 max-w-2xl">
-      <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Mi Perfil</h2>
+    <div className="space-y-5 pb-24 lg:pb-6 max-w-2xl">
+      <h2 style={{ color: '#f1f5f9', letterSpacing: '-0.02em' }} className="text-2xl font-black">Mi Perfil</h2>
 
-      {/* Tarjeta principal */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-700 px-6 py-8 flex flex-col items-center text-center">
-          <div className="w-20 h-20 rounded-full bg-white/20 flex items-center justify-center text-white text-3xl font-bold mb-3">
-            {profile?.full_name?.[0]?.toUpperCase() || 'E'}
-          </div>
-          <h3 className="text-xl font-bold text-white">{profile?.full_name}</h3>
-          <p className="text-blue-200 text-sm">{profile?.specialty || 'Especialista'}</p>
-          <div className="mt-3 flex items-center gap-1.5 bg-white/15 text-white/90 text-xs px-3 py-1 rounded-full">
-            <Shield size={12} /> Rol: Especialista
-          </div>
+      {/* Hero card */}
+      <div style={{ background: 'linear-gradient(135deg, #06b6d418 0%, #8b5cf618 100%)', border: '1px solid rgba(6,182,212,0.2)' }}
+        className="rounded-3xl p-8 text-center relative overflow-hidden">
+        <div style={{ background: '#06b6d4', filter: 'blur(80px)', opacity: 0.08 }}
+          className="absolute -top-8 -right-8 w-48 h-48 rounded-full pointer-events-none" />
+        <div style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)' }}
+          className="w-24 h-24 rounded-3xl flex items-center justify-center text-white font-black text-4xl mx-auto mb-5 shadow-2xl">
+          {profile?.full_name?.[0]?.toUpperCase() || 'E'}
         </div>
+        <h3 style={{ color: '#f1f5f9', letterSpacing: '-0.02em' }} className="text-2xl font-black mb-1">{profile?.full_name}</h3>
+        <p style={{ color: '#64748b' }} className="text-sm font-medium mb-4">{profile?.specialty || 'Especialista Clínico'}</p>
+        <div style={{ background: '#10b98120', border: '1px solid #10b98130', color: '#10b981' }}
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold">
+          <Shield size={13} /> Especialista verificado
+        </div>
+      </div>
 
-        <div className="p-6 space-y-4">
+      {/* Info / Editar */}
+      <div style={{ background: '#0d1a2d', border: '1px solid rgba(255,255,255,0.06)' }} className="rounded-2xl overflow-hidden">
+        <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+          className="px-5 py-4 flex items-center justify-between">
+          <h4 style={{ color: '#e2e8f0' }} className="font-bold text-sm">Información Personal</h4>
+          {!editando && (
+            <button onClick={() => setEditando(true)}
+              style={{ background: '#06b6d415', color: '#06b6d4', border: '1px solid #06b6d430' }}
+              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full hover:brightness-125 transition-all">
+              <Edit3 size={11} /> Editar
+            </button>
+          )}
+        </div>
+        <div className="p-5 space-y-4">
           {editando ? (
             <>
-              <Field label="Nombre completo" icon={User}>
-                <input value={datos.full_name} onChange={e => setDatos(d => ({ ...d, full_name: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </Field>
-              <Field label="Teléfono" icon={Phone}>
-                <input value={datos.phone} onChange={e => setDatos(d => ({ ...d, phone: e.target.value }))}
-                  placeholder="+52 55 1234 5678"
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </Field>
-              <Field label="Especialidad" icon={Stethoscope}>
-                <input value={datos.specialty} onChange={e => setDatos(d => ({ ...d, specialty: e.target.value }))}
-                  placeholder="Ej: Terapeuta ABA, Psicólogo Clínico..."
-                  className="w-full px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </Field>
+              {[
+                { label: 'Nombre completo', icon: User, key: 'full_name', placeholder: 'Tu nombre' },
+                { label: 'Teléfono', icon: Phone, key: 'phone', placeholder: '+52 55 1234 5678' },
+                { label: 'Especialidad', icon: Stethoscope, key: 'specialty', placeholder: 'Ej: Terapeuta ABA' },
+              ].map(f => (
+                <div key={f.key}>
+                  <label style={{ color: '#334155' }} className="flex items-center gap-1.5 text-xs font-black uppercase tracking-widest mb-2">
+                    <f.icon size={11} /> {f.label}
+                  </label>
+                  <input value={(datos as any)[f.key]} onChange={e => setDatos(d => ({ ...d, [f.key]: e.target.value }))}
+                    placeholder={f.placeholder} style={inputStyle} className={inputCls} />
+                </div>
+              ))}
               <div className="flex gap-3 pt-2">
                 <button onClick={() => setEditando(false)}
-                  className="flex-1 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-sm font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#64748b' }}
+                  className="flex-1 py-3 rounded-xl font-bold text-sm hover:bg-white/10 transition-colors">
                   Cancelar
                 </button>
                 <button onClick={guardar} disabled={guardando}
-                  className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-sm font-semibold transition-colors">
+                  style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', boxShadow: '0 0 20px #06b6d425' }}
+                  className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm disabled:opacity-50">
                   {guardando ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
                   Guardar
                 </button>
@@ -106,74 +109,65 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
             </>
           ) : (
             <>
-              <InfoRow icon={Mail} label="Correo" value={profile?.email} />
-              <InfoRow icon={User} label="Nombre" value={profile?.full_name} />
-              <InfoRow icon={Phone} label="Teléfono" value={profile?.phone || 'No registrado'} />
-              <InfoRow icon={Stethoscope} label="Especialidad" value={profile?.specialty || 'No registrado'} />
-              <button onClick={() => setEditando(true)}
-                className="w-full py-2.5 mt-2 rounded-xl border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
-                Editar información
-              </button>
+              {[
+                { label: 'Email', icon: Mail, value: profile?.email },
+                { label: 'Nombre', icon: User, value: profile?.full_name },
+                { label: 'Teléfono', icon: Phone, value: profile?.phone || 'No registrado' },
+                { label: 'Especialidad', icon: Stethoscope, value: profile?.specialty || 'No registrado' },
+              ].map((item, idx) => (
+                <div key={item.label}
+                  style={{ borderBottom: idx < 3 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
+                  className="flex items-center gap-4 pb-4 last:pb-0">
+                  <div style={{ background: 'rgba(255,255,255,0.04)', color: '#475569' }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <item.icon size={15} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p style={{ color: '#334155' }} className="text-xs font-bold uppercase tracking-wide mb-0.5">{item.label}</p>
+                    <p style={{ color: '#94a3b8' }} className="text-sm font-medium truncate">{item.value}</p>
+                  </div>
+                </div>
+              ))}
             </>
           )}
         </div>
       </div>
 
-      {/* Cambio de contraseña */}
-      <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+      {/* Contraseña */}
+      <div style={{ background: '#0d1a2d', border: '1px solid rgba(255,255,255,0.06)' }} className="rounded-2xl overflow-hidden">
         <button onClick={() => setCambioPass(!cambioPass)}
-          className="w-full px-6 py-4 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-          <Key size={18} className="text-slate-400" />
-          <span className="font-semibold text-slate-700 dark:text-slate-300 flex-1 text-left">Cambiar contraseña</span>
-          <span className="text-xs text-slate-400">{cambioPass ? 'Cerrar' : 'Abrir'}</span>
+          className="w-full px-5 py-4 flex items-center gap-3 hover:bg-white/[0.02] transition-colors">
+          <div style={{ background: 'rgba(255,255,255,0.04)', color: '#475569' }}
+            className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Key size={15} />
+          </div>
+          <span style={{ color: '#94a3b8' }} className="font-bold text-sm flex-1 text-left">Cambiar contraseña</span>
+          <span style={{ color: '#334155' }} className="text-xs font-medium">{cambioPass ? '↑ Cerrar' : '↓ Abrir'}</span>
         </button>
         {cambioPass && (
-          <div className="px-6 pb-5 space-y-3 border-t border-slate-100 dark:border-slate-700 pt-4">
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }} className="px-5 pb-5 pt-4 space-y-3">
             <div className="relative">
               <input type={showPass ? 'text' : 'password'} value={pass.nueva}
                 onChange={e => setPass(p => ({ ...p, nueva: e.target.value }))}
                 placeholder="Nueva contraseña (mín. 6 caracteres)"
-                className="w-full px-3 py-2.5 pr-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <button onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">
+                style={inputStyle} className={`${inputCls} pr-12`} />
+              <button onClick={() => setShowPass(!showPass)}
+                style={{ color: '#475569' }} className="absolute right-4 top-1/2 -translate-y-1/2 hover:text-slate-300 transition-colors">
                 {showPass ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
             <input type="password" value={pass.confirmar}
               onChange={e => setPass(p => ({ ...p, confirmar: e.target.value }))}
-              placeholder="Confirmar nueva contraseña"
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-700 text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              placeholder="Confirmar contraseña"
+              style={inputStyle} className={inputCls} />
             <button onClick={cambiarPassword} disabled={guardando}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-slate-800 dark:bg-slate-100 hover:bg-slate-700 dark:hover:bg-white disabled:opacity-50 text-white dark:text-slate-800 text-sm font-semibold transition-colors">
+              style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', boxShadow: '0 0 20px #06b6d420' }}
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-white font-bold text-sm disabled:opacity-50 hover:brightness-110 transition-all">
               {guardando ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
               Actualizar contraseña
             </button>
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-function Field({ label, icon: Icon, children }: any) {
-  return (
-    <div>
-      <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wide">
-        <Icon size={12} /> {label}
-      </label>
-      {children}
-    </div>
-  )
-}
-
-function InfoRow({ icon: Icon, label, value }: any) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
-        <Icon size={14} className="text-slate-500 dark:text-slate-400" />
-      </div>
-      <div>
-        <p className="text-xs text-slate-400 dark:text-slate-500">{label}</p>
-        <p className="text-sm font-medium text-slate-800 dark:text-slate-200">{value}</p>
       </div>
     </div>
   )

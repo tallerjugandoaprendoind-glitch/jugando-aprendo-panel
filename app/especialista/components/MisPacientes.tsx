@@ -1,22 +1,25 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import {
-  Search, User, ChevronRight, Baby, Calendar, Loader2,
-  Eye, FileText, Activity, X, Clock, AlertCircle
-} from 'lucide-react'
+import { Search, ChevronRight, Baby, Loader2, Eye, FileText, Activity, Clock, AlertCircle, X } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
 function calcularEdad(fecha: string) {
   if (!fecha) return 'N/D'
-  const hoy = new Date()
-  const nacimiento = new Date(fecha)
-  const anos = hoy.getFullYear() - nacimiento.getFullYear()
-  const m = hoy.getMonth() - nacimiento.getMonth()
-  if (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) return `${anos - 1} años`
-  return `${anos} años`
+  const hoy = new Date(), nac = new Date(fecha)
+  const anos = hoy.getFullYear() - nac.getFullYear()
+  return `${hoy.getMonth() < nac.getMonth() || (hoy.getMonth() === nac.getMonth() && hoy.getDate() < nac.getDate()) ? anos - 1 : anos} años`
 }
+
+const AVATAR_GRADIENTS = [
+  'linear-gradient(135deg, #06b6d4, #8b5cf6)',
+  'linear-gradient(135deg, #10b981, #06b6d4)',
+  'linear-gradient(135deg, #f59e0b, #ef4444)',
+  'linear-gradient(135deg, #8b5cf6, #f472b6)',
+  'linear-gradient(135deg, #3b82f6, #06b6d4)',
+  'linear-gradient(135deg, #10b981, #f59e0b)',
+]
 
 export default function MisPacientes() {
   const toast = useToast()
@@ -30,36 +33,20 @@ export default function MisPacientes() {
   const cargar = useCallback(async () => {
     setLoading(true)
     try {
-      const { data, error } = await supabase
-        .from('children')
-        .select('*, profiles!children_parent_id_fkey(full_name, email)')
-        .eq('is_active', true)
-        .order('name')
-      if (error) throw error
+      const { data } = await supabase.from('children').select('*, profiles!children_parent_id_fkey(full_name, email)').eq('is_active', true).order('name')
       setNinos(data || [])
-    } catch (e: any) {
-      toast.error('Error cargando pacientes: ' + e.message)
-    } finally {
-      setLoading(false)
-    }
+    } catch (e: any) { toast.error('Error: ' + e.message) }
+    finally { setLoading(false) }
   }, [])
 
   const verHistorial = async (nino: any) => {
     setSeleccionado(nino)
     setLoadingHistorial(true)
     try {
-      const { data } = await supabase
-        .from('session_records')
-        .select('*')
-        .eq('child_id', nino.id)
-        .order('fecha_sesion', { ascending: false })
-        .limit(10)
+      const { data } = await supabase.from('session_records').select('*').eq('child_id', nino.id).order('fecha_sesion', { ascending: false }).limit(10)
       setHistorial(data || [])
-    } catch {
-      setHistorial([])
-    } finally {
-      setLoadingHistorial(false)
-    }
+    } catch { setHistorial([]) }
+    finally { setLoadingHistorial(false) }
   }
 
   useEffect(() => { cargar() }, [cargar])
@@ -70,60 +57,85 @@ export default function MisPacientes() {
   )
 
   if (seleccionado) {
+    const grad = AVATAR_GRADIENTS[seleccionado.name?.charCodeAt(0) % AVATAR_GRADIENTS.length]
     return (
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
+      <div className="space-y-5 pb-24 lg:pb-6">
+        {/* Back + Title */}
+        <div className="flex items-center gap-4">
           <button onClick={() => setSeleccionado(null)}
-            className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors">
-            <ChevronRight size={16} className="rotate-180" /> Volver
+            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#64748b' }}
+            className="p-2 rounded-xl hover:bg-white/10 transition-colors">
+            <ChevronRight size={18} className="rotate-180" />
           </button>
-          <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">{seleccionado.name}</h2>
-        </div>
-
-        {/* Info del paciente */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl p-5 border border-slate-200 dark:border-slate-700 grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Edad</p>
-            <p className="font-semibold text-slate-800 dark:text-slate-100">{calcularEdad(seleccionado.birth_date)}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Diagnóstico</p>
-            <p className="font-semibold text-slate-800 dark:text-slate-100">{seleccionado.diagnosis || 'No registrado'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Tutor</p>
-            <p className="font-semibold text-slate-800 dark:text-slate-100">{seleccionado.profiles?.full_name || '—'}</p>
-          </div>
-          <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Contacto</p>
-            <p className="font-semibold text-slate-800 dark:text-slate-100 text-xs truncate">{seleccionado.profiles?.email || '—'}</p>
+            <p style={{ color: '#475569' }} className="text-xs font-bold uppercase tracking-wide">Paciente</p>
+            <h2 style={{ color: '#f1f5f9', letterSpacing: '-0.02em' }} className="text-xl font-black">{seleccionado.name}</h2>
           </div>
         </div>
 
-        {/* Historial de sesiones (solo lectura) */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center gap-2">
-            <Activity size={16} className="text-blue-500" />
-            <h3 className="font-semibold text-slate-800 dark:text-slate-100">Historial de Sesiones</h3>
-            <span className="ml-auto text-xs bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-400 px-2 py-0.5 rounded-full">Solo lectura</span>
+        {/* Patient card */}
+        <div style={{ background: 'linear-gradient(135deg, #0d1f35 0%, #111827 100%)', border: '1px solid rgba(255,255,255,0.07)' }}
+          className="rounded-2xl p-6 flex flex-col sm:flex-row gap-5">
+          <div style={{ background: grad }} className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-black text-2xl flex-shrink-0 shadow-lg">
+            {seleccionado.name?.[0]?.toUpperCase()}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 flex-1">
+            {[
+              { label: 'Edad', value: calcularEdad(seleccionado.birth_date) },
+              { label: 'Diagnóstico', value: seleccionado.diagnosis || 'No registrado' },
+              { label: 'Tutor', value: seleccionado.profiles?.full_name || '—' },
+              { label: 'Contacto', value: seleccionado.profiles?.email || '—' },
+            ].map(item => (
+              <div key={item.label}>
+                <p style={{ color: '#334155' }} className="text-xs font-bold uppercase tracking-wide mb-1">{item.label}</p>
+                <p style={{ color: '#94a3b8' }} className="text-sm font-medium truncate">{item.value}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Historial */}
+        <div style={{ background: '#0d1a2d', border: '1px solid rgba(255,255,255,0.05)' }} className="rounded-2xl overflow-hidden">
+          <div style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+            className="px-5 py-4 flex items-center gap-3">
+            <div style={{ background: '#06b6d420', color: '#06b6d4' }}
+              className="w-7 h-7 rounded-lg flex items-center justify-center">
+              <Activity size={14} />
+            </div>
+            <h3 style={{ color: '#e2e8f0' }} className="font-bold text-sm">Historial de Sesiones</h3>
+            <span style={{ background: 'rgba(255,255,255,0.05)', color: '#475569' }}
+              className="ml-auto text-xs font-bold px-2 py-0.5 rounded-full">Solo lectura</span>
           </div>
           {loadingHistorial ? (
-            <div className="flex justify-center py-10"><Loader2 size={20} className="animate-spin text-blue-500" /></div>
+            <div className="flex justify-center py-12">
+              <Loader2 size={20} style={{ color: '#06b6d4' }} className="animate-spin" />
+            </div>
           ) : historial.length === 0 ? (
-            <div className="text-center py-10 text-slate-400 dark:text-slate-500">
-              <FileText size={32} className="mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Sin sesiones registradas</p>
+            <div className="py-16 text-center">
+              <FileText size={28} style={{ color: '#1e293b' }} className="mx-auto mb-3" />
+              <p style={{ color: '#334155' }} className="text-sm font-semibold">Sin sesiones registradas</p>
             </div>
           ) : (
-            <div className="divide-y divide-slate-100 dark:divide-slate-700">
-              {historial.map(h => (
-                <div key={h.id} className="px-5 py-3">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Clock size={13} className="text-slate-400" />
-                    <span className="text-xs text-slate-500 dark:text-slate-400">{new Date(h.fecha_sesion).toLocaleDateString('es-MX', { dateStyle: 'long' })}</span>
+            <div>
+              {historial.map((h, idx) => (
+                <div key={h.id}
+                  style={{ borderBottom: idx < historial.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
+                  className="px-5 py-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div style={{ background: '#06b6d420' }} className="w-1.5 h-1.5 rounded-full" style2={{ background: '#06b6d4' }} />
+                    <span style={{ background: '#06b6d4' }} className="w-1.5 h-1.5 rounded-full inline-block" />
+                    <p style={{ color: '#475569' }} className="text-xs font-bold">
+                      {new Date(h.fecha_sesion).toLocaleDateString('es-MX', { dateStyle: 'long' })}
+                    </p>
                   </div>
-                  {h.datos?.conducta && <p className="text-sm text-slate-700 dark:text-slate-300"><span className="font-medium">Conducta:</span> {h.datos.conducta}</p>}
-                  {h.datos?.observations && <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">{h.datos.observations}</p>}
+                  {h.datos?.conducta && (
+                    <p style={{ color: '#94a3b8' }} className="text-sm leading-relaxed">
+                      <span style={{ color: '#64748b' }} className="font-semibold">Conducta: </span>{h.datos.conducta}
+                    </p>
+                  )}
+                  {h.datos?.observations && (
+                    <p style={{ color: '#64748b' }} className="text-xs mt-1 leading-relaxed">{h.datos.observations}</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -134,50 +146,79 @@ export default function MisPacientes() {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="space-y-5 pb-24 lg:pb-6">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">Mis Pacientes</h2>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Vista de consulta • Solo lectura</p>
+          <h2 style={{ color: '#f1f5f9', letterSpacing: '-0.02em' }} className="text-2xl font-black">Pacientes</h2>
+          <p style={{ color: '#475569' }} className="text-sm mt-1">Vista de consulta · Solo lectura</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800 px-3 py-1.5 rounded-full">
-          <AlertCircle size={12} /> Acceso de consulta
+        <div style={{ background: '#f59e0b15', border: '1px solid #f59e0b30', color: '#f59e0b' }}
+          className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full flex-shrink-0">
+          <AlertCircle size={11} /> Consulta
         </div>
       </div>
 
+      {/* Búsqueda */}
       <div className="relative">
-        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          value={busqueda} onChange={e => setBusqueda(e.target.value)}
-          placeholder="Buscar por nombre o diagnóstico..."
-          className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
+        <Search size={15} style={{ color: '#334155' }} className="absolute left-4 top-1/2 -translate-y-1/2" />
+        <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
+          placeholder="Buscar paciente o diagnóstico..."
+          style={{ background: '#0d1a2d', border: '1px solid rgba(255,255,255,0.06)', color: '#e2e8f0' }}
+          className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-medium focus:outline-none transition-all placeholder:text-slate-600" />
+        {busqueda && (
+          <button onClick={() => setBusqueda('')} style={{ color: '#475569' }}
+            className="absolute right-4 top-1/2 -translate-y-1/2 hover:text-slate-300 transition-colors">
+            <X size={14} />
+          </button>
+        )}
       </div>
 
+      {/* Stats bar */}
+      {!loading && (
+        <div style={{ background: '#0d1a2d', border: '1px solid rgba(255,255,255,0.05)' }}
+          className="rounded-xl px-4 py-3 flex items-center gap-3">
+          <Baby size={14} style={{ color: '#8b5cf6' }} />
+          <p style={{ color: '#64748b' }} className="text-xs font-semibold">
+            <span style={{ color: '#e2e8f0' }} className="font-black">{filtrados.length}</span> paciente{filtrados.length !== 1 ? 's' : ''}
+            {busqueda && <span> · filtrando por "{busqueda}"</span>}
+          </p>
+        </div>
+      )}
+
+      {/* Grid de pacientes */}
       {loading ? (
-        <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-blue-500" /></div>
+        <div className="flex justify-center py-20">
+          <Loader2 size={28} style={{ color: '#06b6d4' }} className="animate-spin" />
+        </div>
       ) : (
         <div className="grid gap-3">
-          {filtrados.map(n => (
-            <div key={n.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-4 flex items-center gap-4 hover:border-blue-300 dark:hover:border-blue-600 transition-colors">
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-                {n.name?.[0]?.toUpperCase()}
+          {filtrados.map((n, idx) => {
+            const grad = AVATAR_GRADIENTS[idx % AVATAR_GRADIENTS.length]
+            return (
+              <div key={n.id}
+                style={{ background: '#0d1a2d', border: '1px solid rgba(255,255,255,0.05)' }}
+                className="rounded-2xl p-4 flex items-center gap-4 hover:border-white/10 hover:bg-white/[0.02] transition-all group">
+                <div style={{ background: grad }} className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-black text-lg flex-shrink-0 shadow-lg">
+                  {n.name?.[0]?.toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p style={{ color: '#e2e8f0' }} className="font-bold text-sm">{n.name}</p>
+                  <p style={{ color: '#475569' }} className="text-xs mt-0.5">{calcularEdad(n.birth_date)} · {n.diagnosis || 'Sin diagnóstico'}</p>
+                  <p style={{ color: '#334155' }} className="text-xs truncate">{n.profiles?.full_name || 'Sin tutor'}</p>
+                </div>
+                <button onClick={() => verHistorial(n)}
+                  style={{ background: 'rgba(6,182,212,0.1)', color: '#06b6d4', border: '1px solid rgba(6,182,212,0.2)' }}
+                  className="flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-xl hover:bg-cyan-500/20 transition-colors flex-shrink-0">
+                  <Eye size={13} /> Ver
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-800 dark:text-slate-100">{n.name}</p>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{calcularEdad(n.birth_date)} • {n.diagnosis || 'Sin diagnóstico'}</p>
-                <p className="text-xs text-slate-400 dark:text-slate-500 truncate">{n.profiles?.full_name || 'Sin tutor'}</p>
-              </div>
-              <button onClick={() => verHistorial(n)}
-                className="flex items-center gap-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 px-3 py-1.5 rounded-lg transition-colors">
-                <Eye size={14} /> Ver
-              </button>
-            </div>
-          ))}
-          {filtrados.length === 0 && !loading && (
-            <div className="text-center py-16 text-slate-400">
-              <Baby size={36} className="mx-auto mb-2 opacity-30" />
-              <p>No se encontraron pacientes</p>
+            )
+          })}
+          {filtrados.length === 0 && (
+            <div className="text-center py-16">
+              <Baby size={32} style={{ color: '#1e293b' }} className="mx-auto mb-3" />
+              <p style={{ color: '#334155' }} className="text-sm font-semibold">Sin resultados</p>
             </div>
           )}
         </div>

@@ -65,12 +65,19 @@ export async function PATCH(request: NextRequest) {
       const childName = (record as any).children?.name || 'su hijo/a'
 
       // Notify parent
+      const formType = (record as any).session_data?.form_type || record.source || 'parent_form'
       await supabaseAdmin.from('notifications').insert([{
         user_id: record.parent_id,
         title: `📋 Mensaje sobre ${childName}`,
         message: messageToSend,
         type: 'parent_message',
-        metadata: { source: record.source, source_title: record.source_title, child_id: record.child_id, ai_analysis: record.ai_analysis },
+        metadata: {
+          source: record.source,
+          source_title: record.source_title,
+          child_id: record.child_id,
+          ai_analysis: record.ai_analysis,
+          form_type: formType,
+        },
         is_read: false,
         created_at: new Date().toISOString(),
       }])
