@@ -6,13 +6,18 @@ import { useState, useEffect, useRef } from 'react'
 import {
   Heart, Users, MapPin, CheckCircle, ArrowRight, HelpCircle,
   Brain, Calendar, Sparkles, LineChart, MessageSquareHeart,
-  Star, Award, Clock, Phone, Mail, Instagram, Facebook, ChevronDown
+  Star, Award, Clock, Phone, Mail, Instagram, Facebook, ChevronDown,
+  Quote, X, Send, TrendingUp
 } from 'lucide-react'
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [activeAccordion, setActiveAccordion] = useState<number | null>(null)
   const [count50, setCount50] = useState(0)
+  const [showExitPopup, setShowExitPopup] = useState(false)
+  const [leadEmail, setLeadEmail] = useState('')
+  const [leadSent, setLeadSent] = useState(false)
+  const [popupShown, setPopupShown] = useState(false)
   const statsRef = useRef<HTMLDivElement>(null)
   const counted = useRef(false)
 
@@ -22,7 +27,7 @@ export default function LandingPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // counter animation on scroll
+  // Counter animation on scroll
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !counted.current) {
@@ -39,9 +44,58 @@ export default function LandingPage() {
     return () => observer.disconnect()
   }, [])
 
+  // Exit-intent popup
+  useEffect(() => {
+    const handleMouseLeave = (e: MouseEvent) => {
+      if (e.clientY <= 0 && !popupShown) {
+        setShowExitPopup(true)
+        setPopupShown(true)
+      }
+    }
+    // Also show after 45s if user hasn't registered
+    const timer = setTimeout(() => {
+      if (!popupShown) {
+        setShowExitPopup(true)
+        setPopupShown(true)
+      }
+    }, 45000)
+    document.addEventListener('mouseleave', handleMouseLeave)
+    return () => {
+      document.removeEventListener('mouseleave', handleMouseLeave)
+      clearTimeout(timer)
+    }
+  }, [popupShown])
+
   const scrollToSection = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
+
+  const whatsappMsg = encodeURIComponent('Hola, vi su página web y me interesa agendar una evaluación gratuita para mi hijo/a. ¿Me pueden dar más información?')
+  const whatsappUrl = `https://wa.me/51924807183?text=${whatsappMsg}`
+
+  const testimonials = [
+    {
+      name: 'María G.',
+      desc: 'Mamá de Rodrigo, 6 años · TEA Nivel 2',
+      avatar: 'M',
+      color: '#4f46e5',
+      text: 'En 3 meses mi hijo empezó a comunicarse con frases completas. Los reportes con IA nos ayudan a entender su progreso sin tecnicismos. ¡Los recomiendo al 100%!',
+    },
+    {
+      name: 'Carlos R.',
+      desc: 'Papá de Valentina, 4 años · TDAH',
+      avatar: 'C',
+      color: '#16a34a',
+      text: 'Lo que más me sorprendió fue poder seguir el avance semana a semana desde mi celular. El asistente IA nos da consejos para trabajar en casa. Valentina ha mejorado muchísimo.',
+    },
+    {
+      name: 'Rosa T.',
+      desc: 'Mamá de Mateo, 5 años · TEA Nivel 1',
+      avatar: 'R',
+      color: '#dc2626',
+      text: 'Al principio tenía miedo de no entender los términos clínicos. La terapeuta y el sistema de reportes lo explican todo de manera muy sencilla. Me siento acompañada en este proceso.',
+    },
+  ]
 
   return (
     <>
@@ -52,17 +106,8 @@ export default function LandingPage() {
         body { font-family: 'Plus Jakarta Sans', sans-serif; background: #fff; color: #1a1a2e; overflow-x: hidden; }
 
         /* ── NAV ── */
-        .nav-bar {
-          position: sticky; top: 0; z-index: 100;
-          transition: all .3s;
-          border-bottom: 1px solid transparent;
-        }
-        .nav-bar.scrolled {
-          background: rgba(255,255,255,.95);
-          backdrop-filter: blur(16px);
-          border-color: #f1f0ff;
-          box-shadow: 0 4px 24px rgba(79,70,229,.06);
-        }
+        .nav-bar { position: sticky; top: 0; z-index: 100; transition: all .3s; border-bottom: 1px solid transparent; }
+        .nav-bar.scrolled { background: rgba(255,255,255,.95); backdrop-filter: blur(16px); border-color: #f1f0ff; box-shadow: 0 4px 24px rgba(79,70,229,.06); }
         .nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 24px; height: 70px; display: flex; align-items: center; justify-content: space-between; }
         .nav-links { display: none; gap: 32px; }
         @media(min-width:768px){ .nav-links { display: flex; } }
@@ -74,76 +119,37 @@ export default function LandingPage() {
         .nav-cta-fill:hover { background: #4338ca; box-shadow: 0 6px 18px rgba(79,70,229,.4); transform: translateY(-1px); }
 
         /* ── HERO ── */
-        .hero {
-          min-height: 92vh;
-          display: flex; align-items: center;
-          background: linear-gradient(170deg, #f5f4fe 0%, #fff 55%, #f0fdf4 100%);
-          position: relative; overflow: hidden;
-          padding: 80px 24px 60px;
-        }
-        .hero-grid {
-          position: absolute; inset: 0; z-index: 0;
-          background-image: radial-gradient(circle, rgba(79,70,229,.06) 1px, transparent 1px);
-          background-size: 36px 36px;
-        }
+        .hero { min-height: 92vh; display: flex; align-items: center; background: linear-gradient(170deg, #f5f4fe 0%, #fff 55%, #f0fdf4 100%); position: relative; overflow: hidden; padding: 80px 24px 60px; }
+        .hero-grid { position: absolute; inset: 0; z-index: 0; background-image: radial-gradient(circle, rgba(79,70,229,.06) 1px, transparent 1px); background-size: 36px 36px; }
         .hero-blob-1 { position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(79,70,229,.12) 0%, transparent 70%); top: -200px; right: -100px; border-radius: 50%; }
         .hero-blob-2 { position: absolute; width: 400px; height: 400px; background: radial-gradient(circle, rgba(168,85,247,.08) 0%, transparent 70%); bottom: -100px; left: -100px; border-radius: 50%; }
         .hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; gap: 60px; position: relative; z-index: 1; align-items: center; }
         @media(min-width:900px){ .hero-inner { grid-template-columns: 1fr 1fr; } }
-
-        .hero-tag {
-          display: inline-flex; align-items: center; gap: 8px;
-          background: linear-gradient(135deg, #fce7f3, #ede9fe);
-          border: 1px solid #f9a8d4; border-radius: 99px;
-          padding: 7px 16px; font-size: 12px; font-weight: 700;
-          color: #be185d; margin-bottom: 20px;
-          animation: fadeSlideUp .6s ease both;
-        }
-        .hero-h1 {
-          font-size: clamp(36px, 5vw, 58px);
-          font-weight: 800; line-height: 1.13;
-          color: #111827; margin-bottom: 20px;
-          animation: fadeSlideUp .6s .1s ease both;
-        }
+        .hero-tag { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #fce7f3, #ede9fe); border: 1px solid #f9a8d4; border-radius: 99px; padding: 7px 16px; font-size: 12px; font-weight: 700; color: #be185d; margin-bottom: 20px; animation: fadeSlideUp .6s ease both; }
+        .hero-h1 { font-size: clamp(36px, 5vw, 58px); font-weight: 800; line-height: 1.13; color: #111827; margin-bottom: 20px; animation: fadeSlideUp .6s .1s ease both; }
         .hero-h1 em { font-style: normal; color: #4f46e5; }
-        .hero-p {
-          font-size: 18px; color: #6b7280; line-height: 1.75;
-          margin-bottom: 36px; max-width: 480px;
-          animation: fadeSlideUp .6s .2s ease both;
-        }
+        .hero-p { font-size: 18px; color: #6b7280; line-height: 1.75; margin-bottom: 36px; max-width: 480px; animation: fadeSlideUp .6s .2s ease both; }
         .hero-btns { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 44px; animation: fadeSlideUp .6s .3s ease both; }
         .btn-primary { display: inline-flex; align-items: center; gap: 8px; padding: 15px 30px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; border-radius: 13px; font-weight: 700; font-size: 15px; text-decoration: none; transition: all .25s; box-shadow: 0 8px 24px rgba(79,70,229,.3); }
         .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(79,70,229,.4); }
+        .btn-green { display: inline-flex; align-items: center; gap: 8px; padding: 15px 28px; background: linear-gradient(135deg, #16a34a, #15803d); color: #fff; border-radius: 13px; font-weight: 700; font-size: 15px; text-decoration: none; transition: all .25s; box-shadow: 0 8px 24px rgba(22,163,74,.3); }
+        .btn-green:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(22,163,74,.4); }
         .btn-outline { display: inline-flex; align-items: center; gap: 8px; padding: 15px 28px; border: 2px solid #e5e7eb; color: #374151; border-radius: 13px; font-weight: 700; font-size: 15px; text-decoration: none; background: #fff; transition: all .25s; cursor: pointer; font-family: inherit; }
         .btn-outline:hover { border-color: #4f46e5; color: #4f46e5; background: #f5f4fe; }
-
         .hero-badges { display: flex; flex-wrap: wrap; gap: 16px; animation: fadeSlideUp .6s .4s ease both; }
         .hero-badge { display: flex; align-items: center; gap: 10px; }
         .hero-badge-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
         .hero-badge span { font-size: 13px; font-weight: 700; color: #374151; }
-
-        /* hero image side */
         .hero-img-wrap { position: relative; animation: fadeSlideUp .7s .2s ease both; }
-        .hero-img-main {
-          border-radius: 28px; overflow: hidden;
-          box-shadow: 0 32px 80px rgba(0,0,0,.15);
-          aspect-ratio: 4/3; position: relative;
-          border: 4px solid #fff;
-          transform: rotate(1.5deg);
-          transition: transform .4s;
-        }
+        .hero-img-main { border-radius: 28px; overflow: hidden; box-shadow: 0 32px 80px rgba(0,0,0,.15); aspect-ratio: 4/3; position: relative; border: 4px solid #fff; transform: rotate(1.5deg); transition: transform .4s; }
         .hero-img-main:hover { transform: rotate(0); }
-        .hero-badge-float {
-          position: absolute; background: #fff;
-          border-radius: 14px; padding: 12px 18px;
-          box-shadow: 0 8px 30px rgba(0,0,0,.12);
-          display: flex; align-items: center; gap: 10px;
-          font-weight: 700; font-size: 13px;
-        }
+        .hero-badge-float { position: absolute; background: #fff; border-radius: 14px; padding: 12px 18px; box-shadow: 0 8px 30px rgba(0,0,0,.12); display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 13px; }
         .hero-badge-tl { top: 20px; left: -20px; color: #1e1b4b; }
         .hero-badge-br { bottom: 20px; right: -20px; color: #065f46; }
-
         @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* ── URGENCY BANNER ── */
+        .urgency-banner { background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff; text-align: center; padding: 10px 24px; font-size: 13px; font-weight: 700; letter-spacing: .01em; }
 
         /* ── STATS STRIP ── */
         .stats-strip { background: linear-gradient(135deg, #1e1b4b, #4f46e5); padding: 56px 24px; }
@@ -160,6 +166,13 @@ export default function LandingPage() {
         .section-h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; color: #111827; line-height: 1.2; margin-bottom: 16px; }
         .section-p { font-size: 17px; color: #6b7280; line-height: 1.75; max-width: 600px; }
 
+        /* ── TESTIMONIALS ── */
+        .testimonials-section { background: #f9f8ff; padding: 100px 24px; }
+        .testi-card { background: #fff; border-radius: 22px; padding: 32px; border: 2px solid #f3f4f6; transition: all .3s; }
+        .testi-card:hover { border-color: #e0e7ff; box-shadow: 0 20px 60px rgba(79,70,229,.08); transform: translateY(-4px); }
+        .testi-avatar { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 18px; color: #fff; flex-shrink: 0; }
+        .testi-stars { display: flex; gap: 3px; margin-bottom: 14px; }
+
         /* ── IA SECTION ── */
         .ia-section { background: linear-gradient(160deg, #0f0c29 0%, #1e1b4b 50%, #1a2a4a 100%); padding: 100px 24px; position: relative; overflow: hidden; }
         .ia-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px); background-size: 48px 48px; }
@@ -171,7 +184,7 @@ export default function LandingPage() {
         .ia-card p { color: rgba(255,255,255,.55); font-size: 14px; line-height: 1.7; }
 
         /* ── SERVICIOS ── */
-        .services-section { background: #f9f8ff; padding: 100px 24px; }
+        .services-section { background: #fff; padding: 100px 24px; }
         .svc-card { background: #fff; border-radius: 22px; padding: 36px; border: 2px solid #f3f4f6; transition: all .3s; position: relative; overflow: hidden; }
         .svc-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #4f46e5, #7c3aed); transform: scaleX(0); transform-origin: left; transition: transform .3s; }
         .svc-card:hover::before { transform: scaleX(1); }
@@ -180,6 +193,15 @@ export default function LandingPage() {
         .svc-card.featured::before { display: none; }
         .svc-icon { width: 56px; height: 56px; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
         .svc-popular { position: absolute; top: 20px; right: 20px; background: #fbbf24; color: #1a1a2e; font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 99px; }
+
+        /* ── TEAM ── */
+        .team-section { background: linear-gradient(160deg, #f9f8ff 0%, #fff 100%); padding: 100px 24px; }
+        .team-card { background: #fff; border-radius: 22px; padding: 32px; border: 2px solid #f3f4f6; text-align: center; transition: all .3s; }
+        .team-card:hover { border-color: #e0e7ff; box-shadow: 0 20px 60px rgba(79,70,229,.08); transform: translateY(-4px); }
+        .team-avatar { width: 80px; height: 80px; border-radius: 22px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 28px; color: #fff; margin: 0 auto 16px; }
+
+        /* ── NEWSLETTER ── */
+        .newsletter-section { background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 80px 24px; }
 
         /* ── FAQ ── */
         .faq-item { border: 2px solid #f3f4f6; border-radius: 16px; overflow: hidden; cursor: pointer; transition: all .2s; margin-bottom: 12px; background: #fff; }
@@ -220,37 +242,132 @@ export default function LandingPage() {
         @media(min-width:900px){ .grid-3 { grid-template-columns: repeat(3,1fr); } }
         .grid-4 { display: grid; gap: 20px; grid-template-columns: repeat(2,1fr); }
         @media(min-width:640px){ .grid-4 { grid-template-columns: repeat(4,1fr); } }
+
+        /* exit popup */
+        .popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(8px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 24px; animation: fadeSlideUp .3s ease; }
+        .popup-card { background: #fff; border-radius: 28px; overflow: hidden; max-width: 480px; width: 100%; box-shadow: 0 40px 100px rgba(0,0,0,.3); position: relative; }
+        .popup-banner { background: linear-gradient(135deg, #4f46e5, #7c3aed); padding: 32px; text-align: center; color: #fff; }
+        .popup-body { padding: 32px; }
+
+        /* schema-org structured data helper */
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border-width: 0; }
       `}</style>
 
-      {/* WHATSAPP FLOAT */}
-      <a href="https://wa.me/51924807183" target="_blank" rel="noopener noreferrer" className="wa-btn">
+      {/* Schema.org structured data for local SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "MedicalBusiness",
+            "name": "Jugando Aprendo - Centro de Desarrollo Infantil",
+            "description": "Centro especializado en terapia ABA y neurodivergencia infantil en Pisco, Ica.",
+            "url": "https://jugandoaprendo.com",
+            "telephone": "+51924807183",
+            "email": "tallerjugandoaprendoind@gmail.com",
+            "address": {
+              "@type": "PostalAddress",
+              "streetAddress": "C. Victor Raul Haya de la Torre, Independencia",
+              "addressLocality": "Pisco",
+              "addressRegion": "Ica",
+              "addressCountry": "PE"
+            },
+            "openingHours": "Mo-Fr 08:00-18:00",
+            "medicalSpecialty": ["Pediatrics", "Neurology"],
+            "priceRange": "$$"
+          })
+        }}
+      />
+
+      {/* EXIT INTENT POPUP */}
+      {showExitPopup && (
+        <div className="popup-overlay" onClick={() => setShowExitPopup(false)}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => setShowExitPopup(false)}
+              style={{ position: 'absolute', top: 16, right: 16, zIndex: 10, background: 'rgba(255,255,255,.2)', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#fff' }}
+            >
+              <X size={18} />
+            </button>
+            <div className="popup-banner">
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🎁</div>
+              <h3 style={{ fontWeight: 800, fontSize: 22, marginBottom: 8 }}>¡Antes de irte!</h3>
+              <p style={{ opacity: .85, fontSize: 14, lineHeight: 1.6 }}>
+                Descarga gratis nuestro PDF:<br/><strong>"5 actividades ABA para hacer en casa esta semana"</strong>
+              </p>
+            </div>
+            {leadSent ? (
+              <div className="popup-body" style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
+                <h4 style={{ fontWeight: 800, fontSize: 20, color: '#111827', marginBottom: 8 }}>¡Listo! Revisa tu WhatsApp</h4>
+                <p style={{ color: '#6b7280', fontSize: 14 }}>Te enviaremos el recurso gratuito al instante.</p>
+              </div>
+            ) : (
+              <div className="popup-body">
+                <p style={{ color: '#6b7280', fontSize: 14, marginBottom: 20 }}>Déjanos tu WhatsApp y te enviamos el recurso de inmediato, sin spam:</p>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <input
+                    type="tel"
+                    placeholder="+51 924 807 183"
+                    value={leadEmail}
+                    onChange={e => setLeadEmail(e.target.value)}
+                    style={{ flex: 1, padding: '12px 16px', borderRadius: 12, border: '2px solid #e5e7eb', fontSize: 14, fontWeight: 600, outline: 'none', fontFamily: 'inherit' }}
+                  />
+                  <a
+                    href={`https://wa.me/51924807183?text=${encodeURIComponent(`Hola, mi número es ${leadEmail || 'este'} y quiero el PDF de actividades ABA gratuito`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setLeadSent(true)}
+                    style={{ padding: '12px 20px', background: '#25d366', color: '#fff', borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}
+                  >
+                    <Send size={16} /> Enviar
+                  </a>
+                </div>
+                <p style={{ fontSize: 12, color: '#9ca3af', marginTop: 12 }}>
+                  Al enviar, aceptas recibir información del centro. Sin spam, siempre podrás cancelar.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* WHATSAPP FLOAT - with pre-filled message */}
+      <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="wa-btn" aria-label="Contactar por WhatsApp">
         <Phone size={26} color="#fff" />
         <div className="wa-ping" />
       </a>
+
+      {/* URGENCY BANNER */}
+      <div className="urgency-banner">
+        ⚡ Cupos limitados para evaluaciones de febrero — <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#fbbf24', textDecoration: 'underline' }}>Reserva el tuyo ahora por WhatsApp</a>
+      </div>
 
       {/* NAV */}
       <nav className={`nav-bar ${isScrolled ? 'scrolled' : ''}`} style={{ background: isScrolled ? undefined : 'transparent' }}>
         <div className="nav-inner">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ position: 'relative', width: 44, height: 44 }}>
-              <Image src="/images/logo.png?v=2" alt="Logo" fill style={{ objectFit: 'contain' }} priority unoptimized />
+              <Image src="/images/logo.png?v=2" alt="Logo Jugando Aprendo" fill style={{ objectFit: 'contain' }} priority unoptimized />
             </div>
             <div>
               <p style={{ fontWeight: 800, fontSize: 16, color: '#111827', lineHeight: 1.1 }}>Jugando Aprendo</p>
-              <p style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>Centro de Desarrollo Infantil</p>
+              <p style={{ fontSize: 11, color: '#9ca3af', fontWeight: 500 }}>Centro de Desarrollo Infantil · Pisco</p>
             </div>
           </div>
 
           <div className="nav-links">
             <a href="#ia-innovacion">Innovación IA</a>
             <a href="#servicios">Servicios</a>
-            <a href="#nosotros">Nosotros</a>
+            <a href="#nosotros">Testimonios</a>
             <a href="#faq">Preguntas</a>
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <Link href="/login" className="nav-cta-outline">Ingresar</Link>
-            <Link href="/login?mode=signup" className="nav-cta-fill">Registrarse</Link>
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="nav-cta-fill">
+              Evaluar gratis
+            </a>
           </div>
         </div>
       </nav>
@@ -273,9 +390,10 @@ export default function LandingPage() {
               Centro especializado en neurodivergencia en Pisco. Combinamos la evidencia científica ABA con la innovación de la Inteligencia Artificial y el corazón de nuestra familia.
             </p>
             <div className="hero-btns">
-              <Link href="/login?mode=signup" className="btn-primary">
-                Empezar Ahora <ArrowRight size={17} />
-              </Link>
+              {/* MAIN CTA: Evaluación gratuita en lugar de "Empezar ahora" */}
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-green">
+                <Phone size={17} /> Agenda tu evaluación gratuita
+              </a>
               <button className="btn-outline" onClick={() => scrollToSection('ia-innovacion')}>
                 <Sparkles size={17} color="#7c3aed" /> Ver Innovación IA
               </button>
@@ -296,7 +414,7 @@ export default function LandingPage() {
 
           <div className="hero-img-wrap">
             <div className="hero-img-main">
-              <Image src="/images/hero-image.jpg?v=2" alt="Niños en terapia" fill style={{ objectFit: 'cover' }} priority unoptimized />
+              <Image src="/images/hero-image.jpg?v=2" alt="Niños en terapia ABA en Pisco" fill style={{ objectFit: 'cover' }} priority unoptimized />
             </div>
             <div className="hero-badge-float hero-badge-tl">
               <div style={{ width: 32, height: 32, background: '#dbeafe', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -329,6 +447,46 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* TESTIMONIALS — Prueba social real */}
+      <section className="testimonials-section">
+        <div className="section-inner">
+          <div style={{ textAlign: 'center', marginBottom: 60 }}>
+            <div className="section-tag"><Quote size={13} /> Lo que dicen las familias</div>
+            <h2 className="section-h2">Resultados que<br/>hablan por sí solos</h2>
+            <p className="section-p" style={{ margin: '0 auto' }}>
+              Más de 50 familias han transformado el desarrollo de sus hijos con nuestra metodología.
+            </p>
+          </div>
+
+          <div className="grid-3">
+            {testimonials.map(({ name, desc, avatar, color, text }) => (
+              <div key={name} className="testi-card">
+                <div className="testi-stars">
+                  {[1,2,3,4,5].map(i => <Star key={i} size={14} color="#f59e0b" fill="#f59e0b" />)}
+                </div>
+                <p style={{ color: '#374151', fontSize: 15, lineHeight: 1.8, marginBottom: 24, fontStyle: 'italic' }}>
+                  &ldquo;{text}&rdquo;
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div className="testi-avatar" style={{ background: color }}>{avatar}</div>
+                  <div>
+                    <p style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>{name}</p>
+                    <p style={{ fontSize: 12, color: '#9ca3af' }}>{desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA bajo testimonios */}
+          <div style={{ textAlign: 'center', marginTop: 48 }}>
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="btn-primary" style={{ display: 'inline-flex' }}>
+              Quiero resultados así para mi hijo/a <ArrowRight size={17} />
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* IA SECTION */}
       <section id="ia-innovacion" className="ia-section">
         <div className="ia-grid" />
@@ -358,6 +516,12 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
+
+          <div style={{ textAlign: 'center', marginTop: 56 }}>
+            <Link href="/login?mode=signup" className="btn-primary" style={{ display: 'inline-flex', background: 'linear-gradient(135deg,#818cf8,#c084fc)' }}>
+              Accede a la plataforma <ArrowRight size={17} />
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -376,9 +540,9 @@ export default function LandingPage() {
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, color: '#111827', marginBottom: 12 }}>Terapia ABA</h3>
               <p style={{ color: '#6b7280', fontSize: 14, lineHeight: 1.75, marginBottom: 24 }}>Intervención basada en evidencia para mejorar habilidades sociales, comunicación y aprendizaje.</p>
-              <button onClick={() => scrollToSection('faq')} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4f46e5', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit', transition: 'gap .2s' }}>
-                Conocer más <ArrowRight size={16} />
-              </button>
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#4f46e5', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+                Agendar evaluación <ArrowRight size={16} />
+              </a>
             </div>
 
             <div className="svc-card featured">
@@ -388,9 +552,9 @@ export default function LandingPage() {
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>Habilidades Sociales</h3>
               <p style={{ color: 'rgba(255,255,255,.7)', fontSize: 14, lineHeight: 1.75, marginBottom: 24 }}>Talleres grupales donde los niños aprenden a interactuar en un entorno seguro y estimulante.</p>
-              <button onClick={() => scrollToSection('faq')} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
-                Conocer más <ArrowRight size={16} />
-              </button>
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+                Agendar evaluación <ArrowRight size={16} />
+              </a>
             </div>
 
             <div className="svc-card">
@@ -399,11 +563,66 @@ export default function LandingPage() {
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, color: '#111827', marginBottom: 12 }}>Escuela para Padres</h3>
               <p style={{ color: '#6b7280', fontSize: 14, lineHeight: 1.75, marginBottom: 24 }}>Capacitación constante para que las familias sean parte activa del progreso de sus hijos.</p>
-              <button onClick={() => scrollToSection('faq')} style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#16a34a', fontWeight: 700, fontSize: 14, background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>
-                Conocer más <ArrowRight size={16} />
-              </button>
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#16a34a', fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+                Más información <ArrowRight size={16} />
+              </a>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* EQUIPO — Caras humanas */}
+      <section className="team-section">
+        <div className="section-inner">
+          <div style={{ textAlign: 'center', marginBottom: 60 }}>
+            <div className="section-tag"><Heart size={13} /> Nuestro Equipo</div>
+            <h2 className="section-h2">Profesionales que<br/>aman lo que hacen</h2>
+            <p className="section-p" style={{ margin: '0 auto' }}>
+              Un equipo especializado que combina experiencia clínica, calidez humana y tecnología de punta.
+            </p>
+          </div>
+
+          <div className="grid-3">
+            {[
+              { initial: 'S', color: 'linear-gradient(135deg,#4f46e5,#7c3aed)', name: 'Terapeuta Principal', role: 'Especialista en Análisis Conductual Aplicado (ABA)', spec: 'Autismo · TDAH · TEA' },
+              { initial: 'A', color: 'linear-gradient(135deg,#0891b2,#0e7490)', name: 'Psicóloga Clínica', role: 'Evaluación y diagnóstico neuropsicológico infantil', spec: 'Evaluaciones · Reportes · Familias' },
+              { initial: 'M', color: 'linear-gradient(135deg,#059669,#047857)', name: 'Coordinadora', role: 'Gestión de casos y seguimiento familiar', spec: 'Comunicación · Agenda · Soporte' },
+            ].map(({ initial, color, name, role, spec }) => (
+              <div key={name} className="team-card">
+                <div className="team-avatar" style={{ background: color }}>{initial}</div>
+                <h3 style={{ fontWeight: 700, fontSize: 18, color: '#111827', marginBottom: 6 }}>{name}</h3>
+                <p style={{ fontSize: 13, color: '#6b7280', lineHeight: 1.6, marginBottom: 12 }}>{role}</p>
+                <div style={{ display: 'inline-block', background: '#ede9fe', color: '#7c3aed', borderRadius: 99, padding: '4px 12px', fontSize: 11, fontWeight: 700 }}>
+                  {spec}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* NEWSLETTER / LEAD CAPTURE */}
+      <section className="newsletter-section">
+        <div style={{ maxWidth: 700, margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ fontSize: 40, marginBottom: 16 }}>🎁</div>
+          <h2 style={{ fontWeight: 800, fontSize: 'clamp(24px,4vw,38px)', color: '#fff', marginBottom: 12 }}>
+            Recurso gratuito para ti
+          </h2>
+          <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 16, lineHeight: 1.7, marginBottom: 32 }}>
+            Descarga nuestro PDF gratuito:<br/>
+            <strong style={{ color: '#fff' }}>"5 actividades ABA para hacer en casa esta semana"</strong>
+          </p>
+          <a
+            href={`https://wa.me/51924807183?text=${encodeURIComponent('Hola, quiero recibir el PDF gratuito "5 actividades ABA para hacer en casa". ¡Gracias!')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '16px 32px', background: '#25d366', color: '#fff', borderRadius: 14, fontWeight: 700, fontSize: 16, textDecoration: 'none', boxShadow: '0 8px 24px rgba(0,0,0,.2)', transition: 'transform .2s' }}
+          >
+            <Phone size={20} /> Recibir por WhatsApp — Es gratis
+          </a>
+          <p style={{ color: 'rgba(255,255,255,.4)', fontSize: 12, marginTop: 16 }}>
+            Sin spam. Solo recursos útiles para tu familia.
+          </p>
         </div>
       </section>
 
@@ -417,7 +636,8 @@ export default function LandingPage() {
 
           {[
             { q: '¿A qué edad pueden empezar las terapias?', a: 'Atendemos niños desde los 1 año en adelante. La intervención temprana es clave para obtener mejores resultados. Nuestro equipo especializado adapta las sesiones según la edad y necesidades específicas de cada niño.' },
-            { q: '¿Cómo puedo conocer el progreso de mi hijo?', a: 'Utilizamos una aplicación web exclusiva donde podrás ver reportes diarios, gráficos de avance y observaciones detalladas de cada sesión. Además, nuestra IA genera resúmenes semanales personalizados.' },
+            { q: '¿Cómo es el proceso para empezar? ¿Hay evaluación gratuita?', a: 'Sí. El primer paso es una evaluación gratuita en la que conocemos a tu hijo y a la familia. A partir de ahí diseñamos un plan personalizado. Contáctanos por WhatsApp y coordinamos una fecha que se adapte a ti.' },
+            { q: '¿Cómo puedo conocer el progreso de mi hijo?', a: 'Utilizamos una aplicación web exclusiva donde podrás ver reportes diarios, gráficos de avance y observaciones detalladas de cada sesión. Además, nuestra IA genera resúmenes semanales personalizados en lenguaje sencillo.' },
             { q: '¿Qué metodología utilizan?', a: 'Trabajamos con la metodología ABA (Applied Behavior Analysis), reconocida mundialmente como el enfoque más efectivo basado en evidencia científica para el tratamiento de la neurodivergencia.' },
             { q: '¿Qué es la terapia ABA y por qué la usamos?', a: 'Es el Análisis Conductual Aplicado, un método con respaldo científico que ayuda a mejorar conductas y facilitar el aprendizaje. Registramos cada pequeño avance bajo este modelo para medir el progreso real y adaptar objetivos semana a semana.' },
           ].map((faq, i) => (
@@ -433,11 +653,11 @@ export default function LandingPage() {
             </div>
           ))}
 
-          <div style={{ marginTop: 48, background: 'linear-gradient(135deg, #4f46e5, #7c3aed)', borderRadius: 22, padding: '40px 36px', textAlign: 'center' }}>
-            <h3 style={{ color: '#fff', fontWeight: 800, fontSize: 22, marginBottom: 10 }}>¿Aún tienes dudas?</h3>
-            <p style={{ color: 'rgba(255,255,255,.7)', fontSize: 15, marginBottom: 24 }}>Estamos aquí para ayudarte. Contáctanos y resolveremos todas tus preguntas.</p>
-            <a href="https://wa.me/51924807183" target="_blank" rel="noopener noreferrer"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '13px 28px', background: '#fff', color: '#4f46e5', borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: 'none', transition: 'transform .2s, box-shadow .2s', boxShadow: '0 4px 16px rgba(0,0,0,.1)' }}>
+          <div style={{ marginTop: 48, background: 'linear-gradient(135deg, #16a34a, #15803d)', borderRadius: 22, padding: '40px 36px', textAlign: 'center' }}>
+            <h3 style={{ color: '#fff', fontWeight: 800, fontSize: 22, marginBottom: 10 }}>¿Listo para dar el primer paso?</h3>
+            <p style={{ color: 'rgba(255,255,255,.7)', fontSize: 15, marginBottom: 24 }}>Agenda hoy tu evaluación gratuita. Sin compromiso, con mucho amor.</p>
+            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '13px 28px', background: '#fff', color: '#16a34a', borderRadius: 12, fontWeight: 700, fontSize: 14, textDecoration: 'none', boxShadow: '0 4px 16px rgba(0,0,0,.1)' }}>
               <Phone size={18} /> Hablar con un especialista
             </a>
           </div>
@@ -450,6 +670,7 @@ export default function LandingPage() {
           src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3876.4229091779425!2d-76.0288421240214!3d-13.692817174731204!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91104331c0093305%3A0x21adbeb7d8eb168d!2sC.%20Victor%20Raul%20Haya%20de%20la%20Torre%2C%2011641!5e0!3m2!1ses-419!2spe!4v1770256602309!5m2!1ses-419!2spe"
           width="100%" height="100%" style={{ border: 0, position: 'absolute', inset: 0 }}
           allowFullScreen loading="lazy"
+          title="Ubicación de Jugando Aprendo en Pisco, Ica"
         />
         <div className="map-card">
           <h3 style={{ fontWeight: 800, fontSize: 22, color: '#111827', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -483,20 +704,20 @@ export default function LandingPage() {
               </div>
               <span style={{ color: '#fff', fontWeight: 800, fontSize: 17 }}>Jugando Aprendo</span>
             </div>
-            <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>Centro especializado en terapia y desarrollo infantil potenciado por IA.</p>
+            <p style={{ fontSize: 14, lineHeight: 1.7, marginBottom: 20 }}>Centro especializado en terapia ABA y desarrollo infantil potenciado por IA. Pisco, Ica, Perú.</p>
             <div>
-              <a href="#" className="social-btn"><Facebook size={16} /></a>
-              <a href="#" className="social-btn"><Instagram size={16} /></a>
+              <a href="https://www.facebook.com" className="social-btn" aria-label="Facebook"><Facebook size={16} /></a>
+              <a href="https://www.instagram.com" className="social-btn" aria-label="Instagram"><Instagram size={16} /></a>
             </div>
           </div>
 
           <div>
-            <h4>Enlaces</h4>
+            <h4>Servicios</h4>
             <ul>
-              <li><a href="#ia-innovacion">Innovación IA</a></li>
-              <li><a href="#servicios">Servicios</a></li>
-              <li><a href="#nosotros">Nosotros</a></li>
-              <li><a href="#faq">Preguntas</a></li>
+              <li><a href={whatsappUrl}>Terapia ABA</a></li>
+              <li><a href={whatsappUrl}>Habilidades Sociales</a></li>
+              <li><a href={whatsappUrl}>Escuela para Padres</a></li>
+              <li><a href={whatsappUrl}>Evaluación Gratuita</a></li>
             </ul>
           </div>
 
@@ -515,7 +736,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="footer-bottom">
-          © 2025 Jugando Aprendo. Todos los derechos reservados.
+          © 2025 Jugando Aprendo — Centro de Desarrollo Infantil · Pisco, Ica, Perú. Todos los derechos reservados.
         </div>
       </footer>
     </>

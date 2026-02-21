@@ -329,6 +329,126 @@ export default function ParentDashboard() {
     </div>
   )
 
+  // ── ONBOARDING para primer acceso (sin hijos registrados) ─────────────────
+  if (!loading && myChildren.length === 0 && profile && !showAddChild) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
+        <div className="max-w-lg w-full">
+          {/* Progress steps */}
+          <div className="flex items-center justify-center gap-3 mb-10">
+            {['Bienvenida', 'Tu hijo/a', 'Primera cita'].map((step, i) => (
+              <div key={step} className="flex items-center gap-2">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i === 0 ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                  {i + 1}
+                </div>
+                <span className={`text-xs font-bold ${i === 0 ? 'text-violet-600' : 'text-slate-400'}`}>{step}</span>
+                {i < 2 && <div className="w-8 h-px bg-slate-200" />}
+              </div>
+            ))}
+          </div>
+
+          <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-violet-100 border border-violet-100 text-center">
+            {/* Avatar */}
+            <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-[22px] flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-violet-200 mx-auto mb-6">
+              {profile?.full_name?.charAt(0) || 'F'}
+            </div>
+
+            <h1 className="text-2xl font-black text-slate-800 mb-3">
+              ¡Bienvenido/a, {profile?.full_name?.split(' ')[0]}! 🎉
+            </h1>
+            <p className="text-slate-500 text-base leading-relaxed mb-8">
+              Estamos felices de tenerte en <strong className="text-violet-600">Jugando Aprendo</strong>.
+              Para comenzar, necesitamos registrar a tu hijo/a y podrás acceder a todo el sistema de seguimiento con IA.
+            </p>
+
+            {/* Features preview */}
+            <div className="grid grid-cols-3 gap-4 mb-8">
+              {[
+                { icon: '📊', label: 'Progreso en tiempo real' },
+                { icon: '🤖', label: 'Asistente IA 24/7' },
+                { icon: '📅', label: 'Citas con 1 click' },
+              ].map(({ icon, label }) => (
+                <div key={label} className="bg-violet-50 rounded-2xl p-4 border border-violet-100">
+                  <div className="text-2xl mb-2">{icon}</div>
+                  <p className="text-xs font-bold text-violet-700 leading-tight">{label}</p>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowAddChild(true)}
+              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-4 rounded-2xl font-bold text-base shadow-lg shadow-violet-200 hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[.98] flex items-center justify-center gap-3"
+            >
+              <Baby size={20} /> Registrar a mi hijo/a ahora
+            </button>
+
+            <p className="text-xs text-slate-400 mt-4">
+              Solo toma 1 minuto · Tus datos están protegidos
+            </p>
+          </div>
+
+          {/* Help contact */}
+          <p className="text-center text-sm text-slate-400 mt-6">
+            ¿Tienes dudas? Escríbenos:{' '}
+            <a href="https://wa.me/51924807183" className="text-violet-600 font-bold hover:underline">
+              +51 924 807 183
+            </a>
+          </p>
+        </div>
+
+        {/* El modal de agregar hijo ya existe en el código principal */}
+        {showAddChild && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50"></div>
+              <div className="relative z-10">
+                <div className="flex justify-between items-center mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
+                      <Baby size={24} className="text-white"/>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-2xl text-slate-800">Paso 2: Tu hijo/a</h3>
+                      <p className="text-sm text-slate-400 font-medium">Ingresa sus datos básicos</p>
+                    </div>
+                  </div>
+                  <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+                    <X size={22}/>
+                  </button>
+                </div>
+                <form onSubmit={handleAddChild} className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Nombre Completo *</label>
+                    <input name="name" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder="Ej: María Fernanda López"/>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Fecha de Nacimiento *</label>
+                    <input name="dob" type="date" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all"/>
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Diagnóstico (Opcional)</label>
+                    <input name="diagnosis" className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder="Ej: TEA Nivel 2"/>
+                  </div>
+                  <div className="bg-violet-50 border-2 border-violet-100 rounded-2xl p-4">
+                    <p className="text-xs text-violet-700 font-bold flex items-center gap-2">
+                      <Sparkles size={14}/> La edad se calculará automáticamente
+                    </p>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={()=>setShowAddChild(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all">Cancelar</button>
+                    <button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+                      <CheckCircle2 size={18}/> Guardar y continuar
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 font-sans text-slate-600 overflow-hidden">
         
