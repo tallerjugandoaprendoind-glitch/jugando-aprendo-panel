@@ -259,3 +259,126 @@ body {
 }
 /* Re-apply login styles */
 .dark .login-root { background: #f5f4fe !important; }
+
+/* ============================================================
+   MOBILE RESPONSIVENESS — Panel Padre / Admin / Especialista
+   ============================================================ */
+
+/* Sidebar oculto en móvil por defecto (manejado con JS),
+   pero si hay overflow asegurar que el contenido no quede cortado */
+@media (max-width: 767px) {
+  /* Layout principal: quitar sidebar fijo en pantallas pequeñas */
+  .flex.min-h-screen { display: block !important; }
+
+  /* Contenido de las páginas internas */
+  .admin-content,
+  .flex-1.overflow-y-auto,
+  main { 
+    padding-left: 0 !important; 
+    padding-right: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Cards en grid → apiladas */
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+  .md\\:grid-cols-2, .md\\:grid-cols-3, .md\\:grid-cols-4,
+  .lg\\:grid-cols-2, .lg\\:grid-cols-3, .lg\\:grid-cols-4 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Padding interno */
+  .p-8 { padding: 20px 16px !important; }
+  .p-6 { padding: 16px !important; }
+  .px-8 { padding-left: 16px !important; padding-right: 16px !important; }
+  .px-6 { padding-left: 14px !important; padding-right: 14px !important; }
+
+  /* Tablas: scroll horizontal */
+  table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+
+  /* Modales: pantalla completa en móvil */
+  .fixed.inset-0 > .bg-white,
+  .fixed.inset-0 > div > .bg-white {
+    margin: 0 !important;
+    border-radius: 0 !important;
+    max-height: 100svh !important;
+    overflow-y: auto;
+  }
+
+  /* Texto largo: evitar overflow */
+  h1,h2,h3 { word-break: break-word; }
+
+  /* Botones: full width en pantallas pequeñas cuando están en flex col */
+  .flex.flex-col .w-full { width: 100% !important; }
+
+  /* Chat móvil */
+  .chat-container { height: calc(100svh - 120px) !important; }
+}
+
+/* Tablet: 768px - 1023px */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid-cols-3, .grid-cols-4, .lg\\:grid-cols-3, .lg\\:grid-cols-4 {
+    grid-template-columns: repeat(2,1fr) !important;
+  }
+  .p-8 { padding: 24px !important; }
+}
+
+/* ── Bottom nav móvil (padre/especialista) ─────────────────────── */
+@media (max-width: 767px) {
+  /* Asegurar que el body tenga padding bottom para el nav */
+  body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+  /* Iconos del nav más grandes en móvil */
+  .mobile-nav-icon { width: 28px !important; height: 28px !important; }
+
+  /* Ocultar texto del sidebar en pantallas muy pequeñas */
+  .sidebar-label { display: none; }
+
+  /* Imágenes responsivas */
+  img { max-width: 100%; height: auto; }
+
+  /* Overflow fixes */
+  .overflow-hidden { overflow: visible !important; }
+  .rounded-2xl, .rounded-xl { border-radius: 16px !important; }
+
+  /* Estadísticas: 2 columnas */
+  .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
+
+  /* Formularios: ancho completo */
+  input, select, textarea { width: 100% !important; font-size: 16px !important; }
+
+  /* Scrollable horizontal en tablas */
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* ── Safe area para notch/home indicator ──────────────────────── */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .lp-nav, nav { padding-top: env(safe-area-inset-top, 0); }
+  .lp-wa { bottom: calc(22px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* ── Touch targets mínimos ──────────────────────────────────────── */
+@media (max-width: 767px) {
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  /* Excluir iconos decorativos */
+  button svg, a svg { min-height: unset; min-width: unset; }
+}
+
+/* ── Smooth scroll en iOS ──────────────────────────────────────── */
+* { -webkit-overflow-scrolling: touch; }
+
+/* ── Evitar zoom en inputs iOS ──────────────────────────────────── */
+@media (max-width: 767px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  textarea,
+  select { font-size: 16px !important; }
+}
