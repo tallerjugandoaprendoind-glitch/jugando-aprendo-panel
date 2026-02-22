@@ -2,134 +2,144 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from "@google/genai"
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-// ============================================================================
-// API CHAT PADRES - VERSIÓN ACTUALIZADA (@google/genai)
-// ============================================================================
-
 export async function POST(req: NextRequest) {
   try {
-    const { question, childId } = await req.json()
+    const { question, childId, childName } = await req.json()
 
-    // 1. Validaciones
     if (!question || !childId) {
-      return NextResponse.json(
-        { text: "Error: No se identificó la pregunta o el paciente." },
-        { status: 400 }
-      )
+      return NextResponse.json({ text: "Error: Faltan datos." }, { status: 400 })
     }
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
-      return NextResponse.json(
-        { text: "Error de configuración: Falta la API Key de Gemini." },
-        { status: 500 }
-      )
+      return NextResponse.json({ text: "Error de configuración: Falta la API Key de Gemini." }, { status: 500 })
     }
 
-    // 2. CONTEXTO RICO (Supabase)
     const supabase = supabaseAdmin
 
-    // A. Info del niño
-    const { data: child } = await supabase
-      .from('children')
-      .select('name, birth_date, diagnosis')
-      .eq('id', childId)
-      .single()
+    // ── Contexto clínico ──────────────────────────────────────────────────────
+    const [
+      { data: child },
+      { data: sessions },
+      { data: appointments },
+    ] = await Promise.all([
+      supabase.from('children').select('name, birth_date, diagnosis').eq('id', childId).single(),
+      supabase.from('registro_aba').select('fecha_sesion, datos').eq('child_id', childId).order('fecha_sesion', { ascending: false }).limit(5),
+      supabase.from('appointments').select('appointment_date, appointment_time').eq('child_id', childId).gte('appointment_date', new Date().toISOString().split('T')[0]).order('appointment_date', { ascending: true }).limit(1),
+    ])
 
-    // B. Historial (Leemos 5 para dar contexto reciente sin saturar)
-    const { data: sessions } = await supabase
-      .from('registro_aba')
-      .select('fecha_sesion, datos')
-      .eq('child_id', childId)
-      .order('fecha_sesion', { ascending: false })
-      .limit(5)
+    // ── Productos de la tienda ────────────────────────────────────────────────
+    // Solo traer si la pregunta es sobre actividades, casa, materiales, ayuda
+    const esConsultaActividades = /casa|actividad|ejercicio|material|juego|practicar|hacer|recurso|tip|consejo/i.test(question)
 
-    // C. Próximas citas
-    const { data: appointments } = await supabase
-      .from('appointments')
-      .select('appointment_date, appointment_time')
-      .eq('child_id', childId)
-      .gte('appointment_date', new Date().toISOString().split('T')[0])
-      .order('appointment_date', { ascending: true })
-      .limit(1)
+    let productosTexto = ''
+    let productosData: any[] = []
 
-    // 3. CONSTRUCCIÓN DEL PROMPT INTELIGENTE
+    if (esConsultaActividades) {
+      const { data: productos } = await supabase
+        .from('store_products')
+        .select('id, nombre, descripcion, precio_soles, tipo, categoria, imagen_url')
+        .eq('activo', true)
+        .gt('stock', 0)
+        .order('destacado', { ascending: false })
+        .limit(10)
+
+      productosData = productos || []
+
+      if (productosData.length > 0) {
+        productosTexto = `\n\nPRODUCTOS DE NUESTRA TIENDA (puedes sugerir UNO si genuinamente ayuda):
+${productosData.map((p, i) => `${i + 1}. ID:"${p.id}" | "${p.nombre}" | S/${p.precio_soles} | ${p.tipo}\n   ${p.descripcion || ''}`).join('\n')}
+
+REGLA: Solo sugiere un producto si tiene conexión real con los consejos que das. Si no aplica ninguno, no menciones la tienda.`
+      }
+    }
+
+    // ── Contexto del paciente ─────────────────────────────────────────────────
     let contextParts: string[] = []
 
-    // Contexto: Paciente
     if (child) {
       const age = calculateAge(child.birth_date)
-      contextParts.push(`PACIENTE:
-- Nombre: ${child.name}
-- Edad: ${age} años
-- Diagnóstico: ${child.diagnosis || 'En evaluación'}`)
+      contextParts.push(`PACIENTE: ${child.name}, ${age} años, ${child.diagnosis || 'En evaluación'}`)
     }
 
-    // Contexto: Historial Reciente
     if (sessions && sessions.length > 0) {
-      const historyText = sessions.map((s: any) => `
-      - Fecha: ${s.fecha_sesion}
-        Objetivo: ${s.datos?.objetivo_sesion || 'N/A'}
-        Resultado: ${s.datos?.resultado_sesion || 'N/A'}
-        Conducta: ${s.datos?.conducta || 'N/A'}
-      `).join('\n')
-      
-      contextParts.push(`HISTORIAL RECIENTE (Últimas 5 sesiones):\n${historyText}`)
+      const historyText = sessions.map((s: any) =>
+        `  - ${s.fecha_sesion}: ${s.datos?.objetivo_sesion || 'N/A'} | ${s.datos?.resultado_sesion || 'N/A'}`
+      ).join('\n')
+      contextParts.push(`HISTORIAL RECIENTE:\n${historyText}`)
     } else {
-        contextParts.push("HISTORIAL: Aún no hay sesiones registradas.")
+      contextParts.push("HISTORIAL: Sin sesiones registradas aún.")
     }
 
-    // Contexto: Próxima Cita
     if (appointments && appointments.length > 0) {
-      const next = appointments[0]
-      contextParts.push(`PRÓXIMA CITA: ${next.appointment_date} a las ${next.appointment_time}`)
+      contextParts.push(`PRÓXIMA CITA: ${appointments[0].appointment_date} a las ${appointments[0].appointment_time}`)
     }
+
+    contextParts.push(productosTexto)
 
     const dataContext = contextParts.join('\n\n')
 
-    // 4. INVOCAR GEMINI (Nueva Librería)
+    // ── Prompt ────────────────────────────────────────────────────────────────
     const ai = new GoogleGenAI({ apiKey })
-    
-    // Instrucción del Sistema
-    const systemInstruction = `
-      ERES UN ASISTENTE CLÍNICO EXPERTO EN ABA (Análisis Conductual Aplicado).
-      
-      TU PERSONALIDAD:
-      - Empática, cálida y profesional.
-      - Hablas como una terapeuta experta que apoya a los padres.
-      - Usas emojis ocasionales (💙, ✨, 📋) para suavizar el tono.
 
-      TUS REGLAS:
-      1. Responde basándote EXCLUSIVAMENTE en los datos del historial proporcionado.
-      2. Si hay progreso (objetivos logrados), ¡celébralo con entusiasmo!
-      3. Si hay dificultades, valida la emoción del padre y ofrece perspectiva positiva.
-      4. Si te piden consejos, da 1 o 2 tips prácticos y breves.
-      5. Sé concisa. No escribas párrafos gigantes.
-    `
+    const systemInstruction = `
+ERES UN ASISTENTE CLÍNICO EXPERTO EN ABA del centro Jugando Aprendo (Pisco, Perú).
+
+PERSONALIDAD: Empática, cálida y profesional. Como una terapeuta experta que apoya a los padres.
+Usas emojis ocasionales (💙, ✨, 📋) para suavizar el tono.
+
+REGLAS:
+1. Responde basándote en el historial clínico proporcionado.
+2. Si hay progreso, ¡celébralo!
+3. Si hay dificultades, valida la emoción y ofrece perspectiva positiva.
+4. Sé concisa. No escribas párrafos gigantes.
+5. PRODUCTO: Si el contexto incluye productos de la tienda y la pregunta es sobre actividades/materiales:
+   - Puedes sugerir UNO de forma natural al final de tu respuesta, en una línea separada.
+   - Formato exacto si sugieres: [PRODUCTO_ID:el-id-exacto-aqui]
+   - El mensaje al padre debe ser natural: "Por cierto, en nuestra tienda tenemos el Kit de fichas ABA que puede ayudarte..."
+   - Si ningún producto aplica, NO menciones la tienda en absoluto.
+`
 
     const prompt = `
-    CONTEXTO DEL PACIENTE:
-    ${dataContext}
+CONTEXTO DEL PACIENTE:
+${dataContext}
 
-    PREGUNTA DEL PADRE/MADRE:
-    "${question}"
+PREGUNTA DEL PADRE/MADRE:
+"${question}"
 
-    Responde directamente a la pregunta con el tono empático definido.
-    `
+Responde directamente. Si sugieres un producto, al FINAL pon [PRODUCTO_ID:el-id] en una línea aparte.
+`
 
-    // Ejecución del modelo con la nueva sintaxis
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: prompt,
-      config: {
-        systemInstruction: systemInstruction,
-      },
+      config: { systemInstruction, temperature: 0.5 },
     })
 
-    // Obtener texto de forma segura
-    const text = response.text || "Lo siento, no pude generar una respuesta en este momento."
+    let fullText = response.text || "Lo siento, no pude generar una respuesta en este momento."
 
-    return NextResponse.json({ text })
+    // ── Extraer sugerencia de producto del texto ──────────────────────────────
+    let producto_sugerido_info = null
+    const productoMatch = fullText.match(/\[PRODUCTO_ID:([^\]]+)\]/)
+
+    if (productoMatch && productosData.length > 0) {
+      const productoId = productoMatch[1].trim()
+      const prod = productosData.find((p: any) => p.id === productoId)
+      if (prod) {
+        producto_sugerido_info = {
+          id: prod.id,
+          nombre: prod.nombre,
+          descripcion: prod.descripcion,
+          precio_soles: prod.precio_soles,
+          tipo: prod.tipo,
+          imagen_url: prod.imagen_url,
+        }
+      }
+      // Limpiar el marcador del texto visible
+      fullText = fullText.replace(/\[PRODUCTO_ID:[^\]]+\]/g, '').trim()
+    }
+
+    return NextResponse.json({ text: fullText, producto_sugerido_info })
 
   } catch (error: any) {
     console.error('Error en Chat Padres:', error)
@@ -140,15 +150,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// Función auxiliar para edad
 function calculateAge(birthDate: string): number {
   if (!birthDate) return 0
   const today = new Date()
   const birth = new Date(birthDate)
   let age = today.getFullYear() - birth.getFullYear()
   const monthDiff = today.getMonth() - birth.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--
-  }
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--
   return age
 }

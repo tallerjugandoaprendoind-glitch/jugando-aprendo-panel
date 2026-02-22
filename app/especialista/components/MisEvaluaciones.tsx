@@ -21,6 +21,33 @@ const TIPOS = [
   { id: 'familia',  label: 'Para familia',   desc: 'Guías para el hogar',   color: 'bg-amber-50 text-amber-700 border-amber-200' },
 ]
 
+const TEMPLATES: Record<string, any> = {
+  conducta: {
+    titulo: 'Análisis de conducta - [Nombre]',
+    contenido: 'Antecedente: [Describir qué ocurrió antes]\n\nConducta: [Describir exactamente la conducta, duración e intensidad]\n\nConsecuencia: [Qué ocurrió después]',
+    observaciones: 'La conducta ocurrió [X] veces. El niño mostró [describir estado emocional].',
+    recomendaciones: '1. [Estrategia para casa]\n2. [Reforzadores recomendados]\n3. [Situaciones a evitar]',
+  },
+  progreso: {
+    titulo: 'Reporte de progreso - [Nombre] - [Mes]',
+    contenido: 'Objetivo trabajado: [Nombre]\n\nLogros esta semana:\n- [Logro 1]\n- [Logro 2]\n\nNivel de dominio: [X]%',
+    observaciones: 'El niño mostró [descripción]. Se observó mayor respuesta a [estímulo].',
+    recomendaciones: 'Para casa:\n1. [Actividad 1]\n2. [Actividad 2]',
+  },
+  sesion: {
+    titulo: 'Nota de sesión - [Nombre] - [Fecha]',
+    contenido: 'Duración: [X] minutos\n\nActividades:\n1. [Actividad 1] - [resultado]\n2. [Actividad 2] - [resultado]\n\nRespuesta: [descripción]',
+    observaciones: 'Llegó a la sesión [estado]. Durante la sesión [momentos clave].',
+    recomendaciones: 'Para la próxima sesión: [actividades/temas]',
+  },
+  familia: {
+    titulo: 'Guía para la familia - [Nombre]',
+    contenido: 'Estimadas familias,\n\nEsta semana trabajamos en [objetivo]. Actividades en casa:\n\n🌟 Actividad 1: [Descripción]\n🌟 Actividad 2: [Descripción]',
+    observaciones: 'Practiquen al menos [X] veces por día.',
+    recomendaciones: 'Si notan algo diferente en casa, comuníquenlo en la próxima sesión.',
+  },
+}
+
 export default function MisEvaluaciones({ userId }: { userId: string }) {
   const toast = useToast()
   const [evaluaciones, setEvaluaciones] = useState<any[]>([])
@@ -154,9 +181,22 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                       </span>
                     </div>
                     {ev.admin_comment && (
-                      <div className="mt-3 px-3 py-2 bg-blue-50 border-l-4 border-blue-400 rounded-r-xl text-xs">
-                        <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wide mb-0.5">Comentario del jefe</p>
-                        <p className="text-slate-600">{ev.admin_comment}</p>
+                      <div className={`mt-3 px-4 py-3 rounded-xl text-xs border-l-4 ${ev.status === 'rejected' ? 'bg-red-50 border-red-400' : 'bg-blue-50 border-blue-400'}`}>
+                        <p className={`text-[10px] font-black uppercase tracking-wide mb-1 ${ev.status === 'rejected' ? 'text-red-600' : 'text-blue-500'}`}>
+                          {ev.status === 'rejected' ? '🚨 Motivo del rechazo — por favor corrígelo' : '💬 Comentario del jefe'}
+                        </p>
+                        <p className="text-slate-700 leading-relaxed">{ev.admin_comment}</p>
+                        {ev.status === 'rejected' && (
+                          <button
+                            onClick={() => {
+                              setForm({ child_id: ev.child_id, tipo: ev.tipo, titulo: `[CORREGIDO] ${ev.titulo}`, contenido: ev.contenido, observaciones: ev.observaciones || '', recomendaciones: ev.recomendaciones || '' })
+                              setMostrarForm(true)
+                            }}
+                            className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-black text-red-700 bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-200 transition-all"
+                          >
+                            ✏️ Crear versión corregida
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -195,6 +235,33 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
             </div>
 
             <div className="p-6 space-y-5">
+              {/* Tipo + botón de plantilla */}
+              <div>
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Tipo de evaluación *</label>
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  {TIPOS.map(t => (
+                    <button key={t.id} type="button"
+                      onClick={() => setForm(f => ({ ...f, tipo: t.id }))}
+                      className={`p-3 rounded-xl border-2 text-left transition-all ${form.tipo === t.id ? `${t.color} border-current` : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}>
+                      <p className="text-xs font-black">{t.label}</p>
+                      <p className="text-[10px] opacity-70">{t.desc}</p>
+                    </button>
+                  ))}
+                </div>
+                {TEMPLATES[form.tipo] && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const tpl = TEMPLATES[form.tipo]
+                      setForm(f => ({ ...f, titulo: tpl.titulo, contenido: tpl.contenido, observaciones: tpl.observaciones, recomendaciones: tpl.recomendaciones }))
+                    }}
+                    className="w-full py-2.5 border-2 border-dashed border-blue-300 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                  >
+                    ✨ Usar plantilla de {TIPOS.find(t => t.id === form.tipo)?.label}
+                  </button>
+                )}
+              </div>
+
               {/* Paciente */}
               <div>
                 <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Paciente *</label>

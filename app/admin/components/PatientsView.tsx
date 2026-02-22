@@ -16,7 +16,8 @@ function PatientsView() {
     const [searchTerm, setSearchTerm] = useState('')
     const [filterDiagnosis, setFilterDiagnosis] = useState('todos')
     const [sortBy, setSortBy] = useState('nombre')
-    
+    const [ultimasSesiones, setUltimasSesiones] = useState<Record<string, string>>({})
+
     const [selectedPatient, setSelectedPatient] = useState<any>(null)
     const [showPatientModal, setShowPatientModal] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
@@ -43,8 +44,35 @@ function PatientsView() {
         if (data) {
             setListaNinos(data)
             setListaNinosFiltrada(data)
+            // Cargar última sesión de cada paciente
+            const { data: sesiones } = await supabase
+                .from('aba_sessions_v2')
+                .select('child_id, session_date')
+                .order('session_date', { ascending: false })
+            if (sesiones) {
+                const map: Record<string, string> = {}
+                sesiones.forEach((s: any) => {
+                    if (!map[s.child_id]) map[s.child_id] = s.session_date
+                })
+                setUltimasSesiones(map)
+            }
         }
         setIsLoading(false)
+    }
+
+    // Calcula días desde última sesión
+    const diasSinSesion = (childId: string): number | null => {
+        const fecha = ultimasSesiones[childId]
+        if (!fecha) return null
+        const diff = (Date.now() - new Date(fecha).getTime()) / (1000 * 60 * 60 * 24)
+        return Math.floor(diff)
+    }
+
+    const alertaColor = (dias: number | null) => {
+        if (dias === null) return { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Sin sesiones' }
+        if (dias <= 14) return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: `Hace ${dias}d` }
+        if (dias <= 30) return { bg: 'bg-amber-100', text: 'text-amber-700', label: `Hace ${dias}d ⚠️` }
+        return { bg: 'bg-red-100', text: 'text-red-700', label: `Hace ${dias}d 🚨` }
     }
 
     const calcularEdadDesdeString = (birthDate: string): number => {
@@ -213,9 +241,9 @@ function PatientsView() {
                             <thead className="bg-slate-50 sticky top-0 z-10">
                                 <tr className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
                                     <th className="p-4 lg:p-6 lg:pl-10">Paciente</th>
-                                    <th className="p-4 lg:p-6">F. Nacimiento</th>
                                     <th className="p-4 lg:p-6">Edad</th>
                                     <th className="p-4 lg:p-6">Diagnóstico</th>
+                                    <th className="p-4 lg:p-6">Última sesión</th>
                                     <th className="p-4 lg:p-6 text-right lg:pr-10">Acciones</th>
                                 </tr>
                             </thead>
@@ -228,15 +256,23 @@ function PatientsView() {
                                                 <span className="font-black text-slate-700 text-base">{nino.name}</span>
                                             </div>
                                         </td>
-                                        <td className="p-4 lg:p-6 text-slate-500 text-sm font-medium">
-                                            {nino.birth_date ? new Date(nino.birth_date).toLocaleDateString('es-PE') : "---"}
-                                        </td>
                                         <td className="p-4 lg:p-6">
                                             <span className="font-black text-slate-700">
                                                 {nino.age ? `${nino.age} años` : "N/A"}
                                             </span>
                                         </td>
                                         <td className="p-4 lg:p-6"><span className="px-4 py-2 rounded-xl text-xs font-black bg-purple-50 text-purple-600 border border-purple-100 inline-block">{nino.diagnosis || "En evaluación"}</span></td>
+                                        <td className="p-4 lg:p-6">
+                                            {(() => {
+                                                const dias = diasSinSesion(nino.id)
+                                                const cfg = alertaColor(dias)
+                                                return (
+                                                    <span className={`px-3 py-1.5 rounded-xl text-xs font-black ${cfg.bg} ${cfg.text} inline-block`}>
+                                                        {cfg.label}
+                                                    </span>
+                                                )
+                                            })()}
+                                        </td>
                                         <td className="p-4 lg:p-6 text-right lg:pr-10">
                                             <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> Ver</button>
                                         </td>

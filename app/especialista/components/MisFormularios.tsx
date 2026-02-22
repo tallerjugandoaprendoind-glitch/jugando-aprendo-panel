@@ -393,6 +393,36 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
             </div>
           )}
 
+          {/* ── Producto sugerido por la IA ── */}
+          {aiAnalysis.producto_sugerido_info && (
+            <div className="rounded-2xl overflow-hidden border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50">
+              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 px-4 py-2.5 flex items-center gap-2">
+                <span className="text-lg">🛒</span>
+                <span className="text-xs font-black text-white uppercase tracking-wider">Producto sugerido por IA para este caso</span>
+              </div>
+              <div className="flex gap-4 p-4 items-start">
+                <div className="w-16 h-16 rounded-xl overflow-hidden bg-amber-100 flex-shrink-0 flex items-center justify-center">
+                  {aiAnalysis.producto_sugerido_info.imagen_url
+                    ? <img src={aiAnalysis.producto_sugerido_info.imagen_url} alt="" className="w-full h-full object-cover" />
+                    : <span className="text-2xl">{aiAnalysis.producto_sugerido_info.tipo === 'digital' ? '📄' : '📦'}</span>
+                  }
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-black text-amber-900 text-sm mb-1">{aiAnalysis.producto_sugerido_info.nombre}</p>
+                  {aiAnalysis.producto_sugerido_info.razon && (
+                    <p className="text-xs text-amber-800 leading-relaxed mb-2">💡 {aiAnalysis.producto_sugerido_info.razon}</p>
+                  )}
+                  <p className="text-lg font-black text-amber-700">S/ {Number(aiAnalysis.producto_sugerido_info.precio_soles).toFixed(2)}</p>
+                </div>
+              </div>
+              <div className="px-4 pb-3">
+                <p className="text-xs text-amber-700 bg-amber-100 border border-amber-200 rounded-lg px-3 py-2">
+                  💬 <strong>Nota para el especialista:</strong> Puedes mencionar este material a la familia como apoyo para la tarea en casa.
+                </p>
+              </div>
+            </div>
+          )}
+
           <button onClick={handleSave} disabled={saving}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm disabled:opacity-50 shadow-md transition-colors">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}

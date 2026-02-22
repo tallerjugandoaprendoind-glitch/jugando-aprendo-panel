@@ -10,7 +10,7 @@ import {
   Award, Target, Smile, Book, Star, Zap, Bell, Download, Share2, Eye, Mail, Phone,
   Settings, HelpCircle, FileText, Video, Headphones, Image as ImageIcon, ExternalLink,
   Camera, Upload, Gift, PartyPopper, Flame, TrendingDown, Baby, Stethoscope, PlayCircle,
-  CalendarDays
+  CalendarDays, ShoppingBag
 } from 'lucide-react'
 
 import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './components/shared'
@@ -21,6 +21,7 @@ import ResourcesView from './components/ResourcesView'
 import ParentFormsView from './components/ParentFormsView'
 import MisCitasView from './components/MisCitasView'
 import ProfileView from './components/ProfileView'
+import StoreView from './components/StoreView'
 import ChatInterface from './components/ChatInterface'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
 
@@ -495,6 +496,7 @@ export default function ParentDashboard() {
                     <NavBtnDesktop icon={<CalendarDays size={20}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                     <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
+                    <NavBtnDesktop icon={<ShoppingBag size={20}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
                     <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={0} />
                     <NavBtnDesktop icon={<User size={20}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
                 </nav>
@@ -672,11 +674,12 @@ export default function ParentDashboard() {
                                     <RefreshCw size={18}/>
                                 </button>
                             </div>
-                            <ChatInterface childId={selectedChild?.id} childName={selectedChild?.name} />
+                            <ChatInterface childId={selectedChild?.id} childName={selectedChild?.name} onNavigateToStore={() => setActiveView('tienda')} />
                         </div>
                     )}
 
                     {activeView === 'resources' && <ResourcesView profile={profile} />}
+                    {activeView === 'tienda'    && <StoreView profile={profile} />}
                     {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} />}
 
                     {activeView === 'profile' && (
@@ -715,6 +718,7 @@ export default function ParentDashboard() {
                     </button>
                 </div>
                 <NavBtnMobile icon={<Book size={22}/>} label="Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
+                <NavBtnMobile icon={<ShoppingBag size={22}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
                 <NavBtnMobile icon={<User size={22}/>} label="Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
         </div>

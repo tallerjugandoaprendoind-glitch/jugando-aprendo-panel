@@ -8,7 +8,7 @@ import Image from 'next/image'
 import {
   LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen,
   X, User, FileText, Loader2, Key, BarChart3, ShieldCheck, Upload,
-  ChevronRight, Settings, Crown, Stethoscope
+  ChevronRight, Settings, Crown, Stethoscope, ShoppingBag
 } from 'lucide-react'
 
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
@@ -24,6 +24,7 @@ import ResourcesManagementView from './components/ResourcesManagementView'
 import MensajesPendientesPanel from './components/MensajesPendientesPanel'
 import AIReportView from './components/AIReportView'
 import AprobacionesEspecialista from './components/AprobacionesEspecialista'
+import StoreManagementView from './components/StoreManagementView'
 
 const NAV_ITEMS = [
   { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
@@ -32,6 +33,7 @@ const NAV_ITEMS = [
   { id: 'evaluaciones', icon: FileText,        label: 'Evaluaciones' },
   { id: 'reportes',     icon: Brain,           label: 'Historial & IA' },
   { id: 'recursos',     icon: BookOpen,        label: 'Recursos' },
+  { id: 'tienda',       icon: ShoppingBag,     label: 'Tienda' },
 ]
 
 const SECONDARY_NAV = [
@@ -377,6 +379,7 @@ export default function AdminDashboard() {
               {currentView === 'evaluaciones' && <EvaluacionesUnificadas />}
               {currentView === 'reportes'     && <AIReportView onChildSelect={setSelectedChildReport} />}
               {currentView === 'recursos'     && <ResourcesManagementView />}
+              {currentView === 'tienda'       && <StoreManagementView />}
               {currentView === 'aprobaciones' && (
                 <div className="space-y-10">
                   <MensajesPendientesPanel />
