@@ -198,7 +198,7 @@ export default function LandingPage() {
     return () => clearInterval(t)
   }, [])
 
-  const waMsg = encodeURIComponent('Hola, vi su página web y me interesa agendar una evaluación gratuita para mi hijo/a.')
+  const waMsg = encodeURIComponent('Hola, vi su página web y me interesa conocer más sobre sus servicios de terapia para mi hijo/a.')
   const waUrl = `https://wa.me/51924807183?text=${waMsg}`
 
   const imgs = [
@@ -377,8 +377,7 @@ export default function LandingPage() {
           .lp-modal-x { top: 8px; right: 8px; }
           .lp-nav-inner { height: 60px; }
 
-          /* Hide secondary nav button on small screens to save space */
-          .lp-btn-ghost { display: none; }
+          /* Nav button always visible */
 
           /* Gallery thumbs: 2 cols on very small screens */
           .lp-thumbs { grid-template-columns: repeat(2,1fr) !important; }
@@ -420,8 +419,7 @@ export default function LandingPage() {
             <a href="#faq">Preguntas</a>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <Link href="/login" className="lp-btn-ghost">Ingresar</Link>
-            <a href={waUrl} target="_blank" rel="noopener noreferrer" className="lp-btn-fill">Evaluar gratis</a>
+            <Link href="/login" className="lp-btn-fill">Ingresar</Link>
           </div>
         </div>
       </nav>
@@ -453,7 +451,7 @@ export default function LandingPage() {
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 36 }}>
               <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn-wa">
-                <Phone size={16} /> Evaluación gratuita
+                <Phone size={16} /> Contáctanos
               </a>
               <button className="btn-outline" onClick={() => document.getElementById('para-padres')?.scrollIntoView({ behavior: 'smooth' })}>
                 <Sparkles size={16} color="#f97316" /> ¿Qué ofrecemos?
@@ -725,14 +723,14 @@ export default function LandingPage() {
               <div style={{ width: 56, height: 56, background: '#dbeafe', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Brain size={26} color="#2563eb" /></div>
               <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#1c1917', marginBottom: 10 }}>Terapia ABA</h3>
               <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>Intervención basada en evidencia para mejorar habilidades sociales, comunicación y aprendizaje.</p>
-              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#f97316', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Agendar evaluación <ArrowRight size={15} /></a>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#f97316', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contáctanos <ArrowRight size={15} /></a>
             </div>
             <div className="lp-svc-card featured">
               <div style={{ position: 'absolute', top: 16, right: 16, background: '#fbbf24', color: '#1c1917', fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 99, fontFamily: "'Baloo 2',cursive" }}>Popular</div>
               <div style={{ width: 56, height: 56, background: 'rgba(255,255,255,.2)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Users size={26} color="#fff" /></div>
               <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Habilidades Sociales</h3>
               <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>Talleres grupales donde los niños aprenden a interactuar en un entorno seguro y lúdico.</p>
-              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#fff', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Agendar evaluación <ArrowRight size={15} /></a>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#fff', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contáctanos <ArrowRight size={15} /></a>
             </div>
             <div className="lp-svc-card">
               <div style={{ width: 56, height: 56, background: '#dcfce7', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Calendar size={26} color="#16a34a" /></div>
@@ -777,7 +775,7 @@ export default function LandingPage() {
           </div>
           {[
             { q: '¿A qué edad pueden empezar las terapias?', a: 'Atendemos niños desde los 1 año en adelante. La intervención temprana es clave. Nuestro equipo adapta las sesiones según la edad y necesidades de cada niño.' },
-            { q: '¿Hay evaluación gratuita?', a: 'Sí. El primer paso es una evaluación gratuita donde conocemos a tu hijo y familia. Luego diseñamos un plan personalizado. Contáctanos por WhatsApp.' },
+            { q: '¿Cómo puedo empezar?', a: 'Es muy sencillo. Contáctanos por WhatsApp y nuestro equipo te orientará sobre el proceso de admisión y los servicios que mejor se adaptan a las necesidades de tu hijo/a.' },
             { q: '¿Cómo veo el progreso de mi hijo?', a: 'A través de nuestra plataforma verás reportes diarios, gráficos de avance y observaciones de cada sesión. ARIA genera resúmenes semanales en lenguaje sencillo.' },
             { q: '¿Qué metodología utilizan?', a: 'Trabajamos con la metodología ABA (Applied Behavior Analysis), reconocida como el enfoque más efectivo con respaldo científico para la neurodivergencia.' },
             { q: '¿Qué incluye la plataforma para padres?', a: 'Incluye: reportes diarios, gráficos de progreso, chat con el equipo, asistente ARIA 24/7, agenda de citas, biblioteca de recursos y notificaciones en tiempo real.' },
@@ -797,7 +795,7 @@ export default function LandingPage() {
           <div style={{ marginTop: 44, background: 'linear-gradient(135deg,#f97316,#ea580c)', borderRadius: 22, padding: '38px 32px', textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 10 }}>🌟</div>
             <h3 style={{ fontFamily: "'Baloo 2',cursive", color: '#fff', fontWeight: 800, fontSize: 22, marginBottom: 8 }}>¿Listo para dar el primer paso?</h3>
-            <p style={{ color: 'rgba(255,255,255,.8)', fontSize: 14, marginBottom: 24 }}>Agenda hoy tu evaluación gratuita. Sin compromiso, con mucho amor.</p>
+            <p style={{ color: 'rgba(255,255,255,.8)', fontSize: 14, marginBottom: 24 }}>Escríbenos hoy y da el primer paso hacia el desarrollo de tu hijo/a.</p>
             <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '13px 28px', background: '#fff', color: '#f97316', borderRadius: 99, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
               <Phone size={17} /> Hablar con un especialista
             </a>
