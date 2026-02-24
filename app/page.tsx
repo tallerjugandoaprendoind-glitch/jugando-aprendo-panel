@@ -102,139 +102,65 @@ function getPlatformLabel(url: string) {
   return labels[p]
 }
 
-// ── Robot ARIA animado ───────────────────────────────────────────────────────
-function ARIARobot() {
+// ── Chat IA illustration ───────────────────────────────────────────────────────
+function ARIAChatIllustration() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-      {/* Glow halo */}
-      <div style={{
-        position: 'absolute', width: 260, height: 260, borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(251,191,36,.25) 0%, transparent 70%)',
-        animation: 'ariaPulse 3s ease-in-out infinite',
-        top: '50%', left: '50%', transform: 'translate(-50%,-50%)',
-      }} />
-
-      <div style={{ animation: 'ariaFloat 4s ease-in-out infinite', position: 'relative' }}>
-        {/* ── Antena ── */}
-        <div style={{ display: 'flex', justifyContent: 'center', position: 'relative', marginBottom: 2 }}>
-          <div style={{ width: 5, height: 28, background: 'linear-gradient(to top,#fbbf24,#f59e0b)', borderRadius: 99, margin: '0 auto' }} />
-          <div style={{
-            position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-            width: 18, height: 18, borderRadius: '50%',
-            background: 'radial-gradient(circle, #fff 30%, #fbbf24 100%)',
-            boxShadow: '0 0 14px 6px rgba(251,191,36,.9), 0 0 30px 10px rgba(251,191,36,.4)',
-            animation: 'ariaAntenna 1.8s ease-in-out infinite',
-          }} />
-        </div>
-
-        {/* ── Cabeza ── */}
+    <div style={{ position: 'relative', width: 340, maxWidth: '100%' }}>
+      {/* ARIA avatar circle */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+        {/* Avatar */}
         <div style={{
-          width: 130, height: 100, margin: '0 auto',
-          background: 'linear-gradient(145deg, #fde68a, #fbbf24, #f59e0b)',
-          borderRadius: '28px 28px 22px 22px',
-          boxShadow: '0 0 40px rgba(251,191,36,.6), 0 12px 30px rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.4)',
-          position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          gap: 18,
+          width: 96, height: 96, borderRadius: '50%',
+          background: 'linear-gradient(135deg,#f97316,#ea580c)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 0 8px rgba(249,115,22,.12), 0 16px 40px rgba(249,115,22,.25)',
+          animation: 'ariaFloat 4s ease-in-out infinite',
+          position: 'relative',
         }}>
-          {/* Oídos */}
-          <div style={{ position: 'absolute', left: -14, top: 24, width: 16, height: 32, background: 'linear-gradient(145deg,#f59e0b,#d97706)', borderRadius: 99, boxShadow: '0 4px 12px rgba(0,0,0,.3)' }} />
-          <div style={{ position: 'absolute', right: -14, top: 24, width: 16, height: 32, background: 'linear-gradient(145deg,#f59e0b,#d97706)', borderRadius: 99, boxShadow: '0 4px 12px rgba(0,0,0,.3)' }} />
-          {/* Ojos */}
-          <div style={{ width: 28, height: 28, background: '#fff', borderRadius: '50%', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,.3), inset 0 2px 4px rgba(0,0,0,.1)', animation: 'ariaBlink 5s ease-in-out infinite' }}>
-            <div style={{ position: 'absolute', width: 14, height: 14, background: '#1e1b4b', borderRadius: '50%', top: 7, left: 7 }}>
-              <div style={{ position: 'absolute', width: 5, height: 5, background: '#fff', borderRadius: '50%', top: 2, left: 2 }} />
-            </div>
-          </div>
-          <div style={{ width: 28, height: 28, background: '#fff', borderRadius: '50%', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,.3), inset 0 2px 4px rgba(0,0,0,.1)', animation: 'ariaBlink 5s ease-in-out infinite .2s' }}>
-            <div style={{ position: 'absolute', width: 14, height: 14, background: '#1e1b4b', borderRadius: '50%', top: 7, left: 7 }}>
-              <div style={{ position: 'absolute', width: 5, height: 5, background: '#fff', borderRadius: '50%', top: 2, left: 2 }} />
-            </div>
-          </div>
-          {/* Boca */}
-          <div style={{ position: 'absolute', bottom: 18, left: '50%', transform: 'translateX(-50%)', width: 40, height: 10, background: '#fff', borderRadius: '0 0 20px 20px', opacity: .85, boxShadow: '0 2px 8px rgba(0,0,0,.2)' }} />
-          {/* Mejillas */}
-          <div style={{ position: 'absolute', bottom: 26, left: 16, width: 18, height: 10, background: 'rgba(251,113,133,.5)', borderRadius: '50%', filter: 'blur(3px)' }} />
-          <div style={{ position: 'absolute', bottom: 26, right: 16, width: 18, height: 10, background: 'rgba(251,113,133,.5)', borderRadius: '50%', filter: 'blur(3px)' }} />
+          <Brain size={44} color="#fff" />
+          {/* Online dot */}
+          <div style={{ position: 'absolute', bottom: 6, right: 6, width: 18, height: 18, background: '#22c55e', borderRadius: '50%', border: '3px solid #fff', boxShadow: '0 0 8px rgba(34,197,94,.5)' }} />
         </div>
 
-        {/* ── Cuello ── */}
-        <div style={{ width: 36, height: 12, background: 'linear-gradient(to bottom,#d97706,#b45309)', margin: '0 auto', borderRadius: '4px 4px 0 0' }} />
-
-        {/* ── Torso ── */}
-        <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
-          {/* Brazo izquierdo */}
-          <div style={{
-            position: 'absolute', left: -30, top: 10, width: 24, height: 72, zIndex: 0,
-            background: 'linear-gradient(145deg,#1e40af,#1d4ed8)',
-            borderRadius: '99px 99px 12px 12px',
-            boxShadow: '0 8px 20px rgba(0,0,0,.35)',
-          }} />
-          {/* Brazo derecho - SALUDANDO */}
-          <div style={{
-            position: 'absolute', right: -30, top: 10, width: 24, height: 72, zIndex: 0,
-            background: 'linear-gradient(145deg,#1e40af,#1d4ed8)',
-            borderRadius: '99px 99px 12px 12px',
-            boxShadow: '0 8px 20px rgba(0,0,0,.35)',
-            transformOrigin: 'top center',
-            animation: 'ariaWave 2.5s ease-in-out infinite',
-          }} />
-
-          {/* Cuerpo principal */}
-          <div style={{
-            width: 148, height: 100, zIndex: 1,
-            background: 'linear-gradient(145deg,#1e40af,#1d4ed8,#2563eb)',
-            borderRadius: 24,
-            boxShadow: '0 12px 36px rgba(0,0,0,.4), inset 0 2px 0 rgba(255,255,255,.2)',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
-            position: 'relative', overflow: 'hidden',
-          }}>
-            {/* Shine */}
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(255,255,255,.12) 0%, transparent 50%)', borderRadius: 24 }} />
-            {/* Badge LED */}
-            <div style={{ position: 'absolute', top: 10, right: 12, display: 'flex', gap: 5 }}>
-              {['#34d399','#fbbf24','#f87171'].map((c,i) => (
-                <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: c, boxShadow: `0 0 8px ${c}`, animation: `ariaLed ${1.5+i*.4}s ease-in-out infinite` }} />
-              ))}
+        {/* Chat bubbles */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* ARIA message */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#f97316,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Brain size={16} color="#fff" />
             </div>
-            {/* Pantalla */}
-            <div style={{
-              width: 92, height: 44, background: 'rgba(0,0,0,.5)', borderRadius: 10,
-              border: '1.5px solid rgba(129,140,248,.6)',
-              overflow: 'hidden', position: 'relative',
-              boxShadow: 'inset 0 2px 8px rgba(0,0,0,.5)',
-            }}>
-              <div style={{ width: '100%', height: 3, background: 'linear-gradient(90deg,transparent,#34d399,transparent)', animation: 'ariaScan 1.6s linear infinite' }} />
-              {/* Texto ARIA en pantalla */}
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ color: '#34d399', fontSize: 15, fontWeight: 900, fontFamily: 'monospace', letterSpacing: 2, textShadow: '0 0 8px #34d399' }}>ARIA</span>
+            <div style={{ background: '#fff', border: '1.5px solid #fed7aa', borderRadius: '18px 18px 18px 4px', padding: '12px 16px', fontSize: 13, color: '#44403c', lineHeight: 1.6, boxShadow: '0 4px 16px rgba(249,115,22,.08)', maxWidth: 260 }}>
+              ¡Hola! Hoy Rodrigo logró <strong style={{ color: '#f97316' }}>3 nuevas habilidades</strong> en su sesión. ¿Quieres ver el reporte?
+            </div>
+          </div>
+          {/* Parent reply */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)', borderRadius: '18px 18px 4px 18px', padding: '12px 16px', fontSize: 13, color: '#fff', lineHeight: 1.6, maxWidth: 200 }}>
+              Sí, ¡qué emoción! ¿Cómo lo refuerzo en casa?
+            </div>
+          </div>
+          {/* ARIA response */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#f97316,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Brain size={16} color="#fff" />
+            </div>
+            <div style={{ background: '#fff', border: '1.5px solid #fed7aa', borderRadius: '18px 18px 18px 4px', padding: '12px 16px', fontSize: 13, color: '#44403c', lineHeight: 1.6, boxShadow: '0 4px 16px rgba(249,115,22,.08)', maxWidth: 260 }}>
+              Te recomiendo <strong style={{ color: '#f97316' }}>3 actividades</strong> basadas en los datos de esta semana...
+              <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
+                {[1,2,3].map(i => <div key={i} style={{ height: 4, flex: 1, background: '#fed7aa', borderRadius: 99, overflow: 'hidden' }}><div style={{ height: '100%', width: `${i*30}%`, background: '#f97316', borderRadius: 99 }} /></div>)}
               </div>
             </div>
-            {/* Botón corazón */}
-            <div style={{ width: 28, height: 28, background: 'linear-gradient(135deg,#f43f5e,#fb7185)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 12px rgba(244,63,94,.5)', animation: 'ariaHeart 1.5s ease-in-out infinite' }}>
-              <Heart size={13} color="#fff" fill="#fff" />
+          </div>
+          {/* Typing indicator */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#f97316,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: 0.5 }}>
+              <Brain size={16} color="#fff" />
+            </div>
+            <div style={{ background: '#fff', border: '1.5px solid #fed7aa', borderRadius: '18px 18px 18px 4px', padding: '12px 20px', boxShadow: '0 4px 16px rgba(249,115,22,.08)', display: 'flex', gap: 5, alignItems: 'center' }}>
+              {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316', opacity: 0.4, animation: `ariaLed ${0.8+i*.2}s ease-in-out infinite` }} />)}
             </div>
           </div>
         </div>
-
-        {/* ── Cintura ── */}
-        <div style={{ width: 100, height: 14, background: 'linear-gradient(to bottom,#1e3a8a,#1e40af)', margin: '0 auto', borderRadius: 4 }} />
-
-        {/* ── Piernas ── */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 18 }}>
-          {[0, 1].map(i => (
-            <div key={i}>
-              <div style={{
-                width: 32, height: 44, background: 'linear-gradient(145deg,#1e40af,#1d4ed8)',
-                borderRadius: '4px 4px 0 0', boxShadow: '0 6px 16px rgba(0,0,0,.3)',
-                animation: i === 0 ? 'ariaLegL 4s ease-in-out infinite' : 'ariaLegR 4s ease-in-out infinite',
-              }} />
-              <div style={{ width: 40, height: 16, background: '#1e3a8a', borderRadius: '0 0 10px 10px', margin: '0 auto', boxShadow: '0 6px 16px rgba(0,0,0,.3)' }} />
-            </div>
-          ))}
-        </div>
-
-        {/* ── Sombra ── */}
-        <div style={{ width: 120, height: 16, background: 'radial-gradient(ellipse,rgba(251,191,36,.4) 0%,transparent 70%)', margin: '6px auto 0', animation: 'ariaShadow 4s ease-in-out infinite', filter: 'blur(4px)' }} />
       </div>
     </div>
   )
@@ -376,20 +302,7 @@ export default function LandingPage() {
         .lp-faq-item:hover { border-color: #fed7aa; }
         .lp-faq-item.open { border-color: #fb923c; background: #fff7ed; }
 
-        /* ─ IA SECTION ─ */
-        .lp-ia { background: linear-gradient(160deg,#0f172a 0%,#1e1b4b 60%,#0f172a 100%); padding: 100px 20px; position: relative; overflow: hidden; }
-        .lp-ia-dots { position: absolute; inset: 0; background-image: radial-gradient(circle,rgba(251,191,36,.07) 1px,transparent 1px); background-size: 30px 30px; }
-        .lp-ia-inner { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
-        /* IA: texto izquierda + robot derecha */
-        .lp-ia-layout { display: grid; gap: 48px; align-items: center; }
-        @media(min-width:900px){ .lp-ia-layout { grid-template-columns: 1fr 420px; } }
-        .lp-ia-tag { display: inline-flex; align-items: center; gap: 8px; background: rgba(251,191,36,.15); border: 1px solid rgba(251,191,36,.35); color: #fbbf24; border-radius: 99px; padding: 5px 14px; font-family: 'Baloo 2',cursive; font-size: 12px; font-weight: 700; margin-bottom: 16px; }
-        .lp-ia-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 28px; transition: all .3s; }
-        .lp-ia-card:hover { background: rgba(255,255,255,.1); transform: translateY(-4px); border-color: rgba(251,191,36,.3); }
-        .lp-ia-card h4 { font-family: 'Baloo 2',cursive; color: #fff; font-weight: 700; font-size: 16px; margin-bottom: 8px; }
-        .lp-ia-card p { color: rgba(255,255,255,.5); font-size: 13px; line-height: 1.75; }
-
-        /* ─ GALLERY ─ */
+        /* ─ FLOATING SHAPES ─ */
         .lp-gallery-main { position: relative; border-radius: 24px; overflow: hidden; aspect-ratio: 16/9; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
         .lp-gallery-caption { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent,rgba(0,0,0,.65)); padding: 28px 20px 16px; color: #fff; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 14px; }
         .lp-gallery-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,.9); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; }
@@ -437,18 +350,13 @@ export default function LandingPage() {
         .lp-wa-ping { position: absolute; top: -3px; right: -3px; width: 18px; height: 18px; background: #ef4444; border-radius: 50%; }
         .lp-wa-ping::before { content:''; position:absolute; inset:0; background:#ef4444; border-radius:50%; animation: waPing 1.5s cubic-bezier(0,0,.2,1) infinite; }
 
-        /* ─ ROBOT ARIA ANIMATIONS ─ */
-        @keyframes ariaFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
-        @keyframes ariaBlink { 0%,90%,100%{transform:scaleY(1)} 94%{transform:scaleY(.05)} }
-        @keyframes ariaWave { 0%,100%{transform:rotate(-12deg)} 40%{transform:rotate(-35deg)} 60%{transform:rotate(-20deg)} }
-        @keyframes ariaAntenna { 0%,100%{box-shadow:0 0 14px 6px rgba(251,191,36,.9),0 0 30px 10px rgba(251,191,36,.4)} 50%{box-shadow:0 0 24px 10px rgba(251,191,36,1),0 0 50px 20px rgba(251,191,36,.6)} }
-        @keyframes ariaScan { 0%{transform:translateY(-100%)} 100%{transform:translateY(300%)} }
-        @keyframes ariaLed { 0%,100%{opacity:1} 50%{opacity:.2} }
-        @keyframes ariaHeart { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
-        @keyframes ariaPulse { 0%,100%{opacity:.3;transform:translate(-50%,-50%) scale(1)} 50%{opacity:.6;transform:translate(-50%,-50%) scale(1.15)} }
-        @keyframes ariaShadow { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.2;transform:scale(.8)} }
-        @keyframes ariaLegL { 0%,100%{transform:rotate(0)} 50%{transform:rotate(3deg)} }
-        @keyframes ariaLegR { 0%,100%{transform:rotate(0)} 50%{transform:rotate(-3deg)} }
+        /* ─ ARIA FLOAT ─ */
+        @keyframes ariaFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes ariaLed { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+        /* ─ ARIA LAYOUT ─ */
+        .lp-ia-layout { display: grid; gap: 56px; align-items: center; }
+        @media(min-width:900px){ .lp-ia-layout { grid-template-columns: 1fr 420px; } }
 
         /* ─ FLOATING SHAPES ─ */
         @keyframes shapeFloat1 { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-16px) rotate(10deg)} }
@@ -653,60 +561,73 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── ASISTENTE ARIA + ROBOT ─────────────────────────────────────── */}
-      <section id="aria" className="lp-ia">
-        <div className="lp-ia-dots" />
-        <div className="lp-ia-inner">
+      {/* ── ASISTENTE ARIA ─────────────────────────────────────── */}
+      <section id="aria" style={{ background: '#fff', padding: '100px 20px', position: 'relative', overflow: 'hidden' }}>
+        {/* Subtle bg pattern */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(249,115,22,.04) 1px, transparent 1px)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
+        {/* Orange glow top right */}
+        <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
-          {/* TÍTULO CENTRADO ARRIBA */}
-          <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div className="lp-ia-tag"><Sparkles size={13} /> Inteligencia Artificial</div>
-            <h2 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(26px,4vw,44px)', fontWeight: 800, color: '#fff', lineHeight: 1.2, marginBottom: 12 }}>
-              Conoce a <span style={{ color: '#fbbf24' }}>ARIA</span> 🤖<br/>
-              <span style={{ fontSize: '70%', color: 'rgba(255,255,255,.55)', fontWeight: 600 }}>Tu asistente clínica inteligente</span>
+        <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 64 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff7ed', border: '2px solid #fed7aa', color: '#c2410c', borderRadius: 99, padding: '5px 16px', fontFamily: "'Baloo 2',cursive", fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
+              <Sparkles size={13} /> Inteligencia Artificial
+            </div>
+            <h2 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(28px,4vw,46px)', fontWeight: 800, color: '#1c1917', lineHeight: 1.15, marginBottom: 14 }}>
+              Conoce a <span style={{ color: '#f97316' }}>ARIA</span>
             </h2>
-            <p style={{ color: 'rgba(255,255,255,.5)', fontSize: 15, lineHeight: 1.85, maxWidth: 520, margin: '0 auto' }}>
-              No estás solo entre sesiones. ARIA aprende exclusivamente de los registros clínicos diarios de tu hijo y te acompaña 24/7.
+            <p style={{ color: '#78716c', fontSize: 16, lineHeight: 1.85, maxWidth: 520, margin: '0 auto' }}>
+              Tu asistente clínica inteligente. Aprende de los registros diarios de tu hijo y te acompaña 24/7 entre sesiones.
             </p>
           </div>
 
-          {/* LAYOUT: TEXTO izquierda | ROBOT derecha */}
-          <div className="lp-ia-layout">
-            {/* IZQUIERDA: Cards de funciones */}
+          {/* Layout: cards left | chat right */}
+          <div style={{ display: 'grid', gap: 56, alignItems: 'center' }} className="lp-ia-layout">
+            {/* LEFT: Feature cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
-                { icon: <LineChart size={22} color="#fbbf24" />, bg: 'rgba(251,191,36,.15)', title: 'Seguimiento Preciso', desc: 'ARIA analiza tendencias conductuales sesión a sesión, detectando patrones invisibles al ojo humano.' },
-                { icon: <MessageSquareHeart size={22} color="#34d399" />, bg: 'rgba(52,211,153,.15)', title: 'Apoyo para Padres 24/7', desc: 'Resúmenes en lenguaje sencillo y recomendaciones personalizadas para reforzar el aprendizaje en casa.' },
-                { icon: <Brain size={22} color="#c084fc" />, bg: 'rgba(192,132,252,.15)', title: 'Progreso Visible', desc: 'Gráficos interactivos que muestran la evolución en tiempo real con cada sesión registrada.' },
-                { icon: <Zap size={22} color="#fb923c" />, bg: 'rgba(251,146,60,.15)', title: 'Respuestas Instantáneas', desc: 'Pregúntale a ARIA en cualquier momento sobre el progreso, dudas o actividades para practicar en casa.' },
-              ].map(({ icon, bg, title, desc }) => (
-                <div key={title} className="lp-ia-card" style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                  <div style={{ width: 46, height: 46, borderRadius: 14, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
+                { icon: <LineChart size={20} color="#f97316" />, bg: '#fff7ed', border: '#fed7aa', title: 'Seguimiento Preciso', desc: 'ARIA analiza tendencias conductuales sesión a sesión, detectando patrones invisibles al ojo humano.' },
+                { icon: <MessageSquareHeart size={20} color="#10b981" />, bg: '#f0fdf4', border: '#bbf7d0', title: 'Apoyo para Padres 24/7', desc: 'Resúmenes en lenguaje sencillo y recomendaciones personalizadas para reforzar el aprendizaje en casa.' },
+                { icon: <Brain size={20} color="#8b5cf6" />, bg: '#faf5ff', border: '#e9d5ff', title: 'Progreso Visible', desc: 'Gráficos interactivos que muestran la evolución en tiempo real con cada sesión registrada.' },
+                { icon: <Zap size={20} color="#f59e0b" />, bg: '#fffbeb', border: '#fde68a', title: 'Respuestas Instantáneas', desc: 'Pregúntale a ARIA en cualquier momento sobre el progreso, dudas o actividades para practicar en casa.' },
+              ].map(({ icon, bg, border, title, desc }) => (
+                <div key={title} style={{ background: '#fff', border: `2px solid ${border}`, borderRadius: 18, padding: '20px 22px', display: 'flex', gap: 16, alignItems: 'flex-start', transition: 'all .3s', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 28px rgba(249,115,22,.1)'; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 12px rgba(0,0,0,.04)'; }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 14, background: bg, border: `1.5px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
                   <div>
-                    <h4 style={{ marginBottom: 4 }}>{title}</h4>
-                    <p>{desc}</p>
+                    <h4 style={{ fontFamily: "'Baloo 2',cursive", color: '#1c1917', fontWeight: 700, fontSize: 15, marginBottom: 5 }}>{title}</h4>
+                    <p style={{ color: '#78716c', fontSize: 13, lineHeight: 1.75 }}>{desc}</p>
                   </div>
                 </div>
               ))}
               <div style={{ marginTop: 8 }}>
-                <Link href="/login?mode=signup" className="btn-orange" style={{ display: 'inline-flex', background: 'linear-gradient(135deg,#fbbf24,#f59e0b)', color: '#1c1917' }}>
+                <Link href="/login?mode=signup" className="btn-orange" style={{ display: 'inline-flex' }}>
                   Habla con ARIA ahora <ArrowRight size={16} />
                 </Link>
               </div>
             </div>
 
-            {/* DERECHA: ROBOT */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', position: 'relative' }}>
-              <ARIARobot />
-              {/* Burbuja de diálogo */}
-              <div style={{
-                position: 'absolute', top: -10, right: 0, background: '#fff', borderRadius: '16px 16px 16px 4px',
-                padding: '10px 16px', boxShadow: '0 8px 28px rgba(0,0,0,.25)',
-                fontFamily: "'Baloo 2',cursive", fontSize: 13, fontWeight: 700, color: '#1c1917',
-                maxWidth: 160, animation: 'ariaFloat 4s ease-in-out infinite .5s',
-              }}>
-                ¡Hola! Soy ARIA 👋<br/>
-                <span style={{ fontWeight: 400, fontSize: 11, color: '#78716c' }}>¿En qué te ayudo hoy?</span>
+            {/* RIGHT: Chat illustration */}
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <div style={{ background: '#f8fafc', border: '2px solid #f1f5f9', borderRadius: 28, padding: '28px 24px', width: '100%', maxWidth: 380, boxShadow: '0 20px 60px rgba(0,0,0,.06)' }}>
+                {/* Header bar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, paddingBottom: 18, borderBottom: '1.5px solid #f1f5f9' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#f97316,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(249,115,22,.3)' }}>
+                    <Brain size={22} color="#fff" />
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 15, color: '#1c1917' }}>ARIA</p>
+                    <p style={{ fontSize: 11, color: '#22c55e', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} /> En línea · 24/7
+                    </p>
+                  </div>
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: 5 }}>
+                    {['#ef4444','#f59e0b','#22c55e'].map((c,i) => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
+                  </div>
+                </div>
+                <ARIAChatIllustration />
               </div>
             </div>
           </div>
@@ -774,13 +695,6 @@ export default function LandingPage() {
             })}
           </div>
 
-          {/* Instrucción de edición */}
-          <div style={{ marginTop: 28, background: '#fff', border: '2px dashed #fed7aa', borderRadius: 14, padding: '18px 22px', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-            <div style={{ width: 38, height: 38, background: '#fff7ed', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Video size={17} color="#f97316" /></div>
-            <p style={{ fontSize: 13, color: '#78716c', lineHeight: 1.65 }}>
-              <strong style={{ color: '#1c1917' }}>¿Cómo cambiar los videos?</strong> Abre <code style={{ background: '#f5f5f4', padding: '1px 5px', borderRadius: 4, fontSize: 12 }}>app/page.tsx</code> y edita el arreglo <code style={{ background: '#f5f5f4', padding: '1px 5px', borderRadius: 4, fontSize: 12 }}>VIDEOS</code> al inicio. Soporta <strong>YouTube, TikTok, Google Drive y Vimeo</strong>.
-            </p>
-          </div>
 
           <div style={{ marginTop: 24, background: '#fff', borderRadius: 18, padding: '24px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, border: '2px solid #fef3c7' }}>
             <div>
