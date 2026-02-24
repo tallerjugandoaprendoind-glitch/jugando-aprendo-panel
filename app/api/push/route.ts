@@ -2,14 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import webpush from 'web-push'
 
-// Configure VAPID once
-webpush.setVapidDetails(
-  'mailto:hola@vanty.app',
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
-
 export async function POST(request: NextRequest) {
+  // Configure VAPID inside the handler so env vars are available at runtime
+  webpush.setVapidDetails(
+    'mailto:hola@vanty.app',
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  )
+
   try {
     const { userId, title, body, url } = await request.json()
 
