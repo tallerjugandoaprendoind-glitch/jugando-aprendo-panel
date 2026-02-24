@@ -698,7 +698,7 @@ export default function ParentDashboard() {
 
                     {activeView === 'resources' && <ResourcesView profile={profile} />}
                     {activeView === 'tienda'    && <StoreView profile={profile} />}
-                    {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} />
+                    {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
 
                     {activeView === 'profile' && (
