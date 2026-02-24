@@ -24,6 +24,7 @@ import ProfileView from './components/ProfileView'
 import StoreView from './components/StoreView'
 import ChatInterface from './components/ChatInterface'
 import MensajesView from './components/MensajesView'
+import PushNotificationBanner from '@/components/PushNotificationBanner'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
 
 export default function ParentDashboard() {
@@ -454,6 +455,9 @@ export default function ParentDashboard() {
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 font-sans text-slate-600 overflow-hidden">
         
+        {/* 🔔 PUSH NOTIFICATIONS BANNER */}
+        <PushNotificationBanner userId={profile?.id || null} />
+
         {/* 🎉 ANIMACIÓN DE ÉXITO */}
         {showSuccessAnimation && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">

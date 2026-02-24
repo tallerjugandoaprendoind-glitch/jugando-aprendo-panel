@@ -88,6 +88,25 @@ export async function PATCH(request: NextRequest) {
         .eq('id', id).select()
 
       if (error) throw error
+
+      // 🔔 Send push notification to parent
+      try {
+        const childName = (record as any).children?.name || 'tu hijo/a'
+        await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/push`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: record.parent_id,
+            title: `📋 Mensaje sobre ${childName}`,
+            body: messageToSend.length > 100 ? messageToSend.slice(0, 97) + '...' : messageToSend,
+            url: '/padre',
+          }),
+        })
+      } catch (pushErr) {
+        // Non-critical — log but don't fail the approval
+        console.error('Push notification error (non-critical):', pushErr)
+      }
+
       return NextResponse.json({ data })
 
     } else if (action === 'reject') {
