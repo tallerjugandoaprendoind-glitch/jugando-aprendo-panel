@@ -264,11 +264,8 @@ export default function LandingPage() {
         @keyframes lp-up { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 
         /* ─ STATS ─ */
-        .lp-stats { background: linear-gradient(135deg,#1c1917,#292524); padding: 48px 20px; }
-        .lp-stats-inner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(2,1fr); gap: 28px; }
+        .lp-stats-inner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; }
         @media(min-width:640px){ .lp-stats-inner { grid-template-columns: repeat(4,1fr); } }
-        .lp-stat-num { font-family: 'Baloo 2',cursive; font-size: 44px; font-weight: 800; color: #fb923c; line-height: 1; margin-bottom: 4px; }
-        .lp-stat-lbl { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 
         /* ─ SECTIONS ─ */
         .lp-section { padding: 80px 20px; }
@@ -484,24 +481,22 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* WAVE + STATS */}
-      <div style={{ background: '#1c1917' }}>
-        <svg viewBox="0 0 1440 50" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', background: '#fffbf5' }}>
-          <path d="M0,20 C480,50 960,0 1440,25 L1440,0 L0,0 Z" fill="#1c1917" />
-        </svg>
-      </div>
-      <div className="lp-stats" ref={statsRef}>
-        <div className="lp-stats-inner">
-          {[{ num: `+${count50}`, lbl: 'Familias felices' }, { num: '100%', lbl: 'Personalizado' }, { num: 'ABA', lbl: 'Metodología' }, { num: 'Pisco', lbl: 'Sede Central' }].map(({ num, lbl }) => (
-            <div key={lbl} style={{ textAlign: 'center' }}>
-              <div className="lp-stat-num">{num}</div>
-              <div className="lp-stat-lbl">{lbl}</div>
+      {/* STATS */}
+      <div ref={statsRef} style={{ background: '#fff', borderTop: '1.5px solid #fef3c7', borderBottom: '1.5px solid #fef3c7', padding: '48px 20px' }}>
+        <div style={{ maxWidth: 900px, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 24 }} className="lp-stats-inner">
+          {[
+            { num: `+${count50}`, lbl: 'Familias felices', icon: '👨‍👩‍👧' },
+            { num: '100%', lbl: 'Personalizado', icon: '🎯' },
+            { num: 'ABA', lbl: 'Metodología', icon: '🧠' },
+            { num: 'Pisco', lbl: 'Sede Central', icon: '📍' },
+          ].map(({ num, lbl, icon }) => (
+            <div key={lbl} style={{ textAlign: 'center', padding: '24px 16px', background: '#fff7ed', borderRadius: 20, border: '2px solid #fed7aa' }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>{icon}</div>
+              <div style={{ fontFamily: "'Baloo 2',cursive", fontSize: 38, fontWeight: 800, color: '#f97316', lineHeight: 1, marginBottom: 6 }}>{num}</div>
+              <div style={{ fontSize: 12, color: '#a8a29e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{lbl}</div>
             </div>
           ))}
         </div>
-        <svg viewBox="0 0 1440 40" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block', marginTop: 36 }}>
-          <path d="M0,0 C480,40 960,0 1440,20 L1440,40 L0,40 Z" fill="#fffbf5" />
-        </svg>
       </div>
 
       {/* PARA PADRES */}
@@ -661,8 +656,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* GALERÍA DE VIDEOS */}
-      <section className="lp-section" style={{ background: '#fff7ed' }}>
+      {/* GALERÍA DE VIDEOS — OCULTO TEMPORALMENTE */}
+      {false && <section className="lp-section" style={{ background: '#fff7ed' }}>
         <div className="lp-inner">
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
             <div className="lp-tag"><Video size={12} /> Videos</div>
@@ -707,7 +702,7 @@ export default function LandingPage() {
             </div>
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* SERVICIOS */}
       <section id="servicios" className="lp-section" style={{ background: '#fffbf5' }}>
@@ -740,8 +735,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* EQUIPO */}
-      <section className="lp-section" style={{ background: '#fff7ed' }}>
+      {/* EQUIPO — OCULTO TEMPORALMENTE */}
+      {false && <section className="lp-section" style={{ background: '#fff7ed' }}>
         <div className="lp-inner">
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
             <div className="lp-tag"><Heart size={12} /> Nuestro Equipo</div>
@@ -762,7 +757,7 @@ export default function LandingPage() {
             ))}
           </div>
         </div>
-      </section>
+      </section>}
 
       {/* FAQ */}
       <section id="faq" className="lp-section" style={{ background: '#fffbf5' }}>
