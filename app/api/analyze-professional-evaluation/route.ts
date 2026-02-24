@@ -14,6 +14,27 @@ interface EvaluationRequest {
   childAge: number;
 }
 
+
+// Helper: reintentar con backoff exponencial ante rate limit
+async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 3): Promise<any> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({ model, contents, config })
+      return response
+    } catch (err: any) {
+      const is429 = err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED') || err?.status === 429
+      if (is429 && attempt < maxRetries - 1) {
+        const delay = Math.pow(2, attempt) * 2000 // 2s, 4s, 8s
+        console.warn(`⚠️ Rate limit Gemini (intento ${attempt + 1}/${maxRetries}). Reintentando en ${delay/1000}s...`)
+        await new Promise(r => setTimeout(r, delay))
+        continue
+      }
+      if (is429) throw new Error('CUOTA_AGOTADA')
+      throw err
+    }
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const body: EvaluationRequest = await req.json();
@@ -56,9 +77,12 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error("❌ Error en el análisis de IA:", error);
+    const isQuota = error.message === 'CUOTA_AGOTADA' || error.message?.includes('429')
     return NextResponse.json({ 
-        error: error.message || "Error desconocido procesando la evaluación clínica." 
-    }, { status: 500 });
+      error: isQuota 
+        ? 'Cuota de IA agotada. Por favor espera unos minutos e intenta nuevamente.' 
+        : (error.message || "Error desconocido procesando la evaluación clínica.")
+    }, { status: isQuota ? 429 : 500 });
   }
 }
 
@@ -168,14 +192,7 @@ async function analyzeBRIEF2(ai: any, responses: any, childName: string, childAg
     }
   `;
 
-  const result = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-    config: {
-      temperature: 0.7,
-      maxOutputTokens: 2000,
-    }
-  });
+  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
@@ -255,14 +272,7 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
     }
   `;
 
-  const result = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-    config: {
-      temperature: 0.7,
-      maxOutputTokens: 2000,
-    }
-  });
+  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
@@ -327,14 +337,7 @@ async function analyzeVineland3(ai: any, responses: any, childName: string, chil
     }
   `;
 
-  const result = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-    config: {
-      temperature: 0.7,
-      maxOutputTokens: 2000,
-    }
-  });
+  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
@@ -405,14 +408,7 @@ async function analyzeWISCV(ai: any, responses: any, childName: string, childAge
     }
   `;
 
-  const result = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-    config: {
-      temperature: 0.7,
-      maxOutputTokens: 2000,
-    }
-  });
+  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
@@ -488,14 +484,7 @@ async function analyzeBASC3(ai: any, responses: any, childName: string, childAge
     }
   `;
 
-  const result = await ai.models.generateContent({
-    model: "gemini-3-flash-preview",
-    contents: prompt,
-    config: {
-      temperature: 0.7,
-      maxOutputTokens: 2000,
-    }
-  });
+  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 

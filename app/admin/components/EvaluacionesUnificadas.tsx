@@ -626,6 +626,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
   }
 
   const handleAnalyzeWithAI = async () => {
+    if (isAnalyzing) return // Guard contra doble click
     setIsAnalyzing(true)
     try {
       const child = children.find((c: any) => c.id === selectedChild)
@@ -710,7 +711,11 @@ function FormFillView({ form, children, onBack, toast }: any) {
       }
       toast.success('✨ Análisis IA generado')
     } catch (err: any) {
-      toast.error('Error en análisis: ' + err.message)
+      const isQuota = err.message?.includes('Cuota') || err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')
+      toast.error(isQuota 
+        ? '⏳ Cuota de IA agotada. Espera 1-2 minutos e intenta nuevamente.' 
+        : 'Error en análisis: ' + err.message
+      )
     } finally {
       setIsAnalyzing(false)
     }

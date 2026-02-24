@@ -2,6 +2,27 @@ import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from "@google/genai"
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
+
+// Helper: reintentar con backoff exponencial ante rate limit
+async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 3): Promise<any> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await ai.models.generateContent({ model, contents, config })
+      return response
+    } catch (err: any) {
+      const is429 = err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED') || err?.status === 429
+      if (is429 && attempt < maxRetries - 1) {
+        const delay = Math.pow(2, attempt) * 2000 // 2s, 4s, 8s
+        console.warn(`⚠️ Rate limit Gemini (intento ${attempt + 1}/${maxRetries}). Reintentando en ${delay/1000}s...`)
+        await new Promise(r => setTimeout(r, delay))
+        continue
+      }
+      if (is429) throw new Error('CUOTA_AGOTADA')
+      throw err
+    }
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -57,10 +78,7 @@ ${JSON.stringify(formData, null, 2)}
 Analiza este formulario y proporciona el análisis clínico completo incluyendo indicadores específicos del perfil neurodivergente. Responde SOLO con el JSON, sin texto adicional.`
 
     const ai = new GoogleGenAI({ apiKey })
-    const response = await ai.models.generateContent({
-      model: "gemini-2.0-flash",
-      contents: fullPrompt,
-    })
+    const response = await callGeminiWithRetry(ai, "gemini-2.0-flash", fullPrompt)
 
     const rawText = response.text || '{}'
 
@@ -86,6 +104,11 @@ Analiza este formulario y proporciona el análisis clínico completo incluyendo 
     return NextResponse.json({ success: true, analysis: parsedResult })
   } catch (error: any) {
     console.error('Error analyze-neurodivergent-form:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const isQuota = error.message === 'CUOTA_AGOTADA' || error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED')
+    return NextResponse.json({ 
+      error: isQuota 
+        ? 'Cuota de IA agotada. Por favor espera unos minutos e intenta nuevamente.' 
+        : error.message 
+    }, { status: isQuota ? 429 : 500 })
   }
 }

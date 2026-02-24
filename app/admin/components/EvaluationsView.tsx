@@ -56,7 +56,7 @@ function DynamicEvaluationsView() {
 
   // Lógica Genérica para IA en cualquier formulario (excepto Anamnesis)
   const handleGenerateUniversalIA = async () => {
-     // Validación básica
+     if (isGenerating) return // Guard contra doble click
      const hasEnoughData = Object.keys(respuestas).length > 2;
      if (!hasEnoughData) {
          return alert("⚠️ Por favor responde algunas preguntas antes de generar con IA.");
@@ -152,7 +152,10 @@ function DynamicEvaluationsView() {
 
      } catch (e: any) {
         console.error('💥 Error completo:', e);
-        alert("Error IA: " + e.message);
+        const msg = e.message?.includes('Cuota') || e.message?.includes('429') || e.message?.includes('RESOURCE_EXHAUSTED')
+        ? '⏳ Cuota de IA agotada. Espera 1-2 minutos e intenta nuevamente.'
+        : 'Error IA: ' + e.message
+      alert(msg)
      } finally {
         setIsGenerating(false);
      }
