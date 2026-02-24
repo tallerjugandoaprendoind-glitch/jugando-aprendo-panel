@@ -24,7 +24,7 @@ import ProfileView from './components/ProfileView'
 import StoreView from './components/StoreView'
 import ChatInterface from './components/ChatInterface'
 import MensajesView from './components/MensajesView'
-import PushNotificationBanner from '@/components/PushNotificationBanner'
+import PushNotificationBanner from '../../components/PushNotificationBanner'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
 
 export default function ParentDashboard() {
