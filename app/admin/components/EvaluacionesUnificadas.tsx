@@ -649,19 +649,33 @@ function FormFillView({ form, children, onBack, toast }: any) {
         setEditedMessage(json.analysis?.mensaje_padres || '')
       } else {
         // Formulario clínico profesional
-        let endpoint = '/api/generate-session-report'
-        let payload: any = { ...responses }
+        const childName = child?.name || 'Paciente'
+        const childAge  = child?.age || calcularEdadNumerica(child?.birth_date) || 'N/E'
+        const diagnosis = child?.diagnosis || ''
+
+        let endpoint = '/api/analyze-neurodivergent-form'
+        let payload: any = {
+          formType:  form.formKey || form.id,
+          formData:  responses,
+          childName,
+          childAge,
+          diagnosis,
+        }
 
         if (form.formKey === 'entorno_hogar') {
           endpoint = '/api/generate-home-environment-report'
+          payload = { ...responses, childName, childAge, diagnosis }
+        } else if (form.formKey === 'aba') {
+          // ABA usa generate-session-report solo si tiene datos ABC,
+          // si no, usa analyze-neurodivergent-form
+          if (responses.antecedente && responses.conducta && responses.consecuencia) {
+            endpoint = '/api/generate-session-report'
+            payload = { ...responses }
+          }
+          // si no tiene antecedente/conducta/consecuencia → sigue con analyze-neurodivergent-form
         } else if (['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].includes(form.formKey)) {
           endpoint = '/api/analyze-professional-evaluation'
-          payload = {
-            evaluationType: form.formKey.toUpperCase(),
-            childName: child?.name || 'Paciente',
-            childAge: child?.age || calcularEdadNumerica(child?.birth_date) || 'N/E',
-            responses,
-          }
+          payload = { evaluationType: form.formKey.toUpperCase(), childName, childAge, responses }
         }
 
         const res = await fetch(endpoint, {
@@ -670,9 +684,29 @@ function FormFillView({ form, children, onBack, toast }: any) {
           body: JSON.stringify(payload),
         })
         const json = await res.json()
-        const analysis = json.analysis || { analisis_clinico: json.text || 'Análisis generado' }
+        const rawAnalysis = json.analysis || json || { analisis_clinico: json.text || 'Análisis generado' }
+        // Aplanar metricas al nivel raíz para que los campos del formulario los muestren
+        const analysis: any = { ...rawAnalysis }
+        if (rawAnalysis.metricas) {
+          const m = rawAnalysis.metricas
+          if (m.comunicacion !== undefined)      analysis.puntuacion_comunicacion      = m.comunicacion
+          if (m.socializacion !== undefined)     analysis.puntuacion_socializacion     = m.socializacion
+          if (m.vida_diaria !== undefined)       analysis.puntuacion_vida_diaria        = m.vida_diaria
+          if (m.indice_global !== undefined)     analysis.indice_conducta_adaptativa   = m.indice_global
+          if (m.inhibicion !== undefined)        analysis.inhibicion                   = m.inhibicion
+          if (m.flexibilidad !== undefined)      analysis.flexibilidad                 = m.flexibilidad
+          if (m.total !== undefined)             analysis.total_brief                  = m.total
+          if (m.ci_total !== undefined)          analysis.ci_total                     = m.ci_total
+          if (m.clasificacion !== undefined)     analysis.clasificacion_ci             = m.clasificacion
+          if (m.indice_sintomas !== undefined)   analysis.indice_sintomas_conductuales = m.indice_sintomas
+          if (m.perfil_riesgo !== undefined)     analysis.perfil_riesgo                = m.perfil_riesgo
+          if (m.severidad !== undefined)         analysis.nivel_severidad              = m.severidad
+          if (m.afecto_social !== undefined)     analysis.puntuacion_total             = m.afecto_social
+        }
+        // También mezclar con las respuestas del formulario para que aparezcan en los campos
+        setResponses((prev: any) => ({ ...prev, ...analysis }))
         setAiAnalysis(analysis)
-        setEditedMessage(analysis?.mensaje_padres || '')
+        setEditedMessage(analysis?.mensaje_padres || analysis?.informe_padres_vineland || analysis?.informe_padres_wisc || analysis?.informe_padres_basc || analysis?.informe_padres || '')
       }
       toast.success('✨ Análisis IA generado')
     } catch (err: any) {

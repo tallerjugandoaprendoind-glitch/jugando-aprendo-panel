@@ -68,23 +68,30 @@ function DynamicEvaluationsView() {
      setIsGenerating(true);
      try {
         // Determinamos el endpoint según el tipo de formulario
-        let endpoint = '/api/generate-session-report'; // Default ABA
-        let bodyPayload: any = { ...respuestas };
+        const { data: childData } = await supabase.from('children').select('name, age, diagnosis').eq('id', selectedChild).single();
+        const childName = childData?.name || 'Paciente';
+        const childAge  = childData?.age || 0;
+        const diagnosis = childData?.diagnosis || '';
+
+        let endpoint = '/api/analyze-neurodivergent-form'; // Default universal
+        let bodyPayload: any = {
+          formType:  activeForm,
+          formData:  respuestas,
+          childName,
+          childAge,
+          diagnosis,
+        };
 
         if (activeForm === 'entorno_hogar') {
             endpoint = '/api/generate-home-environment-report';
-            console.log('🏠 Usando endpoint de entorno hogar');
+            bodyPayload = { ...respuestas, childName, childAge, diagnosis };
+        } else if (activeForm === 'aba' && respuestas.antecedente && respuestas.conducta && respuestas.consecuencia) {
+            // Solo usar generate-session-report si tiene los 3 campos ABC
+            endpoint = '/api/generate-session-report';
+            bodyPayload = { ...respuestas };
         } else if (['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].includes(activeForm || '')) {
-             endpoint = '/api/analyze-professional-evaluation'; // Endpoint genérico para profesionales
-             const { data: child } = await supabase.from('children').select('name, age').eq('id', selectedChild).single();
-             bodyPayload = {
-                 evaluationType: activeForm,
-                 responses: respuestas,
-                 childName: child?.name || 'Paciente',
-                 childAge: child?.age || 0
-             }
-             console.log('🧠 Usando endpoint de evaluación profesional:', activeForm);
-             console.log('👤 Datos del niño:', child);
+            endpoint = '/api/analyze-professional-evaluation';
+            bodyPayload = { evaluationType: activeForm, responses: respuestas, childName, childAge };
         }
 
         console.log('📡 Llamando a:', endpoint);
@@ -106,15 +113,40 @@ function DynamicEvaluationsView() {
         }
 
         // Mapeamos la respuesta de la IA al estado (mezclamos con lo existente)
-        console.log('🔄 Actualizando respuestas con:', data);
+        // Aplanar metricas al nivel raíz para que los campos readonly los muestren
+        const flatData: any = { ...data }
+        if (data.metricas) {
+          const m = data.metricas
+          // Vineland-3
+          if (m.comunicacion !== undefined)      flatData.puntuacion_comunicacion      = m.comunicacion
+          if (m.socializacion !== undefined)     flatData.puntuacion_socializacion     = m.socializacion
+          if (m.vida_diaria !== undefined)       flatData.puntuacion_vida_diaria        = m.vida_diaria
+          if (m.indice_global !== undefined)     flatData.indice_conducta_adaptativa   = m.indice_global
+          // BRIEF-2
+          if (m.inhibicion !== undefined)        flatData.inhibicion                   = m.inhibicion
+          if (m.flexibilidad !== undefined)      flatData.flexibilidad                 = m.flexibilidad
+          if (m.total !== undefined)             flatData.total_brief                  = m.total
+          // WISC-V
+          if (m.ci_total !== undefined)          flatData.ci_total                     = m.ci_total
+          if (m.clasificacion !== undefined)     flatData.clasificacion_ci             = m.clasificacion
+          if (m.icv !== undefined)               flatData.icv_total                    = m.icv
+          if (m.ive !== undefined)               flatData.ive_total                    = m.ive
+          if (m.irf !== undefined)               flatData.irf_total                    = m.irf
+          if (m.imt !== undefined)               flatData.imt_total                    = m.imt
+          if (m.ivp !== undefined)               flatData.ivp_total                    = m.ivp
+          // BASC-3
+          if (m.indice_sintomas !== undefined)   flatData.indice_sintomas_conductuales = m.indice_sintomas
+          if (m.perfil_riesgo !== undefined)     flatData.perfil_riesgo                = m.perfil_riesgo
+          // ADOS-2
+          if (m.severidad !== undefined)         flatData.nivel_severidad              = m.severidad
+          if (m.afecto_social !== undefined)     flatData.puntuacion_total             = m.afecto_social
+        }
+        console.log('🔄 Actualizando respuestas con:', flatData)
         setRespuestas((prev: any) => {
-          const newState = {
-            ...prev,
-            ...data
-          };
-          console.log('📊 Nuevo estado de respuestas:', newState);
-          return newState;
-        });
+          const newState = { ...prev, ...flatData }
+          console.log('📊 Nuevo estado de respuestas:', newState)
+          return newState
+        })
         
         alert("✨ ¡Análisis IA completado!");
 
