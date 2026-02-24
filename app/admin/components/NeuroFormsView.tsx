@@ -430,6 +430,12 @@ export default function NeuroFormsView() {
       const { data: child } = await supabase.from('children').select('parent_id').eq('id', childId).single()
       const parentId = (child as any)?.parent_id || null
 
+      // Validar que el niño tenga un padre vinculado antes de enviar
+      if (!parentId) {
+        toast.error('❌ Este paciente no tiene un padre vinculado. Ve a Pacientes y vincula un padre primero.')
+        return
+      }
+
       const res = await fetch('/api/admin/forms', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -211,7 +211,7 @@ function ResourceCard({ resource }: { resource: any }) {
 }
 
 // ─── MAIN PARENT FORMS + RESOURCES VIEW ─────────────────────────────────────
-function ParentFormsResourcesView({ profile, selectedChild }: { profile: any; selectedChild: any }) {
+function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { profile: any; selectedChild: any; onFormsLoaded?: (count: number) => void }) {
   const [activeTab, setActiveTab] = useState<'forms' | 'resources'>('forms')
   const [pendingForms, setPendingForms] = useState<any[]>([])
   const [completedForms, setCompletedForms] = useState<any[]>([])
@@ -232,8 +232,11 @@ function ParentFormsResourcesView({ profile, selectedChild }: { profile: any; se
         .order('created_at', { ascending: false })
       
       if (forms) {
-        setPendingForms(forms.filter(f => f.status !== 'completed'))
-        setCompletedForms(forms.filter(f => f.status === 'completed'))
+        const pending = forms.filter(f => f.status !== 'completed')
+        const completed = forms.filter(f => f.status === 'completed')
+        setPendingForms(pending)
+        setCompletedForms(completed)
+        if (onFormsLoaded) onFormsLoaded(pending.length)
       }
 
       // Load resources
@@ -247,7 +250,12 @@ function ParentFormsResourcesView({ profile, selectedChild }: { profile: any; se
     }
   }
 
-  useEffect(() => { loadData() }, [profile?.id])
+  useEffect(() => { 
+    loadData()
+    // Recargar cada 30 segundos para detectar nuevos formularios en tiempo real
+    const interval = setInterval(loadData, 30000)
+    return () => clearInterval(interval)
+  }, [profile?.id])
 
   const handleSubmitForm = async (formId: string, responses: any) => {
     try {

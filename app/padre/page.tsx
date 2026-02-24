@@ -38,6 +38,7 @@ export default function ParentDashboard() {
   const unreadCount = notifications.filter(n => !n.is_read).length
   // ------------------------------------------
 
+  const [pendingFormsCount, setPendingFormsCount] = useState(0)
   const [myChildren, setMyChildren] = useState<any[]>([])
   const [selectedChild, setSelectedChild] = useState<any>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
@@ -82,6 +83,17 @@ export default function ParentDashboard() {
         if (error || !parent) throw new Error("Perfil no encontrado")
 
         setProfile(parent)
+
+        // --- CONTAR FORMULARIOS PENDIENTES ---
+        if (parent?.id) {
+          const { count } = await supabase
+            .from('parent_forms')
+            .select('*', { count: 'exact', head: true })
+            .eq('parent_id', parent.id)
+            .neq('status', 'completed')
+          setPendingFormsCount(count || 0)
+        }
+        // -------------------------------------
 
         // --- CARGAR NOTIFICACIONES REALES ---
         if (session?.user?.id) {
@@ -503,7 +515,7 @@ export default function ParentDashboard() {
                     <NavBtnDesktop icon={<Bell size={20}/>} label="Mensajes del terapeuta" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
                     <NavBtnDesktop icon={<ShoppingBag size={20}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
-                    <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={0} />
+                    <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                     <NavBtnDesktop icon={<User size={20}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
                 </nav>
             </div>
@@ -686,7 +698,7 @@ export default function ParentDashboard() {
 
                     {activeView === 'resources' && <ResourcesView profile={profile} />}
                     {activeView === 'tienda'    && <StoreView profile={profile} />}
-                    {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} />}
+                    {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} />
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
 
                     {activeView === 'profile' && (
