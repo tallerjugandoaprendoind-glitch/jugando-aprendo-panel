@@ -128,6 +128,42 @@ function QuestionField({ q, value, onChange }: any) {
       className={`${base} resize-none`} />
   )
 
+  if (q.aiGenerated) {
+    const hasVal = value && String(value).trim().length > 0
+    if (q.type === 'textarea') {
+      return hasVal ? (
+        <textarea value={value} onChange={e => onChange(e.target.value)} rows={4}
+          className={`${base} bg-purple-50 border-purple-200 resize-none`} />
+      ) : (
+        <div className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400 flex items-center gap-2">
+          <Sparkles size={14} className="text-purple-400 flex-shrink-0" />
+          <span>Se completará automáticamente al presionar <strong className="text-purple-600">✨ Analizar con IA</strong></span>
+        </div>
+      )
+    }
+    return hasVal ? (
+      <input type="text" value={value} onChange={e => onChange(e.target.value)} className={`${base} bg-purple-50 border-purple-200`} />
+    ) : (
+      <div className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400 flex items-center gap-2">
+        <Sparkles size={14} className="text-purple-400 flex-shrink-0" />
+        <span>Se completará al presionar <strong className="text-purple-600">✨ Analizar con IA</strong></span>
+      </div>
+    )
+  }
+
+  if (q.readonly) {
+    const hasVal = value !== undefined && value !== null && String(value).trim().length > 0
+    return hasVal ? (
+      <div className="w-full px-4 py-3 rounded-xl border-2 border-emerald-200 bg-emerald-50 text-sm font-black text-emerald-800">
+        {value}
+      </div>
+    ) : (
+      <div className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
+        Se calculará automáticamente con la IA
+      </div>
+    )
+  }
+
   return (
     <input type={q.type === 'number' ? 'number' : 'text'}
       value={value || ''} onChange={e => onChange(e.target.value)}
@@ -172,7 +208,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       } else if (form.evalType) {
         res = await fetch('/api/analyze-professional-evaluation', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ evaluationType: form.evalType, childName, childAge, responses }),
+          body: JSON.stringify({ evaluationType: form.evalType.toLowerCase(), childName, childAge, responses }),
         })
       } else if (form.formKey === 'entorno_hogar') {
         res = await fetch('/api/generate-home-environment-report', {
@@ -186,9 +222,40 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         })
       }
       const json = await res!.json()
-      const analysis = json.analysis || { analisis_clinico: json.text || 'Análisis generado' }
+      if (!res!.ok || json.error) throw new Error(json.error || `Error ${res!.status}`)
+
+      // analyze-professional-evaluation devuelve el objeto directo (sin wrapper .analysis)
+      // analyze-neurodivergent-form devuelve { analysis: { ... } }
+      const rawAnalysis = json.analysis && typeof json.analysis === 'object' ? json.analysis : json
+      const analysis: any = { ...rawAnalysis }
+
+      // Aplanar métricas Vineland al nivel raíz para rellenar campos readonly/aiGenerated
+      if (rawAnalysis.metricas) {
+        const m = rawAnalysis.metricas
+        if (m.comunicacion !== undefined)    analysis.puntuacion_comunicacion     = m.comunicacion
+        if (m.vida_diaria !== undefined)     analysis.puntuacion_vida_diaria      = m.vida_diaria
+        if (m.socializacion !== undefined)   analysis.puntuacion_socializacion    = m.socializacion
+        if (m.indice_global !== undefined)   analysis.indice_conducta_adaptativa  = m.indice_global
+        if (m.ci_total !== undefined)        analysis.ci_total                    = m.ci_total
+        if (m.clasificacion !== undefined)   analysis.clasificacion_ci            = m.clasificacion
+        if (m.inhibicion !== undefined)      analysis.inhibicion                  = m.inhibicion
+        if (m.total !== undefined)           analysis.total_brief                 = m.total
+        if (m.severidad !== undefined)       analysis.nivel_severidad             = m.severidad
+        if (m.afecto_social !== undefined)   analysis.puntuacion_total            = m.afecto_social
+        if (m.indice_sintomas !== undefined) analysis.indice_sintomas_conductuales = m.indice_sintomas
+      }
+
+      // Mezclar con responses para que los campos aiGenerated/readonly muestren los valores
+      setResponses(prev => ({ ...prev, ...analysis }))
       setAiAnalysis(analysis)
-      setEditedMsg(analysis?.mensaje_padres || '')
+      setEditedMsg(
+        analysis?.mensaje_padres ||
+        analysis?.informe_padres_vineland ||
+        analysis?.informe_padres_wisc ||
+        analysis?.informe_padres_basc ||
+        analysis?.informe_familia_ados ||
+        analysis?.informe_padres || ''
+      )
       toast.success('✨ Análisis IA generado')
     } catch (e: any) { toast.error('Error: ' + e.message) }
     finally { setAnalyzing(false) }

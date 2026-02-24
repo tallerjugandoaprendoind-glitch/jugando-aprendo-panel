@@ -246,6 +246,69 @@ function QuestionRenderer({ question, value, onChange }: any) {
       </div>
     )
   }
+  // Campo generado por IA (aiGenerated: true) — solo lectura, muestra placeholder si vacío
+  if (question.aiGenerated) {
+    const hasValue = value && String(value).trim().length > 0
+    if (question.type === 'textarea') {
+      return (
+        <div>
+          <label className="text-sm font-bold text-slate-700 block mb-2 flex items-center gap-1.5">
+            <Sparkles size={13} className="text-violet-500" /> {question.label}
+            <span className="text-[10px] font-bold text-violet-400 bg-violet-50 px-2 py-0.5 rounded-full border border-violet-200 ml-1">Generado por IA</span>
+          </label>
+          {hasValue ? (
+            <textarea rows={4} value={value} onChange={e => onChange(e.target.value)}
+              className="w-full p-4 bg-violet-50 border-2 border-violet-200 rounded-xl text-sm font-medium outline-none focus:border-violet-400 transition-all resize-none text-slate-700" />
+          ) : (
+            <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center gap-2 text-slate-400 text-sm">
+              <Sparkles size={15} className="text-violet-300 flex-shrink-0" />
+              <span>Se completará automáticamente al presionar <strong className="text-violet-500">Analizar con IA</strong></span>
+            </div>
+          )}
+        </div>
+      )
+    }
+    return (
+      <div>
+        <label className="text-sm font-bold text-slate-700 block mb-2 flex items-center gap-1.5">
+          <Sparkles size={13} className="text-violet-500" /> {question.label}
+          <span className="text-[10px] font-bold text-violet-400 bg-violet-50 px-2 py-0.5 rounded-full border border-violet-200 ml-1">Generado por IA</span>
+        </label>
+        {hasValue ? (
+          <input type="text" value={value} onChange={e => onChange(e.target.value)}
+            className="w-full p-4 bg-violet-50 border-2 border-violet-200 rounded-xl text-sm font-medium outline-none focus:border-violet-400 transition-all" />
+        ) : (
+          <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center gap-2 text-slate-400 text-sm">
+            <Sparkles size={15} className="text-violet-300 flex-shrink-0" />
+            <span>Se completará al presionar <strong className="text-violet-500">Analizar con IA</strong></span>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  // Campo de solo lectura (readonly: true) — calculado automáticamente
+  if (question.readonly) {
+    const hasValue = value !== undefined && value !== null && String(value).trim().length > 0
+    return (
+      <div>
+        <label className="text-sm font-bold text-slate-700 block mb-2 flex items-center gap-1.5">
+          <Lock size={13} className="text-slate-400" /> {question.label}
+          <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200 ml-1">Auto-calculado</span>
+        </label>
+        {hasValue ? (
+          <div className="w-full p-4 bg-emerald-50 border-2 border-emerald-200 rounded-xl text-sm font-black text-emerald-800">
+            {value}
+          </div>
+        ) : (
+          <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm">
+            Se calculará con el análisis IA
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // Default: text / number input
   return (
     <div>
