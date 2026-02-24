@@ -325,9 +325,9 @@ export default function LandingPage() {
         .lp-modal-x:hover { transform: scale(1.1) rotate(90deg); }
 
         /* ─ MAP ─ */
-        .lp-map-section { position: relative; height: 500px; }
-        .lp-map-card { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: #fff; padding: 28px; border-radius: 22px; box-shadow: 0 24px 60px rgba(0,0,0,.15); max-width: 360px; width: calc(100% - 32px); border: 2px solid #fef3c7; }
-        @media(min-width:768px){ .lp-map-card { left: 48px; transform: translateY(-50%); } }
+        .lp-map-section { position: relative; }
+        .lp-map-card { background: #fff; padding: 28px; border: 2px solid #fef3c7; }
+@media(min-width:640px){ .lp-map-section { height: 500px; } .lp-map-card { position: absolute; top: 50%; left: 48px; transform: translateY(-50%); border-radius: 22px; box-shadow: 0 24px 60px rgba(0,0,0,.15); max-width: 360px; } }
 
         /* ─ FOOTER ─ */
         .lp-footer { background: #1c1917; color: rgba(255,255,255,.4); padding: 64px 20px 28px; }
@@ -361,18 +361,27 @@ export default function LandingPage() {
 
         /* ─ MOBILE FIXES ─ */
         @media(max-width:639px){
-          .lp-hero { padding: 70px 16px 50px; min-height: 100svh; }
+          .lp-hero { padding: 70px 16px 50px; min-height: 100svh; overflow: hidden; }
           .lp-hero-inner { gap: 32px; }
           .lp-ia { padding: 72px 16px; }
           .lp-ia-layout { gap: 32px; }
           .lp-section { padding: 64px 16px; }
           .lp-stats { padding: 40px 16px; }
           .lp-footer { padding: 48px 16px 24px; }
-          .lp-map-section { height: 580px; }
-          .lp-map-card { position: static; transform: none; margin: 0 16px; box-shadow: 0 8px 24px rgba(0,0,0,.1); }
+
+          /* Map: stack vertically on mobile */
+          .lp-map-section { height: auto; min-height: 0; }
+          .lp-map-card { position: static; transform: none; margin: 0; border-radius: 0; box-shadow: 0 -4px 20px rgba(0,0,0,.08); max-width: 100%; width: 100%; }
+
           .lp-modal { padding: 8px; }
           .lp-modal-x { top: 8px; right: 8px; }
           .lp-nav-inner { height: 60px; }
+
+          /* Hide secondary nav button on small screens to save space */
+          .lp-btn-ghost { display: none; }
+
+          /* Gallery thumbs: 2 cols on very small screens */
+          .lp-thumbs { grid-template-columns: repeat(2,1fr) !important; }
         }
       `}</style>
 
@@ -465,17 +474,17 @@ export default function LandingPage() {
           </div>
 
           <div style={{ position: 'relative', animation: 'lp-up .7s .15s ease both' }}>
-            <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 28px 72px rgba(0,0,0,.14)', aspectRatio: '4/3', position: 'relative', border: '5px solid #fff', transform: 'rotate(2deg)', transition: 'transform .4s' }}
-              onMouseEnter={e => (e.currentTarget.style.transform = 'rotate(0)')}
-              onMouseLeave={e => (e.currentTarget.style.transform = 'rotate(2deg)')}>
+            <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 28px 72px rgba(0,0,0,.14)', aspectRatio: '4/3', position: 'relative', border: '5px solid #fff', transition: 'transform .4s' }}
+              onMouseEnter={e => (e.currentTarget.style.transform = 'rotate(0deg)')}
+              onMouseLeave={e => (e.currentTarget.style.transform = '')}>
               <Image src="/images/hero-image.jpg?v=2" alt="Niños en terapia ABA" fill style={{ objectFit: 'cover' }} priority unoptimized />
             </div>
-            <div style={{ position: 'absolute', top: 18, left: -20, background: '#fff', borderRadius: 14, padding: '11px 16px', boxShadow: '0 8px 28px rgba(0,0,0,.1)', display: 'flex', alignItems: 'center', gap: 9, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#1c1917', border: '2px solid #fef3c7' }}>
-              <div style={{ width: 30, height: 30, background: '#fef9c3', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Brain size={15} color="#d97706" /></div>
+            <div style={{ position: 'absolute', top: 18, left: 10, background: '#fff', borderRadius: 14, padding: '10px 14px', boxShadow: '0 8px 28px rgba(0,0,0,.1)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#1c1917', border: '2px solid #fef3c7' }}>
+              <div style={{ width: 30, height: 30, background: '#fef9c3', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Brain size={15} color="#d97706" /></div>
               Metodología ABA
             </div>
-            <div style={{ position: 'absolute', bottom: 18, right: -20, background: '#fff', borderRadius: 14, padding: '11px 16px', boxShadow: '0 8px 28px rgba(0,0,0,.1)', display: 'flex', alignItems: 'center', gap: 9, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#1c1917', border: '2px solid #d1fae5' }}>
-              <CheckCircle size={18} color="#10b981" /> 100% Personalizado
+            <div style={{ position: 'absolute', bottom: 18, right: 10, background: '#fff', borderRadius: 14, padding: '10px 14px', boxShadow: '0 8px 28px rgba(0,0,0,.1)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#1c1917', border: '2px solid #d1fae5' }}>
+              <CheckCircle size={18} color="#10b981" style={{ flexShrink: 0 }} /> 100% Personalizado
             </div>
           </div>
         </div>
@@ -798,8 +807,10 @@ export default function LandingPage() {
 
       {/* MAPA */}
       <section id="ubicacion" className="lp-map-section">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3876.4229091779425!2d-76.0288421240214!3d-13.692817174731204!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91104331c0093305%3A0x21adbeb7d8eb168d!2sC.%20Victor%20Raul%20Haya%20de%20la%20Torre%2C%2011641!5e0!3m2!1ses-419!2spe!4v1770256602309!5m2!1ses-419!2spe"
-          width="100%" height="100%" style={{ border: 0, position: 'absolute', inset: 0 }} allowFullScreen loading="lazy" title="Ubicación" />
+        <div style={{ position: 'relative', height: 340 }}>
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3876.4229091779425!2d-76.0288421240214!3d-13.692817174731204!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91104331c0093305%3A0x21adbeb7d8eb168d!2sC.%20Victor%20Raul%20Haya%20de%20la%20Torre%2C%2011641!5e0!3m2!1ses-419!2spe!4v1770256602309!5m2!1ses-419!2spe"
+            width="100%" height="100%" style={{ border: 0, position: 'absolute', inset: 0 }} allowFullScreen loading="lazy" title="Ubicación" />
+        </div>
         <div className="lp-map-card">
           <h3 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 20, color: '#1c1917', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 7 }}>
             <MapPin color="#ef4444" size={20} /> Visítanos
