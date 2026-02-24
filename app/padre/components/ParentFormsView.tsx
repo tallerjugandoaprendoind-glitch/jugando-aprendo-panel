@@ -13,15 +13,52 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
   const [responses, setResponses] = useState<Record<string, any>>({})
   const [currentStep, setCurrentStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-
-  // Import form definition dynamically
   const [formDef, setFormDef] = useState<any>(null)
-  
+  const [formError, setFormError] = useState(false)
+
+  // Mapeo de IDs de newFormConstants a sus secciones + metadata visual
+  const NEW_FORMS_MAP: Record<string, { title: string; icon: string; color: string; description: string; sections: any[] }> = {}
+
   useEffect(() => {
-    import('@/app/admin/data/neurodivergentForms').then(mod => {
-      const found = mod.ALL_FORMS.find(f => f.id === form.form_type)
-      setFormDef(found || null)
-    })
+    Promise.all([
+      import('@/app/admin/data/neurodivergentForms'),
+      import('@/app/admin/data/newFormConstants'),
+    ]).then(([neuroMod, newMod]) => {
+      // 1. Buscar en neurodivergentForms (tienen estructura completa)
+      const found = neuroMod.ALL_FORMS.find((f: any) => f.id === form.form_type)
+      if (found) { setFormDef(found); return }
+
+      // 2. Buscar en newFormConstants (secciones simples, sin wrapper)
+      const newFormsMap: Record<string, any> = {
+        objetivo_iep: {
+          id: 'objetivo_iep', title: 'Objetivo IEP', icon: '🎯',
+          color: 'from-blue-600 to-indigo-600', description: 'Plan de educación individualizado',
+          sections: newMod.OBJETIVO_IEP_DATA,
+        },
+        nota_sesion: {
+          id: 'nota_sesion', title: 'Nota de Sesión', icon: '📋',
+          color: 'from-emerald-600 to-teal-600', description: 'Registro de sesión clínica',
+          sections: newMod.NOTA_SESION_DATA,
+        },
+        informe_mensual: {
+          id: 'informe_mensual', title: 'Informe Mensual de Progreso', icon: '📊',
+          color: 'from-violet-600 to-purple-600', description: 'Evaluación mensual del progreso',
+          sections: newMod.INFORME_MENSUAL_DATA,
+        },
+        registro_conductual: {
+          id: 'registro_conductual', title: 'Registro Conductual ABC', icon: '📝',
+          color: 'from-orange-600 to-red-600', description: 'Análisis funcional de conducta',
+          sections: newMod.REGISTRO_CONDUCTUAL_ABC_DATA,
+        },
+      }
+
+      const foundNew = newFormsMap[form.form_type]
+      if (foundNew) { setFormDef(foundNew); return }
+
+      // 3. No encontrado en ninguno — mostrar error
+      console.warn(`form_type "${form.form_type}" no encontrado en ningún catálogo`)
+      setFormError(true)
+    }).catch(() => setFormError(true))
   }, [form.form_type])
 
   const answer = (qId: string, val: any) => setResponses(p => ({ ...p, [qId]: val }))
@@ -32,9 +69,24 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
     setSubmitting(false)
   }
 
+  if (formError) return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl p-8 text-center max-w-sm w-full shadow-2xl">
+        <div className="text-5xl mb-4">⚠️</div>
+        <h3 className="font-black text-slate-800 text-lg mb-2">Formulario no disponible</h3>
+        <p className="text-slate-500 text-sm mb-2">El tipo <strong className="text-red-500">"{form.form_type}"</strong> no se encontró en el sistema.</p>
+        <p className="text-slate-400 text-xs mb-6">Pide al administrador que vuelva a asignar el formulario.</p>
+        <button onClick={onClose} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">Cerrar</button>
+      </div>
+    </div>
+  )
+
   if (!formDef) return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl p-8 text-center"><Loader2 className="animate-spin text-blue-600 mx-auto" size={32}/></div>
+      <div className="bg-white rounded-3xl p-8 text-center">
+        <Loader2 className="animate-spin text-blue-600 mx-auto mb-3" size={32}/>
+        <p className="text-slate-500 text-sm">Cargando formulario...</p>
+      </div>
     </div>
   )
 
