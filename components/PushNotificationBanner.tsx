@@ -15,12 +15,12 @@ export default function PushNotificationBanner({ userId }: Props) {
 
   // Don't show if dismissed this session, already subscribed, or not supported
   useEffect(() => {
-    const wasDismissed = sessionStorage.getItem('push-banner-dismissed')
+    const wasDismissed = localStorage.getItem('push-banner-dismissed')
     if (wasDismissed) setDismissed(true)
   }, [])
 
   const handleDismiss = () => {
-    sessionStorage.setItem('push-banner-dismissed', '1')
+    localStorage.setItem('push-banner-dismissed', '1')
     setDismissed(true)
   }
 

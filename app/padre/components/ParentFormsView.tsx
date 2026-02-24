@@ -23,12 +23,13 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
     Promise.all([
       import('@/app/admin/data/neurodivergentForms'),
       import('@/app/admin/data/newFormConstants'),
-    ]).then(([neuroMod, newMod]) => {
-      // 1. Buscar en neurodivergentForms (tienen estructura completa)
+      import('@/app/admin/data/formConstants'),
+    ]).then(([neuroMod, newMod, formMod]) => {
+      // 1. Buscar en neurodivergentForms
       const found = neuroMod.ALL_FORMS.find((f: any) => f.id === form.form_type)
       if (found) { setFormDef(found); return }
 
-      // 2. Buscar en newFormConstants (secciones simples, sin wrapper)
+      // 2. Buscar en newFormConstants
       const newFormsMap: Record<string, any> = {
         objetivo_iep: {
           id: 'objetivo_iep', title: 'Objetivo IEP', icon: '🎯',
@@ -51,11 +52,56 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
           sections: newMod.REGISTRO_CONDUCTUAL_ABC_DATA,
         },
       }
-
       const foundNew = newFormsMap[form.form_type]
       if (foundNew) { setFormDef(foundNew); return }
 
-      // 3. No encontrado en ninguno — mostrar error
+      // 3. Buscar en formConstants (anamnesis, aba, entorno_hogar, evaluaciones clínicas)
+      const formConstantsMap: Record<string, any> = {
+        anamnesis: {
+          id: 'anamnesis', title: 'Historia Clínica', icon: '📋',
+          color: 'from-blue-600 to-cyan-600', description: 'Anamnesis e historia del desarrollo',
+          sections: formMod.ANAMNESIS_DATA,
+        },
+        aba: {
+          id: 'aba', title: 'Sesión ABA', icon: '🧠',
+          color: 'from-indigo-600 to-violet-600', description: 'Registro de sesión de terapia ABA',
+          sections: formMod.ABA_DATA,
+        },
+        entorno_hogar: {
+          id: 'entorno_hogar', title: 'Evaluación del Entorno del Hogar', icon: '🏠',
+          color: 'from-green-600 to-emerald-600', description: 'Evaluación del ambiente familiar',
+          sections: formMod.ENTORNO_HOGAR_DATA,
+        },
+        brief2: {
+          id: 'brief2', title: 'Evaluación BRIEF-2', icon: '🔬',
+          color: 'from-indigo-500 to-indigo-700', description: 'Funciones ejecutivas',
+          sections: formMod.BRIEF2_DATA,
+        },
+        ados2: {
+          id: 'ados2', title: 'Evaluación ADOS-2', icon: '🔍',
+          color: 'from-teal-500 to-teal-700', description: 'Diagnóstico del autismo',
+          sections: formMod.ADOS2_DATA,
+        },
+        vineland3: {
+          id: 'vineland3', title: 'Evaluación Vineland-3', icon: '📈',
+          color: 'from-emerald-500 to-emerald-700', description: 'Conducta adaptativa',
+          sections: formMod.VINELAND3_DATA,
+        },
+        wiscv: {
+          id: 'wiscv', title: 'Evaluación WISC-V', icon: '🧩',
+          color: 'from-violet-500 to-violet-700', description: 'Escala de inteligencia',
+          sections: formMod.WISCV_DATA,
+        },
+        basc3: {
+          id: 'basc3', title: 'Evaluación BASC-3', icon: '📊',
+          color: 'from-rose-500 to-rose-700', description: 'Sistema conductual',
+          sections: formMod.BASC3_DATA,
+        },
+      }
+      const foundConst = formConstantsMap[form.form_type]
+      if (foundConst) { setFormDef(foundConst); return }
+
+      // 4. No encontrado en ningún catálogo
       console.warn(`form_type "${form.form_type}" no encontrado en ningún catálogo`)
       setFormError(true)
     }).catch(() => setFormError(true))
