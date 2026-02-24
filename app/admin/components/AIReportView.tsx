@@ -46,16 +46,35 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
     
     console.log('🔍 Buscando datos para child_id:', childId)
     
-    const { data: anamnesis, error: anamnesisError } = await supabase
+    // Buscar anamnesis en anamnesis_completa (llenada por admin)
+    const { data: anamnesisAdmin } = await supabase
       .from('anamnesis_completa')
       .select('*')
       .eq('child_id', childId)
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
-    
-    if (anamnesisError) console.error('❌ Error cargando anamnesis:', anamnesisError)
-    console.log('📋 Anamnesis encontrada:', anamnesis ? 'Sí' : 'No')
+
+    // Si no hay, buscar en parent_forms (llenada por el padre)
+    let anamnesisFromParent: any = null
+    if (!anamnesisAdmin) {
+      const { data: pf } = await supabase
+        .from('parent_forms')
+        .select('*')
+        .eq('child_id', childId)
+        .eq('status', 'completed')
+        .in('form_type', ['anamnesis', 'historia_familiar', 'Historia Familiar y del Desarrollo'])
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .single()
+      if (pf) {
+        // Adaptar estructura para que sea compatible con el resto del código
+        anamnesisFromParent = { datos: pf.responses, form_title: pf.form_title, created_at: pf.completed_at }
+      }
+    }
+
+    const anamnesis = anamnesisAdmin || anamnesisFromParent
+    console.log('📋 Anamnesis encontrada:', anamnesis ? (anamnesisAdmin ? 'admin' : 'padre') : 'No')
     
     const { data: aba, error: abaError } = await supabase
       .from('registro_aba')

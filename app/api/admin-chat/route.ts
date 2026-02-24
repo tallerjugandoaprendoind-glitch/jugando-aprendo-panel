@@ -25,13 +25,28 @@ export async function POST(req: Request) {
     // ===========================================================================
     // 2. CARGAR ANAMNESIS
     // ===========================================================================
-    const { data: anamnesis } = await supabase
+    // Buscar anamnesis: primero en anamnesis_completa, luego en parent_forms
+    const { data: anamnesisAdmin } = await supabase
       .from('anamnesis_completa')
       .select('datos, created_at')
       .eq('child_id', childId)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
+
+    let anamnesis = anamnesisAdmin;
+    if (!anamnesis) {
+      const { data: pf } = await supabase
+        .from('parent_forms')
+        .select('responses, completed_at, form_title')
+        .eq('child_id', childId)
+        .eq('status', 'completed')
+        .in('form_type', ['anamnesis', 'historia_familiar', 'Historia Familiar y del Desarrollo'])
+        .order('completed_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (pf) anamnesis = { datos: pf.responses, created_at: pf.completed_at };
+    }
 
     // ===========================================================================
     // 3. CARGAR HISTORIAL ABA (últimas 15 sesiones)
