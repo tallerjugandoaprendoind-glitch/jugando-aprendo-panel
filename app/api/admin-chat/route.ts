@@ -113,6 +113,17 @@ export async function POST(req: Request) {
       .limit(15);
 
     // ===========================================================================
+    // 6b. CARGAR FORMULARIOS COMPLETADOS POR LOS PADRES
+    // ===========================================================================
+    const { data: parentFormsData } = await supabase
+      .from('parent_forms')
+      .select('form_type, form_title, responses, completed_at')
+      .eq('child_id', childId)
+      .eq('status', 'completed')
+      .order('completed_at', { ascending: false })
+      .limit(10);
+
+    // ===========================================================================
     // 6. CONSTRUIR CONTEXTO CLÍNICO COMPLETO
     // ===========================================================================
     const context = `
@@ -254,6 +265,17 @@ ${formResponses && formResponses.length > 0 ?
   📋 Respuestas destacadas: ${fr.responses ? Object.entries(fr.responses).slice(0,5).map(([k,v]) => `${k}: ${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}`).join(' | ') : 'N/A'}
   `).join('\n')
   : 'Sin formularios completados registrados'
+}
+
+📨 6. FORMULARIOS COMPLETADOS POR LOS PADRES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${parentFormsData && parentFormsData.length > 0 ?
+  parentFormsData.map((pf, idx) => `
+  Formulario del padre #${idx + 1}: ${pf.form_title || pf.form_type}
+  Fecha completado: ${pf.completed_at ? new Date(pf.completed_at).toLocaleDateString('es-PE') : 'N/A'}
+  📋 Respuestas: ${pf.responses ? Object.entries(pf.responses).slice(0,8).map(([k,v]) => `${k.replace(/_/g,' ')}: ${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}`).join(' | ') : 'N/A'}
+  `).join('\n')
+  : 'Los padres no han completado formularios aún'
 }
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

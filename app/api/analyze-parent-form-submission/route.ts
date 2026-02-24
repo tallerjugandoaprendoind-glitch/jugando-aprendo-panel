@@ -75,7 +75,48 @@ Responde SOLO con JSON (sin markdown ni backticks):
     try { analysis = JSON.parse(text.replace(/```json|```/g, '').trim()) }
     catch { analysis = { resumen_ejecutivo: text } }
 
-    // ── 3. Cola de aprobación ──────────────────────────────────────────────
+    // ── 3. Guardar en tabla clínica correspondiente ────────────────────────
+    // Cuando el padre completa un formulario clínico, guardarlo en la misma
+    // tabla que usa el admin para que aparezca en Historial & IA
+    try {
+      const clinicalTableMap: Record<string, string> = {
+        anamnesis:     'anamnesis_completa',
+        entorno_hogar: 'registro_entorno_hogar',
+        aba:           'registro_aba',
+      }
+      const clinicalTable = clinicalTableMap[formType]
+      if (clinicalTable) {
+        const now = new Date().toISOString()
+        const clinicalPayload: any = {
+          child_id:    childId,
+          datos:       responses,
+          form_type:   formType,
+          ai_analysis: analysis,
+        }
+        // anamnesis_completa usa fecha_creacion, registro_aba usa fecha_sesion
+        if (formType === 'anamnesis')     clinicalPayload.fecha_creacion = now
+        if (formType === 'aba')           clinicalPayload.fecha_sesion = now.split('T')[0]
+        if (formType === 'entorno_hogar') clinicalPayload.created_at = now
+
+        await supabaseAdmin.from(clinicalTable).insert([clinicalPayload])
+        console.log(`✅ Guardado en tabla clínica: ${clinicalTable}`)
+      } else {
+        // Para otros tipos guardar en form_responses
+        await supabaseAdmin.from('form_responses').insert([{
+          child_id:    childId,
+          form_type:   formType,
+          form_title:  formTitle,
+          responses:   responses,
+          ai_analysis: analysis,
+          created_at:  new Date().toISOString(),
+        }])
+        console.log(`✅ Guardado en form_responses (tipo: ${formType})`)
+      }
+    } catch (clinicalErr) {
+      console.error('⚠️ Error guardando en tabla clínica (no crítico):', clinicalErr)
+    }
+
+    // ── 4. Cola de aprobación ──────────────────────────────────────────────
     await supabaseAdmin.from('parent_message_approvals').insert([{
       child_id:       childId,
       parent_id:      parentId,
