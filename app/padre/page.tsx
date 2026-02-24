@@ -23,6 +23,7 @@ import MisCitasView from './components/MisCitasView'
 import ProfileView from './components/ProfileView'
 import StoreView from './components/StoreView'
 import ChatInterface from './components/ChatInterface'
+import MensajesView from './components/MensajesView'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
 
 export default function ParentDashboard() {
@@ -495,6 +496,7 @@ export default function ParentDashboard() {
                     <NavBtnDesktop icon={<Calendar size={20}/>} label="Agendar Cita" active={activeView==='agenda'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0) > 0 ? profile.tokens : null} />
                     <NavBtnDesktop icon={<CalendarDays size={20}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                     <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
+                    <NavBtnDesktop icon={<Bell size={20}/>} label="Mensajes del terapeuta" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
                     <NavBtnDesktop icon={<ShoppingBag size={20}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
                     <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={0} />
@@ -681,6 +683,7 @@ export default function ParentDashboard() {
                     {activeView === 'resources' && <ResourcesView profile={profile} />}
                     {activeView === 'tienda'    && <StoreView profile={profile} />}
                     {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} />}
+                    {activeView === 'mensajes' && <MensajesView profile={profile} />}
 
                     {activeView === 'profile' && (
                         <ProfileView 

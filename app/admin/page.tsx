@@ -161,6 +161,7 @@ export default function AdminDashboard() {
     inicio: 'Panel Principal', agenda: 'Agenda', ninos: 'Pacientes',
     evaluaciones: 'Evaluaciones', reportes: 'Historial & IA',
     recursos: 'Recursos', aprobaciones: 'Aprobaciones',
+    mensajes: 'Mensajes a Padres',
     usuarios: 'Usuarios', importar: 'Importar CSV',
   }
 
@@ -387,6 +388,9 @@ export default function AdminDashboard() {
                     <AprobacionesEspecialista />
                   </div>
                 </div>
+              )}
+              {currentView === 'mensajes' && (
+                <MensajesPendientesPanel />
               )}
               {currentView === 'importar'     && <ExcelImportView />}
             </div>

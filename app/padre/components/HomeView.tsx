@@ -5,7 +5,7 @@ import {
   CalendarDays, Clock, CheckCircle, XCircle, RefreshCw,
   TrendingUp, Target, Activity, Award, ChevronRight,
   Sparkles, Baby, BarChart3, Zap, AlertCircle, Star,
-  Heart, CalendarCheck, BookOpen, Trophy, PartyPopper, X, SmilePlus
+  Heart, CalendarCheck, BookOpen, Trophy, PartyPopper, X, SmilePlus, MessageCircle
 } from 'lucide-react'
 
 interface Props {
@@ -440,6 +440,12 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           <Zap size={22} className="text-indigo-500 mb-2 group-hover:scale-110 transition-transform" />
           <p className="font-black text-slate-800 text-sm">Asistente IA</p>
           <p className="text-xs text-indigo-400 mt-0.5">Consulta al instante</p>
+        </button>
+        <button onClick={() => onChangeView('mensajes')}
+          className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 rounded-2xl p-4 hover:border-violet-300 hover:shadow-md transition-all text-left group">
+          <MessageCircle size={22} className="text-violet-500 mb-2 group-hover:scale-110 transition-transform" />
+          <p className="font-black text-slate-800 text-sm">Mensajes</p>
+          <p className="text-xs text-violet-400 mt-0.5">Del terapeuta</p>
         </button>
       </div>
 
