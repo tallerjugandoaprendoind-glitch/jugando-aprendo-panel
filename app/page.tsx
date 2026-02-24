@@ -483,7 +483,7 @@ export default function LandingPage() {
 
       {/* STATS */}
       <div ref={statsRef} style={{ background: '#fff', borderTop: '1.5px solid #fef3c7', borderBottom: '1.5px solid #fef3c7', padding: '48px 20px' }}>
-        <div style={{ maxWidth: 900px, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 24 }} className="lp-stats-inner">
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 24 }} className="lp-stats-inner">
           {[
             { num: `+${count50}`, lbl: 'Familias felices', icon: '👨‍👩‍👧' },
             { num: '100%', lbl: 'Personalizado', icon: '🎯' },
