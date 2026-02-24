@@ -294,15 +294,38 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
 // 3. LÓGICA VINELAND-3 (Conducta Adaptativa)
 // ============================================================================
 async function analyzeVineland3(ai: any, responses: any, childName: string, childAge: number) {
-  // Dominios Vineland (0=Nunca, 1=A veces, 2=Siempre)
-  const comunicacionScore = calculateVinelandScore(responses, ['vineland_expresivo', 'vineland_receptivo', 'vineland_lenguaje_escrito']);
-  const vidaDiariaScore = calculateVinelandScore(responses, ['vineland_personal', 'vineland_domestico', 'vineland_comunidad']);
-  const socializacionScore = calculateVinelandScore(responses, ['vineland_relaciones', 'vineland_juego', 'vineland_afrontamiento']);
-  const motorScore = calculateVinelandScore(responses, ['vineland_motricidad_fina', 'vineland_motricidad_gruesa']);
+  // ── Claves reales del formulario VINELAND3_DATA en formConstants.tsx ──
+  // Comunicación: 7 ítems × 2 pts = 14 pts máx
+  const comunicacionScore = calculateVinelandScore(responses, [
+    'com_receptiva', 'com_sigue_instrucciones', 'com_entiende_2pasos',
+    'com_expresiva_palabras', 'com_frases_completas', 'com_cuenta_experiencias', 'com_escrita'
+  ]);
+  // Vida Diaria: 7 ítems × 2 pts = 14 pts máx
+  const vidaDiariaScore = calculateVinelandScore(responses, [
+    'vida_come_solo', 'vida_bebe_vaso', 'vida_lava_manos',
+    'vida_viste_superior', 'vida_bano', 'vida_tareas_casa', 'vida_dinero'
+  ]);
+  // Socialización: 7 ítems × 2 pts = 14 pts máx
+  const socializacionScore = calculateVinelandScore(responses, [
+    'soc_sonrie_familiar', 'soc_muestra_afecto', 'soc_juega_otros',
+    'soc_comparte', 'soc_respeta_turnos', 'soc_empatia', 'soc_amistad'
+  ]);
+  // Motoras: 6 ítems × 2 pts = 12 pts máx
+  const motorScore = calculateVinelandScore(responses, [
+    'motor_camina', 'motor_corre', 'motor_salta',
+    'motor_pelota', 'motor_pinza', 'motor_dibuja'
+  ]);
+
+  const maxCom  = 14; const maxVida = 14; const maxSoc = 14; const maxMot = 12;
+  const maxTotal = maxCom + maxVida + maxSoc + maxMot; // 54
 
   const indiceGlobal = comunicacionScore + vidaDiariaScore + socializacionScore + motorScore;
-  const maxPosible = 24; 
-  const percentGlobal = (indiceGlobal / maxPosible) * 100;
+  const percentGlobal = (indiceGlobal / maxTotal) * 100;
+
+  const pctCom  = (comunicacionScore / maxCom)  * 100;
+  const pctVida = (vidaDiariaScore   / maxVida)  * 100;
+  const pctSoc  = (socializacionScore / maxSoc)  * 100;
+  const pctMot  = (motorScore        / maxMot)   * 100;
 
   let nivelAdaptativo = '';
   if (percentGlobal >= 75) nivelAdaptativo = 'Alto';
@@ -316,13 +339,13 @@ async function analyzeVineland3(ai: any, responses: any, childName: string, chil
 
     PACIENTE: ${childName}, ${childAge} años.
 
-    PERFIL DE DOMINIOS:
-    1. Comunicación: ${comunicacionScore}/6 (Expresión, Comprensión, Escritura).
-    2. Habilidades de Vida Diaria: ${vidaDiariaScore}/6 (Autocuidado, Tareas del hogar).
-    3. Socialización: ${socializacionScore}/6 (Relaciones, Juego, Manejo emocional).
-    4. Habilidades Motoras: ${motorScore}/6 (Fina y gruesa).
+    PERFIL DE DOMINIOS (puntuación obtenida / máximo posible — porcentaje):
+    1. Comunicación:          ${comunicacionScore}/${maxCom}  (${pctCom.toFixed(1)}%) — Expresión receptiva, expresiva y escrita.
+    2. Vida Diaria:           ${vidaDiariaScore}/${maxVida}  (${pctVida.toFixed(1)}%) — Autocuidado, tareas domésticas y comunidad.
+    3. Socialización:         ${socializacionScore}/${maxSoc}  (${pctSoc.toFixed(1)}%) — Relaciones, juego y manejo emocional.
+    4. Habilidades Motoras:   ${motorScore}/${maxMot}  (${pctMot.toFixed(1)}%) — Motricidad fina y gruesa.
 
-    ÍNDICE DE COMPORTAMIENTO ADAPTATIVO: ${indiceGlobal}/24 (${percentGlobal.toFixed(1)}%) - Nivel ${nivelAdaptativo}
+    ÍNDICE GLOBAL DE COMPORTAMIENTO ADAPTATIVO: ${indiceGlobal}/${maxTotal} (${percentGlobal.toFixed(1)}%) — Nivel ${nivelAdaptativo}
 
     INSTRUCCIONES CRÍTICAS:
     1. Responde SOLO con un objeto JSON válido
@@ -344,13 +367,14 @@ async function analyzeVineland3(ai: any, responses: any, childName: string, chil
   return {
     ...parsed,
     metricas: {
-      comunicacion: comunicacionScore,
-      vida_diaria: vidaDiariaScore,
+      comunicacion:  comunicacionScore,
+      vida_diaria:   vidaDiariaScore,
       socializacion: socializacionScore,
-      motor: motorScore,
+      motor:         motorScore,
       indice_global: indiceGlobal,
-      porcentaje: percentGlobal,
-      nivel: nivelAdaptativo
+      max_total:     maxTotal,
+      porcentaje:    percentGlobal,
+      nivel:         nivelAdaptativo
     }
   };
 }
