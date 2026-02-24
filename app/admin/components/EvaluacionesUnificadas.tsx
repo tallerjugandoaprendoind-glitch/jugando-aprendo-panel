@@ -695,20 +695,39 @@ function FormFillView({ form, children, onBack, toast }: any) {
 
       // Build insert payload — form_title may not exist in all clinical tables yet
       // The migration below adds it; until then we store it only in form_responses
-      const insertPayload: any = {
-        child_id: selectedChild,
-        form_type: form.formKey || form.id,
-        created_at: new Date().toISOString(),
-        ai_analysis: aiAnalysis,
-      }
+      const now = new Date().toISOString()
+      const insertPayload: any = { child_id: selectedChild }
+
       if (isNeurodivergent) {
-        insertPayload.responses = responses
-        insertPayload.form_title = form.title  // form_responses always has this column
+        // form_responses: tiene form_type, form_title, responses, ai_analysis, created_at
+        insertPayload.form_type  = form.formKey || form.id
+        insertPayload.form_title = form.title
+        insertPayload.responses  = responses
+        insertPayload.ai_analysis = aiAnalysis
+        insertPayload.created_at  = now
+      } else if (table === 'anamnesis_completa') {
+        // anamnesis_completa: child_id, datos, fecha_creacion, form_title, creado_por
+        insertPayload.datos          = responses
+        insertPayload.fecha_creacion = now
+        insertPayload.form_title     = form.title
+      } else if (table === 'registro_aba') {
+        // registro_aba: child_id, fecha_sesion, datos, form_title
+        insertPayload.datos        = responses
+        insertPayload.fecha_sesion = responses['fecha_sesion'] || now.split('T')[0]
+        insertPayload.form_title   = form.title
+      } else if (table === 'registro_entorno_hogar') {
+        // registro_entorno_hogar: child_id, fecha_visita, datos, created_at, form_title
+        insertPayload.datos        = responses
+        insertPayload.fecha_visita = responses['fecha_visita'] || now
+        insertPayload.created_at   = now
+        insertPayload.form_title   = form.title
       } else {
-        insertPayload.datos = responses
-        // Only add form_title if saving to form_responses fallback; for clinical tables add via migration
-        if (table === 'form_responses') insertPayload.form_title = form.title
-        else insertPayload.form_title = form.title  // safe — migration adds the column
+        // form_responses fallback
+        insertPayload.form_type   = form.formKey || form.id
+        insertPayload.form_title  = form.title
+        insertPayload.responses   = responses
+        insertPayload.ai_analysis = aiAnalysis
+        insertPayload.created_at  = now
       }
 
       const { data: savedRecord } = await supabase.from(table).insert([insertPayload]).select().single()
@@ -1028,8 +1047,8 @@ export default function EvaluacionesUnificadas() {
       supabase.from('parent_forms').select('*, profiles(full_name, email)').order('created_at', { ascending: false }),
       supabase.from('form_responses').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(30),
       supabase.from('anamnesis_completa').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(10),
-      supabase.from('registro_aba').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(10),
-      supabase.from('registro_entorno_hogar').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(10),
+      supabase.from('registro_aba').select('id, form_title, datos, child_id, fecha_sesion, children(name)').order('fecha_sesion', { ascending: false }).limit(10),
+      supabase.from('registro_entorno_hogar').select('id, form_title, datos, child_id, fecha_visita, created_at, children(name)').order('fecha_visita', { ascending: false }).limit(10),
     ])
     if (childrenRes.data) setChildren(childrenRes.data)
     if (parentsRes.data) setParents(parentsRes.data)

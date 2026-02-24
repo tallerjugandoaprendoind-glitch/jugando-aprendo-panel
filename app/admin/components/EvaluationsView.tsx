@@ -247,7 +247,7 @@ function DynamicEvaluationsView() {
       
       if (activeForm === 'anamnesis') {
         tabla = 'anamnesis_completa';
-        dataToInsert = { child_id: selectedChild, datos: respuestas };
+        dataToInsert = { child_id: selectedChild, datos: respuestas, fecha_creacion: new Date().toISOString() };
       } else if (activeForm === 'aba') {
         tabla = 'registro_aba';
         dataToInsert = { child_id: selectedChild, fecha_sesion: respuestas['fecha_sesion'] || new Date().toISOString(), datos: respuestas };
