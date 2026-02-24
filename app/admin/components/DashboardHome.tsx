@@ -152,7 +152,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
       { data: actividad },
       { data: sesionesRecientes },
       { data: todosNinos },
-      { data: mensajes },
+      { count: mensajesPendientes },
       { data: bienestar },
     ] = await Promise.all([
       supabase.from('children').select('*', { count: 'exact', head: true }),
@@ -163,7 +163,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
       supabase.from('registro_aba').select('*, children(name)').order('fecha_sesion', { ascending: false }).limit(5),
       supabase.from('aba_sessions_v2').select('child_id').gte('session_date', hace30),
       supabase.from('children').select('id, name'),
-      supabase.from('notifications').select('*').eq('is_read', false).limit(20),
+      supabase.from('parent_message_approvals').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
       supabase.from('parent_forms').select('*').eq('status','completed').gte('created_at', mesActual).order('created_at', { ascending: false }),
     ])
 
@@ -183,7 +183,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
     })
 
     const creditos = profiles?.reduce((s: number, p: any) => s + (p.tokens || 0), 0) || 0
-    setStats({ pacientes: pacientes || 0, sesionesHoy: citasHoy?.length || 0, creditosActivos: creditos, analisisIA: analisis?.length || 0, sinSesion30d: sinSesion.length, mensajesPendientes: mensajes?.length || 0 })
+    setStats({ pacientes: pacientes || 0, sesionesHoy: citasHoy?.length || 0, creditosActivos: creditos, analisisIA: analisis?.length || 0, sinSesion30d: sinSesion.length, mensajesPendientes: mensajesPendientes || 0 })
     setProximasCitas(citas || [])
     setActividadReciente(actividad || [])
     setAlertasClinicas(alertas)
