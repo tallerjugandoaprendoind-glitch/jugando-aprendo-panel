@@ -323,6 +323,19 @@ function QuestionRenderer({ question, value, onChange }: any) {
   )
 }
 
+// ─── HELPER: convierte string con guiones/saltos o array → array limpio ───────
+function toArray(val: any): string[] {
+  if (!val) return []
+  if (Array.isArray(val)) return val.filter(Boolean)
+  if (typeof val === 'string') {
+    return val
+      .split(/\n|;/)
+      .map((s: string) => s.replace(/^[-•*]\s*/, '').trim())
+      .filter(Boolean)
+  }
+  return []
+}
+
 // ─── AI ANALYSIS DISPLAY ─────────────────────────────────────────────────────
 function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysis: any; editableMessage?: string; onEditMessage?: (v: string) => void }) {
   if (!analysis) return null
@@ -332,6 +345,23 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysi
     alto: 'bg-red-50 border-red-200 text-red-800',
   }
   const alertIcons: Record<string, string> = { bajo: '✅', moderado: '⚠️', alto: '🚨' }
+
+  // Normalizar todos los campos que pueden venir como string o array
+  const areasFortaleza    = toArray(analysis.areas_fortaleza)
+  const areasTrabajo      = toArray(analysis.areas_trabajo)
+  const recomendaciones   = toArray(analysis.recomendaciones)
+  const indicadoresClave  = toArray(analysis.indicadores_clave)
+  const formsRecomendados = toArray(analysis.formularios_recomendados)
+
+  // Texto de análisis clínico — puede venir en distintas claves según el formulario
+  const textoAnalisis =
+    analysis.analisis_clinico ||
+    analysis.analisis_ia ||
+    analysis.analisis_vineland_ia ||
+    analysis.analisis_diagnostico_ia ||
+    analysis.analisis_basc_ia ||
+    analysis.perfil_cognitivo_ia ||
+    analysis.resumen_ejecutivo || ''
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -351,20 +381,20 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysi
       )}
 
       {/* Clinical analysis */}
-      {analysis.analisis_clinico && (
+      {textoAnalisis ? (
         <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
           <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">📋 Análisis Clínico</h4>
-          <p className="text-sm text-slate-700 leading-relaxed">{analysis.analisis_clinico}</p>
+          <p className="text-sm text-slate-700 leading-relaxed">{textoAnalisis}</p>
         </div>
-      )}
+      ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {/* Strengths */}
-        {analysis.areas_fortaleza?.length > 0 && (
+        {areasFortaleza.length > 0 && (
           <div className="bg-emerald-50 rounded-xl p-4 border border-emerald-200">
             <h4 className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2">💪 Fortalezas</h4>
             <ul className="space-y-1">
-              {analysis.areas_fortaleza.map((f: string, i: number) => (
+              {areasFortaleza.map((f: string, i: number) => (
                 <li key={i} className="text-xs text-emerald-800 font-medium flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full shrink-0" />{f}
                 </li>
@@ -373,11 +403,11 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysi
           </div>
         )}
         {/* Work areas */}
-        {analysis.areas_trabajo?.length > 0 && (
+        {areasTrabajo.length > 0 && (
           <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
             <h4 className="text-xs font-black text-amber-600 uppercase tracking-widest mb-2">🎯 Áreas a Trabajar</h4>
             <ul className="space-y-1">
-              {analysis.areas_trabajo.map((f: string, i: number) => (
+              {areasTrabajo.map((f: string, i: number) => (
                 <li key={i} className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 bg-amber-500 rounded-full shrink-0" />{f}
                 </li>
@@ -388,11 +418,11 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysi
       </div>
 
       {/* Recommendations */}
-      {analysis.recomendaciones?.length > 0 && (
+      {recomendaciones.length > 0 && (
         <div className="bg-violet-50 rounded-xl p-4 border border-violet-200">
           <h4 className="text-xs font-black text-violet-600 uppercase tracking-widest mb-2">💡 Recomendaciones</h4>
           <ul className="space-y-1.5">
-            {analysis.recomendaciones.map((r: string, i: number) => (
+            {recomendaciones.map((r: string, i: number) => (
               <li key={i} className="text-xs text-violet-800 font-medium flex items-start gap-1.5">
                 <span className="w-1.5 h-1.5 bg-violet-500 rounded-full shrink-0 mt-1" />{r}
               </li>
@@ -402,11 +432,11 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysi
       )}
 
       {/* Key indicators */}
-      {analysis.indicadores_clave?.length > 0 && (
+      {indicadoresClave.length > 0 && (
         <div>
           <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">🔍 Indicadores Clave</h4>
           <div className="flex flex-wrap gap-2">
-            {analysis.indicadores_clave.map((ind: string, i: number) => (
+            {indicadoresClave.map((ind: string, i: number) => (
               <span key={i} className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold border border-slate-200">{ind}</span>
             ))}
           </div>
@@ -414,11 +444,11 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysi
       )}
 
       {/* Next recommended forms */}
-      {analysis.formularios_recomendados?.length > 0 && (
+      {formsRecomendados.length > 0 && (
         <div>
           <h4 className="text-xs font-black text-violet-600 uppercase tracking-widest mb-2">📋 Próximas Evaluaciones Recomendadas</h4>
           <div className="flex flex-wrap gap-2">
-            {analysis.formularios_recomendados.map((f: string, i: number) => (
+            {formsRecomendados.map((f: string, i: number) => (
               <span key={i} className="px-3 py-1.5 bg-violet-50 border border-violet-200 text-violet-700 rounded-full text-xs font-bold">{f}</span>
             ))}
           </div>

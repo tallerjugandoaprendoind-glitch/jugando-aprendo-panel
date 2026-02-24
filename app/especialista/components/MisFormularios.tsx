@@ -400,7 +400,19 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       </div>
 
       {/* AI Result */}
-      {aiAnalysis && (
+      {aiAnalysis && (() => {
+        // Helper: convierte string con guiones/saltos o array → array limpio
+        const toArr = (val: any): string[] => {
+          if (!val) return []
+          if (Array.isArray(val)) return val.filter(Boolean)
+          if (typeof val === 'string') return val.split(/\n|;/).map((s: string) => s.replace(/^[-•*]\s*/, '').trim()).filter(Boolean)
+          return []
+        }
+        const areasFortaleza  = toArr(aiAnalysis.areas_fortaleza)
+        const recomendaciones = toArr(aiAnalysis.recomendaciones || aiAnalysis.recomendaciones_ia || aiAnalysis.plan_intervencion_conductual)
+        const textoAnalisis   = aiAnalysis.resumen_ejecutivo || aiAnalysis.analisis_clinico || aiAnalysis.analisis_ia || aiAnalysis.analisis_vineland_ia || aiAnalysis.analisis_diagnostico_ia || aiAnalysis.analisis_basc_ia || aiAnalysis.perfil_cognitivo_ia || ''
+
+        return (
         <div className="bg-white rounded-2xl border border-purple-200 p-5 space-y-4 shadow-sm">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -417,26 +429,26 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
             )}
           </div>
 
-          {(aiAnalysis.resumen_ejecutivo || aiAnalysis.analisis_clinico) && (
-            <p className="text-sm text-slate-600 leading-relaxed">{aiAnalysis.resumen_ejecutivo || aiAnalysis.analisis_clinico}</p>
-          )}
+          {textoAnalisis ? (
+            <p className="text-sm text-slate-600 leading-relaxed">{textoAnalisis}</p>
+          ) : null}
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {aiAnalysis.areas_fortaleza?.length > 0 && (
+            {areasFortaleza.length > 0 && (
               <div>
                 <p className="text-xs font-black text-emerald-600 uppercase tracking-widest mb-2">💪 Fortalezas</p>
                 <ul className="space-y-1">
-                  {aiAnalysis.areas_fortaleza.map((f: string, i: number) => (
+                  {areasFortaleza.map((f: string, i: number) => (
                     <li key={i} className="text-xs text-slate-600 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">• {f}</li>
                   ))}
                 </ul>
               </div>
             )}
-            {aiAnalysis.recomendaciones?.length > 0 && (
+            {recomendaciones.length > 0 && (
               <div>
                 <p className="text-xs font-black text-blue-600 uppercase tracking-widest mb-2">💡 Recomendaciones</p>
                 <ul className="space-y-1">
-                  {(Array.isArray(aiAnalysis.recomendaciones) ? aiAnalysis.recomendaciones : [aiAnalysis.recomendaciones]).slice(0, 4).map((r: string, i: number) => (
+                  {recomendaciones.slice(0, 4).map((r: string, i: number) => (
                     <li key={i} className="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-lg px-3 py-2">• {r}</li>
                   ))}
                 </ul>
@@ -496,7 +508,8 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
             {saving ? 'Guardando...' : '✅ Guardar y Enviar para Aprobación'}
           </button>
         </div>
-      )}
+        )
+      })()}
     </div>
   )
 }
