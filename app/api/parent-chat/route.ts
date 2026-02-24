@@ -22,14 +22,15 @@ export async function POST(req: NextRequest) {
       { data: child },
       { data: sessions },
       { data: appointments },
+      { data: parentForms },
     ] = await Promise.all([
       supabase.from('children').select('name, birth_date, diagnosis').eq('id', childId).single(),
       supabase.from('registro_aba').select('fecha_sesion, datos').eq('child_id', childId).order('fecha_sesion', { ascending: false }).limit(5),
       supabase.from('appointments').select('appointment_date, appointment_time').eq('child_id', childId).gte('appointment_date', new Date().toISOString().split('T')[0]).order('appointment_date', { ascending: true }).limit(1),
+      supabase.from('parent_forms').select('form_type, form_title, responses, completed_at').eq('child_id', childId).eq('status', 'completed').order('completed_at', { ascending: false }).limit(10),
     ])
 
     // ── Productos de la tienda ────────────────────────────────────────────────
-    // Solo traer si la pregunta es sobre actividades, casa, materiales, ayuda
     const esConsultaActividades = /casa|actividad|ejercicio|material|juego|practicar|hacer|recurso|tip|consejo/i.test(question)
 
     let productosTexto = ''
@@ -62,13 +63,30 @@ REGLA: Solo sugiere un producto si tiene conexión real con los consejos que das
       contextParts.push(`PACIENTE: ${child.name}, ${age} años, ${child.diagnosis || 'En evaluación'}`)
     }
 
+    // ── Formularios completados por los padres (anamnesis, entorno_hogar, etc.) ──
+    if (parentForms && parentForms.length > 0) {
+      const formsText = parentForms.map((f: any) => {
+        const responses = f.responses
+        if (!responses || typeof responses !== 'object') return null
+        const resText = Object.entries(responses)
+          .filter(([, v]) => v !== null && v !== undefined && v !== '')
+          .map(([k, v]) => `    • ${k.replace(/_/g, ' ')}: ${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}`)
+          .join('\n')
+        return `  [${f.form_title || f.form_type} - ${f.completed_at ? new Date(f.completed_at).toLocaleDateString('es-PE') : 'Sin fecha'}]\n${resText}`
+      }).filter(Boolean).join('\n\n')
+
+      contextParts.push(`FORMULARIOS COMPLETADOS POR LOS PADRES:\n${formsText}`)
+    } else {
+      contextParts.push('FORMULARIOS: Los padres no han completado formularios aún.')
+    }
+
     if (sessions && sessions.length > 0) {
       const historyText = sessions.map((s: any) =>
         `  - ${s.fecha_sesion}: ${s.datos?.objetivo_sesion || 'N/A'} | ${s.datos?.resultado_sesion || 'N/A'}`
       ).join('\n')
-      contextParts.push(`HISTORIAL RECIENTE:\n${historyText}`)
+      contextParts.push(`HISTORIAL DE SESIONES ABA:\n${historyText}`)
     } else {
-      contextParts.push("HISTORIAL: Sin sesiones registradas aún.")
+      contextParts.push("HISTORIAL ABA: Sin sesiones registradas aún.")
     }
 
     if (appointments && appointments.length > 0) {
@@ -89,14 +107,14 @@ PERSONALIDAD: Empática, cálida y profesional. Como una terapeuta experta que a
 Usas emojis ocasionales (💙, ✨, 📋) para suavizar el tono.
 
 REGLAS:
-1. Responde basándote en el historial clínico proporcionado.
-2. Si hay progreso, ¡celébralo!
-3. Si hay dificultades, valida la emoción y ofrece perspectiva positiva.
-4. Sé concisa. No escribas párrafos gigantes.
-5. PRODUCTO: Si el contexto incluye productos de la tienda y la pregunta es sobre actividades/materiales:
+1. Responde basándote en el historial clínico proporcionado, incluyendo los formularios y anamnesis completados por los padres.
+2. Si hay información en los formularios (anamnesis, entorno del hogar, etc.), úsala para personalizar tu respuesta.
+3. Si hay progreso, ¡celébralo!
+4. Si hay dificultades, valida la emoción y ofrece perspectiva positiva.
+5. Sé concisa. No escribas párrafos gigantes.
+6. PRODUCTO: Si el contexto incluye productos de la tienda y la pregunta es sobre actividades/materiales:
    - Puedes sugerir UNO de forma natural al final de tu respuesta, en una línea separada.
    - Formato exacto si sugieres: [PRODUCTO_ID:el-id-exacto-aqui]
-   - El mensaje al padre debe ser natural: "Por cierto, en nuestra tienda tenemos el Kit de fichas ABA que puede ayudarte..."
    - Si ningún producto aplica, NO menciones la tienda en absoluto.
 `
 
@@ -107,7 +125,7 @@ ${dataContext}
 PREGUNTA DEL PADRE/MADRE:
 "${question}"
 
-Responde directamente. Si sugieres un producto, al FINAL pon [PRODUCTO_ID:el-id] en una línea aparte.
+Responde directamente usando toda la información disponible del paciente. Si sugieres un producto, al FINAL pon [PRODUCTO_ID:el-id] en una línea aparte.
 `
 
     const response = await ai.models.generateContent({
@@ -135,7 +153,6 @@ Responde directamente. Si sugieres un producto, al FINAL pon [PRODUCTO_ID:el-id]
           imagen_url: prod.imagen_url,
         }
       }
-      // Limpiar el marcador del texto visible
       fullText = fullText.replace(/\[PRODUCTO_ID:[^\]]+\]/g, '').trim()
     }
 
