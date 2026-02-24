@@ -112,11 +112,13 @@ function DynamicEvaluationsView() {
             throw new Error(data.error || "Error al conectar con el servidor IA");
         }
 
-        // Mapeamos la respuesta de la IA al estado (mezclamos con lo existente)
+        // Unwrap .analysis si existe (analyze-neurodivergent-form lo envuelve así)
+        const rawData = data.analysis || data
+        console.log('🧠 rawData recibido de IA:', JSON.stringify(rawData).slice(0,300))
         // Aplanar metricas al nivel raíz para que los campos readonly los muestren
-        const flatData: any = { ...data }
-        if (data.metricas) {
-          const m = data.metricas
+        const flatData: any = { ...rawData }
+        if (rawData.metricas) {
+          const m = rawData.metricas
           // Vineland-3
           if (m.comunicacion !== undefined)      flatData.puntuacion_comunicacion      = m.comunicacion
           if (m.socializacion !== undefined)     flatData.puntuacion_socializacion     = m.socializacion
@@ -144,7 +146,9 @@ function DynamicEvaluationsView() {
         console.log('🔄 Actualizando respuestas con:', flatData)
         setRespuestas((prev: any) => {
           const newState = { ...prev, ...flatData }
-          console.log('📊 Nuevo estado de respuestas:', newState)
+          console.log('📊 Claves en newState:', Object.keys(newState))
+          console.log('📊 analisis_vineland_ia:', newState.analisis_vineland_ia?.slice?.(0,50))
+          console.log('📊 areas_fortaleza:', newState.areas_fortaleza?.slice?.(0,50))
           return newState
         })
         

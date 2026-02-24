@@ -646,8 +646,11 @@ function FormFillView({ form, children, onBack, toast }: any) {
         })
         const json = await res.json()
         if (json.error) throw new Error(json.error)
-        setAiAnalysis(json.analysis)
-        setEditedMessage(json.analysis?.mensaje_padres || '')
+        const nfAnalysis = json.analysis || {}
+        // Mezclar campos de la IA con las respuestas del formulario
+        setResponses((prev: any) => ({ ...prev, ...nfAnalysis }))
+        setAiAnalysis(nfAnalysis)
+        setEditedMessage(nfAnalysis?.mensaje_padres || '')
       } else {
         // Formulario clínico profesional
         const childName = child?.name || 'Paciente'
@@ -676,7 +679,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
           // si no tiene antecedente/conducta/consecuencia → sigue con analyze-neurodivergent-form
         } else if (['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].includes(form.formKey)) {
           endpoint = '/api/analyze-professional-evaluation'
-          payload = { evaluationType: form.formKey.toUpperCase(), childName, childAge, responses }
+          payload = { evaluationType: form.formKey.toLowerCase(), childName, childAge, responses }
         }
 
         const res = await fetch(endpoint, {
@@ -685,7 +688,11 @@ function FormFillView({ form, children, onBack, toast }: any) {
           body: JSON.stringify(payload),
         })
         const json = await res.json()
-        const rawAnalysis = json.analysis || json || { analisis_clinico: json.text || 'Análisis generado' }
+        if (!res.ok || json.error) throw new Error(json.error || `Error ${res.status}`)
+        // analyze-professional-evaluation devuelve el objeto directo (sin .analysis wrapper)
+        // analyze-neurodivergent-form devuelve { analysis: { ... } }
+        const rawAnalysis = json.analysis && typeof json.analysis === 'object' ? json.analysis : json
+        console.log('🔬 rawAnalysis keys:', Object.keys(rawAnalysis))
         // Aplanar metricas al nivel raíz para que los campos del formulario los muestren
         const analysis: any = { ...rawAnalysis }
         if (rawAnalysis.metricas) {
