@@ -351,6 +351,10 @@ export default function LandingPage() {
         @keyframes ariaFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
         @keyframes ariaLed { 0%,100%{opacity:1} 50%{opacity:.25} }
 
+        /* ─ ARIA CARDS GRID ─ */
+        .aria-cards-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media(min-width:900px){ .aria-cards-grid { grid-template-columns: 1fr; } }
+
         /* ─ ARIA LAYOUT ─ */
         .lp-ia-layout { display: grid; gap: 56px; align-items: center; }
         @media(min-width:900px){ .lp-ia-layout { grid-template-columns: 1fr 420px; } }
@@ -376,6 +380,11 @@ export default function LandingPage() {
           .lp-modal { padding: 8px; }
           .lp-modal-x { top: 8px; right: 8px; }
           .lp-nav-inner { height: 60px; }
+
+          /* ARIA section: 2-col cards on mobile, hide chat panel */
+          .aria-cards-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+          .aria-card { flex-direction: column !important; gap: 10px !important; padding: 14px !important; }
+          .aria-chat-panel { display: none !important; }
 
           /* Nav button always visible */
 
@@ -564,7 +573,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── ASISTENTE ARIA ─────────────────────────────────────── */}
-      <section id="aria" style={{ background: '#fff', padding: '100px 20px', position: 'relative', overflow: 'hidden' }}>
+      <section id="aria" style={{ background: '#fff', padding: '72px 20px', position: 'relative', overflow: 'hidden' }}>
         {/* Subtle bg pattern */}
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(249,115,22,.04) 1px, transparent 1px)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
         {/* Orange glow top right */}
@@ -572,38 +581,41 @@ export default function LandingPage() {
 
         <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: 64 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff7ed', border: '2px solid #fed7aa', color: '#c2410c', borderRadius: 99, padding: '5px 16px', fontFamily: "'Baloo 2',cursive", fontSize: 12, fontWeight: 700, marginBottom: 16 }}>
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff7ed', border: '2px solid #fed7aa', color: '#c2410c', borderRadius: 99, padding: '5px 16px', fontFamily: "'Baloo 2',cursive", fontSize: 12, fontWeight: 700, marginBottom: 14 }}>
               <Sparkles size={13} /> Inteligencia Artificial
             </div>
-            <h2 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(28px,4vw,46px)', fontWeight: 800, color: '#1c1917', lineHeight: 1.15, marginBottom: 14 }}>
+            <h2 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(26px,4vw,46px)', fontWeight: 800, color: '#1c1917', lineHeight: 1.15, marginBottom: 12 }}>
               Conoce a <span style={{ color: '#f97316' }}>ARIA</span>
             </h2>
-            <p style={{ color: '#78716c', fontSize: 16, lineHeight: 1.85, maxWidth: 520, margin: '0 auto' }}>
+            <p style={{ color: '#78716c', fontSize: 15, lineHeight: 1.75, maxWidth: 520, margin: '0 auto' }}>
               Tu asistente clínica inteligente. Aprende de los registros diarios de tu hijo y te acompaña 24/7 entre sesiones.
             </p>
           </div>
 
           {/* Layout: cards left | chat right */}
-          <div style={{ display: 'grid', gap: 56, alignItems: 'center' }} className="lp-ia-layout">
+          <div style={{ display: 'grid', gap: 48, alignItems: 'center' }} className="lp-ia-layout">
             {/* LEFT: Feature cards */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {[
-                { icon: <LineChart size={20} color="#f97316" />, bg: '#fff7ed', border: '#fed7aa', title: 'Seguimiento Preciso', desc: 'ARIA analiza tendencias conductuales sesión a sesión, detectando patrones invisibles al ojo humano.' },
-                { icon: <MessageSquareHeart size={20} color="#10b981" />, bg: '#f0fdf4', border: '#bbf7d0', title: 'Apoyo para Padres 24/7', desc: 'Resúmenes en lenguaje sencillo y recomendaciones personalizadas para reforzar el aprendizaje en casa.' },
-                { icon: <Brain size={20} color="#8b5cf6" />, bg: '#faf5ff', border: '#e9d5ff', title: 'Progreso Visible', desc: 'Gráficos interactivos que muestran la evolución en tiempo real con cada sesión registrada.' },
-                { icon: <Zap size={20} color="#f59e0b" />, bg: '#fffbeb', border: '#fde68a', title: 'Respuestas Instantáneas', desc: 'Pregúntale a ARIA en cualquier momento sobre el progreso, dudas o actividades para practicar en casa.' },
-              ].map(({ icon, bg, border, title, desc }) => (
-                <div key={title} style={{ background: '#fff', border: `2px solid ${border}`, borderRadius: 18, padding: '20px 22px', display: 'flex', gap: 16, alignItems: 'flex-start', transition: 'all .3s', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 28px rgba(249,115,22,.1)'; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 12px rgba(0,0,0,.04)'; }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 14, background: bg, border: `1.5px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
-                  <div>
-                    <h4 style={{ fontFamily: "'Baloo 2',cursive", color: '#1c1917', fontWeight: 700, fontSize: 15, marginBottom: 5 }}>{title}</h4>
-                    <p style={{ color: '#78716c', fontSize: 13, lineHeight: 1.75 }}>{desc}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Mobile: 2-col grid | Desktop: stacked list */}
+              <div className="aria-cards-grid">
+                {[
+                  { icon: <LineChart size={18} color="#f97316" />, bg: '#fff7ed', border: '#fed7aa', title: 'Seguimiento Preciso', desc: 'ARIA analiza tendencias conductuales sesión a sesión.' },
+                  { icon: <MessageSquareHeart size={18} color="#10b981" />, bg: '#f0fdf4', border: '#bbf7d0', title: 'Apoyo 24/7', desc: 'Resúmenes sencillos y recomendaciones para reforzar en casa.' },
+                  { icon: <Brain size={18} color="#8b5cf6" />, bg: '#faf5ff', border: '#e9d5ff', title: 'Progreso Visible', desc: 'Gráficos del avance en tiempo real de cada sesión.' },
+                  { icon: <Zap size={18} color="#f59e0b" />, bg: '#fffbeb', border: '#fde68a', title: 'Respuestas Rápidas', desc: 'Pregúntale a ARIA sobre actividades o dudas al instante.' },
+                ].map(({ icon, bg, border, title, desc }) => (
+                  <div key={title} className="aria-card" style={{ background: '#fff', border: `2px solid ${border}`, borderRadius: 16, padding: '16px', display: 'flex', gap: 12, alignItems: 'flex-start', transition: 'all .3s', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 28px rgba(249,115,22,.1)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 12px rgba(0,0,0,.04)'; }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 12, background: bg, border: `1.5px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
+                    <div>
+                      <h4 style={{ fontFamily: "'Baloo 2',cursive", color: '#1c1917', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{title}</h4>
+                      <p style={{ color: '#78716c', fontSize: 12, lineHeight: 1.6 }}>{desc}</p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
               <div style={{ marginTop: 8 }}>
                 <Link href="/login?mode=signup" className="btn-orange" style={{ display: 'inline-flex' }}>
                   Habla con ARIA ahora <ArrowRight size={16} />
@@ -611,8 +623,8 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* RIGHT: Chat illustration */}
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {/* RIGHT: Chat illustration — hidden on mobile via CSS */}
+            <div className="aria-chat-panel" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
               <div style={{ background: '#f8fafc', border: '2px solid #f1f5f9', borderRadius: 28, padding: '28px 24px', width: '100%', maxWidth: 380, boxShadow: '0 20px 60px rgba(0,0,0,.06)' }}>
                 {/* Header bar */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, paddingBottom: 18, borderBottom: '1.5px solid #f1f5f9' }}>
