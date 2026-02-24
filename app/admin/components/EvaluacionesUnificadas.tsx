@@ -1046,7 +1046,7 @@ export default function EvaluacionesUnificadas() {
       supabase.from('profiles').select('id, full_name, email').eq('role', 'padre'),
       supabase.from('parent_forms').select('*, profiles(full_name, email)').order('created_at', { ascending: false }),
       supabase.from('form_responses').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(30),
-      supabase.from('anamnesis_completa').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(10),
+      supabase.from('anamnesis_completa').select('id, form_title, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(10),
       supabase.from('registro_aba').select('id, form_title, datos, child_id, fecha_sesion, children(name)').order('fecha_sesion', { ascending: false }).limit(10),
       supabase.from('registro_entorno_hogar').select('id, form_title, datos, child_id, fecha_visita, created_at, children(name)').order('fecha_visita', { ascending: false }).limit(10),
     ])

@@ -164,7 +164,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
       supabase.from('aba_sessions_v2').select('child_id').gte('session_date', hace30),
       supabase.from('children').select('id, name'),
       supabase.from('notifications').select('*').eq('is_read', false).limit(20),
-      supabase.from('parent_wellbeing').select('*').gte('created_at', mesActual).order('created_at', { ascending: false }),
+      supabase.from('parent_forms').select('*').eq('status','completed').gte('created_at', mesActual).order('created_at', { ascending: false }),
     ])
 
     // Detectar pacientes sin sesión en 30 días

@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     // ===========================================================================
     const { data: historyABA } = await supabase
       .from('registro_aba')
-      .select('fecha_sesion, datos, created_at')
+      .select('fecha_sesion, datos')
       .eq('child_id', childId)
       .order('fecha_sesion', { ascending: false })
       .limit(15);

@@ -43,7 +43,7 @@ export default function MisPacientes() {
     setSeleccionado(nino)
     setLoadingHistorial(true)
     try {
-      const { data } = await supabase.from('session_records').select('*').eq('child_id', nino.id).order('fecha_sesion', { ascending: false }).limit(10)
+      const { data } = await supabase.from('registro_aba').select('*').eq('child_id', nino.id).order('fecha_sesion', { ascending: false }).limit(10)
       setHistorial(data || [])
     } catch { setHistorial([]) }
     finally { setLoadingHistorial(false) }
