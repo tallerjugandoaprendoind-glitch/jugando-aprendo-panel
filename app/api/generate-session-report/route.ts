@@ -25,15 +25,32 @@ async function callGeminiWithRetry(ai: any, model: string, contents: string, con
 
 export async function POST(req: Request) {
   try {
-    const { antecedente, conducta, consecuencia } = await req.json();
+    const body = await req.json();
+
+    // Compatibilidad con llamadas antiguas (solo ABC) y nuevas (formulario completo)
+    const {
+      // Sección 1: Información de la sesión
+      fecha_sesion, duracion_minutos, tipo_sesion, objetivo_principal,
+      // Sección 2: Registro ABC
+      antecedente, conducta, consecuencia, funcion_estimada,
+      // Sección 3: Métricas
+      nivel_atencion, respuesta_instrucciones, iniciativa_comunicativa,
+      tolerancia_frustracion, interaccion_social,
+      // Sección 4: Habilidades
+      habilidades_objetivo, nivel_logro_objetivos, ayudas_utilizadas,
+      // Sección 5: Intervenciones
+      tecnicas_aplicadas, reforzadores_efectivos, conductas_desafiantes, estrategias_manejo,
+      // Paciente
+      childName, childAge,
+    } = body;
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json({ error: "Error de servidor: Falta la variable GEMINI_API_KEY." }, { status: 500 });
     }
 
-    if (!antecedente || !conducta || !consecuencia) {
-      return NextResponse.json({ error: "Faltan datos del registro ABC." }, { status: 400 });
+    if (!conducta && !antecedente) {
+      return NextResponse.json({ error: "Faltan datos del registro ABA." }, { status: 400 });
     }
 
     // ── Traer productos activos de la tienda ──────────────────────────────────
@@ -52,36 +69,84 @@ export async function POST(req: Request) {
         ).join('\n')
       : '';
 
-    // ── Prompt ────────────────────────────────────────────────────────────────
+    // ── Prompt completo para páginas 6–10 ────────────────────────────────────
     const ai = new GoogleGenAI({ apiKey });
 
     const context = `
-ACTÚA COMO: Supervisor Clínico experto en ABA (Análisis Conductual Aplicado).
-TAREA: Analizar esta contingencia conductual ABC y generar reporte técnico.
+ACTÚA COMO: Supervisor Clínico experto en ABA (Análisis Conductual Aplicado) con 15+ años de experiencia.
+PACIENTE: ${childName || 'Paciente'}, ${childAge || 'N/E'} años.
 
-DATOS DE LA SESIÓN:
-- Antecedente (A): ${antecedente}
-- Conducta (B): ${conducta}
-- Consecuencia (C): ${consecuencia}
+DATOS DE LA SESIÓN REGISTRADOS POR EL TERAPEUTA:
+━━━ SECCIÓN 1: INFORMACIÓN ━━━
+- Fecha: ${fecha_sesion || 'N/E'}
+- Duración: ${duracion_minutos || 'N/E'} minutos
+- Tipo: ${tipo_sesion || 'N/E'}
+- Objetivo principal: ${objetivo_principal || 'N/E'}
+
+━━━ SECCIÓN 2: REGISTRO ABC ━━━
+- Antecedente (A): ${antecedente || 'N/E'}
+- Conducta (B): ${conducta || 'N/E'}
+- Consecuencia (C): ${consecuencia || 'N/E'}
+- Función estimada: ${funcion_estimada || 'N/E'}
+
+━━━ SECCIÓN 3: MÉTRICAS (escala 1-5) ━━━
+- Atención sostenida: ${nivel_atencion || 'N/E'}/5
+- Respuesta a instrucciones: ${respuesta_instrucciones || 'N/E'}/5
+- Iniciativa comunicativa: ${iniciativa_comunicativa || 'N/E'}/5
+- Tolerancia a frustración: ${tolerancia_frustracion || 'N/E'}/5
+- Interacción social: ${interaccion_social || 'N/E'}/5
+
+━━━ SECCIÓN 4: HABILIDADES ━━━
+- Habilidades trabajadas: ${Array.isArray(habilidades_objetivo) ? habilidades_objetivo.join(', ') : (habilidades_objetivo || 'N/E')}
+- Nivel de logro: ${nivel_logro_objetivos || 'N/E'}
+- Nivel de ayudas: ${ayudas_utilizadas || 'N/E'}
+
+━━━ SECCIÓN 5: INTERVENCIONES ━━━
+- Técnicas aplicadas: ${Array.isArray(tecnicas_aplicadas) ? tecnicas_aplicadas.join(', ') : (tecnicas_aplicadas || 'N/E')}
+- Reforzadores efectivos: ${reforzadores_efectivos || 'N/E'}
+- Conductas desafiantes: ${conductas_desafiantes || 'N/E'}
+- Estrategias de manejo: ${estrategias_manejo || 'N/E'}
 ${productosTexto}
 
-INSTRUCCIONES:
-- Analiza el caso clínicamente.
-- Para "producto_sugerido": si existe un producto de la tienda que genuinamente ayude a la familia a practicar la tarea_hogar, pon su ID exacto. Si ninguno aplica, pon null.
-- "razon_sugerencia": frase natural de 1 línea explicando por qué ese producto ayuda (ej: "Este material te ayudará a practicar en casa la discriminación visual que trabajamos hoy"). Si no hay sugerencia, null.
-- NO sugiereas un producto forzado. Solo cuando hay conexión real con la tarea.
+TAREA: Con base en TODOS los datos anteriores, completa inteligentemente las secciones 6 al 10 del formulario ABA.
 
-Responde SOLAMENTE con este JSON:
+INSTRUCCIONES CLAVE:
+- Sé clínico, preciso y útil. Evita respuestas genéricas.
+- "patron_aprendizaje" DEBE ser EXACTAMENTE uno de: "Aprendizaje rápido y generalización", "Aprendizaje gradual", "Requiere repetición intensiva", "Dificultad para generalizar", "Aprendizaje inconsistente"
+- "coordinacion_familia" DEBE ser EXACTAMENTE uno de: "Urgente", "Necesaria", "Rutinaria", "No necesaria"
+- "efectividad_sesion" DEBE ser un número entero entre 1 y 5
+- "mensaje_padres": empático, positivo, claro, máx 3 líneas, para WhatsApp
+- "destacar_positivo": logros concretos y observables para compartir con los padres
+- "proximos_pasos": qué viene en próximas sesiones, en lenguaje para padres
+- Para "producto_sugerido": pon el ID exacto si hay un producto de la tienda que genuinamente ayude a practicar la tarea en casa. Si ninguno aplica, pon null.
+- "razon_sugerencia": 1 línea explicando por qué ese producto ayuda. Si no hay sugerencia, null.
+
+Responde SOLAMENTE con este JSON (sin texto adicional):
 {
-  "mensaje_padres": "Mensaje empático, max 2 líneas, positivo y profesional.",
-  "observaciones_clinicas": "Descripción técnica de la topografía y relación con el antecedente.",
-  "analisis_abc": "Hipótesis de función (Atención, Escape, Tangible o Sensorial).",
-  "justificacion": "Breve justificación técnica.",
-  "mentoring_interno": "Consejo (1 frase) para el terapeuta junior.",
-  "actividad_realizada": "Nombre técnico de la intervención.",
-  "red_flags": "SI o NO sobre riesgo de autolesión.",
-  "barreras": "Barrera del aprendizaje detectada.",
-  "tarea_hogar": "Tarea simple (1 frase) para practicar en casa.",
+  "avances_observados": "...",
+  "areas_dificultad": "...",
+  "patron_aprendizaje": "...",
+  "observaciones_tecnicas": "...",
+  "alertas_clinicas": "...",
+  "recomendaciones_equipo": "...",
+  "coordinacion_familia": "...",
+  "actividad_casa": "...",
+  "instrucciones_padres": "...",
+  "objetivo_tarea": "...",
+  "mensaje_padres": "...",
+  "destacar_positivo": "...",
+  "proximos_pasos": "...",
+  "efectividad_sesion": 4,
+  "ajustes_proxima_sesion": "...",
+  "necesidades_materiales": "...",
+  "observaciones_clinicas": "...",
+  "analisis_abc": "...",
+  "justificacion": "...",
+  "mentoring_interno": "...",
+  "actividad_realizada": "...",
+  "red_flags": "NO",
+  "barreras": "...",
+  "tarea_hogar": "...",
   "producto_sugerido": null,
   "razon_sugerencia": null
 }`;
@@ -109,6 +174,12 @@ Responde SOLAMENTE con este JSON:
       }
     }
 
+    // Asegurar que efectividad_sesion sea número entero válido (1-5)
+    if (responseData.efectividad_sesion !== undefined) {
+      const ef = parseInt(String(responseData.efectividad_sesion), 10);
+      responseData.efectividad_sesion = isNaN(ef) ? 3 : Math.min(5, Math.max(1, ef));
+    }
+
     return NextResponse.json(responseData);
 
   } catch (error: any) {
@@ -116,3 +187,4 @@ Responde SOLAMENTE con este JSON:
     return NextResponse.json({ error: "Error procesando el reporte: " + error.message }, { status: 500 });
   }
 }
+

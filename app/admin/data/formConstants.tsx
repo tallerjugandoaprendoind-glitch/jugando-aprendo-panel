@@ -207,33 +207,36 @@ export const ABA_DATA = [
   {
     title: "6. Progreso y Evolución",
     icon: <Award size={20}/>,
+    hasIA: true,
     questions: [
-      { id: "avances_observados", label: "Avances observados en esta sesión", type: "textarea", placeholder: "Logros específicos, mejoras respecto a sesiones anteriores..." },
-      { id: "areas_dificultad", label: "Áreas de dificultad persistente", type: "textarea", placeholder: "Aspectos que requieren más trabajo..." },
+      { id: "avances_observados", label: "Avances observados en esta sesión", type: "textarea", placeholder: "Logros específicos, mejoras respecto a sesiones anteriores...", aiGenerated: true },
+      { id: "areas_dificultad", label: "Áreas de dificultad persistente", type: "textarea", placeholder: "Aspectos que requieren más trabajo...", aiGenerated: true },
       { id: "patron_aprendizaje", label: "Patrón de aprendizaje observado", type: "select", options: [
         "Aprendizaje rápido y generalización", "Aprendizaje gradual",
         "Requiere repetición intensiva", "Dificultad para generalizar",
         "Aprendizaje inconsistente"
-      ]},
+      ], aiGenerated: true },
     ]
   },
   {
     title: "7. Observaciones Clínicas (Interno)",
     icon: <BookOpen size={20}/>,
+    hasIA: true,
     questions: [
-      { id: "observaciones_tecnicas", label: "Notas técnicas para el equipo", type: "textarea", placeholder: "Análisis profesional, hipótesis clínicas, ajustes necesarios..." },
-      { id: "alertas_clinicas", label: "Alertas o banderas rojas", type: "textarea", placeholder: "Señales de preocupación, regresiones, cambios significativos..." },
-      { id: "recomendaciones_equipo", label: "Recomendaciones para el equipo", type: "textarea", placeholder: "Sugerencias para siguientes sesiones, derivaciones necesarias..." },
-      { id: "coordinacion_familia", label: "Necesidad de coordinación con familia", type: "radio", options: ["Urgente", "Necesaria", "Rutinaria", "No necesaria"] },
+      { id: "observaciones_tecnicas", label: "Notas técnicas para el equipo", type: "textarea", placeholder: "Análisis profesional, hipótesis clínicas, ajustes necesarios...", aiGenerated: true },
+      { id: "alertas_clinicas", label: "Alertas o banderas rojas", type: "textarea", placeholder: "Señales de preocupación, regresiones, cambios significativos...", aiGenerated: true },
+      { id: "recomendaciones_equipo", label: "Recomendaciones para el equipo", type: "textarea", placeholder: "Sugerencias para siguientes sesiones, derivaciones necesarias...", aiGenerated: true },
+      { id: "coordinacion_familia", label: "Necesidad de coordinación con familia", type: "radio", options: ["Urgente", "Necesaria", "Rutinaria", "No necesaria"], aiGenerated: true },
     ]
   },
   {
     title: "8. Tarea para Casa",
     icon: <Home size={20}/>,
+    hasIA: true,
     questions: [
-      { id: "actividad_casa", label: "Actividad sugerida para practicar en casa", type: "textarea", placeholder: "Descripción detallada de la actividad, materiales necesarios, frecuencia..." },
-      { id: "instrucciones_padres", label: "Instrucciones específicas para los padres", type: "textarea", placeholder: "Pasos claros, qué hacer y qué evitar..." },
-      { id: "objetivo_tarea", label: "Objetivo de la tarea", type: "text", placeholder: "¿Qué habilidad refuerza esta actividad?" },
+      { id: "actividad_casa", label: "Actividad sugerida para practicar en casa", type: "textarea", placeholder: "Descripción detallada de la actividad, materiales necesarios, frecuencia...", aiGenerated: true },
+      { id: "instrucciones_padres", label: "Instrucciones específicas para los padres", type: "textarea", placeholder: "Pasos claros, qué hacer y qué evitar...", aiGenerated: true },
+      { id: "objetivo_tarea", label: "Objetivo de la tarea", type: "text", placeholder: "¿Qué habilidad refuerza esta actividad?", aiGenerated: true },
     ]
   },
   {
@@ -242,17 +245,18 @@ export const ABA_DATA = [
     hasIA: true,
     questions: [
       { id: "mensaje_padres", label: "Mensaje para WhatsApp/Informe", type: "textarea", placeholder: "Este mensaje será visible para los padres. Usa lenguaje positivo y claro...", aiGenerated: true },
-      { id: "destacar_positivo", label: "Logros para destacar a los padres", type: "textarea", placeholder: "Aspectos positivos que los padres deben saber..." },
-      { id: "proximos_pasos", label: "Próximos pasos (para compartir)", type: "textarea", placeholder: "Qué viene en las siguientes sesiones..." },
+      { id: "destacar_positivo", label: "Logros para destacar a los padres", type: "textarea", placeholder: "Aspectos positivos que los padres deben saber...", aiGenerated: true },
+      { id: "proximos_pasos", label: "Próximos pasos (para compartir)", type: "textarea", placeholder: "Qué viene en las siguientes sesiones...", aiGenerated: true },
     ]
   },
   {
     title: "10. Análisis y Planificación",
     icon: <Brain size={20}/>,
+    hasIA: true,
     questions: [
-      { id: "efectividad_sesion", label: "Efectividad global de la sesión", type: "range", min: 1, max: 5, labels: ["Muy baja", "Baja", "Moderada", "Alta", "Muy alta"] },
-      { id: "ajustes_proxima_sesion", label: "Ajustes para la próxima sesión", type: "textarea", placeholder: "Qué modificar, qué mantener, nuevas estrategias a probar..." },
-      { id: "necesidades_materiales", label: "Materiales o recursos necesarios", type: "text", placeholder: "Qué se necesita conseguir para próximas sesiones..." },
+      { id: "efectividad_sesion", label: "Efectividad global de la sesión", type: "range", min: 1, max: 5, labels: ["Muy baja", "Baja", "Moderada", "Alta", "Muy alta"], aiGenerated: true },
+      { id: "ajustes_proxima_sesion", label: "Ajustes para la próxima sesión", type: "textarea", placeholder: "Qué modificar, qué mantener, nuevas estrategias a probar...", aiGenerated: true },
+      { id: "necesidades_materiales", label: "Materiales o recursos necesarios", type: "text", placeholder: "Qué se necesita conseguir para próximas sesiones...", aiGenerated: true },
     ]
   }
 ]
