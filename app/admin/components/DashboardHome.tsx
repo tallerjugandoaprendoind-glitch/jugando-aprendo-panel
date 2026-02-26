@@ -33,6 +33,7 @@ function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any
 
 // ── Fila de cita próxima ────────────────────────────────────────────────────
 function CitaRow({ cita }: { cita: any }) {
+  if (!cita.appointment_date) return null
   const fecha = new Date(cita.appointment_date + 'T00:00:00')
   const mesCorto = fecha.toLocaleString('es', { month: 'short' }).toUpperCase()
   const dia = fecha.getDate()

@@ -45,7 +45,7 @@ export default function ParentDashboard() {
   const [refreshTrigger, setRefreshTrigger] = useState(0)
   const [activeView, setActiveView] = useState('home') 
    
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState('')
   const [takenSlots, setTakenSlots] = useState<string[]>([])
   const [bookingLoading, setBookingLoading] = useState(false)
 
@@ -59,6 +59,10 @@ export default function ParentDashboard() {
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
   const [celebrationMessage, setCelebrationMessage] = useState('')
   const [videoCallSession, setVideoCallSession] = useState<{roomUrl:string;sessionId:string}|null>(null)
+
+  useEffect(() => {
+    setSelectedDate(new Date().toISOString().split('T')[0])
+  }, [])
 
   useEffect(() => {
     const loadData = async () => {

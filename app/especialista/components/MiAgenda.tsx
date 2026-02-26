@@ -19,7 +19,7 @@ export default function MiAgenda() {
   const toast = useToast()
   const [citas, setCitas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [mes, setMes] = useState(new Date())
+  const [mes, setMes] = useState<Date | null>(null)
   const [diaSeleccionado, setDiaSeleccionado] = useState<string | null>(null)
 
   const cargar = useCallback(async () => {
@@ -32,8 +32,10 @@ export default function MiAgenda() {
   }, [])
 
   useEffect(() => { cargar() }, [cargar])
+  useEffect(() => { setMes(new Date()) }, [])
 
-  const año = mes.getFullYear(), mesN = mes.getMonth()
+  const año = mes?.getFullYear() ?? new Date().getFullYear()
+  const mesN = mes?.getMonth() ?? new Date().getMonth()
   const primerDia = new Date(año, mesN, 1).getDay()
   const diasEnMes = new Date(año, mesN + 1, 0).getDate()
   const hoy = new Date().toISOString().split('T')[0]

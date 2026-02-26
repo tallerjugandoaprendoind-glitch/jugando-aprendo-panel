@@ -50,6 +50,11 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
   const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
   const [trends, setTrends] = useState<Trend[]>([]);
   const [developmentAreas, setDevelopmentAreas] = useState<any[]>([]);
+  const [fechaAnalisis, setFechaAnalisis] = useState('');
+
+  useEffect(() => {
+    setFechaAnalisis(new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }));
+  }, []);
 
   useEffect(() => {
     loadAnalytics();
@@ -135,11 +140,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
             <div className="flex items-center gap-3 text-sm">
               <Calendar className="w-4 h-4" />
               <span className="opacity-90">
-                Último análisis: {new Date().toLocaleDateString('es-ES', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric'
-                })}
+                Último análisis: {fechaAnalisis}
               </span>
             </div>
           </div>

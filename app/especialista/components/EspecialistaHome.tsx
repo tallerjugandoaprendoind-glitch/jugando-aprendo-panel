@@ -83,6 +83,15 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [tipIndex] = useState(() => Math.floor(Math.random() * TIPS_CLINICOS.length))
+  const [saludo, setSaludo] = useState('')
+  const [fechaStr, setFechaStr] = useState('')
+
+  useEffect(() => {
+    const now = new Date()
+    const h = now.getHours()
+    setSaludo(h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches')
+    setFechaStr(now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }))
+  }, [])
 
   useEffect(() => {
     const cargar = async () => {
@@ -122,8 +131,6 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
     cargar()
   }, [userId])
 
-  const hora = new Date().getHours()
-  const saludo = hora < 12 ? 'Buenos días' : hora < 18 ? 'Buenas tardes' : 'Buenas noches'
   const tip = TIPS_CLINICOS[tipIndex]
 
   const STAT_CARDS = [
@@ -152,7 +159,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             {profile?.full_name?.split(' ')[0] || 'Especialista'}
           </h2>
           <p className="text-blue-200 text-sm font-medium mb-5">
-            {profile?.specialty || 'Especialista Clínico'} · {new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {profile?.specialty || 'Especialista Clínico'} · {fechaStr}
           </p>
 
           <div className="flex flex-wrap gap-3">
