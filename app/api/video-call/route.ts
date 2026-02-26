@@ -68,7 +68,6 @@ export async function POST(req: NextRequest) {
           max_participants: 4,
           enable_chat: true,
           enable_screenshare: true,
-          enable_recording: 'local',
           start_video_off: false,
           start_audio_off: false,
           lang: 'es',
