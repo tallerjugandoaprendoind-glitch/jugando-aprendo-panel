@@ -434,5 +434,6 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         </button>
       </div>
     </div>
+    </>
   )
 }

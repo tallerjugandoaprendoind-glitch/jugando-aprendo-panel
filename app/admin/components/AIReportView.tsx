@@ -696,7 +696,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                 )}
             </div>
             </div>{/* end main grid */}
-        </div>{/* end flex-1 flex-col */}
+        </div>
       ) : (
           <div className="flex flex-col items-center justify-center h-full text-slate-300 py-40">
               <Brain size={120} className="mb-8 text-slate-200"/>
