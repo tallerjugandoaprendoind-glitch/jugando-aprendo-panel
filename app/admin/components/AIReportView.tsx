@@ -1,9 +1,95 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import {
-  Activity, Brain, CheckCircle2, ChevronDown, ChevronRight, Clock, Download, Eye, FileCheck, FileDown, FileText, History, Home, Loader2, MessageCircle, RefreshCw, Send, ShieldAlert, Sparkles, Target, User, Users, X, Zap
+  Activity, Brain, CheckCircle2, ChevronDown, ChevronRight, Clock, Download, Eye, FileCheck, FileDown, FileText, History, Home, Loader2, MessageCircle, RefreshCw, Send, ShieldAlert, Sparkles, Target, User, Users, X, Zap, Mic, MicOff, Volume2, VolumeX, StopCircle
 } from 'lucide-react'
+
+// ── Tipos Web Speech API ──────────────────────────────────────────────────────
+declare global {
+  interface Window {
+    SpeechRecognition: any
+    webkitSpeechRecognition: any
+  }
+}
+
+// ── Hook Text-to-Speech ───────────────────────────────────────────────────────
+function useTextToSpeech() {
+  const [speaking, setSpeaking] = useState(false)
+  const [voiceEnabled, setVoiceEnabled] = useState(true)
+
+  const speak = useCallback((text: string) => {
+    if (!voiceEnabled || !('speechSynthesis' in window)) return
+    window.speechSynthesis.cancel()
+    const clean = text
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/#{1,6}\s/g, '')
+      .replace(/✅|❌|⚠️|📊|📋|🏠|📝|💡|🔍|👤|🧠|🤖/g, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/\n{2,}/g, '. ')
+      .trim()
+    const utter = new SpeechSynthesisUtterance(clean)
+    utter.lang = 'es-PE'
+    utter.rate = 1.05
+    utter.pitch = 1.0
+    utter.volume = 0.95
+    const voices = window.speechSynthesis.getVoices()
+    const esVoice = voices.find(v => v.lang.startsWith('es') && v.localService) || voices.find(v => v.lang.startsWith('es'))
+    if (esVoice) utter.voice = esVoice
+    utter.onstart = () => setSpeaking(true)
+    utter.onend = () => setSpeaking(false)
+    utter.onerror = () => setSpeaking(false)
+    window.speechSynthesis.speak(utter)
+  }, [voiceEnabled])
+
+  const stopSpeaking = useCallback(() => {
+    window.speechSynthesis.cancel()
+    setSpeaking(false)
+  }, [])
+
+  const toggleVoice = useCallback(() => {
+    if (speaking) window.speechSynthesis.cancel()
+    setVoiceEnabled(v => !v)
+  }, [speaking])
+
+  return { speak, stopSpeaking, speaking, voiceEnabled, toggleVoice }
+}
+
+// ── Hook Speech-to-Text ───────────────────────────────────────────────────────
+function useSpeechToText(onResult: (text: string) => void) {
+  const [listening, setListening] = useState(false)
+  const [supported, setSupported] = useState(false)
+  const recognitionRef = useRef<any>(null)
+
+  useEffect(() => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition
+    if (SR) {
+      setSupported(true)
+      const rec = new SR()
+      rec.lang = 'es-PE'
+      rec.continuous = false
+      rec.interimResults = false
+      rec.onresult = (e: any) => onResult(e.results[0][0].transcript)
+      rec.onend = () => setListening(false)
+      rec.onerror = () => setListening(false)
+      recognitionRef.current = rec
+    }
+  }, [onResult])
+
+  const startListening = useCallback(() => {
+    if (!recognitionRef.current || listening) return
+    setListening(true)
+    recognitionRef.current.start()
+  }, [listening])
+
+  const stopListening = useCallback(() => {
+    recognitionRef.current?.stop()
+    setListening(false)
+  }, [])
+
+  return { listening, supported, startListening, stopListening }
+}
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import ReportGenerator from '@/components/ReportGenerator'
@@ -23,6 +109,16 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
   const chatContainerRef = useRef<HTMLDivElement>(null)
+
+  // ── Voz ──
+  const { speak, stopSpeaking, speaking, voiceEnabled, toggleVoice } = useTextToSpeech()
+
+  const handleVoiceResult = useCallback((transcript: string) => {
+    setInput(transcript)
+    setTimeout(() => sendMessageWithText(transcript), 600)
+  }, []) // eslint-disable-line
+
+  const { listening, supported: micSupported, startListening, stopListening } = useSpeechToText(handleVoiceResult)
 
   useEffect(() => {
     supabase.from('children').select('id, name').then(({ data }) => data && setListaNinos(data))
@@ -194,35 +290,34 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
     setLoadingReportes(false)
 }
 
-  const sendMessage = async () => {
-    if(!input.trim()) return;
-    if(!selectedChild) {
-        alert("Selecciona un paciente primero.");
-        return;
-    }
-
-    const text = input;
-    setMessages(prev => [...prev, { role: 'user', text }]);
-    setInput('');
-    setTyping(true);
+  const sendMessageWithText = async (text: string) => {
+    if (!text.trim()) return
+    if (!selectedChild) { alert('Selecciona un paciente primero.'); return }
+    setMessages(prev => [...prev, { role: 'user', text }])
+    setInput('')
+    stopSpeaking()
+    setTyping(true)
     try {
-        const response = await fetch('/api/admin-chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                question: text, 
-                childId: selectedChild 
-            })
-        });
-
-        const data = await response.json();
-        setMessages(prev => [...prev, { role: 'ai', text: data.text }]);
-
-    } catch (error) {
-        setMessages(prev => [...prev, { role: 'ai', text: "❌ Error de conexión." }]);
+      const response = await fetch('/api/admin-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: text, childId: selectedChild })
+      })
+      const data = await response.json()
+      setMessages(prev => [...prev, { role: 'ai', text: data.text }])
+      speak(data.text)
+    } catch {
+      setMessages(prev => [...prev, { role: 'ai', text: '❌ Error de conexión.' }])
     } finally {
-        setTyping(false);
+      setTyping(false)
     }
+  }
+
+  const sendMessage = () => sendMessageWithText(input)
+
+  const handleMicClick = () => {
+    if (listening) { stopListening() }
+    else { stopSpeaking(); startListening() }
   }
 
   const toggleCard = (id: string) => setExpandedCardId(expandedCardId === id ? null : id)
@@ -446,11 +541,33 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                             <span className="font-black text-sm uppercase tracking-widest">Asistente IA</span>
                             <span className="text-[10px] text-green-400 font-bold uppercase flex items-center gap-1">
                                 <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div> 
-                             IA clinica v4.0
+                             {speaking ? '🔊 Hablando...' : 'IA clinica v4.0'}
                             </span>
                         </div>
                     </div>
+                    {/* Botón silenciar */}
+                    <button onClick={toggleVoice} title={voiceEnabled ? 'Silenciar voz' : 'Activar voz'}
+                      className="p-2 rounded-xl hover:bg-white/10 transition-all"
+                      style={{ color: voiceEnabled ? '#86efac' : '#94a3b8' }}>
+                      {voiceEnabled ? <Volume2 size={16}/> : <VolumeX size={16}/>}
+                    </button>
                 </div>
+
+                {/* Banner escuchando */}
+                {listening && (
+                  <div className="mx-4 mt-3 rounded-2xl px-4 py-3 flex items-center gap-3 bg-red-50 border-2 border-red-200">
+                    <div className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center shrink-0 animate-pulse">
+                      <Mic size={13} className="text-white"/>
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-black text-red-700">Escuchando...</p>
+                      <p className="text-[10px] text-red-500 font-medium">Habla ahora, se enviará automáticamente</p>
+                    </div>
+                    <button onClick={stopListening} className="p-1.5 rounded-xl bg-red-100 hover:bg-red-200 transition-all">
+                      <StopCircle size={14} className="text-red-600"/>
+                    </button>
+                  </div>
+                )}
                 
                 <div 
                   className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-5 bg-gradient-to-br from-slate-50 to-white" 
@@ -483,22 +600,57 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                     )}
                 </div>
 
-                <div className="p-4 md:p-5 border-t-2 border-slate-200 bg-white flex gap-3 shadow-lg">
+                <div className="p-4 md:p-5 border-t-2 border-slate-200 bg-white flex gap-2 shadow-lg">
                     <input 
-                        className="flex-1 bg-slate-100 border-2 border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all" 
-                        placeholder="Pregunta sobre evolución..."
+                        className="flex-1 border-2 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all"
+                        style={{
+                          background: listening ? '#fef2f2' : '#f8fafc',
+                          borderColor: listening ? '#fca5a5' : '#e2e8f0',
+                        }}
+                        placeholder={listening ? '🎤 Escuchando...' : 'Pregunta sobre evolución...'}
                         value={input}
                         onChange={e => setInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && sendMessage()}
+                        onKeyDown={e => e.key === 'Enter' && !listening && sendMessage()}
+                        disabled={listening}
                     />
-                    <button 
-                      onClick={sendMessage} 
-                      disabled={!input.trim()}
-                      className="p-4 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl hover:scale-105 active:scale-95 transition shadow-xl disabled:opacity-50"
-                    >
-                      <Send size={20}/>
-                    </button>
+                    {/* Botón micrófono */}
+                    {micSupported && (
+                      <button
+                        onClick={handleMicClick}
+                        disabled={typing}
+                        title={listening ? 'Detener grabación' : 'Hablar con IA'}
+                        className="p-4 rounded-2xl transition-all disabled:opacity-40 hover:scale-105 active:scale-95"
+                        style={{
+                          background: listening ? 'linear-gradient(135deg,#ef4444,#dc2626)' : '#f1f5f9',
+                          boxShadow: listening ? '0 4px 14px rgba(239,68,68,.4)' : 'none',
+                        }}>
+                        {listening
+                          ? <MicOff size={18} className="text-white"/>
+                          : <Mic size={18} className="text-slate-500"/>
+                        }
+                      </button>
+                    )}
+                    {/* Botón enviar / detener voz */}
+                    {speaking ? (
+                      <button onClick={stopSpeaking} title="Detener voz"
+                        className="p-4 bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-2xl hover:scale-105 active:scale-95 transition shadow-xl animate-pulse">
+                        <StopCircle size={20}/>
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={sendMessage} 
+                        disabled={!input.trim() || listening}
+                        className="p-4 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl hover:scale-105 active:scale-95 transition shadow-xl disabled:opacity-50"
+                      >
+                        <Send size={20}/>
+                      </button>
+                    )}
                 </div>
+                {micSupported && (
+                  <p className="text-center text-[10px] text-slate-300 pb-2 font-medium">
+                    {listening ? '🔴 Grabando · Habla claro' : '🎤 Micrófono disponible · Enter o botón para enviar'}
+                  </p>
+                )}
             </div>
         </div>
       ) : (
