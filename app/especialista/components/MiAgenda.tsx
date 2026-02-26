@@ -131,7 +131,7 @@ export default function MiAgenda() {
             <p className="text-center py-8 text-sm text-slate-400 font-semibold">Sin citas este día</p>
           ) : (
             <div>
-              {citasDelDia.sort((a, b) => a.appointment_time.localeCompare(b.appointment_time)).map((c, idx) => {
+              {citasDelDia.sort((a, b) => (a.appointment_time || '').localeCompare(b.appointment_time || '')).map((c, idx) => {
                 const cfg = STATUS_CFG[c.status] || STATUS_CFG.confirmed
                 return (
                   <div key={c.id} className={`px-5 py-4 flex items-center gap-4 ${idx < citasDelDia.length - 1 ? 'border-b border-slate-50' : ''}`}>

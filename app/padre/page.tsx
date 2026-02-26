@@ -132,7 +132,7 @@ export default function ParentDashboard() {
   useEffect(() => {
     const fetchSlots = async () => {
         const { data } = await supabase.from('appointments').select('appointment_time').eq('appointment_date', selectedDate)
-        if(data) setTakenSlots(data.map(d => d.appointment_time.slice(0,5)))
+        if(data) setTakenSlots(data.map(d => d.appointment_time?.slice(0,5) ?? '').filter(Boolean))
     }
     fetchSlots()
   }, [selectedDate, refreshTrigger])

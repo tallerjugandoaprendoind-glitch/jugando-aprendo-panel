@@ -129,10 +129,19 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   const [actividadReciente, setActividadReciente] = useState<any[]>([])
   const [alertasClinicas, setAlertasClinicas] = useState<any[]>([])
   const [bienestarData, setBienestarData] = useState<any[]>([])
-  const [horaActual, setHoraActual] = useState(new Date())
+  const [horaActual, setHoraActual] = useState<Date | null>(null)
+  const [saludo, setSaludo] = useState('')
+  const [diaStr, setDiaStr] = useState('')
 
   useEffect(() => {
-    const iv = setInterval(() => setHoraActual(new Date()), 1000)
+    const update = () => {
+      const now = new Date()
+      setHoraActual(now)
+      setSaludo(now.getHours() < 12 ? 'Buenos días' : now.getHours() < 19 ? 'Buenas tardes' : 'Buenas noches')
+      setDiaStr(now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
+    }
+    update()
+    const iv = setInterval(update, 1000)
     return () => clearInterval(iv)
   }, [])
 
@@ -204,9 +213,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
     finally { setLoading(false) }
   }
 
-  const hoy = new Date()
-  const saludo = hoy.getHours() < 12 ? 'Buenos días' : hoy.getHours() < 19 ? 'Buenas tardes' : 'Buenas noches'
-  const diaStr = hoy.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+
 
   const STAT_CARDS = [
     { title: 'Pacientes activos', value: stats.pacientes, sub: 'Total', icon: Users, accent: { bg: 'bg-blue-50', icon: 'text-blue-600', badge: 'bg-blue-50 text-blue-600' }, onClick: () => navigateTo('ninos') },
@@ -235,9 +242,9 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         <div className="text-right hidden sm:block relative">
           <p className="text-blue-300 text-xs font-medium">Hora actual</p>
           <p className="text-3xl font-black tabular-nums">
-            {horaActual.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
+            {horaActual ? horaActual.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
           </p>
-          <p className="text-blue-300 text-xs">{horaActual.getSeconds()}s</p>
+          <p className="text-blue-300 text-xs">{horaActual ? horaActual.getSeconds() + 's' : ''}</p>
         </div>
       </div>
 

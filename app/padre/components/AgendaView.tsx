@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {
   AlertCircle, Calendar, CheckCircle2, ChevronLeft, ChevronRight, Loader2, Phone, Sparkles, Ticket, Zap
 } from 'lucide-react'
@@ -10,6 +10,16 @@ import { TIME_SLOTS } from '../utils/helpers'
 function AgendaView({ profile, selectedDate, setSelectedDate, takenSlots, bookingLoading, handleBookAppointment }: any) {
     const today = new Date().toISOString().split('T')[0]
     const [viewMode, setViewMode] = useState<'week' | 'month'>('week')
+    const [currentTime, setCurrentTime] = useState('')
+
+    useEffect(() => {
+        const update = () => setCurrentTime(
+            new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+        )
+        update()
+        const interval = setInterval(update, 30000)
+        return () => clearInterval(interval)
+    }, [])
 
     return (
         <div className="animate-fade-in">
@@ -101,7 +111,7 @@ function AgendaView({ profile, selectedDate, setSelectedDate, takenSlots, bookin
                                                 isTaken={takenSlots.includes(time)} 
                                                 loading={bookingLoading} 
                                                 onClick={() => handleBookAppointment(time)}
-                                                isPast={selectedDate === today && time < new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}
+                                                isPast={selectedDate === today && !!currentTime && time < currentTime}
                                             />
                                         ))}
                                     </div>
@@ -119,7 +129,7 @@ function AgendaView({ profile, selectedDate, setSelectedDate, takenSlots, bookin
                                                 isTaken={takenSlots.includes(time)} 
                                                 loading={bookingLoading} 
                                                 onClick={() => handleBookAppointment(time)}
-                                                isPast={selectedDate === today && time < new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute: '2-digit'})}
+                                                isPast={selectedDate === today && !!currentTime && time < currentTime}
                                             />
                                         ))}
                                     </div>

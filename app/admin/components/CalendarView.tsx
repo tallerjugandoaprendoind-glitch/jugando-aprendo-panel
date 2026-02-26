@@ -126,7 +126,7 @@ function MonthlyCalendarView() {
     const matchDate = !filterDate || a.appointment_date===filterDate
     const matchStatus = filterStatus==='todos' || (a.status||'confirmed')===filterStatus
     return matchDate && matchStatus
-  }).sort((a,b) => (a.appointment_date+a.appointment_time).localeCompare(b.appointment_date+b.appointment_time))
+  }).sort((a,b) => ((a.appointment_date||'')+(a.appointment_time||'')).localeCompare((b.appointment_date||'')+(b.appointment_time||'')))
 
   const todayApts = apts.filter(a => a.appointment_date===todayStr)
   const weekApts = apts.filter(a => { const d=new Date(a.appointment_date); const diff=(d.getTime()-new Date().getTime())/86400000; return diff>=0&&diff<=7 })
