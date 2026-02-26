@@ -13,43 +13,68 @@ declare global {
   }
 }
 
-// ── Hook Text-to-Speech ───────────────────────────────────────────────────────
+// ── Hook Text-to-Speech con ElevenLabs (Ivanna) ──────────────────────────────
 function useTextToSpeech() {
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
-  const speak = useCallback((text: string) => {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return
-    window.speechSynthesis.cancel()
-    const clean = text
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/#{1,6}\s/g, '')
-      .replace(/✅|❌|⚠️|📊|📋|🏠|📝|💡|🔍|👤|🧠|🤖/g, '')
-      .replace(/<[^>]+>/g, '')
-      .replace(/\n{2,}/g, '. ')
-      .trim()
-    const utter = new SpeechSynthesisUtterance(clean)
-    utter.lang = 'es-PE'
-    utter.rate = 1.05
-    utter.pitch = 1.0
-    utter.volume = 0.95
-    const voices = window.speechSynthesis.getVoices()
-    const esVoice = voices.find(v => v.lang.startsWith('es') && v.localService) || voices.find(v => v.lang.startsWith('es'))
-    if (esVoice) utter.voice = esVoice
-    utter.onstart = () => setSpeaking(true)
-    utter.onend = () => setSpeaking(false)
-    utter.onerror = () => setSpeaking(false)
-    window.speechSynthesis.speak(utter)
+  const speak = useCallback(async (text: string) => {
+    if (!voiceEnabled || !text.trim()) return
+
+    abortRef.current?.abort()
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+
+    abortRef.current = new AbortController()
+    setSpeaking(true)
+
+    try {
+      const res = await fetch('/api/elevenlabs-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+        signal: abortRef.current.signal,
+      })
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      audioRef.current = audio
+
+      audio.onended = () => { setSpeaking(false); URL.revokeObjectURL(url) }
+      audio.onerror = () => { setSpeaking(false); URL.revokeObjectURL(url) }
+      audio.play()
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.warn('ElevenLabs TTS falló, usando fallback del navegador')
+        if ('speechSynthesis' in window) {
+          const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n{2,}/g, '. ').trim().slice(0, 500)
+          const utter = new SpeechSynthesisUtterance(clean)
+          utter.lang = 'es-PE'; utter.rate = 1.05
+          utter.onend = () => setSpeaking(false)
+          utter.onerror = () => setSpeaking(false)
+          window.speechSynthesis.speak(utter)
+        } else { setSpeaking(false) }
+      } else { setSpeaking(false) }
+    }
   }, [voiceEnabled])
 
   const stopSpeaking = useCallback(() => {
-    window.speechSynthesis.cancel()
+    abortRef.current?.abort()
+    if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
     setSpeaking(false)
   }, [])
 
   const toggleVoice = useCallback(() => {
-    if (speaking) window.speechSynthesis.cancel()
+    if (speaking) {
+      abortRef.current?.abort()
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+    }
     setVoiceEnabled(v => !v)
   }, [speaking])
 
@@ -102,6 +127,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   const [reportesHistorial, setReportesHistorial] = useState<any[]>([])
   const [loadingReportes, setLoadingReportes] = useState(false)
   const [showReportPanel, setShowReportPanel] = useState(true)
+  const [mobileTab, setMobileTab] = useState<'chat' | 'history' | 'reports'>('chat')
   
   const [messages, setMessages] = useState<any[]>([
       { role: 'ai', text: 'Hola 👋. Selecciona un paciente para iniciar el análisis clínico.' }
@@ -342,10 +368,24 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
       </div>
 
       {selectedChild ? (
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 overflow-hidden min-h-0">
+        <div className="flex-1 flex flex-col gap-3 md:gap-6 overflow-hidden min-h-0">
 
-            {/* ── PANEL REPORTES WORD ──────────────────────────────────────────── */}
-            <div className="col-span-1 lg:col-span-12 flex-shrink-0">
+            {/* ── TABS MÓVIL ── */}
+            <div className="flex lg:hidden gap-1 bg-slate-100 p-1 rounded-2xl flex-shrink-0">
+              {([
+                { id: 'chat' as const,    label: '🤖 IA Chat'  },
+                { id: 'history' as const, label: '📋 Historial' },
+                { id: 'reports' as const, label: '📄 Reportes'  },
+              ]).map(t => (
+                <button key={t.id} onClick={() => setMobileTab(t.id)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${mobileTab === t.id ? 'bg-white shadow text-slate-800' : 'text-slate-500'}`}>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* ── REPORTES (desktop: top bar, mobile: tab) ── */}
+            <div className={`flex-shrink-0 ${mobileTab !== 'reports' ? 'hidden lg:block' : ''}`}>
               <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
                 <button
                   onClick={() => setShowReportPanel(!showReportPanel)}
@@ -397,8 +437,11 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
               </div>
             </div>
             
-            {/* ANAMNESIS */}
-            <div className="hidden xl:block xl:col-span-3 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+            {/* ── MAIN GRID ── */}
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 overflow-hidden min-h-0">
+
+            {/* ANAMNESIS (solo desktop XL) */}
+            <div className="hidden xl:flex xl:col-span-3 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex-col overflow-hidden">
                 <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-slate-100 font-extrabold text-slate-700 text-xs uppercase tracking-[0.2em] flex items-center gap-2 sticky top-0 z-10">
                     <FileText size={16} className="text-blue-600"/> Ficha de Ingreso
                 </div>
@@ -415,10 +458,9 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                         </div>
                     )}
                 </div>
-            </div>
-
-            {/* HISTORIAL */}
-            <div className="col-span-1 lg:col-span-7 xl:col-span-5 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col overflow-hidden">
+            </div>            {/* HISTORIAL (desktop: columna fija, mobile: tab) */}
+            <div className={`col-span-1 lg:col-span-7 xl:col-span-5 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex-col overflow-hidden
+              ${mobileTab === 'history' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="p-4 md:p-6 bg-white border-b border-slate-100 flex justify-between items-center sticky top-0 z-10 shadow-sm">
                     <span className="font-bold text-slate-700 text-sm uppercase tracking-widest flex items-center gap-2">
                       <History size={18} className="text-orange-500"/> 
@@ -530,8 +572,9 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                 </div>
             </div>
 
-            {/* CHAT IA */}
-            <div className="col-span-1 lg:col-span-5 xl:col-span-4 bg-white rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-200 flex flex-col overflow-hidden">
+            {/* CHAT IA (desktop: columna, mobile: tab chat) */}
+            <div className={`col-span-1 lg:col-span-5 xl:col-span-4 bg-white rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-200 flex-col overflow-hidden
+              ${mobileTab === 'chat' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="p-4 md:p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex justify-between items-center shadow-lg">
                    <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -652,7 +695,8 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                   </p>
                 )}
             </div>
-        </div>
+            </div>{/* end main grid */}
+        </div>{/* end flex-1 flex-col */}
       ) : (
           <div className="flex flex-col items-center justify-center h-full text-slate-300 py-40">
               <Brain size={120} className="mb-8 text-slate-200"/>

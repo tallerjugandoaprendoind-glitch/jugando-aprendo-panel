@@ -6,8 +6,9 @@ import {
   Calendar, Clock, CheckCircle, XCircle, AlertCircle, 
   ChevronRight, Phone, MessageCircle, RefreshCw, 
   CalendarDays, Filter, Sparkles, Baby, ArrowRight,
-  MapPin, Star, TrendingUp
+  MapPin, Star, TrendingUp, Video, Loader2
 } from 'lucide-react'
+import VideoCallModal from '@/components/VideoCallModal'
 
 interface Appointment {
   id: string
@@ -98,6 +99,17 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('upcoming')
+  const [videoSession, setVideoSession] = useState<{roomUrl:string;sessionId:string}|null>(null)
+  const [joiningCall, setJoiningCall] = useState<string|null>(null)
+
+  const handleJoinVideoCall = async (notification: any) => {
+    if (!notification?.metadata?.room_url) return
+    setJoiningCall(notification.id)
+    // Mark notification as read
+    await supabaseClient.from('notifications').update({is_read:true}).eq('id', notification.id)
+    setVideoSession({ roomUrl: notification.metadata.room_url, sessionId: notification.metadata.session_id || '' })
+    setJoiningCall(null)
+  }
   const [statusFilter, setStatusFilter] = useState<string>('all')
 
   useEffect(() => {
@@ -165,6 +177,15 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
   })
 
   return (
+    <>
+      {videoSession && (
+        <VideoCallModal
+          roomUrl={videoSession.roomUrl}
+          sessionId={videoSession.sessionId}
+          participantName={profile?.full_name || 'Padre/Madre'}
+          onClose={() => setVideoSession(null)}
+        />
+      )}
     <div className="animate-fade-in space-y-6 pb-8">
       
       {/* Header */}
@@ -356,21 +377,36 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                             </div>
                           </div>
 
+                          {/* ── Botón unirse a videollamada virtual ── */}
+                          {upcoming && (apt as any).modalidad === 'virtual' && (apt.status === 'confirmed' || apt.status === 'pending') && (() => {
+                            // Buscar notificación de videollamada para esta cita
+                            return null // placeholder: se maneja desde notificaciones
+                          })()}
+
                           {/* Actions for upcoming confirmed */}
                           {upcoming && (apt.status === 'confirmed' || apt.status === 'pending') && (
-                            <div className="flex gap-2 mt-3 pt-3 border-t border-slate-100">
-                              <button
-                                onClick={() => onCancelAppointment(apt.id, true)}
-                                className="flex-1 py-1.5 px-3 bg-violet-50 text-violet-700 border border-violet-200 rounded-xl text-xs font-bold hover:bg-violet-100 transition-all flex items-center justify-center gap-1"
-                              >
-                                <RefreshCw size={11}/> Reprogramar
-                              </button>
-                              <button
-                                onClick={() => onCancelAppointment(apt.id, false)}
-                                className="flex-1 py-1.5 px-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-1"
-                              >
-                                <XCircle size={11}/> Cancelar
-                              </button>
+                            <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-slate-100">
+                              {/* Badge virtual */}
+                              {(apt as any).modalidad === 'virtual' && (
+                                <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-100 rounded-xl">
+                                  <Video size={13} className="text-indigo-500 shrink-0"/>
+                                  <p className="text-xs text-indigo-600 font-semibold flex-1">Cita virtual · El terapeuta te enviará el link cuando inicie</p>
+                                </div>
+                              )}
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => onCancelAppointment(apt.id, true)}
+                                  className="flex-1 py-1.5 px-3 bg-violet-50 text-violet-700 border border-violet-200 rounded-xl text-xs font-bold hover:bg-violet-100 transition-all flex items-center justify-center gap-1"
+                                >
+                                  <RefreshCw size={11}/> Reprogramar
+                                </button>
+                                <button
+                                  onClick={() => onCancelAppointment(apt.id, false)}
+                                  className="flex-1 py-1.5 px-3 bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold hover:bg-red-100 transition-all flex items-center justify-center gap-1"
+                                >
+                                  <XCircle size={11}/> Cancelar
+                                </button>
+                              </div>
                             </div>
                           )}
                         </div>

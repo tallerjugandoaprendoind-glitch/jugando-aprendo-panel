@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 
 import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './components/shared'
+import VideoCallModal from '@/components/VideoCallModal'
 import { ThemeToggleButton } from '@/components/ThemeContext'
 import AgendaView from './components/AgendaView'
 import HomeViewInnovative from './components/HomeView'
@@ -57,6 +58,7 @@ export default function ParentDashboard() {
   const [showHelp, setShowHelp] = useState(false)
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
   const [celebrationMessage, setCelebrationMessage] = useState('')
+  const [videoCallSession, setVideoCallSession] = useState<{roomUrl:string;sessionId:string}|null>(null)
 
   useEffect(() => {
     const loadData = async () => {
@@ -469,6 +471,16 @@ export default function ParentDashboard() {
         
         {/* 🔔 PUSH NOTIFICATIONS BANNER */}
         <PushNotificationBanner userId={profile?.id || null} />
+
+        {/* 📹 VIDEOLLAMADA MODAL */}
+        {videoCallSession && (
+          <VideoCallModal
+            roomUrl={videoCallSession.roomUrl}
+            sessionId={videoCallSession.sessionId}
+            participantName={profile?.full_name || 'Padre/Madre'}
+            onClose={() => setVideoCallSession(null)}
+          />
+        )}
 
         {/* 🎉 ANIMACIÓN DE ÉXITO */}
         {showSuccessAnimation && (
@@ -998,6 +1010,7 @@ export default function ParentDashboard() {
                                     ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Historia Clínica'} :
                                     ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-700',  border:'border-green-200',  label:'Entorno del Hogar'} :
                                     ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-700', border:'border-purple-200', label:'Evaluación Clínica'} :
+                                    selectedNoti.type==='video_call'      ? {icon:<Video size={20}/>,         bg:'bg-indigo-100', text:'text-indigo-700', border:'border-indigo-200', label:'Videollamada'} :
                                     selectedNoti.type==='form_request'    ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-700', border:'border-orange-200', label:'Nuevo formulario'} :
                                     selectedNoti.type==='parent_message'  ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
                                     selectedNoti.type==='success'         ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-700', border:'border-yellow-200', label:'¡Buenas noticias!'} :
@@ -1015,6 +1028,21 @@ export default function ParentDashboard() {
                                         <div className="bg-slate-50 rounded-2xl p-5">
                                             <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{selectedNoti.message}</p>
                                         </div>
+                                        {/* ── Botón unirse a videollamada ── */}
+                                        {selectedNoti.type === 'video_call' && selectedNoti.metadata?.room_url && (
+                                          <button
+                                            onClick={() => {
+                                              setVideoCallSession({ roomUrl: selectedNoti.metadata.room_url, sessionId: selectedNoti.metadata.session_id || '' })
+                                              setShowNotifications(false)
+                                              setSelectedNoti(null)
+                                            }}
+                                            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-white text-base shadow-xl transition-all hover:scale-[1.02] active:scale-[.98]"
+                                            style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6)',boxShadow:'0 8px 30px rgba(99,102,241,0.4)'}}
+                                          >
+                                            <Video size={20}/> Unirse a la videollamada
+                                          </button>
+                                        )}
+
                                         {selectedNoti.metadata?.source_title && (
                                             <div className="bg-blue-50 rounded-xl p-3 flex items-center gap-2">
                                                 <FileText size={14} className="text-blue-500 flex-shrink-0"/>
@@ -1033,6 +1061,22 @@ export default function ParentDashboard() {
                         </div>
                     ) : (
                     <div className="p-5 space-y-3 overflow-y-auto flex-1">
+                        {/* ── Banner videollamadas activas ── */}
+                        {notifications.filter(n => n.type==='video_call' && n.metadata?.room_url).map(n => (
+                          <button key={`vcall-${n.id}`}
+                            onClick={() => { setVideoCallSession({roomUrl:n.metadata.room_url, sessionId:n.metadata.session_id||''}); setShowNotifications(false) }}
+                            className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-indigo-300 text-left transition-all hover:scale-[1.01] active:scale-[.99]"
+                            style={{background:'linear-gradient(135deg,rgba(99,102,241,0.1),rgba(139,92,246,0.1))'}}>
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 animate-pulse" style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6)'}}>
+                              <Video size={20} className="text-white"/>
+                            </div>
+                            <div className="flex-1 text-left">
+                              <p className="font-black text-indigo-700 text-sm">📹 Videollamada activa</p>
+                              <p className="text-xs text-indigo-500 font-semibold">Tu terapeuta te espera · Toca para unirte</p>
+                            </div>
+                            <ChevronRight size={18} className="text-indigo-400 shrink-0"/>
+                          </button>
+                        ))}
                         {notifications.length === 0 ? (
                             <div className="text-center py-16">
                                 <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
@@ -1049,6 +1093,7 @@ export default function ParentDashboard() {
                                     ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Historia Clínica'} :
                                     ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-600',  border:'border-green-200',  label:'Entorno del Hogar'} :
                                     ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-600', border:'border-purple-200', label:'Evaluación Clínica'} :
+                                    noti.type==='video_call'     ? {icon:<Video size={20}/>,         bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-200', label:'Videollamada'} :
                                     noti.type==='form_request'   ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-600', border:'border-orange-200', label:'Nuevo formulario'} :
                                     noti.type==='parent_message' ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
                                     noti.type==='success'        ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-600', border:'border-yellow-200', label:'¡Buenas noticias!'} :

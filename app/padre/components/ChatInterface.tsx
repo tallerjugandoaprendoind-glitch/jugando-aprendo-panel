@@ -11,48 +11,87 @@ declare global {
   }
 }
 
-// ── Hook de Text-to-Speech ────────────────────────────────────────────────────
+// ── Hook de Text-to-Speech con ElevenLabs (Ivanna) ───────────────────────────
 function useTextToSpeech() {
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
 
-  const speak = useCallback((text: string) => {
-    if (!voiceEnabled || !('speechSynthesis' in window)) return
-    // Cancelar cualquier voz en curso
-    window.speechSynthesis.cancel()
-    // Limpiar markdown básico para mejor lectura
-    const clean = text
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1')
-      .replace(/#{1,6}\s/g, '')
-      .replace(/💙|📊|🏠|💬|❌|⚠️|✅|🎯|📋|💡|🤖|💜/g, '')
-      .replace(/\n{2,}/g, '. ')
-      .trim()
-    const utter = new SpeechSynthesisUtterance(clean)
-    utter.lang = 'es-PE'
-    utter.rate = 1.05
-    utter.pitch = 1.1
-    utter.volume = 0.95
-    // Preferir voz en español si está disponible
-    const voices = window.speechSynthesis.getVoices()
-    const esVoice = voices.find(v => v.lang.startsWith('es') && v.localService) ||
-                    voices.find(v => v.lang.startsWith('es'))
-    if (esVoice) utter.voice = esVoice
-    utter.onstart = () => setSpeaking(true)
-    utter.onend = () => setSpeaking(false)
-    utter.onerror = () => setSpeaking(false)
-    utteranceRef.current = utter
-    window.speechSynthesis.speak(utter)
+  const speak = useCallback(async (text: string) => {
+    if (!voiceEnabled || !text.trim()) return
+
+    // Cancelar cualquier audio en curso
+    abortRef.current?.abort()
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.src = ''
+    }
+
+    abortRef.current = new AbortController()
+    setSpeaking(true)
+
+    try {
+      const res = await fetch('/api/elevenlabs-tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+        signal: abortRef.current.signal,
+      })
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      audioRef.current = audio
+
+      audio.onended = () => {
+        setSpeaking(false)
+        URL.revokeObjectURL(url)
+      }
+      audio.onerror = () => {
+        setSpeaking(false)
+        URL.revokeObjectURL(url)
+      }
+      audio.play()
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.warn('ElevenLabs TTS falló, usando voz del navegador como fallback')
+        // Fallback al TTS del navegador si ElevenLabs falla
+        if ('speechSynthesis' in window) {
+          const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n{2,}/g, '. ').trim().slice(0, 500)
+          const utter = new SpeechSynthesisUtterance(clean)
+          utter.lang = 'es-PE'
+          utter.rate = 1.05
+          utter.onend = () => setSpeaking(false)
+          utter.onerror = () => setSpeaking(false)
+          window.speechSynthesis.speak(utter)
+        } else {
+          setSpeaking(false)
+        }
+      } else {
+        setSpeaking(false)
+      }
+    }
   }, [voiceEnabled])
 
   const stopSpeaking = useCallback(() => {
-    window.speechSynthesis.cancel()
+    abortRef.current?.abort()
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.src = ''
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel()
     setSpeaking(false)
   }, [])
 
   const toggleVoice = useCallback(() => {
-    if (speaking) window.speechSynthesis.cancel()
+    if (speaking) {
+      abortRef.current?.abort()
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current.src = '' }
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel()
+    }
     setVoiceEnabled(v => !v)
   }, [speaking])
 
