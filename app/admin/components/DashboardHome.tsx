@@ -169,7 +169,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
       supabase.from('profiles').select('tokens').gt('tokens', 0),
       supabase.from('registro_aba').select('*').gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(50),
       supabase.from('appointments').select('*, children(name)').gte('appointment_date', hoy).order('appointment_date').order('appointment_time').limit(6),
-      supabase.from('registro_aba').select('*, children(name)').order('fecha_sesion', { ascending: false }).limit(5),
+      supabase.from('registro_aba').select('*, children:child_id(name)').order('fecha_sesion', { ascending: false }).limit(5),
       supabase.from('aba_sessions_v2').select('child_id').gte('session_date', hace30),
       supabase.from('children').select('id, name'),
       supabase.from('parent_message_approvals').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),

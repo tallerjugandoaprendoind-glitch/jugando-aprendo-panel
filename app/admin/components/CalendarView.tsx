@@ -30,10 +30,10 @@ function MonthlyCalendarView() {
   const [show, setShow] = useState(false)
   const [filterDate, setFilterDate] = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
-  const [currentMonth, setCurrentMonth] = useState(new Date())
+  const [currentMonth, setCurrentMonth] = useState<Date | null>(null)
   const [tipoSesion, setTipoSesion] = useState<'individual'|'grupal'>('individual')
   const [modalidadCita, setModalidadCita] = useState<'presencial'|'virtual'>('presencial')
-  const [newApt, setNewApt] = useState({ child_id:'', date:new Date().toISOString().split('T')[0], time:'09:00', service:'Terapia ABA', notes:'', group_name:'', status:'confirmed' })
+  const [newApt, setNewApt] = useState({ child_id:'', date:'', time:'09:00', service:'Terapia ABA', notes:'', group_name:'', status:'confirmed' })
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([])
 
   // Video call
@@ -114,11 +114,18 @@ function MonthlyCalendarView() {
   }
 
   const toggleParticipant = (id:string) => setSelectedParticipants(p => p.includes(id) ? p.filter(x=>x!==id) : [...p,id])
+  useEffect(() => {
+    const today = new Date()
+    setCurrentMonth(today)
+    setNewApt(prev => ({ ...prev, date: today.toISOString().split('T')[0] }))
+  }, [])
+
   const getDaysInMonth = (d:Date) => ({ firstDay: new Date(d.getFullYear(),d.getMonth(),1).getDay(), daysInMonth: new Date(d.getFullYear(),d.getMonth()+1,0).getDate() })
-  const { firstDay, daysInMonth } = getDaysInMonth(currentMonth)
-  const monthYear = currentMonth.toLocaleString('es-PE',{month:'long',year:'numeric'})
+  const { firstDay, daysInMonth } = currentMonth ? getDaysInMonth(currentMonth) : { firstDay: 0, daysInMonth: 31 }
+  const monthYear = currentMonth ? currentMonth.toLocaleString('es-PE',{month:'long',year:'numeric'}) : ''
   const todayStr = new Date().toISOString().split('T')[0]
   const getAptsForDay = (day:number) => {
+    if (!currentMonth) return null
     const ds = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
     return apts.filter(a => a.appointment_date===ds)
   }
@@ -185,9 +192,9 @@ function MonthlyCalendarView() {
           {/* Calendario */}
           <div className="xl:col-span-8 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-slate-100">
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1))} className="p-2 rounded-xl hover:bg-slate-100"><ChevronLeft size={20}/></button>
+              <button onClick={() => currentMonth && setCurrentMonth(new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1))} className="p-2 rounded-xl hover:bg-slate-100"><ChevronLeft size={20}/></button>
               <h3 className="font-black text-slate-800 text-lg capitalize">{monthYear}</h3>
-              <button onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1))} className="p-2 rounded-xl hover:bg-slate-100"><ChevronRight size={20}/></button>
+              <button onClick={() => currentMonth && setCurrentMonth(new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1))} className="p-2 rounded-xl hover:bg-slate-100"><ChevronRight size={20}/></button>
             </div>
             <div className="grid grid-cols-7 border-b border-slate-100">
               {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map(d => <div key={d} className="py-3 text-center text-xs font-black text-slate-400 uppercase tracking-widest">{d}</div>)}
@@ -196,7 +203,8 @@ function MonthlyCalendarView() {
               {Array.from({length:firstDay}).map((_,i) => <div key={`e${i}`} className="min-h-[80px] border-b border-r border-slate-50 bg-slate-50/30"/>)}
               {Array.from({length:daysInMonth},(_,i)=>i+1).map(day => {
                 const dayApts = getAptsForDay(day)
-                const ds = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+                if (!currentMonth) return null
+    const ds = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
                 const isToday=ds===todayStr; const isPast=ds<todayStr
                 return (
                   <div key={day} onClick={()=>{setNewApt(p=>({...p,date:ds}));setShow(true)}} className={`min-h-[80px] border-b border-r border-slate-100 p-2 cursor-pointer transition-all hover:bg-blue-50/50 group ${isToday?'bg-blue-50':isPast?'bg-slate-50/50':''}`}>
