@@ -124,8 +124,8 @@ function MonthlyCalendarView() {
   const { firstDay, daysInMonth } = currentMonth ? getDaysInMonth(currentMonth) : { firstDay: 0, daysInMonth: 31 }
   const monthYear = currentMonth ? currentMonth.toLocaleString('es-PE',{month:'long',year:'numeric'}) : ''
   const todayStr = new Date().toISOString().split('T')[0]
-  const getAptsForDay = (day:number) => {
-    if (!currentMonth) return null
+  const getAptsForDay = (day:number): any[] => {
+    if (!currentMonth) return []
     const ds = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
     return apts.filter(a => a.appointment_date===ds)
   }
@@ -202,9 +202,9 @@ function MonthlyCalendarView() {
             <div className="grid grid-cols-7">
               {Array.from({length:firstDay}).map((_,i) => <div key={`e${i}`} className="min-h-[80px] border-b border-r border-slate-50 bg-slate-50/30"/>)}
               {Array.from({length:daysInMonth},(_,i)=>i+1).map(day => {
-                const dayApts = getAptsForDay(day)
                 if (!currentMonth) return null
-    const ds = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+                const dayApts = getAptsForDay(day)
+                const ds = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
                 const isToday=ds===todayStr; const isPast=ds<todayStr
                 return (
                   <div key={day} onClick={()=>{setNewApt(p=>({...p,date:ds}));setShow(true)}} className={`min-h-[80px] border-b border-r border-slate-100 p-2 cursor-pointer transition-all hover:bg-blue-50/50 group ${isToday?'bg-blue-50':isPast?'bg-slate-50/50':''}`}>
