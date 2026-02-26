@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { X, Mic, MicOff, Video, VideoOff, PhoneOff, Monitor, Users, Loader2, Wifi, WifiOff } from 'lucide-react'
+import { X, Video, PhoneOff, Loader2, Wifi } from 'lucide-react'
 
 interface VideoCallModalProps {
   roomUrl: string
@@ -11,7 +11,6 @@ interface VideoCallModalProps {
 }
 
 export default function VideoCallModal({ roomUrl, sessionId, participantName, onClose }: VideoCallModalProps) {
-  const iframeRef = useRef<HTMLIFrameElement>(null)
   const startTimeRef = useRef<number>(Date.now())
   const [status, setStatus] = useState<'connecting' | 'connected' | 'ended'>('connecting')
   const [duration, setDuration] = useState(0)
@@ -54,17 +53,16 @@ export default function VideoCallModal({ roomUrl, sessionId, participantName, on
     }
   }, [sessionId, onClose])
 
-  // Construir URL de Daily con nombre del participante
-  const callUrl = `${roomUrl}?name=${encodeURIComponent(participantName)}&lang=es`
+  // Jitsi Meet URL: pasar nombre del participante por fragmento (no se envía al servidor)
+  const callUrl = `${roomUrl}#userInfo.displayName="${encodeURIComponent(participantName)}"&config.defaultLanguage="es"&config.prejoinPageEnabled=false`
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" style={{ background: '#0a0a0f' }}>
       {/* ── Header ── */}
       <div className="shrink-0 flex items-center justify-between px-4 py-3"
         style={{ background: 'rgba(255,255,255,0.04)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        
+
         <div className="flex items-center gap-3">
-          {/* Logo / Sala */}
           <div className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-black text-sm"
             style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)' }}>
             JA
@@ -78,7 +76,6 @@ export default function VideoCallModal({ roomUrl, sessionId, participantName, on
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Duración */}
           {status === 'connected' && (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full"
               style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
@@ -87,10 +84,11 @@ export default function VideoCallModal({ roomUrl, sessionId, participantName, on
             </div>
           )}
 
-          {/* Estado conexión */}
           <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full"
-            style={{ background: status === 'connected' ? 'rgba(34,197,94,0.15)' : 'rgba(251,191,36,0.15)',
-                     border: `1px solid ${status === 'connected' ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.3)'}` }}>
+            style={{
+              background: status === 'connected' ? 'rgba(34,197,94,0.15)' : 'rgba(251,191,36,0.15)',
+              border: `1px solid ${status === 'connected' ? 'rgba(34,197,94,0.3)' : 'rgba(251,191,36,0.3)'}`
+            }}>
             {status === 'connecting'
               ? <Loader2 size={12} className="animate-spin text-yellow-400" />
               : <Wifi size={12} className="text-green-400" />
@@ -100,7 +98,6 @@ export default function VideoCallModal({ roomUrl, sessionId, participantName, on
             </span>
           </div>
 
-          {/* Cerrar sin colgar */}
           <button onClick={onClose}
             className="p-2 rounded-xl transition-all hover:scale-105"
             style={{ background: 'rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.5)' }}
@@ -139,7 +136,6 @@ export default function VideoCallModal({ roomUrl, sessionId, participantName, on
         )}
 
         <iframe
-          ref={iframeRef}
           src={callUrl}
           allow="camera; microphone; fullscreen; speaker; display-capture; autoplay"
           className="w-full h-full border-0"
@@ -152,7 +148,7 @@ export default function VideoCallModal({ roomUrl, sessionId, participantName, on
       {/* ── Barra inferior con botón colgar ── */}
       <div className="shrink-0 flex items-center justify-center gap-4 py-4"
         style={{ background: 'rgba(255,255,255,0.03)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-        
+
         <p className="text-xs mr-4" style={{ color: 'rgba(255,255,255,0.3)' }}>
           Los controles de cámara y micrófono están dentro de la llamada
         </p>
