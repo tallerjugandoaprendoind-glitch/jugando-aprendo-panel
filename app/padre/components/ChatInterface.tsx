@@ -214,7 +214,7 @@ function RobotAvatar({ size = 36, animated = false }: { size?: number; animated?
 }
 
 // ── Burbuja de mensaje ────────────────────────────────────────────────────────
-function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: () => void }) {
+function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; onNavigateToStore?: () => void; onWellbeingAnswer?: (opt: string) => void }) {
   const isUser = m.role === 'user'
 
   if (isUser) {
@@ -246,24 +246,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
           <div className="px-4 pb-4 flex flex-col gap-2">
             {['😊 Bien, con energía', '😐 Regular, algo cansado/a', '😔 Difícil, necesito apoyo'].map(opt => (
               <button key={opt}
-                onClick={async () => {
-                  if (!parentId) return
-                  // Guardar respuesta de bienestar en parent_forms
-                  await supabase.from('parent_forms').insert([{
-                    parent_id: parentId,
-                    child_id: childId || null,
-                    form_type: 'wellbeing',
-                    form_title: opt,
-                    status: 'completed',
-                    responses: { answer: opt },
-                    created_at: new Date().toISOString(),
-                  }])
-                  // Mostrar confirmación en el chat
-                  setMessages(p => [...p,
-                    { role: 'user', text: opt },
-                    { role: 'ai', text: '¡Gracias por compartir cómo te sientes! 💜 Tu bienestar también importa mucho para el progreso de tu hijo/a.' }
-                  ])
-                }}
+                onClick={() => onWellbeingAnswer?.(opt)}
                 className="text-left px-4 py-3 text-sm font-semibold text-slate-700 rounded-2xl border-2 border-purple-100 transition-all hover:border-purple-400 hover:bg-purple-50 bg-white">
                 {opt}
               </button>
@@ -457,6 +440,25 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, typing])
+
+  // ── Guardar respuesta de bienestar ─────────────────────────────────────────
+  const handleWellbeingAnswer = useCallback(async (opt: string) => {
+    if (parentId) {
+      await supabase.from('parent_forms').insert([{
+        parent_id: parentId,
+        child_id: childId || null,
+        form_type: 'wellbeing',
+        form_title: opt,
+        status: 'completed',
+        responses: { answer: opt },
+        created_at: new Date().toISOString(),
+      }])
+    }
+    setMessages(p => [...p,
+      { role: 'user', text: opt },
+      { role: 'ai', text: '¡Gracias por compartir cómo te sientes! 💜 Tu bienestar también importa mucho para el progreso de tu hijo/a.' }
+    ])
+  }, [parentId, childId])
 
   const sendText = async (txt: string) => {
     if (!txt.trim() || typing) return
@@ -662,7 +664,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
             <>
               {messages.map((m, i) => (
                 <div key={i} style={{ animation: 'fadeUp .3s ease' }}>
-                  <MessageBubble m={m} onNavigateToStore={onNavigateToStore} />
+                  <MessageBubble m={m} onNavigateToStore={onNavigateToStore} onWellbeingAnswer={handleWellbeingAnswer} />
                 </div>
               ))}
               {typing && <TypingIndicator />}
