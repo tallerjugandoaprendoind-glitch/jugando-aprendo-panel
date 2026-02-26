@@ -708,7 +708,7 @@ export default function ParentDashboard() {
                                     <RefreshCw size={18}/>
                                 </button>
                             </div>
-                            <ChatInterface childId={selectedChild?.id} childName={selectedChild?.name} onNavigateToStore={() => setActiveView('tienda')} />
+                            <ChatInterface childId={selectedChild?.id} childName={selectedChild?.name} onNavigateToStore={() => setActiveView('tienda')} parentId={profile?.id} />
                         </div>
                     )}
 

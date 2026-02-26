@@ -33,6 +33,23 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const { id, status } = await request.json()
+    if (!id || !status) throw new Error('id y status son requeridos')
+    const { data, error } = await supabaseAdmin
+      .from('appointments')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single()
+    if (error) throw error
+    return NextResponse.json({ data })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     const { id } = await request.json()

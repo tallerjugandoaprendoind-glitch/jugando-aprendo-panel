@@ -82,9 +82,9 @@ function AlertaClinica({ tipo, paciente, mensaje, onClick }: any) {
 function BienestarPanel({ data }: { data: any[] }) {
   if (data.length === 0) return null
   const counts = {
-    bien: data.filter(d => d.answer?.includes('Bien')).length,
-    regular: data.filter(d => d.answer?.includes('Regular')).length,
-    dificil: data.filter(d => d.answer?.includes('Difícil')).length,
+    bien:    data.filter(d => (d.responses?.answer || d.form_title || '').includes('Bien')).length,
+    regular: data.filter(d => (d.responses?.answer || d.form_title || '').includes('Regular')).length,
+    dificil: data.filter(d => (d.responses?.answer || d.form_title || '').includes('Difícil')).length,
   }
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
@@ -174,7 +174,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
       supabase.from('aba_sessions_v2').select('child_id').gte('session_date', hace30),
       supabase.from('children').select('id, name'),
       supabase.from('parent_message_approvals').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
-      supabase.from('parent_forms').select('*').eq('status','completed').gte('created_at', mesActual).order('created_at', { ascending: false }),
+      supabase.from('parent_forms').select('*').eq('status','completed').eq('form_type','wellbeing').gte('created_at', mesActual).order('created_at', { ascending: false }),
     ])
 
     // Detectar pacientes sin sesión en 30 días
@@ -187,7 +187,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
     })
 
     // Alertas de bienestar bajo
-    const bienestarBajo = (bienestar || []).filter((b: any) => b.answer?.includes('Difícil'))
+    const bienestarBajo = (bienestar || []).filter((b: any) => (b.responses?.answer || b.form_title || '').includes('Difícil'))
     bienestarBajo.slice(0, 2).forEach((b: any) => {
       alertas.push({ tipo: 'bienestar_bajo', paciente: `Padre/Madre (${b.created_at?.slice(0, 10)})`, mensaje: 'Reportó dificultad esta semana. Considera contactarlos.' })
     })

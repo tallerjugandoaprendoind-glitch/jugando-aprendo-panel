@@ -4,24 +4,41 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 // Jitsi Meet — 100% gratuito, sin cuenta, sin tarjeta
 const JITSI_BASE = 'https://meet.jit.si'
 
-// ── GET: obtener uso actual del mes ──────────────────────────────────────────
-export async function GET() {
+// ── GET: uso del mes (sin params) · sesión activa por appointment_id (con param) ─
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url)
+    const appointmentId = searchParams.get('appointment_id')
+
+    // ── Consulta de sesión activa para un appointment específico (padre) ──
+    if (appointmentId) {
+      const { data, error } = await supabaseAdmin
+        .from('video_sessions')
+        .select('id, room_url, status, started_at')
+        .eq('appointment_id', appointmentId)
+        .in('status', ['waiting', 'active'])
+        .order('started_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (error) throw error
+      if (!data) return NextResponse.json({ session: null })
+      return NextResponse.json({ session: { sessionId: data.id, roomUrl: data.room_url, status: data.status } })
+    }
+
+    // ── Uso mensual (admin) ──
     const now = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-
     const { data, error } = await supabaseAdmin
       .from('video_sessions')
       .select('duration_minutes')
       .gte('started_at', monthStart)
 
     if (error) throw error
-
     const used = (data || []).reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
     const limit = 10000
     const remaining = Math.max(0, limit - used)
     const percentage = Math.round((used / limit) * 100)
-
     return NextResponse.json({ used, remaining, percentage, limit })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

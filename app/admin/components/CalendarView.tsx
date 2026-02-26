@@ -7,7 +7,6 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import VideoCallModal from '@/components/VideoCallModal'
-import VideoUsageIndicator from '@/components/VideoUsageIndicator'
 
 const SERVICES = [
   'Terapia ABA','Evaluación Inicial','Seguimiento BRIEF-2','Evaluación ADOS-2',
@@ -37,7 +36,7 @@ function MonthlyCalendarView() {
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([])
 
   // Video call
-  const [videoSession, setVideoSession] = useState<{roomUrl:string;sessionId:string}|null>(null)
+  const [videoSession, setVideoSession] = useState<{roomUrl:string;sessionId:string;appointmentId:string}|null>(null)
   const [startingCall, setStartingCall] = useState<string|null>(null)
 
   const cargarCitas = useCallback(async () => {
@@ -101,7 +100,7 @@ function MonthlyCalendarView() {
       const data = await res.json()
       if (data.limitReached) { toast.error('⚠️ Límite mensual de 10,000 min alcanzado. Se reinicia el próximo mes.'); return }
       if (data.error) throw new Error(data.error)
-      setVideoSession({ roomUrl: data.room_url, sessionId: data.session_id })
+      setVideoSession({ roomUrl: data.room_url, sessionId: data.session_id, appointmentId: apt.id })
       toast.success('📹 Sala creada · Padre notificado')
     } catch (err:any) { toast.error('Error: ' + err.message) }
     finally { setStartingCall(null) }
@@ -145,8 +144,9 @@ function MonthlyCalendarView() {
         <VideoCallModal
           roomUrl={videoSession.roomUrl}
           sessionId={videoSession.sessionId}
+          appointmentId={videoSession.appointmentId}
           participantName="Terapeuta – Jugando Aprendo"
-          onClose={() => setVideoSession(null)}
+          onClose={() => { setVideoSession(null); cargarCitas() }}
         />
       )}
 
@@ -183,9 +183,6 @@ function MonthlyCalendarView() {
             </div>
           ))}
         </div>
-
-        {/* Video usage */}
-        <div className="mb-6"><VideoUsageIndicator /></div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 

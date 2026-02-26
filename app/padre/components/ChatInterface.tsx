@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { supabase } from '@/lib/supabase'
 import { Send, Sparkles, Heart, ShoppingBag, Mic, MicOff, Volume2, VolumeX, RefreshCw, StopCircle } from 'lucide-react'
 
 // ── Tipos para Web Speech API ─────────────────────────────────────────────────
@@ -245,6 +246,24 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
           <div className="px-4 pb-4 flex flex-col gap-2">
             {['😊 Bien, con energía', '😐 Regular, algo cansado/a', '😔 Difícil, necesito apoyo'].map(opt => (
               <button key={opt}
+                onClick={async () => {
+                  if (!parentId) return
+                  // Guardar respuesta de bienestar en parent_forms
+                  await supabase.from('parent_forms').insert([{
+                    parent_id: parentId,
+                    child_id: childId || null,
+                    form_type: 'wellbeing',
+                    form_title: opt,
+                    status: 'completed',
+                    responses: { answer: opt },
+                    created_at: new Date().toISOString(),
+                  }])
+                  // Mostrar confirmación en el chat
+                  setMessages(p => [...p,
+                    { role: 'user', text: opt },
+                    { role: 'ai', text: '¡Gracias por compartir cómo te sientes! 💜 Tu bienestar también importa mucho para el progreso de tu hijo/a.' }
+                  ])
+                }}
                 className="text-left px-4 py-3 text-sm font-semibold text-slate-700 rounded-2xl border-2 border-purple-100 transition-all hover:border-purple-400 hover:bg-purple-50 bg-white">
                 {opt}
               </button>
@@ -405,7 +424,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
-function ChatInterface({ childId, childName, onNavigateToStore }: any) {
+function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any) {
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)

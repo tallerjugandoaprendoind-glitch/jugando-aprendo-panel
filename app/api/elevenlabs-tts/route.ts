@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const ELEVENLABS_VOICE_ID = 'yM93hbw8Qtvdma2wCnJG' // Ivanna - Young, Versatile and Casual
-const ELEVENLABS_MODEL    = 'eleven_multilingual_v2'
+// Voice ID: configura ELEVENLABS_VOICE_ID en tus env vars de Vercel
+// Para obtenerlo: ElevenLabs → tu voz → copiar el ID desde la URL o la página de la voz
+const ELEVENLABS_VOICE_ID = process.env.ELEVENLABS_VOICE_ID || 'yM93hbw8Qtvdma2wCnJG'
+const ELEVENLABS_MODEL    = process.env.ELEVENLABS_MODEL    || 'eleven_multilingual_v2'
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,8 +56,8 @@ export async function POST(req: NextRequest) {
 
     if (!response.ok) {
       const err = await response.text()
-      console.error('ElevenLabs error:', response.status, err)
-      return NextResponse.json({ error: `ElevenLabs: ${response.status}` }, { status: response.status })
+      console.error(`ElevenLabs error (voice: ${ELEVENLABS_VOICE_ID}):`, response.status, err)
+      return NextResponse.json({ error: `ElevenLabs ${response.status}: ${err}` }, { status: response.status })
     }
 
     // Pasar el stream de audio directamente al cliente

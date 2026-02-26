@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import type { JSX } from 'react'
 import { supabase as supabaseClient } from '@/lib/supabase'
 import { 
@@ -99,22 +99,52 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'upcoming' | 'past'>('upcoming')
-  const [videoSession, setVideoSession] = useState<{roomUrl:string;sessionId:string}|null>(null)
+  const [videoSession, setVideoSession] = useState<{roomUrl:string;sessionId:string;appointmentId:string}|null>(null)
   const [joiningCall, setJoiningCall] = useState<string|null>(null)
+  const [activeVideoSessions, setActiveVideoSessions] = useState<Record<string, {sessionId:string;roomUrl:string}>>({})
+  const [statusFilter, setStatusFilter] = useState<string>('all')
 
-  const handleJoinVideoCall = async (notification: any) => {
-    if (!notification?.metadata?.room_url) return
-    setJoiningCall(notification.id)
-    // Mark notification as read
-    await supabaseClient.from('notifications').update({is_read:true}).eq('id', notification.id)
-    setVideoSession({ roomUrl: notification.metadata.room_url, sessionId: notification.metadata.session_id || '' })
+  // Poll active video sessions for virtual upcoming appointments
+  const pollActiveSessions = useCallback(async (apts: Appointment[]) => {
+    const virtualUpcoming = apts.filter(a =>
+      (a as any).modalidad === 'virtual' &&
+      isUpcoming(a.appointment_date) &&
+      (a.status === 'confirmed' || a.status === 'pending')
+    )
+    if (virtualUpcoming.length === 0) return
+    const results: Record<string, {sessionId:string;roomUrl:string}> = {}
+    await Promise.all(
+      virtualUpcoming.map(async (apt) => {
+        try {
+          const res = await fetch(`/api/video-call?appointment_id=${apt.id}`)
+          const data = await res.json()
+          if (data.session?.roomUrl) {
+            results[apt.id] = { sessionId: data.session.sessionId, roomUrl: data.session.roomUrl }
+          }
+        } catch { /* silencioso */ }
+      })
+    )
+    setActiveVideoSessions(results)
+  }, [])
+
+  const handleJoinVideoCall = (apt: Appointment) => {
+    const session = activeVideoSessions[apt.id]
+    if (!session) return
+    setJoiningCall(apt.id)
+    setVideoSession({ roomUrl: session.roomUrl, sessionId: session.sessionId, appointmentId: apt.id })
     setJoiningCall(null)
   }
-  const [statusFilter, setStatusFilter] = useState<string>('all')
 
   useEffect(() => {
     loadAppointments()
   }, [profile?.id, selectedChild?.id])
+
+  // Recheck active video sessions every 15s so the join button appears automatically
+  useEffect(() => {
+    if (appointments.length === 0) return
+    const interval = setInterval(() => pollActiveSessions(appointments), 15000)
+    return () => clearInterval(interval)
+  }, [appointments, pollActiveSessions])
 
   const loadAppointments = async () => {
     if (!profile?.id) return
@@ -148,6 +178,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
       const { data, error } = await query
       if (error) throw error
       setAppointments(data || [])
+      pollActiveSessions(data || [])
     } catch (e) {
       console.error('Error cargando citas:', e)
     } finally {
@@ -182,8 +213,9 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         <VideoCallModal
           roomUrl={videoSession.roomUrl}
           sessionId={videoSession.sessionId}
+          appointmentId={videoSession.appointmentId}
           participantName={profile?.full_name || 'Padre/Madre'}
-          onClose={() => setVideoSession(null)}
+          onClose={() => { setVideoSession(null); loadAppointments() }}
         />
       )}
     <div className="animate-fade-in space-y-6 pb-8">
@@ -377,22 +409,41 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                             </div>
                           </div>
 
-                          {/* ── Botón unirse a videollamada virtual ── */}
-                          {upcoming && (apt as any).modalidad === 'virtual' && (apt.status === 'confirmed' || apt.status === 'pending') && (() => {
-                            // Buscar notificación de videollamada para esta cita
-                            return null // placeholder: se maneja desde notificaciones
-                          })()}
-
                           {/* Actions for upcoming confirmed */}
                           {upcoming && (apt.status === 'confirmed' || apt.status === 'pending') && (
                             <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-slate-100">
-                              {/* Badge virtual */}
-                              {(apt as any).modalidad === 'virtual' && (
-                                <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-100 rounded-xl">
-                                  <Video size={13} className="text-indigo-500 shrink-0"/>
-                                  <p className="text-xs text-indigo-600 font-semibold flex-1">Cita virtual · El terapeuta te enviará el link cuando inicie</p>
-                                </div>
-                              )}
+
+                              {/* ── Videollamada virtual ── */}
+                              {(apt as any).modalidad === 'virtual' && (() => {
+                                const activeSession = activeVideoSessions[apt.id]
+                                if (activeSession) {
+                                  // ✅ Sesión activa → botón unirse
+                                  return (
+                                    <button
+                                      onClick={() => handleJoinVideoCall(apt)}
+                                      disabled={joiningCall === apt.id}
+                                      className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-2xl font-black text-sm text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-60 shadow-lg"
+                                      style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', boxShadow: '0 4px 16px rgba(99,102,241,0.4)' }}
+                                    >
+                                      {joiningCall === apt.id
+                                        ? <><Loader2 size={16} className="animate-spin"/> Conectando...</>
+                                        : <><Video size={16}/> 🟢 Unirse a la videollamada</>}
+                                    </button>
+                                  )
+                                }
+                                // ⏳ Sin sesión activa aún → badge de espera
+                                return (
+                                  <div className="flex items-center gap-2 px-3 py-2.5 bg-indigo-50 border border-indigo-200 rounded-xl">
+                                    <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse shrink-0"/>
+                                    <div className="flex-1">
+                                      <p className="text-xs text-indigo-700 font-bold">Cita virtual · Esperando al terapeuta</p>
+                                      <p className="text-[10px] text-indigo-500 mt-0.5">El botón para unirte aparecerá aquí cuando la sesión inicie</p>
+                                    </div>
+                                    <Video size={14} className="text-indigo-400 shrink-0"/>
+                                  </div>
+                                )
+                              })()}
+
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => onCancelAppointment(apt.id, true)}
