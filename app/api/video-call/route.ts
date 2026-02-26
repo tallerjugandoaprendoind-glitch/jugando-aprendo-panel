@@ -18,8 +18,11 @@ export async function GET() {
     if (error) throw error
 
     const used = (data || []).reduce((sum, s) => sum + (s.duration_minutes || 0), 0)
+    const limit = 10000
+    const remaining = Math.max(0, limit - used)
+    const percentage = Math.round((used / limit) * 100)
 
-    return NextResponse.json({ used, remaining: null, percentage: null, limit: null })
+    return NextResponse.json({ used, remaining, percentage, limit })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }

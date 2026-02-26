@@ -9,7 +9,12 @@ export default function VideoUsageIndicator() {
   useEffect(() => {
     fetch('/api/video-call')
       .then(r => r.json())
-      .then(setUsage)
+      .then(data => {
+        // Solo actualizar el estado si la respuesta tiene los campos esperados
+        if (typeof data.used === 'number' && typeof data.limit === 'number') {
+          setUsage(data)
+        }
+      })
       .catch(() => {})
   }, [])
 
@@ -50,7 +55,7 @@ export default function VideoUsageIndicator() {
         <p className={`text-xs font-bold ${
           isCritical ? 'text-red-600' : isWarning ? 'text-amber-600' : 'text-emerald-600'
         }`}>
-          {usage.used.toLocaleString()} / {usage.limit.toLocaleString()} min usados
+          {(usage.used ?? 0).toLocaleString()} / {(usage.limit ?? 0).toLocaleString()} min usados
         </p>
         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
           isCritical ? 'bg-red-100 text-red-700' :
