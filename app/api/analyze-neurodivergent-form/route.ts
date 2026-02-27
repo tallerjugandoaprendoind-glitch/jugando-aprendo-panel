@@ -4,16 +4,17 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 
 // Helper: reintentar con backoff exponencial ante rate limit
-async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 3): Promise<any> {
+async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 5): Promise<any> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const response = await ai.models.generateContent({ model, contents, config })
       return response
     } catch (err: any) {
       const is429 = err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED') || err?.status === 429
-      if (is429 && attempt < maxRetries - 1) {
-        const delay = Math.pow(2, attempt) * 2000 // 2s, 4s, 8s
-        console.warn(`⚠️ Rate limit Gemini (intento ${attempt + 1}/${maxRetries}). Reintentando en ${delay/1000}s...`)
+      const is503 = err?.message?.includes('503') || err?.message?.includes('UNAVAILABLE') || err?.message?.includes('high demand')
+      if ((is429 || is503) && attempt < maxRetries - 1) {
+        const delay = Math.pow(2, attempt) * 3000 // 3s, 6s, 12s, 24s
+        console.warn(`⚠️ Rate limit/503 Gemini (intento ${attempt + 1}/${maxRetries}). Reintentando en ${delay/1000}s...`)
         await new Promise(r => setTimeout(r, delay))
         continue
       }

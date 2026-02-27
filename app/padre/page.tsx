@@ -525,8 +525,7 @@ export default function ParentDashboard() {
                 
                 <nav className="space-y-2">
                     <NavBtnDesktop icon={<Home size={20}/>} label="Inicio & Progreso" active={activeView==='home'} onClick={()=>setActiveView('home')} />
-                    <NavBtnDesktop icon={<Calendar size={20}/>} label="Agendar Cita" active={activeView==='agenda'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0) > 0 ? profile.tokens : null} />
-                    <NavBtnDesktop icon={<CalendarDays size={20}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
+                    <NavBtnDesktop icon={<Calendar size={20}/>} label="Agenda y Citas" active={activeView==='agenda' || activeView==='miscitas'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0) > 0 ? profile.tokens : null} />
                     <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                     <NavBtnDesktop icon={<Bell size={20}/>} label="Mensajes del terapeuta" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
@@ -670,24 +669,42 @@ export default function ParentDashboard() {
                         />
                     )}
                     
-                    {activeView === 'agenda' && (
-                        <AgendaView 
-                            profile={profile}
-                            selectedDate={selectedDate}
-                            setSelectedDate={setSelectedDate}
-                            takenSlots={takenSlots}
-                            bookingLoading={bookingLoading}
-                            handleBookAppointment={handleBookAppointment}
-                        />
-                    )}
-
-                    {activeView === 'miscitas' && (
-                        <MisCitasView
-                            profile={profile}
-                            selectedChild={selectedChild}
-                            onCancelAppointment={handleCancelAppointment}
-                            onChangeView={setActiveView}
-                        />
+                    {(activeView === 'agenda' || activeView === 'miscitas') && (
+                        <div className="animate-fade-in">
+                          {/* Tabs */}
+                          <div className="flex gap-2 mb-6 bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 border border-slate-200/60 shadow-sm">
+                            <button
+                              onClick={() => setActiveView('agenda')}
+                              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeView === 'agenda' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50'}`}
+                            >
+                              <Calendar size={15}/> Agendar Cita
+                            </button>
+                            <button
+                              onClick={() => setActiveView('miscitas')}
+                              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeView === 'miscitas' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50'}`}
+                            >
+                              <CalendarDays size={15}/> Mis Citas
+                            </button>
+                          </div>
+                          {activeView === 'agenda' && (
+                            <AgendaView 
+                              profile={profile}
+                              selectedDate={selectedDate}
+                              setSelectedDate={setSelectedDate}
+                              takenSlots={takenSlots}
+                              bookingLoading={bookingLoading}
+                              handleBookAppointment={handleBookAppointment}
+                            />
+                          )}
+                          {activeView === 'miscitas' && (
+                            <MisCitasView
+                              profile={profile}
+                              selectedChild={selectedChild}
+                              onCancelAppointment={handleCancelAppointment}
+                              onChangeView={setActiveView}
+                            />
+                          )}
+                        </div>
                     )}
 
                     {activeView === 'chat' && (
@@ -733,8 +750,7 @@ export default function ParentDashboard() {
             {/* 📱 NAVEGACIÓN INFERIOR MÓVIL MEJORADA */}
             <nav className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 p-3 flex justify-around items-center fixed bottom-0 w-full z-30 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
                 <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
-                <NavBtnMobile icon={<Calendar size={22}/>} label="Agenda" active={activeView==='agenda'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0)} />
-                <NavBtnMobile icon={<CalendarDays size={22}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
+                <NavBtnMobile icon={<Calendar size={22}/>} label="Agenda" active={activeView==='agenda' || activeView==='miscitas'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0)} />
                 <div className="relative -top-8">
                     <button 
                         onClick={()=>setActiveView('chat')} 

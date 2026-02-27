@@ -41,9 +41,11 @@ export async function POST(request: NextRequest) {
 
     // Normalizar reportData: algunos formularios clínicos usan 'datos' en vez de 'responses'
     // Unificar ambos para que el generador siempre tenga acceso a las respuestas
+    const resolvedResponses = reportData?.responses || reportData?.datos || reportData || {}
     const normalizedReportData = {
-      ...reportData,
-      responses: reportData?.responses || reportData?.datos || reportData,
+      ...resolvedResponses,          // spread all form fields to top level
+      ...reportData,                 // keep original top-level fields
+      responses: resolvedResponses,  // also keep .responses accessor
     }
 
     console.log('📝 Generando reporte:', { reportType, childName, childAge });
@@ -536,6 +538,8 @@ function createCoverPage(reportType: string, childName: string, childAge?: numbe
 // REPORTE DE ANAMNESIS - VERSIÓN MEJORADA
 // ==============================================================================
 function createAnamnesisReport(data: any, childName: string, childAge?: number, aiAnalysis?: string | null): any[] {
+  // Normalize: data may come as { responses: {...}, ai_analysis: {...} } or flat
+  const d = data?.responses || data;
   const elements: any[] = [];
 
   // ══════════════════════════════════════════════════════════════════════════
@@ -1073,6 +1077,7 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
 // ==============================================================================
 
 function createABAReport(data: any, childName: string, aiAnalysis?: string | null): any[] {
+  const d = data?.responses || data;
   const elements: any[] = [];
   
   // Análisis IA primero
@@ -1105,9 +1110,13 @@ function createABAReport(data: any, childName: string, aiAnalysis?: string | nul
   );
   
   const sessionItems = [
-    { label: "Fecha de sesión", value: data.fecha_sesion },
-    { label: "Objetivo principal", value: data.datos?.objetivo_principal },
-    { label: "Conducta trabajada", value: data.datos?.conducta }
+    { label: "Fecha de sesión", value: d.fecha_sesion },
+    { label: "Objetivo principal", value: d.objetivo_principal || d.datos?.objetivo_principal },
+    { label: "Conducta trabajada", value: d.conducta || d.datos?.conducta },
+    { label: "Antecedente", value: d.antecedente },
+    { label: "Consecuencia", value: d.consecuencia },
+    { label: "Programa trabajado", value: d.programa },
+    { label: "Observaciones", value: d.observaciones || d.datos?.observations },
   ];
 
   sessionItems.forEach(item => {
@@ -1128,6 +1137,7 @@ function createABAReport(data: any, childName: string, aiAnalysis?: string | nul
 }
 
 function createEntornoHogarReport(data: any, childName: string, aiAnalysis?: string | null): any[] {
+  const d = data?.responses || data;
   const elements: any[] = [];
   
   if (aiAnalysis) {
@@ -1159,9 +1169,18 @@ function createEntornoHogarReport(data: any, childName: string, aiAnalysis?: str
   );
 
   const items = [
-    { label: "Fecha de visita", value: data.fecha_visita },
-    { label: "Comportamiento observado", value: data.datos?.comportamiento_observado },
-    { label: "Barreras identificadas", value: data.datos?.barreras_identificadas }
+    { label: "Fecha de visita", value: d.fecha_visita },
+    { label: "Duración", value: d.duracion_visita },
+    { label: "Personas presentes", value: d.personas_presentes },
+    { label: "Tipo de vivienda", value: d.tipo_vivienda },
+    { label: "Espacio de juego", value: d.espacio_juego },
+    { label: "Comportamiento observado", value: d.comportamiento_observado || d.datos?.comportamiento_observado },
+    { label: "Barreras identificadas", value: d.barreras_identificadas || d.datos?.barreras_identificadas },
+    { label: "Impresión general", value: d.impresion_general },
+    { label: "Actividades sugeridas", value: d.actividades_casa || d.actividades_sugeridas },
+    { label: "Mensaje para los padres", value: d.mensaje_padres_entorno },
+    { label: "Recomendaciones espacio", value: d.recomendaciones_espacio },
+    { label: "Recomendaciones rutinas", value: d.recomendaciones_rutinas },
   ];
 
   items.forEach(item => {
@@ -1285,11 +1304,24 @@ function createNeuroFormReport(data: any, childName: string, formType: string, a
   const responses = data?.responses || data;
   if (responses && typeof responses === 'object' && !Array.isArray(responses)) {
     elements.push(sectionHead('Respuestas del Formulario', '📝'));
-    const entries = Object.entries(responses).filter(([, v]) => v !== null && v !== undefined && v !== '');
+    const entries = Object.entries(responses).filter(([k, v]) => {
+      // Skip internal/system fields and empty values
+      if (['responses', 'ai_analysis'].includes(k)) return false;
+      return v !== null && v !== undefined && v !== '';
+    });
     if (entries.length > 0) {
       const tableRows = entries.map(([key, value]) => {
         const displayKey = key.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
-        const displayValue = Array.isArray(value) ? (value as any[]).join(', ') : String(value);
+        let displayValue: string;
+        if (Array.isArray(value)) {
+          displayValue = (value as any[]).map((v: any) => typeof v === 'object' ? JSON.stringify(v) : String(v)).join(', ');
+        } else if (typeof value === 'object' && value !== null) {
+          displayValue = JSON.stringify(value).slice(0, 500); // prevent runaway JSON
+        } else {
+          displayValue = String(value);
+        }
+        // Truncate very long values to prevent docx issues
+        displayValue = displayValue.slice(0, 1000);
         return new TableRow({
           children: [
             new TableCell({

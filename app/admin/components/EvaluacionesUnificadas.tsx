@@ -799,6 +799,17 @@ function FormFillView({ form, children, onBack, toast }: any) {
           if (m.total !== undefined)             analysis.total_brief                  = m.total
           if (m.ci_total !== undefined)          analysis.ci_total                     = m.ci_total
           if (m.clasificacion !== undefined)     analysis.clasificacion_ci             = m.clasificacion
+          if (m.icv !== undefined)               analysis.icv_total                    = m.icv
+          if (m.ive !== undefined)               analysis.ive_total                    = m.ive
+          if (m.irf !== undefined)               analysis.irf_total                    = m.irf
+          if (m.imt !== undefined)               analysis.imt_total                    = m.imt
+          if (m.ivp !== undefined)               analysis.ivp_total                    = m.ivp
+          if (m.icv_percentil !== undefined)     analysis.icv_percentil                = m.icv_percentil
+          if (m.ive_percentil !== undefined)     analysis.ive_percentil                = m.ive_percentil
+          if (m.irf_percentil !== undefined)     analysis.irf_percentil                = m.irf_percentil
+          if (m.imt_percentil !== undefined)     analysis.imt_percentil                = m.imt_percentil
+          if (m.ivp_percentil !== undefined)     analysis.ivp_percentil                = m.ivp_percentil
+          if (m.ci_percentil !== undefined)      analysis.ci_percentil                 = m.ci_percentil
           if (m.indice_sintomas !== undefined)   analysis.indice_sintomas_conductuales = m.indice_sintomas
           if (m.perfil_riesgo !== undefined)     analysis.perfil_riesgo                = m.perfil_riesgo
           if (m.severidad !== undefined)         analysis.nivel_severidad              = m.severidad
@@ -807,7 +818,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         // También mezclar con las respuestas del formulario para que aparezcan en los campos
         setResponses((prev: any) => ({ ...prev, ...analysis }))
         setAiAnalysis(analysis)
-        setEditedMessage(analysis?.mensaje_padres || analysis?.informe_padres_vineland || analysis?.informe_padres_wisc || analysis?.informe_padres_basc || analysis?.informe_padres || '')
+        setEditedMessage(analysis?.mensaje_padres || analysis?.informe_padres_vineland || analysis?.informe_padres_wisc || analysis?.informe_padres_basc || analysis?.informe_familia_ados || analysis?.informe_padres_entorno || analysis?.mensaje_padres_entorno || analysis?.informe_padres || '')
       }
       toast.success('✨ Análisis IA generado')
     } catch (err: any) {
@@ -1071,25 +1082,37 @@ function FormFillView({ form, children, onBack, toast }: any) {
           </button>
 
           <div className="flex items-center gap-3">
-            {currentStep === totalSteps - 1 && (
+            {/* Show AI button from page 6+ for ABA, or on last step for others */}
+            {(currentStep === totalSteps - 1 || (form.formKey === 'aba' && currentStep >= 5)) && (
               <>
                 <button onClick={handleAnalyzeWithAI} disabled={isAnalyzing || answeredCount < 3}
                   className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold disabled:opacity-40 transition-all shadow-lg shadow-violet-200 hover:opacity-90">
                   {isAnalyzing ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
                   {isAnalyzing ? 'Analizando...' : 'Analizar con IA'}
                 </button>
-                <button onClick={handleSave} disabled={isSaving || !selectedChild}
-                  className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-40 transition-all">
-                  {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                  Guardar
-                </button>
+                {currentStep === totalSteps - 1 && (
+                  <button onClick={handleSave} disabled={isSaving || !selectedChild}
+                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-40 transition-all">
+                    {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                    Guardar
+                  </button>
+                )}
               </>
             )}
             {currentStep < totalSteps - 1 && (
-              <button onClick={() => setCurrentStep(s => s + 1)}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-violet-200 hover:opacity-90">
-                Siguiente <ChevronRight size={18} />
-              </button>
+              <>
+                {currentStep === totalSteps - 1 && (
+                  <button onClick={handleSave} disabled={isSaving || !selectedChild}
+                    className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-40 transition-all">
+                    {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                    Guardar
+                  </button>
+                )}
+                <button onClick={() => setCurrentStep(s => s + 1)}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-violet-200 hover:opacity-90">
+                  Siguiente <ChevronRight size={18} />
+                </button>
+              </>
             )}
           </div>
         </div>

@@ -43,8 +43,22 @@ export default function MisPacientes() {
     setSeleccionado(nino)
     setLoadingHistorial(true)
     try {
-      const { data } = await supabase.from('registro_aba').select('*').eq('child_id', nino.id).order('fecha_sesion', { ascending: false }).limit(10)
-      setHistorial(data || [])
+      // Load from multiple sources for complete history
+      const [abaRes, formRes, anamnesisRes, entornoRes] = await Promise.all([
+        supabase.from('registro_aba').select('id, fecha_sesion, datos, form_title').eq('child_id', nino.id).order('fecha_sesion', { ascending: false }).limit(15),
+        supabase.from('form_responses').select('id, form_type, form_title, created_at, ai_analysis').eq('child_id', nino.id).order('created_at', { ascending: false }).limit(15),
+        supabase.from('anamnesis_completa').select('id, fecha_creacion, datos, form_title').eq('child_id', nino.id).order('fecha_creacion', { ascending: false }).limit(1),
+        supabase.from('registro_entorno_hogar').select('id, fecha_visita, datos, form_title').eq('child_id', nino.id).order('fecha_visita', { ascending: false }).limit(5),
+      ])
+      
+      const combined: any[] = [
+        ...(abaRes.data || []).map((r: any) => ({ ...r, _type: 'Sesión ABA', _date: r.fecha_sesion, _content: r.datos?.conducta || r.datos?.objetivo_principal || 'Sesión registrada' })),
+        ...(anamnesisRes.data || []).map((r: any) => ({ ...r, _type: 'Anamnesis', _date: r.fecha_creacion?.split('T')[0], _content: r.datos?.motivo_principal || 'Historia clínica inicial' })),
+        ...(entornoRes.data || []).map((r: any) => ({ ...r, _type: 'Visita Domiciliaria', _date: r.fecha_visita?.split('T')[0], _content: r.datos?.impresion_general || 'Visita al hogar' })),
+        ...(formRes.data || []).map((r: any) => ({ ...r, _type: r.form_title || r.form_type, _date: r.created_at?.split('T')[0], _content: r.ai_analysis?.analisis_clinico?.slice?.(0, 100) || 'Formulario completado' })),
+      ].sort((a, b) => (b._date || '').localeCompare(a._date || ''))
+      
+      setHistorial(combined.slice(0, 20))
     } catch { setHistorial([]) }
     finally { setLoadingHistorial(false) }
   }
@@ -114,18 +128,16 @@ export default function MisPacientes() {
           ) : (
             <div>
               {historial.map((h, idx) => (
-                <div key={h.id} className={`px-5 py-4 ${idx < historial.length - 1 ? 'border-b border-slate-50' : ''}`}>
-                  <p className="text-xs font-bold text-slate-400 mb-2">
-                    {new Date(h.fecha_sesion).toLocaleDateString('es-MX', { dateStyle: 'long' })}
-                  </p>
-                  {h.datos?.conducta && (
-                    <p className="text-sm text-slate-600 leading-relaxed">
-                      <span className="font-semibold text-slate-700">Conducta: </span>{h.datos.conducta}
+                <div key={h.id + idx} className={`px-5 py-4 ${idx < historial.length - 1 ? 'border-b border-slate-50' : ''}`}>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">{h._type || 'Registro'}</span>
+                    <p className="text-xs font-bold text-slate-400">
+                      {h._date ? new Date(h._date).toLocaleDateString('es-MX', { dateStyle: 'medium' }) : ''}
                     </p>
-                  )}
-                  {h.datos?.observations && (
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">{h.datos.observations}</p>
-                  )}
+                  </div>
+                  <p className="text-sm text-slate-600 leading-relaxed line-clamp-2">
+                    {h._content || '—'}
+                  </p>
                 </div>
               ))}
             </div>

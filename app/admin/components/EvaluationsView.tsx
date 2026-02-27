@@ -136,6 +136,12 @@ function DynamicEvaluationsView() {
           if (m.irf !== undefined)               flatData.irf_total                    = m.irf
           if (m.imt !== undefined)               flatData.imt_total                    = m.imt
           if (m.ivp !== undefined)               flatData.ivp_total                    = m.ivp
+          if (m.icv_percentil !== undefined)     flatData.icv_percentil                = m.icv_percentil
+          if (m.ive_percentil !== undefined)     flatData.ive_percentil                = m.ive_percentil
+          if (m.irf_percentil !== undefined)     flatData.irf_percentil                = m.irf_percentil
+          if (m.imt_percentil !== undefined)     flatData.imt_percentil                = m.imt_percentil
+          if (m.ivp_percentil !== undefined)     flatData.ivp_percentil                = m.ivp_percentil
+          if (m.ci_percentil !== undefined)      flatData.ci_percentil                 = m.ci_percentil
           // BASC-3
           if (m.indice_sintomas !== undefined)   flatData.indice_sintomas_conductuales = m.indice_sintomas
           if (m.perfil_riesgo !== undefined)     flatData.perfil_riesgo                = m.perfil_riesgo

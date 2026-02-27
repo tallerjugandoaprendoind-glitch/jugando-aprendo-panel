@@ -61,7 +61,7 @@ function useTextToSpeech() {
         console.warn('ElevenLabs TTS falló, usando voz del navegador como fallback')
         // Fallback al TTS del navegador si ElevenLabs falla
         if ('speechSynthesis' in window) {
-          const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n{2,}/g, '. ').trim().slice(0, 500)
+          const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n{2,}/g, '. ').trim().slice(0, 4000)
           const utter = new SpeechSynthesisUtterance(clean)
           utter.lang = 'es-PE'
           utter.rate = 1.05

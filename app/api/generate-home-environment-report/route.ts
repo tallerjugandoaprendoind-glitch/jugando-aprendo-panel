@@ -268,9 +268,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       impresion_general: analysisData.impresion_general,
       mensaje_padres_entorno: analysisData.mensaje_padres_entorno,
+      mensaje_padres: analysisData.mensaje_padres_entorno,  // alias for compatibility
       recomendaciones_espacio: analysisData.recomendaciones_espacio || "",
       recomendaciones_rutinas: analysisData.recomendaciones_rutinas || "",
-      actividades_sugeridas: analysisData.actividades_sugeridas || ""
+      actividades_sugeridas: analysisData.actividades_sugeridas || "",
+      actividades_casa: analysisData.actividades_sugeridas || "",  // alias matching form field id
     });
 
   } catch (error: any) {

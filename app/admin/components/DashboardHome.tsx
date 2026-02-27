@@ -310,7 +310,8 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
             </div>
           </div>
 
-          {/* Créditos */}
+          {/* Créditos - Administrar desde el módulo de Usuarios */}
+          {false && (
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Cargar créditos</p>
             <p className="text-xs text-slate-400 mb-3">Total en circulación: <strong className="text-slate-700">{stats.creditosActivos}</strong></p>
@@ -331,6 +332,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
               ))}
             </div>
           </div>
+          )}
         </div>
 
         {/* Próximas citas */}

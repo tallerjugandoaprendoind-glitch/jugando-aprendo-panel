@@ -48,7 +48,7 @@ const MOBILE_NAV_ITEMS = [
 const SECONDARY_NAV = [
   { id: 'aprobaciones', icon: ShieldCheck, label: 'Aprobaciones' },
   { id: 'usuarios',     icon: Key,         label: 'Usuarios' },
-  { id: 'importar',     icon: Upload,      label: 'Importar CSV' },
+  { id: 'importar',     icon: Upload,      label: 'Importar CSV', hidden: true },
 ]
 
 const ROLE_ICON: Record<string, any> = {
@@ -230,7 +230,7 @@ export default function AdminDashboard() {
               ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
               Configuración
             </p>
-            {SECONDARY_NAV.map(item => (
+            {SECONDARY_NAV.filter((item: any) => !item.hidden).map(item => (
               <SidebarLink
                 key={item.id}
                 icon={item.icon}

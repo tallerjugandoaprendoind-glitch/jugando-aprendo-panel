@@ -28,8 +28,8 @@ export async function POST(req: NextRequest) {
       .replace(/\n{2,}/g, '. ')
       .replace(/•/g, '')
       .trim()
-      // Limitar a 1000 caracteres para evitar latencia excesiva
-      .slice(0, 1000)
+      // Limitar a 4000 caracteres para evitar latencia excesiva (ElevenLabs soporta hasta 5000)
+      .slice(0, 4000)
 
     const response = await fetch(
       `https://api.elevenlabs.io/v1/text-to-speech/${ELEVENLABS_VOICE_ID}/stream`,

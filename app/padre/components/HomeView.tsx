@@ -177,6 +177,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
   const [nextAppt, setNextAppt] = useState<any>(null)
   const [stats, setStats] = useState({ sessions: 0, goalsAchieved: 0, hoursTotal: 0, level: 'Inicial', monthSessions: 0, masteryRate: 0 })
   const [loading, setLoading] = useState(true)
+  const [parentMessages, setParentMessages] = useState<any[]>([])
   const [showCelebration, setShowCelebration] = useState(false)
   const [prevGoals, setPrevGoals] = useState(-1)
   const [showWellbeing, setShowWellbeing] = useState(false)
@@ -216,13 +217,20 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       .limit(1)
     setNextAppt(appts?.[0] || null)
 
+    // Use registro_aba as primary session source
     const { data: monthSess } = await supabase
-      .from('aba_sessions_v2')
+      .from('registro_aba')
       .select('id')
       .eq('child_id', child.id)
-      .gte('session_date', monthStart)
+      .gte('fecha_sesion', monthStart)
 
     const { data: allSess } = await supabase
+      .from('registro_aba')
+      .select('id, datos')
+      .eq('child_id', child.id)
+
+    // Also check aba_sessions_v2 if it exists
+    const { data: allSessV2 } = await supabase
       .from('aba_sessions_v2')
       .select('id, duration_minutes')
       .eq('child_id', child.id)
@@ -232,8 +240,30 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       .select('id, mastery_level')
       .eq('child_id', child.id)
 
-    const totalSess = allSess?.length || 0
-    const totalMinutes = (allSess || []).reduce((s: number, x: any) => s + (x.duration_minutes || 45), 0)
+    // Load parent messages from notifications table
+    const { data: msgs } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', child.parent_id || '')
+      .eq('is_read', false)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    
+    // Also check parent_messages table
+    const { data: parentMsgs } = await supabase
+      .from('parent_messages')
+      .select('*')
+      .eq('child_id', child.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    
+    setParentMessages([...(msgs || []), ...(parentMsgs || [])].slice(0, 5))
+
+    const totalSessFromABA = allSess?.length || 0
+    const totalSessFromV2 = allSessV2?.length || 0
+    const totalSess = Math.max(totalSessFromABA, totalSessFromV2)
+    const totalMinutes = (allSessV2 || []).reduce((s: number, x: any) => s + (x.duration_minutes || 45), 0) ||
+                        totalSess * 45 // fallback: estimate 45min per session
     const achieved = (goals || []).filter((g: any) => (g.mastery_level || 0) >= 80).length
     const totalGoals = goals?.length || 0
     const masteryRate = totalGoals > 0 ? Math.round((achieved / totalGoals) * 100) : 0
@@ -243,7 +273,6 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
     else if (totalSess >= 20) level = 'Intermedio'
     else if (totalSess >= 5) level = 'Básico'
 
-    // Celebración cuando hay nuevos objetivos logrados
     if (prevGoals !== -1 && achieved > prevGoals && achieved > 0) {
       setShowCelebration(true)
     }
@@ -448,6 +477,36 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           <p className="text-xs text-violet-400 mt-0.5">Del terapeuta</p>
         </button>
       </div>
+
+      {/* ── MENSAJES DEL TERAPEUTA ── */}
+      {parentMessages.length > 0 && (
+        <div className="bg-white rounded-3xl border border-violet-100 shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-slate-50">
+            <MessageCircle size={16} className="text-violet-600" />
+            <h2 className="font-black text-slate-700 text-sm uppercase tracking-wide">Mensajes del Terapeuta</h2>
+            <span className="ml-auto text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
+              {parentMessages.length} nuevo{parentMessages.length !== 1 ? 's' : ''}
+            </span>
+          </div>
+          <div className="divide-y divide-slate-50">
+            {parentMessages.map((msg: any, idx: number) => (
+              <div key={idx} className="px-5 py-4">
+                <p className="text-xs font-bold text-slate-400 mb-1">
+                  {msg.created_at ? new Date(msg.created_at).toLocaleDateString('es-PE', { dateStyle: 'medium' }) : ''}
+                </p>
+                <p className="text-sm font-bold text-slate-800 mb-1">{msg.title || msg.subject || 'Mensaje del terapeuta'}</p>
+                <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">{msg.body || msg.message || msg.content || ''}</p>
+              </div>
+            ))}
+          </div>
+          <div className="px-5 pb-4">
+            <button onClick={() => onChangeView('mensajes')}
+              className="w-full py-2.5 bg-violet-50 text-violet-700 border border-violet-200 rounded-xl text-sm font-bold hover:bg-violet-100 transition-all flex items-center justify-center gap-2">
+              <MessageCircle size={14} /> Ver todos los mensajes
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── PROGRESS CARD ── */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-5">

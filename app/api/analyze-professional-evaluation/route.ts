@@ -16,16 +16,17 @@ interface EvaluationRequest {
 
 
 // Helper: reintentar con backoff exponencial ante rate limit
-async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 3): Promise<any> {
+async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 5): Promise<any> {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       const response = await ai.models.generateContent({ model, contents, config })
       return response
     } catch (err: any) {
       const is429 = err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED') || err?.status === 429
-      if (is429 && attempt < maxRetries - 1) {
-        const delay = Math.pow(2, attempt) * 2000 // 2s, 4s, 8s
-        console.warn(`⚠️ Rate limit Gemini (intento ${attempt + 1}/${maxRetries}). Reintentando en ${delay/1000}s...`)
+      const is503 = err?.message?.includes('503') || err?.message?.includes('UNAVAILABLE') || err?.message?.includes('high demand')
+      if ((is429 || is503) && attempt < maxRetries - 1) {
+        const delay = Math.pow(2, attempt) * 3000 // 3s, 6s, 12s, 24s
+        console.warn(`⚠️ Rate limit/503 Gemini (intento ${attempt + 1}/${maxRetries}). Reintentando en ${delay/1000}s...`)
         await new Promise(r => setTimeout(r, delay))
         continue
       }
@@ -436,12 +437,31 @@ async function analyzeWISCV(ai: any, responses: any, childName: string, childAge
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
+  // Convertir puntuaciones escalares a percentiles (escala 1-19, media=10)
+  function scaledToPercentile(s: number): number {
+    const table: Record<number, number> = {1:0,2:1,3:1,4:2,5:5,6:9,7:16,8:25,9:37,10:50,11:63,12:75,13:84,14:91,15:95,16:98,17:99,18:99,19:99};
+    return table[Math.min(19, Math.max(1, Math.round(s)))] ?? 50;
+  }
+  function ciToPercentile(ci: number): number {
+    if (ci >= 130) return 98; if (ci >= 125) return 95; if (ci >= 120) return 91;
+    if (ci >= 115) return 84; if (ci >= 110) return 75; if (ci >= 105) return 63;
+    if (ci >= 100) return 50; if (ci >= 95) return 37;  if (ci >= 90) return 25;
+    if (ci >= 85) return 16;  if (ci >= 80) return 9;   if (ci >= 75) return 5;
+    if (ci >= 70) return 2;   return 1;
+  }
+
   return {
     ...parsed,
     ci_total: ciTotal,
     clasificacion_ci: clasificacion,
     metricas: {
-      icv, ive, irf, imt, ivp, ci_total: ciTotal, clasificacion
+      icv, ive, irf, imt, ivp, ci_total: ciTotal, clasificacion,
+      icv_percentil: scaledToPercentile(icv),
+      ive_percentil: scaledToPercentile(ive),
+      irf_percentil: scaledToPercentile(irf),
+      imt_percentil: scaledToPercentile(imt),
+      ivp_percentil: scaledToPercentile(ivp),
+      ci_percentil: ciToPercentile(ciTotal),
     }
   };
 }

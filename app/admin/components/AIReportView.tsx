@@ -51,7 +51,7 @@ function useTextToSpeech() {
       if (err.name !== 'AbortError') {
         console.warn('ElevenLabs TTS falló, usando fallback del navegador')
         if ('speechSynthesis' in window) {
-          const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n{2,}/g, '. ').trim().slice(0, 500)
+          const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n{2,}/g, '. ').trim().slice(0, 4000)
           const utter = new SpeechSynthesisUtterance(clean)
           utter.lang = 'es-PE'; utter.rate = 1.05
           utter.onend = () => setSpeaking(false)
@@ -259,10 +259,14 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   // Load all completed NeuroForms and form_responses
   const { data: formResponses } = await supabase
     .from('form_responses')
-    .select('id, form_type, form_title, ai_analysis, created_at')
+    .select('id, form_type, form_title, ai_analysis, responses, created_at')
     .eq('child_id', childId)
     .order('created_at', { ascending: false })
-    .limit(20)
+    .limit(30)
+
+  // Helper: extract professional eval from form_responses if dedicated table is empty
+  const fromFormResponses = (type: string) =>
+    (formResponses || []).find((r: any) => r.form_type === type) || null;
 
   // Formularios completados por los padres
   const { data: parentFormsCompleted } = await supabase
@@ -273,21 +277,32 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
     .order('completed_at', { ascending: false })
     .limit(20)
      
-     setHistoryData({ 
+  const resolvedBrief2   = brief2   || fromFormResponses('brief2');
+  const resolvedAdos2    = ados2    || fromFormResponses('ados2');
+  const resolvedVineland = vineland3 || fromFormResponses('vineland3');
+  const resolvedWiscv    = wiscv    || fromFormResponses('wiscv');
+  const resolvedBasc3    = basc3    || fromFormResponses('basc3');
+
+  // Filter form_responses to exclude professional evals (already handled above)
+  const filteredFormResponses = (formResponses || []).filter(
+    (r: any) => !['brief2','ados2','vineland3','wiscv','basc3'].includes(r.form_type)
+  );
+
+  setHistoryData({ 
     anamnesis: anamnesis ? anamnesis.datos : null, 
     aba: aba || [],
     entorno: entorno || [],
-    brief2: brief2 || null,
-    ados2: ados2 || null,
-    vineland3: vineland3 || null,
-    wiscv: wiscv || null,
-    basc3: basc3 || null,
+    brief2: resolvedBrief2,
+    ados2: resolvedAdos2,
+    vineland3: resolvedVineland,
+    wiscv: resolvedWiscv,
+    basc3: resolvedBasc3,
     parentForms: parentFormsCompleted || [],
   })
     
 const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
-  const totalEvaluaciones = [brief2, ados2, vineland3, wiscv, basc3].filter(Boolean).length;
-  const totalFormularios = (formResponses?.length || 0) + (parentFormsCompleted?.length || 0)
+  const totalEvaluaciones = [resolvedBrief2, resolvedAdos2, resolvedVineland, resolvedWiscv, resolvedBasc3].filter(Boolean).length;
+  const totalFormularios = (filteredFormResponses.length || 0) + (parentFormsCompleted?.length || 0)
   const parentFormsText = (parentFormsCompleted || []).length > 0
     ? `\n📨 **Formularios de Padres (${parentFormsCompleted!.length}):**\n${parentFormsCompleted!.slice(0,5).map((f: any) => `  • ${f.form_title || f.form_type} (${f.completed_at ? new Date(f.completed_at).toLocaleDateString('es-PE') : 'Sin fecha'})`).join('\n')}`
     : '';
@@ -302,7 +317,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
       
      setMessages([{ 
     role: 'ai', 
-    text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${brief2 ? '✅' : '❌'} BRIEF-2\n• ${ados2 ? '✅' : '❌'} ADOS-2\n• ${vineland3 ? '✅' : '❌'} Vineland-3\n• ${wiscv ? '✅' : '❌'} WISC-V\n• ${basc3 ? '✅' : '❌'} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}\n📝 **NeuroFormas / Formularios:** ${totalFormularios}${totalFormularios > 0 ? `\n${[...(formResponses||[]), ...(parentFormsCompleted||[])].slice(0,8).map((f: any) => `  • ${f.form_title || f.form_type} (${new Date(f.completed_at || f.created_at).toLocaleDateString('es-PE')})`).join('\n')}` : ''}${!anamnesis ? '\n\n⚠️ Falta Anamnesis Inicial' : ''}${(!entorno || entorno.length === 0) ? '\n⚠️ Falta Visita Domiciliaria' : ''}\n\n¿Qué deseas analizar?`
+    text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${resolvedBrief2 ? "✅" : "❌"} BRIEF-2\n• ${resolvedAdos2 ? "✅" : "❌"} ADOS-2\n• ${resolvedVineland ? "✅" : "❌"} Vineland-3\n• ${resolvedWiscv ? "✅" : "❌"} WISC-V\n• ${resolvedBasc3 ? "✅" : "❌"} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}\n📝 **NeuroFormas / Formularios:** ${totalFormularios}${totalFormularios > 0 ? `\n${[...(filteredFormResponses), ...(parentFormsCompleted||[])].slice(0,8).map((f: any) => `  • ${f.form_title || f.form_type} (${new Date(f.completed_at || f.created_at).toLocaleDateString('es-PE')})`).join('\n')}` : ''}${!anamnesis ? '\n\n⚠️ Falta Anamnesis Inicial' : ''}${(!entorno || entorno.length === 0) ? '\n⚠️ Falta Visita Domiciliaria' : ''}\n\n¿Qué deseas analizar?`
   }])
 
     // Cargar todos los reportes Word del paciente
