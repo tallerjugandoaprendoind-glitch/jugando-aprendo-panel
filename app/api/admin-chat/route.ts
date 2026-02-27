@@ -3,6 +3,15 @@ import { NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
+// Helper: convierte cualquier valor a array de strings de forma segura
+function toArr(val: any): string[] {
+  if (!val) return []
+  if (Array.isArray(val)) return val.map(String)
+  if (typeof val === 'string') return val.split(/[,;•\n]+/).map(s => s.trim()).filter(Boolean)
+  if (typeof val === 'object') return Object.values(val).map(String)
+  return [String(val)]
+}
+
 export async function POST(req: Request) {
   try {
     const { question, childId } = await req.json();
@@ -273,9 +282,9 @@ ${formResponses && formResponses.length > 0 ?
   🤖 Análisis IA:
     • Nivel alerta: ${fr.ai_analysis.nivel_alerta || 'N/A'}
     • Análisis: ${fr.ai_analysis.analisis_clinico || 'N/A'}
-    • Fortalezas: ${(fr.ai_analysis.areas_fortaleza || []).join(', ') || 'N/A'}
-    • Áreas trabajo: ${(fr.ai_analysis.areas_trabajo || []).join(', ') || 'N/A'}
-    • Recomendaciones: ${(fr.ai_analysis.recomendaciones || []).slice(0,2).join(' | ') || 'N/A'}
+    • Fortalezas: ${toArr(fr.ai_analysis.areas_fortaleza).join(', ') || 'N/A'}
+    • Áreas trabajo: ${toArr(fr.ai_analysis.areas_trabajo).join(', ') || 'N/A'}
+    • Recomendaciones: ${toArr(fr.ai_analysis.recomendaciones).slice(0,2).join(' | ') || 'N/A'}
   ` : ''}
   📋 Respuestas destacadas: ${fr.responses ? Object.entries(fr.responses).slice(0,5).map(([k,v]) => `${k}: ${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}`).join(' | ') : 'N/A'}
   `).join('\n')
