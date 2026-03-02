@@ -165,7 +165,7 @@ Responde SOLAMENTE con JSON válido (sin texto adicional, sin backticks, sin com
   "razon_sugerencia": null
 }`;
 
-    const response = await callGeminiWithRetry(ai, "gemini-2.0-flash", context, { responseMimeType: "application/json", temperature: 0.4 })
+    const response = await callGeminiWithRetry(ai, "gemini-3-flash-preview", context, { responseMimeType: "application/json", temperature: 0.4 })
 
     const responseData = JSON.parse(response.text || "{}");
 
