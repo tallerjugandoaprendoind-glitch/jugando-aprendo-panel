@@ -1077,61 +1077,227 @@ function createAnamnesisReport(data: any, childName: string, childAge?: number, 
 // ==============================================================================
 
 function createABAReport(data: any, childName: string, aiAnalysis?: string | null): any[] {
-  const d = data?.responses || data;
+  const d = data?.responses || data?.datos || data;
   const elements: any[] = [];
-  
-  // Análisis IA primero
-  if (aiAnalysis) {
-    elements.push(
-      new Paragraph({
-        heading: HeadingLevel.HEADING_1,
-        children: [new TextRun("Análisis de la Sesión")]
-      })
-    );
-    
-    const paragraphs = aiAnalysis.split('\n\n').filter(p => p.trim());
-    paragraphs.forEach(para => {
-      elements.push(
-        new Paragraph({
-          spacing: { after: 200 },
-          children: [new TextRun({ text: para.trim(), size: 22 })]
-        })
-      );
-    });
-    
-    elements.push(new Paragraph({ children: [new PageBreak()] }));
-  }
-  
-  elements.push(
-    new Paragraph({
-      heading: HeadingLevel.HEADING_1,
-      children: [new TextRun("Información de la Sesión")]
-    })
-  );
-  
-  const sessionItems = [
-    { label: "Fecha de sesión", value: d.fecha_sesion },
-    { label: "Objetivo principal", value: d.objetivo_principal || d.datos?.objetivo_principal },
-    { label: "Conducta trabajada", value: d.conducta || d.datos?.conducta },
-    { label: "Antecedente", value: d.antecedente },
-    { label: "Consecuencia", value: d.consecuencia },
-    { label: "Programa trabajado", value: d.programa },
-    { label: "Observaciones", value: d.observaciones || d.datos?.observations },
-  ];
+  const today = new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
 
-  sessionItems.forEach(item => {
-    if (item.value) {
-      elements.push(
-        new Paragraph({
-          spacing: { after: 140 },
+  const separator = () => new Paragraph({
+    spacing: { after: 160 },
+    border: { bottom: { color: 'D4E6F5', space: 1, value: BorderStyle.SINGLE, size: 6 } },
+    children: [new TextRun({ text: ' ' })]
+  });
+
+  const sectionHead = (text: string) => new Paragraph({
+    heading: HeadingLevel.HEADING_1,
+    spacing: { before: 440, after: 200 },
+    shading: { type: ShadingType.SOLID, color: 'EBF3FB' },
+    children: [new TextRun({ text, size: 26, bold: true, color: '2E75B5', font: 'Calibri' })]
+  });
+
+  const subHead = (text: string) => new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    spacing: { before: 260, after: 120 },
+    children: [new TextRun({ text, size: 23, bold: true, color: '1F4D78', font: 'Calibri' })]
+  });
+
+  const field = (label: string, value: string | undefined | null) => {
+    if (!value || value === '') return [];
+    return [new Paragraph({
+      spacing: { after: 160 },
+      children: [
+        new TextRun({ text: `${label}:  `, bold: true, size: 22, font: 'Calibri', color: '2C3E50' }),
+        new TextRun({ text: String(value), size: 22, font: 'Calibri', color: '333333' })
+      ]
+    })];
+  };
+
+  const bulletItem = (text: string, color = '2E75B5') => new Paragraph({
+    spacing: { after: 120 },
+    indent: { left: 400 },
+    children: [
+      new TextRun({ text: '▶  ', size: 20, bold: true, color, font: 'Calibri' }),
+      new TextRun({ text, size: 21, font: 'Calibri', color: '333333' })
+    ]
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // INFORMACIÓN GENERAL DE SESIÓN
+  // ─────────────────────────────────────────────────────────────────────────
+  elements.push(sectionHead('Información General de la Sesión'));
+
+  const infoTable = new Table({
+    width: { size: 100, type: WidthType.PERCENTAGE },
+    rows: [
+      new TableRow({ children: [
+        new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Paciente', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
+        new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: childName, size: 20, font: 'Calibri', color: '333333' })] })] }),
+      ]}),
+      new TableRow({ children: [
+        new TableCell({ shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Fecha de sesión', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.fecha_sesion || today, size: 20, font: 'Calibri' })] })] }),
+      ]}),
+      ...(d.terapeuta ? [new TableRow({ children: [
+        new TableCell({ shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Terapeuta', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(d.terapeuta), size: 20, font: 'Calibri' })] })] }),
+      ]})] : []),
+      ...(d.duracion ? [new TableRow({ children: [
+        new TableCell({ shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Duración', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(d.duracion), size: 20, font: 'Calibri' })] })] }),
+      ]})] : []),
+      ...(d.lugar ? [new TableRow({ children: [
+        new TableCell({ shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Lugar / Modalidad', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
+        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(d.lugar), size: 20, font: 'Calibri' })] })] }),
+      ]})] : []),
+    ]
+  });
+  elements.push(infoTable, new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // OBJETIVO Y CONDUCTA TRABAJADA
+  // ─────────────────────────────────────────────────────────────────────────
+  elements.push(separator(), sectionHead('Objetivo y Conducta Trabajada'));
+  elements.push(...field('Objetivo principal', d.objetivo_principal || d.objetivo));
+  elements.push(...field('Programa / Currículo', d.programa || d.programa_trabajo));
+  elements.push(...field('Conducta objetivo', d.conducta || d.conducta_objetivo));
+  elements.push(...field('Habilidad trabajada', d.habilidad));
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ANÁLISIS FUNCIONAL (ABC)
+  // ─────────────────────────────────────────────────────────────────────────
+  if (d.antecedente || d.conducta_observada || d.consecuencia) {
+    elements.push(separator(), sectionHead('Análisis Funcional de la Conducta (ABC)'));
+    
+    const abcTable = new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [
+        new TableRow({
+          tableHeader: true,
           children: [
-            new TextRun({ text: `${item.label}: `, bold: true, size: 22 }),
-            new TextRun({ text: String(item.value), size: 22 })
+            new TableCell({ shading: { type: ShadingType.SOLID, color: '2E75B5' }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'A – Antecedente', size: 21, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+            new TableCell({ shading: { type: ShadingType.SOLID, color: '1F4D78' }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'B – Conducta', size: 21, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+            new TableCell({ shading: { type: ShadingType.SOLID, color: '2E75B5' }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'C – Consecuencia', size: 21, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
           ]
+        }),
+        new TableRow({
+          children: [
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.antecedente || '—', size: 20, font: 'Calibri' })] })] }),
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.conducta_observada || d.conducta || '—', size: 20, font: 'Calibri' })] })] }),
+            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.consecuencia || '—', size: 20, font: 'Calibri' })] })] }),
+          ]
+        }),
+      ]
+    });
+    elements.push(abcTable, new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // DATOS DE DESEMPEÑO
+  // ─────────────────────────────────────────────────────────────────────────
+  const tieneDesempeno = d.porcentaje_respuesta || d.ensayos || d.nivel_prompt || d.reforzadores || d.intentos_correctos || d.intentos_totales;
+  if (tieneDesempeno) {
+    elements.push(separator(), sectionHead('Datos de Desempeño'));
+    elements.push(...field('Intentos correctos / Total', d.intentos_correctos && d.intentos_totales ? `${d.intentos_correctos} / ${d.intentos_totales}` : undefined));
+    elements.push(...field('Porcentaje de respuesta correcta', d.porcentaje_respuesta ? `${d.porcentaje_respuesta}%` : undefined));
+    elements.push(...field('Número de ensayos', d.ensayos));
+    elements.push(...field('Nivel de ayuda / Prompt utilizado', d.nivel_prompt || d.prompt));
+    elements.push(...field('Reforzadores utilizados', d.reforzadores));
+    elements.push(...field('Nivel de motivación', d.motivacion));
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // LOGROS Y OBSERVACIONES
+  // ─────────────────────────────────────────────────────────────────────────
+  elements.push(separator(), sectionHead('Logros y Observaciones de la Sesión'));
+  elements.push(...field('Logros destacados', d.logros || d.logros_sesion));
+  elements.push(...field('Estado emocional del niño', d.estado_emocional || d.estado_animo));
+  elements.push(...field('Nivel de atención', d.atencion || d.nivel_atencion));
+  elements.push(...field('Comportamiento general', d.comportamiento || d.comportamiento_general));
+  elements.push(...field('Observaciones generales', d.observaciones || d.notas || d.datos?.observations));
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ESTRATEGIAS Y RECOMENDACIONES
+  // ─────────────────────────────────────────────────────────────────────────
+  const tieneRecomendaciones = d.estrategias || d.recomendaciones || d.actividades_casa || d.mensaje_padres || d.proxima_sesion;
+  if (tieneRecomendaciones) {
+    elements.push(separator(), sectionHead('Estrategias y Recomendaciones'));
+    elements.push(...field('Estrategias utilizadas', d.estrategias));
+    elements.push(...field('Actividades para casa', d.actividades_casa || d.actividades_hogar));
+    elements.push(...field('Recomendaciones para la familia', d.recomendaciones));
+
+    if (d.mensaje_padres) {
+      elements.push(
+        subHead('Mensaje para los Padres'),
+        new Paragraph({
+          spacing: { after: 160 },
+          shading: { type: ShadingType.SOLID, color: 'FEF9E7' },
+          border: { left: { color: 'F39C12', space: 8, value: BorderStyle.SINGLE, size: 18 } },
+          indent: { left: 300 },
+          children: [new TextRun({ text: `"${d.mensaje_padres}"`, size: 22, italics: true, font: 'Calibri', color: '7D6608' })]
         })
       );
     }
-  });
+
+    elements.push(...field('Objetivos para próxima sesión', d.proxima_sesion || d.objetivos_proxima));
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // ANÁLISIS PROFESIONAL CON IA
+  // ─────────────────────────────────────────────────────────────────────────
+  if (aiAnalysis) {
+    elements.push(new Paragraph({ children: [new PageBreak()] }));
+    elements.push(sectionHead('Análisis Clínico Profesional (IA)'));
+
+    const lines = aiAnalysis.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      if (trimmed.startsWith('## ')) {
+        elements.push(subHead(trimmed.replace(/^##\s*/, '')));
+      } else if (trimmed.startsWith('# ')) {
+        elements.push(sectionHead(trimmed.replace(/^#\s*/, '')));
+      } else if (trimmed.startsWith('- ') || trimmed.startsWith('• ') || trimmed.startsWith('* ')) {
+        elements.push(bulletItem(trimmed.replace(/^[-•*]\s*/, '')));
+      } else if (trimmed.match(/^\d+\.\s/)) {
+        elements.push(bulletItem(trimmed.replace(/^\d+\.\s*/, ''), '1F4D78'));
+      } else if (trimmed.match(/^[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{4,}:?$/) && trimmed.length < 60) {
+        elements.push(subHead(trimmed.replace(/:$/, '')));
+      } else {
+        elements.push(new Paragraph({
+          spacing: { after: 160 },
+          children: [new TextRun({ text: trimmed, size: 22, font: 'Calibri', color: '333333' })]
+        }));
+      }
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // FIRMA
+  // ─────────────────────────────────────────────────────────────────────────
+  elements.push(
+    separator(),
+    new Paragraph({ spacing: { before: 600, after: 80 }, children: [new TextRun({ text: ' ' })] }),
+    new Paragraph({
+      spacing: { after: 60 },
+      children: [new TextRun({ text: '___________________________________', size: 22, font: 'Calibri', color: '595959' })]
+    }),
+    new Paragraph({
+      spacing: { after: 80 },
+      children: [new TextRun({ text: 'Firma del Terapeuta', size: 20, font: 'Calibri', bold: true, color: '595959' })]
+    }),
+    new Paragraph({
+      spacing: { after: 40 },
+      children: [new TextRun({ text: 'Jugando Aprendo – Centro de Desarrollo Infantil', size: 18, font: 'Calibri', italics: true, color: '737373' })]
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 320 },
+      children: [
+        new TextRun({ text: 'Reporte generado con asistencia de IA  ·  ', size: 17, italics: true, color: '999999', font: 'Calibri' }),
+        new TextRun({ text: 'Jugando Aprendo', size: 17, bold: true, italics: true, color: '2E75B5', font: 'Calibri' }),
+        new TextRun({ text: `  ·  ${today}`, size: 17, italics: true, color: '999999', font: 'Calibri' })
+      ]
+    })
+  );
 
   return elements;
 }

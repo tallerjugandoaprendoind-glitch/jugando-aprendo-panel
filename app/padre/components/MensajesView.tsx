@@ -1,10 +1,9 @@
-'use client'
-
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
   MessageCircle, CheckCircle2, Clock, ChevronDown, ChevronUp,
-  Sparkles, Baby, RefreshCw, Home, Target, Activity, BookOpen
+  Sparkles, Baby, RefreshCw, Home, Target, Activity, BookOpen,
+  Heart, Star, Info, Calendar, User
 } from 'lucide-react'
 
 interface Notification {
@@ -43,41 +42,45 @@ function AnalysisCard({ analysis }: { analysis: any }) {
   if (!resumen_ejecutivo && !areas_fortaleza?.length) return null
 
   return (
-    <div className="mt-4 bg-white rounded-2xl border border-slate-100 shadow-sm p-4 space-y-4">
-      <p className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-        <Sparkles size={12} className="text-violet-500" /> Análisis clínico del terapeuta
-      </p>
-
+    <div className="mt-5 space-y-4">
+      {/* Resumen ejecutivo destacado */}
       {resumen_ejecutivo && (
-        <p className="text-sm text-slate-700 leading-relaxed bg-slate-50 rounded-xl p-3 border border-slate-100">
-          {resumen_ejecutivo}
-        </p>
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border border-blue-100 p-5">
+          <p className="text-xs font-black text-blue-500 uppercase tracking-widest flex items-center gap-2 mb-3">
+            <Info size={13} /> Resumen clínico
+          </p>
+          <p className="text-base text-slate-700 leading-relaxed font-medium">
+            {resumen_ejecutivo}
+          </p>
+        </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {areas_fortaleza?.length > 0 && (
-          <div>
-            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-2 flex items-center gap-1">
-              <Activity size={10} /> Fortalezas
+          <div className="bg-emerald-50 rounded-2xl border border-emerald-100 p-4">
+            <p className="text-xs font-black text-emerald-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Star size={13} /> Fortalezas de tu hijo/a
             </p>
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               {areas_fortaleza.slice(0, 4).map((f: string, i: number) => (
-                <li key={i} className="text-xs text-slate-600 bg-emerald-50 rounded-xl p-2.5 border border-emerald-100 leading-relaxed">
-                  💪 {f}
+                <li key={i} className="text-sm text-slate-700 bg-white rounded-xl p-3 border border-emerald-100 leading-relaxed flex items-start gap-2 shadow-sm">
+                  <span className="text-emerald-500 font-black text-base leading-none mt-0.5">✓</span>
+                  <span>{f}</span>
                 </li>
               ))}
             </ul>
           </div>
         )}
         {areas_trabajo?.length > 0 && (
-          <div>
-            <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2 flex items-center gap-1">
-              <Target size={10} /> Áreas de trabajo
+          <div className="bg-orange-50 rounded-2xl border border-orange-100 p-4">
+            <p className="text-xs font-black text-orange-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <Target size={13} /> Áreas en desarrollo
             </p>
-            <ul className="space-y-1.5">
+            <ul className="space-y-2">
               {areas_trabajo.slice(0, 4).map((a: string, i: number) => (
-                <li key={i} className="text-xs text-slate-600 bg-orange-50 rounded-xl p-2.5 border border-orange-100 leading-relaxed">
-                  🎯 {a}
+                <li key={i} className="text-sm text-slate-700 bg-white rounded-xl p-3 border border-orange-100 leading-relaxed flex items-start gap-2 shadow-sm">
+                  <span className="text-orange-500 font-black text-base leading-none mt-0.5">→</span>
+                  <span>{a}</span>
                 </li>
               ))}
             </ul>
@@ -86,17 +89,17 @@ function AnalysisCard({ analysis }: { analysis: any }) {
       </div>
 
       {actividades_en_casa?.length > 0 && (
-        <div>
-          <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 flex items-center gap-1">
-            <Home size={10} /> Actividades para casa
+        <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4">
+          <p className="text-xs font-black text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <Home size={13} /> Actividades para practicar en casa
           </p>
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {actividades_en_casa.map((a: string, i: number) => (
-              <li key={i} className="text-xs text-slate-600 bg-blue-50 rounded-xl p-2.5 border border-blue-100 leading-relaxed flex items-start gap-2">
-                <span className="w-5 h-5 bg-blue-600 text-white rounded-full text-[9px] font-black flex items-center justify-center shrink-0 mt-0.5">
+              <li key={i} className="text-sm text-slate-700 bg-white rounded-xl p-3.5 border border-blue-100 leading-relaxed flex items-start gap-3 shadow-sm">
+                <span className="w-6 h-6 bg-blue-600 text-white rounded-full text-xs font-black flex items-center justify-center shrink-0 mt-0.5">
                   {i + 1}
                 </span>
-                {a}
+                <span>{a}</span>
               </li>
             ))}
           </ul>
@@ -104,14 +107,15 @@ function AnalysisCard({ analysis }: { analysis: any }) {
       )}
 
       {recomendaciones?.length > 0 && (
-        <div>
-          <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2 flex items-center gap-1">
-            <BookOpen size={10} /> Recomendaciones
+        <div className="bg-violet-50 rounded-2xl border border-violet-100 p-4">
+          <p className="text-xs font-black text-violet-700 uppercase tracking-widest mb-3 flex items-center gap-2">
+            <BookOpen size={13} /> Recomendaciones del terapeuta
           </p>
-          <ul className="space-y-1.5">
+          <ul className="space-y-2">
             {recomendaciones.slice(0, 3).map((r: string, i: number) => (
-              <li key={i} className="text-xs text-slate-600 bg-violet-50 rounded-xl p-2.5 border border-violet-100 leading-relaxed">
-                💡 {r}
+              <li key={i} className="text-sm text-slate-700 bg-white rounded-xl p-3 border border-violet-100 leading-relaxed flex items-start gap-2 shadow-sm">
+                <span className="text-violet-500 font-black leading-none mt-0.5">💡</span>
+                <span>{r}</span>
               </li>
             ))}
           </ul>
@@ -138,7 +142,6 @@ export default function MensajesView({ profile }: { profile: any }) {
 
       if (data) {
         setNotifications(data)
-        // Mark all as read
         const unreadIds = data.filter(n => !n.is_read).map(n => n.id)
         if (unreadIds.length > 0) {
           await supabase
@@ -167,6 +170,8 @@ export default function MensajesView({ profile }: { profile: any }) {
     )
   }
 
+  const unreadCount = notifications.filter(n => !n.is_read).length
+
   return (
     <div className="space-y-5 pb-10">
       {/* Header */}
@@ -177,9 +182,14 @@ export default function MensajesView({ profile }: { profile: any }) {
               <MessageCircle className="text-violet-600" size={24} />
             </div>
             Mensajes del terapeuta
+            {unreadCount > 0 && (
+              <span className="px-2.5 py-1 bg-violet-600 text-white rounded-full text-sm font-black">
+                {unreadCount}
+              </span>
+            )}
           </h2>
-          <p className="text-slate-400 text-sm mt-1 ml-1">
-            Aquí verás todos los mensajes que el equipo clínico te ha enviado
+          <p className="text-slate-500 text-base mt-2 ml-1 leading-relaxed">
+            Aquí encontrarás todos los mensajes, análisis y recomendaciones que el equipo clínico te envía sobre el progreso de tu hijo/a.
           </p>
         </div>
         <button
@@ -198,11 +208,11 @@ export default function MensajesView({ profile }: { profile: any }) {
           </div>
           <p className="font-black text-slate-500 text-lg mb-2">Aún no hay mensajes</p>
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto">
-            Cuando el terapeuta te envíe un mensaje o análisis sobre tu hijo/a, aparecerá aquí.
+            Cuando el terapeuta te envíe un mensaje o análisis sobre tu hijo/a, aparecerá aquí con toda la información detallada.
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {notifications.map(noti => {
             const isOpen = expanded === noti.id
             const meta = noti.metadata || {}
@@ -213,84 +223,86 @@ export default function MensajesView({ profile }: { profile: any }) {
             return (
               <div
                 key={noti.id}
-                className={`bg-white rounded-2xl border-2 shadow-sm overflow-hidden transition-all ${
+                className={`bg-white rounded-3xl border-2 shadow-sm overflow-hidden transition-all ${
                   !noti.is_read ? 'border-violet-300 shadow-violet-100' : 'border-slate-100'
                 }`}
               >
                 {/* Card header */}
                 <div
-                  className="p-5 cursor-pointer hover:bg-slate-50/50 transition-all"
+                  className="p-5 md:p-6 cursor-pointer hover:bg-slate-50/50 transition-all"
                   onClick={() => toggle(noti.id)}
                 >
                   <div className="flex items-start gap-4">
                     {/* Icon */}
-                    <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-xl shrink-0 border ${sourceInfo.bg}`}>
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 border-2 ${sourceInfo.bg}`}>
                       {sourceInfo.icon}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <p className="font-black text-slate-800 text-sm">
+                      <div className="flex items-center gap-2 flex-wrap mb-2">
+                        <p className="font-black text-slate-800 text-base md:text-lg">
                           {meta.source_title || noti.title || 'Mensaje del terapeuta'}
                         </p>
                         {!noti.is_read && (
-                          <span className="px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full text-[9px] font-black border border-violet-200">
+                          <span className="px-2.5 py-1 bg-violet-100 text-violet-700 rounded-full text-xs font-black border border-violet-200 animate-pulse">
                             NUEVO
                           </span>
                         )}
-                        <span className={`px-2 py-0.5 rounded-full text-[9px] font-black border ${sourceInfo.bg} ${sourceInfo.color}`}>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap mb-3">
+                        <span className={`px-2.5 py-1 rounded-full text-xs font-black border ${sourceInfo.bg} ${sourceInfo.color}`}>
                           {sourceInfo.label}
                         </span>
+                        <span className="flex items-center gap-1.5 text-sm text-slate-400">
+                          <Calendar size={12} />
+                          {formatDate(noti.created_at)}
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-slate-400 mb-2">
-                        <Clock size={10} />
-                        <span>{formatDate(noti.created_at)}</span>
+                      {/* Preview del mensaje */}
+                      <div className={`text-sm text-slate-600 leading-relaxed ${isOpen ? '' : 'line-clamp-2'}`}>
+                        {noti.message}
                       </div>
-                      <p className="text-xs text-slate-500 italic line-clamp-2">
-                        "{noti.message}"
-                      </p>
                     </div>
 
-                    <div className="shrink-0 mt-1">
+                    <div className="shrink-0 flex flex-col items-center gap-2 mt-1">
                       {noti.is_read
-                        ? <CheckCircle2 size={16} className="text-emerald-400" />
-                        : <div className="w-3 h-3 bg-violet-500 rounded-full animate-pulse" />
+                        ? <CheckCircle2 size={18} className="text-emerald-400" />
+                        : <div className="w-3.5 h-3.5 bg-violet-500 rounded-full animate-pulse" />
                       }
-                    </div>
-
-                    <div className="shrink-0">
-                      {isOpen
-                        ? <ChevronUp size={16} className="text-slate-400" />
-                        : <ChevronDown size={16} className="text-slate-400" />
-                      }
+                      <div className="p-1.5 rounded-lg bg-slate-100 text-slate-400">
+                        {isOpen
+                          ? <ChevronUp size={16} />
+                          : <ChevronDown size={16} />
+                        }
+                      </div>
                     </div>
                   </div>
                 </div>
 
                 {/* Expanded content */}
                 {isOpen && (
-                  <div className="border-t border-slate-100 bg-slate-50/40 p-5">
-                    {/* Main message */}
+                  <div className="border-t-2 border-slate-100 bg-slate-50/40 p-5 md:p-6">
+                    {/* Mensaje principal grande */}
                     <div
-                      className="rounded-2xl p-5 text-white leading-relaxed text-sm"
-                      style={{ background: 'linear-gradient(135deg, #6366f1, #7c3aed)' }}
+                      className="rounded-2xl p-6 text-white leading-relaxed"
+                      style={{ background: 'linear-gradient(135deg, #5b21b6, #6d28d9, #7c3aed)' }}
                     >
-                      <p className="text-xs font-black text-indigo-200 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-                        <MessageCircle size={11} /> Mensaje del terapeuta
+                      <p className="text-xs font-black text-purple-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+                        <MessageCircle size={12} /> Mensaje de tu terapeuta
                       </p>
-                      <p className="text-indigo-50 leading-relaxed whitespace-pre-wrap">
+                      <p className="text-white text-base md:text-lg leading-relaxed whitespace-pre-wrap font-medium">
                         {noti.message}
                       </p>
                     </div>
 
-                    {/* AI Analysis if present */}
+                    {/* Análisis clínico detallado */}
                     {analysis && <AnalysisCard analysis={analysis} />}
 
-                    {/* Footer */}
-                    <div className="mt-4 flex items-center gap-2 text-xs text-slate-400 bg-white rounded-xl p-3 border border-slate-100">
-                      <CheckCircle2 size={13} className="text-emerald-500" />
+                    {/* Footer informativo */}
+                    <div className="mt-5 flex items-start gap-3 text-sm text-slate-500 bg-white rounded-2xl p-4 border border-slate-100 leading-relaxed">
+                      <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
                       <span>
-                        Este mensaje fue revisado y aprobado por tu terapeuta antes de enviártelo.
+                        Este mensaje fue revisado y aprobado por tu terapeuta antes de enviártelo. Si tienes preguntas, puedes contactar al equipo de <strong>Jugando Aprendo</strong> directamente.
                       </span>
                     </div>
                   </div>

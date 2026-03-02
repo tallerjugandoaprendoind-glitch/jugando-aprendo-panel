@@ -39,22 +39,59 @@ function MonthlyCalendarView() {
   const [videoSession, setVideoSession] = useState<{roomUrl:string;sessionId:string;appointmentId:string}|null>(null)
   const [startingCall, setStartingCall] = useState<string|null>(null)
 
+  // Auto-elimina citas cuya sesión ya terminó (fecha+hora+45min en el pasado)
+  const limpiarCitasVencidas = useCallback(async (citas: any[]) => {
+    const ahora = new Date()
+    const vencidas = citas.filter(a => {
+      if (a.status === 'cancelled' || a.status === 'completed') return false
+      if (!a.appointment_date || !a.appointment_time) return false
+      const [h, m] = (a.appointment_time || '00:00').split(':').map(Number)
+      const inicio = new Date(`${a.appointment_date}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`)
+      const fin = new Date(inicio.getTime() + 45 * 60 * 1000)
+      return ahora > fin
+    })
+    for (const cita of vencidas) {
+      try {
+        await fetch('/api/admin/appointments', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: cita.id, status: 'completed' }),
+        })
+      } catch {}
+    }
+    if (vencidas.length > 0) return true
+    return false
+  }, [])
+
   const cargarCitas = useCallback(async () => {
     setIsLoading(true)
     try {
       const res = await fetch('/api/admin/appointments')
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      setApts(json.data || [])
+      const citas = json.data || []
+      // Marcar como completadas las que ya pasaron 45 min
+      const huboCambios = await limpiarCitasVencidas(citas)
+      if (huboCambios) {
+        // Recargar para obtener estados actualizados
+        const res2 = await fetch('/api/admin/appointments')
+        const json2 = await res2.json()
+        setApts(json2.data || [])
+      } else {
+        setApts(citas)
+      }
     } catch (err:any) { toast.error('Error: ' + err.message) }
     finally { setIsLoading(false) }
-  }, [])
+  }, [limpiarCitasVencidas])
 
   useEffect(() => {
     cargarCitas()
     import('@/lib/supabase').then(({ supabase }) => {
       supabase.from('children').select('id, name').order('name').then(({ data }) => { if (data) setNinos(data) })
     })
+    // Auto-refresh cada minuto para detectar sesiones vencidas
+    const interval = setInterval(() => { cargarCitas() }, 60 * 1000)
+    return () => clearInterval(interval)
   }, [cargarCitas])
 
   const eliminarCita = async (id:string, e:React.MouseEvent) => {
