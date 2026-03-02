@@ -166,10 +166,10 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
       { data: bienestar },
     ] = await Promise.all([
       supabase.from('children').select('*', { count: 'exact', head: true }),
-      supabase.from('appointments').select('*').eq('appointment_date', hoy),
+      supabase.from('appointments').select('*').eq('appointment_date', hoy).in('status', ['confirmed', 'pending']),
       supabase.from('profiles').select('tokens').gt('tokens', 0),
       supabase.from('registro_aba').select('*').gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(50),
-      supabase.from('appointments').select('*, children(name)').gte('appointment_date', hoy).order('appointment_date').order('appointment_time').limit(6),
+      supabase.from('appointments').select('*, children(name)').gte('appointment_date', hoy).neq('status', 'cancelled').neq('status', 'completed').order('appointment_date').order('appointment_time').limit(6),
       supabase.from('registro_aba').select('*, children:child_id(name)').order('fecha_sesion', { ascending: false }).limit(5),
       supabase.from('aba_sessions_v2').select('child_id').gte('session_date', hace30),
       supabase.from('children').select('id, name'),
@@ -218,7 +218,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
 
   const STAT_CARDS = [
     { title: 'Pacientes activos', value: stats.pacientes, sub: 'Total', icon: Users, accent: { bg: 'bg-blue-50', icon: 'text-blue-600', badge: 'bg-blue-50 text-blue-600' }, onClick: () => navigateTo('ninos') },
-    { title: 'Citas programadas hoy', value: stats.sesionesHoy, sub: 'Hoy', icon: Calendar, accent: { bg: 'bg-indigo-50', icon: 'text-indigo-600', badge: 'bg-indigo-50 text-indigo-600' }, onClick: () => navigateTo('agenda') },
+    { title: 'Sesiones pendientes hoy', value: stats.sesionesHoy, sub: 'Por realizar', icon: Calendar, accent: { bg: 'bg-indigo-50', icon: 'text-indigo-600', badge: 'bg-indigo-50 text-indigo-600' }, onClick: () => navigateTo('agenda') },
     { title: 'Sin sesión 30 días', value: stats.sinSesion30d, sub: 'Revisar', icon: AlertTriangle, accent: { bg: 'bg-amber-50', icon: 'text-amber-600', badge: 'bg-amber-50 text-amber-600' }, alert: stats.sinSesion30d > 0, onClick: () => navigateTo('ninos') },
     { title: 'Mensajes sin leer', value: stats.mensajesPendientes, sub: 'Padres', icon: MessageCircle, accent: { bg: 'bg-violet-50', icon: 'text-violet-600', badge: 'bg-violet-50 text-violet-600' }, alert: stats.mensajesPendientes > 3, onClick: () => navigateTo('mensajes') },
   ]

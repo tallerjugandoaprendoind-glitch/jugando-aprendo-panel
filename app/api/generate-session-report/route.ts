@@ -69,11 +69,12 @@ export async function POST(req: Request) {
         ).join('\n')
       : '';
 
-    // ── Prompt completo para páginas 6–10 ────────────────────────────────────
+    // ── Prompt neuropsicológico profesional ──────────────────────────────────
     const ai = new GoogleGenAI({ apiKey });
 
     const context = `
-ACTÚA COMO: Supervisor Clínico experto en ABA (Análisis Conductual Aplicado) con 15+ años de experiencia.
+ACTÚA COMO: Neuropsicólogo clínico infantil supervisor con 15+ años de experiencia en centros especializados en neurodivergencia (TEA, TDAH, DI, TDL). Tu escritura es cálida, técnica y profundamente empática. Los padres confían en ti porque les explicas TODO con claridad, con actividades concretas y aplicables en casa.
+
 PACIENTE: ${childName || 'Paciente'}, ${childAge || 'N/E'} años.
 
 DATOS DE LA SESIÓN REGISTRADOS POR EL TERAPEUTA:
@@ -108,50 +109,63 @@ DATOS DE LA SESIÓN REGISTRADOS POR EL TERAPEUTA:
 - Estrategias de manejo: ${estrategias_manejo || 'N/E'}
 ${productosTexto}
 
-TAREA: Con base en TODOS los datos anteriores, completa inteligentemente las secciones 6 al 10 del formulario ABA.
+TAREA PRINCIPAL: Genera el análisis clínico completo Y el reporte profesional neuropsicológico para los padres.
 
-INSTRUCCIONES CLAVE:
-- Sé clínico, preciso y útil. Evita respuestas genéricas.
+REGLAS ESTRICTAS:
 - "patron_aprendizaje" DEBE ser EXACTAMENTE uno de: "Aprendizaje rápido y generalización", "Aprendizaje gradual", "Requiere repetición intensiva", "Dificultad para generalizar", "Aprendizaje inconsistente"
 - "coordinacion_familia" DEBE ser EXACTAMENTE uno de: "Urgente", "Necesaria", "Rutinaria", "No necesaria"
-- "efectividad_sesion" DEBE ser un número entero entre 1 y 5
-- "mensaje_padres": empático, positivo, claro, máx 3 líneas, para WhatsApp
-- "destacar_positivo": logros concretos y observables para compartir con los padres
-- "proximos_pasos": qué viene en próximas sesiones, en lenguaje para padres
-- Para "producto_sugerido": pon el ID exacto si hay un producto de la tienda que genuinamente ayude a practicar la tarea en casa. Si ninguno aplica, pon null.
-- "razon_sugerencia": 1 línea explicando por qué ese producto ayuda. Si no hay sugerencia, null.
+- "efectividad_sesion" DEBE ser número entero 1-5
+- "mensaje_padres": Este es el campo MÁS IMPORTANTE. Debe ser un REPORTE NEUROPSICOLÓGICO PROFESIONAL COMPLETO de 10-14 oraciones con la siguiente estructura obligatoria:
+  1. Saludo cálido mencionando al niño/a por nombre
+  2. Qué se trabajó en la sesión (en lenguaje accesible, no técnico)
+  3. Descripción de 2-3 logros específicos y observables que tuvo el niño/a hoy
+  4. Una fortaleza destacada observada durante la sesión
+  5. Una área que seguimos trabajando y por qué es importante
+  6. ACTIVIDADES PARA CASA (esta sección es OBLIGATORIA - mínimo 3 actividades):
+     "ACTIVIDADES PARA PRACTICAR EN CASA ESTA SEMANA:
+      Actividad 1 - [Nombre de la actividad]: [descripción clara]. Cómo hacerlo: [pasos numerados]. Frecuencia: [X veces por semana, X minutos]. Qué observar: [qué deben notar los padres].
+      Actividad 2 - [Nombre]: [descripción]. Cómo hacerlo: [pasos]. Frecuencia: [...]. Qué observar: [...].
+      Actividad 3 - [Nombre]: [descripción]. Cómo hacerlo: [pasos]. Frecuencia: [...]. Qué observar: [...]."
+  7. Qué reportar en la próxima sesión
+  8. Mensaje motivador para la familia
+  9. Firma con nombre del centro
 
-Responde SOLAMENTE con este JSON (sin texto adicional):
+- "destacar_positivo": exactamente 3-5 logros separados por " | " (ej: "Mantuvo atención 8 min | Verbalizó 4 palabras nuevas | Toleró frustración sin berrinche")
+- "instrucciones_padres": instrucciones paso a paso numeradas para la actividad terapéutica principal
+- Para "producto_sugerido": ID exacto si aplica genuinamente, si no, null
+- Sé ESPECÍFICO. Usa el nombre del niño. Menciona las habilidades trabajadas. NO generes texto genérico.
+
+Responde SOLAMENTE con JSON válido (sin texto adicional, sin backticks, sin comentarios):
 {
-  "avances_observados": "...",
-  "areas_dificultad": "...",
-  "patron_aprendizaje": "...",
-  "observaciones_tecnicas": "...",
-  "alertas_clinicas": "...",
-  "recomendaciones_equipo": "...",
-  "coordinacion_familia": "...",
-  "actividad_casa": "...",
-  "instrucciones_padres": "...",
-  "objetivo_tarea": "...",
-  "mensaje_padres": "...",
-  "destacar_positivo": "...",
-  "proximos_pasos": "...",
+  "avances_observados": "descripción clínica detallada de avances observados en sesión",
+  "areas_dificultad": "descripción clínica de áreas que requieren más intervención",
+  "patron_aprendizaje": "Aprendizaje gradual",
+  "observaciones_tecnicas": "notas técnicas relevantes para el equipo terapéutico",
+  "alertas_clinicas": "alertas o banderas rojas identificadas, o Sin alertas clínicas significativas",
+  "recomendaciones_equipo": "recomendaciones específicas para el equipo interdisciplinario",
+  "coordinacion_familia": "Rutinaria",
+  "actividad_casa": "descripción completa y detallada de la actividad terapéutica principal para el hogar",
+  "instrucciones_padres": "1. Preparar el espacio de la siguiente manera...\n2. Presentar el material así...\n3. Cuando el niño/a haga X, responder con Y...\n4. Repetir X veces...\n5. Finalizar con refuerzo positivo diciendo...",
+  "objetivo_tarea": "objetivo conductual y neuropsicológico de la actividad en casa",
+  "mensaje_padres": "Estimados papás de [Nombre],\n\nHoy tuvimos una sesión muy enriquecedora...\n\n[reporte completo 10-14 oraciones con logros, fortalezas, área de trabajo, y ACTIVIDADES PARA CASA detalladas paso a paso]\n\nCon afecto y compromiso,\nEquipo Jugando Aprendo",
+  "destacar_positivo": "Logro específico 1 | Logro específico 2 | Logro específico 3",
+  "proximos_pasos": "En las próximas sesiones continuaremos... Los avances de hoy nos permiten planificar...",
   "efectividad_sesion": 4,
-  "ajustes_proxima_sesion": "...",
-  "necesidades_materiales": "...",
-  "observaciones_clinicas": "...",
-  "analisis_abc": "...",
-  "justificacion": "...",
-  "mentoring_interno": "...",
-  "actividad_realizada": "...",
+  "ajustes_proxima_sesion": "ajustes técnicos planificados para próxima sesión",
+  "necesidades_materiales": "materiales y recursos necesarios para próximas sesiones",
+  "observaciones_clinicas": "observaciones clínicas adicionales de interés terapéutico",
+  "analisis_abc": "análisis funcional clínico de la conducta observada (modelo ABC)",
+  "justificacion": "justificación clínica y teórica de las intervenciones seleccionadas",
+  "mentoring_interno": "notas de supervisión interna para el desarrollo del terapeuta",
+  "actividad_realizada": "descripción de la actividad principal realizada en sesión",
   "red_flags": "NO",
-  "barreras": "...",
-  "tarea_hogar": "...",
+  "barreras": "barreras identificadas para el aprendizaje y generalización",
+  "tarea_hogar": "resumen ejecutivo de la tarea terapéutica para el hogar",
   "producto_sugerido": null,
   "razon_sugerencia": null
 }`;
 
-    const response = await callGeminiWithRetry(ai, "gemini-3-flash-preview", context, { responseMimeType: "application/json", temperature: 0.4 })
+    const response = await callGeminiWithRetry(ai, "gemini-2.0-flash", context, { responseMimeType: "application/json", temperature: 0.4 })
 
     const responseData = JSON.parse(response.text || "{}");
 
@@ -187,4 +201,3 @@ Responde SOLAMENTE con este JSON (sin texto adicional):
     return NextResponse.json({ error: "Error procesando el reporte: " + error.message }, { status: 500 });
   }
 }
-

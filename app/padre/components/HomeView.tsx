@@ -212,6 +212,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       .eq('child_id', child.id)
       .gte('appointment_date', today)
       .neq('status', 'cancelled')
+      .neq('status', 'completed')
       .order('appointment_date', { ascending: true })
       .order('appointment_time', { ascending: true })
       .limit(1)

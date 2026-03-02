@@ -311,7 +311,7 @@ export default function MensajesPendientesPanel() {
                         <Sparkles size={12}/> Mensaje original de la IA
                       </p>
                       <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-2xl p-4 text-white">
-                        <p className="text-sm leading-relaxed text-blue-100">{msg.ai_message}</p>
+                        <p className="text-sm leading-relaxed text-blue-100 whitespace-pre-wrap">{msg.ai_message}</p>
                       </div>
                     </div>
 
@@ -352,7 +352,7 @@ export default function MensajesPendientesPanel() {
                           </div>
                         ) : (
                           <div className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-4 text-white">
-                            <p className="text-sm leading-relaxed text-blue-100">{msg.edited_message || msg.ai_message}</p>
+                            <p className="text-sm leading-relaxed text-blue-100 whitespace-pre-wrap">{msg.edited_message || msg.ai_message}</p>
                           </div>
                         )}
 
@@ -380,7 +380,7 @@ export default function MensajesPendientesPanel() {
                         </p>
                         {msg.approved_at && <p className="text-xs text-emerald-600 mt-1">{new Date(msg.approved_at).toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}</p>}
                         <div className="mt-3 bg-gradient-to-br from-emerald-600 to-green-600 rounded-xl p-3 text-white">
-                          <p className="text-xs text-emerald-100 leading-relaxed">{msg.edited_message || msg.ai_message}</p>
+                          <p className="text-xs text-emerald-100 leading-relaxed whitespace-pre-wrap">{msg.edited_message || msg.ai_message}</p>
                         </div>
                       </div>
                     )}

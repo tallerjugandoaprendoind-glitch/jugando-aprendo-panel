@@ -156,19 +156,83 @@ FORMATO: Texto profesional, claro, sin jerga excesiva. Tono empático pero técn
 
       case 'aba':
         prompt = `
-Eres un terapeuta ABA experto. Analiza esta sesión y genera un informe profesional.
+Eres un psicólogo conductual certificado en ABA (Análisis Aplicado de la Conducta) con más de 15 años de experiencia clínica en un centro neuropsicológico de alto nivel especializado en neurodivergencia infantil. Tu tarea es redactar un INFORME CLÍNICO DE SESIÓN ABA de nivel profesional especializado, al estándar de un centro neuropsicológico privado.
 
-PACIENTE: ${childName}
-DATOS DE LA SESIÓN:
+═══════════════════════════════════════════════════════════
+DATOS DE LA SESIÓN - PACIENTE: ${childName}
+═══════════════════════════════════════════════════════════
 ${JSON.stringify(reportData, null, 2)}
 
-GENERA:
-1. Resumen de la sesión (2-3 líneas)
-2. Análisis del comportamiento observado
-3. Progreso hacia objetivos terapéuticos
-4. Logros destacados de la sesión
-5. Recomendaciones para próximas sesiones
-6. Estrategias sugeridas para el hogar
+═══════════════════════════════════════════════════════════
+INSTRUCCIONES DE REDACCIÓN (CRÍTICAS - SEGUIR AL PIE DE LA LETRA)
+═══════════════════════════════════════════════════════════
+
+Redacta el informe en español profesional clínico. Usa terminología ABA y neuropsicológica correcta (schedules of reinforcement, prompt fading, generalization, discriminative stimulus, baseline, etc.). El tono debe ser técnico pero comprensible. Evita el lenguaje coloquial. Cada sección debe ser sustancial y aportar valor clínico real, no frases genéricas.
+
+ESTRUCTURA OBLIGATORIA DEL INFORME:
+
+## RESUMEN EJECUTIVO DE SESIÓN
+Párrafo de 4-5 oraciones que sintetice: modalidad de sesión, estado general del paciente al inicio, habilidades trabajadas, nivel de respuesta terapéutica y cierre de la sesión. Usa terminología clínica precisa.
+
+## ANÁLISIS CONDUCTUAL (Modelo ABC)
+Describe el análisis funcional de las conductas observadas durante la sesión. Incluye: antecedentes identificados, topografía de las conductas objetivo, consecuencias aplicadas y función estimada de la conducta. Si se presentaron conductas desafiantes, analiza su función desde el modelo de Iwata et al. Si no hay datos ABC explícitos, infiere desde los datos disponibles.
+
+## PERFIL DE DESEMPEÑO EN SESIÓN
+Analiza cuantitativamente y cualitativamente las métricas registradas:
+- Nivel de atención sostenida (con interpretación clínica del puntaje)
+- Respuesta a instrucciones y compliance (incluyendo latencia y calidad de respuesta)
+- Iniciativa comunicativa (espontaneidad, modalidad, funciones comunicativas)
+- Tolerancia a la frustración (análisis de regulación emocional)
+- Calidad de interacción social (reciprocidad, contacto visual, interés social)
+Relaciona cada métrica con el perfil neurológico típico de pacientes con necesidades similares.
+
+## HABILIDADES TRABAJADAS Y NIVEL DE ADQUISICIÓN
+Para cada habilidad trabajada:
+- Describe el estado actual de adquisición
+- Nivel de prompt utilizado y justificación clínica
+- Porcentaje o nivel de logro con interpretación
+- Hipótesis sobre factores que facilitaron o dificultaron el aprendizaje en esta sesión
+Usa el concepto de Zona de Desarrollo Proximal donde sea relevante.
+
+## ESTRATEGIAS E INTERVENCIONES APLICADAS
+Describe técnicamente las intervenciones usadas:
+- Justificación clínica de cada técnica seleccionada
+- Evidencia de su efectividad en la sesión
+- Reforzadores utilizados y análisis de su eficacia (valor motivacional observado)
+- Análisis de la jerarquía de prompts empleada
+
+## ANÁLISIS DE CONDUCTAS DESAFIANTES (si aplica)
+Si se reportaron conductas desafiantes: topografía, frecuencia/intensidad estimada, función conductual hipotética, estrategias de manejo aplicadas y su efectividad. Si no hubo conductas desafiantes, mencionar este dato como indicador positivo.
+
+## PROGRESO TERAPÉUTICO Y PATRÓN DE APRENDIZAJE
+- Análisis del patrón de aprendizaje observado (consolidación, generalización, mantenimiento)
+- Avances concretos en relación al objetivo de sesión
+- Áreas de dificultad persistente con hipótesis clínica
+- Tendencia de progreso estimada
+
+## OBSERVACIONES CLÍNICAS PARA EL EQUIPO
+Notas técnicas internas relevantes para el equipo terapéutico: hipótesis clínicas emergentes, ajustes al programa sugeridos, necesidad de coordinación interdisciplinaria, alertas o banderas rojas si las hay. Nivel de coordinación requerida con familia.
+
+## PLAN DE INTERVENCIÓN PARA PRÓXIMA SESIÓN
+- Objetivo principal ajustado para la siguiente sesión
+- Materiales y recursos a preparar
+- Ajustes en estrategias o nivel de ayudas
+- Variables a monitorear
+
+## TAREA TERAPÉUTICA PARA EL HOGAR
+Descripción detallada de la actividad para casa:
+- Instrucciones claras paso a paso para los padres/cuidadores
+- Objetivo conductual de la actividad
+- Frecuencia sugerida
+- Indicadores que los padres deben observar y reportar
+
+## COMUNICACIÓN FAMILIAR (Mensaje para compartir con la familia)
+Redacta un párrafo en lenguaje accesible (sin jerga técnica excesiva) con los logros de la sesión, el avance del niño/a y un mensaje motivador. Este texto debe transmitir profesionalismo y calidez. Menciona algo específico positivo del paciente.
+
+NIVEL DE EFECTIVIDAD DE SESIÓN: ${reportData?.efectividad_sesion ? `${reportData.efectividad_sesion}/5` : 'No registrado'}
+ALERTAS CLÍNICAS: ${reportData?.alertas_clinicas || 'Ninguna reportada'}
+
+IMPORTANTE: Si algún campo de datos está vacío o no fue registrado, infiere información clínicamente razonable basándote en los datos disponibles. Nunca dejes una sección vacía ni escribas "No hay datos". Sé siempre específico y aporta valor clínico en cada párrafo.
 `;
         break;
 
@@ -1081,171 +1145,359 @@ function createABAReport(data: any, childName: string, aiAnalysis?: string | nul
   const elements: any[] = [];
   const today = new Date().toLocaleDateString('es-PE', { year: 'numeric', month: 'long', day: 'numeric' });
 
+  // ─── HELPERS ─────────────────────────────────────────────────────────────
   const separator = () => new Paragraph({
-    spacing: { after: 160 },
-    border: { bottom: { color: 'D4E6F5', space: 1, value: BorderStyle.SINGLE, size: 6 } },
+    spacing: { after: 200, before: 100 },
+    border: { bottom: { color: 'C5D8F0', space: 1, value: BorderStyle.SINGLE, size: 8 } },
     children: [new TextRun({ text: ' ' })]
   });
 
-  const sectionHead = (text: string) => new Paragraph({
+  const sectionHead = (text: string, accent = '1B5EA1') => new Paragraph({
     heading: HeadingLevel.HEADING_1,
-    spacing: { before: 440, after: 200 },
+    spacing: { before: 500, after: 220 },
     shading: { type: ShadingType.SOLID, color: 'EBF3FB' },
-    children: [new TextRun({ text, size: 26, bold: true, color: '2E75B5', font: 'Calibri' })]
+    border: { left: { color: accent, space: 10, value: BorderStyle.SINGLE, size: 28 } },
+    indent: { left: 220 },
+    children: [new TextRun({ text: text.toUpperCase(), size: 25, bold: true, color: accent, font: 'Calibri' })]
   });
 
   const subHead = (text: string) => new Paragraph({
     heading: HeadingLevel.HEADING_2,
-    spacing: { before: 260, after: 120 },
+    spacing: { before: 300, after: 140 },
     children: [new TextRun({ text, size: 23, bold: true, color: '1F4D78', font: 'Calibri' })]
   });
 
-  const field = (label: string, value: string | undefined | null) => {
+  const bodyPara = (text: string, italics = false) => new Paragraph({
+    spacing: { after: 180, line: 300 },
+    children: [new TextRun({ text, size: 22, font: 'Calibri', color: '2C2C2C', italics })]
+  });
+
+  const fieldRow = (label: string, value: string | undefined | null) => {
     if (!value || value === '') return [];
     return [new Paragraph({
-      spacing: { after: 160 },
+      spacing: { after: 150 },
       children: [
-        new TextRun({ text: `${label}:  `, bold: true, size: 22, font: 'Calibri', color: '2C3E50' }),
-        new TextRun({ text: String(value), size: 22, font: 'Calibri', color: '333333' })
+        new TextRun({ text: `${label}:  `, bold: true, size: 21, font: 'Calibri', color: '1B5EA1' }),
+        new TextRun({ text: String(value), size: 21, font: 'Calibri', color: '333333' })
       ]
     })];
   };
 
-  const bulletItem = (text: string, color = '2E75B5') => new Paragraph({
-    spacing: { after: 120 },
-    indent: { left: 400 },
+  const bulletItem = (text: string, color = '1B5EA1') => new Paragraph({
+    spacing: { after: 130 },
+    indent: { left: 480, hanging: 280 },
     children: [
-      new TextRun({ text: '▶  ', size: 20, bold: true, color, font: 'Calibri' }),
+      new TextRun({ text: '◆  ', size: 19, bold: true, color, font: 'Calibri' }),
       new TextRun({ text, size: 21, font: 'Calibri', color: '333333' })
     ]
   });
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // INFORMACIÓN GENERAL DE SESIÓN
-  // ─────────────────────────────────────────────────────────────────────────
-  elements.push(sectionHead('Información General de la Sesión'));
-
-  const infoTable = new Table({
-    width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [
-      new TableRow({ children: [
-        new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Paciente', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
-        new TableCell({ width: { size: 50, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: childName, size: 20, font: 'Calibri', color: '333333' })] })] }),
-      ]}),
-      new TableRow({ children: [
-        new TableCell({ shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Fecha de sesión', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.fecha_sesion || today, size: 20, font: 'Calibri' })] })] }),
-      ]}),
-      ...(d.terapeuta ? [new TableRow({ children: [
-        new TableCell({ shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Terapeuta', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(d.terapeuta), size: 20, font: 'Calibri' })] })] }),
-      ]})] : []),
-      ...(d.duracion ? [new TableRow({ children: [
-        new TableCell({ shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Duración', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(d.duracion), size: 20, font: 'Calibri' })] })] }),
-      ]})] : []),
-      ...(d.lugar ? [new TableRow({ children: [
-        new TableCell({ shading: { type: ShadingType.SOLID, color: 'F0F4F8' }, children: [new Paragraph({ children: [new TextRun({ text: 'Lugar / Modalidad', size: 20, bold: true, font: 'Calibri', color: '2E75B5' })] })] }),
-        new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: String(d.lugar), size: 20, font: 'Calibri' })] })] }),
-      ]})] : []),
-    ]
-  });
-  elements.push(infoTable, new Paragraph({ children: [new TextRun({ text: ' ' })] }));
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // OBJETIVO Y CONDUCTA TRABAJADA
-  // ─────────────────────────────────────────────────────────────────────────
-  elements.push(separator(), sectionHead('Objetivo y Conducta Trabajada'));
-  elements.push(...field('Objetivo principal', d.objetivo_principal || d.objetivo));
-  elements.push(...field('Programa / Currículo', d.programa || d.programa_trabajo));
-  elements.push(...field('Conducta objetivo', d.conducta || d.conducta_objetivo));
-  elements.push(...field('Habilidad trabajada', d.habilidad));
-
-  // ─────────────────────────────────────────────────────────────────────────
-  // ANÁLISIS FUNCIONAL (ABC)
-  // ─────────────────────────────────────────────────────────────────────────
-  if (d.antecedente || d.conducta_observada || d.consecuencia) {
-    elements.push(separator(), sectionHead('Análisis Funcional de la Conducta (ABC)'));
-    
-    const abcTable = new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [
-        new TableRow({
-          tableHeader: true,
-          children: [
-            new TableCell({ shading: { type: ShadingType.SOLID, color: '2E75B5' }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'A – Antecedente', size: 21, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
-            new TableCell({ shading: { type: ShadingType.SOLID, color: '1F4D78' }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'B – Conducta', size: 21, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
-            new TableCell({ shading: { type: ShadingType.SOLID, color: '2E75B5' }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'C – Consecuencia', size: 21, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
-          ]
-        }),
-        new TableRow({
-          children: [
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.antecedente || '—', size: 20, font: 'Calibri' })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.conducta_observada || d.conducta || '—', size: 20, font: 'Calibri' })] })] }),
-            new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: d.consecuencia || '—', size: 20, font: 'Calibri' })] })] }),
-          ]
-        }),
+  const metricBadge = (label: string, value: number | undefined, max: number, labels: string[]) => {
+    if (!value) return [];
+    const label_text = labels[value - 1] || String(value);
+    const pct = Math.round((value / max) * 100);
+    const color = pct >= 70 ? '27AE60' : pct >= 40 ? 'E67E22' : 'E74C3C';
+    return [new Paragraph({
+      spacing: { after: 130 },
+      children: [
+        new TextRun({ text: `${label}: `, bold: true, size: 21, font: 'Calibri', color: '2C3E50' }),
+        new TextRun({ text: `${value}/${max}`, bold: true, size: 21, font: 'Calibri', color }),
+        new TextRun({ text: `  —  ${label_text}`, size: 20, font: 'Calibri', color: '595959', italics: true }),
       ]
+    })];
+  };
+
+  // ─── ENCABEZADO INSTITUCIONAL ────────────────────────────────────────────
+  elements.push(
+    new Paragraph({
+      spacing: { after: 80 },
+      border: { bottom: { color: '1B5EA1', space: 6, value: BorderStyle.SINGLE, size: 16 } },
+      children: [
+        new TextRun({ text: 'INFORME CLÍNICO DE SESIÓN', size: 28, bold: true, font: 'Calibri', color: '1B5EA1', allCaps: true }),
+        new TextRun({ text: '   |   Análisis Aplicado de la Conducta (ABA)', size: 22, font: 'Calibri', color: '5A7FA8' }),
+      ]
+    }),
+    new Paragraph({ spacing: { after: 40 }, children: [new TextRun({ text: ' ' })] })
+  );
+
+  // ─── TABLA IDENTIFICACIÓN ─────────────────────────────────────────────────
+  const tipoSesionValor = d.tipo_sesion || 'Individual';
+  const duracionValor = d.duracion_minutos ? `${d.duracion_minutos} minutos` : (d.duracion || 'No especificada');
+  const fechaValor = d.fecha_sesion || today;
+  const objetivoValor = d.objetivo_principal || d.objetivo || 'Ver análisis clínico';
+
+  const idRows: any[] = [
+    new TableRow({ children: [
+      new TableCell({ shading: { type: ShadingType.SOLID, color: '1B5EA1' }, width: { size: 35, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: 'PACIENTE', size: 19, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+      new TableCell({ width: { size: 65, type: WidthType.PERCENTAGE }, children: [new Paragraph({ children: [new TextRun({ text: childName, size: 21, bold: true, font: 'Calibri', color: '1B5EA1' })] })] }),
+    ]}),
+    new TableRow({ children: [
+      new TableCell({ shading: { type: ShadingType.SOLID, color: 'D6E8F7' }, children: [new Paragraph({ children: [new TextRun({ text: 'Fecha de Sesión', size: 19, bold: true, color: '1B5EA1', font: 'Calibri' })] })] }),
+      new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: fechaValor, size: 20, font: 'Calibri' })] })] }),
+    ]}),
+    new TableRow({ children: [
+      new TableCell({ shading: { type: ShadingType.SOLID, color: 'EBF3FB' }, children: [new Paragraph({ children: [new TextRun({ text: 'Tipo de Sesión', size: 19, bold: true, color: '1B5EA1', font: 'Calibri' })] })] }),
+      new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: tipoSesionValor, size: 20, font: 'Calibri' })] })] }),
+    ]}),
+    new TableRow({ children: [
+      new TableCell({ shading: { type: ShadingType.SOLID, color: 'D6E8F7' }, children: [new Paragraph({ children: [new TextRun({ text: 'Duración', size: 19, bold: true, color: '1B5EA1', font: 'Calibri' })] })] }),
+      new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: duracionValor, size: 20, font: 'Calibri' })] })] }),
+    ]}),
+    new TableRow({ children: [
+      new TableCell({ shading: { type: ShadingType.SOLID, color: 'EBF3FB' }, children: [new Paragraph({ children: [new TextRun({ text: 'Objetivo de Sesión', size: 19, bold: true, color: '1B5EA1', font: 'Calibri' })] })] }),
+      new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: objetivoValor, size: 20, font: 'Calibri' })] })] }),
+    ]}),
+  ];
+
+  if (d.efectividad_sesion) {
+    const efectividadLabels = ['Muy baja', 'Baja', 'Moderada', 'Alta', 'Muy alta'];
+    const efLabel = efectividadLabels[Number(d.efectividad_sesion) - 1] || String(d.efectividad_sesion);
+    idRows.push(new TableRow({ children: [
+      new TableCell({ shading: { type: ShadingType.SOLID, color: 'D6E8F7' }, children: [new Paragraph({ children: [new TextRun({ text: 'Efectividad Global', size: 19, bold: true, color: '1B5EA1', font: 'Calibri' })] })] }),
+      new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: `${d.efectividad_sesion}/5 — ${efLabel}`, size: 20, bold: true, font: 'Calibri', color: Number(d.efectividad_sesion) >= 4 ? '27AE60' : Number(d.efectividad_sesion) >= 3 ? 'E67E22' : 'E74C3C' })] })] }),
+    ]}));
+  }
+
+  elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: idRows }));
+  elements.push(new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+
+  // ─── PERFIL DE MÉTRICAS DE DESEMPEÑO ─────────────────────────────────────
+  const tieneMetricas = d.nivel_atencion || d.respuesta_instrucciones || d.iniciativa_comunicativa || d.tolerancia_frustracion || d.interaccion_social;
+  if (tieneMetricas) {
+    elements.push(separator(), sectionHead('Perfil de Desempeño en Sesión'));
+
+    const metricasLabels: Record<string, { label: string; max: number; labels: string[] }> = {
+      nivel_atencion: { label: 'Atención Sostenida', max: 5, labels: ['Muy disperso', 'Disperso', 'Moderado', 'Bueno', 'Excelente'] },
+      respuesta_instrucciones: { label: 'Respuesta a Instrucciones', max: 5, labels: ['Nula', 'Mínima', 'Parcial', 'Buena', 'Inmediata'] },
+      iniciativa_comunicativa: { label: 'Iniciativa Comunicativa', max: 5, labels: ['Nula', 'Muy baja', 'Baja', 'Moderada', 'Alta'] },
+      tolerancia_frustracion: { label: 'Tolerancia a la Frustración', max: 5, labels: ['Muy baja', 'Baja', 'Moderada', 'Buena', 'Excelente'] },
+      interaccion_social: { label: 'Calidad de Interacción Social', max: 5, labels: ['Evitativa', 'Mínima', 'Funcional', 'Buena', 'Espontánea'] },
+    };
+
+    const metricaRows: any[] = [
+      new TableRow({
+        tableHeader: true,
+        children: [
+          new TableCell({ shading: { type: ShadingType.SOLID, color: '1B5EA1' }, width: { size: 40, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'ÁREA EVALUADA', size: 19, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+          new TableCell({ shading: { type: ShadingType.SOLID, color: '1B5EA1' }, width: { size: 15, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'PUNTAJE', size: 19, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+          new TableCell({ shading: { type: ShadingType.SOLID, color: '1B5EA1' }, width: { size: 45, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'NIVEL CUALITATIVO', size: 19, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+        ]
+      })
+    ];
+
+    Object.entries(metricasLabels).forEach(([key, meta], idx) => {
+      const val = Number(d[key]);
+      if (!val) return;
+      const qualLabel = meta.labels[val - 1] || String(val);
+      const pct = (val / meta.max) * 100;
+      const color = pct >= 70 ? '1E8449' : pct >= 40 ? 'CA6F1E' : 'CB4335';
+      const bgColor = idx % 2 === 0 ? 'EBF3FB' : 'F8FBFF';
+      metricaRows.push(new TableRow({ children: [
+        new TableCell({ shading: { type: ShadingType.SOLID, color: bgColor }, children: [new Paragraph({ children: [new TextRun({ text: meta.label, size: 20, font: 'Calibri', bold: true, color: '2C3E50' })] })] }),
+        new TableCell({ shading: { type: ShadingType.SOLID, color: bgColor }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${val}/${meta.max}`, size: 22, bold: true, font: 'Calibri', color })] })] }),
+        new TableCell({ shading: { type: ShadingType.SOLID, color: bgColor }, children: [new Paragraph({ children: [new TextRun({ text: qualLabel, size: 20, font: 'Calibri', color, bold: true })] })] }),
+      ]}));
     });
-    elements.push(abcTable, new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+
+    if (metricaRows.length > 1) {
+      elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: metricaRows }));
+      elements.push(new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+    }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // DATOS DE DESEMPEÑO
-  // ─────────────────────────────────────────────────────────────────────────
-  const tieneDesempeno = d.porcentaje_respuesta || d.ensayos || d.nivel_prompt || d.reforzadores || d.intentos_correctos || d.intentos_totales;
-  if (tieneDesempeno) {
-    elements.push(separator(), sectionHead('Datos de Desempeño'));
-    elements.push(...field('Intentos correctos / Total', d.intentos_correctos && d.intentos_totales ? `${d.intentos_correctos} / ${d.intentos_totales}` : undefined));
-    elements.push(...field('Porcentaje de respuesta correcta', d.porcentaje_respuesta ? `${d.porcentaje_respuesta}%` : undefined));
-    elements.push(...field('Número de ensayos', d.ensayos));
-    elements.push(...field('Nivel de ayuda / Prompt utilizado', d.nivel_prompt || d.prompt));
-    elements.push(...field('Reforzadores utilizados', d.reforzadores));
-    elements.push(...field('Nivel de motivación', d.motivacion));
+  // ─── REGISTRO ABC ─────────────────────────────────────────────────────────
+  if (d.antecedente || d.conducta || d.consecuencia || d.funcion_estimada) {
+    elements.push(separator(), sectionHead('Registro de Análisis Conductual (A–B–C)'));
+
+    const abcRows = [
+      new TableRow({
+        tableHeader: true,
+        children: [
+          new TableCell({ shading: { type: ShadingType.SOLID, color: '154580' }, width: { size: 33, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'A — ANTECEDENTE', size: 20, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+          new TableCell({ shading: { type: ShadingType.SOLID, color: '1B5EA1' }, width: { size: 34, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'B — CONDUCTA', size: 20, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+          new TableCell({ shading: { type: ShadingType.SOLID, color: '154580' }, width: { size: 33, type: WidthType.PERCENTAGE }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'C — CONSECUENCIA', size: 20, bold: true, color: 'FFFFFF', font: 'Calibri' })] })] }),
+        ]
+      }),
+      new TableRow({ children: [
+        new TableCell({ shading: { type: ShadingType.SOLID, color: 'EBF3FB' }, children: [new Paragraph({ spacing: { after: 120, before: 120 }, children: [new TextRun({ text: d.antecedente || 'No especificado', size: 20, font: 'Calibri', color: '2C2C2C' })] })] }),
+        new TableCell({ children: [new Paragraph({ spacing: { after: 120, before: 120 }, children: [new TextRun({ text: d.conducta || '—', size: 20, font: 'Calibri', bold: true, color: '2C2C2C' })] })] }),
+        new TableCell({ shading: { type: ShadingType.SOLID, color: 'EBF3FB' }, children: [new Paragraph({ spacing: { after: 120, before: 120 }, children: [new TextRun({ text: d.consecuencia || 'No especificada', size: 20, font: 'Calibri', color: '2C2C2C' })] })] }),
+      ]}),
+    ];
+    elements.push(new Table({ width: { size: 100, type: WidthType.PERCENTAGE }, rows: abcRows }));
+
+    if (d.funcion_estimada) {
+      elements.push(new Paragraph({ spacing: { before: 160, after: 120 }, children: [
+        new TextRun({ text: 'Función Conductual Estimada: ', bold: true, size: 21, font: 'Calibri', color: '1B5EA1' }),
+        new TextRun({ text: d.funcion_estimada, size: 21, font: 'Calibri', color: '333333' }),
+      ]}));
+    }
+    elements.push(new Paragraph({ children: [new TextRun({ text: ' ' })] }));
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // LOGROS Y OBSERVACIONES
-  // ─────────────────────────────────────────────────────────────────────────
-  elements.push(separator(), sectionHead('Logros y Observaciones de la Sesión'));
-  elements.push(...field('Logros destacados', d.logros || d.logros_sesion));
-  elements.push(...field('Estado emocional del niño', d.estado_emocional || d.estado_animo));
-  elements.push(...field('Nivel de atención', d.atencion || d.nivel_atencion));
-  elements.push(...field('Comportamiento general', d.comportamiento || d.comportamiento_general));
-  elements.push(...field('Observaciones generales', d.observaciones || d.notas || d.datos?.observations));
+  // ─── HABILIDADES TRABAJADAS ───────────────────────────────────────────────
+  const tieneHabilidades = d.habilidades_objetivo || d.nivel_logro_objetivos || d.ayudas_utilizadas;
+  if (tieneHabilidades) {
+    elements.push(separator(), sectionHead('Habilidades Trabajadas y Nivel de Adquisición'));
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ESTRATEGIAS Y RECOMENDACIONES
-  // ─────────────────────────────────────────────────────────────────────────
-  const tieneRecomendaciones = d.estrategias || d.recomendaciones || d.actividades_casa || d.mensaje_padres || d.proxima_sesion;
-  if (tieneRecomendaciones) {
-    elements.push(separator(), sectionHead('Estrategias y Recomendaciones'));
-    elements.push(...field('Estrategias utilizadas', d.estrategias));
-    elements.push(...field('Actividades para casa', d.actividades_casa || d.actividades_hogar));
-    elements.push(...field('Recomendaciones para la familia', d.recomendaciones));
+    if (d.habilidades_objetivo) {
+      elements.push(subHead('Habilidades Específicas Trabajadas'));
+      const habilidades = Array.isArray(d.habilidades_objetivo) ? d.habilidades_objetivo : [String(d.habilidades_objetivo)];
+      habilidades.forEach((h: string) => elements.push(bulletItem(h, '1B5EA1')));
+    }
+
+    if (d.nivel_logro_objetivos) {
+      const logro = String(d.nivel_logro_objetivos);
+      const logroColor = logro.includes('76-100') || logro.includes('Completamente') ? '1E8449' :
+                         logro.includes('51-75') || logro.includes('Mayormente') ? '1A8A1A' :
+                         logro.includes('26-50') || logro.includes('Parcialmente') ? 'CA6F1E' : 'CB4335';
+      elements.push(new Paragraph({ spacing: { before: 160, after: 140 }, children: [
+        new TextRun({ text: 'Nivel de Logro de Objetivos: ', bold: true, size: 22, font: 'Calibri', color: '2C3E50' }),
+        new TextRun({ text: logro, size: 22, bold: true, font: 'Calibri', color: logroColor }),
+      ]}));
+    }
+
+    elements.push(...fieldRow('Nivel de Ayudas Proporcionadas', d.ayudas_utilizadas));
+    elements.push(new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+  }
+
+  // ─── TÉCNICAS E INTERVENCIONES ────────────────────────────────────────────
+  const tieneTecnicas = d.tecnicas_aplicadas || d.reforzadores_efectivos || d.conductas_desafiantes || d.estrategias_manejo;
+  if (tieneTecnicas) {
+    elements.push(separator(), sectionHead('Intervenciones y Estrategias ABA Aplicadas'));
+
+    if (d.tecnicas_aplicadas) {
+      elements.push(subHead('Técnicas ABA Utilizadas'));
+      const tecnicas = Array.isArray(d.tecnicas_aplicadas) ? d.tecnicas_aplicadas : [String(d.tecnicas_aplicadas)];
+      tecnicas.forEach((t: string) => elements.push(bulletItem(t, '154580')));
+    }
+
+    elements.push(...fieldRow('Reforzadores Más Efectivos', d.reforzadores_efectivos));
+
+    if (d.conductas_desafiantes) {
+      elements.push(subHead('Conductas Desafiantes Presentadas'));
+      elements.push(new Paragraph({
+        spacing: { after: 160 },
+        shading: { type: ShadingType.SOLID, color: 'FEF5E7' },
+        border: { left: { color: 'E67E22', space: 8, value: BorderStyle.SINGLE, size: 20 } },
+        indent: { left: 260 },
+        children: [new TextRun({ text: d.conductas_desafiantes, size: 21, font: 'Calibri', color: '7D3C00' })]
+      }));
+      elements.push(...fieldRow('Estrategias de Manejo Aplicadas', d.estrategias_manejo));
+    }
+    elements.push(new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+  }
+
+  // ─── PROGRESO Y EVOLUCIÓN ─────────────────────────────────────────────────
+  const tieneProgreso = d.avances_observados || d.areas_dificultad || d.patron_aprendizaje;
+  if (tieneProgreso) {
+    elements.push(separator(), sectionHead('Progreso Terapéutico y Evolución'));
+    elements.push(...fieldRow('Avances Observados en Sesión', d.avances_observados));
+    elements.push(...fieldRow('Áreas de Dificultad Persistente', d.areas_dificultad));
+    elements.push(...fieldRow('Patrón de Aprendizaje Observado', d.patron_aprendizaje));
+    elements.push(new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+  }
+
+  // ─── OBSERVACIONES CLÍNICAS PARA EL EQUIPO ───────────────────────────────
+  const tieneObs = d.observaciones_tecnicas || d.alertas_clinicas || d.recomendaciones_equipo || d.coordinacion_familia;
+  if (tieneObs) {
+    elements.push(separator(), sectionHead('Observaciones Clínicas para el Equipo', '8B0000'));
+
+    elements.push(...fieldRow('Notas Técnicas para el Equipo', d.observaciones_tecnicas));
+
+    if (d.alertas_clinicas) {
+      elements.push(subHead('Alertas Clínicas / Banderas Rojas'));
+      elements.push(new Paragraph({
+        spacing: { after: 160 },
+        shading: { type: ShadingType.SOLID, color: 'FDEDEC' },
+        border: { left: { color: 'CB4335', space: 8, value: BorderStyle.SINGLE, size: 20 } },
+        indent: { left: 260 },
+        children: [new TextRun({ text: d.alertas_clinicas, size: 21, font: 'Calibri', color: '922B21', bold: true })]
+      }));
+    }
+
+    elements.push(...fieldRow('Recomendaciones para el Equipo', d.recomendaciones_equipo));
+
+    if (d.coordinacion_familia) {
+      const coordColor = d.coordinacion_familia === 'Urgente' ? 'CB4335' : d.coordinacion_familia === 'Necesaria' ? 'CA6F1E' : '2E75B5';
+      elements.push(new Paragraph({ spacing: { after: 150 }, children: [
+        new TextRun({ text: 'Coordinación con Familia Requerida: ', bold: true, size: 21, font: 'Calibri', color: '2C3E50' }),
+        new TextRun({ text: d.coordinacion_familia, size: 21, bold: true, font: 'Calibri', color: coordColor }),
+      ]}));
+    }
+    elements.push(new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+  }
+
+  // ─── PLAN DE INTERVENCIÓN PRÓXIMA SESIÓN ──────────────────────────────────
+  if (d.ajustes_proxima_sesion || d.necesidades_materiales) {
+    elements.push(separator(), sectionHead('Plan de Intervención — Próxima Sesión'));
+    elements.push(...fieldRow('Ajustes Planificados para Próxima Sesión', d.ajustes_proxima_sesion));
+    elements.push(...fieldRow('Materiales y Recursos Necesarios', d.necesidades_materiales));
+    elements.push(new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+  }
+
+  // ─── TAREA TERAPÉUTICA PARA EL HOGAR ─────────────────────────────────────
+  const tieneTarea = d.actividad_casa || d.instrucciones_padres || d.objetivo_tarea;
+  if (tieneTarea) {
+    elements.push(separator(), sectionHead('Tarea Terapéutica para el Hogar'));
+
+    if (d.objetivo_tarea) {
+      elements.push(new Paragraph({ spacing: { after: 140 }, children: [
+        new TextRun({ text: 'Objetivo de la Actividad: ', bold: true, size: 21, font: 'Calibri', color: '1B5EA1' }),
+        new TextRun({ text: d.objetivo_tarea, size: 21, font: 'Calibri', color: '333333' }),
+      ]}));
+    }
+    elements.push(...fieldRow('Actividad Propuesta', d.actividad_casa));
+    elements.push(...fieldRow('Instrucciones Específicas para Padres/Cuidadores', d.instrucciones_padres));
+    elements.push(new Paragraph({ children: [new TextRun({ text: ' ' })] }));
+  }
+
+  // ─── COMUNICACIÓN FAMILIAR ────────────────────────────────────────────────
+  const tieneComFamiliar = d.mensaje_padres || d.destacar_positivo || d.proximos_pasos;
+  if (tieneComFamiliar) {
+    elements.push(separator(), sectionHead('Comunicación con la Familia'));
+
+    if (d.destacar_positivo) {
+      elements.push(subHead('Logros para Comunicar a los Padres'));
+      const logros = typeof d.destacar_positivo === 'string' ? d.destacar_positivo.split('\n').filter((l: string) => l.trim()) : [String(d.destacar_positivo)];
+      logros.forEach((l: string) => elements.push(bulletItem(l.replace(/^[-•*]\s*/, ''), '1E8449')));
+    }
+
+    if (d.proximos_pasos) {
+      elements.push(subHead('Próximos Pasos (para compartir con la familia)'));
+      elements.push(bodyPara(d.proximos_pasos));
+    }
 
     if (d.mensaje_padres) {
       elements.push(
-        subHead('Mensaje para los Padres'),
+        subHead('Mensaje para la Familia'),
         new Paragraph({
-          spacing: { after: 160 },
-          shading: { type: ShadingType.SOLID, color: 'FEF9E7' },
-          border: { left: { color: 'F39C12', space: 8, value: BorderStyle.SINGLE, size: 18 } },
-          indent: { left: 300 },
-          children: [new TextRun({ text: `"${d.mensaje_padres}"`, size: 22, italics: true, font: 'Calibri', color: '7D6608' })]
+          spacing: { after: 180, before: 80, line: 300 },
+          shading: { type: ShadingType.SOLID, color: 'EAF6FF' },
+          border: {
+            top: { color: '1B5EA1', space: 4, value: BorderStyle.SINGLE, size: 6 },
+            bottom: { color: '1B5EA1', space: 4, value: BorderStyle.SINGLE, size: 6 },
+            left: { color: '1B5EA1', space: 10, value: BorderStyle.SINGLE, size: 24 },
+            right: { color: '1B5EA1', space: 4, value: BorderStyle.SINGLE, size: 6 },
+          },
+          indent: { left: 300, right: 300 },
+          children: [new TextRun({ text: d.mensaje_padres, size: 22, italics: true, font: 'Calibri', color: '1B3A5C' })]
         })
       );
     }
-
-    elements.push(...field('Objetivos para próxima sesión', d.proxima_sesion || d.objetivos_proxima));
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // ANÁLISIS PROFESIONAL CON IA
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─── ANÁLISIS CLÍNICO PROFESIONAL (IA) ───────────────────────────────────
   if (aiAnalysis) {
     elements.push(new Paragraph({ children: [new PageBreak()] }));
-    elements.push(sectionHead('Análisis Clínico Profesional (IA)'));
+    elements.push(sectionHead('Análisis Clínico Profesional — Síntesis IA'));
+    elements.push(new Paragraph({
+      spacing: { after: 160 },
+      shading: { type: ShadingType.SOLID, color: 'F0F4F8' },
+      border: { left: { color: '2E75B5', space: 8, value: BorderStyle.SINGLE, size: 8 } },
+      indent: { left: 200 },
+      children: [new TextRun({ text: 'El siguiente análisis fue generado con asistencia de inteligencia artificial a partir de los datos de la sesión. Debe ser revisado y validado por el profesional tratante.', size: 19, italics: true, font: 'Calibri', color: '5A7FA8' })]
+    }));
 
     const lines = aiAnalysis.split('\n');
     for (const line of lines) {
@@ -1259,43 +1511,43 @@ function createABAReport(data: any, childName: string, aiAnalysis?: string | nul
         elements.push(bulletItem(trimmed.replace(/^[-•*]\s*/, '')));
       } else if (trimmed.match(/^\d+\.\s/)) {
         elements.push(bulletItem(trimmed.replace(/^\d+\.\s*/, ''), '1F4D78'));
-      } else if (trimmed.match(/^[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{4,}:?$/) && trimmed.length < 60) {
+      } else if (trimmed.match(/^[A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ\s]{4,}:?$/) && trimmed.length < 70) {
         elements.push(subHead(trimmed.replace(/:$/, '')));
+      } else if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
+        elements.push(new Paragraph({ spacing: { after: 160 }, children: [new TextRun({ text: trimmed.replace(/\*\*/g, ''), size: 22, bold: true, font: 'Calibri', color: '1B5EA1' })] }));
       } else {
-        elements.push(new Paragraph({
-          spacing: { after: 160 },
-          children: [new TextRun({ text: trimmed, size: 22, font: 'Calibri', color: '333333' })]
-        }));
+        elements.push(new Paragraph({ spacing: { after: 160, line: 300 }, children: [new TextRun({ text: trimmed, size: 22, font: 'Calibri', color: '2C2C2C' })] }));
       }
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────
-  // FIRMA
-  // ─────────────────────────────────────────────────────────────────────────
+  // ─── FIRMA Y PIE DE PÁGINA ────────────────────────────────────────────────
   elements.push(
     separator(),
-    new Paragraph({ spacing: { before: 600, after: 80 }, children: [new TextRun({ text: ' ' })] }),
-    new Paragraph({
-      spacing: { after: 60 },
-      children: [new TextRun({ text: '___________________________________', size: 22, font: 'Calibri', color: '595959' })]
-    }),
-    new Paragraph({
-      spacing: { after: 80 },
-      children: [new TextRun({ text: 'Firma del Terapeuta', size: 20, font: 'Calibri', bold: true, color: '595959' })]
-    }),
-    new Paragraph({
-      spacing: { after: 40 },
-      children: [new TextRun({ text: 'Jugando Aprendo – Centro de Desarrollo Infantil', size: 18, font: 'Calibri', italics: true, color: '737373' })]
-    }),
-    new Paragraph({
-      alignment: AlignmentType.CENTER,
-      spacing: { before: 320 },
-      children: [
-        new TextRun({ text: 'Reporte generado con asistencia de IA  ·  ', size: 17, italics: true, color: '999999', font: 'Calibri' }),
-        new TextRun({ text: 'Jugando Aprendo', size: 17, bold: true, italics: true, color: '2E75B5', font: 'Calibri' }),
-        new TextRun({ text: `  ·  ${today}`, size: 17, italics: true, color: '999999', font: 'Calibri' })
-      ]
+    new Paragraph({ spacing: { before: 800, after: 60 }, children: [new TextRun({ text: ' ' })] }),
+    new Table({
+      width: { size: 100, type: WidthType.PERCENTAGE },
+      rows: [new TableRow({ children: [
+        new TableCell({
+          width: { size: 50, type: WidthType.PERCENTAGE },
+          borders: { top: { color: '595959', space: 1, value: BorderStyle.SINGLE, size: 10 }, bottom: { value: BorderStyle.NONE, size: 0, color: 'FFFFFF', space: 0 }, left: { value: BorderStyle.NONE, size: 0, color: 'FFFFFF', space: 0 }, right: { value: BorderStyle.NONE, size: 0, color: 'FFFFFF', space: 0 } },
+          children: [
+            new Paragraph({ children: [new TextRun({ text: 'Firma del Terapeuta ABA', size: 20, font: 'Calibri', bold: true, color: '595959' })] }),
+            new Paragraph({ children: [new TextRun({ text: 'Jugando Aprendo — Centro de Desarrollo Infantil', size: 18, font: 'Calibri', italics: true, color: '737373' })] }),
+          ]
+        }),
+        new TableCell({
+          width: { size: 50, type: WidthType.PERCENTAGE },
+          borders: { top: { color: 'FFFFFF', space: 0, value: BorderStyle.NONE, size: 0 }, bottom: { value: BorderStyle.NONE, size: 0, color: 'FFFFFF', space: 0 }, left: { value: BorderStyle.NONE, size: 0, color: 'FFFFFF', space: 0 }, right: { value: BorderStyle.NONE, size: 0, color: 'FFFFFF', space: 0 } },
+          children: [
+            new Paragraph({ alignment: AlignmentType.RIGHT, children: [new TextRun({ text: `Fecha de emisión: ${today}`, size: 18, font: 'Calibri', color: '737373' })] }),
+            new Paragraph({ alignment: AlignmentType.RIGHT, children: [
+              new TextRun({ text: 'Generado con asistencia de IA · ', size: 17, italics: true, color: '999999', font: 'Calibri' }),
+              new TextRun({ text: 'Jugando Aprendo', size: 17, bold: true, color: '2E75B5', font: 'Calibri' }),
+            ]}),
+          ]
+        }),
+      ]})]
     })
   );
 
