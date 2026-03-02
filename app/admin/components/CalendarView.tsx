@@ -1,12 +1,88 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Calendar, ChevronLeft, ChevronRight, Clock, User, Plus, X, Loader2,
-  CheckCircle2, Trash2, Users, RefreshCw, Video, MapPin
+  CheckCircle2, Trash2, Users, RefreshCw, Video, MapPin, Timer
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import VideoCallModal from '@/components/VideoCallModal'
+
+// ── Cronómetro de 45 min por cita ──────────────────────────────────────────
+function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) => void }) {
+  const [remaining, setRemaining] = useState<number | null>(null)
+  const [phase, setPhase] = useState<'waiting' | 'active' | 'done'>('waiting')
+  const calledRef = useRef(false)
+
+  useEffect(() => {
+    if (!apt.appointment_date || !apt.appointment_time) return
+    const [h, m] = (apt.appointment_time as string).split(':').map(Number)
+    const start = new Date(`${apt.appointment_date}T${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:00`)
+    const end = new Date(start.getTime() + 45 * 60 * 1000)
+
+    const tick = () => {
+      const now = new Date()
+      const diffToStart = start.getTime() - now.getTime()
+      const diffToEnd   = end.getTime()   - now.getTime()
+
+      if (diffToStart > 0) {
+        setPhase('waiting')
+        setRemaining(null)
+      } else if (diffToEnd > 0) {
+        setPhase('active')
+        setRemaining(Math.ceil(diffToEnd / 1000))
+      } else {
+        setPhase('done')
+        setRemaining(0)
+        if (!calledRef.current) {
+          calledRef.current = true
+          onExpired(apt.id)
+        }
+      }
+    }
+
+    tick()
+    const iv = setInterval(tick, 1000)
+    return () => clearInterval(iv)
+  }, [apt.id, apt.appointment_date, apt.appointment_time, onExpired])
+
+  if (phase === 'waiting' || phase === 'done') return null
+
+  const mins = Math.floor((remaining ?? 0) / 60)
+  const secs = (remaining ?? 0) % 60
+  const pct  = ((remaining ?? 0) / (45 * 60)) * 100
+  const urgent = (remaining ?? 0) <= 5 * 60   // últimos 5 min
+  const warning = (remaining ?? 0) <= 10 * 60  // últimos 10 min
+
+  return (
+    <div className={`mt-2.5 rounded-xl px-3 py-2 border flex items-center gap-2.5 transition-all
+      ${urgent  ? 'bg-red-50 border-red-200 animate-pulse' :
+        warning ? 'bg-amber-50 border-amber-200' :
+                  'bg-emerald-50 border-emerald-200'}`}>
+      <Timer size={13} className={urgent ? 'text-red-500' : warning ? 'text-amber-500' : 'text-emerald-600'} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-0.5">
+          <span className={`text-[10px] font-black uppercase tracking-wider
+            ${urgent ? 'text-red-600' : warning ? 'text-amber-600' : 'text-emerald-700'}`}>
+            {urgent ? '⚠️ Finalizando' : 'Sesión en curso'}
+          </span>
+          <span className={`text-xs font-black tabular-nums
+            ${urgent ? 'text-red-600' : warning ? 'text-amber-600' : 'text-emerald-700'}`}>
+            {String(mins).padStart(2,'0')}:{String(secs).padStart(2,'0')}
+          </span>
+        </div>
+        {/* Barra de progreso */}
+        <div className="h-1.5 rounded-full bg-white/70 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-1000
+              ${urgent ? 'bg-red-500' : warning ? 'bg-amber-400' : 'bg-emerald-500'}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 const SERVICES = [
   'Terapia ABA','Evaluación Inicial','Seguimiento BRIEF-2','Evaluación ADOS-2',
@@ -83,6 +159,21 @@ function MonthlyCalendarView() {
     } catch (err:any) { toast.error('Error: ' + err.message) }
     finally { setIsLoading(false) }
   }, [limpiarCitasVencidas])
+
+  // Callback que llama el SessionTimer cuando el cronómetro llega a 0
+  const handleExpired = useCallback(async (id: string) => {
+    try {
+      await fetch('/api/admin/appointments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status: 'completed' }),
+      })
+      setApts(prev => prev.map(a => a.id === id ? { ...a, status: 'completed' } : a))
+      toast.success('✅ Sesión finalizada · Cita movida al historial')
+    } catch {
+      cargarCitas()
+    }
+  }, [cargarCitas])
 
   useEffect(() => {
     cargarCitas()
@@ -311,6 +402,11 @@ function MonthlyCalendarView() {
                             <span className="flex items-center gap-1"><Clock size={11}/>{a.appointment_time?.slice(0,5)}</span>
                           </div>
                           {a.notes && <p className="text-[10px] text-slate-400 mt-1 italic truncate">{a.notes}</p>}
+
+                          {/* Cronómetro 45 min */}
+                          {isUpcoming && (
+                            <SessionTimer apt={a} onExpired={handleExpired} />
+                          )}
 
                           {/* Botón iniciar videollamada */}
                           {isVirtual && isUpcoming && (
