@@ -27,7 +27,7 @@ import AIReportView from './components/AIReportView'
 import AprobacionesEspecialista from './components/AprobacionesEspecialista'
 import StoreManagementView from './components/StoreManagementView'
 import KnowledgeBaseView from './components/KnowledgeBaseView'
-import VADIAgentChat from './components/VADIAgentChat'
+import ARIAAgentChat from './components/ARIAAgentChat'
 import ProgramasABAView from './components/ProgramasABAView'
 
 // Vista general de programas (sin paciente específico)
@@ -48,7 +48,7 @@ function ProgramasABAViewGeneral({ navigateTo, userId }: { navigateTo: (v: strin
           <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
             <Sparkles size={20} className="text-violet-600" />
           </div>
-          <h3 className="font-black text-slate-800">Consultar a VADI</h3>
+          <h3 className="font-black text-slate-800">Consultar a ARIA</h3>
           <p className="text-xs text-slate-400 mt-1">Pide análisis de tendencias o sugerencias de programas</p>
         </button>
       </div>
@@ -63,7 +63,7 @@ const NAV_ITEMS = [
   { id: 'programas',    icon: Activity,        label: 'Programas ABA' },
   { id: 'evaluaciones', icon: FileText,        label: 'Evaluaciones' },
   { id: 'reportes',     icon: Brain,           label: 'Historial & IA' },
-  { id: 'vadi',         icon: Sparkles,        label: 'VADI Agente' },
+  { id: 'vadi',         icon: Sparkles,        label: 'ARIA Agente' },
   { id: 'cerebro',      icon: Database,        label: 'Cerebro IA' },
   { id: 'recursos',     icon: BookOpen,        label: 'Recursos' },
   { id: 'tienda',       icon: ShoppingBag,     label: 'Tienda' },
@@ -73,7 +73,7 @@ const MOBILE_NAV_ITEMS = [
   { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
   { id: 'ninos',        icon: Users,           label: 'Pacientes' },
   { id: 'programas',    icon: Activity,        label: 'ABA' },
-  { id: 'vadi',         icon: Sparkles,        label: 'VADI' },
+  { id: 'vadi',         icon: Sparkles,        label: 'ARIA' },
   { id: 'evaluaciones', icon: FileText,        label: 'Evaluac.' },
 ]
 
@@ -205,7 +205,7 @@ export default function AdminDashboard() {
     evaluaciones: 'Evaluaciones', reportes: 'Historial & IA',
     recursos: 'Recursos', aprobaciones: 'Aprobaciones',
     mensajes: 'Mensajes a Padres', usuarios: 'Usuarios', importar: 'Importar CSV',
-    programas: 'Programas ABA', vadi: 'VADI — Agente IA', cerebro: 'Cerebro de la IA',
+    programas: 'Programas ABA', vadi: 'ARIA — Agente IA', cerebro: 'Cerebro de la IA',
   }
 
   const role = userProfile?.role || 'admin'
@@ -434,7 +434,7 @@ export default function AdminDashboard() {
               )}
               {currentView === 'vadi'         && (
                 <div className="max-w-3xl mx-auto">
-                  <VADIAgentChat userId={userId} />
+                  <ARIAAgentChat userId={userId} />
                 </div>
               )}
               {currentView === 'cerebro'      && <KnowledgeBaseView />}

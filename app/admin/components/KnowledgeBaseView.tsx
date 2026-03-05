@@ -91,7 +91,7 @@ export default function KnowledgeBaseView() {
             <div className="p-2.5 bg-violet-100 rounded-2xl">
               <Brain className="text-violet-600" size={24} />
             </div>
-            Cerebro de VADI
+            Cerebro de ARIA
           </h2>
           <p className="text-slate-400 text-sm mt-1">Base de conocimiento clínico que usa la IA en cada análisis</p>
         </div>
@@ -128,7 +128,7 @@ export default function KnowledgeBaseView() {
         <div>
           <p className="font-black text-violet-800 text-sm">¿Cómo funciona?</p>
           <p className="text-violet-700 text-xs mt-0.5 leading-relaxed">
-            Cada documento que subas se fragmenta y convierte en vectores semánticos. Cuando VADI responde una consulta, busca automáticamente los fragmentos más relevantes y los incluye en su razonamiento. Cuanto más documentos indexes, más precisa y fundamentada será la IA.
+            Cada documento que subas se fragmenta y convierte en vectores semánticos. Cuando ARIA responde una consulta, busca automáticamente los fragmentos más relevantes y los incluye en su razonamiento. Cuanto más documentos indexes, más precisa y fundamentada será la IA.
           </p>
         </div>
       </div>
@@ -319,7 +319,7 @@ function InstruccionesModal({ onClose }: { onClose: () => void }) {
           <div className="flex justify-between items-center mb-5">
             <div>
               <h3 className="font-black text-lg text-slate-800">⚡ Instrucciones del Centro</h3>
-              <p className="text-xs text-slate-400 mt-0.5">VADI las incluye siempre en su contexto</p>
+              <p className="text-xs text-slate-400 mt-0.5">ARIA las incluye siempre en su contexto</p>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
           </div>
@@ -360,7 +360,7 @@ function InstruccionesModal({ onClose }: { onClose: () => void }) {
               placeholder="ej: Criterio de dominio estándar"
               className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400" />
             <textarea value={nueva.contenido} onChange={e => setNueva(n => ({ ...n, contenido: e.target.value }))}
-              rows={3} placeholder="Instrucción que VADI debe seguir siempre..."
+              rows={3} placeholder="Instrucción que ARIA debe seguir siempre..."
               className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-violet-400" />
             <button onClick={handleSave} disabled={saving}
               className="w-full py-3 bg-violet-600 text-white rounded-xl font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2">

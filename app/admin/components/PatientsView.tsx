@@ -9,7 +9,7 @@ import { useToast } from '@/components/Toast'
 import { InfoRow } from './shared'
 import { calcularEdad } from '../utils/helpers'
 import ProgramasABAView from './ProgramasABAView'
-import VADIAgentChat from './VADIAgentChat'
+import ARIAAgentChat from './ARIAAgentChat'
 
 function PatientsView() {
     const [listaNinos, setListaNinos] = useState<any[]>([])
@@ -312,7 +312,7 @@ function PatientsView() {
                                 {[
                                   { id: 'info', label: '📋 Info', icon: User },
                                   { id: 'programas', label: '📈 Programas ABA', icon: Activity },
-                                  { id: 'vadi', label: '✨ VADI', icon: Brain },
+                                  { id: 'vadi', label: '✨ ARIA', icon: Brain },
                                 ].map(tab => (
                                   <button key={tab.id} onClick={() => setPatientTab(tab.id as any)}
                                     className={`px-3 py-2 rounded-xl text-xs font-black transition-all border ${
@@ -339,7 +339,7 @@ function PatientsView() {
                               />
                             )}
                             {!isEditing && patientTab === 'vadi' && (
-                              <VADIAgentChat
+                              <ARIAAgentChat
                                 userId={selectedPatient.id}
                                 childId={selectedPatient.id}
                                 childName={selectedPatient.name}

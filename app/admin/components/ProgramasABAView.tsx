@@ -111,13 +111,13 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       {loadingAI && (
         <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 flex items-center gap-3">
           <Loader2 size={16} className="animate-spin text-violet-500" />
-          <p className="text-sm text-violet-700 font-medium">VADI analizando progreso...</p>
+          <p className="text-sm text-violet-700 font-medium">ARIA analizando progreso...</p>
         </div>
       )}
       {aiAnalysis && aiAnalysis.alertas?.length > 0 && (
         <div className="space-y-2">
           <p className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-            <Brain size={11} className="text-violet-500" /> Análisis VADI
+            <Brain size={11} className="text-violet-500" /> Análisis ARIA
           </p>
           {aiAnalysis.resumen && (
             <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl p-4">

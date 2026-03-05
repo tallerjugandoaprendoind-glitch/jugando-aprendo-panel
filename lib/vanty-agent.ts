@@ -108,7 +108,7 @@ function calcularTendenciaLocal(sesiones: any[]) {
 }
 
 // ── Sistema prompt del agente ─────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Eres VADI, el asistente clínico inteligente de Vanty — una plataforma de intervención infantil especializada en ABA, TEA, TDAH y neurodesarrollo.
+const SYSTEM_PROMPT = `Eres ARIA, el asistente clínico inteligente de Vanty — una plataforma de intervención infantil especializada en ABA, TEA, TDAH y neurodesarrollo.
 
 IDENTIDAD:
 - Eres un neuropsicólogo clínico y analista de conducta certificado (nivel IBA) con 15+ años de experiencia
@@ -178,11 +178,11 @@ ${knowledgeCtx}
 ${childCtx ? `\nPACIENTE ACTIVO:\n${childCtx}` : ''}
 
 HISTORIAL DE CONVERSACIÓN:
-${historialReciente.map((m: any) => `${m.role === 'user' ? 'Especialista' : 'VADI'}: ${m.content}`).join('\n')}
+${historialReciente.map((m: any) => `${m.role === 'user' ? 'Especialista' : 'ARIA'}: ${m.content}`).join('\n')}
 
 Especialista: ${userMessage}
 
-VADI:`
+ARIA:`
 
       // 5. Llamar al modelo
       const response = await this.ai.models.generateContent({
@@ -325,7 +325,7 @@ VADI:`
 
       // Resumen general con IA
       const childHistory = await getChildHistory(childId)
-      const resumenPrompt = `Eres VADI, analista de conducta. Resume el estado clínico actual de ${childHistory.nombre} en 2-3 oraciones basándote en estos datos:
+      const resumenPrompt = `Eres ARIA, analista de conducta. Resume el estado clínico actual de ${childHistory.nombre} en 2-3 oraciones basándote en estos datos:
       - ${programas.length} programas activos
       - Alertas detectadas: ${alertas.map(a => a.titulo).join(', ') || 'ninguna'}
       - Avances cercanos al criterio: ${sugerencias.join(', ') || 'ninguno'}
