@@ -129,11 +129,13 @@ export default function AdminDashboard() {
   const [changingPassword, setChangingPassword] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
   const [pendingMessages, setPendingMessages] = useState(0)
+  const [userId, setUserId] = useState('')
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (user?.email) {
         setUserEmail(user.email)
+        setUserId(user.id)
         const { data: profile } = await supabase
           .from('profiles')
           .select('*')
@@ -427,12 +429,12 @@ export default function AdminDashboard() {
                   <div className="mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-2xl text-sm text-indigo-700">
                     💡 Selecciona un paciente desde <button onClick={() => navigateTo('ninos')} className="font-black underline">Pacientes</button> para ver sus programas ABA. O usa esta vista general.
                   </div>
-                  <ProgramasABAViewGeneral navigateTo={navigateTo} userId={user?.id || ''} />
+                  <ProgramasABAViewGeneral navigateTo={navigateTo} userId={userId} />
                 </div>
               )}
               {currentView === 'vadi'         && (
                 <div className="max-w-3xl mx-auto">
-                  <VADIAgentChat userId={user?.id || ''} />
+                  <VADIAgentChat userId={userId} />
                 </div>
               )}
               {currentView === 'cerebro'      && <KnowledgeBaseView />}
