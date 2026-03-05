@@ -334,7 +334,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload }: any) {
                     {/* Leyenda de fases */}
                     <div className="flex gap-3 mb-3 flex-wrap">
                       {Object.entries(faseLabel).map(([key, label]) => {
-                        const hasFase = chartData.some(d => d.fase === key)
+                        const hasFase = chartData.some((d: any) => d.fase === key)
                         if (!hasFase) return null
                         return (
                           <span key={key} className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
