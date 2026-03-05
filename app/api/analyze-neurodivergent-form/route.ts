@@ -89,13 +89,15 @@ Responde SOLO con JSON:
     })
 
     if (body.formId) {
-      await supabaseAdmin.from('form_ai_analyses').insert([{
-        form_id: body.formId,
-        form_type: formType,
-        child_name: ctx.childName,
-        analysis: parsedResult,
-        created_at: new Date().toISOString(),
-      }]).catch(() => {})
+      try {
+        await supabaseAdmin.from('form_ai_analyses').insert([{
+          form_id: body.formId,
+          form_type: formType,
+          child_name: ctx.childName,
+          analysis: parsedResult,
+          created_at: new Date().toISOString(),
+        }])
+      } catch (_) {}
     }
 
     return NextResponse.json({ success: true, analysis: parsedResult })
