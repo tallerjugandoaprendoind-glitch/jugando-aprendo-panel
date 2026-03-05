@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
     // ── 1. Datos e historial completo del niño ────────────────────────────
     const childHistory = await getChildHistory(childId)
     const childName = childHistory.nombre
-    const childAge  = childHistory.edad
+    const childAgeStr = childHistory.edad
+    const childAge: number | undefined = childAgeStr && !isNaN(Number(childAgeStr)) ? Number(childAgeStr) : undefined
     const diagnosis = childHistory.diagnostico
     const historialTexto = childHistory.historialTexto
 
