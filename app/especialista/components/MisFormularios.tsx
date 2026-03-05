@@ -204,17 +204,17 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       if (form.isSoft) {
         res = await fetch('/api/analyze-neurodivergent-form', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ formType: form.id, formData: responses, childName, childAge, diagnosis: child?.diagnosis || '' }),
+          body: JSON.stringify({ formType: form.id, formData: responses, childName, childAge, childId, diagnosis: child?.diagnosis || '' }),
         })
       } else if (form.evalType) {
         res = await fetch('/api/analyze-professional-evaluation', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ evaluationType: form.evalType.toLowerCase(), childName, childAge, responses }),
+          body: JSON.stringify({ evaluationType: form.evalType.toLowerCase(), childName, childAge, childId, responses }),
         })
       } else if (form.formKey === 'entorno_hogar') {
         res = await fetch('/api/generate-home-environment-report', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...responses, childName, childAge }),
+          body: JSON.stringify({ ...responses, childName, childAge, childId }),
         })
       } else {
         res = await fetch('/api/generate-session-report', {

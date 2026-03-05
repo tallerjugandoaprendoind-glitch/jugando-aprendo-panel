@@ -9,6 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from "@google/genai"
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getChildHistory } from '@/lib/child-history'
 
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
         AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel,
@@ -22,16 +23,12 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Falta API Key' }, { status: 500 })
 
-    // ── 1. Datos del niño ──────────────────────────────────────────────────
-    const { data: child } = await supabaseAdmin
-      .from('children')
-      .select('name, birth_date, diagnosis, age')
-      .eq('id', childId)
-      .single()
-
-    const childName = child?.name || 'Paciente'
-    const childAge  = typeof child?.age === 'number' ? child.age : undefined
-    const diagnosis = child?.diagnosis || 'No especificado'
+    // ── 1. Datos e historial completo del niño ────────────────────────────
+    const childHistory = await getChildHistory(childId)
+    const childName = childHistory.nombre
+    const childAge  = childHistory.edad
+    const diagnosis = childHistory.diagnostico
+    const historialTexto = childHistory.historialTexto
 
     // ── 2. Análisis IA del formulario ──────────────────────────────────────
     const responsesText = Object.entries(responses)
@@ -46,21 +43,23 @@ DATOS DEL FORMULARIO:
 - Paciente: ${childName}${childAge ? ` (${childAge} años)` : ''}
 - Diagnóstico: ${diagnosis}
 - Formulario: ${formTitle}
-
-RESPUESTAS:
+${historialTexto}
+RESPUESTAS DEL FORMULARIO:
 ${responsesText}
+
+INSTRUCCIÓN: Usa el historial clínico previo para contextualizar tu análisis. Menciona avances o cambios respecto a evaluaciones anteriores. El mensaje a los padres DEBE usar el nombre real del niño (${childName}) y ser específico a su situación, no genérico.
 
 Responde SOLO con JSON (sin markdown ni backticks):
 {
-  "resumen_ejecutivo": "3-4 oraciones",
-  "analisis_clinico": "4-5 oraciones con terminología profesional",
+  "resumen_ejecutivo": "3-4 oraciones contextualizadas con el historial",
+  "analisis_clinico": "4-5 oraciones con terminología profesional referenciando historial previo",
   "areas_fortaleza": ["Fortaleza 1", "Fortaleza 2", "Fortaleza 3"],
   "areas_trabajo": ["Área 1", "Área 2", "Área 3"],
   "recomendaciones": ["Rec 1", "Rec 2", "Rec 3", "Rec 4"],
   "actividades_en_casa": ["Act 1", "Act 2", "Act 3"],
   "indicadores_clave": ["Ind 1", "Ind 2", "Ind 3"],
   "nivel_alerta": "bajo",
-  "mensaje_padres": "Mensaje empático 2-3 oraciones.",
+  "mensaje_padres": "Mensaje empático 2-3 oraciones usando el nombre ${childName}, específico a lo reportado.",
   "proximo_paso": "Acción concreta próxima sesión"
 }`
 

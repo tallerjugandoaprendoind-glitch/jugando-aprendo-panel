@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
+import { getChildHistory } from '@/lib/child-history';
 
 // ============================================================================
 // INTERFACES (Tipado fuerte para seguridad)
@@ -105,7 +106,13 @@ export async function POST(request: NextRequest) {
       actividades_casa
     } = body;
 
-    // Validación mínima: necesitamos algo de input para trabajar
+    // Cargar historial clínico del niño
+    const childId = body.childId || ''
+    const childHistory = await getChildHistory(childId, body.childName, body.childAge ? String(body.childAge) : undefined)
+    const nombreNino = childHistory.nombre
+    const historialTexto = childHistory.historialTexto
+
+    // Validación mínima
     const hasMinimalData = comportamiento_observado || barreras_identificadas || rutina_diaria || interaccion_padres;
     
     if (!hasMinimalData) {
@@ -120,7 +127,8 @@ export async function POST(request: NextRequest) {
     
     contextParts.push(`
       ACTÚA COMO: Terapeuta Senior especializado en Análisis Conductual Aplicado (ABA) y Desarrollo Infantil.
-      TAREA: Evaluar el entorno del hogar de un niño en terapia y generar un reporte de intervención amigable para los padres.
+      TAREA: Evaluar el entorno del hogar de ${nombreNino} y generar un reporte de intervención amigable para los padres.
+      ${historialTexto}
     `);
 
     // Información de la visita

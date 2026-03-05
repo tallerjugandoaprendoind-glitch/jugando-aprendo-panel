@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from "@google/genai"
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { getChildHistory } from '@/lib/child-history'
 
 
 // Helper: reintentar con backoff exponencial ante rate limit
@@ -27,10 +28,17 @@ async function callGeminiWithRetry(ai: any, model: string, contents: string, con
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { formType, formData, childName, childAge, diagnosis, sessionContext } = body
+    const { formType, formData, childName, childAge, diagnosis, sessionContext, childId } = body
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Falta GEMINI_API_KEY en variables de entorno' }, { status: 500 })
+
+    // Cargar historial clínico del niño
+    const childHistory = await getChildHistory(childId || '', childName, childAge ? String(childAge) : undefined)
+    const nombreNino = childHistory.nombre
+    const edadNino = childHistory.edad
+    const diagnosticoNino = childHistory.diagnostico !== 'No especificado' ? childHistory.diagnostico : (diagnosis || '')
+    const historialTexto = childHistory.historialTexto
 
     const systemPrompt = `Eres un neuropsicólogo clínico especializado en neurodiversidad infantil con experiencia en TEA, TDAH, Síndrome de Down, discapacidad intelectual y otros perfiles neurodivergentes.
 
@@ -70,13 +78,14 @@ Responde SIEMPRE en español y en formato JSON con esta estructura exacta:
     const fullPrompt = `${systemPrompt}
 
 Formulario Clínico: ${formTypeLabels[formType] || formType}
-Paciente: ${childName}, ${childAge} años${diagnosis ? `, Diagnóstico/Perfil: ${diagnosis}` : ''}
-${sessionContext ? `Contexto: ${sessionContext}` : ''}
+Paciente: ${nombreNino}, ${edadNino} años${diagnosticoNino ? `, Diagnóstico/Perfil: ${diagnosticoNino}` : ''}
+${historialTexto}
+${sessionContext ? `Contexto de sesión: ${sessionContext}` : ''}
 
 DATOS DEL FORMULARIO:
 ${JSON.stringify(formData, null, 2)}
 
-Analiza este formulario y proporciona el análisis clínico completo incluyendo indicadores específicos del perfil neurodivergente. Responde SOLO con el JSON, sin texto adicional.`
+INSTRUCCIÓN: Usa el historial clínico previo para contextualizar tu análisis. Menciona si hay progreso, regresión o consistencia respecto a evaluaciones anteriores. El mensaje a los padres debe incluir el nombre real del niño (${nombreNino}) y ser específico a su situación. Responde SOLO con el JSON, sin texto adicional.`
 
     const ai = new GoogleGenAI({ apiKey })
     const response = await callGeminiWithRetry(ai, "gemini-2.0-flash", fullPrompt)
@@ -96,7 +105,7 @@ Analiza este formulario y proporciona el análisis clínico completo incluyendo 
       await supabaseAdmin.from('form_ai_analyses').insert([{
         form_id: body.formId,
         form_type: formType,
-        child_name: childName,
+        child_name: nombreNino,
         analysis: parsedResult,
         created_at: new Date().toISOString(),
       }])

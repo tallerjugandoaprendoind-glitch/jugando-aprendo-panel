@@ -337,7 +337,7 @@ function toArray(val: any): string[] {
 }
 
 // ─── AI ANALYSIS DISPLAY ─────────────────────────────────────────────────────
-function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysis: any; editableMessage?: string; onEditMessage?: (v: string) => void }) {
+function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableActividades, onEditActividades }: { analysis: any; editableMessage?: string; onEditMessage?: (v: string) => void; editableActividades?: string; onEditActividades?: (v: string) => void }) {
   if (!analysis) return null
   const alertColors: Record<string, string> = {
     bajo: 'bg-emerald-50 border-emerald-200 text-emerald-800',
@@ -455,30 +455,57 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage }: { analysi
         </div>
       )}
 
-      {/* Message for parents - editable before saving */}
+      {/* Mensaje al padre/madre - editable */}
       {(analysis.mensaje_padres || editableMessage !== undefined) && (
-        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 border-2 border-amber-200">
-          <div className="flex items-center gap-2 mb-3">
-            <div className="w-7 h-7 bg-amber-500 rounded-lg flex items-center justify-center">
-              <MessageCircle size={14} className="text-white"/>
+        <div className="space-y-4">
+          {/* Sección 1: Mensaje al padre */}
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 border-2 border-amber-200">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 bg-amber-500 rounded-lg flex items-center justify-center">
+                <MessageCircle size={14} className="text-white"/>
+              </div>
+              <h4 className="font-black text-amber-800">Mensaje para los Padres</h4>
+              <span className="ml-auto px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full border border-amber-300 uppercase tracking-widest">✏️ Editable</span>
             </div>
-            <h4 className="font-black text-amber-800">Mensaje para los Padres</h4>
-            <span className="ml-auto px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full border border-amber-300 uppercase tracking-widest">✏️ Editable</span>
+            {onEditMessage ? (
+              <textarea
+                rows={4}
+                value={editableMessage !== undefined ? editableMessage : (analysis.mensaje_padres || '')}
+                onChange={e => onEditMessage(e.target.value)}
+                className="w-full p-3 bg-white/80 border-2 border-amber-200 rounded-xl text-amber-800 text-sm leading-relaxed resize-none outline-none focus:border-amber-400 transition-all font-medium mb-2"
+                placeholder="Edita el mensaje antes de guardar..."
+              />
+            ) : (
+              <p className="text-amber-700 text-sm leading-relaxed mb-3 italic">&quot;{editableMessage || analysis.mensaje_padres}&quot;</p>
+            )}
+            <p className="text-amber-600 text-xs font-semibold bg-amber-100 rounded-xl px-3 py-2 border border-amber-200">
+              🔒 Edita el mensaje y guarda. Irá a <strong>Bandeja de Aprobación</strong> para revisarlo antes de enviarlo al padre/madre.
+            </p>
           </div>
-          {onEditMessage ? (
-            <textarea
-              rows={4}
-              value={editableMessage !== undefined ? editableMessage : (analysis.mensaje_padres || '')}
-              onChange={e => onEditMessage(e.target.value)}
-              className="w-full p-3 bg-white/80 border-2 border-amber-200 rounded-xl text-amber-800 text-sm leading-relaxed resize-none outline-none focus:border-amber-400 transition-all font-medium mb-2"
-              placeholder="Edita el mensaje antes de guardar..."
-            />
-          ) : (
-            <p className="text-amber-700 text-sm leading-relaxed mb-3 italic">&quot;{editableMessage || analysis.mensaje_padres}&quot;</p>
+
+          {/* Sección 2: Actividad para casa */}
+          {(analysis.actividades_casa || analysis.actividad_casa || editableActividades !== undefined) && (
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-5 border-2 border-blue-200">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <span className="text-white text-xs font-black">🏠</span>
+                </div>
+                <h4 className="font-black text-blue-800">Actividad para realizar en casa</h4>
+                <span className="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-black rounded-full border border-blue-300 uppercase tracking-widest">✏️ Editable</span>
+              </div>
+              {onEditActividades ? (
+                <textarea
+                  rows={5}
+                  value={editableActividades !== undefined ? editableActividades : (analysis.actividades_casa || analysis.actividad_casa || '')}
+                  onChange={e => onEditActividades(e.target.value)}
+                  className="w-full p-3 bg-white/80 border-2 border-blue-200 rounded-xl text-blue-800 text-sm leading-relaxed resize-none outline-none focus:border-blue-400 transition-all font-medium"
+                  placeholder="Actividad terapéutica para practicar en casa..."
+                />
+              ) : (
+                <p className="text-blue-700 text-sm leading-relaxed italic whitespace-pre-wrap">{editableActividades || analysis.actividades_casa || analysis.actividad_casa}</p>
+              )}
+            </div>
           )}
-          <p className="text-amber-600 text-xs font-semibold bg-amber-100 rounded-xl px-3 py-2 border border-amber-200">
-            🔒 Edita el mensaje y guarda. Irá a <strong>Bandeja de Aprobación</strong> para revisarlo antes de enviarlo al padre/madre.
-          </p>
         </div>
       )}
     </div>
@@ -691,6 +718,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
   const [isSaving, setIsSaving] = useState(false)
   const [aiAnalysis, setAiAnalysis] = useState<any>(null)
   const [editedMessage, setEditedMessage] = useState('')
+  const [editedActividades, setEditedActividades] = useState('')
   const [isNeurodivergent] = useState(!!(form as any).isNeurodivergent)
   const [showSuccessScreen, setShowSuccessScreen] = useState(false)
   const [savedRecordId, setSavedRecordId] = useState<string | null>(null)
@@ -735,17 +763,17 @@ function FormFillView({ form, children, onBack, toast }: any) {
             childName: child?.name || 'Paciente',
             childAge: child?.age || calcularEdadNumerica(child?.birth_date) || 'N/E',
             diagnosis: child?.diagnosis || '',
+            childId: selectedChild,
           }),
         })
         const json = await res.json()
         if (json.error) throw new Error(json.error)
         const nfAnalysis = json.analysis || {}
-        // Mezclar campos de la IA con las respuestas del formulario
         setResponses((prev: any) => ({ ...prev, ...nfAnalysis }))
         setAiAnalysis(nfAnalysis)
         setEditedMessage(nfAnalysis?.mensaje_padres || '')
+        setEditedActividades(nfAnalysis?.actividades_casa || nfAnalysis?.actividad_casa || '')
       } else {
-        // Formulario clínico profesional
         const childName = child?.name || 'Paciente'
         const childAge  = child?.age || calcularEdadNumerica(child?.birth_date) || 'N/E'
         const diagnosis = child?.diagnosis || ''
@@ -757,22 +785,20 @@ function FormFillView({ form, children, onBack, toast }: any) {
           childName,
           childAge,
           diagnosis,
+          childId: selectedChild,
         }
 
         if (form.formKey === 'entorno_hogar') {
           endpoint = '/api/generate-home-environment-report'
-          payload = { ...responses, childName, childAge, diagnosis }
+          payload = { ...responses, childName, childAge, diagnosis, childId: selectedChild }
         } else if (form.formKey === 'aba') {
-          // ABA usa generate-session-report solo si tiene datos ABC,
-          // si no, usa analyze-neurodivergent-form
           if (responses.antecedente && responses.conducta && responses.consecuencia) {
             endpoint = '/api/generate-session-report'
-            payload = { ...responses }
+            payload = { ...responses, childName, childAge, childId: selectedChild }
           }
-          // si no tiene antecedente/conducta/consecuencia → sigue con analyze-neurodivergent-form
         } else if (['brief2', 'ados2', 'vineland3', 'wiscv', 'basc3'].includes(form.formKey)) {
           endpoint = '/api/analyze-professional-evaluation'
-          payload = { evaluationType: form.formKey.toLowerCase(), childName, childAge, responses }
+          payload = { evaluationType: form.formKey.toLowerCase(), childName, childAge, childId: selectedChild, responses }
         }
 
         const res = await fetch(endpoint, {
@@ -819,6 +845,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         setResponses((prev: any) => ({ ...prev, ...analysis }))
         setAiAnalysis(analysis)
         setEditedMessage(analysis?.mensaje_padres || analysis?.informe_padres_vineland || analysis?.informe_padres_wisc || analysis?.informe_padres_basc || analysis?.informe_familia_ados || analysis?.informe_padres_entorno || analysis?.mensaje_padres_entorno || analysis?.informe_padres || '')
+        setEditedActividades(analysis?.actividades_casa || analysis?.actividad_casa || '')
       }
       toast.success('✨ Análisis IA generado')
     } catch (err: any) {
@@ -901,6 +928,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
               source: isNeurodivergent ? 'neuroforma' : 'evaluacion',
               source_title: form.title,
               ai_message: editedMessage || aiAnalysis.mensaje_padres,
+              actividades_casa: editedActividades || aiAnalysis.actividades_casa || aiAnalysis.actividad_casa,
               ai_analysis: aiAnalysis,
               session_data: { form_type: form.formKey || form.id, responses },
             }),
@@ -1120,7 +1148,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         {/* AI Analysis */}
         {aiAnalysis && (
           <div className="bg-white rounded-2xl shadow-sm border border-violet-100 p-6">
-            <AIAnalysisPanel analysis={aiAnalysis} editableMessage={editedMessage} onEditMessage={setEditedMessage} />
+            <AIAnalysisPanel analysis={aiAnalysis} editableMessage={editedMessage} onEditMessage={setEditedMessage} editableActividades={editedActividades} onEditActividades={setEditedActividades} />
           </div>
         )}
       </div>
