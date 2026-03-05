@@ -536,7 +536,20 @@ export const HISTORIA_FAMILIAR: FormDefinition = {
 // ═══════════════════════════════════════════════════════════════════════════════
 // ÍNDICE COMPLETO DE TODOS LOS FORMULARIOS
 // ═══════════════════════════════════════════════════════════════════════════════
+// Importar formularios competitivos
+import {
+  EVALUACION_FUNCIONAL_CONDUCTA,
+  PLAN_INTERVENCION_CONDUCTUAL,
+  OBJETIVOS_IEP,
+  EVALUACION_LENGUAJE_VERBAL,
+  INFORME_PROGRESO_MENSUAL,
+  HABILIDADES_ADAPTATIVAS,
+  PERFIL_SENSORIAL_AVANZADO,
+  REGISTRO_ABC_AVANZADO,
+} from './competitiveForms'
+
 export const ALL_FORMS: FormDefinition[] = [
+  // Formularios base
   SCREENING_TDAH,
   CONDUCTA_CASA_TDAH,
   SCREENING_TEA,
@@ -545,6 +558,15 @@ export const ALL_FORMS: FormDefinition[] = [
   HABILIDADES_SOCIALES,
   INFORME_PADRES_GENERAL,
   HISTORIA_FAMILIAR,
+  // Formularios competitivos (nivel Thread Learning / Central Reach)
+  EVALUACION_FUNCIONAL_CONDUCTA,
+  PLAN_INTERVENCION_CONDUCTUAL,
+  OBJETIVOS_IEP,
+  EVALUACION_LENGUAJE_VERBAL,
+  INFORME_PROGRESO_MENSUAL,
+  HABILIDADES_ADAPTATIVAS,
+  PERFIL_SENSORIAL_AVANZADO,
+  REGISTRO_ABC_AVANZADO,
 ]
 
 export const FORMS_BY_CATEGORY = {

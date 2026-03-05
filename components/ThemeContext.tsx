@@ -81,3 +81,5 @@ export function ThemeToggleButton({ className = '' }: { className?: string }) {
     </button>
   )
 }
+
+export default ThemeProvider

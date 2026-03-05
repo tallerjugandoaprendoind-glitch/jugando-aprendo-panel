@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { GoogleGenAI } from "@google/genai"
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { getChildHistory } from '@/lib/child-history'
+import { buildAIContext, callGeminiSafe, parseAIJson } from '@/lib/ai-context-builder'
 
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
         AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel,
@@ -23,13 +23,14 @@ export async function POST(request: NextRequest) {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Falta API Key' }, { status: 500 })
 
-    // ── 1. Datos e historial completo del niño ────────────────────────────
-    const childHistory = await getChildHistory(childId)
-    const childName = childHistory.nombre
-    const childAgeStr = childHistory.edad
+    // ── 1. Contexto completo: RAG + historial + centro ────────────────────
+    const searchQuery = `${formTitle || 'formulario padres'} familia intervención conducta en casa`
+    const ctx = await buildAIContext(childId, undefined, undefined, searchQuery)
+    const childName = ctx.childName
+    const childAgeStr = ctx.childAge
     const childAge: number | undefined = childAgeStr && !isNaN(Number(childAgeStr)) ? Number(childAgeStr) : undefined
-    const diagnosis = childHistory.diagnostico
-    const historialTexto = childHistory.historialTexto
+    const diagnosis = ctx.diagnosis
+    const historialTexto = ctx.fullContext  // RAG + centro + historial del niño
 
     // ── 2. Análisis IA del formulario ──────────────────────────────────────
     const responsesText = Object.entries(responses)
@@ -38,26 +39,28 @@ export async function POST(request: NextRequest) {
 
     const ai = new GoogleGenAI({ apiKey })
 
-    const prompt = `Eres un supervisor clínico especialista en neurodiversidad (TDAH, TEA, trastornos del desarrollo).
+    const prompt = `Eres un supervisor clínico especialista en neurodiversidad (TDAH, TEA, trastornos del desarrollo) y analista de conducta (IBA).
 
-DATOS DEL FORMULARIO:
-- Paciente: ${childName}${childAge ? ` (${childAge} años)` : ''}
-- Diagnóstico: ${diagnosis}
-- Formulario: ${formTitle}
+CONTEXTO CLÍNICO COMPLETO:
 ${historialTexto}
+
+PACIENTE: ${childName}${childAge ? ` (${childAge} años)` : ''}
+DIAGNÓSTICO: ${diagnosis}
+FORMULARIO: ${formTitle}
+
 RESPUESTAS DEL FORMULARIO:
 ${responsesText}
 
-INSTRUCCIÓN: Usa el historial clínico previo para contextualizar tu análisis. Menciona avances o cambios respecto a evaluaciones anteriores. El mensaje a los padres DEBE usar el nombre real del niño (${childName}) y ser específico a su situación, no genérico.
+INSTRUCCIÓN: Usa el historial y base de conocimiento para contextualizar. Si hay protocolos relevantes en la base de conocimiento, referenciarlos. El mensaje a padres DEBE usar el nombre real "${childName}" y ser específico a sus respuestas, no genérico.
 
-Responde SOLO con JSON (sin markdown ni backticks):
+Responde SOLO con JSON (sin markdown):
 {
-  "resumen_ejecutivo": "3-4 oraciones contextualizadas con el historial",
-  "analisis_clinico": "4-5 oraciones con terminología profesional referenciando historial previo",
-  "areas_fortaleza": ["Fortaleza 1", "Fortaleza 2", "Fortaleza 3"],
-  "areas_trabajo": ["Área 1", "Área 2", "Área 3"],
-  "recomendaciones": ["Rec 1", "Rec 2", "Rec 3", "Rec 4"],
-  "actividades_en_casa": ["Act 1", "Act 2", "Act 3"],
+  "resumen_ejecutivo": "3-4 oraciones contextualizadas con el historial y datos concretos",
+  "analisis_clinico": "4-5 oraciones técnicas referenciando historial previo y fuentes clínicas si aplica",
+  "areas_fortaleza": ["Fortaleza específica 1", "Fortaleza 2", "Fortaleza 3"],
+  "areas_trabajo": ["Área prioritaria 1", "Área 2", "Área 3"],
+  "recomendaciones": ["Recomendación accionable 1", "Rec 2", "Rec 3", "Rec 4"],
+  "actividades_en_casa": ["Actividad específica 1", "Act 2", "Act 3"],
   "indicadores_clave": ["Ind 1", "Ind 2", "Ind 3"],
   "nivel_alerta": "bajo",
   "mensaje_padres": "Mensaje empático 2-3 oraciones usando el nombre ${childName}, específico a lo reportado.",

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { buildAIContext, callGeminiSafe } from '@/lib/ai-context-builder';
 
 
 // Helper: reintentar con backoff exponencial ante rate limit
@@ -44,47 +45,11 @@ export async function POST(req: Request) {
       childName, childAge, childId,
     } = body;
 
-    // ── Traer historial previo del niño ──────────────────────────────────────
-    let historialTexto = '';
-    let nombreNino = childName || 'Paciente';
-    let edadNino = childAge || 'N/E';
-
-    if (childId) {
-      // Leer nombre y datos del niño directamente de la BD
-      const { data: childData } = await supabaseAdmin
-        .from('children')
-        .select('name, age, birth_date, diagnosis')
-        .eq('id', childId)
-        .single();
-      if (childData) {
-        nombreNino = (childData as any).name || nombreNino;
-        edadNino = (childData as any).age || edadNino;
-      }
-
-      // Últimas 5 sesiones ABA previas
-      const { data: sesionesAba } = await supabaseAdmin
-        .from('registro_aba')
-        .select('fecha_sesion, datos, ai_analysis')
-        .eq('child_id', childId)
-        .order('fecha_sesion', { ascending: false })
-        .limit(5);
-
-      if (sesionesAba && sesionesAba.length > 0) {
-        historialTexto = `\n━━━ HISTORIAL PREVIO DEL NIÑO (últimas ${sesionesAba.length} sesiones) ━━━\n` +
-          sesionesAba.map((s: any, i: number) => {
-            const d = s.datos || {};
-            const ai = s.ai_analysis || {};
-            return `Sesión ${i + 1} (${s.fecha_sesion || 'sin fecha'}):
-  - Objetivo: ${d.objetivo_principal || 'N/E'}
-  - Conducta observada: ${d.conducta || 'N/E'}
-  - Antecedente: ${d.antecedente || 'N/E'}
-  - Técnicas: ${Array.isArray(d.tecnicas_aplicadas) ? d.tecnicas_aplicadas.join(', ') : (d.tecnicas_aplicadas || 'N/E')}
-  - Avances IA: ${ai.avances_observados || 'N/E'}
-  - Áreas dificultad: ${ai.areas_dificultad || 'N/E'}
-  - Patrón aprendizaje: ${ai.patron_aprendizaje || 'N/E'}`;
-          }).join('\n\n');
-      }
-    }
+    // ── Construir contexto completo con RAG + historial + centro ─────────────
+    const sessionQuery = `sesión ABA ${tipo_sesion || ''} ${conducta || ''} ${funcion_estimada || ''} intervención conductual`
+    const aiCtx = await buildAIContext(childId, childName, childAge ? String(childAge) : undefined, sessionQuery)
+    const nombreNino = aiCtx.childName
+    const edadNino = aiCtx.childAge
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -115,12 +80,14 @@ export async function POST(req: Request) {
     const ai = new GoogleGenAI({ apiKey });
 
     const context = `
-ACTÚA COMO: Neuropsicólogo clínico infantil supervisor con 15+ años de experiencia en centros especializados en neurodivergencia (TEA, TDAH, DI, TDL). Tu escritura es cálida, técnica y profundamente empática. Los padres confían en ti porque les explicas TODO con claridad.
+ACTÚA COMO: Neuropsicólogo clínico infantil supervisor y analista de conducta (IBA) con 15+ años de experiencia.
+
+CONTEXTO CLÍNICO COMPLETO (historial, protocolos del centro, conocimiento clínico):
+${aiCtx.fullContext}
 
 PACIENTE: ${nombreNino}, ${edadNino} años.
-${historialTexto}
 
-DATOS DE LA SESIÓN REGISTRADOS POR EL TERAPEUTA:
+DATOS DE LA SESIÓN:
 ━━━ SECCIÓN 1: INFORMACIÓN ━━━
 - Fecha: ${fecha_sesion || 'N/E'}
 - Duración: ${duracion_minutos || 'N/E'} minutos

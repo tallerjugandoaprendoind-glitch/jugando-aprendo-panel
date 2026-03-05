@@ -1,178 +1,207 @@
+// app/api/parent-chat/route.ts
+// Chat IA exclusivo para padres - respuestas en lenguaje accesible
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenAI } from "@google/genai"
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { GoogleGenAI } from '@google/genai'
 
 export async function POST(req: NextRequest) {
   try {
-    const { question, childId, childName } = await req.json()
+    const { mensaje, childId, parentUserId } = await req.json()
 
-    if (!question || !childId) {
-      return NextResponse.json({ text: "Error: Faltan datos." }, { status: 400 })
+    if (!mensaje || !childId || !parentUserId) {
+      return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
     }
 
     const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) {
-      return NextResponse.json({ text: "Error de configuración: Falta la API Key de Gemini." }, { status: 500 })
+    if (!apiKey) return NextResponse.json({ error: 'Servicio no disponible' }, { status: 500 })
+
+    // Verificar que el padre tiene acceso a este paciente
+    const { data: acceso } = await supabaseAdmin
+      .from('parent_accounts')
+      .select('id, nombre')
+      .eq('user_id', parentUserId)
+      .eq('child_id', childId)
+      .single()
+
+    if (!acceso) {
+      return NextResponse.json({ error: 'No tienes acceso a este paciente' }, { status: 403 })
     }
 
-    const supabase = supabaseAdmin
+    // Cargar historial del chat (últimas 10 conversaciones)
+    const { data: historial } = await supabaseAdmin
+      .from('chat_padres')
+      .select('rol, mensaje')
+      .eq('child_id', childId)
+      .eq('parent_user_id', parentUserId)
+      .order('created_at', { ascending: false })
+      .limit(10)
 
-    // ── Contexto clínico ──────────────────────────────────────────────────────
-    const [
-      { data: child },
-      { data: sessions },
-      { data: appointments },
-      { data: parentForms },
-    ] = await Promise.all([
-      supabase.from('children').select('name, birth_date, diagnosis').eq('id', childId).single(),
-      supabase.from('registro_aba').select('fecha_sesion, datos').eq('child_id', childId).order('fecha_sesion', { ascending: false }).limit(5),
-      supabase.from('appointments').select('appointment_date, appointment_time').eq('child_id', childId).gte('appointment_date', new Date().toISOString().split('T')[0]).order('appointment_date', { ascending: true }).limit(1),
-      supabase.from('parent_forms').select('form_type, form_title, responses, completed_at').eq('child_id', childId).eq('status', 'completed').order('completed_at', { ascending: false }).limit(10),
-    ])
+    const historialOrdenado = (historial || []).reverse()
 
-    // ── Productos de la tienda ────────────────────────────────────────────────
-    const esConsultaActividades = /casa|actividad|ejercicio|material|juego|practicar|hacer|recurso|tip|consejo/i.test(question)
+    // Cargar contexto LIMITADO del paciente (solo info apta para padres)
+    const contexto = await cargarContextoPadre(childId)
 
-    let productosTexto = ''
-    let productosData: any[] = []
-
-    if (esConsultaActividades) {
-      const { data: productos } = await supabase
-        .from('store_products')
-        .select('id, nombre, descripcion, precio_soles, tipo, categoria, imagen_url')
-        .eq('activo', true)
-        .gt('stock', 0)
-        .order('destacado', { ascending: false })
-        .limit(10)
-
-      productosData = productos || []
-
-      if (productosData.length > 0) {
-        productosTexto = `\n\nPRODUCTOS DE NUESTRA TIENDA (puedes sugerir UNO si genuinamente ayuda):
-${productosData.map((p, i) => `${i + 1}. ID:"${p.id}" | "${p.nombre}" | S/${p.precio_soles} | ${p.tipo}\n   ${p.descripcion || ''}`).join('\n')}
-
-REGLA: Solo sugiere un producto si tiene conexión real con los consejos que das. Si no aplica ninguno, no menciones la tienda.`
-      }
-    }
-
-    // ── Contexto del paciente ─────────────────────────────────────────────────
-    let contextParts: string[] = []
-
-    if (child) {
-      const age = calculateAge(child.birth_date)
-      contextParts.push(`PACIENTE: ${child.name}, ${age} años, ${child.diagnosis || 'En evaluación'}`)
-    }
-
-    // ── Formularios completados por los padres (anamnesis, entorno_hogar, etc.) ──
-    if (parentForms && parentForms.length > 0) {
-      const formsText = parentForms.map((f: any) => {
-        const responses = f.responses
-        if (!responses || typeof responses !== 'object') return null
-        const resText = Object.entries(responses)
-          .filter(([, v]) => v !== null && v !== undefined && v !== '')
-          .map(([k, v]) => `    • ${k.replace(/_/g, ' ')}: ${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}`)
-          .join('\n')
-        return `  [${f.form_title || f.form_type} - ${f.completed_at ? new Date(f.completed_at).toLocaleDateString('es-PE') : 'Sin fecha'}]\n${resText}`
-      }).filter(Boolean).join('\n\n')
-
-      contextParts.push(`FORMULARIOS COMPLETADOS POR LOS PADRES:\n${formsText}`)
-    } else {
-      contextParts.push('FORMULARIOS: Los padres no han completado formularios aún.')
-    }
-
-    if (sessions && sessions.length > 0) {
-      const historyText = sessions.map((s: any) =>
-        `  - ${s.fecha_sesion}: ${s.datos?.objetivo_sesion || 'N/A'} | ${s.datos?.resultado_sesion || 'N/A'}`
-      ).join('\n')
-      contextParts.push(`HISTORIAL DE SESIONES ABA:\n${historyText}`)
-    } else {
-      contextParts.push("HISTORIAL ABA: Sin sesiones registradas aún.")
-    }
-
-    if (appointments && appointments.length > 0) {
-      contextParts.push(`PRÓXIMA CITA: ${appointments[0].appointment_date} a las ${appointments[0].appointment_time}`)
-    }
-
-    contextParts.push(productosTexto)
-
-    const dataContext = contextParts.join('\n\n')
-
-    // ── Prompt ────────────────────────────────────────────────────────────────
-    const ai = new GoogleGenAI({ apiKey })
-
-    const systemInstruction = `
-ERES UN ASISTENTE CLÍNICO EXPERTO EN ABA del centro Jugando Aprendo (Pisco, Perú).
-
-PERSONALIDAD: Empática, cálida y profesional. Como una terapeuta experta que apoya a los padres.
-Usas emojis ocasionales (💙, ✨, 📋) para suavizar el tono.
-
-REGLAS:
-1. Responde basándote en el historial clínico proporcionado, incluyendo los formularios y anamnesis completados por los padres.
-2. Si hay información en los formularios (anamnesis, entorno del hogar, etc.), úsala para personalizar tu respuesta.
-3. Si hay progreso, ¡celébralo!
-4. Si hay dificultades, valida la emoción y ofrece perspectiva positiva.
-5. Sé concisa. No escribas párrafos gigantes.
-6. PRODUCTO: Si el contexto incluye productos de la tienda y la pregunta es sobre actividades/materiales:
-   - Puedes sugerir UNO de forma natural al final de tu respuesta, en una línea separada.
-   - Formato exacto si sugieres: [PRODUCTO_ID:el-id-exacto-aqui]
-   - Si ningún producto aplica, NO menciones la tienda en absoluto.
-`
-
-    const prompt = `
-CONTEXTO DEL PACIENTE:
-${dataContext}
-
-PREGUNTA DEL PADRE/MADRE:
-"${question}"
-
-Responde directamente usando toda la información disponible del paciente. Si sugieres un producto, al FINAL pon [PRODUCTO_ID:el-id] en una línea aparte.
-`
-
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-      config: { systemInstruction, temperature: 0.5 },
+    // Guardar mensaje del padre
+    await supabaseAdmin.from('chat_padres').insert({
+      child_id: childId,
+      parent_user_id: parentUserId,
+      rol: 'user',
+      mensaje
     })
 
-    let fullText = response.text || "Lo siento, no pude generar una respuesta en este momento."
+    // Generar respuesta IA
+    const respuesta = await generarRespuestaPadre(mensaje, contexto, historialOrdenado, (acceso as any).nombre)
 
-    // ── Extraer sugerencia de producto del texto ──────────────────────────────
-    let producto_sugerido_info = null
-    const productoMatch = fullText.match(/\[PRODUCTO_ID:([^\]]+)\]/)
+    // Guardar respuesta
+    await supabaseAdmin.from('chat_padres').insert({
+      child_id: childId,
+      parent_user_id: parentUserId,
+      rol: 'assistant',
+      mensaje: respuesta
+    })
 
-    if (productoMatch && productosData.length > 0) {
-      const productoId = productoMatch[1].trim()
-      const prod = productosData.find((p: any) => p.id === productoId)
-      if (prod) {
-        producto_sugerido_info = {
-          id: prod.id,
-          nombre: prod.nombre,
-          descripcion: prod.descripcion,
-          precio_soles: prod.precio_soles,
-          tipo: prod.tipo,
-          imagen_url: prod.imagen_url,
-        }
-      }
-      fullText = fullText.replace(/\[PRODUCTO_ID:[^\]]+\]/g, '').trim()
-    }
-
-    return NextResponse.json({ text: fullText, producto_sugerido_info })
-
-  } catch (error: any) {
-    console.error('Error en Chat Padres:', error)
-    return NextResponse.json(
-      { text: "Tuve un pequeño problema de conexión. Por favor, pregúntame de nuevo." },
-      { status: 500 }
-    )
+    return NextResponse.json({ respuesta })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
 
-function calculateAge(birthDate: string): number {
-  if (!birthDate) return 0
-  const today = new Date()
-  const birth = new Date(birthDate)
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDiff = today.getMonth() - birth.getMonth()
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) age--
-  return age
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url)
+  const childId      = searchParams.get('child_id')
+  const parentUserId = searchParams.get('parent_user_id')
+
+  try {
+    const { data } = await supabaseAdmin
+      .from('chat_padres')
+      .select('id, rol, mensaje, created_at')
+      .eq('child_id', childId!)
+      .eq('parent_user_id', parentUserId!)
+      .order('created_at', { ascending: true })
+      .limit(50)
+
+    return NextResponse.json({ data })
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 })
+  }
+}
+
+// ─── CONTEXTO FILTRADO PARA PADRES ───────────────────────────
+// IMPORTANTE: No se revelan datos clínicos técnicos sensibles
+async function cargarContextoPadre(childId: string) {
+  const { data: child } = await supabaseAdmin
+    .from('children')
+    .select('name, age, diagnosis, birth_date')
+    .eq('id', childId)
+    .single()
+
+  // Solo últimas 5 sesiones ABA con info resumida
+  const { data: sesiones } = await supabaseAdmin
+    .from('registro_aba')
+    .select('fecha_sesion, datos')
+    .eq('child_id', childId)
+    .order('fecha_sesion', { ascending: false })
+    .limit(5)
+
+  const { data: tareasPendientes } = await supabaseAdmin
+    .from('tareas_hogar')
+    .select('titulo, completada, fecha_asignada, instrucciones')
+    .eq('child_id', childId)
+    .eq('activa', true)
+    .order('fecha_asignada', { ascending: false })
+    .limit(5)
+
+  const { data: proximaCita } = await supabaseAdmin
+    .from('agenda_sesiones')
+    .select('fecha, hora_inicio, tipo')
+    .eq('child_id', childId)
+    .gte('fecha', new Date().toISOString().split('T')[0])
+    .in('estado', ['programada', 'confirmada'])
+    .order('fecha', { ascending: true })
+    .limit(1)
+    .single()
+
+  // Construir resumen legible de sesiones (SIN jerga técnica)
+  const resumenSesiones = sesiones?.map((s, i) => {
+    const d = s.datos || {}
+    const nivelLogro = d.nivel_logro_objetivos || ''
+    const logro = nivelLogro.includes('76') || nivelLogro.includes('Completamente') ? 'excelente'
+      : nivelLogro.includes('51') || nivelLogro.includes('Mayormente') ? 'muy bien'
+      : nivelLogro.includes('26') || nivelLogro.includes('Parcialmente') ? 'en progreso'
+      : 'necesita apoyo'
+
+    return `Sesion ${i + 1} (${s.fecha_sesion}): Trabajo en "${d.objetivo_principal || 'objetivos del dia'}". Como estuvo: ${logro}. ${d.avances_observados ? 'Avances: ' + d.avances_observados : ''}`
+  }).join('\n') || 'Sin sesiones recientes registradas'
+
+  const proximaCitaTexto = proximaCita
+    ? `Proxima cita: ${(proximaCita as any).fecha} a las ${(proximaCita as any).hora_inicio?.slice(0, 5)}`
+    : 'Sin proxima cita programada'
+
+  const tareasTexto = tareasPendientes?.map(t =>
+    `- "${t.titulo}" (${t.completada ? 'COMPLETADA' : 'PENDIENTE'})`
+  ).join('\n') || 'Sin tareas asignadas'
+
+  return {
+    nombre: (child as any)?.name || 'tu hijo/a',
+    edad: (child as any)?.age,
+    diagnostico: (child as any)?.diagnosis,
+    resumenSesiones,
+    proximaCita: proximaCitaTexto,
+    tareas: tareasTexto
+  }
+}
+
+// ─── GENERAR RESPUESTA PARA PADRE ────────────────────────────
+async function generarRespuestaPadre(
+  mensaje: string,
+  contexto: any,
+  historial: any[],
+  nombrePadre: string
+): Promise<string> {
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
+
+  const systemPrompt = `Eres el asistente virtual del Centro Jugando Aprendo, especializado en comunicacion con familias.
+
+INFORMACION DEL PACIENTE (para tu referencia interna - no revelar datos tecnicos):
+Nombre: ${contexto.nombre}
+Edad: ${contexto.edad} anos
+Diagnostico: ${contexto.diagnostico}
+${contexto.proximaCita}
+
+ULTIMAS SESIONES (resumen):
+${contexto.resumenSesiones}
+
+TAREAS PARA EL HOGAR:
+${contexto.tareas}
+
+REGLAS CRITICAS:
+1. Usa lenguaje SIMPLE y CALIDO. Nada de terminos tecnicos como "análisis funcional", "prompt fading", "contingencia", etc.
+2. Responde SIEMPRE en espanol.
+3. Se POSITIVO y esperanzador, pero honesto.
+4. Maximo 3-4 oraciones por respuesta.
+5. NO reveles datos clinicos sensibles como puntuaciones de evaluaciones, diagnosticos detallados, ni comparaciones con otros pacientes.
+6. Si el padre pregunta algo que necesita atencion medica o clinica especializada, recomienda hablar directamente con la terapeuta.
+7. Puedes hablar del progreso, las tareas, proximas citas, y dar consejos generales de apoyo en casa.
+8. Trata al padre por su nombre cuando sea natural: ${nombrePadre}.
+9. Si hay tareas pendientes, recuerdalas amablemente.
+
+TONO: Como una amiga profesional que conoce al nino y quiere ayudar a la familia.`
+
+  // Construir mensajes con historial
+  const mensajes = historial.map(h => ({
+    role: h.rol as 'user' | 'model',
+    parts: [{ text: h.mensaje }]
+  }))
+  mensajes.push({ role: 'user', parts: [{ text: mensaje }] })
+
+  const response = await ai.models.generateContent({
+    model: 'gemini-3-flash-preview',
+    contents: [
+      { role: 'user', parts: [{ text: systemPrompt + '\n\nAhora responde al mensaje del padre.' }] },
+      { role: 'model', parts: [{ text: 'Entendido. Estoy aqui para ayudar a la familia de ' + contexto.nombre + '.' }] },
+      ...mensajes
+    ],
+  })
+
+  return response.text || 'Disculpa, no pude procesar tu mensaje. Por favor intenta nuevamente.'
 }

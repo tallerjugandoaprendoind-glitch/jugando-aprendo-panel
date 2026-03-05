@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
-import { getChildHistory } from '@/lib/child-history';
+import { buildAIContext, callGeminiSafe } from '@/lib/ai-context-builder';
 
 // Definimos interfaces para tipado básico
 interface EvaluationRequest {
@@ -46,15 +46,15 @@ export async function POST(req: Request) {
     // 1. Verificación de Seguridad
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
-      console.error("❌ CRÍTICO: No se encontró GEMINI_API_KEY");
       return NextResponse.json({ error: "Configuración del servidor incompleta (API Key)" }, { status: 500 });
     }
 
-    // Cargar historial clínico del niño
-    const childHistory = await getChildHistory(childId || '', childName, childAge ? String(childAge) : undefined)
-    const nombreNino = childHistory.nombre
-    const edadNino = childHistory.edad ? Number(childHistory.edad) || childAge : childAge
-    const historialTexto = childHistory.historialTexto
+    // Contexto completo: RAG + historial + instrucciones del centro
+    const evalQuery = `${evaluationType} evaluación clínica ${childName || ''}`
+    const ctx = await buildAIContext(childId, childName, childAge ? String(childAge) : undefined, evalQuery)
+    const nombreNino = ctx.childName
+    const edadNino = ctx.childAge ? Number(ctx.childAge) || childAge : childAge
+    const historialTexto = ctx.fullContext  // includes RAG + centro + child history
 
     // 2. Inicialización
     const ai = new GoogleGenAI({ apiKey });

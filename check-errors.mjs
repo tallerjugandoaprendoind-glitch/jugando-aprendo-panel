@@ -44,13 +44,15 @@ function readFile(p) { return fs.readFileSync(p, 'utf-8') }
 
 function countBalanced(content) {
   let brace = 0, paren = 0
-  let inString = null, inTemplate = 0, inRegex = false
+  let inString = null, inTemplate = 0, inRegex = false, inCharClass = false
   let i = 0
   while (i < content.length) {
     const c = content[i]
     if (inRegex) {
       if (c === '\\') { i += 2; continue }
-      if (c === '/') inRegex = false
+      if (c === '[' && !inCharClass) { inCharClass = true; i++; continue }
+      if (c === ']' && inCharClass) { inCharClass = false; i++; continue }
+      if (c === '/' && !inCharClass) { inRegex = false; inCharClass = false }
       i++; continue
     }
     if (inString) {
@@ -68,8 +70,10 @@ function countBalanced(content) {
     if (c === '"' || c === "'") { inString = c; i++; continue }
     if (c === '`') { inTemplate++; i++; continue }
     if (c === '/') {
+      // Skip JSX self-closing tags /> — not a regex literal
+      if (content[i+1] === '>') { i++; continue }
       const before = content.slice(Math.max(0, i-15), i).trim()
-      if (/[=(,\[{!&|?:;+\-*~^%]$/.test(before) || /\b(return|typeof|in|of|new|delete|void|throw|case|yield|await)$/.test(before) || before === '') {
+      if (/[=(,\[{!&|?:;+\-*~^%]$/.test(before) || /\b(return|typeof|in|of|new|delete|void|throw|case|yield|await)$/.test(before)) {
         inRegex = true; i++; continue
       }
     }
@@ -148,7 +152,7 @@ const ALL_LUCIDE = new Set([
   'Download','Edit','Eye','EyeOff','ExternalLink','File','FileCheck','FileDown',
   'FileSpreadsheet','FileText','FileWarning','Filter','Flag','Flame','FolderOpen',
   'Gift','Globe','Grid','HardDrive','Headphones','Heart','HelpCircle','Home',
-  'Info','Key','Laptop','Layers','LayoutDashboard','LineChart','List',
+  'Info','Key','Laptop','Layers','LayoutDashboard','List',
   'Lock','Loader2','LogOut','Mail','MapPin','Menu','MessageCircle','MessageSquareHeart',
   'Mic','Monitor','MoreHorizontal','Navigation','Package','PartyPopper','Phone',
   'PieChart','PlayCircle','Plus','Printer','QrCode','RefreshCw','Save','Search',
@@ -223,7 +227,7 @@ function checkStrayTokens(files) {
       const trimmed = lines[i].trim()
       if ((trimmed === ')' || trimmed === ');') && i > 0) {
         const prev = lines[i-1]?.trim() || ''
-        if (/=\s*[a-zA-Z_$][a-zA-Z0-9_$.]*\s*$/.test(prev)) {
+        if (/(?<![=!<>])=\s*[a-zA-Z_$][a-zA-Z0-9_$.]*\s*$/.test(prev)) {
           error(rel(f), `Paréntesis suelto en línea ${i+1} tras: "${prev}"`); found = true
         }
       }

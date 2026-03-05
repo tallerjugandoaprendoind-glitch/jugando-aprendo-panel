@@ -1,28 +1,42 @@
+// app/api/analyze-neurodivergent-form/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenAI } from "@google/genai"
+import { GoogleGenAI } from '@google/genai'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { getChildHistory } from '@/lib/child-history'
+import { buildAIContext, callGeminiSafe, parseAIJson } from '@/lib/ai-context-builder'
 
+const FORM_LABELS: Record<string, string> = {
+  screening_tdah: 'Screening TDAH (Conners)',
+  screening_tea: 'Screening TEA (M-CHAT/CAST)',
+  conducta_casa_tdah: 'Conducta en Casa – TDAH',
+  conducta_casa_tea: 'Conducta en Casa – TEA',
+  perfil_sensorial: 'Perfil Sensorial',
+  sensorial_avanzado: 'Perfil Sensorial Avanzado (Dunn)',
+  habilidades_sociales: 'Habilidades Sociales',
+  informe_padres_general: 'Informe General a Padres',
+  historia_familiar: 'Historia Familiar',
+  fba: 'Evaluación Funcional de Conducta (FBA)',
+  bip: 'Plan de Intervención Conductual (BIP)',
+  iep: 'Plan de Intervención Individual (IEP)',
+  lenguaje_verbal: 'Evaluación Conducta Verbal (VB-MAPP)',
+  informe_mensual_prog: 'Informe de Progreso Mensual',
+  habilidades_adaptativas: 'Habilidades Adaptativas',
+  abc_avanzado: 'Registro ABC Avanzado',
+}
 
-// Helper: reintentar con backoff exponencial ante rate limit
-async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 5): Promise<any> {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await ai.models.generateContent({ model, contents, config })
-      return response
-    } catch (err: any) {
-      const is429 = err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED') || err?.status === 429
-      const is503 = err?.message?.includes('503') || err?.message?.includes('UNAVAILABLE') || err?.message?.includes('high demand')
-      if ((is429 || is503) && attempt < maxRetries - 1) {
-        const delay = Math.pow(2, attempt) * 3000 // 3s, 6s, 12s, 24s
-        console.warn(`⚠️ Rate limit/503 Gemini (intento ${attempt + 1}/${maxRetries}). Reintentando en ${delay/1000}s...`)
-        await new Promise(r => setTimeout(r, delay))
-        continue
-      }
-      if (is429) throw new Error('CUOTA_AGOTADA')
-      throw err
-    }
+function getSpecializedInstructions(formType: string): string {
+  const map: Record<string, string> = {
+    fba: 'Analiza la función mantenedora según Malott: reforzamiento positivo (atención, tangible), negativo (escape/evitación), automático. Evalúa coherencia antecedente-consecuencia. Señala si se necesita análisis funcional análogo para confirmar hipótesis.',
+    bip: 'Verifica coherencia función-intervención: el reforzador del BIP debe ser el MISMO que mantiene la conducta problemática. Cita IBAO Guideline 1.3 sobre intervención mínimamente invasiva. Señala trampas de reforzamiento accidental.',
+    iep: 'Objetivos deben ser SMART con criterio de dominio cuantificable. Prioriza por impacto funcional en vida diaria. Verifica que horas de servicio sean acordes con nivel de soporte DSM-5.',
+    lenguaje_verbal: 'Analiza perfil de operantes verbales (Sundberg): mando, tácto, ecoico, intraverbal, oyente. El déficit de mando es prioridad absoluta en VB. Sugiere jerarquía de intervención.',
+    screening_tdah: 'Aplica criterios DSM-5-TR para TDAH: ≥6 síntomas en inatención Y/O hiperactividad, en ≥2 contextos, inicio antes de 12 años, impacto funcional. Distingue presentación e identifica diagnósticos diferenciales.',
+    screening_tea: 'Aplica criterios DSM-5-TR para TEA: déficits en comunicación social (A1-A3) + ≥2 patrones restrictivos/repetitivos (B1-B4). Indica si se requiere ADOS-2 para confirmación y nivel de soporte.',
+    abc_avanzado: 'La función requiere PATRONES repetidos, no un solo episodio. Analiza consistencia A-B-C para hipótesis funcional. Si es episodio único, indica que se necesitan más datos.',
+    informe_mensual_prog: 'Evalúa tendencias: ¿hay generalización real o solo desempeño en sesión? ¿El ritmo de progreso es adecuado? ¿Hay meseta que requiera cambio de estrategia, reforzadores o criterio de dominio?',
+    sensorial_avanzado: 'Aplica modelo de Dunn (1997): 4 cuadrantes (umbral neurológico × estrategia conductual). Sugiere dieta sensorial específica y adaptaciones de ambiente para el perfil identificado.',
+    habilidades_adaptativas: 'Evalúa funcionamiento en vida diaria vs. nivel esperado para la edad. Identifica brechas funcionales prioritarias. Considera si déficits son consistentes con diagnóstico DSM-5 (criterio C para DI y TEA).',
   }
+  return map[formType] || 'Analiza clínicamente los datos basándote en evidencia ABA y el contexto del paciente.'
 }
 
 export async function POST(request: NextRequest) {
@@ -31,94 +45,64 @@ export async function POST(request: NextRequest) {
     const { formType, formData, childName, childAge, diagnosis, sessionContext, childId } = body
 
     const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) return NextResponse.json({ error: 'Falta GEMINI_API_KEY en variables de entorno' }, { status: 500 })
+    if (!apiKey) return NextResponse.json({ error: 'Falta GEMINI_API_KEY' }, { status: 500 })
 
-    // Cargar historial clínico del niño
-    const childHistory = await getChildHistory(childId || '', childName, childAge ? String(childAge) : undefined)
-    const nombreNino = childHistory.nombre
-    const edadNino = childHistory.edad
-    const diagnosticoNino = childHistory.diagnostico !== 'No especificado' ? childHistory.diagnostico : (diagnosis || '')
-    const historialTexto = childHistory.historialTexto
+    const searchQuery = `${FORM_LABELS[formType] || formType} ${diagnosis || ''} evaluación ABA`
+    const ctx = await buildAIContext(childId, childName, childAge ? String(childAge) : undefined, searchQuery)
 
-    const systemPrompt = `Eres un neuropsicólogo clínico especializado en neurodiversidad infantil con experiencia en TEA, TDAH, Síndrome de Down, discapacidad intelectual y otros perfiles neurodivergentes.
+    const prompt = `Eres un neuropsicólogo clínico y analista de conducta certificado (IBA) con 15+ años de experiencia.
 
-Tu rol es analizar formularios clínicos y proporcionar:
-1. Un análisis clínico profesional y detallado
-2. Indicadores de riesgo o alerta si los hay
-3. Recomendaciones terapéuticas específicas
-4. Un mensaje cálido y comprensible para los padres (sin jerga técnica)
-5. Próximos formularios o evaluaciones recomendados
+INSTRUCCIONES ESPECIALIZADAS: ${getSpecializedInstructions(formType)}
 
-Responde SIEMPRE en español y en formato JSON con esta estructura exacta:
-{
-  "analisis_clinico": "análisis detallado para el terapeuta",
-  "indicadores_clave": ["indicador1", "indicador2"],
-  "nivel_alerta": "bajo|moderado|alto",
-  "recomendaciones": ["recomendación1", "recomendación2"],
-  "mensaje_padres": "mensaje cálido y esperanzador para los padres",
-  "formularios_recomendados": ["formulario1", "formulario2"],
-  "areas_fortaleza": ["fortaleza1", "fortaleza2"],
-  "areas_trabajo": ["área1", "área2"]
-}`
+CONTEXTO CLÍNICO:
+${ctx.fullContext}
 
-    const formTypeLabels: Record<string, string> = {
-      'screening_tdah': 'Screening TDAH (Conners)',
-      'screening_tea': 'Screening TEA (M-CHAT / CAST)',
-      'conducta_casa': 'Cuestionario de Conducta en Casa',
-      'anamnesis': 'Historia Clínica (Anamnesis)',
-      'objetivo_iep': 'Objetivo IEP',
-      'nota_sesion': 'Nota de Sesión',
-      'informe_mensual': 'Informe Mensual',
-      'registro_abc': 'Registro Conductual ABC',
-      'sensorial': 'Perfil Sensorial',
-      'habilidades_sociales': 'Evaluación Habilidades Sociales',
-      'conducta_padres': 'Informe de Conducta (Padres)',
-    }
-
-    const fullPrompt = `${systemPrompt}
-
-Formulario Clínico: ${formTypeLabels[formType] || formType}
-Paciente: ${nombreNino}, ${edadNino} años${diagnosticoNino ? `, Diagnóstico/Perfil: ${diagnosticoNino}` : ''}
-${historialTexto}
-${sessionContext ? `Contexto de sesión: ${sessionContext}` : ''}
+PACIENTE: ${ctx.childName}, ${ctx.childAge}
+DIAGNÓSTICO: ${ctx.diagnosis || diagnosis || 'En evaluación'}
+FORMULARIO: ${FORM_LABELS[formType] || formType}
+${sessionContext ? `CONTEXTO EXTRA: ${sessionContext}` : ''}
 
 DATOS DEL FORMULARIO:
 ${JSON.stringify(formData, null, 2)}
 
-INSTRUCCIÓN: Usa el historial clínico previo para contextualizar tu análisis. Menciona si hay progreso, regresión o consistencia respecto a evaluaciones anteriores. El mensaje a los padres debe incluir el nombre real del niño (${nombreNino}) y ser específico a su situación. Responde SOLO con el JSON, sin texto adicional.`
+INSTRUCCIÓN: Si hay historial previo, menciona cambios vs. evaluaciones anteriores. Si la base de conocimiento tiene información relevante, cítala. El mensaje a padres usa el nombre "${ctx.childName}" y menciona algo concreto de sus respuestas.
+
+Responde SOLO con JSON:
+{
+  "analisis_clinico": "análisis técnico detallado (3-5 párrafos)",
+  "indicadores_clave": ["indicador con dato específico"],
+  "nivel_alerta": "bajo|moderado|alto",
+  "areas_fortaleza": ["fortaleza específica del paciente"],
+  "areas_trabajo": ["área prioritaria con justificación"],
+  "recomendaciones": ["recomendación accionable específica"],
+  "mensaje_padres": "3-4 oraciones cálidas sin jerga técnica, con nombre del niño y dato específico",
+  "formularios_recomendados": ["siguiente formulario recomendado"],
+  "fuentes_clinicas": ["fuente citada si aplica"]
+}`
 
     const ai = new GoogleGenAI({ apiKey })
-    const response = await callGeminiWithRetry(ai, "gemini-2.0-flash", fullPrompt)
+    const rawText = await callGeminiSafe(ai, 'gemini-2.0-flash', prompt)
+    const parsedResult = parseAIJson(rawText, {
+      analisis_clinico: rawText,
+      mensaje_padres: `El análisis de ${ctx.childName} está completo.`,
+      nivel_alerta: 'bajo',
+    })
 
-    const rawText = response.text || '{}'
-
-    let parsedResult
-    try {
-      const jsonMatch = rawText.match(/\{[\s\S]*\}/)
-      parsedResult = jsonMatch ? JSON.parse(jsonMatch[0]) : { analisis_clinico: rawText }
-    } catch {
-      parsedResult = { analisis_clinico: rawText, mensaje_padres: 'El análisis está disponible.' }
-    }
-
-    // Guardar análisis en DB si se provee formId
     if (body.formId) {
       await supabaseAdmin.from('form_ai_analyses').insert([{
         form_id: body.formId,
         form_type: formType,
-        child_name: nombreNino,
+        child_name: ctx.childName,
         analysis: parsedResult,
         created_at: new Date().toISOString(),
-      }])
+      }]).catch(() => {})
     }
 
     return NextResponse.json({ success: true, analysis: parsedResult })
   } catch (error: any) {
-    console.error('Error analyze-neurodivergent-form:', error)
-    const isQuota = error.message === 'CUOTA_AGOTADA' || error.message?.includes('429') || error.message?.includes('RESOURCE_EXHAUSTED')
-    return NextResponse.json({ 
-      error: isQuota 
-        ? 'Cuota de IA agotada. Por favor espera unos minutos e intenta nuevamente.' 
-        : error.message 
+    const isQuota = error.message === 'CUOTA_AGOTADA'
+    return NextResponse.json({
+      error: isQuota ? 'Cuota de IA agotada. Espera unos minutos.' : error.message,
     }, { status: isQuota ? 429 : 500 })
   }
 }

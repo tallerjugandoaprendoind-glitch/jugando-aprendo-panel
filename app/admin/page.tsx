@@ -8,7 +8,8 @@ import Image from 'next/image'
 import {
   LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen,
   X, User, FileText, Loader2, Key, BarChart3, ShieldCheck, Upload,
-  ChevronRight, Settings, Crown, Stethoscope, ShoppingBag
+  ChevronRight, Settings, Crown, Stethoscope, ShoppingBag, Activity,
+  Database, Sparkles
 } from 'lucide-react'
 
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
@@ -25,24 +26,55 @@ import MensajesPendientesPanel from './components/MensajesPendientesPanel'
 import AIReportView from './components/AIReportView'
 import AprobacionesEspecialista from './components/AprobacionesEspecialista'
 import StoreManagementView from './components/StoreManagementView'
+import KnowledgeBaseView from './components/KnowledgeBaseView'
+import VADIAgentChat from './components/VADIAgentChat'
+import ProgramasABAView from './components/ProgramasABAView'
+
+// Vista general de programas (sin paciente específico)
+function ProgramasABAViewGeneral({ navigateTo, userId }: { navigateTo: (v: string) => void; userId: string }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <button onClick={() => navigateTo('ninos')}
+          className="bg-white border-2 border-indigo-100 rounded-2xl p-6 text-left hover:border-indigo-300 transition-all group">
+          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <Users size={20} className="text-indigo-600" />
+          </div>
+          <h3 className="font-black text-slate-800">Ver por paciente</h3>
+          <p className="text-xs text-slate-400 mt-1">Selecciona un niño para ver y registrar sus programas</p>
+        </button>
+        <button onClick={() => navigateTo('vadi')}
+          className="bg-white border-2 border-violet-100 rounded-2xl p-6 text-left hover:border-violet-300 transition-all group">
+          <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <Sparkles size={20} className="text-violet-600" />
+          </div>
+          <h3 className="font-black text-slate-800">Consultar a VADI</h3>
+          <p className="text-xs text-slate-400 mt-1">Pide análisis de tendencias o sugerencias de programas</p>
+        </button>
+      </div>
+    </div>
+  )
+}
 
 const NAV_ITEMS = [
   { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
   { id: 'agenda',       icon: Calendar,        label: 'Agenda' },
   { id: 'ninos',        icon: Users,           label: 'Pacientes' },
+  { id: 'programas',    icon: Activity,        label: 'Programas ABA' },
   { id: 'evaluaciones', icon: FileText,        label: 'Evaluaciones' },
   { id: 'reportes',     icon: Brain,           label: 'Historial & IA' },
+  { id: 'vadi',         icon: Sparkles,        label: 'VADI Agente' },
+  { id: 'cerebro',      icon: Database,        label: 'Cerebro IA' },
   { id: 'recursos',     icon: BookOpen,        label: 'Recursos' },
   { id: 'tienda',       icon: ShoppingBag,     label: 'Tienda' },
 ]
 
-// Ítems que aparecen en el bottom nav móvil (los más usados)
 const MOBILE_NAV_ITEMS = [
   { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
   { id: 'ninos',        icon: Users,           label: 'Pacientes' },
+  { id: 'programas',    icon: Activity,        label: 'ABA' },
+  { id: 'vadi',         icon: Sparkles,        label: 'VADI' },
   { id: 'evaluaciones', icon: FileText,        label: 'Evaluac.' },
-  { id: 'reportes',     icon: Brain,           label: 'IA' },
-  { id: 'agenda',       icon: Calendar,        label: 'Agenda' },
 ]
 
 const SECONDARY_NAV = [
@@ -170,8 +202,8 @@ export default function AdminDashboard() {
     inicio: 'Panel Principal', agenda: 'Agenda', ninos: 'Pacientes',
     evaluaciones: 'Evaluaciones', reportes: 'Historial & IA',
     recursos: 'Recursos', aprobaciones: 'Aprobaciones',
-    mensajes: 'Mensajes a Padres',
-    usuarios: 'Usuarios', importar: 'Importar CSV',
+    mensajes: 'Mensajes a Padres', usuarios: 'Usuarios', importar: 'Importar CSV',
+    programas: 'Programas ABA', vadi: 'VADI — Agente IA', cerebro: 'Cerebro de la IA',
   }
 
   const role = userProfile?.role || 'admin'
@@ -390,6 +422,20 @@ export default function AdminDashboard() {
               {currentView === 'reportes'     && <AIReportView onChildSelect={setSelectedChildReport} />}
               {currentView === 'recursos'     && <ResourcesManagementView />}
               {currentView === 'tienda'       && <StoreManagementView />}
+              {currentView === 'programas'    && (
+                <div className="max-w-4xl mx-auto">
+                  <div className="mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-2xl text-sm text-indigo-700">
+                    💡 Selecciona un paciente desde <button onClick={() => navigateTo('ninos')} className="font-black underline">Pacientes</button> para ver sus programas ABA. O usa esta vista general.
+                  </div>
+                  <ProgramasABAViewGeneral navigateTo={navigateTo} userId={user?.id || ''} />
+                </div>
+              )}
+              {currentView === 'vadi'         && (
+                <div className="max-w-3xl mx-auto">
+                  <VADIAgentChat userId={user?.id || ''} />
+                </div>
+              )}
+              {currentView === 'cerebro'      && <KnowledgeBaseView />}
               {currentView === 'aprobaciones' && (
                 <div className="space-y-10">
                   <MensajesPendientesPanel />
@@ -398,9 +444,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-              {currentView === 'mensajes' && (
-                <MensajesPendientesPanel />
-              )}
+              {currentView === 'mensajes' && <MensajesPendientesPanel />}
               {currentView === 'importar'     && <ExcelImportView />}
             </div>
           )}

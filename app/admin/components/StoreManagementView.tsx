@@ -5,7 +5,7 @@ import {
   ShoppingBag, Plus, Edit2, Trash2, Package, X, Save, Loader2,
   Upload, ImageIcon, Tag, Archive, CheckCircle, Clock, Truck,
   XCircle, ChevronDown, ChevronUp, Search, Filter, ToggleLeft,
-  ToggleRight, Star, FileText, AlertTriangle, RefreshCw, Eye,
+  ToggleRight, Star, FileText, File, AlertTriangle, RefreshCw, Eye,
   Phone, Mail, DollarSign, BarChart3
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'

@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import {
-  Activity, Baby, Calendar, ChevronRight, ClipboardList, Clock, Edit, Eye, FileText, Heart, Key, Loader2, Mail, Phone, Plus, Save, Search, Stethoscope, Ticket, Trash2, User, UserPlus, Users, X
+  Activity, Baby, Calendar, ChevronRight, ClipboardList, Clock, Edit, Eye, FileText, Heart, Key, Loader2, Mail, Phone, Plus, Save, Search, Stethoscope, Ticket, Trash2, User, UserPlus, Users, X, Brain, Sparkles, BarChart3
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { InfoRow } from './shared'
 import { calcularEdad } from '../utils/helpers'
+import ProgramasABAView from './ProgramasABAView'
+import VADIAgentChat from './VADIAgentChat'
 
 function PatientsView() {
     const [listaNinos, setListaNinos] = useState<any[]>([])
@@ -17,6 +19,7 @@ function PatientsView() {
     const [filterDiagnosis, setFilterDiagnosis] = useState('todos')
     const [sortBy, setSortBy] = useState('nombre')
     const [ultimasSesiones, setUltimasSesiones] = useState<Record<string, string>>({})
+    const [patientTab, setPatientTab] = useState<'info' | 'programas' | 'vadi'>('info')
 
     const [selectedPatient, setSelectedPatient] = useState<any>(null)
     const [showPatientModal, setShowPatientModal] = useState(false)
@@ -303,13 +306,48 @@ function PatientsView() {
                         </div>
 
                         <div className="p-6 space-y-4">
-                            {!isEditing ? (
+                            {/* Tabs */}
+                            {!isEditing && (
+                              <div className="flex gap-2 mb-4">
+                                {[
+                                  { id: 'info', label: '📋 Info', icon: User },
+                                  { id: 'programas', label: '📈 Programas ABA', icon: Activity },
+                                  { id: 'vadi', label: '✨ VADI', icon: Brain },
+                                ].map(tab => (
+                                  <button key={tab.id} onClick={() => setPatientTab(tab.id as any)}
+                                    className={`px-3 py-2 rounded-xl text-xs font-black transition-all border ${
+                                      patientTab === tab.id
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-300'
+                                    }`}>
+                                    {tab.label}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                            {!isEditing && patientTab === 'info' && (
                                 <>
                                     <InfoRow label="Fecha de Nacimiento" value={selectedPatient.birth_date ? new Date(selectedPatient.birth_date).toLocaleDateString('es-PE') : "No registrada"} icon={<Calendar size={16}/>}/>
                                     <InfoRow label="Edad" value={selectedPatient.age ? `${selectedPatient.age} años` : "No disponible"} icon={<Baby size={16}/>}/>
                                     <InfoRow label="Diagnóstico" value={selectedPatient.diagnosis || "En evaluación"} icon={<Stethoscope size={16}/>}/>
                                 </>
-                            ) : (
+                            )}
+                            {!isEditing && patientTab === 'programas' && (
+                              <ProgramasABAView
+                                childId={selectedPatient.id}
+                                childName={selectedPatient.name}
+                              />
+                            )}
+                            {!isEditing && patientTab === 'vadi' && (
+                              <VADIAgentChat
+                                userId={selectedPatient.id}
+                                childId={selectedPatient.id}
+                                childName={selectedPatient.name}
+                                contexto="paciente"
+                                compact
+                              />
+                            )}
+                            {isEditing && (
                                 <div className="space-y-4 animate-fade-in">
                                     <div>
                                         <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Completo</label>

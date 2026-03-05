@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from "@google/genai";
-import { getChildHistory } from '@/lib/child-history';
+import { buildAIContext, callGeminiSafe, parseAIJson } from '@/lib/ai-context-builder';
 
 // ============================================================================
 // INTERFACES (Tipado fuerte para seguridad)
@@ -106,11 +106,12 @@ export async function POST(request: NextRequest) {
       actividades_casa
     } = body;
 
-    // Cargar historial clínico del niño
+    // Cargar contexto completo: RAG + historial + centro
     const childId = body.childId || ''
-    const childHistory = await getChildHistory(childId, body.childName, body.childAge ? String(body.childAge) : undefined)
-    const nombreNino = childHistory.nombre
-    const historialTexto = childHistory.historialTexto
+    const homeQuery = `entorno hogar familia ABA ambiente terapéutico ${comportamiento_observado || ''}`
+    const ctx = await buildAIContext(childId, body.childName, body.childAge ? String(body.childAge) : undefined, homeQuery)
+    const nombreNino = ctx.childName
+    const historialTexto = ctx.fullContext  // RAG + centro + historial
 
     // Validación mínima
     const hasMinimalData = comportamiento_observado || barreras_identificadas || rutina_diaria || interaccion_padres;
