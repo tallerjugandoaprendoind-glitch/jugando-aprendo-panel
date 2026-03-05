@@ -181,6 +181,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
   const [saving, setSaving] = useState(false)
   const [aiAnalysis, setAiAnalysis] = useState<any>(null)
   const [editedMsg, setEditedMsg] = useState('')
+  const [editedActividades, setEditedActividades] = useState('')
   const [done, setDone] = useState(false)
 
   const sections = form.sections || []
@@ -218,7 +219,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       } else {
         res = await fetch('/api/generate-session-report', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...responses, childName, childAge, formType: form.formKey }),
+          body: JSON.stringify({ ...responses, childName, childAge, childId, formType: form.formKey }),
         })
       }
       const json = await res!.json()
@@ -256,6 +257,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         analysis?.informe_familia_ados ||
         analysis?.informe_padres || ''
       )
+      setEditedActividades(analysis?.actividades_casa || analysis?.actividad_casa || '')
       toast.success('✨ Análisis IA generado')
     } catch (e: any) { toast.error('Error: ' + e.message) }
     finally { setAnalyzing(false) }
@@ -286,12 +288,13 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       }])
 
       const msgToSend = editedMsg || aiAnalysis?.mensaje_padres
+      const actividadToSend = editedActividades || aiAnalysis?.actividades_casa || aiAnalysis?.actividad_casa
       if (msgToSend) {
         const { data: childData } = await supabase.from('children').select('parent_id').eq('id', childId).single()
         if ((childData as any)?.parent_id) {
           await fetch('/api/admin/parent-messages', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ child_id: childId, parent_id: (childData as any).parent_id, source: form.isSoft ? 'neuroforma' : 'evaluacion', source_title: `Especialista: ${form.title}`, ai_message: msgToSend, ai_analysis: aiAnalysis, session_data: { form_type: form.formKey || form.id, responses, specialist_id: userId } }),
+            body: JSON.stringify({ child_id: childId, parent_id: (childData as any).parent_id, source: form.isSoft ? 'neuroforma' : 'evaluacion', source_title: `Especialista: ${form.title}`, ai_message: msgToSend, actividades_casa: actividadToSend, ai_analysis: aiAnalysis, session_data: { form_type: form.formKey || form.id, responses, specialist_id: userId } }),
           }).catch(() => {})
         }
       }
@@ -457,18 +460,38 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
           </div>
 
           {(aiAnalysis.mensaje_padres || editedMsg) && (
-            <div>
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">
-                📩 Mensaje para los padres (editable)
-              </label>
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 flex gap-2">
-                <AlertTriangle size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-amber-700 leading-relaxed">
-                  Pasará por <strong>aprobación del jefe</strong> antes de enviarse al padre/madre.
-                </p>
+            <div className="space-y-4">
+              {/* Sección 1: Mensaje al padre */}
+              <div>
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">
+                  💬 Mensaje al padre/madre (editable)
+                </label>
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 flex gap-2">
+                  <AlertTriangle size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-700 leading-relaxed">
+                    Pasará por <strong>aprobación del jefe</strong> antes de enviarse al padre/madre.
+                  </p>
+                </div>
+                <textarea value={editedMsg} onChange={e => setEditedMsg(e.target.value)} rows={5}
+                  className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
               </div>
-              <textarea value={editedMsg} onChange={e => setEditedMsg(e.target.value)} rows={4}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+
+              {/* Sección 2: Actividad para casa */}
+              <div>
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">
+                  🏠 Actividad para realizar en casa (editable)
+                </label>
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3 flex gap-2">
+                  <span className="text-blue-600 flex-shrink-0 text-xs font-bold">1</span>
+                  <p className="text-xs text-blue-700 leading-relaxed">
+                    Una sola actividad basada en lo trabajado hoy en sesión.
+                  </p>
+                </div>
+                <textarea
+                  value={editedActividades || aiAnalysis?.actividades_casa || aiAnalysis?.actividad_casa || ''}
+                  onChange={e => setEditedActividades(e.target.value)} rows={5}
+                  className="w-full px-4 py-3 rounded-xl border border-blue-200 bg-blue-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
+              </div>
             </div>
           )}
 

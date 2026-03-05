@@ -41,8 +41,50 @@ export async function POST(req: Request) {
       // Sección 5: Intervenciones
       tecnicas_aplicadas, reforzadores_efectivos, conductas_desafiantes, estrategias_manejo,
       // Paciente
-      childName, childAge,
+      childName, childAge, childId,
     } = body;
+
+    // ── Traer historial previo del niño ──────────────────────────────────────
+    let historialTexto = '';
+    let nombreNino = childName || 'Paciente';
+    let edadNino = childAge || 'N/E';
+
+    if (childId) {
+      // Leer nombre y datos del niño directamente de la BD
+      const { data: childData } = await supabaseAdmin
+        .from('children')
+        .select('name, age, birth_date, diagnosis')
+        .eq('id', childId)
+        .single();
+      if (childData) {
+        nombreNino = (childData as any).name || nombreNino;
+        edadNino = (childData as any).age || edadNino;
+      }
+
+      // Últimas 5 sesiones ABA previas
+      const { data: sesionesAba } = await supabaseAdmin
+        .from('registro_aba')
+        .select('fecha_sesion, datos, ai_analysis')
+        .eq('child_id', childId)
+        .order('fecha_sesion', { ascending: false })
+        .limit(5);
+
+      if (sesionesAba && sesionesAba.length > 0) {
+        historialTexto = `\n━━━ HISTORIAL PREVIO DEL NIÑO (últimas ${sesionesAba.length} sesiones) ━━━\n` +
+          sesionesAba.map((s: any, i: number) => {
+            const d = s.datos || {};
+            const ai = s.ai_analysis || {};
+            return `Sesión ${i + 1} (${s.fecha_sesion || 'sin fecha'}):
+  - Objetivo: ${d.objetivo_principal || 'N/E'}
+  - Conducta observada: ${d.conducta || 'N/E'}
+  - Antecedente: ${d.antecedente || 'N/E'}
+  - Técnicas: ${Array.isArray(d.tecnicas_aplicadas) ? d.tecnicas_aplicadas.join(', ') : (d.tecnicas_aplicadas || 'N/E')}
+  - Avances IA: ${ai.avances_observados || 'N/E'}
+  - Áreas dificultad: ${ai.areas_dificultad || 'N/E'}
+  - Patrón aprendizaje: ${ai.patron_aprendizaje || 'N/E'}`;
+          }).join('\n\n');
+      }
+    }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -73,9 +115,10 @@ export async function POST(req: Request) {
     const ai = new GoogleGenAI({ apiKey });
 
     const context = `
-ACTÚA COMO: Neuropsicólogo clínico infantil supervisor con 15+ años de experiencia en centros especializados en neurodivergencia (TEA, TDAH, DI, TDL). Tu escritura es cálida, técnica y profundamente empática. Los padres confían en ti porque les explicas TODO con claridad, con actividades concretas y aplicables en casa.
+ACTÚA COMO: Neuropsicólogo clínico infantil supervisor con 15+ años de experiencia en centros especializados en neurodivergencia (TEA, TDAH, DI, TDL). Tu escritura es cálida, técnica y profundamente empática. Los padres confían en ti porque les explicas TODO con claridad.
 
-PACIENTE: ${childName || 'Paciente'}, ${childAge || 'N/E'} años.
+PACIENTE: ${nombreNino}, ${edadNino} años.
+${historialTexto}
 
 DATOS DE LA SESIÓN REGISTRADOS POR EL TERAPEUTA:
 ━━━ SECCIÓN 1: INFORMACIÓN ━━━
@@ -109,31 +152,39 @@ DATOS DE LA SESIÓN REGISTRADOS POR EL TERAPEUTA:
 - Estrategias de manejo: ${estrategias_manejo || 'N/E'}
 ${productosTexto}
 
-TAREA PRINCIPAL: Genera el análisis clínico completo Y el reporte profesional neuropsicológico para los padres.
+TAREA PRINCIPAL: Genera el análisis clínico completo Y el reporte profesional para los padres, EN DOS PARTES SEPARADAS.
 
 REGLAS ESTRICTAS:
 - "patron_aprendizaje" DEBE ser EXACTAMENTE uno de: "Aprendizaje rápido y generalización", "Aprendizaje gradual", "Requiere repetición intensiva", "Dificultad para generalizar", "Aprendizaje inconsistente"
 - "coordinacion_familia" DEBE ser EXACTAMENTE uno de: "Urgente", "Necesaria", "Rutinaria", "No necesaria"
 - "efectividad_sesion" DEBE ser número entero 1-5
-- "mensaje_padres": Este es el campo MÁS IMPORTANTE. Debe ser un REPORTE NEUROPSICOLÓGICO PROFESIONAL COMPLETO de 10-14 oraciones con la siguiente estructura obligatoria:
-  1. Saludo cálido mencionando al niño/a por nombre
-  2. Qué se trabajó en la sesión (en lenguaje accesible, no técnico)
-  3. Descripción de 2-3 logros específicos y observables que tuvo el niño/a hoy
-  4. Una fortaleza destacada observada durante la sesión
-  5. Una área que seguimos trabajando y por qué es importante
-  6. ACTIVIDADES PARA CASA (esta sección es OBLIGATORIA - mínimo 3 actividades):
-     "ACTIVIDADES PARA PRACTICAR EN CASA ESTA SEMANA:
-      Actividad 1 - [Nombre de la actividad]: [descripción clara]. Cómo hacerlo: [pasos numerados]. Frecuencia: [X veces por semana, X minutos]. Qué observar: [qué deben notar los padres].
-      Actividad 2 - [Nombre]: [descripción]. Cómo hacerlo: [pasos]. Frecuencia: [...]. Qué observar: [...].
-      Actividad 3 - [Nombre]: [descripción]. Cómo hacerlo: [pasos]. Frecuencia: [...]. Qué observar: [...]."
-  7. Qué reportar en la próxima sesión
-  8. Mensaje motivador para la familia
-  9. Firma con nombre del centro
+- USA el historial previo para contextualizar: menciona si hay progreso, regresión o consistencia respecto a sesiones anteriores.
 
-- "destacar_positivo": exactamente 3-5 logros separados por " | " (ej: "Mantuvo atención 8 min | Verbalizó 4 palabras nuevas | Toleró frustración sin berrinche")
-- "instrucciones_padres": instrucciones paso a paso numeradas para la actividad terapéutica principal
-- Para "producto_sugerido": ID exacto si aplica genuinamente, si no, null
-- Sé ESPECÍFICO. Usa el nombre del niño. Menciona las habilidades trabajadas. NO generes texto genérico.
+- "mensaje_padres": Mensaje SOLO emocional/informativo. 6-8 oraciones, SIN actividades en casa. Estructura:
+  1. Saludo cálido usando el nombre real del niño/a
+  2. Qué se trabajó hoy (lenguaje accesible, no técnico)
+  3. 2-3 logros específicos observados HOY, comparando con historial si hay
+  4. Una fortaleza destacada
+  5. Un área que seguimos trabajando y por qué importa
+  6. Qué reportar en la próxima sesión
+  7. Mensaje motivador para la familia
+  8. Firma "Con afecto y compromiso, Equipo Jugando Aprendo"
+  ⚠️ PROHIBIDO incluir actividades para casa aquí.
+
+- "actividades_casa": UNA SOLA actividad terapéutica para el hogar, basada exactamente en lo trabajado HOY. Formato exacto:
+  "Actividad: [Nombre descriptivo]
+   Objetivo: [qué habilidad trabaja]
+   Cómo hacerlo:
+   1. [paso]
+   2. [paso]
+   3. [paso]
+   Frecuencia: [X veces por semana, X-X minutos]
+   Qué observar: [qué reportar en próxima sesión]"
+
+- "destacar_positivo": exactamente 3-5 logros separados por " | "
+- "instrucciones_padres": pasos numerados de la actividad en casa (mismo contenido que actividades_casa pero como lista)
+- Para "producto_sugerido": ID exacto si aplica, si no null
+- Usa el nombre real del niño. Sé ESPECÍFICO. NO generes texto genérico.
 
 Responde SOLAMENTE con JSON válido (sin texto adicional, sin backticks, sin comentarios):
 {
@@ -144,23 +195,23 @@ Responde SOLAMENTE con JSON válido (sin texto adicional, sin backticks, sin com
   "alertas_clinicas": "alertas o banderas rojas identificadas, o Sin alertas clínicas significativas",
   "recomendaciones_equipo": "recomendaciones específicas para el equipo interdisciplinario",
   "coordinacion_familia": "Rutinaria",
-  "actividad_casa": "descripción completa y detallada de la actividad terapéutica principal para el hogar",
-  "instrucciones_padres": "1. Preparar el espacio de la siguiente manera...\n2. Presentar el material así...\n3. Cuando el niño/a haga X, responder con Y...\n4. Repetir X veces...\n5. Finalizar con refuerzo positivo diciendo...",
+  "actividad_casa": "Actividad: [nombre]\n Objetivo: [objetivo]\n Cómo hacerlo:\n 1. [paso]\n 2. [paso]\n 3. [paso]\n Frecuencia: [frecuencia]\n Qué observar: [observación]",
+  "instrucciones_padres": "1. [paso]\n2. [paso]\n3. [paso]",
   "objetivo_tarea": "objetivo conductual y neuropsicológico de la actividad en casa",
-  "mensaje_padres": "Estimados papás de [Nombre],\n\nHoy tuvimos una sesión muy enriquecedora...\n\n[reporte completo 10-14 oraciones con logros, fortalezas, área de trabajo, y ACTIVIDADES PARA CASA detalladas paso a paso]\n\nCon afecto y compromiso,\nEquipo Jugando Aprendo",
-  "destacar_positivo": "Logro específico 1 | Logro específico 2 | Logro específico 3",
-  "proximos_pasos": "En las próximas sesiones continuaremos... Los avances de hoy nos permiten planificar...",
+  "mensaje_padres": "Estimados papás de [Nombre real],\n\n[6-8 oraciones cálidas e informativas SIN actividades para casa]\n\nCon afecto y compromiso,\nEquipo Jugando Aprendo",
+  "destacar_positivo": "Logro 1 | Logro 2 | Logro 3",
+  "proximos_pasos": "En las próximas sesiones continuaremos...",
   "efectividad_sesion": 4,
-  "ajustes_proxima_sesion": "ajustes técnicos planificados para próxima sesión",
-  "necesidades_materiales": "materiales y recursos necesarios para próximas sesiones",
-  "observaciones_clinicas": "observaciones clínicas adicionales de interés terapéutico",
-  "analisis_abc": "análisis funcional clínico de la conducta observada (modelo ABC)",
-  "justificacion": "justificación clínica y teórica de las intervenciones seleccionadas",
-  "mentoring_interno": "notas de supervisión interna para el desarrollo del terapeuta",
+  "ajustes_proxima_sesion": "ajustes técnicos para próxima sesión",
+  "necesidades_materiales": "materiales necesarios para próximas sesiones",
+  "observaciones_clinicas": "observaciones clínicas adicionales",
+  "analisis_abc": "análisis funcional clínico ABC",
+  "justificacion": "justificación clínica de las intervenciones",
+  "mentoring_interno": "notas de supervisión interna",
   "actividad_realizada": "descripción de la actividad principal realizada en sesión",
   "red_flags": "NO",
-  "barreras": "barreras identificadas para el aprendizaje y generalización",
-  "tarea_hogar": "resumen ejecutivo de la tarea terapéutica para el hogar",
+  "barreras": "barreras identificadas para el aprendizaje",
+  "tarea_hogar": "resumen ejecutivo de la tarea para el hogar",
   "producto_sugerido": null,
   "razon_sugerencia": null
 }`;
