@@ -1,7 +1,7 @@
 // app/api/progreso-paciente/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { GoogleGenAI } from '@google/genai'
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -120,7 +120,6 @@ export async function GET(req: NextRequest) {
 // ─── REPORTE SEMANAL CON IA ───────────────────────────────────
 async function generarReporteSemanal(childId: string, sesiones: any[]): Promise<string | null> {
   try {
-    const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey || sesiones.length === 0) return null
 
     const { data: child } = await supabaseAdmin
@@ -128,8 +127,6 @@ async function generarReporteSemanal(childId: string, sesiones: any[]): Promise<
       .select('name, age, diagnosis')
       .eq('id', childId)
       .single()
-
-    const ai = new GoogleGenAI({ apiKey })
 
     const prompt = `Genera un reporte semanal de progreso para compartir con la familia del paciente ${(child as any)?.name} (${(child as any)?.age} anos, ${(child as any)?.diagnosis}).
 
@@ -149,10 +146,12 @@ Escribe un parrafo corto (3-4 oraciones) en lenguaje simple para los padres:
 
 Tono: Calido, positivo y alentador. Sin tecnicismos.`
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-    })
+    const responseText__ = await callGroqSimple(
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        prompt,
+        { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
+      )
+      const response = { text: responseText__ }
 
     return response.text || null
   } catch {

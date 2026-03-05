@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from "@google/genai";
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 export async function POST(req: Request) {
@@ -32,8 +32,6 @@ export async function POST(req: Request) {
     }
 
     // 3. Configurar Gemini con la nueva librería
-    const ai = new GoogleGenAI({ apiKey });
-
     // 4. Prompt Estructurado
     const prompt = `
       Eres un analista clínico experto en terapia ABA.
@@ -44,10 +42,12 @@ export async function POST(req: Request) {
     `;
 
     // 5. Generar Análisis - Se asegura que el modelo sea un string fijo
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview" as string,
-      contents: prompt as string,
-    });
+    const responseText__ = await callGroqSimple(
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        prompt as string,
+        { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
+      )
+      const response = { text: responseText__ };
 
     // 6. Obtener y parsear el texto de la respuesta con validación
     const responseText = response.text || "{}";

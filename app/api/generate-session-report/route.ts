@@ -1,28 +1,10 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from "@google/genai";
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { buildAIContext, callGeminiSafe } from '@/lib/ai-context-builder';
 
 
 // Helper: reintentar con backoff exponencial ante rate limit
-async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 3): Promise<any> {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await ai.models.generateContent({ model, contents, config })
-      return response
-    } catch (err: any) {
-      const is429 = err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED') || err?.status === 429
-      if (is429 && attempt < maxRetries - 1) {
-        const delay = Math.pow(2, attempt) * 2000 // 2s, 4s, 8s
-        console.warn(`⚠️ Rate limit Gemini (intento ${attempt + 1}/${maxRetries}). Reintentando en ${delay/1000}s...`)
-        await new Promise(r => setTimeout(r, delay))
-        continue
-      }
-      if (is429) throw new Error('CUOTA_AGOTADA')
-      throw err
-    }
-  }
-}
 
 export async function POST(req: Request) {
   try {
@@ -51,11 +33,6 @@ export async function POST(req: Request) {
     const nombreNino = aiCtx.childName
     const edadNino = aiCtx.childAge
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "Error de servidor: Falta la variable GEMINI_API_KEY." }, { status: 500 });
-    }
-
     if (!conducta && !antecedente) {
       return NextResponse.json({ error: "Faltan datos del registro ABA." }, { status: 400 });
     }
@@ -77,7 +54,6 @@ export async function POST(req: Request) {
       : '';
 
     // ── Prompt neuropsicológico profesional ──────────────────────────────────
-    const ai = new GoogleGenAI({ apiKey });
 
     const context = `
 ACTÚA COMO: Neuropsicólogo clínico infantil supervisor y analista de conducta (IBA) con 15+ años de experiencia.
@@ -183,9 +159,9 @@ Responde SOLAMENTE con JSON válido (sin texto adicional, sin backticks, sin com
   "razon_sugerencia": null
 }`;
 
-    const response = await callGeminiWithRetry(ai, "gemini-3-flash-preview", context, { responseMimeType: "application/json", temperature: 0.4 })
+    const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', context, { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 2000 })
 
-    const responseData = JSON.parse(response.text || "{}");
+    const responseData = JSON.parse(response || "{}");
 
     // Enriquecer con info completa del producto si la IA eligió uno
     if (responseData.producto_sugerido && productos) {

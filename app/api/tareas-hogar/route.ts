@@ -1,7 +1,7 @@
 // app/api/tareas-hogar/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { GoogleGenAI } from '@google/genai'
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -124,7 +124,6 @@ export async function POST(req: NextRequest) {
 // ─── GENERAR INSTRUCCIONES CON GEMINI ────────────────────────
 async function generarInstruccionesIA(childId: string, titulo: string, objetivo?: string): Promise<string> {
   try {
-    const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return generarInstruccionesGenericas(titulo)
 
     const { data: child } = await supabaseAdmin
@@ -133,7 +132,6 @@ async function generarInstruccionesIA(childId: string, titulo: string, objetivo?
       .eq('id', childId)
       .single()
 
-    const ai = new GoogleGenAI({ apiKey })
     const prompt = `Eres un terapeuta ABA especializado en neuropsicologia infantil.
 
 Genera instrucciones CLARAS y PRACTICAS para que los padres realicen esta actividad terapeutica en casa:
@@ -155,10 +153,12 @@ QUE OBSERVAR: [que registrar o notar]
 
 Usa lenguaje simple, sin tecnicismos. Maximo 150 palabras total.`
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
-    })
+    const responseText__ = await callGroqSimple(
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        prompt,
+        { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
+      )
+      const response = { text: responseText__ }
 
     return response.text || generarInstruccionesGenericas(titulo)
   } catch {

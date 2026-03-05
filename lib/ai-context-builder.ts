@@ -105,42 +105,28 @@ export async function buildAIContext(
   }
 }
 
-// ── Retry helper Gemini (reutilizable) ──────────────────────────────────────
+// ── Retry helper IA — usa Groq por defecto, fallback a Gemini para PDFs ────
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+
+// callGeminiSafe - ahora usa Groq internamente (más rápido y gratuito)
+// El parámetro 'ai' y 'model' se mantienen por compatibilidad pero se ignoran
 export async function callGeminiSafe(
   ai: any,
   model: string,
   prompt: string,
   config: any = {},
-  maxRetries = 4
+  maxRetries = 3
 ): Promise<string> {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: prompt,
-        config: { temperature: 0.5, maxOutputTokens: 2500, ...config },
-      })
-      return response.text || ''
-    } catch (err: any) {
-      const isRetryable =
-        err?.message?.includes('429') ||
-        err?.message?.includes('RESOURCE_EXHAUSTED') ||
-        err?.message?.includes('503') ||
-        err?.message?.includes('UNAVAILABLE')
-
-      if (isRetryable && attempt < maxRetries - 1) {
-        const delay = Math.pow(2, attempt) * 3000
-        console.warn(`⚠️ Gemini retry ${attempt + 1}/${maxRetries} en ${delay / 1000}s`)
-        await new Promise(r => setTimeout(r, delay))
-        continue
-      }
-      if (err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED')) {
-        throw new Error('CUOTA_AGOTADA')
-      }
-      throw err
-    }
+  try {
+    const result = await callGroqSimple(
+      'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo. Responde siempre en español.',
+      prompt,
+      { model: GROQ_MODELS.SMART, temperature: config.temperature ?? 0.5, maxTokens: config.maxOutputTokens ?? 2500, maxRetries }
+    )
+    return result
+  } catch (err: any) {
+    throw new Error(err.message || 'Error en IA')
   }
-  throw new Error('Max retries exceeded')
 }
 
 // ── Parser JSON seguro ───────────────────────────────────────────────────────

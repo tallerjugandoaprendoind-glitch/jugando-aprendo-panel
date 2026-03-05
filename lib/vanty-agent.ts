@@ -4,9 +4,9 @@
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { buildKnowledgeContext, searchKnowledge } from '@/lib/knowledge-base'
 import { getChildHistory } from '@/lib/child-history'
-import { GoogleGenAI } from '@google/genai'
+import { callGroq, callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
-const MODEL = 'gemini-2.0-flash'
+
 
 // ── Herramientas del agente ──────────────────────────────────────────────────
 
@@ -133,12 +133,7 @@ REGLAS:
 
 // ── Clase principal del Agente ────────────────────────────────────────────────
 export class VantyAgent {
-  private ai: GoogleGenAI
   private conversacionId: string | null = null
-
-  constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
-  }
 
   // Iniciar o continuar una conversación
   async chat(
@@ -167,31 +162,21 @@ export class VantyAgent {
         options.childId ? AGENT_TOOLS.obtenerHistorialNino(options.childId) : Promise.resolve(''),
       ])
 
-      // 3. Preparar mensajes con historial
+      // 3. Preparar mensajes con historial (formato Groq/OpenAI)
       const messages = conversacion.mensajes as any[]
-      const historialReciente = messages.slice(-10) // últimos 10 mensajes
+      const historialReciente = messages.slice(-10)
+      const groqMessages = [
+        { role: 'system' as const, content: SYSTEM_PROMPT + '\n\n' + knowledgeCtx + (childCtx ? '\nPACIENTE ACTIVO:\n' + childCtx : '') },
+        ...historialReciente.map((m: any) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        { role: 'user' as const, content: userMessage },
+      ]
 
-      // 4. Construir prompt completo
-      const fullPrompt = `${SYSTEM_PROMPT}
-
-${knowledgeCtx}
-${childCtx ? `\nPACIENTE ACTIVO:\n${childCtx}` : ''}
-
-HISTORIAL DE CONVERSACIÓN:
-${historialReciente.map((m: any) => `${m.role === 'user' ? 'Especialista' : 'ARIA'}: ${m.content}`).join('\n')}
-
-Especialista: ${userMessage}
-
-ARIA:`
-
-      // 5. Llamar al modelo
-      const response = await this.ai.models.generateContent({
-        model: MODEL,
-        contents: fullPrompt,
-        config: { temperature: 0.6, maxOutputTokens: 2000 },
-      })
-
-      const aiResponse = response.text || 'No pude generar una respuesta.'
+      // 4. Llamar a Groq (gratis, rápido)
+      const aiResponse = await callGroq(groqMessages, {
+        model: GROQ_MODELS.SMART,
+        temperature: 0.6,
+        maxTokens: 2000,
+      }) || 'No pude generar una respuesta.'
 
       // 6. Detectar si necesita usar herramientas
       const toolResult = await this.detectAndUseTool(userMessage, aiResponse, options.childId)
@@ -331,16 +316,12 @@ ARIA:`
       - Avances cercanos al criterio: ${sugerencias.join(', ') || 'ninguno'}
       Sé específico, clínico y menciona el nombre del paciente.`
 
-      const resumenResp = await this.ai.models.generateContent({
-        model: MODEL,
-        contents: resumenPrompt,
-        config: { temperature: 0.4, maxOutputTokens: 300 },
-      })
+      const resumenText = await callGroqSimple('Eres ARIA, analista de conducta clínica.', resumenPrompt, { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 300 })
 
       return {
         alertas,
         sugerencias,
-        resumen: resumenResp.text || 'Análisis completado.',
+        resumen: resumenText || 'Análisis completado.',
       }
     } catch (error: any) {
       console.error('Error análisis proactivo:', error)

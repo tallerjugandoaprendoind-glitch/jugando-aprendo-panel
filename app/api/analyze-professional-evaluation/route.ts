@@ -4,7 +4,7 @@
 // ==============================================================================
 
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from "@google/genai";
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { buildAIContext, callGeminiSafe } from '@/lib/ai-context-builder';
 
 // Definimos interfaces para tipado básico
@@ -18,25 +18,6 @@ interface EvaluationRequest {
 
 
 // Helper: reintentar con backoff exponencial ante rate limit
-async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 5): Promise<any> {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await ai.models.generateContent({ model, contents, config })
-      return response
-    } catch (err: any) {
-      const is429 = err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED') || err?.status === 429
-      const is503 = err?.message?.includes('503') || err?.message?.includes('UNAVAILABLE') || err?.message?.includes('high demand')
-      if ((is429 || is503) && attempt < maxRetries - 1) {
-        const delay = Math.pow(2, attempt) * 3000 // 3s, 6s, 12s, 24s
-        console.warn(`⚠️ Rate limit/503 Gemini (intento ${attempt + 1}/${maxRetries}). Reintentando en ${delay/1000}s...`)
-        await new Promise(r => setTimeout(r, delay))
-        continue
-      }
-      if (is429) throw new Error('CUOTA_AGOTADA')
-      throw err
-    }
-  }
-}
 
 export async function POST(req: Request) {
   try {
@@ -57,8 +38,6 @@ export async function POST(req: Request) {
     const historialTexto = ctx.fullContext  // includes RAG + centro + child history
 
     // 2. Inicialización
-    const ai = new GoogleGenAI({ apiKey });
-
     let analysisResult: any = {};
 
     // 3. Router de Evaluaciones
@@ -202,7 +181,7 @@ async function analyzeBRIEF2(ai: any, responses: any, childName: string, childAg
     }
   `;
 
-  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
+  const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
@@ -283,7 +262,7 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
     }
   `;
 
-  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
+  const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
@@ -372,7 +351,7 @@ async function analyzeVineland3(ai: any, responses: any, childName: string, chil
     }
   `;
 
-  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
+  const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
@@ -445,7 +424,7 @@ async function analyzeWISCV(ai: any, responses: any, childName: string, childAge
     }
   `;
 
-  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
+  const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 
@@ -541,7 +520,7 @@ async function analyzeBASC3(ai: any, responses: any, childName: string, childAge
     }
   `;
 
-  const result = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, { temperature: 0.7, maxOutputTokens: 2000 });
+  const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
   if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
 

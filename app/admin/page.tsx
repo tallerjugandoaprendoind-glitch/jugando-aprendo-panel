@@ -29,12 +29,27 @@ import StoreManagementView from './components/StoreManagementView'
 import KnowledgeBaseView from './components/KnowledgeBaseView'
 import ARIAAgentChat from './components/ARIAAgentChat'
 import ProgramasABAView from './components/ProgramasABAView'
+import DashboardGraficasABA from './components/DashboardGraficasABA'
 
 // Vista general de programas (sin paciente específico)
 function ProgramasABAViewGeneral({ navigateTo, userId }: { navigateTo: (v: string) => void; userId: string }) {
+  const [mode, setMode] = useState<'menu' | 'dashboard'>('menu')
+
+  if (mode === 'dashboard') {
+    return (
+      <div>
+        <button onClick={() => setMode('menu')}
+          className="mb-4 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
+          ← Volver al menú
+        </button>
+        <DashboardGraficasABA onIrAPacientes={() => navigateTo('ninos')} />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <button onClick={() => navigateTo('ninos')}
           className="bg-white border-2 border-indigo-100 rounded-2xl p-6 text-left hover:border-indigo-300 transition-all group">
           <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
@@ -42,6 +57,14 @@ function ProgramasABAViewGeneral({ navigateTo, userId }: { navigateTo: (v: strin
           </div>
           <h3 className="font-black text-slate-800">Ver por paciente</h3>
           <p className="text-xs text-slate-400 mt-1">Selecciona un niño para ver y registrar sus programas</p>
+        </button>
+        <button onClick={() => setMode('dashboard')}
+          className="bg-white border-2 border-emerald-100 rounded-2xl p-6 text-left hover:border-emerald-300 transition-all group">
+          <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+            <Activity size={20} className="text-emerald-600" />
+          </div>
+          <h3 className="font-black text-slate-800">Dashboard de gráficas</h3>
+          <p className="text-xs text-slate-400 mt-1">Ve el progreso y gráficas de todos los pacientes</p>
         </button>
         <button onClick={() => navigateTo('vadi')}
           className="bg-white border-2 border-violet-100 rounded-2xl p-6 text-left hover:border-violet-300 transition-all group">

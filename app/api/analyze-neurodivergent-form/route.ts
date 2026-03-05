@@ -1,6 +1,6 @@
 // app/api/analyze-neurodivergent-form/route.ts
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenAI } from '@google/genai'
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { buildAIContext, callGeminiSafe, parseAIJson } from '@/lib/ai-context-builder'
 
@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { formType, formData, childName, childAge, diagnosis, sessionContext, childId } = body
 
-    const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Falta GEMINI_API_KEY' }, { status: 500 })
 
     const searchQuery = `${FORM_LABELS[formType] || formType} ${diagnosis || ''} evaluación ABA`
@@ -80,8 +79,7 @@ Responde SOLO con JSON:
   "fuentes_clinicas": ["fuente citada si aplica"]
 }`
 
-    const ai = new GoogleGenAI({ apiKey })
-    const rawText = await callGeminiSafe(ai, 'gemini-2.0-flash', prompt)
+    const rawText = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2500 })
     const parsedResult = parseAIJson(rawText, {
       analisis_clinico: rawText,
       mensaje_padres: `El análisis de ${ctx.childName} está completo.`,

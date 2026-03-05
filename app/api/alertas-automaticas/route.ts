@@ -2,7 +2,7 @@
 // Motor de alertas proactivas - ejecutar como cron semanal
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { GoogleGenAI } from '@google/genai'
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
 // ─── GET: ejecutar análisis proactivo de todos los pacientes ──
 export async function GET(req: NextRequest) {
@@ -244,7 +244,6 @@ async function crearAlertaSiNoExiste(alerta: any) {
 
 // ─── ANÁLISIS IA DE TENDENCIA ─────────────────────────────────
 async function analizarTendenciaConIA(childId: string, sesiones: any[]): Promise<string | null> {
-  const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) return null
 
   const { data: child } = await supabaseAdmin
@@ -262,7 +261,6 @@ async function analizarTendenciaConIA(childId: string, sesiones: any[]): Promise
     conducta: s.datos?.conducta
   }))
 
-  const ai = new GoogleGenAI({ apiKey })
   const prompt = `Analiza estas ultimas ${sesiones.length} sesiones ABA del paciente ${(child as any)?.name} (${(child as any)?.diagnosis}):
 
 ${JSON.stringify(resumenSesiones, null, 2)}
@@ -272,10 +270,12 @@ Si ves algo importante, responde en 1-2 oraciones concretas.
 Si todo va bien, responde exactamente: "SIN_ALERTA"
 No uses markdown.`
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: prompt,
-  })
+  const responseText__ = await callGroqSimple(
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        prompt,
+        { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
+      )
+      const response = { text: responseText__ }
 
   const texto = response.text?.trim()
   if (!texto || texto === 'SIN_ALERTA' || texto.includes('SIN_ALERTA')) return null

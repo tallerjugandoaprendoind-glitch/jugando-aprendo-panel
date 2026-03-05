@@ -7,7 +7,7 @@
 // ==============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenAI } from "@google/genai"
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { buildAIContext, callGeminiSafe, parseAIJson } from '@/lib/ai-context-builder'
 
@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { formId, formType, formTitle, responses, childId, parentId } = body
 
-    const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) return NextResponse.json({ error: 'Falta API Key' }, { status: 500 })
 
     // ── 1. Contexto completo: RAG + historial + centro ────────────────────
@@ -37,7 +36,6 @@ export async function POST(request: NextRequest) {
       .map(([k, v]) => `- ${k}: ${Array.isArray(v) ? (v as string[]).join(', ') : String(v)}`)
       .join('\n')
 
-    const ai = new GoogleGenAI({ apiKey })
 
     const prompt = `Eres un supervisor clínico especialista en neurodiversidad (TDAH, TEA, trastornos del desarrollo) y analista de conducta (IBA).
 
@@ -67,11 +65,12 @@ Responde SOLO con JSON (sin markdown):
   "proximo_paso": "Acción concreta próxima sesión"
 }`
 
-    const aiResponse = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: prompt,
-      config: { responseMimeType: 'application/json', temperature: 0.3 }
-    })
+    const aiResponseText__ = await callGroqSimple(
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        prompt,
+        { model: GROQ_MODELS.SMART, temperature: 0.3, maxTokens: 2000 }
+      )
+      const aiResponse = { text: aiResponseText__ }
 
     const text = aiResponse.text || '{}'
     let analysis: any = {}
@@ -187,7 +186,6 @@ async function generateNarrativeForWord(
   reportData: any, formTitle: string | undefined, apiKey: string
 ): Promise<string | null> {
   try {
-    const ai = new GoogleGenAI({ apiKey })
     const existingAnalysis = reportData?.ai_analysis
     const displayTitle = formTitle || formType.replace(/_/g, ' ').toUpperCase()
 
@@ -231,7 +229,12 @@ Genera un INFORME CLÍNICO PROFESIONAL con:
 ## INDICADORES DE SEGUIMIENTO
 ## PRÓXIMOS PASOS`
 
-    const resp = await ai.models.generateContent({ model: 'gemini-2.0-flash', contents: prompt })
+    const respText__ = await callGroqSimple(
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        prompt,
+        { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
+      )
+      const resp = { text: respText__ }
     return resp.candidates?.[0]?.content?.parts?.[0]?.text || resp.text || null
   } catch { return null }
 }

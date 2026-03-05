@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 // Se actualiza la importación según tu archivo de referencia
-import { GoogleGenAI } from "@google/genai";
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 // Helper: convierte cualquier valor a array de strings de forma segura
@@ -348,13 +348,14 @@ RESPONDE AHORA:
     
     // El cliente obtiene la API key automáticamente si está en el objeto de configuración
     // o puedes pasarla directamente como en tu archivo de origen.
-    const ai = new GoogleGenAI({ apiKey });
     
     // Llamada actualizada siguiendo tu sintaxis exacta: ai.models.generateContent
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: context,
-    });
+    const responseText__ = await callGroqSimple(
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        context,
+        { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
+      )
+      const response = { text: responseText__ };
     
     // Se retorna la respuesta usando response.text
     return NextResponse.json({ text: response.text });

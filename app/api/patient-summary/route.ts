@@ -1,32 +1,12 @@
 import { NextResponse } from 'next/server';
-import { GoogleGenAI } from "@google/genai";
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
-async function callGeminiWithRetry(ai: any, model: string, contents: string, config: any = {}, maxRetries = 5): Promise<any> {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      const response = await ai.models.generateContent({ model, contents, config })
-      return response
-    } catch (err: any) {
-      const is429 = err?.message?.includes('429') || err?.message?.includes('RESOURCE_EXHAUSTED')
-      const is503 = err?.message?.includes('503') || err?.message?.includes('UNAVAILABLE') || err?.message?.includes('high demand')
-      if ((is429 || is503) && attempt < maxRetries - 1) {
-        const delay = Math.pow(2, attempt) * 3000
-        await new Promise(r => setTimeout(r, delay))
-        continue
-      }
-      throw err
-    }
-  }
-}
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { childName, childAge, diagnosis, records } = body;
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: 'Sin API Key' }, { status: 500 });
-    const ai = new GoogleGenAI({ apiKey });
 
     // Build context from all records
     const contextParts: string[] = [];
@@ -89,10 +69,7 @@ Genera un JSON con la siguiente estructura EXACTA (sin markdown, solo JSON puro)
   "mensaje_equipo": "Mensaje motivador de 2-3 oraciones para el equipo terapéutico"
 }`;
 
-    const response = await callGeminiWithRetry(ai, "gemini-3-flash-preview", prompt, {
-      temperature: 0.7,
-      maxOutputTokens: 2000,
-    });
+    const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
     const text = response?.candidates?.[0]?.content?.parts?.[0]?.text || response?.text || '';
     const clean = text.replace(/```json|```/g, '').trim();

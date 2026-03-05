@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI } from "@google/genai";
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { buildAIContext, callGeminiSafe, parseAIJson } from '@/lib/ai-context-builder';
 
 // ============================================================================
@@ -239,17 +239,13 @@ export async function POST(request: NextRequest) {
     console.log('🤖 Enviando contexto a Gemini para análisis de entorno...');
 
     // 4. Inicialización de Gemini
-    const ai = new GoogleGenAI({ apiKey });
-
     // 5. Ejecución del Modelo
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: fullContext,
-      config: {
-        temperature: 0.7,
-        maxOutputTokens: 2000,
-      }
-    });
+    const responseText__ = await callGroqSimple(
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        fullContext,
+        { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 }
+      )
+      const response = { text: responseText__ };
 
     console.log('✅ Respuesta recibida de Gemini');
     

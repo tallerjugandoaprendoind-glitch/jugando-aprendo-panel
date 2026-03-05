@@ -2,7 +2,7 @@
 // Chat IA exclusivo para padres - respuestas en lenguaje accesible
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { GoogleGenAI } from '@google/genai'
+import { callGroq, callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
 export async function POST(req: NextRequest) {
   try {
@@ -11,9 +11,6 @@ export async function POST(req: NextRequest) {
     if (!mensaje || !childId || !parentUserId) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
     }
-
-    const apiKey = process.env.GEMINI_API_KEY
-    if (!apiKey) return NextResponse.json({ error: 'Servicio no disponible' }, { status: 500 })
 
     // Verificar que el padre tiene acceso a este paciente
     const { data: acceso } = await supabaseAdmin
@@ -158,8 +155,6 @@ async function generarRespuestaPadre(
   historial: any[],
   nombrePadre: string
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
-
   const systemPrompt = `Eres el asistente virtual del Centro Jugando Aprendo, especializado en comunicacion con familias.
 
 INFORMACION DEL PACIENTE (para tu referencia interna - no revelar datos tecnicos):
@@ -194,14 +189,21 @@ TONO: Como una amiga profesional que conoce al nino y quiere ayudar a la familia
   }))
   mensajes.push({ role: 'user', parts: [{ text: mensaje }] })
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-3-flash-preview',
-    contents: [
-      { role: 'user', parts: [{ text: systemPrompt + '\n\nAhora responde al mensaje del padre.' }] },
-      { role: 'model', parts: [{ text: 'Entendido. Estoy aqui para ayudar a la familia de ' + contexto.nombre + '.' }] },
-      ...mensajes
-    ],
+  // Build chat messages for Groq
+  const groqMessages = [
+    { role: 'system' as const, content: systemPrompt },
+    ...historial.map(h => ({
+      role: h.rol as 'user' | 'assistant',
+      content: h.mensaje,
+    })),
+    { role: 'user' as const, content: mensaje },
+  ]
+
+  const respuesta = await callGroq(groqMessages, {
+    model: GROQ_MODELS.SMART,
+    temperature: 0.5,
+    maxTokens: 500,
   })
 
-  return response.text || 'Disculpa, no pude procesar tu mensaje. Por favor intenta nuevamente.'
+  return respuesta || 'Disculpa, no pude procesar tu mensaje. Por favor intenta nuevamente.'
 }

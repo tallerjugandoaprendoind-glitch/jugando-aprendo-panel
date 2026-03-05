@@ -4,7 +4,7 @@
 // ==============================================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenAI } from "@google/genai";
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
         AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel,
@@ -99,12 +99,7 @@ async function generateAIAnalysis(
   reportData: any,
   formTitle?: string
 ): Promise<string | null> {
-  
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    console.warn('⚠️ No hay API key de Gemini - reporte sin análisis IA');
-    return null;
-  }
+
 
   try {
     // Si ya existe análisis IA completo, no llamar Gemini (evita timeout)
@@ -113,7 +108,6 @@ async function generateAIAnalysis(
       return null;
     }
 
-    const ai = new GoogleGenAI({ apiKey });
 
     let prompt = '';
     const displayTitle = formTitle || reportType.replace(/_/g, ' ').toUpperCase();
@@ -339,12 +333,13 @@ FORMATO: Texto profesional, empático, claro. Terminología clínica apropiada.
         }
     }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt,
-    });
+    const response = await callGroqSimple(
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        prompt,
+        { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
+      );
 
-    const analysis = response.candidates?.[0]?.content?.parts?.[0]?.text || response.text || null;
+    const analysis = response.candidates?.[0]?.content?.parts?.[0]?.text || response || null;
     console.log('✅ Análisis IA generado exitosamente');
     return analysis;
 
