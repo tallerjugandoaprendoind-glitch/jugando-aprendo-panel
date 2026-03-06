@@ -64,7 +64,7 @@ export default function ExcelImportView() {
     setDragOver(false)
     const f = e.dataTransfer.files[0]
     if (f && (f.name.endsWith('.csv') || f.name.endsWith('.txt'))) handleFile(f)
-    else showToast('Solo se aceptan archivos CSV', 'error')
+    else showToast('error', 'Solo se aceptan archivos CSV')
   }
 
   const handleImport = async () => {
@@ -102,7 +102,7 @@ export default function ExcelImportView() {
 
       setResult(res)
       setLoading(false)
-      if (res.exitosos > 0) showToast(`${res.exitosos} pacientes importados`, 'success')
+      if (res.exitosos > 0) showToast('success', `${res.exitosos} pacientes importados`)
     }
     reader.readAsText(file)
   }
