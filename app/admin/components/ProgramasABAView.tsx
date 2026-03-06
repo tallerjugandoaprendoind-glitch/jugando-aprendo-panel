@@ -235,7 +235,6 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
   const [expanded, setExpanded] = useState(false)
   const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [detalle, setDetalle] = useState<any>(null)
-  const [tipoGrafico, setTipoGrafico] = useState<'lineas'|'barras'|'histograma'|'pie'>('lineas')
   const toast = useToast()
 
   const area = AREA_CONFIG[programa.area] || AREA_CONFIG.comunicacion
@@ -364,7 +363,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                         { id: 'histograma' as const, label: 'Histograma', emoji: '🗂️' },
                         { id: 'pie'        as const, label: 'Pie',        emoji: '🥧' },
                       ] as const).map(t => (
-                        <button key={t.id} onClick={() => setTipoGrafico(t.id)}
+                        <button key={t.id} onClick={() => onChangeTipoGrafico(t.id)}
                           title={t.label}
                           className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                             tipoGrafico === t.id
