@@ -12,7 +12,7 @@ import {
 
 type Tab = 'predicciones' | 'seguridad' | 'competitividad'
 
-interface Paciente { id: string; name: string; diagnosis: string }
+interface Paciente { id: string; name: string; nombre?: string; diagnosis: string }
 interface Prediccion {
   prediccion_30d: number
   prediccion_90d: number
