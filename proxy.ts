@@ -12,7 +12,7 @@ const ESPECIALISTA_ROLES = ['especialista']
 // Roles que van al portal /padre
 const PADRE_ROLES = ['padre']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
 
   const supabase = createServerClient(
