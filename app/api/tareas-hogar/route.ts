@@ -152,14 +152,13 @@ QUE OBSERVAR: [que registrar o notar]
 
 Usa lenguaje simple, sin tecnicismos. Maximo 150 palabras total.`
 
-    const responseText__ = await callGroqSimple(
+    const response = await callGroqSimple(
         'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
         prompt,
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
       )
-      const response = { text: responseText__ }
 
-    return response.text || generarInstruccionesGenericas(titulo)
+    return response || generarInstruccionesGenericas(titulo)
   } catch {
     return generarInstruccionesGenericas(titulo)
   }

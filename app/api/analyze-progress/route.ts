@@ -38,15 +38,14 @@ export async function POST(req: Request) {
     `;
 
     // 5. Generar Análisis - Se asegura que el modelo sea un string fijo
-    const responseText__ = await callGroqSimple(
+    const response = await callGroqSimple(
         'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
         prompt as string,
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
-      )
-      const response = { text: responseText__ };
+      );
 
     // 6. Obtener y parsear el texto de la respuesta con validación
-    const responseText = response.text || "{}";
+    const responseText = response || "{}";
     const data = JSON.parse(responseText);
 
     // 7. Guardar resultados en Supabase

@@ -64,12 +64,11 @@ Responde SOLO con JSON (sin markdown):
   "proximo_paso": "Acción concreta próxima sesión"
 }`
 
-    const aiResponseText__ = await callGroqSimple(
+    const aiResponse = await callGroqSimple(
         'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
         prompt,
         { model: GROQ_MODELS.SMART, temperature: 0.3, maxTokens: 2000 }
       )
-      const aiResponse = { text: aiResponseText__ }
 
     const text = aiResponse.text || '{}'
     let analysis: any = {}
@@ -228,13 +227,12 @@ Genera un INFORME CLÍNICO PROFESIONAL con:
 ## INDICADORES DE SEGUIMIENTO
 ## PRÓXIMOS PASOS`
 
-    const respText__ = await callGroqSimple(
+    const resp = await callGroqSimple(
         'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
         prompt,
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
       )
-      const resp = { text: respText__ }
-    return resp.candidates?.[0]?.content?.parts?.[0]?.text || resp.text || null
+    return resp || null
   } catch { return null }
 }
 

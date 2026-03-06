@@ -348,15 +348,14 @@ RESPONDE AHORA:
     // o puedes pasarla directamente como en tu archivo de origen.
     
     // Llamada actualizada siguiendo tu sintaxis exacta: ai.models.generateContent
-    const responseText__ = await callGroqSimple(
+    const response = await callGroqSimple(
         'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
         context,
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
-      )
-      const response = { text: responseText__ };
+      );
     
-    // Se retorna la respuesta usando response.text
-    return NextResponse.json({ text: response.text });
+    // Se retorna la respuesta usando response
+    return NextResponse.json({ text: response });
 
   } catch (error: any) {
     console.error("Error Admin Chat:", error);

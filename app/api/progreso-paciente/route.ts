@@ -146,14 +146,13 @@ Escribe un parrafo corto (3-4 oraciones) en lenguaje simple para los padres:
 
 Tono: Calido, positivo y alentador. Sin tecnicismos.`
 
-    const responseText__ = await callGroqSimple(
+    const response = await callGroqSimple(
         'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
         prompt,
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
       )
-      const response = { text: responseText__ }
 
-    return response.text || null
+    return response || null
   } catch {
     return null
   }

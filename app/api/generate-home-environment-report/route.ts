@@ -231,17 +231,16 @@ export async function POST(request: NextRequest) {
 
     // 4. Inicialización de Gemini
     // 5. Ejecución del Modelo
-    const responseText__ = await callGroqSimple(
+    const response = await callGroqSimple(
         'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
         fullContext,
         { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 }
-      )
-      const response = { text: responseText__ };
+      );
 
     console.log('✅ Respuesta recibida de Gemini');
     
     // Verificar que la respuesta tenga texto
-    const responseText = response.text;
+    const responseText = response;
     if (!responseText) {
       throw new Error("La IA no generó una respuesta válida");
     }
