@@ -1,18 +1,20 @@
 'use client'
 // app/admin/components/InteligenciaHubView.tsx
-// 🧠 Hub de Inteligencia Artificial — Predicciones + Seguridad + Competitividad
+// 🧠 Hub de Inteligencia Artificial — Predicciones + Seguridad + Engagement Padres
 
 import { useState, useEffect, useCallback } from 'react'
 import {
-  Brain, Shield, Trophy, TrendingUp, TrendingDown, Minus,
+  Brain, Shield, TrendingUp, TrendingDown, Minus,
   AlertTriangle, CheckCircle, RefreshCw, Users, Target,
   Lock, Eye, BarChart3, Zap, ArrowUp, ArrowDown,
-  ChevronRight, Activity, Sparkles, Clock, Star
+  ChevronRight, Activity, Sparkles, Clock, Star, Heart,
+  MessageCircle, BookOpen, Award, UserCheck
 } from 'lucide-react'
 
-type Tab = 'predicciones' | 'seguridad' | 'competitividad'
+type Tab = 'predicciones' | 'seguridad' | 'engagement'
 
 interface Paciente { id: string; name: string; nombre?: string; diagnosis: string }
+
 interface Prediccion {
   prediccion_30d: number
   prediccion_90d: number
@@ -579,7 +581,6 @@ export default function InteligenciaHubView() {
   const tabs = [
     { id: 'predicciones' as Tab, icon: Brain, label: 'Predicciones IA', color: 'blue' },
     { id: 'seguridad' as Tab, icon: Shield, label: 'Seguridad', color: 'emerald' },
-    { id: 'competitividad' as Tab, icon: Trophy, label: 'vs Central Reach', color: 'purple' },
   ]
 
   return (
@@ -591,7 +592,7 @@ export default function InteligenciaHubView() {
         </div>
         <div>
           <h1 className="text-xl font-black text-slate-800">Hub de Inteligencia</h1>
-          <p className="text-xs text-slate-400">Predicciones · Seguridad · Competitividad vs Central Reach</p>
+          <p className="text-xs text-slate-400">Predicciones · Seguridad · Análisis IA</p>
         </div>
       </div>
 
@@ -613,7 +614,6 @@ export default function InteligenciaHubView() {
       {/* Tab Content */}
       {tab === 'predicciones' && <TabPredicciones pacientes={pacientes} />}
       {tab === 'seguridad' && <TabSeguridad />}
-      {tab === 'competitividad' && <TabCompetitividad />}
     </div>
   )
 }

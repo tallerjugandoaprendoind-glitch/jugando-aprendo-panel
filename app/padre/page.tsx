@@ -25,6 +25,7 @@ import ProfileView from './components/ProfileView'
 import StoreView from './components/StoreView'
 import ChatInterface from './components/ChatInterface'
 import MensajesView from './components/MensajesView'
+import EngagementView from './components/EngagementView'
 import PushNotificationBanner from '../../components/PushNotificationBanner'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
 
@@ -526,6 +527,7 @@ export default function ParentDashboard() {
                 <nav className="space-y-2">
                     <NavBtnDesktop icon={<Home size={20}/>} label="Inicio & Progreso" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                     <NavBtnDesktop icon={<Calendar size={20}/>} label="Agenda y Citas" active={activeView==='agenda' || activeView==='miscitas'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0) > 0 ? profile.tokens : null} />
+                    <NavBtnDesktop icon={<Heart size={20}/>} label="Plan Semanal" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                     <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                     <NavBtnDesktop icon={<Bell size={20}/>} label="Mensajes del terapeuta" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
@@ -733,6 +735,7 @@ export default function ParentDashboard() {
                     {activeView === 'tienda'    && <StoreView profile={profile} />}
                     {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
+                    {activeView === 'engagement' && <EngagementView childId={selectedChild?.id || ''} />}
 
                     {activeView === 'profile' && (
                         <ProfileView 

@@ -8,6 +8,7 @@
     "app/api/generate-home-environment-report/route.ts": { "maxDuration": 60 },
     "app/api/admin-chat/route.ts": { "maxDuration": 60 },
     "app/api/knowledge/ingest/route.ts": { "maxDuration": 300 },
-    "app/api/knowledge/upload/route.ts": { "maxDuration": 300 }
+    "app/api/knowledge/upload/route.ts": { "maxDuration": 300 },
+    "app/api/engagement-padres/route.ts": { "maxDuration": 60 }
   }
 }
