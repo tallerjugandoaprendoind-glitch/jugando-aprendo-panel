@@ -2,16 +2,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
-// Cliente Supabase público (solo para upload desde el navegador)
 const supabasePublic = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
 import {
   Upload, BookOpen, Trash2, CheckCircle2, Clock, Loader2,
-  FileText, File, Plus, X, Brain, Database, Zap, AlertTriangle, Save
+  FileText, File, Plus, X, Brain, Database, Zap, AlertTriangle, Save, Link
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
+
+// Modos de ingesta
+type InputMode = 'archivo' | 'url' | 'texto'
 
 export default function KnowledgeBaseView() {
   const toast = useToast()
@@ -21,9 +23,11 @@ export default function KnowledgeBaseView() {
   const [showForm, setShowForm] = useState(false)
   const [showInstrucciones, setShowInstrucciones] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
-  const [form, setForm] = useState({ titulo: '', tipo: 'libro', descripcion: '', texto: '' })
+  const [form, setForm] = useState({ titulo: '', tipo: 'libro', descripcion: '', texto: '', url: '' })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string>('')
+  // ✅ NUEVO: modo de entrada
+  const [inputMode, setInputMode] = useState<InputMode>('archivo')
 
   const loadDocs = async () => {
     setLoading(true)
@@ -39,57 +43,86 @@ export default function KnowledgeBaseView() {
 
   const handleUpload = async () => {
     if (!form.titulo) { toast.error('El título es requerido'); return }
-    if (!selectedFile && !form.texto.trim()) { toast.error('Sube un archivo o pega el texto'); return }
+
+    // Validar según modo
+    if (inputMode === 'archivo' && !selectedFile) { toast.error('Selecciona un archivo'); return }
+    if (inputMode === 'url' && !form.url.trim()) { toast.error('Ingresa una URL válida'); return }
+    if (inputMode === 'texto' && !form.texto.trim()) { toast.error('Pega el contenido del documento'); return }
+
+    // Validar URL básica
+    if (inputMode === 'url') {
+      try { new URL(form.url) } catch {
+        toast.error('La URL no es válida. Ejemplo: https://drive.google.com/...')
+        return
+      }
+    }
 
     setUploading(true)
     try {
-      let storageUrl: string | undefined
-      let fileName: string | undefined
+      let body: Record<string, any> = {
+        titulo: form.titulo,
+        tipo: form.tipo,
+        descripcion: form.descripcion,
+      }
 
-      if (selectedFile) {
-        // 1. Subir el archivo DIRECTO a Supabase Storage desde el navegador
-        //    (evita el límite de 4.5MB de Vercel)
-        setUploadProgress('Subiendo archivo...')
+      // ── Modo: Archivo ────────────────────────────────────────────────────
+      if (inputMode === 'archivo' && selectedFile) {
+        const MAX_SIZE = 100 * 1024 * 1024
+        if (selectedFile.size > MAX_SIZE) {
+          toast.error(`Archivo muy grande (${Math.round(selectedFile.size / 1024 / 1024)}MB). Máx: 100MB. Usá el modo URL en su lugar.`)
+          return
+        }
+        setUploadProgress(`Subiendo archivo (${Math.round(selectedFile.size / 1024 / 1024)}MB)...`)
         const safeName = `knowledge/${Date.now()}_${selectedFile.name.replace(/\s+/g, '_')}`
+
         const { error: uploadError } = await supabasePublic.storage
-          .from('documentos')
+          .from('knowledge-base')
           .upload(safeName, selectedFile, { contentType: selectedFile.type, upsert: false })
 
         if (uploadError) throw new Error(`Error al subir: ${uploadError.message}`)
 
-        // 2. Obtener URL pública del archivo
-        const { data: urlData } = supabasePublic.storage.from('documentos').getPublicUrl(safeName)
-        storageUrl = urlData.publicUrl
-        fileName = selectedFile.name
-        setUploadProgress('Extrayendo texto con IA...')
+        const { data: signedData, error: signedError } = await supabasePublic.storage
+          .from('knowledge-base')
+          .createSignedUrl(safeName, 3600)
+
+        if (signedError || !signedData?.signedUrl) throw new Error('No se pudo obtener la URL del archivo')
+
+        body.storageUrl = signedData.signedUrl
+        body.fileName = selectedFile.name
+        setUploadProgress('Extrayendo texto...')
       }
 
-      // 3. Mandar solo la URL (o el texto) al backend — payload pequeño
+      // ── Modo: URL ────────────────────────────────────────────────────────
+      if (inputMode === 'url') {
+        setUploadProgress('Descargando y procesando URL...')
+        body.sourceUrl = form.url.trim()
+      }
+
+      // ── Modo: Texto ──────────────────────────────────────────────────────
+      if (inputMode === 'texto') {
+        body.texto = form.texto
+      }
+
       const res = await fetch('/api/knowledge/ingest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          titulo: form.titulo,
-          tipo: form.tipo,
-          descripcion: form.descripcion,
-          ...(storageUrl ? { storageUrl, fileName } : { texto: form.texto }),
-        }),
+        body: JSON.stringify(body),
       })
 
       const json = await res.json()
       if (json.error) throw new Error(json.error)
 
       toast.success(`✅ "${form.titulo}" recibido — indexando en background`)
-      setForm({ titulo: '', tipo: 'libro', descripcion: '', texto: '' })
+      setForm({ titulo: '', tipo: 'libro', descripcion: '', texto: '', url: '' })
       setSelectedFile(null)
       setUploadProgress('')
+      setInputMode('archivo')
       setShowForm(false)
       setTimeout(loadDocs, 3000)
     } catch (e: any) {
       setUploadProgress('')
       toast.error(e.message)
-    }
-    finally { setUploading(false) }
+    } finally { setUploading(false) }
   }
 
   const handleDelete = async (id: string, titulo: string) => {
@@ -118,6 +151,12 @@ export default function KnowledgeBaseView() {
     programa: { emoji: '🎯', label: 'Programa', color: 'bg-amber-50 text-amber-700 border-amber-200' },
     centro:   { emoji: '🏥', label: 'Del centro', color: 'bg-pink-50 text-pink-700 border-pink-200' },
   }
+
+  const modoConfig: { id: InputMode; label: string; icon: any; desc: string }[] = [
+    { id: 'archivo', label: 'Archivo', icon: Upload,   desc: 'PDF, TXT, MD (hasta 100MB)' },
+    { id: 'url',     label: 'URL',     icon: Link,     desc: 'Google Drive, Dropbox, web' },
+    { id: 'texto',   label: 'Texto',   icon: FileText, desc: 'Pegar contenido directo' },
+  ]
 
   return (
     <div className="space-y-6 pb-10">
@@ -201,6 +240,11 @@ export default function KnowledgeBaseView() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-bold text-slate-800 text-sm">{doc.titulo}</p>
                     <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${tipo.color}`}>{tipo.label}</span>
+                    {doc.source_url && (
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full border bg-blue-50 text-blue-600 border-blue-200 flex items-center gap-1">
+                        <Link size={8} /> URL
+                      </span>
+                    )}
                   </div>
                   {doc.descripcion && <p className="text-xs text-slate-400 mt-0.5 truncate">{doc.descripcion}</p>}
                   <div className="flex items-center gap-3 mt-1">
@@ -264,32 +308,78 @@ export default function KnowledgeBaseView() {
                     className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-violet-400" />
                 </div>
 
-                {/* Upload PDF */}
-                <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-violet-300 transition-all cursor-pointer"
-                  onClick={() => fileRef.current?.click()}>
-                  <input ref={fileRef} type="file" accept=".pdf,.txt,.md" className="hidden"
-                    onChange={e => setSelectedFile(e.target.files?.[0] || null)} />
-                  {selectedFile ? (
-                    <div className="flex items-center gap-3 justify-center">
-                      <FileText size={20} className="text-violet-500" />
-                      <span className="font-bold text-slate-700 text-sm">{selectedFile.name}</span>
-                      <button onClick={e => { e.stopPropagation(); setSelectedFile(null) }}
-                        className="text-slate-300 hover:text-red-400"><X size={14} /></button>
-                    </div>
-                  ) : (
-                    <>
-                      <Upload size={24} className="text-slate-300 mx-auto mb-2" />
-                      <p className="font-bold text-slate-500 text-sm">Arrastra un PDF o haz clic</p>
-                      <p className="text-xs text-slate-300 mt-1">PDF, TXT o Markdown · Cualquier tamaño</p>
-                    </>
-                  )}
+                {/* ── Selector de modo de entrada ── */}
+                <div>
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Fuente del documento</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {modoConfig.map(m => (
+                      <button key={m.id} onClick={() => setInputMode(m.id)}
+                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
+                          inputMode === m.id
+                            ? 'border-violet-500 bg-violet-50 text-violet-700'
+                            : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300'
+                        }`}>
+                        <m.icon size={18} />
+                        <span className="text-xs font-black">{m.label}</span>
+                        <span className="text-[10px] leading-tight">{m.desc}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="text-center text-xs text-slate-300 font-bold">— O pega el texto directamente —</div>
+                {/* ── Modo: Archivo ── */}
+                {inputMode === 'archivo' && (
+                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-violet-300 transition-all cursor-pointer"
+                    onClick={() => fileRef.current?.click()}>
+                    <input ref={fileRef} type="file" accept=".pdf,.txt,.md" className="hidden"
+                      onChange={e => setSelectedFile(e.target.files?.[0] || null)} />
+                    {selectedFile ? (
+                      <div className="flex items-center gap-3 justify-center">
+                        <FileText size={20} className="text-violet-500" />
+                        <span className="font-bold text-slate-700 text-sm">{selectedFile.name}</span>
+                        <button onClick={e => { e.stopPropagation(); setSelectedFile(null) }}
+                          className="text-slate-300 hover:text-red-400"><X size={14} /></button>
+                      </div>
+                    ) : (
+                      <>
+                        <Upload size={24} className="text-slate-300 mx-auto mb-2" />
+                        <p className="font-bold text-slate-500 text-sm">Arrastra un PDF o haz clic</p>
+                        <p className="text-xs text-slate-300 mt-1">PDF, TXT o Markdown · Hasta 100MB</p>
+                      </>
+                    )}
+                  </div>
+                )}
 
-                <textarea value={form.texto} onChange={e => setForm(f => ({ ...f, texto: e.target.value }))}
-                  rows={5} placeholder="Pega aquí el contenido del documento..."
-                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-violet-400" />
+                {/* ── Modo: URL ── */}
+                {inputMode === 'url' && (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Link size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input
+                        value={form.url}
+                        onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
+                        placeholder="https://drive.google.com/file/d/... o cualquier URL pública"
+                        className="w-full pl-9 pr-3 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-violet-400"
+                      />
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                      <p className="text-xs font-black text-blue-700 mb-1">📎 URLs compatibles</p>
+                      <ul className="text-xs text-blue-600 space-y-0.5">
+                        <li>• <strong>Google Drive:</strong> compartir → "Cualquier persona con el enlace"</li>
+                        <li>• <strong>Dropbox:</strong> usar enlace directo (dl=1)</li>
+                        <li>• <strong>Web pública:</strong> cualquier página HTML o PDF online</li>
+                        <li>• <strong>Archive.org, libgen, etc.</strong></li>
+                      </ul>
+                    </div>
+                  </div>
+                )}
+
+                {/* ── Modo: Texto ── */}
+                {inputMode === 'texto' && (
+                  <textarea value={form.texto} onChange={e => setForm(f => ({ ...f, texto: e.target.value }))}
+                    rows={6} placeholder="Pega aquí el contenido del documento..."
+                    className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-violet-400" />
+                )}
 
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">
                   <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
@@ -310,7 +400,6 @@ export default function KnowledgeBaseView() {
         </div>
       )}
 
-      {/* Modal: Instrucciones del centro */}
       {showInstrucciones && <InstruccionesModal onClose={() => setShowInstrucciones(false)} />}
     </div>
   )
@@ -361,7 +450,6 @@ function InstruccionesModal({ onClose }: { onClose: () => void }) {
             <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
           </div>
 
-          {/* Instrucciones existentes */}
           {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : (
             <div className="space-y-2 mb-5">
               {instrucciones.map((inst: any) => (
@@ -377,7 +465,7 @@ function InstruccionesModal({ onClose }: { onClose: () => void }) {
             </div>
           )}
 
-          {/* Nueva instrucción */}
+          
           <div className="border-t border-slate-100 pt-4 space-y-3">
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">+ Nueva instrucción</p>
             <div className="grid grid-cols-2 gap-3">

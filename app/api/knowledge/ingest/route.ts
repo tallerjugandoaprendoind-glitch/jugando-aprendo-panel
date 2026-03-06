@@ -1,204 +1,221 @@
 // app/api/knowledge/ingest/route.ts
-// ARQUITECTURA: El frontend sube el PDF directo a Supabase Storage
-// Este endpoint recibe solo la URL (no el archivo) y extrae el texto con Gemini
-// Esto evita el límite de 4.5MB de Vercel para request bodies
+// Maneja: texto directo | archivo (Supabase Storage) | URL externa
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { indexDocument } from '@/lib/knowledge-base'
-import { GoogleGenAI } from '@google/genai'
 
-// Aumentado a 500MB — el archivo llega desde Supabase Storage (no desde Vercel body)
-const MAX_CHUNK_B64 = 4_000_000 // ~3MB binario por segmento (Gemini admite hasta ~20MB por llamada)
-const MAX_FILE_BYTES = 500 * 1024 * 1024 // 500MB
+// ── GET: listar documentos ────────────────────────────────────────────────────
+export async function GET() {
+  const { data, error } = await supabaseAdmin
+    .from('knowledge_documents')
+    .select('id, titulo, tipo, descripcion, procesado, total_chunks, created_at, source_url')
+    .order('created_at', { ascending: false })
 
-// FIX: nombre correcto del bucket — ajusta si tu bucket tiene otro nombre
-const STORAGE_BUCKET = process.env.KNOWLEDGE_BUCKET_NAME || 'knowledge-base'
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ data })
+}
 
+// ── DELETE: eliminar documento ────────────────────────────────────────────────
+export async function DELETE(req: NextRequest) {
+  const { id } = await req.json()
+  if (!id) return NextResponse.json({ error: 'id requerido' }, { status: 400 })
+
+  await supabaseAdmin.from('knowledge_chunks').delete().eq('document_id', id)
+  await supabaseAdmin.from('knowledge_documents').delete().eq('id', id)
+
+  return NextResponse.json({ ok: true })
+}
+
+// ── POST: ingestar documento ──────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { titulo, tipo = 'libro', descripcion = '', texto, storageUrl, fileName } = body
+    const { titulo, tipo, descripcion, texto, storageUrl, fileName, sourceUrl } = body
 
-    if (!titulo) {
-      return NextResponse.json({ error: 'El título es requerido' }, { status: 400 })
-    }
+    if (!titulo) return NextResponse.json({ error: 'título requerido' }, { status: 400 })
 
-    let textoParaIndexar = ''
-
-    if (texto) {
-      textoParaIndexar = texto
-
-    } else if (storageUrl) {
-      try {
-        // FIX: pasar el Authorization header si la URL es privada de Supabase
-        const fileRes = await fetch(storageUrl, {
-          headers: {
-            // Si la URL es un signed URL ya lleva el token; si es pública no necesita auth
-            // Para URLs privadas sin firma, usar el service role key
-            ...(storageUrl.includes('/storage/v1/object/') && !storageUrl.includes('token=')
-              ? { Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` }
-              : {})
-          }
-        })
-
-        if (!fileRes.ok) {
-          const errText = await fileRes.text().catch(() => fileRes.statusText)
-          console.error('Error descargando archivo:', fileRes.status, errText)
-
-          // FIX: mensaje de error más descriptivo para "Bucket not found"
-          if (fileRes.status === 400 || errText.includes('Bucket not found') || errText.includes('bucket')) {
-            return NextResponse.json({
-              error: `Bucket de almacenamiento no encontrado. Verifica que el bucket "${STORAGE_BUCKET}" existe en Supabase Storage y que la variable KNOWLEDGE_BUCKET_NAME está configurada correctamente.`,
-            }, { status: 422 })
-          }
-
-          throw new Error(`No se pudo descargar el archivo: ${fileRes.status} - ${errText}`)
-        }
-
-        // FIX: verificar tamaño antes de procesar
-        const contentLength = fileRes.headers.get('content-length')
-        if (contentLength && parseInt(contentLength) > MAX_FILE_BYTES) {
-          return NextResponse.json({
-            error: `El archivo es demasiado grande (${Math.round(parseInt(contentLength) / 1024 / 1024)}MB). El máximo permitido es 500MB.`,
-          }, { status: 413 })
-        }
-
-        const arrayBuffer = await fileRes.arrayBuffer()
-
-        // FIX: verificar tamaño real del buffer
-        if (arrayBuffer.byteLength > MAX_FILE_BYTES) {
-          return NextResponse.json({
-            error: `El archivo excede el límite de 500MB (${Math.round(arrayBuffer.byteLength / 1024 / 1024)}MB).`,
-          }, { status: 413 })
-        }
-
-        const fullBase64 = Buffer.from(arrayBuffer).toString('base64')
-
-        const apiKey = process.env.GEMINI_API_KEY!
-        const ai = new GoogleGenAI({ apiKey })
-        const partes: string[] = []
-
-        if (fullBase64.length <= MAX_CHUNK_B64) {
-          const response = await ai.models.generateContent({
-            model: 'gemini-2.0-flash',
-            contents: [{
-              role: 'user',
-              parts: [
-                { inlineData: { mimeType: 'application/pdf', data: fullBase64 } },
-                { text: 'Extrae TODO el texto de este documento manteniendo la estructura. No resumas, transcribe el contenido completo incluyendo títulos, párrafos y listas.' }
-              ]
-            }],
-            config: { temperature: 0, maxOutputTokens: 8192 },
-          })
-          partes.push(response.text || '')
-
-        } else {
-          const totalPartes = Math.ceil(fullBase64.length / MAX_CHUNK_B64)
-          console.log(`PDF grande: ${totalPartes} segmentos (${Math.round(arrayBuffer.byteLength / 1024 / 1024)}MB)`)
-
-          for (let p = 0; p < totalPartes; p++) {
-            const segmento = fullBase64.slice(p * MAX_CHUNK_B64, (p + 1) * MAX_CHUNK_B64)
-            try {
-              const response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
-                contents: [{
-                  role: 'user',
-                  parts: [
-                    { inlineData: { mimeType: 'application/pdf', data: segmento } },
-                    { text: `Extrae TODO el texto de esta sección (parte ${p + 1} de ${totalPartes}). No resumas, transcribe el contenido completo.` }
-                  ]
-                }],
-                config: { temperature: 0, maxOutputTokens: 8192 },
-              })
-              partes.push(response.text || '')
-              console.log(`Segmento ${p + 1}/${totalPartes} extraído`)
-            } catch (partErr: any) {
-              console.warn(`Segmento ${p + 1} falló:`, partErr.message)
-            }
-            // FIX: delay reducido a 500ms para indexar más rápido
-            if (p < totalPartes - 1) await new Promise(r => setTimeout(r, 500))
-          }
-        }
-
-        textoParaIndexar = partes.filter(Boolean).join('\n\n')
-        console.log(`Texto extraído: ${textoParaIndexar.length} caracteres`)
-
-      } catch (pdfError: any) {
-        console.error('Error extrayendo PDF:', pdfError.message)
-        return NextResponse.json({
-          error: `No se pudo extraer el texto del PDF: ${pdfError.message}. Intenta pegar el texto directamente.`,
-        }, { status: 422 })
-      }
-    } else {
-      return NextResponse.json({ error: 'Se requiere texto o archivo PDF' }, { status: 400 })
-    }
-
-    if (!textoParaIndexar || textoParaIndexar.length < 50) {
-      return NextResponse.json({
-        error: 'No se pudo extraer suficiente texto del documento',
-      }, { status: 422 })
-    }
-
-    const { data: doc, error: docError } = await supabaseAdmin
+    // 1. Crear el registro en la DB
+    const { data: doc, error: dbError } = await supabaseAdmin
       .from('knowledge_documents')
-      .insert({ titulo, tipo, descripcion, procesado: false })
+      .insert({
+        titulo,
+        tipo: tipo || 'libro',
+        descripcion: descripcion || '',
+        procesado: false,
+        source_url: sourceUrl || null,
+      })
       .select()
       .single()
 
-    if (docError) throw docError
+    if (dbError) throw new Error(dbError.message)
+    const docId = doc.id
 
-    // FIX: indexar en background sin encadenar .catch sobre PromiseLike<void>
-    const docId = (doc as any).id
-    ;(async () => {
-      try {
-        const result = await indexDocument(docId, textoParaIndexar, { titulo, tipo })
-        console.log(`Indexado "${titulo}": ${result.chunks} chunks`)
-        try {
-          await supabaseAdmin
-            .from('knowledge_documents')
-            .update({ procesado: true, total_chunks: result.chunks })
-            .eq('id', docId)
-        } catch (updateErr) {
-          console.error('Error actualizando estado:', updateErr)
-        }
-      } catch (err) {
-        console.error(`Error indexando "${titulo}":`, err)
-      }
-    })()
+    // 2. Extraer el texto según la fuente
+    let fullText = ''
 
-    return NextResponse.json({
-      success: true,
-      document_id: (doc as any).id,
-      titulo,
-      texto_chars: textoParaIndexar.length,
-      mensaje: `Documento recibido (${Math.round(textoParaIndexar.length / 1000)}K chars). El indexado comenzó en background.`,
-    })
+    // ── Fuente: texto directo ──────────────────────────────────────────────
+    if (texto) {
+      fullText = texto
+
+    // ── Fuente: archivo en Supabase Storage ───────────────────────────────
+    } else if (storageUrl) {
+      fullText = await extractTextFromStorageUrl(storageUrl, fileName || '')
+
+    // ── Fuente: URL externa ────────────────────────────────────────────────
+    } else if (sourceUrl) {
+      fullText = await extractTextFromUrl(sourceUrl)
+
+    } else {
+      return NextResponse.json({ error: 'Se requiere texto, storageUrl o sourceUrl' }, { status: 400 })
+    }
+
+    if (!fullText || fullText.trim().length < 50) {
+      await supabaseAdmin.from('knowledge_documents').delete().eq('id', docId)
+      return NextResponse.json({ error: 'No se pudo extraer texto suficiente del documento' }, { status: 422 })
+    }
+
+    // 3. Indexar en background — respondemos inmediatamente al cliente
+    indexDocument(docId, fullText, { titulo, tipo, fuente: sourceUrl || fileName || 'texto' })
+      .catch(e => console.error(`[ingest] Error indexando ${docId}:`, e))
+
+    return NextResponse.json({ ok: true, docId, chars: fullText.length })
+
   } catch (e: any) {
-    console.error('Error en ingest:', e)
+    console.error('[ingest] Error:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
 
-export async function GET(req: NextRequest) {
+// ── Extraer texto desde Supabase Storage (PDF o TXT) ─────────────────────────
+async function extractTextFromStorageUrl(url: string, fileName: string): Promise<string> {
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`No se pudo descargar el archivo: ${res.status}`)
+
+  const ext = fileName.split('.').pop()?.toLowerCase()
+
+  if (ext === 'pdf') {
+    const buffer = await res.arrayBuffer()
+    return await extractTextFromPdfBuffer(buffer)
+  }
+
+  // TXT, MD — texto plano
+  return await res.text()
+}
+
+// ── Extraer texto desde URL externa ──────────────────────────────────────────
+async function extractTextFromUrl(url: string): Promise<string> {
+  // Normalizar URLs de Google Drive
+  url = normalizeUrl(url)
+
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; KnowledgeBot/1.0)',
+    },
+  })
+
+  if (!res.ok) throw new Error(`No se pudo acceder a la URL (${res.status}). Verificá que sea pública.`)
+
+  const contentType = res.headers.get('content-type') || ''
+
+  // ── PDF ──────────────────────────────────────────────────────────────────
+  if (contentType.includes('pdf') || url.toLowerCase().includes('.pdf')) {
+    const buffer = await res.arrayBuffer()
+    return await extractTextFromPdfBuffer(buffer)
+  }
+
+  // ── HTML (página web) ────────────────────────────────────────────────────
+  if (contentType.includes('html')) {
+    const html = await res.text()
+    return extractTextFromHtml(html)
+  }
+
+  // ── Texto plano ──────────────────────────────────────────────────────────
+  return await res.text()
+}
+
+// ── Normalizar URLs especiales ────────────────────────────────────────────────
+function normalizeUrl(url: string): string {
+  // Google Drive: /file/d/ID/view → /uc?export=download&id=ID
+  const gdrive = url.match(/drive\.google\.com\/file\/d\/([^/]+)/)
+  if (gdrive) {
+    return `https://drive.google.com/uc?export=download&id=${gdrive[1]}`
+  }
+
+  // Google Drive compartido directo
+  const gdriveOpen = url.match(/drive\.google\.com\/open\?id=([^&]+)/)
+  if (gdriveOpen) {
+    return `https://drive.google.com/uc?export=download&id=${gdriveOpen[1]}`
+  }
+
+  // Dropbox: ?dl=0 → ?dl=1
+  if (url.includes('dropbox.com')) {
+    return url.replace('?dl=0', '?dl=1').replace('www.dropbox.com', 'dl.dropboxusercontent.com')
+  }
+
+  return url
+}
+
+// ── Extraer texto de PDF ──────────────────────────────────────────────────────
+async function extractTextFromPdfBuffer(buffer: ArrayBuffer): Promise<string> {
   try {
-    const { data } = await supabaseAdmin
-      .from('knowledge_documents')
-      .select('id, titulo, tipo, descripcion, procesado, total_chunks, created_at')
-      .order('created_at', { ascending: false })
-    return NextResponse.json({ data })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    // Usamos pdf-parse (debe estar instalado: npm install pdf-parse)
+    const pdfParse = (await import('pdf-parse')).default
+    const data = await pdfParse(Buffer.from(buffer))
+    return data.text || ''
+  } catch (e) {
+    console.warn('[ingest] pdf-parse falló, extrayendo texto básico:', e)
+    // Fallback: extraer texto visible del PDF manualmente
+    return extractPdfTextFallback(buffer)
   }
 }
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const { id } = await req.json()
-    await supabaseAdmin.from('knowledge_chunks').delete().eq('document_id', id)
-    await supabaseAdmin.from('knowledge_documents').delete().eq('id', id)
-    return NextResponse.json({ success: true })
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+// ── Fallback: extracción básica de texto de PDF sin librería ─────────────────
+function extractPdfTextFallback(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer)
+  const raw = new TextDecoder('latin1').decode(bytes)
+  const chunks: string[] = []
+
+  // Buscar streams de texto BT...ET en el PDF
+  const regex = /BT([\s\S]*?)ET/g
+  let match
+  while ((match = regex.exec(raw)) !== null) {
+    const block = match[1]
+    // Extraer contenido de paréntesis: (texto)
+    const textRegex = /\(([^)]+)\)/g
+    let t
+    while ((t = textRegex.exec(block)) !== null) {
+      const clean = t[1].replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\/g, '')
+      if (clean.trim()) chunks.push(clean)
+    }
   }
+
+  return chunks.join(' ').replace(/\s+/g, ' ').trim()
+}
+
+// ── Extraer texto limpio de HTML ──────────────────────────────────────────────
+function extractTextFromHtml(html: string): string {
+  // Remover scripts, styles, nav, footer
+  let text = html
+    .replace(/<script[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?<\/style>/gi, '')
+    .replace(/<nav[\s\S]*?<\/nav>/gi, '')
+    .replace(/<footer[\s\S]*?<\/footer>/gi, '')
+    .replace(/<header[\s\S]*?<\/header>/gi, '')
+    // Convertir tags de bloque en saltos de línea
+    .replace(/<\/?(p|div|h[1-6]|li|br|tr)[^>]*>/gi, '\n')
+    // Remover todos los tags restantes
+    .replace(/<[^>]+>/g, '')
+    // Decodificar entidades HTML básicas
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#\d+;/g, '')
+    // Limpiar espacios múltiples
+    .replace(/\n{3,}/g, '\n\n')
+    .replace(/ {2,}/g, ' ')
+    .trim()
+
+  return text
 }
