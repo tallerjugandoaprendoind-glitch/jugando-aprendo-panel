@@ -11,7 +11,7 @@ import {
   MessageCircle, BookOpen, Award, UserCheck
 } from 'lucide-react'
 
-type Tab = 'predicciones' | 'seguridad' | 'engagement'
+type Tab = 'predicciones' | 'seguridad' | 'patrones' | 'objetivos' | 'reportes' | 'sugerencias'
 
 interface Paciente { id: string; name: string; nombre?: string; diagnosis: string }
 
@@ -545,6 +545,333 @@ function TabCompetitividad() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// TAB: PATRONES ABA (CAPA 1)
+// ═══════════════════════════════════════════════════════════════════════════════
+function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
+  const [selected, setSelected] = useState<Paciente | null>(null)
+  const [resultado, setResultado] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const analizar = async () => {
+    if (!selected) return
+    setLoading(true); setError(''); setResultado(null)
+    try {
+      const res = await fetch('/api/agente-patrones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId: selected.id, childName: selected.name }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setResultado(json)
+    } catch (e: any) { setError(e.message) }
+    finally { setLoading(false) }
+  }
+
+  const colorTipo: Record<string, string> = {
+    regresion: 'bg-red-100 text-red-700 border-red-200',
+    estancamiento: 'bg-amber-100 text-amber-700 border-amber-200',
+    aceleracion: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    inconsistencia: 'bg-orange-100 text-orange-700 border-orange-200',
+    dominio: 'bg-blue-100 text-blue-700 border-blue-200',
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Activity size={16} className="text-violet-600" />
+          <span className="font-bold text-violet-800 text-sm">Detector de Patrones ABA — CAPA 1</span>
+        </div>
+        <p className="text-xs text-violet-600">Analiza el historial de sesiones y detecta regresiones, estancamientos, aceleraciones e inconsistencias.</p>
+      </div>
+      <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Selecciona paciente</label>
+        <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+          value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
+          <option value="">— Seleccionar —</option>
+          {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <button onClick={analizar} disabled={!selected || loading}
+          className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
+          {loading ? <><RefreshCw size={14} className="animate-spin" /> Analizando patrones...</> : <><Activity size={14} /> Detectar Patrones</>}
+        </button>
+        {error && <p className="text-red-500 text-xs">{error}</p>}
+      </div>
+      {resultado && (
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { label: 'Sesiones', val: resultado.total_sesiones || 0 },
+              { label: 'Patrones', val: resultado.patrones?.length || 0 },
+              { label: 'Programas', val: resultado.programas_analizados || 0 },
+            ].map(m => (
+              <div key={m.label} className="bg-white rounded-xl border border-slate-100 p-3 text-center">
+                <p className="text-2xl font-black text-slate-800">{m.val}</p>
+                <p className="text-xs text-slate-400">{m.label}</p>
+              </div>
+            ))}
+          </div>
+          {(resultado.patrones || []).map((p: any, i: number) => (
+            <div key={i} className={`bg-white rounded-xl border p-4 ${colorTipo[p.tipo] || 'border-slate-200'}`}>
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${colorTipo[p.tipo] || ''}`}>{p.tipo}</span>
+                <span className="text-xs text-slate-400">{p.confianza}% confianza</span>
+              </div>
+              <p className="font-bold text-sm text-slate-800">{p.area}</p>
+              <p className="text-xs text-slate-600 mt-1">{p.descripcion}</p>
+              <p className="text-xs font-semibold text-slate-700 mt-2 bg-slate-50 rounded-lg px-3 py-2">💡 {p.accion_sugerida}</p>
+            </div>
+          ))}
+          {resultado.resumen_ia && (
+            <div className="bg-violet-50 rounded-xl border border-violet-100 p-4">
+              <p className="text-xs font-bold text-violet-700 mb-2">Resumen IA</p>
+              <p className="text-sm text-violet-800">{resultado.resumen_ia}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB: OBJETIVOS ADAPTATIVOS (CAPA 1)
+// ═══════════════════════════════════════════════════════════════════════════════
+function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
+  const [selected, setSelected] = useState<Paciente | null>(null)
+  const [resultado, setResultado] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [accion, setAccion] = useState<'generar' | 'ajustar' | 'evaluar_dominio'>('generar')
+  const [error, setError] = useState('')
+
+  const ejecutar = async () => {
+    if (!selected) return
+    setLoading(true); setError(''); setResultado(null)
+    try {
+      const res = await fetch('/api/agente-objetivos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId: selected.id, childName: selected.name, accion }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setResultado(json)
+    } catch (e: any) { setError(e.message) }
+    finally { setLoading(false) }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <Target size={16} className="text-amber-600" />
+          <span className="font-bold text-amber-800 text-sm">Generador de Objetivos Adaptativos — CAPA 1</span>
+        </div>
+        <p className="text-xs text-amber-600">Genera o ajusta objetivos terapéuticos ABA automáticamente según el progreso real del paciente.</p>
+      </div>
+      <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+        <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+          value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
+          <option value="">— Seleccionar paciente —</option>
+          {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <div className="flex gap-2">
+          {([['generar', 'Generar nuevos'], ['ajustar', 'Ajustar existentes'], ['evaluar_dominio', 'Evaluar dominio']] as const).map(([val, lbl]) => (
+            <button key={val} onClick={() => setAccion(val)}
+              className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${accion === val ? 'bg-amber-100 text-amber-700' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+        <button onClick={ejecutar} disabled={!selected || loading}
+          className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
+          {loading ? <><RefreshCw size={14} className="animate-spin" /> Procesando...</> : <><Target size={14} /> Ejecutar</>}
+        </button>
+        {error && <p className="text-red-500 text-xs">{error}</p>}
+      </div>
+      {resultado && (
+        <div className="space-y-3">
+          {(resultado.objetivos_nuevos || resultado.objetivos_ajustados || []).map((obj: any, i: number) => (
+            <div key={i} className="bg-white rounded-xl border border-amber-100 p-4">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="font-bold text-sm text-slate-800">{obj.nombre || obj.titulo}</p>
+                <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">{obj.area}</span>
+              </div>
+              <p className="text-xs text-slate-500">{obj.descripcion}</p>
+              {obj.criterio_dominio && <p className="text-xs font-semibold text-slate-600 mt-1">Meta: {obj.criterio_dominio}</p>}
+              {obj.justificacion && <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-3 py-2 rounded-lg">{obj.justificacion}</p>}
+            </div>
+          ))}
+          {resultado.resumen_ia && (
+            <div className="bg-amber-50 rounded-xl border border-amber-100 p-4">
+              <p className="text-xs font-bold text-amber-700 mb-1">Análisis IA</p>
+              <p className="text-sm text-amber-800">{resultado.resumen_ia}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB: ALERTAS PROACTIVAS (CAPA 4)
+// ═══════════════════════════════════════════════════════════════════════════════
+function TabSugerencias() {
+  const [sugerencias, setSugerencias] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const cargar = async () => {
+    setLoading(true); setError('')
+    try {
+      const res = await fetch('/api/agente-sugerencias', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setSugerencias(json.sugerencias || [])
+    } catch (e: any) { setError(e.message) }
+    finally { setLoading(false) }
+  }
+
+  useEffect(() => { cargar() }, [])
+
+  const prioColor: Record<string, string> = {
+    alta: 'bg-red-100 text-red-700 border-red-200',
+    media: 'bg-amber-100 text-amber-700 border-amber-200',
+    baja: 'bg-slate-100 text-slate-600 border-slate-200',
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-orange-50 border border-orange-100 rounded-2xl p-4 flex items-start justify-between">
+        <div>
+          <div className="flex items-center gap-2 mb-1">
+            <Sparkles size={16} className="text-orange-600" />
+            <span className="font-bold text-orange-800 text-sm">Alertas Proactivas — CAPA 4</span>
+          </div>
+          <p className="text-xs text-orange-600">La IA analiza todos los pacientes y alerta antes de que haya un problema.</p>
+        </div>
+        <button onClick={cargar} disabled={loading} className="p-2 hover:bg-orange-100 rounded-xl transition">
+          <RefreshCw size={14} className={`text-orange-600 ${loading ? 'animate-spin' : ''}`} />
+        </button>
+      </div>
+      {error && <p className="text-red-500 text-xs">{error}</p>}
+      {loading && <div className="flex justify-center py-8"><RefreshCw size={24} className="animate-spin text-orange-400" /></div>}
+      {!loading && sugerencias.length === 0 && (
+        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
+          <CheckCircle size={32} className="text-emerald-400 mx-auto mb-3" />
+          <p className="font-bold text-slate-700">Sin alertas activas</p>
+          <p className="text-xs text-slate-400 mt-1">Todos los pacientes están en progreso normal</p>
+        </div>
+      )}
+      {sugerencias.map((s: any, i: number) => (
+        <div key={i} className="bg-white rounded-xl border border-slate-100 p-4">
+          <div className="flex items-start justify-between gap-2 mb-2">
+            <div>
+              <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${prioColor[s.prioridad]}`}>{s.prioridad}</span>
+              <span className="ml-2 text-[10px] text-slate-400">{s.child_name}</span>
+            </div>
+            <span className="text-[10px] text-slate-400">{s.semanas_detectado}w</span>
+          </div>
+          <p className="font-bold text-sm text-slate-800">{s.titulo}</p>
+          <p className="text-xs text-slate-500 mt-1">{s.descripcion}</p>
+          <p className="text-xs font-semibold text-slate-700 mt-2 bg-slate-50 rounded-lg px-3 py-2">→ {s.accion_concreta}</p>
+          {s.dato_clave && <p className="text-[10px] text-slate-400 mt-1">Dato: {s.dato_clave}</p>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// TAB: REPORTES IA (CAPA 2)
+// ═══════════════════════════════════════════════════════════════════════════════
+function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
+  const [selected, setSelected] = useState<Paciente | null>(null)
+  const [tipo, setTipo] = useState<'padres' | 'seguro' | 'comparativo'>('padres')
+  const [resultado, setResultado] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  const generar = async () => {
+    if (!selected) return
+    setLoading(true); setError(''); setResultado(null)
+    const endpoints: Record<string, string> = {
+      padres: '/api/reporte-padres',
+      seguro: '/api/reporte-seguro',
+      comparativo: '/api/reporte-comparativo',
+    }
+    try {
+      const res = await fetch(endpoints[tipo], {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId: selected.id }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setResultado(json)
+    } catch (e: any) { setError(e.message) }
+    finally { setLoading(false) }
+  }
+
+  const tipoInfo = {
+    padres: { label: 'Para padres', desc: 'Lenguaje emocional y accesible', color: 'bg-violet-600' },
+    seguro: { label: 'Para seguros/IMSS', desc: 'Formato técnico-legal con CIE-10', color: 'bg-blue-600' },
+    comparativo: { label: 'Comparativo + predicción', desc: '"En 3 meses logrará X"', color: 'bg-teal-600' },
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-teal-50 border border-teal-100 rounded-2xl p-4">
+        <div className="flex items-center gap-2 mb-1">
+          <BookOpen size={16} className="text-teal-600" />
+          <span className="font-bold text-teal-800 text-sm">Reportes Avanzados IA — CAPA 2</span>
+        </div>
+        <p className="text-xs text-teal-600">Genera reportes profesionales: para padres en lenguaje accesible, para seguros con codificación diagnóstica, y comparativos con predicciones.</p>
+      </div>
+      <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+        <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+          value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
+          <option value="">— Seleccionar paciente —</option>
+          {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <div className="grid grid-cols-3 gap-2">
+          {(Object.entries(tipoInfo) as [typeof tipo, typeof tipoInfo['padres']][]).map(([k, v]) => (
+            <button key={k} onClick={() => setTipo(k)}
+              className={`p-2.5 rounded-xl border text-center transition ${tipo === k ? 'border-teal-300 bg-teal-50' : 'border-slate-100 bg-slate-50 hover:border-teal-200'}`}>
+              <p className={`text-xs font-bold ${tipo === k ? 'text-teal-700' : 'text-slate-600'}`}>{v.label}</p>
+              <p className="text-[10px] text-slate-400 mt-0.5">{v.desc}</p>
+            </button>
+          ))}
+        </div>
+        <button onClick={generar} disabled={!selected || loading}
+          className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
+          {loading ? <><RefreshCw size={14} className="animate-spin" /> Generando reporte...</> : <><BookOpen size={14} /> Generar Reporte</>}
+        </button>
+        {error && <p className="text-red-500 text-xs">{error}</p>}
+      </div>
+      {resultado && (
+        <div className="bg-white rounded-2xl border border-teal-100 p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="font-bold text-slate-800">{resultado.titulo || `Reporte ${tipo}`}</p>
+            <button onClick={() => {
+              const blob = new Blob([JSON.stringify(resultado, null, 2)], { type: 'application/json' })
+              const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
+              a.download = `reporte_${tipo}_${selected?.name?.replace(/\s/g,'_')}.json`; a.click()
+            }} className="text-xs text-teal-600 hover:underline">Descargar</button>
+          </div>
+          {resultado.contenido && <div className="prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap text-xs leading-relaxed border border-slate-100 rounded-xl p-4 bg-slate-50">{resultado.contenido}</div>}
+          {resultado.resumen && <div className="bg-teal-50 rounded-xl p-4"><p className="text-sm text-teal-800">{resultado.resumen}</p></div>}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function InteligenciaHubView() {
@@ -552,34 +879,26 @@ export default function InteligenciaHubView() {
   const [pacientes, setPacientes] = useState<Paciente[]>([])
 
   useEffect(() => {
-    // Cargar pacientes desde supabase directamente
-    const cargarPacientes = async () => {
-      try {
-        const { createClient } = await import('@supabase/supabase-js')
-        const sb = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
-        // Intentar tabla 'ninos' primero, luego 'children' como fallback
-        let { data, error } = await sb.from('ninos').select('id, nombre, diagnostico').order('nombre')
-        if (error || !data || data.length === 0) {
-          const res2 = await sb.from('children').select('id, name, diagnosis').order('name')
-          data = (res2.data || []).map((r: any) => ({ id: r.id, nombre: r.name, diagnostico: r.diagnosis }))
-        }
-        setPacientes((data || []).map((r: any) => ({
+    // Usar API server-side que bypassa RLS de Supabase
+    fetch('/api/admin/children')
+      .then(r => r.json())
+      .then(json => {
+        const data = json.data || []
+        setPacientes(data.map((r: any) => ({
           id: r.id,
-          name: r.nombre || r.name || 'Sin nombre',
-          diagnosis: r.diagnostico || r.diagnosis || '',
+          name: r.name || r.nombre || 'Sin nombre',
+          diagnosis: r.diagnosis || r.diagnostico || '',
         })))
-      } catch (e) {
-        console.error('Error cargando pacientes:', e)
-      }
-    }
-    cargarPacientes()
+      })
+      .catch(e => console.error('Error cargando pacientes Hub IA:', e))
   }, [])
 
   const tabs = [
     { id: 'predicciones' as Tab, icon: Brain, label: 'Predicciones IA', color: 'blue' },
+    { id: 'patrones' as Tab, icon: Activity, label: 'Patrones ABA', color: 'violet' },
+    { id: 'objetivos' as Tab, icon: Target, label: 'Objetivos IA', color: 'amber' },
+    { id: 'sugerencias' as Tab, icon: Sparkles, label: 'Alertas Proactivas', color: 'orange' },
+    { id: 'reportes' as Tab, icon: BookOpen, label: 'Reportes IA', color: 'teal' },
     { id: 'seguridad' as Tab, icon: Shield, label: 'Seguridad', color: 'emerald' },
   ]
 
@@ -592,20 +911,27 @@ export default function InteligenciaHubView() {
         </div>
         <div>
           <h1 className="text-xl font-black text-slate-800">Hub de Inteligencia</h1>
-          <p className="text-xs text-slate-400">Predicciones · Seguridad · Análisis IA</p>
+          <p className="text-xs text-slate-400">6 agentes IA · Predicciones · Patrones · Objetivos · Reportes · Seguridad</p>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 bg-slate-100 rounded-xl p-1.5 w-fit">
+      {/* Tabs scrollable */}
+      <div className="flex gap-1.5 bg-slate-100 rounded-xl p-1.5 overflow-x-auto">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
               tab === t.id
-                ? `bg-white shadow-sm ${t.color === 'blue' ? 'text-blue-700' : t.color === 'emerald' ? 'text-emerald-700' : 'text-purple-700'}`
+                ? `bg-white shadow-sm ${
+                    t.color === 'blue' ? 'text-blue-700' :
+                    t.color === 'violet' ? 'text-violet-700' :
+                    t.color === 'amber' ? 'text-amber-700' :
+                    t.color === 'orange' ? 'text-orange-700' :
+                    t.color === 'teal' ? 'text-teal-700' :
+                    'text-emerald-700'
+                  }`
                 : 'text-slate-500 hover:text-slate-700'
             }`}>
-            <t.icon size={14} />
+            <t.icon size={13} />
             {t.label}
           </button>
         ))}
@@ -613,6 +939,10 @@ export default function InteligenciaHubView() {
 
       {/* Tab Content */}
       {tab === 'predicciones' && <TabPredicciones pacientes={pacientes} />}
+      {tab === 'patrones' && <TabPatrones pacientes={pacientes} />}
+      {tab === 'objetivos' && <TabObjetivos pacientes={pacientes} />}
+      {tab === 'sugerencias' && <TabSugerencias />}
+      {tab === 'reportes' && <TabReportes pacientes={pacientes} />}
       {tab === 'seguridad' && <TabSeguridad />}
     </div>
   )

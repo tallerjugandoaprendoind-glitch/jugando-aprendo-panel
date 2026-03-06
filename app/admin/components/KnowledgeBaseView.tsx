@@ -1,12 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-// Cliente Supabase público (solo para upload desde el navegador)
-const supabasePublic = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { supabase as supabasePublic } from '@/lib/supabase'
+// supabasePublic usa createBrowserClient con cookies — el usuario admin está autenticado
 import {
   Upload, BookOpen, Trash2, CheckCircle2, Clock, Loader2,
   FileText, File, Plus, X, Brain, Database, Zap, AlertTriangle, Save
@@ -63,43 +58,41 @@ export default function KnowledgeBaseView() {
 
       if (selectedFile) {
         const sizeMB = Math.round(selectedFile.size / 1024 / 1024)
-        setUploadProgress(`Preparando subida (${sizeMB}MB)...`)
+        const BUCKET = 'knowledge-base'
+        const safeName = `knowledge/${Date.now()}_${selectedFile.name.replace(/\s+/g, '_')}`
 
-        const VERCEL_LIMIT = 4 * 1024 * 1024 // 4MB
+        setUploadProgress(`Subiendo ${sizeMB}MB a Storage...`)
 
-        if (selectedFile.size <= VERCEL_LIMIT) {
-          // Archivos pequeños: FormData normal
+        // Usar el cliente autenticado — el usuario admin tiene sesión activa
+        // Esto bypassa RLS porque el bucket permite uploads de usuarios autenticados
+        const { error: uploadError } = await supabasePublic.storage
+          .from(BUCKET)
+          .upload(safeName, selectedFile, {
+            contentType: selectedFile.type || 'application/pdf',
+            upsert: false,
+          })
+
+        if (uploadError) {
+          // Si falla con auth, intentar via servidor (service_role)
+          console.warn('Upload directo falló, intentando via servidor:', uploadError.message)
           const fd = new FormData()
           fd.append('file', selectedFile)
-          setUploadProgress(`Subiendo archivo (${sizeMB}MB)...`)
           const uploadRes = await fetch('/api/knowledge/upload', { method: 'POST', body: fd })
+          if (!uploadRes.ok) {
+            const errText = await uploadRes.text()
+            throw new Error(`Error subiendo: ${errText}`)
+          }
           const uploadJson = await uploadRes.json()
           if (uploadJson.error) throw new Error(uploadJson.error)
           storageUrl = uploadJson.storageUrl
           fileName = uploadJson.fileName
-
         } else {
-          // Archivos grandes: presigned URL → sube directo a Supabase sin pasar por Vercel
-          setUploadProgress(`Obteniendo URL de subida...`)
-          const presignRes = await fetch('/api/knowledge/upload?presign=true', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileName: selectedFile.name, contentType: selectedFile.type }),
-          })
-          const presignJson = await presignRes.json()
-          if (presignJson.error) throw new Error(presignJson.error)
-
-          // Subir directamente a Supabase Storage con la URL pre-firmada
-          setUploadProgress(`Subiendo ${sizeMB}MB directo a Storage...`)
-          const putRes = await fetch(presignJson.uploadUrl, {
-            method: 'PUT',
-            headers: { 'Content-Type': selectedFile.type || 'application/pdf' },
-            body: selectedFile,
-          })
-          if (!putRes.ok) throw new Error(`Error subiendo archivo: ${putRes.statusText}`)
-
-          storageUrl = presignJson.storageUrl
-          fileName = presignJson.fileName
+          // Generar signed URL para que el backend pueda leer el archivo
+          const { data: signed } = await supabasePublic.storage
+            .from(BUCKET)
+            .createSignedUrl(safeName, 7200)
+          storageUrl = signed?.signedUrl || ''
+          fileName = selectedFile.name
         }
 
         setUploadProgress('Extrayendo texto con IA...')

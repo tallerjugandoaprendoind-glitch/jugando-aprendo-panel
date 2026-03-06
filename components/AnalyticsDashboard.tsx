@@ -118,16 +118,15 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
       const html2canvas = (h2cMod as any).default || h2cMod
       const { jsPDF } = jsPDFMod
 
-      // ── 1. Capturar el dashboard visual (gráfico incluido) ──────────────────
+      // ── 1. Capturar el dashboard visual ─────────────────────────────────────
       const dashEl = reportRef.current
       if (!dashEl) throw new Error('No hay contenido para exportar')
 
-      // Ocultar botones durante la captura
       const btnArea = dashEl.querySelector('[data-no-print]') as HTMLElement
       if (btnArea) btnArea.style.display = 'none'
 
-      // FIX DEFINITIVO: parchear getComputedStyle en el documento clonado
-      // para que html2canvas nunca vea colores lab()/oklch()
+      // FIX lab()/oklch(): Tailwind v4 genera colores modernos que jsPDF no entiende.
+      // Solución: en el clone, eliminar las stylesheets de Tailwind e inyectar CSS seguro RGB.
       const canvas = await html2canvas(dashEl, {
         scale: 2,
         useCORS: true,
@@ -138,69 +137,60 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
         width: dashEl.scrollWidth,
         height: dashEl.scrollHeight,
         onclone: (clonedDoc: Document, el: HTMLElement) => {
-          // 1. Inyectar stylesheet con overrides de variables Tailwind v4
-          const st = clonedDoc.createElement('style')
-          st.textContent = `
-            *, *::before, *::after {
-              --tw-shadow-color: rgba(0,0,0,0.1) !important;
-              --tw-ring-color: rgba(59,130,246,0.5) !important;
-              color-scheme: light !important;
+          // Eliminar stylesheets con oklch/@layer (Tailwind v4)
+          Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"], style')).forEach(node => {
+            const href = (node as HTMLLinkElement).href || ''
+            const txt = (node as HTMLStyleElement).textContent || ''
+            if (href.includes('/_next/') || txt.includes('oklch') || txt.includes('@layer') || txt.includes('color-mix')) {
+              node.remove()
             }
-            /* Anular colores oklch/lab con fallbacks seguros */
-            :root {
-              --color-slate-50: #f8fafc; --color-slate-100: #f1f5f9;
-              --color-slate-200: #e2e8f0; --color-slate-300: #cbd5e1;
-              --color-slate-400: #94a3b8; --color-slate-500: #64748b;
-              --color-slate-600: #475569; --color-slate-700: #334155;
-              --color-slate-800: #1e293b; --color-slate-900: #0f172a;
-              --color-blue-500: #3b82f6; --color-blue-600: #2563eb;
-              --color-violet-500: #8b5cf6; --color-violet-600: #7c3aed;
-              --color-emerald-500: #10b981; --color-red-500: #ef4444;
-              --color-amber-500: #f59e0b; --color-indigo-500: #6366f1;
-            }
+          })
+          // Inyectar CSS seguro en RGB
+          const safe = clonedDoc.createElement('style')
+          safe.textContent = `
+            *, *::before, *::after { box-sizing: border-box; }
+            body { font-family: system-ui,sans-serif; background:#fff; color:#1e293b; margin:0; }
+            .bg-white { background-color:#ffffff !important; }
+            .bg-slate-50,.bg-gray-50 { background-color:#f8fafc !important; }
+            .bg-slate-100,.bg-gray-100 { background-color:#f1f5f9 !important; }
+            .bg-blue-600 { background-color:#2563eb !important; }
+            .bg-blue-500 { background-color:#3b82f6 !important; }
+            .bg-violet-600 { background-color:#7c3aed !important; }
+            .bg-emerald-500 { background-color:#10b981 !important; }
+            .bg-red-500 { background-color:#ef4444 !important; }
+            .bg-amber-500 { background-color:#f59e0b !important; }
+            .text-white { color:#ffffff !important; }
+            .text-slate-800,.text-gray-800 { color:#1e293b !important; }
+            .text-slate-600,.text-gray-600 { color:#475569 !important; }
+            .text-slate-400 { color:#94a3b8 !important; }
+            .text-blue-600 { color:#2563eb !important; }
+            .text-violet-600 { color:#7c3aed !important; }
+            .text-emerald-600 { color:#059669 !important; }
+            .text-red-500,.text-red-600 { color:#dc2626 !important; }
+            .border { border:1px solid #e2e8f0; }
+            .border-slate-200 { border-color:#e2e8f0 !important; }
+            .rounded-xl { border-radius:12px !important; }
+            .rounded-2xl { border-radius:16px !important; }
+            .p-4 { padding:16px !important; }
+            .font-bold { font-weight:700 !important; }
+            .font-black { font-weight:900 !important; }
+            .text-sm { font-size:14px !important; }
+            .text-xs { font-size:12px !important; }
+            .text-2xl { font-size:24px !important; }
+            .text-3xl { font-size:30px !important; }
+            .shadow-sm { box-shadow:0 1px 3px rgba(0,0,0,0.1); }
           `
-          clonedDoc.head.appendChild(st)
-
-          // 2. Parchear getComputedStyle del window del documento clonado
-          //    para que devuelva RGB en vez de lab()/oklch()
-          const origGCS = clonedDoc.defaultView?.getComputedStyle?.bind(clonedDoc.defaultView)
-          if (origGCS && clonedDoc.defaultView) {
-            const colorProps = new Set(['color','background-color','border-color','fill','stroke',
-              'border-top-color','border-right-color','border-bottom-color','border-left-color',
-              'outline-color','text-decoration-color','caret-color'])
-            ;(clonedDoc.defaultView as any).getComputedStyle = (elem: Element, pseudo?: string) => {
-              const cs = origGCS(elem, pseudo)
-              return new Proxy(cs, {
-                get(target, prop: string) {
-                  const val = (target as any)[prop]
-                  if (typeof val === 'function') return val.bind(target)
-                  if (typeof prop === 'string' && typeof val === 'string') {
-                    if (val.includes('lab(') || val.includes('oklch') || val.includes('lch(')) {
-                      const isBg = String(prop).includes('background') || String(prop).includes('Background')
-                      return isBg ? 'rgb(255, 255, 255)' : 'rgb(30, 41, 59)'
-                    }
-                  }
-                  return val
-                },
-                apply(target: any, thisArg, args) {
-                  const val = target.apply(thisArg, args)
-                  if (typeof val === 'string' && (val.includes('lab(') || val.includes('oklch') || val.includes('lch('))) {
-                    return 'rgb(30, 41, 59)'
-                  }
-                  return val
-                }
-              })
-            }
-          }
-
-          // 3. Limpiar styles inline con oklch/lab
-          Array.from(el.querySelectorAll('[style]')).forEach(node => {
-            const s = node.getAttribute('style') || ''
-            if (s.includes('oklch') || s.includes('lab(') || s.includes('lch(')) {
-              node.setAttribute('style', s
-                .replace(/:\s*oklch\([^)]+\)/g, ': initial')
-                .replace(/:\s*lab\([^)]+\)/g, ': initial')
-                .replace(/:\s*lch\([^)]+\)/g, ': initial')
+          clonedDoc.head.appendChild(safe)
+          // Limpiar inline styles residuales con lab()/oklch()
+          Array.from(el.querySelectorAll('*')).forEach((node: Element) => {
+            const h = node as HTMLElement
+            if (!h.style) return
+            const s = h.getAttribute('style') || ''
+            if (/oklch|lab\(|lch\(/.test(s)) {
+              h.setAttribute('style', s
+                .replace(/:\s*oklch\([^)]+\)/g, ':#1e293b')
+                .replace(/:\s*lab\([^)]+\)/g, ':#1e293b')
+                .replace(/:\s*lch\([^)]+\)/g, ':#1e293b')
               )
             }
           })

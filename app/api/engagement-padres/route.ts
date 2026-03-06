@@ -26,13 +26,13 @@ export async function POST(req: NextRequest) {
 
     // Cargar datos del niño
     const { data: child } = await supabaseAdmin
-      .from('ninos')
-      .select('nombre, fecha_nacimiento, diagnostico')
+      .from('children')
+      .select('name, age, diagnosis')
       .eq('id', childId)
       .single()
 
-    const childName = (child as any)?.nombre || 'el niño'
-    const diagnostico = (child as any)?.diagnostico || 'TEA'
+    const childName = (child as any)?.name || 'el paciente'
+    const diagnostico = (child as any)?.diagnosis || 'TEA'
 
     // Cargar últimas sesiones para contexto
     const { data: sesiones } = await supabaseAdmin
