@@ -163,7 +163,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             <button key={p.id} onClick={() => generarPrediccion(p)}
               className={`w-full text-left p-3.5 hover:bg-blue-50/50 transition-colors flex items-center gap-3 ${selectedPaciente?.id === p.id ? 'bg-blue-50 border-l-2 border-blue-500' : ''}`}>
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-black text-sm">{p.name.charAt(0)}</span>
+                <span className="text-white font-black text-sm">{(p.name || p.nombre || '?').charAt(0)}</span>
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm text-slate-800 truncate">{p.name}</p>
@@ -550,19 +550,30 @@ export default function InteligenciaHubView() {
   const [pacientes, setPacientes] = useState<Paciente[]>([])
 
   useEffect(() => {
-    fetch('/api/admin/users?tipo=pacientes')
-      .then(r => r.json())
-      .then(d => setPacientes(d.data || d.pacientes || []))
-      .catch(async () => {
-        // Fallback: cargar desde supabase-client
+    // Cargar pacientes desde supabase directamente
+    const cargarPacientes = async () => {
+      try {
         const { createClient } = await import('@supabase/supabase-js')
         const sb = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL!,
           process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
         )
-        const { data } = await sb.from('children').select('id, name, diagnosis').order('name')
-        setPacientes(data || [])
-      })
+        // Intentar tabla 'ninos' primero, luego 'children' como fallback
+        let { data, error } = await sb.from('ninos').select('id, nombre, diagnostico').order('nombre')
+        if (error || !data || data.length === 0) {
+          const res2 = await sb.from('children').select('id, name, diagnosis').order('name')
+          data = (res2.data || []).map((r: any) => ({ id: r.id, nombre: r.name, diagnostico: r.diagnosis }))
+        }
+        setPacientes((data || []).map((r: any) => ({
+          id: r.id,
+          name: r.nombre || r.name || 'Sin nombre',
+          diagnosis: r.diagnostico || r.diagnosis || '',
+        })))
+      } catch (e) {
+        console.error('Error cargando pacientes:', e)
+      }
+    }
+    cargarPacientes()
   }, [])
 
   const tabs = [

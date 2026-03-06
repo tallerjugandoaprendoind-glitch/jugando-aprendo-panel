@@ -25,17 +25,25 @@ export default function KnowledgeBaseView() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [uploadProgress, setUploadProgress] = useState<string>('')
 
-  const loadDocs = async () => {
-    setLoading(true)
+  const loadDocs = async (silent = false) => {
+    if (!silent) setLoading(true)
     try {
       const res = await fetch('/api/knowledge/ingest')
       const json = await res.json()
       setDocumentos(json.data || [])
-    } catch { toast.error('Error cargando documentos') }
-    finally { setLoading(false) }
+    } catch { if (!silent) toast.error('Error cargando documentos') }
+    finally { if (!silent) setLoading(false) }
   }
 
-  useEffect(() => { loadDocs() }, [])
+  // Polling: refresca cada 10s si hay documentos aún indexando
+  useEffect(() => {
+    loadDocs()
+    const interval = setInterval(() => {
+      const hayIndexando = documentos.some((d: any) => !d.procesado)
+      if (hayIndexando) loadDocs(true)
+    }, 10_000)
+    return () => clearInterval(interval)
+  }, [documentos.length])
 
   const handleUpload = async () => {
     if (!form.titulo) { toast.error('El título es requerido'); return }
@@ -54,25 +62,50 @@ export default function KnowledgeBaseView() {
       let fileName: string | undefined
 
       if (selectedFile) {
-        setUploadProgress(`Subiendo archivo (${Math.round(selectedFile.size / 1024 / 1024)}MB)...`)
+        const sizeMB = Math.round(selectedFile.size / 1024 / 1024)
+        setUploadProgress(`Preparando subida (${sizeMB}MB)...`)
 
-        // Subir via API server-side (usa service role key, bypassa RLS del bucket)
-        const fd = new FormData()
-        fd.append('file', selectedFile)
+        const VERCEL_LIMIT = 4 * 1024 * 1024 // 4MB
 
-        const uploadRes = await fetch('/api/knowledge/upload', {
-          method: 'POST',
-          body: fd,
-        })
-        const uploadJson = await uploadRes.json()
-        if (uploadJson.error) throw new Error(uploadJson.error)
+        if (selectedFile.size <= VERCEL_LIMIT) {
+          // Archivos pequeños: FormData normal
+          const fd = new FormData()
+          fd.append('file', selectedFile)
+          setUploadProgress(`Subiendo archivo (${sizeMB}MB)...`)
+          const uploadRes = await fetch('/api/knowledge/upload', { method: 'POST', body: fd })
+          const uploadJson = await uploadRes.json()
+          if (uploadJson.error) throw new Error(uploadJson.error)
+          storageUrl = uploadJson.storageUrl
+          fileName = uploadJson.fileName
 
-        storageUrl = uploadJson.storageUrl
-        fileName = uploadJson.fileName
+        } else {
+          // Archivos grandes: presigned URL → sube directo a Supabase sin pasar por Vercel
+          setUploadProgress(`Obteniendo URL de subida...`)
+          const presignRes = await fetch('/api/knowledge/upload?presign=true', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileName: selectedFile.name, contentType: selectedFile.type }),
+          })
+          const presignJson = await presignRes.json()
+          if (presignJson.error) throw new Error(presignJson.error)
+
+          // Subir directamente a Supabase Storage con la URL pre-firmada
+          setUploadProgress(`Subiendo ${sizeMB}MB directo a Storage...`)
+          const putRes = await fetch(presignJson.uploadUrl, {
+            method: 'PUT',
+            headers: { 'Content-Type': selectedFile.type || 'application/pdf' },
+            body: selectedFile,
+          })
+          if (!putRes.ok) throw new Error(`Error subiendo archivo: ${putRes.statusText}`)
+
+          storageUrl = presignJson.storageUrl
+          fileName = presignJson.fileName
+        }
+
         setUploadProgress('Extrayendo texto con IA...')
       }
 
-      // 3. Mandar solo la URL (o el texto) al backend — payload pequeño
+      // Mandar solo la URL (o el texto) al backend — payload pequeño
       const res = await fetch('/api/knowledge/ingest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
