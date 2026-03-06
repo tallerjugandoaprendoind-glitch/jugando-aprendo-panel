@@ -41,10 +41,10 @@ export default function KnowledgeBaseView() {
     if (!form.titulo) { toast.error('El título es requerido'); return }
     if (!selectedFile && !form.texto.trim()) { toast.error('Sube un archivo o pega el texto'); return }
 
-    // FIX: validar tamaño máximo 100MB antes de intentar subir
-    const MAX_SIZE = 100 * 1024 * 1024
+    // Validar tamaño máximo 500MB antes de intentar subir
+    const MAX_SIZE = 500 * 1024 * 1024
     if (selectedFile && selectedFile.size > MAX_SIZE) {
-      toast.error(`El archivo es demasiado grande (${Math.round(selectedFile.size / 1024 / 1024)}MB). Máximo: 100MB.`)
+      toast.error(`El archivo es demasiado grande (${Math.round(selectedFile.size / 1024 / 1024)}MB). Máximo: 500MB.`)
       return
     }
 

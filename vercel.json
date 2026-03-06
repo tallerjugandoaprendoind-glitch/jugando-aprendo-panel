@@ -6,6 +6,7 @@
     "app/api/analyze-professional-evaluation/route.ts": { "maxDuration": 60 },
     "app/api/generate-session-report/route.ts": { "maxDuration": 60 },
     "app/api/generate-home-environment-report/route.ts": { "maxDuration": 60 },
-    "app/api/admin-chat/route.ts": { "maxDuration": 60 }
+    "app/api/admin-chat/route.ts": { "maxDuration": 60 },
+    "app/api/knowledge/ingest/route.ts": { "maxDuration": 300 }
   }
 }

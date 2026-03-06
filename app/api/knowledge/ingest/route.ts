@@ -8,9 +8,9 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { indexDocument } from '@/lib/knowledge-base'
 import { GoogleGenAI } from '@google/genai'
 
-// FIX: aumentado a ~75MB de PDF (base64 ~4/3 del tamaño binario)
+// Aumentado a 500MB — el archivo llega desde Supabase Storage (no desde Vercel body)
 const MAX_CHUNK_B64 = 4_000_000 // ~3MB binario por segmento (Gemini admite hasta ~20MB por llamada)
-const MAX_FILE_BYTES = 80 * 1024 * 1024 // 80MB
+const MAX_FILE_BYTES = 500 * 1024 * 1024 // 500MB
 
 // FIX: nombre correcto del bucket — ajusta si tu bucket tiene otro nombre
 const STORAGE_BUCKET = process.env.KNOWLEDGE_BUCKET_NAME || 'knowledge-base'
@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         const contentLength = fileRes.headers.get('content-length')
         if (contentLength && parseInt(contentLength) > MAX_FILE_BYTES) {
           return NextResponse.json({
-            error: `El archivo es demasiado grande (${Math.round(parseInt(contentLength) / 1024 / 1024)}MB). El máximo permitido es 80MB.`,
+            error: `El archivo es demasiado grande (${Math.round(parseInt(contentLength) / 1024 / 1024)}MB). El máximo permitido es 500MB.`,
           }, { status: 413 })
         }
 
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
         // FIX: verificar tamaño real del buffer
         if (arrayBuffer.byteLength > MAX_FILE_BYTES) {
           return NextResponse.json({
-            error: `El archivo excede el límite de 80MB (${Math.round(arrayBuffer.byteLength / 1024 / 1024)}MB).`,
+            error: `El archivo excede el límite de 500MB (${Math.round(arrayBuffer.byteLength / 1024 / 1024)}MB).`,
           }, { status: 413 })
         }
 
