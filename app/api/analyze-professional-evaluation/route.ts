@@ -38,19 +38,19 @@ export async function POST(req: Request) {
     // 3. Router de Evaluaciones
     switch (evaluationType) {
       case 'brief2':
-        analysisResult = await analyzeBRIEF2(ai, responses, nombreNino, edadNino, historialTexto);
+        analysisResult = await analyzeBRIEF2(responses, nombreNino, edadNino, historialTexto);
         break;
       case 'ados2':
-        analysisResult = await analyzeADOS2(ai, responses, nombreNino, edadNino, historialTexto);
+        analysisResult = await analyzeADOS2(responses, nombreNino, edadNino, historialTexto);
         break;
       case 'vineland3':
-        analysisResult = await analyzeVineland3(ai, responses, nombreNino, edadNino, historialTexto);
+        analysisResult = await analyzeVineland3(responses, nombreNino, edadNino, historialTexto);
         break;
       case 'wiscv':
-        analysisResult = await analyzeWISCV(ai, responses, nombreNino, edadNino, historialTexto);
+        analysisResult = await analyzeWISCV(responses, nombreNino, edadNino, historialTexto);
         break;
       case 'basc3':
-        analysisResult = await analyzeBASC3(ai, responses, nombreNino, edadNino, historialTexto);
+        analysisResult = await analyzeBASC3(responses, nombreNino, edadNino, historialTexto);
         break;
       default:
         return NextResponse.json({ error: `Tipo de evaluación no soportado: ${evaluationType}` }, { status: 400 });
@@ -122,7 +122,7 @@ function parseGeminiJSON(text: string | undefined, context: string = "respuesta"
 // ============================================================================
 // 1. LÓGICA BRIEF-2 (Funciones Ejecutivas)
 // ============================================================================
-async function analyzeBRIEF2(ai: any, responses: any, childName: string, childAge: number, historialTexto: string = "") {
+async function analyzeBRIEF2(responses: any, childName: string, childAge: number, historialTexto: string = "") {
   // Cálculos matemáticos precisos
   const inhibicionScore = sumItems(responses, 'inhibe_', 6);
   const flexibilidadScore = sumItems(responses, 'flex_', 6);
@@ -198,7 +198,7 @@ async function analyzeBRIEF2(ai: any, responses: any, childName: string, childAg
 // ============================================================================
 // 2. LÓGICA ADOS-2 (Diagnóstico Autismo)
 // ============================================================================
-async function analyzeADOS2(ai: any, responses: any, childName: string, childAge: number, historialTexto: string = "") {
+async function analyzeADOS2(responses: any, childName: string, childAge: number, historialTexto: string = "") {
   // Agrupación por dominios ADOS-2
   const comunicacionScore = sumItems(responses, '', ['contacto_visual', 'expresiones_faciales', 'integracion_mirada', 'sonrisa_social', 'comunicacion_afectiva', 'atencion_conjunta', 'inicio_atencion']);
   const interaccionScore = sumItems(responses, '', ['busqueda_compartir', 'ofrecimiento_consuelo', 'respuesta_nombre', 'reciprocidad_social', 'interes_otros']);
@@ -278,7 +278,7 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
 // ============================================================================
 // 3. LÓGICA VINELAND-3 (Conducta Adaptativa)
 // ============================================================================
-async function analyzeVineland3(ai: any, responses: any, childName: string, childAge: number, historialTexto: string = "") {
+async function analyzeVineland3(responses: any, childName: string, childAge: number, historialTexto: string = "") {
   // ── Claves reales del formulario VINELAND3_DATA en formConstants.tsx ──
   // Comunicación: 7 ítems × 2 pts = 14 pts máx
   const comunicacionScore = calculateVinelandScore(responses, [
@@ -368,7 +368,7 @@ async function analyzeVineland3(ai: any, responses: any, childName: string, chil
 // ============================================================================
 // 4. LÓGICA WISC-V (Inteligencia / Cognitivo)
 // ============================================================================
-async function analyzeWISCV(ai: any, responses: any, childName: string, childAge: number, historialTexto: string = "") {
+async function analyzeWISCV(responses: any, childName: string, childAge: number, historialTexto: string = "") {
   // Suma de escalares
   const icv = sumScalars(responses, ['icv_semejanzas', 'icv_vocabulario', 'icv_informacion', 'icv_comprension']);
   const ive = sumScalars(responses, ['ive_cubos', 'ive_puzles']);
@@ -455,7 +455,7 @@ async function analyzeWISCV(ai: any, responses: any, childName: string, childAge
 // ============================================================================
 // 5. LÓGICA BASC-3 (Conducta y Emociones)
 // ============================================================================
-async function analyzeBASC3(ai: any, responses: any, childName: string, childAge: number, historialTexto: string = "") {
+async function analyzeBASC3(responses: any, childName: string, childAge: number, historialTexto: string = "") {
   // Parseo seguro de integers
   const toInt = (k: string) => parseInt(responses[k]) || 0;
 
