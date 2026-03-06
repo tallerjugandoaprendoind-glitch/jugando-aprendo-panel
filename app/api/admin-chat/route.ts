@@ -3,6 +3,20 @@ import { NextResponse } from 'next/server';
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
+// FIX: calcular edad correctamente desde birth_date cuando age es null
+function calcularEdad(birthDate: string | null | undefined, ageFallback: number | null | undefined): string {
+  if (birthDate) {
+    const hoy = new Date()
+    const nacimiento = new Date(birthDate)
+    const diff = hoy.getFullYear() - nacimiento.getFullYear()
+    const m = hoy.getMonth() - nacimiento.getMonth()
+    const edad = (m < 0 || (m === 0 && hoy.getDate() < nacimiento.getDate())) ? diff - 1 : diff
+    if (edad >= 0 && edad < 120) return `${edad} años`
+  }
+  if (ageFallback != null && !isNaN(Number(ageFallback))) return `${ageFallback} años`
+  return 'edad no registrada'
+}
+
 // Helper: convierte cualquier valor a array de strings de forma segura
 function toArr(val: any): string[] {
   if (!val) return []
@@ -152,7 +166,7 @@ export async function POST(req: Request) {
 🎯 CONTEXTO CLÍNICO INTEGRAL - SISTEMA PROFESIONAL
 
 PACIENTE: ${child?.name || 'Paciente'}
-Edad: ${child?.age || 'No especificada'} años
+Edad: ${calcularEdad(child?.birth_date, child?.age)}
 Diagnóstico: ${child?.diagnosis || 'En evaluación'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

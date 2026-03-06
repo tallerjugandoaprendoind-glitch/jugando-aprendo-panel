@@ -5,14 +5,28 @@ import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const childId     = searchParams.get('child_id')
+  const childId      = searchParams.get('child_id')
   const parentUserId = searchParams.get('parent_user_id')
-  const soloActivas = searchParams.get('activas') !== 'false'
+  const soloActivas  = searchParams.get('activas') !== 'false'
 
   try {
+    // FIX: si viene parentUserId, verificar que tiene acceso a ese child_id
+    if (parentUserId && childId) {
+      const { data: acceso } = await supabaseAdmin
+        .from('parent_accounts')
+        .select('id')
+        .eq('user_id', parentUserId)
+        .eq('child_id', childId)
+        .single()
+
+      if (!acceso) {
+        return NextResponse.json({ error: 'No tienes acceso a este paciente' }, { status: 403 })
+      }
+    }
+
     let query = supabaseAdmin
       .from('tareas_hogar')
-      .select('*, children(name), terapeuta:terapeuta_id(email, raw_user_meta_data)')
+      .select('id, titulo, objetivo, instrucciones, completada, fecha_asignada, fecha_limite, nota_padre, dificultad_reportada, activa, child_id, children(name)')
       .order('fecha_asignada', { ascending: false })
 
     if (childId)     query = query.eq('child_id', childId)
@@ -40,7 +54,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'child_id y titulo son requeridos' }, { status: 400 })
       }
 
-      // Generar instrucciones con IA
       const instrucciones = await generarInstruccionesIA(child_id, titulo, objetivo)
 
       const { data, error } = await supabaseAdmin
@@ -58,7 +71,6 @@ export async function POST(req: NextRequest) {
 
       if (error) throw error
 
-      // Notificar a los padres
       await notificarPadresTareaNueva(child_id, data)
 
       return NextResponse.json({ data })
@@ -82,7 +94,6 @@ export async function POST(req: NextRequest) {
 
       if (error) throw error
 
-      // Notificar al terapeuta
       await notificarTerapeutaTareaCompletada(data)
 
       return NextResponse.json({ data })
@@ -121,21 +132,33 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ─── GENERAR INSTRUCCIONES CON GEMINI ────────────────────────
+// ─── GENERAR INSTRUCCIONES CON GROQ ──────────────────────────
 async function generarInstruccionesIA(childId: string, titulo: string, objetivo?: string): Promise<string> {
   try {
-
     const { data: child } = await supabaseAdmin
       .from('children')
-      .select('name, age, diagnosis')
+      .select('name, age, birth_date, diagnosis')
       .eq('id', childId)
       .single()
+
+    // FIX: calcular edad desde birth_date si age es null
+    let edadTexto = 'edad no registrada'
+    if ((child as any)?.birth_date) {
+      const hoy = new Date()
+      const nac = new Date((child as any).birth_date)
+      const diff = hoy.getFullYear() - nac.getFullYear()
+      const m = hoy.getMonth() - nac.getMonth()
+      const edad = (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) ? diff - 1 : diff
+      edadTexto = `${edad} años`
+    } else if ((child as any)?.age) {
+      edadTexto = `${(child as any).age} años`
+    }
 
     const prompt = `Eres un terapeuta ABA especializado en neuropsicologia infantil.
 
 Genera instrucciones CLARAS y PRACTICAS para que los padres realicen esta actividad terapeutica en casa:
 
-PACIENTE: ${(child as any)?.name}, ${(child as any)?.age} años, diagnostico: ${(child as any)?.diagnosis}
+PACIENTE: ${(child as any)?.name}, ${edadTexto}, diagnostico: ${(child as any)?.diagnosis}
 ACTIVIDAD: ${titulo}
 OBJETIVO TERAPEUTICO: ${objetivo || 'Reforzar habilidades trabajadas en sesion'}
 
@@ -153,10 +176,10 @@ QUE OBSERVAR: [que registrar o notar]
 Usa lenguaje simple, sin tecnicismos. Maximo 150 palabras total.`
 
     const response = await callGroqSimple(
-        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
-        prompt,
-        { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
-      )
+      'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+      prompt,
+      { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
+    )
 
     return response || generarInstruccionesGenericas(titulo)
   } catch {
@@ -192,8 +215,8 @@ async function notificarPadresTareaNueva(childId: string, tarea: any) {
       user_id: p.user_id,
       child_id: childId,
       tipo: 'tarea_nueva',
-      titulo: 'Nueva tarea terapeutica asignada',
-      mensaje: `Tu terapeuta asigno una nueva actividad: "${tarea.titulo}". Ingresa a la app para ver las instrucciones.`,
+      titulo: 'Nueva actividad para casa asignada',
+      mensaje: `Tu terapeuta asignó una nueva actividad: "${tarea.titulo}". Ingresa a la app para ver las instrucciones paso a paso.`,
       prioridad: 2,
       canal: 'in_app',
       metadata: { tarea_id: tarea.id }
@@ -212,8 +235,8 @@ async function notificarTerapeutaTareaCompletada(tarea: any) {
       user_id: tarea.terapeuta_id,
       child_id: tarea.child_id,
       tipo: 'tarea_completada',
-      titulo: 'Tarea completada por la familia',
-      mensaje: `La familia completo la tarea "${tarea.titulo}"${tarea.nota_padre ? '. Nota: ' + tarea.nota_padre : ''}.`,
+      titulo: 'Actividad completada por la familia',
+      mensaje: `La familia completó la actividad "${tarea.titulo}"${tarea.nota_padre ? '. Nota: ' + tarea.nota_padre : ''}.`,
       prioridad: 3,
       canal: 'in_app',
       metadata: { tarea_id: tarea.id }

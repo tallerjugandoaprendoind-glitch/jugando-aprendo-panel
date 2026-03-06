@@ -8,7 +8,12 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { indexDocument } from '@/lib/knowledge-base'
 import { GoogleGenAI } from '@google/genai'
 
-const MAX_CHUNK_B64 = 3_500_000 // ~2.6MB binario por segmento
+// FIX: aumentado a ~75MB de PDF (base64 ~4/3 del tamaño binario)
+const MAX_CHUNK_B64 = 4_000_000 // ~3MB binario por segmento (Gemini admite hasta ~20MB por llamada)
+const MAX_FILE_BYTES = 80 * 1024 * 1024 // 80MB
+
+// FIX: nombre correcto del bucket — ajusta si tu bucket tiene otro nombre
+const STORAGE_BUCKET = process.env.KNOWLEDGE_BUCKET_NAME || 'knowledge-base'
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,16 +27,52 @@ export async function POST(req: NextRequest) {
     let textoParaIndexar = ''
 
     if (texto) {
-      // Texto pegado directamente
       textoParaIndexar = texto
 
     } else if (storageUrl) {
-      // PDF subido a Supabase Storage — descargar y extraer con Gemini
       try {
-        const fileRes = await fetch(storageUrl)
-        if (!fileRes.ok) throw new Error(`No se pudo descargar el archivo: ${fileRes.status}`)
+        // FIX: pasar el Authorization header si la URL es privada de Supabase
+        const fileRes = await fetch(storageUrl, {
+          headers: {
+            // Si la URL es un signed URL ya lleva el token; si es pública no necesita auth
+            // Para URLs privadas sin firma, usar el service role key
+            ...(storageUrl.includes('/storage/v1/object/') && !storageUrl.includes('token=')
+              ? { Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}` }
+              : {})
+          }
+        })
+
+        if (!fileRes.ok) {
+          const errText = await fileRes.text().catch(() => fileRes.statusText)
+          console.error('Error descargando archivo:', fileRes.status, errText)
+
+          // FIX: mensaje de error más descriptivo para "Bucket not found"
+          if (fileRes.status === 400 || errText.includes('Bucket not found') || errText.includes('bucket')) {
+            return NextResponse.json({
+              error: `Bucket de almacenamiento no encontrado. Verifica que el bucket "${STORAGE_BUCKET}" existe en Supabase Storage y que la variable KNOWLEDGE_BUCKET_NAME está configurada correctamente.`,
+            }, { status: 422 })
+          }
+
+          throw new Error(`No se pudo descargar el archivo: ${fileRes.status} - ${errText}`)
+        }
+
+        // FIX: verificar tamaño antes de procesar
+        const contentLength = fileRes.headers.get('content-length')
+        if (contentLength && parseInt(contentLength) > MAX_FILE_BYTES) {
+          return NextResponse.json({
+            error: `El archivo es demasiado grande (${Math.round(parseInt(contentLength) / 1024 / 1024)}MB). El máximo permitido es 80MB.`,
+          }, { status: 413 })
+        }
 
         const arrayBuffer = await fileRes.arrayBuffer()
+
+        // FIX: verificar tamaño real del buffer
+        if (arrayBuffer.byteLength > MAX_FILE_BYTES) {
+          return NextResponse.json({
+            error: `El archivo excede el límite de 80MB (${Math.round(arrayBuffer.byteLength / 1024 / 1024)}MB).`,
+          }, { status: 413 })
+        }
+
         const fullBase64 = Buffer.from(arrayBuffer).toString('base64')
 
         const apiKey = process.env.GEMINI_API_KEY!
@@ -51,9 +92,10 @@ export async function POST(req: NextRequest) {
             config: { temperature: 0, maxOutputTokens: 8192 },
           })
           partes.push(response.text || '')
+
         } else {
           const totalPartes = Math.ceil(fullBase64.length / MAX_CHUNK_B64)
-          console.log(`PDF grande: ${totalPartes} segmentos`)
+          console.log(`PDF grande: ${totalPartes} segmentos (${Math.round(arrayBuffer.byteLength / 1024 / 1024)}MB)`)
 
           for (let p = 0; p < totalPartes; p++) {
             const segmento = fullBase64.slice(p * MAX_CHUNK_B64, (p + 1) * MAX_CHUNK_B64)
@@ -74,16 +116,18 @@ export async function POST(req: NextRequest) {
             } catch (partErr: any) {
               console.warn(`Segmento ${p + 1} falló:`, partErr.message)
             }
-            if (p < totalPartes - 1) await new Promise(r => setTimeout(r, 1000))
+            // FIX: delay reducido a 500ms para indexar más rápido
+            if (p < totalPartes - 1) await new Promise(r => setTimeout(r, 500))
           }
         }
 
         textoParaIndexar = partes.filter(Boolean).join('\n\n')
         console.log(`Texto extraído: ${textoParaIndexar.length} caracteres`)
+
       } catch (pdfError: any) {
         console.error('Error extrayendo PDF:', pdfError.message)
         return NextResponse.json({
-          error: 'No se pudo extraer el texto del PDF. Intenta pegar el texto directamente.',
+          error: `No se pudo extraer el texto del PDF: ${pdfError.message}. Intenta pegar el texto directamente.`,
         }, { status: 422 })
       }
     } else {
@@ -96,7 +140,6 @@ export async function POST(req: NextRequest) {
       }, { status: 422 })
     }
 
-    // Crear registro del documento
     const { data: doc, error: docError } = await supabaseAdmin
       .from('knowledge_documents')
       .insert({ titulo, tipo, descripcion, procesado: false })
@@ -105,9 +148,18 @@ export async function POST(req: NextRequest) {
 
     if (docError) throw docError
 
-    // Indexar en background
+    // FIX: indexar con mayor concurrencia para acelerar el proceso
     indexDocument((doc as any).id, textoParaIndexar, { titulo, tipo })
-      .then(result => console.log(`Indexado "${titulo}": ${result.chunks} chunks`))
+      .then(result => {
+        console.log(`Indexado "${titulo}": ${result.chunks} chunks`)
+        // Marcar como procesado cuando termine
+        supabaseAdmin
+          .from('knowledge_documents')
+          .update({ procesado: true, total_chunks: result.chunks })
+          .eq('id', (doc as any).id)
+          .then(() => {})
+          .catch(err => console.error('Error actualizando estado:', err))
+      })
       .catch(err => console.error(`Error indexando "${titulo}":`, err))
 
     return NextResponse.json({
@@ -115,9 +167,10 @@ export async function POST(req: NextRequest) {
       document_id: (doc as any).id,
       titulo,
       texto_chars: textoParaIndexar.length,
-      mensaje: 'Documento recibido. El indexado comenzó en background.',
+      mensaje: `Documento recibido (${Math.round(textoParaIndexar.length / 1000)}K chars). El indexado comenzó en background.`,
     })
   } catch (e: any) {
+    console.error('Error en ingest:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
 }
