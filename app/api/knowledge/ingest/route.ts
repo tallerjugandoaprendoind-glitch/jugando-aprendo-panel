@@ -148,19 +148,24 @@ export async function POST(req: NextRequest) {
 
     if (docError) throw docError
 
-    // FIX: indexar con mayor concurrencia para acelerar el proceso
-    indexDocument((doc as any).id, textoParaIndexar, { titulo, tipo })
-      .then(result => {
+    // FIX: indexar en background sin encadenar .catch sobre PromiseLike<void>
+    const docId = (doc as any).id
+    ;(async () => {
+      try {
+        const result = await indexDocument(docId, textoParaIndexar, { titulo, tipo })
         console.log(`Indexado "${titulo}": ${result.chunks} chunks`)
-        // Marcar como procesado cuando termine
-        supabaseAdmin
-          .from('knowledge_documents')
-          .update({ procesado: true, total_chunks: result.chunks })
-          .eq('id', (doc as any).id)
-          .then(() => {})
-          .catch(err => console.error('Error actualizando estado:', err))
-      })
-      .catch(err => console.error(`Error indexando "${titulo}":`, err))
+        try {
+          await supabaseAdmin
+            .from('knowledge_documents')
+            .update({ procesado: true, total_chunks: result.chunks })
+            .eq('id', docId)
+        } catch (updateErr) {
+          console.error('Error actualizando estado:', updateErr)
+        }
+      } catch (err) {
+        console.error(`Error indexando "${titulo}":`, err)
+      }
+    })()
 
     return NextResponse.json({
       success: true,
