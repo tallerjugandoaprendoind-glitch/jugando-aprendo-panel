@@ -68,7 +68,9 @@ function infoBox(text: string, fill = 'EDE9FE', color = '5B21B6') {
   })
 }
 
-function makeDoc(sections: Paragraph[], fileName: string) {
+type DocChild = Paragraph | Table
+
+function makeDoc(sections: DocChild[], fileName: string) {
   return new Document({
     numbering: { config: [{ reference: 'bul', levels: [{ level: 0, format: LevelFormat.BULLET, text: '•', alignment: AlignmentType.LEFT, style: { paragraph: { indent: { left: 600, hanging: 300 } } } }] }] },
     styles: { default: { document: { run: { font: 'Arial', size: 20 } } } },
@@ -140,7 +142,7 @@ INSTRUCCIONES:
   const hoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
   const fileName = `Reporte_${nombre.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.docx`
 
-  const sections: Paragraph[] = [
+  const sections: DocChild[] = [
     new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: '🌟 Jugando Aprendo', bold: true, size: 28, font: 'Arial', color: '5B21B6' })] }),
     title(`Reporte de Progreso — ${nombre}`),
     subtitle(`Período: ${fechaInicio} al ${fechaFin}  ·  Generado el ${hoy}`),
@@ -217,7 +219,7 @@ Usa terminología clínica apropiada. Sin bullets.`
 
   const textoTecnico = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.2, maxTokens: 600 })
 
-  const sections: Paragraph[] = [
+  const sections: DocChild[] = [
     new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: 'JUGANDO APRENDO — Centro de Terapia ABA', bold: true, size: 28, font: 'Arial', color: '1E293B' })] }),
     new Paragraph({ spacing: { before: 0, after: 80 }, children: [new TextRun({ text: 'REPORTE CLÍNICO PARA ASEGURADORAS / IMSS', bold: true, size: 32, font: 'Arial', color: '1E40AF' })] }),
     subtitle(`Fecha de emisión: ${hoy}  ·  Documento Confidencial`),
@@ -323,7 +325,7 @@ Lenguaje técnico pero comprensible.`
 
   const analisis = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 800 })
 
-  const sections: Paragraph[] = [
+  const sections: DocChild[] = [
     new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: '📊 Jugando Aprendo', bold: true, size: 28, font: 'Arial', color: '5B21B6' })] }),
     title(`Reporte Comparativo — ${nombre}`),
     subtitle(`Análisis de progreso y predicción · ${hoy}`),
