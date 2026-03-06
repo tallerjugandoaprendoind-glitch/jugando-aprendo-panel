@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { 
   TrendingUp, TrendingDown, Activity, Users, Calendar, Target, 
   Award, BarChart3, Brain, Heart, Zap, Clock, CheckCircle2,
@@ -289,100 +289,333 @@ function KPICard({ title, value, change, icon, color }: any) {
   );
 }
 
-// GRÁFICO DE LÍNEA SIMPLE (CSS puro)
+// GRÁFICO DE LÍNEA PROFESIONAL — SVG responsive con dimensiones reales
 function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
-  const maxValue = Math.max(...data.map(d => d.progress));
-  const minValue = Math.min(...data.map(d => d.progress));
-  const range = maxValue - minValue || 1;
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [dims, setDims] = useState({ w: 800, h: 280 })
+  const [tooltip, setTooltip] = useState<{ idx: number } | null>(null)
+
+  useEffect(() => {
+    const update = () => {
+      if (containerRef.current) {
+        setDims({ w: containerRef.current.clientWidth, h: 280 })
+      }
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    if (containerRef.current) ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [])
+
+  if (!data || data.length === 0) return null
+
+  const W = dims.w
+  const H = dims.h
+  const PAD = { top: 24, right: 24, bottom: 44, left: 52 }
+  const iW = W - PAD.left - PAD.right
+  const iH = H - PAD.top - PAD.bottom
+
+  const norm = (v: any): number => {
+    if (v === null || v === undefined) return 0
+    const n = Number(v)
+    if (isNaN(n)) return 0
+    return n <= 5 && n > 0 ? Math.round((n / 5) * 100) : Math.min(100, Math.max(0, n))
+  }
+
+  const xOf = (i: number) => PAD.left + (i / Math.max(data.length - 1, 1)) * iW
+  const yOf = (v: number) => PAD.top + iH - (v / 100) * iH
+
+  const series = [
+    { key: 'progress',  label: 'Logro',    color: '#6366F1', shadow: '#6366F140' },
+    { key: 'attention', label: 'Atención', color: '#10B981', shadow: '#10B98140' },
+    { key: 'behavior',  label: 'Conducta', color: '#F59E0B', shadow: '#F59E0B40' },
+  ]
+
+  // Construir path suavizado con curvas bezier
+  const smoothPath = (key: string): string => {
+    const pts = data.map((d, i) => ({ x: xOf(i), y: yOf(norm((d as any)[key] ?? 0)) }))
+    if (pts.length === 1) return `M ${pts[0].x} ${pts[0].y}`
+    let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`
+    for (let i = 1; i < pts.length; i++) {
+      const cp1x = (pts[i - 1].x + pts[i].x) / 2
+      const cp1y = pts[i - 1].y
+      const cp2x = cp1x
+      const cp2y = pts[i].y
+      d += ` C ${cp1x.toFixed(1)} ${cp1y.toFixed(1)}, ${cp2x.toFixed(1)} ${cp2y.toFixed(1)}, ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}`
+    }
+    return d
+  }
+
+  const smoothArea = (key: string): string => {
+    const pts = data.map((d, i) => ({ x: xOf(i), y: yOf(norm((d as any)[key] ?? 0)) }))
+    if (pts.length === 0) return ''
+    let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`
+    for (let i = 1; i < pts.length; i++) {
+      const cp1x = (pts[i - 1].x + pts[i].x) / 2
+      d += ` C ${cp1x.toFixed(1)} ${pts[i - 1].y.toFixed(1)}, ${cp1x.toFixed(1)} ${pts[i].y.toFixed(1)}, ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}`
+    }
+    const base = yOf(0)
+    d += ` L ${pts[pts.length - 1].x.toFixed(1)} ${base.toFixed(1)} L ${pts[0].x.toFixed(1)} ${base.toFixed(1)} Z`
+    return d
+  }
+
+  const gridLines = [100, 75, 50, 25, 0]
+  const labelStep = Math.max(1, Math.ceil(data.length / 7))
+  const activeD = tooltip !== null ? data[tooltip.idx] : null
 
   return (
-    <div className="space-y-4">
-      <div className="relative h-64 bg-gradient-to-b from-blue-50 to-white rounded-xl p-4 border-2 border-blue-100">
-        {/* Grid horizontal */}
-        <div className="absolute inset-0 flex flex-col justify-between p-4">
-          {[100, 75, 50, 25, 0].map(val => (
-            <div key={val} className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 font-medium w-8">{val}%</span>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
-          ))}
-        </div>
+    <div className="space-y-3">
+      {/* Leyenda */}
+      <div className="flex items-center gap-5 flex-wrap px-1">
+        {series.map(s => (
+          <div key={s.key} className="flex items-center gap-1.5">
+            <div className="w-3 h-0.5 rounded-full" style={{ background: s.color, boxShadow: `0 0 4px ${s.color}` }} />
+            <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
+            <span className="text-xs font-semibold text-gray-500">{s.label}</span>
+          </div>
+        ))}
+      </div>
 
-        {/* Línea de progreso */}
-        <svg className="absolute inset-0 w-full h-full" style={{ padding: '16px' }}>
-          <polyline
-            fill="none"
-            stroke="#3B82F6"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            points={data.map((d, i) => {
-              const x = (i / (data.length - 1)) * 100;
-              const y = 100 - ((d.progress - minValue) / range) * 100;
-              return `${x}%,${y}%`;
-            }).join(' ')}
+      {/* Contenedor SVG con dimensiones reales */}
+      <div ref={containerRef} className="relative w-full" style={{ height: H }}>
+        <svg
+          width={W}
+          height={H}
+          className="overflow-visible"
+        >
+          <defs>
+            {series.map(s => (
+              <linearGradient key={s.key} id={`grad-${s.key}-${W}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={s.color} stopOpacity="0.22" />
+                <stop offset="85%" stopColor={s.color} stopOpacity="0.02" />
+              </linearGradient>
+            ))}
+            <filter id="line-shadow">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.15" />
+            </filter>
+          </defs>
+
+          {/* Fondo del área del gráfico */}
+          <rect
+            x={PAD.left} y={PAD.top}
+            width={iW} height={iH}
+            fill="#F8FAFF"
+            rx="8"
           />
-          
-          {/* Puntos */}
-          {data.map((d, i) => {
-            const x = (i / (data.length - 1)) * 100;
-            const y = 100 - ((d.progress - minValue) / range) * 100;
-            return (
-              <circle
-                key={i}
-                cx={`${x}%`}
-                cy={`${y}%`}
-                r="4"
-                fill="#3B82F6"
-                className="hover:r-6 transition-all cursor-pointer"
+
+          {/* Grid lines */}
+          {gridLines.map(v => (
+            <g key={v}>
+              <line
+                x1={PAD.left} y1={yOf(v)}
+                x2={W - PAD.right} y2={yOf(v)}
+                stroke={v === 0 ? '#CBD5E1' : '#E2E8F0'}
+                strokeWidth={v === 0 ? 1.5 : 1}
+                strokeDasharray={v > 0 && v < 100 ? '4 4' : ''}
               />
-            );
+              <text
+                x={PAD.left - 8} y={yOf(v) + 4}
+                textAnchor="end"
+                fontSize={11}
+                fill="#94A3B8"
+                fontFamily="system-ui, sans-serif"
+                fontWeight="600"
+              >{v}%</text>
+            </g>
+          ))}
+
+          {/* Áreas */}
+          {series.map(s => (
+            <path
+              key={`area-${s.key}`}
+              d={smoothArea(s.key)}
+              fill={`url(#grad-${s.key}-${W})`}
+            />
+          ))}
+
+          {/* Líneas suavizadas con sombra */}
+          {series.map(s => (
+            <path
+              key={`line-${s.key}`}
+              d={smoothPath(s.key)}
+              fill="none"
+              stroke={s.color}
+              strokeWidth={2.5}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#line-shadow)"
+            />
+          ))}
+
+          {/* Puntos con hover */}
+          {data.map((d, i) => {
+            const isActive = tooltip?.idx === i
+            const px = xOf(i)
+            const py = yOf(norm(d.progress))
+            return (
+              <g key={i}>
+                {/* Zona hover invisible */}
+                <rect
+                  x={px - 20} y={PAD.top}
+                  width={40} height={iH}
+                  fill="transparent"
+                  style={{ cursor: 'crosshair' }}
+                  onMouseEnter={() => setTooltip({ idx: i })}
+                  onMouseLeave={() => setTooltip(null)}
+                />
+                {/* Línea vertical al hacer hover */}
+                {isActive && (
+                  <line
+                    x1={px} y1={PAD.top}
+                    x2={px} y2={PAD.top + iH}
+                    stroke="#6366F1"
+                    strokeWidth={1}
+                    strokeDasharray="4 3"
+                    opacity={0.4}
+                  />
+                )}
+                {/* Punto progreso */}
+                <circle
+                  cx={px} cy={py}
+                  r={isActive ? 7 : 4.5}
+                  fill={isActive ? '#6366F1' : 'white'}
+                  stroke="#6366F1"
+                  strokeWidth={isActive ? 0 : 2.5}
+                  style={{ transition: 'r 0.15s, fill 0.15s' }}
+                />
+                {/* Punto atención */}
+                {d.attention !== undefined && (
+                  <circle
+                    cx={px} cy={yOf(norm(d.attention))}
+                    r={isActive ? 5 : 3.5}
+                    fill={isActive ? '#10B981' : 'white'}
+                    stroke="#10B981"
+                    strokeWidth={2}
+                    style={{ transition: 'r 0.15s' }}
+                  />
+                )}
+                {/* Punto conducta */}
+                {d.behavior !== undefined && (
+                  <circle
+                    cx={px} cy={yOf(norm(d.behavior))}
+                    r={isActive ? 5 : 3.5}
+                    fill={isActive ? '#F59E0B' : 'white'}
+                    stroke="#F59E0B"
+                    strokeWidth={2}
+                    style={{ transition: 'r 0.15s' }}
+                  />
+                )}
+              </g>
+            )
+          })}
+
+          {/* Etiquetas eje X */}
+          {data.map((d, i) => {
+            if (i % labelStep !== 0 && i !== data.length - 1) return null
+            return (
+              <text
+                key={i}
+                x={xOf(i)} y={H - 8}
+                textAnchor="middle"
+                fontSize={11}
+                fill="#94A3B8"
+                fontFamily="system-ui, sans-serif"
+                fontWeight="600"
+              >{d.date}</text>
+            )
           })}
         </svg>
-      </div>
 
-      {/* Etiquetas de fechas */}
-      <div className="flex justify-between px-4">
-        {data.map((d, i) => {
-          if (i % Math.ceil(data.length / 6) === 0 || i === data.length - 1) {
-            return (
-              <span key={i} className="text-xs text-gray-500 font-medium">
-                {d.date}
-              </span>
-            );
-          }
-          return null;
-        })}
+        {/* Tooltip flotante HTML (fuera del SVG para mejor estilo) */}
+        {tooltip !== null && activeD && (() => {
+          const px = xOf(tooltip.idx)
+          const leftPct = (px / W) * 100
+          const isRight = leftPct > 60
+          return (
+            <div
+              className="absolute z-20 pointer-events-none"
+              style={{
+                top: 20,
+                left: isRight ? 'auto' : px + 14,
+                right: isRight ? W - px + 14 : 'auto',
+              }}
+            >
+              <div className="bg-gray-900/95 backdrop-blur-sm text-white rounded-2xl px-3.5 py-3 shadow-2xl text-xs font-semibold min-w-[148px] border border-white/10">
+                <p className="text-gray-300 font-bold mb-2 pb-1.5 border-b border-white/10 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block"/>
+                  {activeD.date}
+                </p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="flex items-center gap-1.5 text-gray-300">
+                      <span className="w-2 h-2 rounded-full bg-indigo-400 inline-block"/>Logro
+                    </span>
+                    <span className="font-black text-indigo-300 tabular-nums">{norm(activeD.progress)}%</span>
+                  </div>
+                  {activeD.attention !== undefined && (
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-gray-300">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"/>Atención
+                      </span>
+                      <span className="font-black text-emerald-300 tabular-nums">{norm(activeD.attention)}%</span>
+                    </div>
+                  )}
+                  {activeD.behavior !== undefined && (
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="flex items-center gap-1.5 text-gray-300">
+                        <span className="w-2 h-2 rounded-full bg-amber-400 inline-block"/>Conducta
+                      </span>
+                      <span className="font-black text-amber-300 tabular-nums">{norm(activeD.behavior)}%</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })()}
       </div>
     </div>
-  );
+  )
 }
 
-// BARRA DE ÁREA DE DESARROLLO
+
+
+// BARRA DE ÁREA DE DESARROLLO — diseño premium con gradiente y badge
 function DevelopmentAreaBar({ area, score, maxScore }: any) {
-  const percentage = (score / maxScore) * 100;
-  
-  const getColor = (pct: number) => {
-    if (pct >= 75) return 'bg-green-500';
-    if (pct >= 50) return 'bg-yellow-500';
-    if (pct >= 25) return 'bg-orange-500';
-    return 'bg-red-500';
-  };
+  const percentage = Math.min(100, Math.max(0, (score / maxScore) * 100))
+
+  const getStyle = (pct: number) => {
+    if (pct >= 75) return { gradient: 'from-emerald-400 to-emerald-600', label: 'Excelente', labelColor: 'text-emerald-600 bg-emerald-50' }
+    if (pct >= 50) return { gradient: 'from-blue-400 to-indigo-500',    label: 'Bien',      labelColor: 'text-indigo-600 bg-indigo-50'  }
+    if (pct >= 25) return { gradient: 'from-amber-400 to-orange-500',   label: 'Regular',   labelColor: 'text-amber-600 bg-amber-50'    }
+    return              { gradient: 'from-red-400 to-rose-600',         label: 'Atención',  labelColor: 'text-rose-600 bg-rose-50'       }
+  }
+
+  const style = getStyle(percentage)
 
   return (
-    <div>
+    <div className="group">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-bold text-gray-700">{area}</span>
-        <span className="text-sm font-black text-gray-900">{score}/{maxScore}</span>
+        <div className="flex items-center gap-2">
+          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${style.labelColor}`}>{style.label}</span>
+          <span className="text-sm font-black text-gray-900 tabular-nums">{score}<span className="text-gray-400 font-medium">/{maxScore}</span></span>
+        </div>
       </div>
-      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+      <div className="relative h-2.5 bg-gray-100 rounded-full overflow-hidden">
         <div
-          className={`h-full ${getColor(percentage)} rounded-full transition-all duration-1000 ease-out`}
+          className={`h-full bg-gradient-to-r ${style.gradient} rounded-full transition-all duration-1000 ease-out relative`}
           style={{ width: `${percentage}%` }}
-        />
+        >
+          {/* Shimmer effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent rounded-full" />
+        </div>
+      </div>
+      <div className="mt-1 text-right">
+        <span className="text-[10px] font-bold text-gray-400 tabular-nums">{Math.round(percentage)}%</span>
       </div>
     </div>
-  );
+  )
 }
 
 // TARJETA DE TENDENCIA

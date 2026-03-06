@@ -75,6 +75,80 @@ const AGENT_TOOLS = {
     return `Paciente: ${history.nombre}, ${history.edad}\nDiagnóstico: ${history.diagnostico}\n${history.historialTexto}`
   },
 
+  // FIX: Resumen de TODOS los pacientes para preguntas generales
+  async obtenerResumenTodosPacientes() {
+    const { data: pacientes } = await supabaseAdmin
+      .from('children')
+      .select('id, name, age, birth_date, diagnosis, status')
+      .order('name', { ascending: true })
+      .limit(50)
+
+    if (!pacientes || pacientes.length === 0) return 'No hay pacientes registrados en el sistema.'
+
+    const resumenes: string[] = []
+
+    for (const p of pacientes as any[]) {
+      // Edad calculada
+      let edadTexto = p.age ? `${p.age} años` : 'edad N/E'
+      if (!p.age && p.birth_date) {
+        const hoy = new Date()
+        const nac = new Date(p.birth_date)
+        const diff = hoy.getFullYear() - nac.getFullYear()
+        const m = hoy.getMonth() - nac.getMonth()
+        const edad = (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) ? diff - 1 : diff
+        edadTexto = `${edad} años`
+      }
+
+      // Última sesión ABA
+      const { data: ultimaSesion } = await supabaseAdmin
+        .from('registro_aba')
+        .select('fecha_sesion, datos')
+        .eq('child_id', p.id)
+        .order('fecha_sesion', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      // Programas activos
+      const { data: programas } = await supabaseAdmin
+        .from('programas_aba')
+        .select('id, titulo, estado')
+        .eq('child_id', p.id)
+        .eq('estado', 'activo')
+        .limit(3)
+
+      // Alertas activas
+      const { data: alertas } = await supabaseAdmin
+        .from('agente_alertas')
+        .select('tipo, prioridad')
+        .eq('child_id', p.id)
+        .eq('resuelta', false)
+        .limit(5)
+
+      const alertasAltas = (alertas || []).filter((a: any) => a.prioridad === 'alta').length
+      const alertasMedia = (alertas || []).filter((a: any) => a.prioridad === 'media').length
+
+      let nivelLogro = 'sin datos'
+      if (ultimaSesion && (ultimaSesion as any).datos?.nivel_logro_objetivos) {
+        const val = (ultimaSesion as any).datos.nivel_logro_objetivos
+        nivelLogro = typeof val === 'string' && val.includes('-') ? val : `${val}%`
+      }
+
+      const diasSinSesion = ultimaSesion
+        ? Math.floor((Date.now() - new Date((ultimaSesion as any).fecha_sesion).getTime()) / 86400000)
+        : null
+
+      resumenes.push(
+        `PACIENTE: ${p.name} | ${edadTexto} | Dx: ${p.diagnosis || 'No especificado'}\n` +
+        `  Última sesión: ${ultimaSesion ? (ultimaSesion as any).fecha_sesion + (diasSinSesion !== null ? ` (hace ${diasSinSesion} días)` : '') : 'ninguna registrada'}\n` +
+        `  Último logro de objetivos: ${nivelLogro}\n` +
+        `  Programas ABA activos: ${programas?.length || 0}${programas && programas.length > 0 ? ' (' + (programas as any[]).map(pr => pr.titulo).join(', ') + ')' : ''}\n` +
+        `  Alertas activas: ${(alertas || []).length}${alertasAltas > 0 ? ` (${alertasAltas} ALTA prioridad)` : ''}${alertasMedia > 0 ? ` (${alertasMedia} media)` : ''}`
+      )
+    }
+
+    return `RESUMEN DEL SISTEMA — ${pacientes.length} PACIENTES ACTIVOS:\n\n${resumenes.join('\n\n')}`
+  },
+
   // Analizar tendencia de un programa
   async analizarTendencia(programaId: string, ultimasN: number = 5) {
     const { data } = await supabaseAdmin
@@ -114,7 +188,7 @@ IDENTIDAD:
 - Eres un neuropsicólogo clínico y analista de conducta certificado (nivel IBA) con 15+ años de experiencia
 - Conoces profundamente el DSM-5-TR, los principios de Malott, las guías éticas IBAO y programas ABA basados en evidencia
 - Hablas español clínico, cálido y profesional
-- Nunca eres genérico — siempre usas el nombre del niño y datos específicos de su expediente
+- SIEMPRE usas datos reales del sistema cuando están disponibles en el contexto
 
 CAPACIDADES:
 1. Analizar tendencias de progreso de programas ABA con interpretación clínica
@@ -122,13 +196,20 @@ CAPACIDADES:
 3. Sugerir ajustes a programas basados en datos de sesiones
 4. Alertar sobre regresiones, estancamientos o situaciones éticas
 5. Generar sugerencias de nuevos programas según diagnóstico
-6. Apoyar al especialista durante y después de sesiones
+6. Comparar pacientes y dar visión global del centro cuando se te pida
+7. Apoyar al especialista durante y después de sesiones
+
+ACCESO A DATOS:
+- Cuando el contexto incluya "RESUMEN DEL SISTEMA" o "HISTORIAL CLÍNICO", ÚSALOS directamente para responder
+- Nunca digas "no tengo acceso" si los datos están en el contexto
+- Para preguntas sobre el estado de pacientes, usa los datos de alertas, última sesión y logro de objetivos del contexto
+- Para comparar pacientes, analiza todos los pacientes del resumen y da una respuesta específica con nombres
 
 REGLAS:
 - Siempre cita la fuente cuando uses conocimiento de libros o guías (ej: "Según Malott Cap.12...")
 - Si hay riesgo ético, aplica el modelo IBAO de resolución de problemas
-- Si no tienes datos suficientes, dilo claramente y pide más información
-- Nunca inventes datos de sesiones o porcentajes que no hayas recibido
+- NUNCA respondas con evasivas genéricas si tienes datos en el contexto — úsalos
+- Nunca inventes datos que no estén en el contexto
 - Cuando analices tendencias, siempre considera el contexto clínico completo`
 
 // ── Clase principal del Agente ────────────────────────────────────────────────
@@ -157,16 +238,29 @@ export class VantyAgent {
       )
 
       // 2. Construir contexto dinámico
-      const [knowledgeCtx, childCtx] = await Promise.all([
+      // FIX: detectar preguntas sobre pacientes para cargar datos del sistema
+      const preguntaSobrePacientes = /paciente|peor|mejor|progreso|todos|lista|quien|quién|comparar|estado|sesion|sesión|avance|regresion|regresión|alert/i.test(userMessage)
+
+      const [knowledgeCtx, childCtx, globalCtx] = await Promise.all([
         buildKnowledgeContext(userMessage),
         options.childId ? AGENT_TOOLS.obtenerHistorialNino(options.childId) : Promise.resolve(''),
+        // FIX: Si no hay paciente específico pero preguntan sobre pacientes, cargar todos
+        (!options.childId && preguntaSobrePacientes)
+          ? AGENT_TOOLS.obtenerResumenTodosPacientes()
+          : Promise.resolve(''),
       ])
 
       // 3. Preparar mensajes con historial (formato Groq/OpenAI)
       const messages = conversacion.mensajes as any[]
       const historialReciente = messages.slice(-10)
+
+      // Construir contexto completo
+      let systemContext = SYSTEM_PROMPT + '\n\n' + knowledgeCtx
+      if (childCtx) systemContext += '\nPACIENTE ACTIVO:\n' + childCtx
+      if (globalCtx) systemContext += '\n\n' + globalCtx
+
       const groqMessages = [
-        { role: 'system' as const, content: SYSTEM_PROMPT + '\n\n' + knowledgeCtx + (childCtx ? '\nPACIENTE ACTIVO:\n' + childCtx : '') },
+        { role: 'system' as const, content: systemContext },
         ...historialReciente.map((m: any) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
         { role: 'user' as const, content: userMessage },
       ]
@@ -337,11 +431,23 @@ export class VantyAgent {
   ): Promise<string | null> {
     const msg = userMessage.toLowerCase()
 
-    if ((msg.includes('tendencia') || msg.includes('progreso') || msg.includes('sesiones')) && childId) {
+    // Con paciente específico: mostrar programas activos
+    if ((msg.includes('tendencia') || msg.includes('progreso') || msg.includes('programa')) && childId) {
       const programas = await AGENT_TOOLS.obtenerProgramasNino(childId)
       if (programas !== 'No hay programas activos para este paciente.') {
-        return `\n**Programas activos:**\n${programas}`
+        return `\n**Programas ABA activos:**\n${programas}`
       }
+    }
+
+    // FIX: Sin paciente, preguntas sobre quién está peor/mejor → ya se maneja en el contexto
+    // Si la respuesta de la IA aún dice "no tengo acceso", forzar la carga
+    if (!childId && (
+      aiResponse.includes('no tengo acceso') ||
+      aiResponse.includes('no puedo proporcionar') ||
+      aiResponse.includes('sin acceso')
+    ) && /paciente|peor|mejor|progreso|estado/i.test(msg)) {
+      const resumen = await AGENT_TOOLS.obtenerResumenTodosPacientes()
+      return `\n**Datos del sistema (respuesta directa):**\n${resumen}`
     }
 
     return null
