@@ -65,12 +65,14 @@ export async function POST(req: NextRequest) {
 
     // Guardar mensaje (solo si hay parentUserId para no generar basura)
     if (parentUserId) {
-      await supabaseAdmin.from('chat_padres').insert({
-        child_id: childId,
-        parent_user_id: parentUserId,
-        rol: 'user',
-        mensaje
-      }).catch(() => {}) // no bloquear si falla el guardado
+      try {
+        await supabaseAdmin.from('chat_padres').insert({
+          child_id: childId,
+          parent_user_id: parentUserId,
+          rol: 'user',
+          mensaje
+        })
+      } catch {} // no bloquear si falla el guardado
     }
 
     // Generar respuesta IA
@@ -78,12 +80,14 @@ export async function POST(req: NextRequest) {
 
     // Guardar respuesta
     if (parentUserId) {
-      await supabaseAdmin.from('chat_padres').insert({
-        child_id: childId,
-        parent_user_id: parentUserId,
-        rol: 'assistant',
-        mensaje: respuesta
-      }).catch(() => {})
+      try {
+        await supabaseAdmin.from('chat_padres').insert({
+          child_id: childId,
+          parent_user_id: parentUserId,
+          rol: 'assistant',
+          mensaje: respuesta
+        })
+      } catch {}
     }
 
     // FIX: responder con AMBOS campos para compatibilidad con los dos frontends
