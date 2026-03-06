@@ -58,7 +58,9 @@ function ScoreRing({ score, size = 80, color }: { score: number; size?: number; 
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
         style={{ transition: 'stroke-dasharray 1s ease' }} />
       <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="middle"
-        className="rotate-90" style={{ transform: `rotate(90deg) translate(0px, ${-size/2*2}px)` }}>
+        fill={color} fontSize={size * 0.22} fontWeight="bold"
+        style={{ transform: 'rotate(90deg)', transformOrigin: `${size/2}px ${size/2}px` }}>
+        {score}
       </text>
     </svg>
   )

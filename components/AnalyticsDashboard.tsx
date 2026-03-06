@@ -138,40 +138,46 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
         width: dashEl.scrollWidth,
         height: dashEl.scrollHeight,
         onclone: (_doc: Document, el: HTMLElement) => {
-          // Reemplazar variables CSS oklch/lab en todos los elementos clonados
-          const allEls = [el, ...Array.from(el.querySelectorAll('*'))] as HTMLElement[]
+          // Inyectar overrides completos para Tailwind v4 (oklch/lab → RGB)
+          const overrideStyle = _doc.createElement('style')
+          overrideStyle.textContent = `
+            *, *::before, *::after {
+              --tw-shadow-color: rgba(0,0,0,0.1) !important;
+              --tw-ring-color: rgba(59,130,246,0.5) !important;
+            }
+            /* Forzar colores RGB en todos los elementos */
+            * { color-scheme: light !important; }
+          `
+          _doc.head.appendChild(overrideStyle)
+
+          // Reemplazar oklch/lab en estilos computados e inline
+          const allEls = Array.from(el.querySelectorAll('*')) as HTMLElement[]
           allEls.forEach(node => {
             try {
-              const propsToFix = ['color','backgroundColor','borderColor','fill','stroke',
-                'borderTopColor','borderRightColor','borderBottomColor','borderLeftColor']
-              propsToFix.forEach(prop => {
-                const val = window.getComputedStyle(node).getPropertyValue(prop)
-                if (val && (val.includes('oklch') || val.includes('lab(') || val.includes('lch('))) {
-                  (node as HTMLElement).style.setProperty(
-                    prop,
-                    prop.toLowerCase().includes('background') ? '#ffffff' : '#1e293b',
-                    'important'
-                  )
+              const cs = window.getComputedStyle(node)
+              const props = ['color','background-color','border-color','fill','stroke',
+                'border-top-color','border-right-color','border-bottom-color','border-left-color',
+                'outline-color','text-decoration-color']
+              props.forEach(prop => {
+                const val = cs.getPropertyValue(prop)
+                if (!val) return
+                if (val.includes('oklch') || val.includes('lab(') || val.includes('lch(')) {
+                  const camel = prop.replace(/-([a-z])/g, (_,l) => l.toUpperCase())
+                  const isBg = prop.includes('background')
+                  ;(node.style as any)[camel] = isBg ? '#ffffff' : '#1e293b'
                 }
               })
-              // Limpiar atributo style inline con oklch/lab
-              const style = node.getAttribute('style') || ''
-              if (style.includes('oklch') || style.includes('lab(')) {
-                node.setAttribute('style', style
+              // Limpiar style inline con oklch/lab
+              const inlineStyle = node.getAttribute('style') || ''
+              if (inlineStyle.includes('oklch') || inlineStyle.includes('lab(') || inlineStyle.includes('lch(')) {
+                node.setAttribute('style', inlineStyle
                   .replace(/:\s*oklch\([^)]+\)/g, ': initial')
                   .replace(/:\s*lab\([^)]+\)/g, ': initial')
                   .replace(/:\s*lch\([^)]+\)/g, ': initial')
                 )
               }
-            } catch { /* ignorar nodos sin estilos */ }
+            } catch { /* ignorar */ }
           })
-          // Inyectar override para variables Tailwind v4
-          const overrideStyle = _doc.createElement('style')
-          overrideStyle.textContent = `*, *::before, *::after {
-            --tw-shadow-color: rgba(0,0,0,0.1) !important;
-            --tw-ring-color: rgba(59,130,246,0.5) !important;
-          }`
-          _doc.head.appendChild(overrideStyle)
         },
       })
 
