@@ -160,7 +160,7 @@ function normalizeUrl(url: string): string {
 async function extractTextFromPdfBuffer(buffer: ArrayBuffer): Promise<string> {
   try {
     // Usamos pdf-parse (debe estar instalado: npm install pdf-parse)
-    const pdfParse = (await import('pdf-parse')).default
+    const pdfMod = await import('pdf-parse'); const pdfParse = pdfMod.default ?? pdfMod
     const data = await pdfParse(Buffer.from(buffer))
     return data.text || ''
   } catch (e) {
