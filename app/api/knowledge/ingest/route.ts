@@ -159,13 +159,12 @@ function normalizeUrl(url: string): string {
 // ── Extraer texto de PDF ──────────────────────────────────────────────────────
 async function extractTextFromPdfBuffer(buffer: ArrayBuffer): Promise<string> {
   try {
-    // Usamos pdf-parse (debe estar instalado: npm install pdf-parse)
-    const pdfMod = await import('pdf-parse'); const pdfParse = pdfMod.default ?? pdfMod
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const pdfParse: (buf: Buffer) => Promise<{ text: string }> = require('pdf-parse')
     const data = await pdfParse(Buffer.from(buffer))
     return data.text || ''
   } catch (e) {
     console.warn('[ingest] pdf-parse falló, extrayendo texto básico:', e)
-    // Fallback: extraer texto visible del PDF manualmente
     return extractPdfTextFallback(buffer)
   }
 }
