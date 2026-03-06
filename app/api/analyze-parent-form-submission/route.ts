@@ -70,7 +70,7 @@ Responde SOLO con JSON (sin markdown):
         { model: GROQ_MODELS.SMART, temperature: 0.3, maxTokens: 2000 }
       )
 
-    const text = aiResponse.text || '{}'
+    const text = aiResponse || '{}'
     let analysis: any = {}
     try { analysis = JSON.parse(text.replace(/```json|```/g, '').trim()) }
     catch { analysis = { resumen_ejecutivo: text } }

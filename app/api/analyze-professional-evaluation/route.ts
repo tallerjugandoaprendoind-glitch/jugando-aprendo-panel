@@ -178,7 +178,7 @@ async function analyzeBRIEF2(ai: any, responses: any, childName: string, childAg
 
   const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
-  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
+  if (!result) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result, "análisis");
 
   return {
     ...parsed,
@@ -259,7 +259,7 @@ async function analyzeADOS2(ai: any, responses: any, childName: string, childAge
 
   const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
-  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
+  if (!result) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result, "análisis");
 
   return {
     ...parsed,
@@ -348,7 +348,7 @@ async function analyzeVineland3(ai: any, responses: any, childName: string, chil
 
   const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
-  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
+  if (!result) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result, "análisis");
 
   return {
     ...parsed,
@@ -421,7 +421,7 @@ async function analyzeWISCV(ai: any, responses: any, childName: string, childAge
 
   const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
-  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
+  if (!result) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result, "análisis");
 
   // Convertir puntuaciones escalares a percentiles (escala 1-19, media=10)
   function scaledToPercentile(s: number): number {
@@ -517,7 +517,7 @@ async function analyzeBASC3(ai: any, responses: any, childName: string, childAge
 
   const result = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
-  if (!result.text) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result.text, "análisis");
+  if (!result) throw new Error("La IA no generó respuesta"); const parsed = parseGeminiJSON(result, "análisis");
 
   return {
     ...parsed,

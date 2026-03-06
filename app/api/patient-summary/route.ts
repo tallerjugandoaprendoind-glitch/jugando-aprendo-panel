@@ -71,7 +71,7 @@ Genera un JSON con la siguiente estructura EXACTA (sin markdown, solo JSON puro)
 
     const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
-    const text = response?.candidates?.[0]?.content?.parts?.[0]?.text || response?.text || '';
+    const text = response || '';
     const clean = text.replace(/```json|```/g, '').trim();
     
     let summary;

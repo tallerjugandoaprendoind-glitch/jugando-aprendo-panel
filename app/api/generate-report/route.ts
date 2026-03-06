@@ -339,7 +339,7 @@ FORMATO: Texto profesional, empático, claro. Terminología clínica apropiada.
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
       );
 
-    const analysis = response.candidates?.[0]?.content?.parts?.[0]?.text || response || null;
+    const analysis = response || null;
     console.log('✅ Análisis IA generado exitosamente');
     return analysis;
 
