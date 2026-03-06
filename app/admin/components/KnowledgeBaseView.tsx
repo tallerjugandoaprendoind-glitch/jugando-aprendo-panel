@@ -1,5 +1,12 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
+import { createClient } from '@supabase/supabase-js'
+
+// Cliente Supabase público (solo para upload desde el navegador)
+const supabasePublic = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)
 import {
   Upload, BookOpen, Trash2, CheckCircle2, Clock, Loader2,
   FileText, File, Plus, X, Brain, Database, Zap, AlertTriangle, Save
@@ -16,6 +23,7 @@ export default function KnowledgeBaseView() {
   const fileRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({ titulo: '', tipo: 'libro', descripcion: '', texto: '' })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [uploadProgress, setUploadProgress] = useState<string>('')
 
   const loadDocs = async () => {
     setLoading(true)
@@ -35,23 +43,52 @@ export default function KnowledgeBaseView() {
 
     setUploading(true)
     try {
-      const formData = new FormData()
-      formData.append('titulo', form.titulo)
-      formData.append('tipo', form.tipo)
-      formData.append('descripcion', form.descripcion)
-      if (selectedFile) formData.append('file', selectedFile)
-      else formData.append('texto', form.texto)
+      let storageUrl: string | undefined
+      let fileName: string | undefined
 
-      const res = await fetch('/api/knowledge/ingest', { method: 'POST', body: formData })
+      if (selectedFile) {
+        // 1. Subir el archivo DIRECTO a Supabase Storage desde el navegador
+        //    (evita el límite de 4.5MB de Vercel)
+        setUploadProgress('Subiendo archivo...')
+        const safeName = `knowledge/${Date.now()}_${selectedFile.name.replace(/\s+/g, '_')}`
+        const { error: uploadError } = await supabasePublic.storage
+          .from('documentos')
+          .upload(safeName, selectedFile, { contentType: selectedFile.type, upsert: false })
+
+        if (uploadError) throw new Error(`Error al subir: ${uploadError.message}`)
+
+        // 2. Obtener URL pública del archivo
+        const { data: urlData } = supabasePublic.storage.from('documentos').getPublicUrl(safeName)
+        storageUrl = urlData.publicUrl
+        fileName = selectedFile.name
+        setUploadProgress('Extrayendo texto con IA...')
+      }
+
+      // 3. Mandar solo la URL (o el texto) al backend — payload pequeño
+      const res = await fetch('/api/knowledge/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titulo: form.titulo,
+          tipo: form.tipo,
+          descripcion: form.descripcion,
+          ...(storageUrl ? { storageUrl, fileName } : { texto: form.texto }),
+        }),
+      })
+
       const json = await res.json()
       if (json.error) throw new Error(json.error)
 
       toast.success(`✅ "${form.titulo}" recibido — indexando en background`)
       setForm({ titulo: '', tipo: 'libro', descripcion: '', texto: '' })
       setSelectedFile(null)
+      setUploadProgress('')
       setShowForm(false)
       setTimeout(loadDocs, 3000)
-    } catch (e: any) { toast.error(e.message) }
+    } catch (e: any) {
+      setUploadProgress('')
+      toast.error(e.message)
+    }
     finally { setUploading(false) }
   }
 
@@ -243,7 +280,7 @@ export default function KnowledgeBaseView() {
                     <>
                       <Upload size={24} className="text-slate-300 mx-auto mb-2" />
                       <p className="font-bold text-slate-500 text-sm">Arrastra un PDF o haz clic</p>
-                      <p className="text-xs text-slate-300 mt-1">PDF, TXT o Markdown · Max 10MB</p>
+                      <p className="text-xs text-slate-300 mt-1">PDF, TXT o Markdown · Cualquier tamaño</p>
                     </>
                   )}
                 </div>
@@ -265,7 +302,7 @@ export default function KnowledgeBaseView() {
                 <button onClick={handleUpload} disabled={uploading}
                   className="flex-[2] py-3 bg-violet-600 text-white rounded-xl font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2">
                   {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  {uploading ? 'Subiendo...' : 'Subir e Indexar'}
+                  {uploading ? (uploadProgress || 'Procesando...') : 'Subir e Indexar'}
                 </button>
               </div>
             </div>

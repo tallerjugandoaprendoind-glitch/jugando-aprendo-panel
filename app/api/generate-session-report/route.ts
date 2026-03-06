@@ -61,7 +61,7 @@ ACTÚA COMO: Neuropsicólogo clínico infantil supervisor y analista de conducta
 CONTEXTO CLÍNICO COMPLETO (historial, protocolos del centro, conocimiento clínico):
 ${aiCtx.fullContext}
 
-PACIENTE: ${nombreNino}, ${edadNino} años.
+PACIENTE: ${nombreNino}, ${edadNino} años. ⚠️ IMPORTANTE: Usa EXACTAMENTE este nombre y esta edad — son datos reales del expediente.
 
 DATOS DE LA SESIÓN:
 ━━━ SECCIÓN 1: INFORMACIÓN ━━━
@@ -161,7 +161,23 @@ Responde SOLAMENTE con JSON válido (sin texto adicional, sin backticks, sin com
 
     const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', context, { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 2000 })
 
-    const responseData = JSON.parse(response || "{}");
+    // Sanitizar JSON: eliminar caracteres de control que Groq a veces incluye
+    const safeJson = (response || '{}')
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '') // control chars
+      .replace(/\n/g, '\\n')                            // literal newlines → \n
+      .replace(/\r/g, '\\r')                            // literal CR → \r
+      .replace(/\t/g, '\\t')                            // literal tab → \t
+    let responseData: any = {}
+    try {
+      responseData = JSON.parse(safeJson)
+    } catch {
+      // Si falla, intentar extracción directa del bloque JSON
+      const match = (response || '').match(/\{[\s\S]*\}/)
+      if (match) {
+        try { responseData = JSON.parse(match[0].replace(/[\x00-\x1F\x7F]/g, ' ')) }
+        catch { responseData = { avances_observados: response || 'Error procesando respuesta' } }
+      }
+    }
 
     // Enriquecer con info completa del producto si la IA eligió uno
     if (responseData.producto_sugerido && productos) {

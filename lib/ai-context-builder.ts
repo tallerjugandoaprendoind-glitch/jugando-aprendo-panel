@@ -137,3 +137,26 @@ export function parseAIJson(rawText: string, fallback: any = {}): any {
   } catch {}
   return { ...fallback, raw_text: rawText }
 }
+
+// ── Sanitizador JSON robusto para respuestas de Groq ─────────────────────────
+// Groq a veces incluye newlines literales y control chars dentro de strings JSON
+export function sanitizeGroqJson(raw: string): any {
+  if (!raw) return {}
+  try {
+    // Intentar parseo directo primero
+    return JSON.parse(raw)
+  } catch {}
+  try {
+    // Extraer bloque JSON y limpiar caracteres de control
+    const match = raw.match(/\{[\s\S]*\}/)
+    if (!match) return {}
+    const cleaned = match[0]
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')  // control chars (no \t \n \r)
+      .replace(/(?<!\\)\n/g, '\\n')                      // unescaped newlines
+      .replace(/(?<!\\)\r/g, '\\r')                      // unescaped carriage returns
+      .replace(/(?<!\\)\t/g, '\\t')                      // unescaped tabs
+    return JSON.parse(cleaned)
+  } catch {
+    return {}
+  }
+}
