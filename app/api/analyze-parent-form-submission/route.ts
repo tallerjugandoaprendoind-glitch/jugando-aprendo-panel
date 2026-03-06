@@ -20,7 +20,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { formId, formType, formTitle, responses, childId, parentId } = body
 
-    if (!apiKey) return NextResponse.json({ error: 'Falta API Key' }, { status: 500 })
 
     // ── 1. Contexto completo: RAG + historial + centro ────────────────────
     const searchQuery = `${formTitle || 'formulario padres'} familia intervención conducta en casa`

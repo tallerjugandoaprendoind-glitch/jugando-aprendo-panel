@@ -12,10 +12,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Falta el ID del paciente (childId)" }, { status: 400 });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "Error de servidor: Falta API Key" }, { status: 500 });
-    }
 
     // 2. Obtener sesiones con FECHA
     const { data: sessions, error: dbError } = await supabase

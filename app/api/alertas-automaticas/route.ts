@@ -244,8 +244,6 @@ async function crearAlertaSiNoExiste(alerta: any) {
 
 // ─── ANÁLISIS IA DE TENDENCIA ─────────────────────────────────
 async function analizarTendenciaConIA(childId: string, sesiones: any[]): Promise<string | null> {
-  if (!apiKey) return null
-
   const { data: child } = await supabaseAdmin
     .from('children')
     .select('name, diagnosis')
@@ -270,14 +268,13 @@ Si ves algo importante, responde en 1-2 oraciones concretas.
 Si todo va bien, responde exactamente: "SIN_ALERTA"
 No uses markdown.`
 
-  const responseText__ = await callGroqSimple(
-        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
-        prompt,
-        { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
-      )
-      const response = { text: responseText__ }
+  const response = await callGroqSimple(
+    'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+    prompt,
+    { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 500 }
+  )
 
-  const texto = response.text?.trim()
+  const texto = response?.trim()
   if (!texto || texto === 'SIN_ALERTA' || texto.includes('SIN_ALERTA')) return null
   return texto
 }

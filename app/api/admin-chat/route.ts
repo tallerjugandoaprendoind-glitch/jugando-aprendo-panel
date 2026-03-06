@@ -19,8 +19,6 @@ export async function POST(req: Request) {
     // Validaciones iniciales
     if (!childId) return NextResponse.json({ text: "⚠️ Selecciona un paciente primero." });
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return NextResponse.json({ text: "❌ Error: Falta API Key en las variables de entorno." });
 
     // ===========================================================================
     // 1. CARGAR DATOS DEL PACIENTE

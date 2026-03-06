@@ -56,15 +56,6 @@ function parseGeminiJSON(text: string): any {
 // ============================================================================
 export async function POST(request: NextRequest) {
   try {
-    // 1. Configuración y Validación de API Key
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      console.error("❌ CRÍTICO: Falta GEMINI_API_KEY en variables de entorno");
-      return NextResponse.json(
-        { error: 'Configuración del servidor incompleta (Falta API Key)' },
-        { status: 500 }
-      );
-    }
 
     // 2. Parseo del Body (aceptamos todos los campos)
     const body: HomeEnvironmentRequest = await request.json();

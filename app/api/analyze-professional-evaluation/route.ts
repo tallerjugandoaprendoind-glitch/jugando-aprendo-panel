@@ -24,11 +24,6 @@ export async function POST(req: Request) {
     const body: EvaluationRequest = await req.json();
     const { evaluationType, responses, childName, childAge, childId } = body;
 
-    // 1. Verificación de Seguridad
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json({ error: "Configuración del servidor incompleta (API Key)" }, { status: 500 });
-    }
 
     // Contexto completo: RAG + historial + instrucciones del centro
     const evalQuery = `${evaluationType} evaluación clínica ${childName || ''}`

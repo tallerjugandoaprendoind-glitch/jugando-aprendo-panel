@@ -44,7 +44,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { formType, formData, childName, childAge, diagnosis, sessionContext, childId } = body
 
-    if (!apiKey) return NextResponse.json({ error: 'Falta GEMINI_API_KEY' }, { status: 500 })
 
     const searchQuery = `${FORM_LABELS[formType] || formType} ${diagnosis || ''} evaluación ABA`
     const ctx = await buildAIContext(childId, childName, childAge ? String(childAge) : undefined, searchQuery)

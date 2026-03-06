@@ -124,7 +124,6 @@ export async function POST(req: NextRequest) {
 // ─── GENERAR INSTRUCCIONES CON GEMINI ────────────────────────
 async function generarInstruccionesIA(childId: string, titulo: string, objetivo?: string): Promise<string> {
   try {
-    if (!apiKey) return generarInstruccionesGenericas(titulo)
 
     const { data: child } = await supabaseAdmin
       .from('children')
