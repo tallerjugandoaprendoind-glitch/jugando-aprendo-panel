@@ -97,352 +97,33 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
     }
   };
 
-  // ── EXPORTAR PDF — captura visual del dashboard + datos estructurados ────────
+  // ── EXPORTAR WORD — genera documento .docx profesional via servidor ─────────
   const exportarPDF = async () => {
     if (exporting) return
     setExporting(true)
     try {
-      // Obtener datos extra del servidor
-      const extraRes = await fetch('/api/export-report', {
+      const res = await fetch('/api/reporte-word', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId, analyticsData: { kpiData, developmentAreas, trends } })
+        body: JSON.stringify({ childId, tipo: 'padres' }),
       })
-      const extraData = extraRes.ok ? await extraRes.json() : null
-
-      // Cargar librerías dinámicamente (no están en el bundle principal)
-      const [h2cMod, jsPDFMod] = await Promise.all([
-        import(/* webpackChunkName: "html2canvas" */ 'html2canvas' as any),
-        import(/* webpackChunkName: "jspdf" */ 'jspdf' as any),
-      ])
-      const html2canvas = (h2cMod as any).default || h2cMod
-      const { jsPDF } = jsPDFMod
-
-      // ── 1. Capturar el dashboard visual ─────────────────────────────────────
-      const dashEl = reportRef.current
-      if (!dashEl) throw new Error('No hay contenido para exportar')
-
-      const btnArea = dashEl.querySelector('[data-no-print]') as HTMLElement
-      if (btnArea) btnArea.style.display = 'none'
-
-      // FIX lab()/oklch(): Tailwind v4 genera colores modernos que jsPDF no entiende.
-      // Solución: en el clone, eliminar las stylesheets de Tailwind e inyectar CSS seguro RGB.
-      const canvas = await html2canvas(dashEl, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        width: dashEl.scrollWidth,
-        height: dashEl.scrollHeight,
-        onclone: (clonedDoc: Document, el: HTMLElement) => {
-          // Eliminar stylesheets con oklch/@layer (Tailwind v4)
-          Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"], style')).forEach(node => {
-            const href = (node as HTMLLinkElement).href || ''
-            const txt = (node as HTMLStyleElement).textContent || ''
-            if (href.includes('/_next/') || txt.includes('oklch') || txt.includes('@layer') || txt.includes('color-mix')) {
-              node.remove()
-            }
-          })
-          // Inyectar CSS seguro en RGB
-          const safe = clonedDoc.createElement('style')
-          safe.textContent = `
-            *, *::before, *::after { box-sizing: border-box; }
-            body { font-family: system-ui,sans-serif; background:#fff; color:#1e293b; margin:0; }
-            .bg-white { background-color:#ffffff !important; }
-            .bg-slate-50,.bg-gray-50 { background-color:#f8fafc !important; }
-            .bg-slate-100,.bg-gray-100 { background-color:#f1f5f9 !important; }
-            .bg-blue-600 { background-color:#2563eb !important; }
-            .bg-blue-500 { background-color:#3b82f6 !important; }
-            .bg-violet-600 { background-color:#7c3aed !important; }
-            .bg-emerald-500 { background-color:#10b981 !important; }
-            .bg-red-500 { background-color:#ef4444 !important; }
-            .bg-amber-500 { background-color:#f59e0b !important; }
-            .text-white { color:#ffffff !important; }
-            .text-slate-800,.text-gray-800 { color:#1e293b !important; }
-            .text-slate-600,.text-gray-600 { color:#475569 !important; }
-            .text-slate-400 { color:#94a3b8 !important; }
-            .text-blue-600 { color:#2563eb !important; }
-            .text-violet-600 { color:#7c3aed !important; }
-            .text-emerald-600 { color:#059669 !important; }
-            .text-red-500,.text-red-600 { color:#dc2626 !important; }
-            .border { border:1px solid #e2e8f0; }
-            .border-slate-200 { border-color:#e2e8f0 !important; }
-            .rounded-xl { border-radius:12px !important; }
-            .rounded-2xl { border-radius:16px !important; }
-            .p-4 { padding:16px !important; }
-            .font-bold { font-weight:700 !important; }
-            .font-black { font-weight:900 !important; }
-            .text-sm { font-size:14px !important; }
-            .text-xs { font-size:12px !important; }
-            .text-2xl { font-size:24px !important; }
-            .text-3xl { font-size:30px !important; }
-            .shadow-sm { box-shadow:0 1px 3px rgba(0,0,0,0.1); }
-          `
-          clonedDoc.head.appendChild(safe)
-          // Limpiar inline styles residuales con lab()/oklch()
-          Array.from(el.querySelectorAll('*')).forEach((node: Element) => {
-            const h = node as HTMLElement
-            if (!h.style) return
-            const s = h.getAttribute('style') || ''
-            if (/oklch|lab\(|lch\(/.test(s)) {
-              h.setAttribute('style', s
-                .replace(/:\s*oklch\([^)]+\)/g, ':#1e293b')
-                .replace(/:\s*lab\([^)]+\)/g, ':#1e293b')
-                .replace(/:\s*lch\([^)]+\)/g, ':#1e293b')
-              )
-            }
-          })
-        },
-      })
-
-      if (btnArea) btnArea.style.display = ''
-
-      const dashImg = canvas.toDataURL('image/png')
-
-      // ── 2. Construir PDF profesional ────────────────────────────────────────
-      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-      const PW = pdf.internal.pageSize.getWidth()   // 210mm
-      const PH = pdf.internal.pageSize.getHeight()  // 297mm
-      const M  = 14   // margen
-      const CW = PW - M * 2  // ancho útil
-      let y = M
-
-      const newPage = () => {
-        // Footer antes de nueva página
-        pdf.setFontSize(7)
-        pdf.setTextColor(180, 180, 180)
-        pdf.text(`Jugando Aprendo · Reporte clínico confidencial · ${new Date().toLocaleDateString('es-ES')}`, PW / 2, PH - 6, { align: 'center' })
-        pdf.addPage()
-        y = M
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Error desconocido' }))
+        throw new Error(err.error || 'Error generando reporte')
       }
-
-      const checkY = (needed: number) => { if (y + needed > PH - 16) newPage() }
-
-      // ── PORTADA / HEADER ────────────────────────────────────────────────────
-      // Fondo gradiente simulado con rectángulo
-      pdf.setFillColor(37, 99, 235)    // blue-600
-      pdf.roundedRect(M, y, CW, 38, 4, 4, 'F')
-
-      // Franja accent
-      pdf.setFillColor(124, 58, 237)   // violet-600
-      pdf.roundedRect(M + CW - 36, y, 36, 38, 4, 4, 'F')
-      pdf.setFillColor(37, 99, 235)
-      pdf.rect(M + CW - 36, y, 18, 38, 'F')  // overlap para unir
-
-      pdf.setTextColor(255, 255, 255)
-      pdf.setFontSize(18)
-      pdf.setFont('helvetica', 'bold')
-      pdf.text('Reporte de Analytics', M + 8, y + 13)
-
-      pdf.setFontSize(11)
-      pdf.setFont('helvetica', 'normal')
-      const pacNombre = extraData?.paciente?.nombre || childName || 'Paciente'
-      pdf.text(pacNombre, M + 8, y + 22)
-
-      pdf.setFontSize(8)
-      pdf.setTextColor(200, 220, 255)
-      pdf.text(`Generado: ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`, M + 8, y + 30)
-
-      if (extraData?.paciente) {
-        pdf.setTextColor(255, 255, 255)
-        pdf.setFontSize(8)
-        pdf.text(`Dx: ${extraData.paciente.diagnostico || '-'}  ·  ${extraData.paciente.edad || '-'}  ·  ${extraData.paciente.estado || '-'}`, M + 8, y + 36)
-      }
-
-      y += 46
-
-      // ── KPIs ────────────────────────────────────────────────────────────────
-      if (kpiData) {
-        const kpis = [
-          { label: 'Sesiones Totales', value: String(kpiData.totalSessions), color: [59, 130, 246] as [number,number,number] },
-          { label: 'Progreso Promedio', value: `${kpiData.avgProgress}%`, color: [16, 185, 129] as [number,number,number] },
-          { label: 'Objetivos', value: `${kpiData.goalsAchieved}/${kpiData.totalGoals}`, color: [124, 58, 237] as [number,number,number] },
-          { label: 'Asistencia', value: `${kpiData.attendanceRate}%`, color: [245, 158, 11] as [number,number,number] },
-        ]
-        const kW = (CW - 6) / 4
-        kpis.forEach((k, i) => {
-          const kx = M + i * (kW + 2)
-          pdf.setFillColor(...k.color)
-          pdf.roundedRect(kx, y, kW, 22, 3, 3, 'F')
-          pdf.setTextColor(255, 255, 255)
-          pdf.setFontSize(7)
-          pdf.setFont('helvetica', 'normal')
-          pdf.text(k.label, kx + 4, y + 7)
-          pdf.setFontSize(16)
-          pdf.setFont('helvetica', 'bold')
-          pdf.text(k.value, kx + 4, y + 18)
-        })
-        y += 28
-      }
-
-      // ── CAPTURA VISUAL DEL DASHBOARD ────────────────────────────────────────
-      pdf.setFont('helvetica', 'bold')
-      pdf.setFontSize(11)
-      pdf.setTextColor(30, 30, 60)
-      pdf.text('Evolución del Progreso', M, y + 5)
-      y += 8
-
-      const imgH = (canvas.height / canvas.width) * CW
-      const maxH = 95
-      const finalH = Math.min(imgH, maxH)
-      checkY(finalH + 4)
-      pdf.addImage(dashImg, 'PNG', M, y, CW, finalH, undefined, 'FAST')
-      y += finalH + 8
-
-      // ── ÁREAS DE DESARROLLO ─────────────────────────────────────────────────
-      if (developmentAreas.length > 0) {
-        checkY(10 + developmentAreas.length * 14)
-        pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(11)
-        pdf.setTextColor(30, 30, 60)
-        pdf.text('Áreas de Desarrollo', M, y)
-        y += 6
-
-        developmentAreas.forEach(area => {
-          const pct = Math.min(100, Math.max(0, area.score))
-          const barW = CW - 40
-          const barH = 5
-
-          pdf.setFont('helvetica', 'normal')
-          pdf.setFontSize(8)
-          pdf.setTextColor(60, 60, 80)
-          pdf.text(area.area, M, y + 4)
-          pdf.setFont('helvetica', 'bold')
-          pdf.setTextColor(30, 30, 60)
-          pdf.text(`${pct}%`, M + CW - 2, y + 4, { align: 'right' })
-
-          // Barra fondo
-          pdf.setFillColor(235, 237, 245)
-          pdf.roundedRect(M + 32, y, barW, barH, 2, 2, 'F')
-
-          // Barra progreso
-          const barColor: [number,number,number] = pct >= 75 ? [16,185,129] : pct >= 50 ? [99,102,241] : pct >= 25 ? [245,158,11] : [239,68,68]
-          pdf.setFillColor(...barColor)
-          pdf.roundedRect(M + 32, y, barW * (pct / 100), barH, 2, 2, 'F')
-
-          y += 12
-        })
-        y += 4
-      }
-
-      // ── PROGRAMAS ABA ───────────────────────────────────────────────────────
-      if (extraData?.programas && extraData.programas.length > 0) {
-        checkY(16 + extraData.programas.length * 10)
-        pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(11)
-        pdf.setTextColor(30, 30, 60)
-        pdf.text('Programas ABA', M, y)
-        y += 6
-
-        // Cabecera tabla
-        pdf.setFillColor(241, 245, 249)
-        pdf.rect(M, y, CW, 7, 'F')
-        pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(7)
-        pdf.setTextColor(100, 100, 130)
-        pdf.text('PROGRAMA', M + 2, y + 5)
-        pdf.text('ÁREA', M + 70, y + 5)
-        pdf.text('FASE', M + 110, y + 5)
-        pdf.text('ESTADO', M + 150, y + 5)
-        y += 8
-
-        extraData.programas.forEach((p: any, i: number) => {
-          if (i % 2 === 0) {
-            pdf.setFillColor(249, 250, 255)
-            pdf.rect(M, y - 1, CW, 8, 'F')
-          }
-          pdf.setFont('helvetica', 'normal')
-          pdf.setFontSize(8)
-          pdf.setTextColor(40, 40, 70)
-          pdf.text((p.titulo || '-').slice(0, 35), M + 2, y + 5)
-          pdf.text((p.area || '-').slice(0, 18), M + 70, y + 5)
-          pdf.text((p.fase_actual || '-').slice(0, 15), M + 110, y + 5)
-
-          const estadoColor: [number,number,number] = p.estado === 'dominado' ? [16,185,129] : p.estado === 'activo' ? [99,102,241] : [245,158,11]
-          pdf.setTextColor(...estadoColor)
-          pdf.setFont('helvetica', 'bold')
-          pdf.text((p.estado || '-').toUpperCase(), M + 150, y + 5)
-          y += 9
-        })
-        y += 4
-      }
-
-      // ── INSIGHTS IA ─────────────────────────────────────────────────────────
-      if (trends.length > 0) {
-        checkY(12 + trends.length * 18)
-        pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(11)
-        pdf.setTextColor(30, 30, 60)
-        pdf.text('Insights con IA', M, y)
-        y += 6
-
-        trends.forEach(t => {
-          const bgColor: [number,number,number] = t.type === 'positive' ? [236,253,245] : t.type === 'negative' ? [254,242,242] : [248,250,252]
-          const dotColor: [number,number,number] = t.type === 'positive' ? [16,185,129] : t.type === 'negative' ? [239,68,68] : [148,163,184]
-
-          pdf.setFillColor(...bgColor)
-          pdf.roundedRect(M, y, CW, 16, 2, 2, 'F')
-          pdf.setFillColor(...dotColor)
-          pdf.circle(M + 5, y + 5, 2, 'F')
-          pdf.setFont('helvetica', 'bold')
-          pdf.setFontSize(8.5)
-          pdf.setTextColor(30, 30, 60)
-          pdf.text(t.title, M + 10, y + 6)
-          pdf.setFont('helvetica', 'normal')
-          pdf.setFontSize(7.5)
-          pdf.setTextColor(80, 80, 100)
-          const lines = pdf.splitTextToSize(t.description, CW - 20)
-          pdf.text(lines[0], M + 10, y + 12)
-          pdf.setFont('helvetica', 'bold')
-          pdf.setTextColor(...dotColor)
-          pdf.text(`${t.confidence}%`, M + CW - 2, y + 6, { align: 'right' })
-          y += 19
-        })
-        y += 2
-      }
-
-      // ── ALERTAS ACTIVAS ─────────────────────────────────────────────────────
-      if (extraData?.alertas && extraData.alertas.length > 0) {
-        checkY(12 + extraData.alertas.length * 14)
-        pdf.setFont('helvetica', 'bold')
-        pdf.setFontSize(11)
-        pdf.setTextColor(30, 30, 60)
-        pdf.text('Alertas Activas', M, y)
-        y += 6
-
-        extraData.alertas.forEach((a: any) => {
-          const prioColor: [number,number,number] = a.prioridad === 'alta' ? [239,68,68] : a.prioridad === 'media' ? [245,158,11] : [148,163,184]
-          pdf.setFillColor(254, 252, 232)
-          pdf.roundedRect(M, y, CW, 12, 2, 2, 'F')
-          pdf.setFillColor(...prioColor)
-          pdf.roundedRect(M, y, 3, 12, 1, 1, 'F')
-          pdf.setFont('helvetica', 'bold')
-          pdf.setFontSize(8)
-          pdf.setTextColor(60, 40, 10)
-          pdf.text(a.titulo || '-', M + 6, y + 5)
-          pdf.setFont('helvetica', 'normal')
-          pdf.setFontSize(7)
-          pdf.setTextColor(100, 80, 30)
-          const mLines = pdf.splitTextToSize(a.mensaje || '', CW - 10)
-          pdf.text(mLines[0], M + 6, y + 10)
-          y += 14
-        })
-      }
-
-      // Footer última página
-      pdf.setFontSize(7)
-      pdf.setTextColor(180, 180, 180)
-      pdf.text(`Jugando Aprendo · Reporte clínico confidencial · ${new Date().toLocaleDateString('es-ES')}`, PW / 2, PH - 6, { align: 'center' })
-
-      // Guardar
-      const safeName = (childName || 'paciente').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-      pdf.save(`reporte-${safeName}-${new Date().toISOString().split('T')[0]}.pdf`)
-
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      const cd = res.headers.get('content-disposition') || ''
+      const match = cd.match(/filename="([^"]+)"/)
+      const safeName = (childName || 'paciente').toLowerCase().replace(/\s+/g, '-')
+      a.download = match?.[1] || `Reporte_${safeName}_${new Date().toISOString().slice(0,10)}.docx`
+      a.href = url
+      a.click()
+      URL.revokeObjectURL(url)
     } catch (err: any) {
-      console.error('Error exportando PDF:', err)
-      alert('Error al generar el PDF: ' + err.message)
+      console.error('Error exportando reporte:', err)
+      alert('Error al generar el reporte: ' + err.message)
     } finally {
       setExporting(false)
     }
@@ -606,7 +287,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
                 ) : (
                   <>
                     <Download className="w-5 h-5" />
-                    Exportar Reporte PDF
+                    Exportar Reporte Word
                   </>
                 )}
               </button>

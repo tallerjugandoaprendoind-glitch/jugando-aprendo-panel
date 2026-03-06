@@ -693,23 +693,50 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
       </div>
       {resultado && (
         <div className="space-y-3">
-          {(resultado.objetivos_nuevos || resultado.objetivos_ajustados || []).map((obj: any, i: number) => (
+          {/* generar → resultado.resultado.objetivos_sugeridos */}
+          {(resultado.resultado?.objetivos_sugeridos || []).map((obj: any, i: number) => (
             <div key={i} className="bg-white rounded-xl border border-amber-100 p-4">
               <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="font-bold text-sm text-slate-800">{obj.nombre || obj.titulo}</p>
-                <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">{obj.area}</span>
+                <p className="font-bold text-sm text-slate-800">{obj.titulo}</p>
+                <div className="flex gap-1">
+                  <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">{obj.area}</span>
+                  {obj.prioridad && <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${obj.prioridad === 'alta' ? 'bg-red-100 text-red-600' : obj.prioridad === 'media' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{obj.prioridad}</span>}
+                </div>
               </div>
               <p className="text-xs text-slate-500">{obj.descripcion}</p>
-              {obj.criterio_dominio && <p className="text-xs font-semibold text-slate-600 mt-1">Meta: {obj.criterio_dominio}</p>}
-              {obj.justificacion && <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-3 py-2 rounded-lg">{obj.justificacion}</p>}
+              {obj.criterio_dominio && <p className="text-xs font-semibold text-slate-600 mt-1">✓ Meta: {obj.criterio_dominio}</p>}
+              {obj.metodologia && <p className="text-xs text-slate-500 mt-1">Método: {obj.metodologia}</p>}
+              {obj.justificacion_clinica && <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-3 py-2 rounded-lg">{obj.justificacion_clinica}</p>}
             </div>
           ))}
-          {resultado.resumen_ia && (
+          {/* ajustar → resultado.resultado.ajustes */}
+          {(resultado.resultado?.ajustes || []).map((obj: any, i: number) => (
+            <div key={i} className="bg-white rounded-xl border border-orange-100 p-4">
+              <p className="font-bold text-sm text-slate-800">{obj.area}</p>
+              <p className="text-xs text-slate-600 mt-1"><strong>Qué ajustar:</strong> {obj.que_ajustar}</p>
+              <p className="text-xs text-slate-600 mt-1"><strong>Cómo:</strong> {obj.como_ajustar}</p>
+              <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-3 py-2 rounded-lg">Meta 4 semanas: {obj.meta_4_semanas}</p>
+            </div>
+          ))}
+          {/* evaluar_dominio → resultado.resultado.evaluaciones */}
+          {(resultado.resultado?.evaluaciones || []).map((obj: any, i: number) => (
+            <div key={i} className="bg-white rounded-xl border border-blue-100 p-4">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <p className="font-bold text-sm text-slate-800">{obj.programa}</p>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${obj.estado === 'listo_para_avanzar' ? 'bg-green-100 text-green-700' : obj.estado === 'necesita_ajuste' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'}`}>{obj.estado?.replace(/_/g,' ')}</span>
+              </div>
+              <p className="text-xs text-slate-600">Acción: {obj.accion}</p>
+              <p className="text-xs text-slate-500 mt-1">{obj.justificacion}</p>
+              {obj.siguiente_paso && <p className="text-xs text-blue-700 mt-2 bg-blue-50 px-3 py-2 rounded-lg">→ {obj.siguiente_paso}</p>}
+            </div>
+          ))}
+          {/* texto_libre fallback */}
+          {resultado.resultado?.texto_libre && (
             <div className="bg-amber-50 rounded-xl border border-amber-100 p-4">
-              <p className="text-xs font-bold text-amber-700 mb-1">Análisis IA</p>
-              <p className="text-sm text-amber-800">{resultado.resumen_ia}</p>
+              <p className="text-sm text-amber-800 whitespace-pre-wrap">{resultado.resultado.texto_libre}</p>
             </div>
           )}
+          <p className="text-xs text-slate-400">Programas analizados: {resultado.programas_analizados || 0} · Patrones considerados: {resultado.patrones_considerados || 0}</p>
         </div>
       )}
     </div>
@@ -792,35 +819,42 @@ function TabSugerencias() {
 function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
   const [selected, setSelected] = useState<Paciente | null>(null)
   const [tipo, setTipo] = useState<'padres' | 'seguro' | 'comparativo'>('padres')
-  const [resultado, setResultado] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const generar = async () => {
     if (!selected) return
-    setLoading(true); setError(''); setResultado(null)
-    const endpoints: Record<string, string> = {
-      padres: '/api/reporte-padres',
-      seguro: '/api/reporte-seguro',
-      comparativo: '/api/reporte-comparativo',
-    }
+    setLoading(true); setError(''); setSuccess('')
     try {
-      const res = await fetch(endpoints[tipo], {
+      const res = await fetch('/api/reporte-word', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId: selected.id }),
+        body: JSON.stringify({ childId: selected.id, tipo }),
       })
-      const json = await res.json()
-      if (json.error) throw new Error(json.error)
-      setResultado(json)
+      if (!res.ok) {
+        const err = await res.json()
+        throw new Error(err.error || 'Error generando reporte')
+      }
+      // Descargar el .docx directamente
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      const cd = res.headers.get('content-disposition') || ''
+      const match = cd.match(/filename="([^"]+)"/)
+      a.download = match?.[1] || `Reporte_${tipo}_${selected.name}.docx`
+      a.href = url
+      a.click()
+      URL.revokeObjectURL(url)
+      setSuccess(`✅ Reporte Word descargado: ${a.download}`)
     } catch (e: any) { setError(e.message) }
     finally { setLoading(false) }
   }
 
   const tipoInfo = {
-    padres: { label: 'Para padres', desc: 'Lenguaje emocional y accesible', color: 'bg-violet-600' },
-    seguro: { label: 'Para seguros/IMSS', desc: 'Formato técnico-legal con CIE-10', color: 'bg-blue-600' },
-    comparativo: { label: 'Comparativo + predicción', desc: '"En 3 meses logrará X"', color: 'bg-teal-600' },
+    padres:      { label: 'Para padres',          desc: 'Lenguaje emocional y accesible',    emoji: '👨‍👩‍👧' },
+    seguro:      { label: 'Para seguros / IMSS',  desc: 'Formato técnico-legal con CIE-10',  emoji: '🏥' },
+    comparativo: { label: 'Comparativo + pred.',  desc: '"En 3 meses logrará X"',            emoji: '📊' },
   }
 
   return (
@@ -828,45 +862,55 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       <div className="bg-teal-50 border border-teal-100 rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-1">
           <BookOpen size={16} className="text-teal-600" />
-          <span className="font-bold text-teal-800 text-sm">Reportes Avanzados IA — CAPA 2</span>
+          <span className="font-bold text-teal-800 text-sm">Reportes Profesionales Word — CAPA 2</span>
         </div>
-        <p className="text-xs text-teal-600">Genera reportes profesionales: para padres en lenguaje accesible, para seguros con codificación diagnóstica, y comparativos con predicciones.</p>
+        <p className="text-xs text-teal-600">Genera documentos .docx profesionales listos para imprimir o enviar: para padres, aseguradoras o análisis comparativo.</p>
       </div>
       <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Paciente</label>
         <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
           value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
-          <option value="">— Seleccionar paciente —</option>
+          <option value="">— Seleccionar —</option>
           {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
+
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Tipo de reporte</label>
         <div className="grid grid-cols-3 gap-2">
           {(Object.entries(tipoInfo) as [typeof tipo, typeof tipoInfo['padres']][]).map(([k, v]) => (
             <button key={k} onClick={() => setTipo(k)}
-              className={`p-2.5 rounded-xl border text-center transition ${tipo === k ? 'border-teal-300 bg-teal-50' : 'border-slate-100 bg-slate-50 hover:border-teal-200'}`}>
+              className={`p-3 rounded-xl border text-left transition ${tipo === k ? 'border-teal-400 bg-teal-50 shadow-sm' : 'border-slate-100 bg-slate-50 hover:border-teal-200'}`}>
+              <p className="text-lg mb-1">{v.emoji}</p>
               <p className={`text-xs font-bold ${tipo === k ? 'text-teal-700' : 'text-slate-600'}`}>{v.label}</p>
               <p className="text-[10px] text-slate-400 mt-0.5">{v.desc}</p>
             </button>
           ))}
         </div>
+
         <button onClick={generar} disabled={!selected || loading}
-          className="w-full py-2.5 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
-          {loading ? <><RefreshCw size={14} className="animate-spin" /> Generando reporte...</> : <><BookOpen size={14} /> Generar Reporte</>}
+          className="w-full py-3 bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
+          {loading
+            ? <><RefreshCw size={14} className="animate-spin" /> Generando documento Word...</>
+            : <><BookOpen size={14} /> Generar y Descargar .docx</>}
         </button>
-        {error && <p className="text-red-500 text-xs">{error}</p>}
+
+        {error && <div className="bg-red-50 border border-red-100 rounded-xl p-3"><p className="text-red-600 text-xs">{error}</p></div>}
+        {success && <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3"><p className="text-emerald-700 text-sm font-semibold">{success}</p></div>}
       </div>
-      {resultado && (
-        <div className="bg-white rounded-2xl border border-teal-100 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="font-bold text-slate-800">{resultado.titulo || `Reporte ${tipo}`}</p>
-            <button onClick={() => {
-              const blob = new Blob([JSON.stringify(resultado, null, 2)], { type: 'application/json' })
-              const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
-              a.download = `reporte_${tipo}_${selected?.name?.replace(/\s/g,'_')}.json`; a.click()
-            }} className="text-xs text-teal-600 hover:underline">Descargar</button>
+
+      {/* Info cards */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { emoji: '👨‍👩‍👧', title: 'Padres', desc: 'Carta emocional con logros, actividades en casa y predicción. Sin tecnicismos.' },
+          { emoji: '🏥', title: 'Seguros', desc: 'CIE-10, justificación médica, tabla de programas, firma profesional.' },
+          { emoji: '📊', title: 'Comparativo', desc: 'Progreso entre períodos con gráficos de predicción a 30 y 90 días.' },
+        ].map((c, i) => (
+          <div key={i} className="bg-white border border-slate-100 rounded-xl p-3">
+            <p className="text-xl mb-1">{c.emoji}</p>
+            <p className="text-xs font-bold text-slate-700">{c.title}</p>
+            <p className="text-[10px] text-slate-400 mt-1">{c.desc}</p>
           </div>
-          {resultado.contenido && <div className="prose prose-sm max-w-none text-slate-700 whitespace-pre-wrap text-xs leading-relaxed border border-slate-100 rounded-xl p-4 bg-slate-50">{resultado.contenido}</div>}
-          {resultado.resumen && <div className="bg-teal-50 rounded-xl p-4"><p className="text-sm text-teal-800">{resultado.resumen}</p></div>}
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   )
 }
