@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen,
   X, User, FileText, Loader2, Key, BarChart3, ShieldCheck, Upload,
   ChevronRight, Settings, Crown, Stethoscope, ShoppingBag, Activity,
-  Database, Sparkles
+  Database, Sparkles, Zap
 } from 'lucide-react'
 
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
@@ -30,6 +30,7 @@ import KnowledgeBaseView from './components/KnowledgeBaseView'
 import ARIAAgentChat from './components/ARIAAgentChat'
 import ProgramasABAView from './components/ProgramasABAView'
 import DashboardGraficasABA from './components/DashboardGraficasABA'
+import InteligenciaHubView from './components/InteligenciaHubView'
 
 // Vista general de programas (sin paciente específico)
 function ProgramasABAViewGeneral({ navigateTo, userId }: { navigateTo: (v: string) => void; userId: string }) {
@@ -87,6 +88,7 @@ const NAV_ITEMS = [
   { id: 'evaluaciones', icon: FileText,        label: 'Evaluaciones' },
   { id: 'reportes',     icon: Brain,           label: 'Historial & IA' },
   { id: 'vadi',         icon: Sparkles,        label: 'ARIA Agente' },
+  { id: 'inteligencia', icon: Zap,             label: 'Hub IA' },
   { id: 'cerebro',      icon: Database,        label: 'Cerebro IA' },
   { id: 'recursos',     icon: BookOpen,        label: 'Recursos' },
   { id: 'tienda',       icon: ShoppingBag,     label: 'Tienda' },
@@ -461,6 +463,7 @@ export default function AdminDashboard() {
                 </div>
               )}
               {currentView === 'cerebro'      && <KnowledgeBaseView />}
+              {currentView === 'inteligencia' && <InteligenciaHubView />}
               {currentView === 'aprobaciones' && (
                 <div className="space-y-10">
                   <MensajesPendientesPanel />

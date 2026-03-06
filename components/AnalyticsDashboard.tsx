@@ -126,6 +126,8 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
       const btnArea = dashEl.querySelector('[data-no-print]') as HTMLElement
       if (btnArea) btnArea.style.display = 'none'
 
+      // FIX: Tailwind v4 usa oklch()/lab() que html2canvas no soporta.
+      // onclone reemplaza esas variables CSS con fallbacks RGB antes de capturar.
       const canvas = await html2canvas(dashEl, {
         scale: 2,
         useCORS: true,
@@ -135,6 +137,42 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
         scrollY: 0,
         width: dashEl.scrollWidth,
         height: dashEl.scrollHeight,
+        onclone: (_doc: Document, el: HTMLElement) => {
+          // Reemplazar variables CSS oklch/lab en todos los elementos clonados
+          const allEls = [el, ...Array.from(el.querySelectorAll('*'))] as HTMLElement[]
+          allEls.forEach(node => {
+            try {
+              const propsToFix = ['color','backgroundColor','borderColor','fill','stroke',
+                'borderTopColor','borderRightColor','borderBottomColor','borderLeftColor']
+              propsToFix.forEach(prop => {
+                const val = window.getComputedStyle(node).getPropertyValue(prop)
+                if (val && (val.includes('oklch') || val.includes('lab(') || val.includes('lch('))) {
+                  (node as HTMLElement).style.setProperty(
+                    prop,
+                    prop.toLowerCase().includes('background') ? '#ffffff' : '#1e293b',
+                    'important'
+                  )
+                }
+              })
+              // Limpiar atributo style inline con oklch/lab
+              const style = node.getAttribute('style') || ''
+              if (style.includes('oklch') || style.includes('lab(')) {
+                node.setAttribute('style', style
+                  .replace(/:\s*oklch\([^)]+\)/g, ': initial')
+                  .replace(/:\s*lab\([^)]+\)/g, ': initial')
+                  .replace(/:\s*lch\([^)]+\)/g, ': initial')
+                )
+              }
+            } catch { /* ignorar nodos sin estilos */ }
+          })
+          // Inyectar override para variables Tailwind v4
+          const overrideStyle = _doc.createElement('style')
+          overrideStyle.textContent = `*, *::before, *::after {
+            --tw-shadow-color: rgba(0,0,0,0.1) !important;
+            --tw-ring-color: rgba(59,130,246,0.5) !important;
+          }`
+          _doc.head.appendChild(overrideStyle)
+        },
       })
 
       if (btnArea) btnArea.style.display = ''
