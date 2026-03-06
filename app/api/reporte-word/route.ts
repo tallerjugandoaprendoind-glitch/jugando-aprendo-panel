@@ -396,12 +396,13 @@ export async function POST(req: NextRequest) {
     else result = await generarReportePadres(childId)
 
     const buffer = await Packer.toBuffer(result.doc)
+    const uint8 = new Uint8Array(buffer)
 
-    return new NextResponse(buffer, {
+    return new NextResponse(uint8, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         'Content-Disposition': `attachment; filename="${result.fileName}"`,
-        'Content-Length': String(buffer.length),
+        'Content-Length': String(uint8.byteLength),
       },
     })
   } catch (e: any) {
