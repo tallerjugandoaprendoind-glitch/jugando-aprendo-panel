@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { buildAIContext, callGeminiSafe, parseAIJson } from '@/lib/ai-context-builder'
+import { buildAIContext, parseAIJson } from '@/lib/ai-context-builder'
 
 const FORM_LABELS: Record<string, string> = {
   screening_tdah: 'Screening TDAH (Conners)',

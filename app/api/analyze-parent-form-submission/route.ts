@@ -9,7 +9,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { buildAIContext, callGeminiSafe, parseAIJson } from '@/lib/ai-context-builder'
+import { buildAIContext, parseAIJson } from '@/lib/ai-context-builder'
 
 const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
         AlignmentType, BorderStyle, WidthType, ShadingType, HeadingLevel,
@@ -181,7 +181,7 @@ Responde SOLO con JSON (sin markdown):
 // ==============================================================================
 async function generateNarrativeForWord(
   formType: string, childName: string, childAge: number | undefined,
-  reportData: any, formTitle: string | undefined, apiKey: string
+  reportData: any, formTitle: string | undefined
 ): Promise<string | null> {
   try {
     const existingAnalysis = reportData?.ai_analysis

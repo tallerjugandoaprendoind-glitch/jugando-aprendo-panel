@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
-import { buildAIContext, callGeminiSafe, parseAIJson } from '@/lib/ai-context-builder';
+import { buildAIContext, parseAIJson } from '@/lib/ai-context-builder';
 
 // ============================================================================
 // INTERFACES (Tipado fuerte para seguridad)

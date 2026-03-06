@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { buildAIContext, callGeminiSafe } from '@/lib/ai-context-builder';
+import { buildAIContext } from '@/lib/ai-context-builder';
 
 
 // Helper: reintentar con backoff exponencial ante rate limit

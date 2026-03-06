@@ -5,7 +5,7 @@
 
 import { NextResponse } from 'next/server';
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
-import { buildAIContext, callGeminiSafe } from '@/lib/ai-context-builder';
+import { buildAIContext } from '@/lib/ai-context-builder';
 
 // Definimos interfaces para tipado básico
 interface EvaluationRequest {

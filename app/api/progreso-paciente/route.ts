@@ -120,7 +120,7 @@ export async function GET(req: NextRequest) {
 // ─── REPORTE SEMANAL CON IA ───────────────────────────────────
 async function generarReporteSemanal(childId: string, sesiones: any[]): Promise<string | null> {
   try {
-    if (!apiKey || sesiones.length === 0) return null
+    if (sesiones.length === 0) return null
 
     const { data: child } = await supabaseAdmin
       .from('children')
