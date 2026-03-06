@@ -77,7 +77,8 @@ function makeDoc(sections: Paragraph[], fileName: string) {
       footers: { default: new Footer({ children: [
         new Paragraph({ alignment: AlignmentType.CENTER, children: [
           new TextRun({ text: `Jugando Aprendo · ${fileName} · `, size: 16, font: 'Arial', color: '9CA3AF' }),
-          new TextRun({ children: [new PageNumber()], size: 16, font: 'Arial', color: '9CA3AF' })
+          // ✅ FIX: PageNumber.CURRENT es un valor, no una función — sin paréntesis
+          new TextRun({ children: [PageNumber.CURRENT], size: 16, font: 'Arial', color: '9CA3AF' })
         ]})
       ]})},
       children: sections,
