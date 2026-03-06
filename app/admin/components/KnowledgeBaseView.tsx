@@ -112,13 +112,28 @@ export default function KnowledgeBaseView() {
       const json = await res.json()
       if (json.error) throw new Error(json.error)
 
-      toast.success(`✅ "${form.titulo}" recibido — indexando en background`)
+      // Si el texto es grande, el backend guardó el texto pero no indexó aún
+      // Llamamos a /api/knowledge/index para que indexe sincrónicamente
+      if (json.needsIndex && json.docId) {
+        setUploadProgress('Indexando fragmentos con IA... (puede tardar 2-5 min)')
+        const indexRes = await fetch('/api/knowledge/index', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ docId: json.docId }),
+        })
+        const indexJson = await indexRes.json()
+        if (indexJson.error) throw new Error(`Error indexando: ${indexJson.error}`)
+        toast.success(`✅ "${form.titulo}" indexado — ${indexJson.chunks} fragmentos listos`)
+      } else {
+        toast.success(`✅ "${form.titulo}" indexado — ${json.chunks || 0} fragmentos listos`)
+      }
+
       setForm({ titulo: '', tipo: 'libro', descripcion: '', texto: '', url: '' })
       setSelectedFile(null)
       setUploadProgress('')
       setInputMode('archivo')
       setShowForm(false)
-      setTimeout(loadDocs, 3000)
+      loadDocs()
     } catch (e: any) {
       setUploadProgress('')
       toast.error(e.message)
