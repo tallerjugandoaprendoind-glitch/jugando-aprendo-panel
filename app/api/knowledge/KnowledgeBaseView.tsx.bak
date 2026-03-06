@@ -41,37 +41,25 @@ export default function KnowledgeBaseView() {
     if (!form.titulo) { toast.error('El título es requerido'); return }
     if (!selectedFile && !form.texto.trim()) { toast.error('Sube un archivo o pega el texto'); return }
 
-    // FIX: validar tamaño máximo 100MB antes de intentar subir
-    const MAX_SIZE = 100 * 1024 * 1024
-    if (selectedFile && selectedFile.size > MAX_SIZE) {
-      toast.error(`El archivo es demasiado grande (${Math.round(selectedFile.size / 1024 / 1024)}MB). Máximo: 100MB.`)
-      return
-    }
-
     setUploading(true)
     try {
       let storageUrl: string | undefined
       let fileName: string | undefined
 
       if (selectedFile) {
-        setUploadProgress(`Subiendo archivo (${Math.round(selectedFile.size / 1024 / 1024)}MB)...`)
+        // 1. Subir el archivo DIRECTO a Supabase Storage desde el navegador
+        //    (evita el límite de 4.5MB de Vercel)
+        setUploadProgress('Subiendo archivo...')
         const safeName = `knowledge/${Date.now()}_${selectedFile.name.replace(/\s+/g, '_')}`
-
-        // FIX: bucket correcto = 'knowledge-base' (antes era 'documentos' — incorrecto)
         const { error: uploadError } = await supabasePublic.storage
-          .from('knowledge-base')
+          .from('documentos')
           .upload(safeName, selectedFile, { contentType: selectedFile.type, upsert: false })
 
         if (uploadError) throw new Error(`Error al subir: ${uploadError.message}`)
 
-        // FIX: URL firmada (bucket privado) en vez de URL pública
-        const { data: signedData, error: signedError } = await supabasePublic.storage
-          .from('knowledge-base')
-          .createSignedUrl(safeName, 3600)
-
-        if (signedError || !signedData?.signedUrl) throw new Error('No se pudo obtener la URL del archivo')
-
-        storageUrl = signedData.signedUrl
+        // 2. Obtener URL pública del archivo
+        const { data: urlData } = supabasePublic.storage.from('documentos').getPublicUrl(safeName)
+        storageUrl = urlData.publicUrl
         fileName = selectedFile.name
         setUploadProgress('Extrayendo texto con IA...')
       }
