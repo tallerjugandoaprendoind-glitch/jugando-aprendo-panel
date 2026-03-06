@@ -8,12 +8,12 @@ const supabasePublic = createClient(
 )
 import {
   Upload, BookOpen, Trash2, CheckCircle2, Clock, Loader2,
-  FileText, File, Plus, X, Brain, Database, Zap, AlertTriangle, Save, Link
+  FileText, File, Plus, X, Brain, Database, Zap, AlertTriangle, Save, Link, Search, Globe, ExternalLink
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 
 // Modos de ingesta
-type InputMode = 'archivo' | 'url' | 'texto'
+type InputMode = 'archivo' | 'url' | 'texto' | 'buscar'
 
 export default function KnowledgeBaseView() {
   const toast = useToast()
@@ -28,6 +28,11 @@ export default function KnowledgeBaseView() {
   const [uploadProgress, setUploadProgress] = useState<string>('')
   // ✅ NUEVO: modo de entrada
   const [inputMode, setInputMode] = useState<InputMode>('archivo')
+  // Buscador de libros online
+  const [busqueda, setBusqueda] = useState('')
+  const [buscando, setBuscando] = useState(false)
+  const [resultadosBusqueda, setResultadosBusqueda] = useState<any[]>([])
+  const [libroSeleccionado, setLibroSeleccionado] = useState<any>(null)
 
   const loadDocs = async () => {
     setLoading(true)
@@ -41,6 +46,22 @@ export default function KnowledgeBaseView() {
 
   useEffect(() => { loadDocs() }, [])
 
+  const buscarLibros = async () => {
+    if (!busqueda.trim()) return
+    setBuscando(true)
+    setResultadosBusqueda([])
+    setLibroSeleccionado(null)
+    try {
+      const res = await fetch(`/api/knowledge/buscar-libro?q=${encodeURIComponent(busqueda)}`)
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setResultadosBusqueda(json.resultados || [])
+      if (json.resultados?.length === 0) toast.error('No se encontraron resultados. Probá con otro título.')
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally { setBuscando(false) }
+  }
+
   const handleUpload = async () => {
     if (!form.titulo) { toast.error('El título es requerido'); return }
 
@@ -48,6 +69,7 @@ export default function KnowledgeBaseView() {
     if (inputMode === 'archivo' && !selectedFile) { toast.error('Selecciona un archivo'); return }
     if (inputMode === 'url' && !form.url.trim()) { toast.error('Ingresa una URL válida'); return }
     if (inputMode === 'texto' && !form.texto.trim()) { toast.error('Pega el contenido del documento'); return }
+    if (inputMode === 'buscar' && !libroSeleccionado) { toast.error('Seleccioná un libro de los resultados'); return }
 
     // Validar URL básica
     if (inputMode === 'url') {
@@ -98,6 +120,14 @@ export default function KnowledgeBaseView() {
         body.sourceUrl = form.url.trim()
       }
 
+      // ── Modo: Buscar libro online ────────────────────────────────────────
+      if (inputMode === 'buscar' && libroSeleccionado) {
+        setUploadProgress(`Descargando "${libroSeleccionado.titulo}" desde ${libroSeleccionado.fuente}...`)
+        body.sourceUrl = libroSeleccionado.url
+        body.titulo = body.titulo || libroSeleccionado.titulo
+        body.descripcion = body.descripcion || `${libroSeleccionado.autor} — vía ${libroSeleccionado.fuente}`
+      }
+
       // ── Modo: Texto ──────────────────────────────────────────────────────
       if (inputMode === 'texto') {
         body.texto = form.texto
@@ -132,6 +162,9 @@ export default function KnowledgeBaseView() {
       setSelectedFile(null)
       setUploadProgress('')
       setInputMode('archivo')
+      setLibroSeleccionado(null)
+      setResultadosBusqueda([])
+      setBusqueda('')
       setShowForm(false)
       loadDocs()
     } catch (e: any) {
@@ -171,6 +204,7 @@ export default function KnowledgeBaseView() {
     { id: 'archivo', label: 'Archivo', icon: Upload,   desc: 'PDF, TXT, MD (hasta 100MB)' },
     { id: 'url',     label: 'URL',     icon: Link,     desc: 'Google Drive, Dropbox, web' },
     { id: 'texto',   label: 'Texto',   icon: FileText, desc: 'Pegar contenido directo' },
+    { id: 'buscar',  label: 'Buscar',  icon: Search,   desc: 'Archive.org · Open Library' },
   ]
 
   return (
@@ -394,6 +428,100 @@ export default function KnowledgeBaseView() {
                   <textarea value={form.texto} onChange={e => setForm(f => ({ ...f, texto: e.target.value }))}
                     rows={6} placeholder="Pega aquí el contenido del documento..."
                     className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-violet-400" />
+                )}
+
+                {/* ── Modo: Buscar libro online ── */}
+                {inputMode === 'buscar' && (
+                  <div className="space-y-3">
+                    {/* Barra de búsqueda */}
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          value={busqueda}
+                          onChange={e => setBusqueda(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && buscarLibros()}
+                          placeholder="ej: Cooper Applied Behavior Analysis"
+                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-violet-400"
+                        />
+                      </div>
+                      <button onClick={buscarLibros} disabled={buscando}
+                        className="px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-bold hover:bg-violet-700 disabled:opacity-50 flex items-center gap-2">
+                        {buscando ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+                        {buscando ? 'Buscando...' : 'Buscar'}
+                      </button>
+                    </div>
+
+                    {/* Info fuentes */}
+                    {resultadosBusqueda.length === 0 && !buscando && (
+                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
+                        <p className="text-xs font-black text-emerald-700 mb-1">🌐 Fuentes disponibles</p>
+                        <ul className="text-xs text-emerald-600 space-y-0.5">
+                          <li>• <strong>Archive.org</strong> — millones de libros en inglés y español</li>
+                          <li>• <strong>Open Library</strong> — catálogo mundial con descarga directa</li>
+                          <li>• Escribí el título en inglés para mejores resultados</li>
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Resultados */}
+                    {resultadosBusqueda.length > 0 && (
+                      <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        <p className="text-xs font-black text-slate-400 uppercase">{resultadosBusqueda.length} resultados encontrados</p>
+                        {resultadosBusqueda.map((libro: any) => (
+                          <button key={libro.id} onClick={() => {
+                            setLibroSeleccionado(libro)
+                            setForm(f => ({ ...f, titulo: f.titulo || libro.titulo, descripcion: f.descripcion || libro.autor }))
+                          }}
+                            className={`w-full text-left p-3 rounded-xl border-2 transition-all ${
+                              libroSeleccionado?.id === libro.id
+                                ? 'border-violet-500 bg-violet-50'
+                                : 'border-slate-200 bg-white hover:border-violet-300'
+                            }`}>
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
+                                <p className="font-bold text-slate-800 text-sm truncate">{libro.titulo}</p>
+                                <p className="text-xs text-slate-500 mt-0.5">{libro.autor}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                    libro.fuente === 'Archive.org' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'
+                                  }`}>
+                                    <Globe size={8} className="inline mr-0.5" />{libro.fuente}
+                                  </span>
+                                  <span className="text-[10px] text-slate-400">{libro.formato}</span>
+                                  {libro.idioma && <span className="text-[10px] text-slate-400 uppercase">{libro.idioma}</span>}
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end gap-1 shrink-0">
+                                {libroSeleccionado?.id === libro.id && (
+                                  <span className="text-violet-600 font-black text-xs">✓ Seleccionado</span>
+                                )}
+                                <a href={libro.urlVista} target="_blank" rel="noopener noreferrer"
+                                  onClick={e => e.stopPropagation()}
+                                  className="text-[10px] text-slate-400 hover:text-violet-600 flex items-center gap-0.5">
+                                  <ExternalLink size={10} /> Ver
+                                </a>
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Libro seleccionado */}
+                    {libroSeleccionado && (
+                      <div className="bg-violet-50 border border-violet-200 rounded-xl p-3 flex items-center gap-2">
+                        <span className="text-lg">📗</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-black text-violet-800 truncate">{libroSeleccionado.titulo}</p>
+                          <p className="text-[10px] text-violet-600">Se descargará e indexará automáticamente</p>
+                        </div>
+                        <button onClick={() => setLibroSeleccionado(null)} className="text-slate-400 hover:text-red-400">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 )}
 
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">

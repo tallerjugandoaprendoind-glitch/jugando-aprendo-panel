@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import ProgresoGraficas from '@/components/graficos/ProgresoGraficas'
 import {
   Activity, Brain, CheckCircle2, ChevronDown, ChevronRight, Clock, Download, Eye, FileCheck, FileDown, FileText, History, Home, Loader2, MessageCircle, RefreshCw, Send, ShieldAlert, Sparkles, Target, User, Users, X, Zap, Mic, MicOff, Volume2, VolumeX, StopCircle
 } from 'lucide-react'
@@ -127,7 +128,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   const [reportesHistorial, setReportesHistorial] = useState<any[]>([])
   const [loadingReportes, setLoadingReportes] = useState(false)
   const [showReportPanel, setShowReportPanel] = useState(true)
-  const [mobileTab, setMobileTab] = useState<'chat' | 'history' | 'reports'>('chat')
+  const [mobileTab, setMobileTab] = useState<'chat' | 'history' | 'reports' | 'graficas'>('chat')
   
   const [messages, setMessages] = useState<any[]>([
       { role: 'ai', text: 'Hola 👋. Selecciona un paciente para iniciar el análisis clínico.' }
@@ -391,6 +392,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                 { id: 'chat' as const,    label: '🤖 IA Chat'  },
                 { id: 'history' as const, label: '📋 Historial' },
                 { id: 'reports' as const, label: '📄 Reportes'  },
+                { id: 'graficas' as const,label: '📊 Gráficas'  },
               ]).map(t => (
                 <button key={t.id} onClick={() => setMobileTab(t.id)}
                   className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${mobileTab === t.id ? 'bg-white shadow text-slate-800' : 'text-slate-500'}`}>
@@ -711,6 +713,31 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                 )}
             </div>
             </div>{/* end main grid */}
+
+            {/* ── PANEL GRÁFICAS (mobile tab) ── */}
+            {mobileTab === 'graficas' && (
+              <div className="lg:hidden flex-1 overflow-y-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="p-2 bg-violet-50 rounded-xl">
+                    <span className="text-lg">📊</span>
+                  </div>
+                  <span className="font-black text-slate-700 text-sm uppercase tracking-widest">Gráficas ABA</span>
+                </div>
+                <ProgresoGraficas childId={selectedChild} modoParent={false} />
+              </div>
+            )}
+
+            {/* ── PANEL GRÁFICAS (desktop: siempre visible como columna extra) ── */}
+            <div className="hidden lg:block flex-shrink-0 w-full bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="p-2 bg-violet-50 rounded-xl">
+                  <span className="text-lg">📊</span>
+                </div>
+                <span className="font-black text-slate-700 text-sm uppercase tracking-widest">Gráficas ABA</span>
+              </div>
+              <ProgresoGraficas childId={selectedChild} modoParent={false} />
+            </div>
+
         </div>
       ) : (
           <div className="flex flex-col items-center justify-center h-full text-slate-300 py-40">

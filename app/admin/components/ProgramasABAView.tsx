@@ -1,15 +1,32 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ReferenceLine, ResponsiveContainer, Legend
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ReferenceLine, ResponsiveContainer, Legend, Cell, PieChart, Pie, ComposedChart, Area
 } from 'recharts'
 import {
   Plus, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp,
-  Target, BarChart3, Edit3, CheckCircle2, AlertTriangle, Clock,
+  Target, BarChart3, BarChart2, Edit3, CheckCircle2, AlertTriangle, Clock,
   Loader2, X, Save, Activity, Zap, Brain, BookOpen, ArrowRight
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
+
+// ── Tipo de gráfico por programa (guardado en estado) ─────────────────────────
+type TipoGrafico = 'lineas' | 'barras' | 'histograma' | 'pie'
+
+const TIPOS_GRAFICO_PROGRAMA = [
+  { id: 'lineas'    as TipoGrafico, emoji: '📈', label: 'Líneas' },
+  { id: 'barras'    as TipoGrafico, emoji: '📊', label: 'Barras' },
+  { id: 'histograma'as TipoGrafico, emoji: '🗂️', label: 'Histograma' },
+  { id: 'pie'       as TipoGrafico, emoji: '🥧', label: 'Pie' },
+]
+
+function colorPorPct(pct: number) {
+  if (pct >= 90) return '#059669'
+  if (pct >= 70) return '#6366f1'
+  if (pct >= 45) return '#f59e0b'
+  return '#ef4444'
+}
 
 // ── Colores por área ────────────────────────────────────────────────────────
 const AREA_CONFIG: Record<string, { color: string; bg: string; label: string; emoji: string }> = {
@@ -37,6 +54,12 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
   const [aiAnalysis, setAiAnalysis] = useState<any>(null)
   const [loadingAI, setLoadingAI] = useState(false)
   const [filtroArea, setFiltroArea] = useState<string>('todos')
+  // Tipo de gráfico por programa: { [programaId]: TipoGrafico }
+  const [tiposGrafico, setTiposGrafico] = useState<Record<string, TipoGrafico>>({})
+
+  function setTipoGrafico(programaId: string, tipo: TipoGrafico) {
+    setTiposGrafico(prev => ({ ...prev, [programaId]: tipo }))
+  }
 
   const loadProgramas = useCallback(async () => {
     setLoading(true)
@@ -208,10 +231,11 @@ function AlertaCard({ alerta }: { alerta: any }) {
 }
 
 // ── Tarjeta de programa con gráfica ─────────────────────────────────────────
-function ProgramaCard({ programa, onRegistrarSesion, onReload }: any) {
+function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'lineas', onChangeTipoGrafico }: any) {
   const [expanded, setExpanded] = useState(false)
   const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [detalle, setDetalle] = useState<any>(null)
+  const [tipoGrafico, setTipoGrafico] = useState<'lineas'|'barras'|'histograma'|'pie'>('lineas')
   const toast = useToast()
 
   const area = AREA_CONFIG[programa.area] || AREA_CONFIG.comunicacion
@@ -324,12 +348,36 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload }: any) {
             </div>
           ) : detalle ? (
             <>
-              {/* Gráfica completa */}
+              {/* Gráfica completa con selector de tipo */}
               {chartData.length >= 2 && (
                 <div>
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">
-                    📈 Gráfica de progreso
-                  </p>
+                  {/* Header con selector de tipo */}
+                  <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+                      📈 Gráfica de progreso
+                    </p>
+                    {/* Selector de tipo — solo analista */}
+                    <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                      {([
+                        { id: 'lineas'     as const, label: 'Líneas',     emoji: '📈' },
+                        { id: 'barras'     as const, label: 'Barras',     emoji: '📊' },
+                        { id: 'histograma' as const, label: 'Histograma', emoji: '🗂️' },
+                        { id: 'pie'        as const, label: 'Pie',        emoji: '🥧' },
+                      ] as const).map(t => (
+                        <button key={t.id} onClick={() => setTipoGrafico(t.id)}
+                          title={t.label}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                            tipoGrafico === t.id
+                              ? 'bg-white shadow text-indigo-700'
+                              : 'text-slate-500 hover:text-slate-700'
+                          }`}>
+                          {t.emoji}
+                          <span className="ml-1 hidden sm:inline">{t.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="bg-white rounded-xl p-4 border border-slate-100">
                     {/* Leyenda de fases */}
                     <div className="flex gap-3 mb-3 flex-wrap">
@@ -348,31 +396,112 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload }: any) {
                         Criterio {programa.criterio_dominio_pct}%
                       </span>
                     </div>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                        <XAxis dataKey="sesion" tick={{ fontSize: 10 }} label={{ value: 'Sesión', position: 'insideBottom', offset: -2, fontSize: 10 }} />
-                        <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
-                        <Tooltip
-                          formatter={(value: any, name: any) => [`${value}%`, 'Éxito']}
-                          labelFormatter={(label) => {
-                            const d = chartData[label - 1]
-                            return d ? `Sesión ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}` : `Sesión ${label}`
-                          }}
-                        />
-                        {cambiosFase.map(x => (
-                          <ReferenceLine key={x} x={x} stroke="#cbd5e1" strokeDasharray="3 3" />
-                        ))}
-                        <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981"
-                          strokeDasharray="6 3" strokeWidth={2}
-                          label={{ value: `${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
-                        <Line
-                          type="monotone" dataKey="pct" stroke="#6366f1" strokeWidth={2.5}
-                          dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }}
-                          activeDot={{ r: 6 }}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
+
+                    {/* ── Líneas ── */}
+                    {tipoGrafico === 'lineas' && (
+                      <ResponsiveContainer width="100%" height={200}>
+                        <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                          <XAxis dataKey="sesion" tick={{ fontSize: 10 }} label={{ value: 'Sesión', position: 'insideBottom', offset: -2, fontSize: 10 }} />
+                          <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
+                          <Tooltip
+                            formatter={(value: any) => [`${value}%`, 'Éxito']}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}` : `Sesión ${label}` }}
+                          />
+                          {cambiosFase.map(x => <ReferenceLine key={x} x={x} stroke="#cbd5e1" strokeDasharray="3 3" />)}
+                          <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
+                            label={{ value: `${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
+                          <Line type="monotone" dataKey="pct" stroke="#6366f1" strokeWidth={2.5}
+                            dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }} activeDot={{ r: 6 }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    )}
+
+                    {/* ── Barras (color por nivel) ── */}
+                    {tipoGrafico === 'barras' && (
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                          <XAxis dataKey="sesion" tick={{ fontSize: 10 }} />
+                          <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
+                          <Tooltip
+                            formatter={(value: any) => [`${value}%`, 'Éxito']}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha}` : `Sesión ${label}` }}
+                          />
+                          <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
+                            label={{ value: `${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
+                          <Bar dataKey="pct" radius={[4, 4, 0, 0]}>
+                            {chartData.map((entry: any, index: number) => (
+                              <Cell key={index} fill={
+                                entry.pct >= programa.criterio_dominio_pct ? '#059669'
+                                : entry.pct >= 70 ? '#6366f1'
+                                : entry.pct >= 45 ? '#D97706' : '#DC2626'
+                              } />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+
+                    {/* ── Histograma de distribución ── */}
+                    {tipoGrafico === 'histograma' && (() => {
+                      const crit = programa.criterio_dominio_pct
+                      const histData = [
+                        { rango: '0-25%',   count: chartData.filter((d: any) => d.pct < 26).length,               color: '#DC2626' },
+                        { rango: '26-50%',  count: chartData.filter((d: any) => d.pct >= 26 && d.pct < 51).length, color: '#D97706' },
+                        { rango: '51-75%',  count: chartData.filter((d: any) => d.pct >= 51 && d.pct < 76).length, color: '#6366f1' },
+                        { rango: '76-89%',  count: chartData.filter((d: any) => d.pct >= 76 && d.pct < crit).length, color: '#0891B2' },
+                        { rango: `${crit}%+`, count: chartData.filter((d: any) => d.pct >= crit).length,            color: '#059669' },
+                      ]
+                      return (
+                        <ResponsiveContainer width="100%" height={200}>
+                          <BarChart data={histData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                            <XAxis dataKey="rango" tick={{ fontSize: 10 }} />
+                            <YAxis tick={{ fontSize: 10 }} label={{ value: 'Sesiones', angle: -90, position: 'insideLeft', fontSize: 10 }} />
+                            <Tooltip formatter={(v: any) => [`${v} sesiones`, 'Cantidad']} />
+                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                              {histData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      )
+                    })()}
+
+                    {/* ── Pie chart ── */}
+                    {tipoGrafico === 'pie' && (() => {
+                      const crit = programa.criterio_dominio_pct
+                      const pieRaw = [
+                        { name: `Criterio (≥${crit}%)`, value: chartData.filter((d: any) => d.pct >= crit).length, color: '#059669' },
+                        { name: '70-89%',  value: chartData.filter((d: any) => d.pct >= 70 && d.pct < crit).length, color: '#6366f1' },
+                        { name: '45-69%',  value: chartData.filter((d: any) => d.pct >= 45 && d.pct < 70).length,  color: '#D97706' },
+                        { name: '<45%',    value: chartData.filter((d: any) => d.pct < 45).length,                  color: '#DC2626' },
+                      ].filter(p => p.value > 0)
+                      return (
+                        <div className="flex items-center gap-4">
+                          <ResponsiveContainer width="55%" height={180}>
+                            <PieChart>
+                              <Pie data={pieRaw} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} paddingAngle={3}>
+                                {pieRaw.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                              </Pie>
+                              <Tooltip formatter={(v: any) => [`${v} sesiones`, '']} />
+                            </PieChart>
+                          </ResponsiveContainer>
+                          <div className="flex-1 space-y-2">
+                            {pieRaw.map(p => (
+                              <div key={p.name} className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full shrink-0" style={{ background: p.color }} />
+                                <span className="text-[11px] text-slate-600 flex-1">{p.name}</span>
+                                <span className="text-xs font-black" style={{ color: p.color }}>{p.value}</span>
+                              </div>
+                            ))}
+                            <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+                              Total: {chartData.length} sesiones
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    })()}
                   </div>
                 </div>
               )}
