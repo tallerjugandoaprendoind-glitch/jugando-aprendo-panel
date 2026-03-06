@@ -55,24 +55,20 @@ export default function KnowledgeBaseView() {
 
       if (selectedFile) {
         setUploadProgress(`Subiendo archivo (${Math.round(selectedFile.size / 1024 / 1024)}MB)...`)
-        const safeName = `knowledge/${Date.now()}_${selectedFile.name.replace(/\s+/g, '_')}`
 
-        // FIX: bucket correcto = 'knowledge-base' (antes era 'documentos' — incorrecto)
-        const { error: uploadError } = await supabasePublic.storage
-          .from('knowledge-base')
-          .upload(safeName, selectedFile, { contentType: selectedFile.type, upsert: false })
+        // Subir via API server-side (usa service role key, bypassa RLS del bucket)
+        const fd = new FormData()
+        fd.append('file', selectedFile)
 
-        if (uploadError) throw new Error(`Error al subir: ${uploadError.message}`)
+        const uploadRes = await fetch('/api/knowledge/upload', {
+          method: 'POST',
+          body: fd,
+        })
+        const uploadJson = await uploadRes.json()
+        if (uploadJson.error) throw new Error(uploadJson.error)
 
-        // FIX: URL firmada (bucket privado) en vez de URL pública
-        const { data: signedData, error: signedError } = await supabasePublic.storage
-          .from('knowledge-base')
-          .createSignedUrl(safeName, 3600)
-
-        if (signedError || !signedData?.signedUrl) throw new Error('No se pudo obtener la URL del archivo')
-
-        storageUrl = signedData.signedUrl
-        fileName = selectedFile.name
+        storageUrl = uploadJson.storageUrl
+        fileName = uploadJson.fileName
         setUploadProgress('Extrayendo texto con IA...')
       }
 

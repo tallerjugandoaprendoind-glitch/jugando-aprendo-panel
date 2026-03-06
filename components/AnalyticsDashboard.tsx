@@ -126,8 +126,8 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
       const btnArea = dashEl.querySelector('[data-no-print]') as HTMLElement
       if (btnArea) btnArea.style.display = 'none'
 
-      // FIX: Tailwind v4 usa oklch()/lab() que html2canvas no soporta.
-      // onclone reemplaza esas variables CSS con fallbacks RGB antes de capturar.
+      // FIX DEFINITIVO: parchear getComputedStyle en el documento clonado
+      // para que html2canvas nunca vea colores lab()/oklch()
       const canvas = await html2canvas(dashEl, {
         scale: 2,
         useCORS: true,
@@ -137,46 +137,72 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
         scrollY: 0,
         width: dashEl.scrollWidth,
         height: dashEl.scrollHeight,
-        onclone: (_doc: Document, el: HTMLElement) => {
-          // Inyectar overrides completos para Tailwind v4 (oklch/lab → RGB)
-          const overrideStyle = _doc.createElement('style')
-          overrideStyle.textContent = `
+        onclone: (clonedDoc: Document, el: HTMLElement) => {
+          // 1. Inyectar stylesheet con overrides de variables Tailwind v4
+          const st = clonedDoc.createElement('style')
+          st.textContent = `
             *, *::before, *::after {
               --tw-shadow-color: rgba(0,0,0,0.1) !important;
               --tw-ring-color: rgba(59,130,246,0.5) !important;
+              color-scheme: light !important;
             }
-            /* Forzar colores RGB en todos los elementos */
-            * { color-scheme: light !important; }
+            /* Anular colores oklch/lab con fallbacks seguros */
+            :root {
+              --color-slate-50: #f8fafc; --color-slate-100: #f1f5f9;
+              --color-slate-200: #e2e8f0; --color-slate-300: #cbd5e1;
+              --color-slate-400: #94a3b8; --color-slate-500: #64748b;
+              --color-slate-600: #475569; --color-slate-700: #334155;
+              --color-slate-800: #1e293b; --color-slate-900: #0f172a;
+              --color-blue-500: #3b82f6; --color-blue-600: #2563eb;
+              --color-violet-500: #8b5cf6; --color-violet-600: #7c3aed;
+              --color-emerald-500: #10b981; --color-red-500: #ef4444;
+              --color-amber-500: #f59e0b; --color-indigo-500: #6366f1;
+            }
           `
-          _doc.head.appendChild(overrideStyle)
+          clonedDoc.head.appendChild(st)
 
-          // Reemplazar oklch/lab en estilos computados e inline
-          const allEls = Array.from(el.querySelectorAll('*')) as HTMLElement[]
-          allEls.forEach(node => {
-            try {
-              const cs = window.getComputedStyle(node)
-              const props = ['color','background-color','border-color','fill','stroke',
-                'border-top-color','border-right-color','border-bottom-color','border-left-color',
-                'outline-color','text-decoration-color']
-              props.forEach(prop => {
-                const val = cs.getPropertyValue(prop)
-                if (!val) return
-                if (val.includes('oklch') || val.includes('lab(') || val.includes('lch(')) {
-                  const camel = prop.replace(/-([a-z])/g, (_,l) => l.toUpperCase())
-                  const isBg = prop.includes('background')
-                  ;(node.style as any)[camel] = isBg ? '#ffffff' : '#1e293b'
+          // 2. Parchear getComputedStyle del window del documento clonado
+          //    para que devuelva RGB en vez de lab()/oklch()
+          const origGCS = clonedDoc.defaultView?.getComputedStyle?.bind(clonedDoc.defaultView)
+          if (origGCS && clonedDoc.defaultView) {
+            const colorProps = new Set(['color','background-color','border-color','fill','stroke',
+              'border-top-color','border-right-color','border-bottom-color','border-left-color',
+              'outline-color','text-decoration-color','caret-color'])
+            ;(clonedDoc.defaultView as any).getComputedStyle = (elem: Element, pseudo?: string) => {
+              const cs = origGCS(elem, pseudo)
+              return new Proxy(cs, {
+                get(target, prop: string) {
+                  const val = (target as any)[prop]
+                  if (typeof val === 'function') return val.bind(target)
+                  if (typeof prop === 'string' && typeof val === 'string') {
+                    if (val.includes('lab(') || val.includes('oklch') || val.includes('lch(')) {
+                      const isBg = String(prop).includes('background') || String(prop).includes('Background')
+                      return isBg ? 'rgb(255, 255, 255)' : 'rgb(30, 41, 59)'
+                    }
+                  }
+                  return val
+                },
+                apply(target: any, thisArg, args) {
+                  const val = target.apply(thisArg, args)
+                  if (typeof val === 'string' && (val.includes('lab(') || val.includes('oklch') || val.includes('lch('))) {
+                    return 'rgb(30, 41, 59)'
+                  }
+                  return val
                 }
               })
-              // Limpiar style inline con oklch/lab
-              const inlineStyle = node.getAttribute('style') || ''
-              if (inlineStyle.includes('oklch') || inlineStyle.includes('lab(') || inlineStyle.includes('lch(')) {
-                node.setAttribute('style', inlineStyle
-                  .replace(/:\s*oklch\([^)]+\)/g, ': initial')
-                  .replace(/:\s*lab\([^)]+\)/g, ': initial')
-                  .replace(/:\s*lch\([^)]+\)/g, ': initial')
-                )
-              }
-            } catch { /* ignorar */ }
+            }
+          }
+
+          // 3. Limpiar styles inline con oklch/lab
+          Array.from(el.querySelectorAll('[style]')).forEach(node => {
+            const s = node.getAttribute('style') || ''
+            if (s.includes('oklch') || s.includes('lab(') || s.includes('lch(')) {
+              node.setAttribute('style', s
+                .replace(/:\s*oklch\([^)]+\)/g, ': initial')
+                .replace(/:\s*lab\([^)]+\)/g, ': initial')
+                .replace(/:\s*lch\([^)]+\)/g, ': initial')
+              )
+            }
           })
         },
       })
