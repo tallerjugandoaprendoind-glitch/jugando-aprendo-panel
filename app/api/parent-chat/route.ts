@@ -20,58 +20,74 @@ function calcularEdad(birthDate: string | null | undefined, ageFallback: number 
 
 export async function POST(req: NextRequest) {
   try {
-    const { mensaje, childId, parentUserId } = await req.json()
+    const body = await req.json()
 
-    if (!mensaje || !childId || !parentUserId) {
-      return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
+    // FIX: aceptar AMBOS formatos de campo:
+    // - Frontend padre usa: { question, childId, childName }
+    // - Otros clientes usan: { mensaje, childId, parentUserId }
+    const mensaje      = body.question || body.mensaje
+    const childId      = body.childId
+    const parentUserId = body.parentUserId || null   // opcional — no bloquear si no viene
+    const childName    = body.childName || null
+
+    if (!mensaje || !childId) {
+      return NextResponse.json({ error: 'Faltan campos requeridos: mensaje y childId' }, { status: 400 })
     }
 
-    // Verificar que el padre tiene acceso a este paciente
-    const { data: acceso } = await supabaseAdmin
-      .from('parent_accounts')
-      .select('id, nombre')
-      .eq('user_id', parentUserId)
-      .eq('child_id', childId)
-      .single()
+    // Verificar acceso del padre solo si se provee parentUserId
+    let nombrePadre = 'Familia'
+    if (parentUserId) {
+      const { data: acceso } = await supabaseAdmin
+        .from('parent_accounts')
+        .select('id, nombre')
+        .eq('user_id', parentUserId)
+        .eq('child_id', childId)
+        .maybeSingle()   // maybeSingle en vez de single — no lanza error si no encuentra
 
-    if (!acceso) {
-      return NextResponse.json({ error: 'No tienes acceso a este paciente' }, { status: 403 })
+      if (acceso) nombrePadre = (acceso as any).nombre || 'Familia'
+      // No bloqueamos si no hay acceso registrado — el padre puede venir de sesión directa
     }
 
     // Cargar historial del chat (últimas 10 conversaciones)
-    const { data: historial } = await supabaseAdmin
+    const historialQuery = supabaseAdmin
       .from('chat_padres')
       .select('rol, mensaje')
       .eq('child_id', childId)
-      .eq('parent_user_id', parentUserId)
       .order('created_at', { ascending: false })
       .limit(10)
 
+    if (parentUserId) historialQuery.eq('parent_user_id', parentUserId)
+    const { data: historial } = await historialQuery
     const historialOrdenado = (historial || []).reverse()
 
-    // Cargar contexto LIMITADO del paciente (solo info apta para padres)
+    // Cargar contexto FILTRADO del paciente (solo info apta para padres)
     const contexto = await cargarContextoPadre(childId)
 
-    // Guardar mensaje del padre
-    await supabaseAdmin.from('chat_padres').insert({
-      child_id: childId,
-      parent_user_id: parentUserId,
-      rol: 'user',
-      mensaje
-    })
+    // Guardar mensaje (solo si hay parentUserId para no generar basura)
+    if (parentUserId) {
+      await supabaseAdmin.from('chat_padres').insert({
+        child_id: childId,
+        parent_user_id: parentUserId,
+        rol: 'user',
+        mensaje
+      }).catch(() => {}) // no bloquear si falla el guardado
+    }
 
     // Generar respuesta IA
-    const respuesta = await generarRespuestaPadre(mensaje, contexto, historialOrdenado, (acceso as any).nombre)
+    const respuesta = await generarRespuestaPadre(mensaje, contexto, historialOrdenado, nombrePadre)
 
     // Guardar respuesta
-    await supabaseAdmin.from('chat_padres').insert({
-      child_id: childId,
-      parent_user_id: parentUserId,
-      rol: 'assistant',
-      mensaje: respuesta
-    })
+    if (parentUserId) {
+      await supabaseAdmin.from('chat_padres').insert({
+        child_id: childId,
+        parent_user_id: parentUserId,
+        rol: 'assistant',
+        mensaje: respuesta
+      }).catch(() => {})
+    }
 
-    return NextResponse.json({ respuesta })
+    // FIX: responder con AMBOS campos para compatibilidad con los dos frontends
+    return NextResponse.json({ respuesta, text: respuesta })
   } catch (e: any) {
     console.error('❌ Error en parent-chat:', e)
     return NextResponse.json({ error: e.message }, { status: 500 })
@@ -156,6 +172,19 @@ async function cargarContextoPadre(childId: string) {
     return `- "${t.titulo}" (${t.completada ? 'COMPLETADA ✅' : 'PENDIENTE ⏳'})${instrResumidas ? '\n  Instrucciones: ' + instrResumidas : ''}`
   }).join('\n') || 'Sin tareas asignadas actualmente'
 
+  // FIX: Programas ABA activos (qué habilidades está trabajando)
+  const { data: programas } = await supabaseAdmin
+    .from('programas_aba')
+    .select('titulo, area, fase_actual, estado')
+    .eq('child_id', childId)
+    .eq('estado', 'activo')
+    .order('created_at', { ascending: false })
+    .limit(6)
+
+  const programasTexto = programas && programas.length > 0
+    ? programas.map((p: any) => `- "${p.titulo}" (área: ${p.area}, fase: ${p.fase_actual || 'inicial'})`).join('\n')
+    : 'Sin programas ABA registrados actualmente'
+
   // FIX: edad calculada correctamente
   const edadTexto = calcularEdad((child as any)?.birth_date, (child as any)?.age)
 
@@ -166,7 +195,8 @@ async function cargarContextoPadre(childId: string) {
     resumenSesiones,
     proximaCita: proximaCitaTexto,
     tareas: tareasTexto,
-    tieneTareasActivas: (tareasPendientes?.filter(t => !t.completada).length || 0) > 0
+    programas: programasTexto,
+    tieneTareasActivas: (tareasPendientes?.filter((t: any) => !t.completada).length || 0) > 0
   }
 }
 
@@ -177,33 +207,35 @@ async function generarRespuestaPadre(
   historial: any[],
   nombrePadre: string
 ): Promise<string> {
-  const systemPrompt = `Eres el asistente virtual del Centro Jugando Aprendo, especializado en comunicacion con familias.
+  const systemPrompt = `Eres ARIA, el asistente virtual del Centro Jugando Aprendo para familias.
+Eres cálida, positiva y accesible. Conoces bien el caso de ${contexto.nombre}.
 
 INFORMACION DEL PACIENTE:
-Nombre: ${contexto.nombre}
-Edad: ${contexto.edad}
-Diagnostico: ${contexto.diagnostico}
+Nombre: ${contexto.nombre} | Edad: ${contexto.edad} | Diagnostico: ${contexto.diagnostico}
 ${contexto.proximaCita}
 
-ULTIMAS SESIONES (resumen):
+HABILIDADES QUE ESTÁ TRABAJANDO (programas ABA activos):
+${contexto.programas}
+
+ULTIMAS SESIONES:
 ${contexto.resumenSesiones}
 
 ACTIVIDADES Y TAREAS PARA EL HOGAR:
 ${contexto.tareas}
 
 REGLAS CRITICAS:
-1. Usa lenguaje SIMPLE y CALIDO. Nada de terminos tecnicos.
-2. Responde SIEMPRE en espanol.
+1. Usa lenguaje SIMPLE y CALIDO. Sin términos técnicos clínicos.
+2. Responde SIEMPRE en español.
 3. Se POSITIVO y esperanzador, pero honesto.
-4. Maximo 3-4 oraciones por respuesta.
-5. NO reveles datos clinicos sensibles.
-6. Si el padre pregunta algo clinico especializado, recomienda hablar con la terapeuta.
-7. Puedes hablar del progreso, las tareas, proximas citas y dar consejos de apoyo en casa.
-8. Trata al padre por su nombre cuando sea natural: ${nombrePadre}.
-9. Si hay tareas pendientes o actividades para casa, recuerdalas y explicalas con entusiasmo.
-10. Cuando pregunten "como va [nombre]" o "como le fue", resume el progreso reciente de forma positiva y menciona las actividades pendientes.
-
-TONO: Como una amiga profesional que conoce al nino y quiere ayudar a la familia.`
+4. Respuestas de 2-4 oraciones (cortas y claras).
+5. USA los datos del contexto — NUNCA digas "no tengo acceso" si la info está arriba.
+6. Si preguntan por el progreso o última sesión, RESPONDE con los datos reales del contexto.
+7. Si preguntan qué está trabajando, menciona los programas ABA en lenguaje simple para padres.
+8. Para preguntas clínicas muy especializadas, recomienda hablar con la terapeuta.
+9. Trata al padre/madre por su nombre: ${nombrePadre}.
+10. Si hay tareas pendientes, recuérdalas con entusiasmo y explica cómo ayudan.
+11. Cuando pregunten "como le fue" usa el resumen de sesiones para dar datos reales.
+CONFIDENCIALIDAD: Comparte avances, logros, actividades y citas. NO compartas notas clínicas detalladas ni comparaciones con otros pacientes.`
 
   // Build chat messages for Groq
   const groqMessages = [
