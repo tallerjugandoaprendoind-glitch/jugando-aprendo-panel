@@ -4,7 +4,7 @@ import { supabase as supabasePublic } from '@/lib/supabase'
 import {
   Upload, BookOpen, Trash2, CheckCircle2, Clock, Loader2,
   FileText, Plus, X, Brain, Save, Search,
-  Sparkles, Cpu, BookMarked,
+  Sparkles, Cpu, BookMarked, RefreshCw,
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 
@@ -23,6 +23,8 @@ export default function KnowledgeBaseView() {
   const [aprendiendo, setAprendiendo] = useState(false)
   const [logAprender, setLogAprender] = useState<string[]>([])
   const [resultadoAprender, setResultadoAprender] = useState<any>(null)
+  const [urlAprender, setUrlAprender] = useState('')
+  const [modoFuente, setModoFuente] = useState<'keywords' | 'url'>('keywords')
   const temasSugeridos = [
     'Reforzamiento positivo ABA',
     'Comunicación aumentativa AAC TEA',
@@ -88,6 +90,54 @@ export default function KnowledgeBaseView() {
     } finally {
       setAprendiendo(false)
     }
+  }
+
+  // ─── Reintentar indexado de doc fallido ───────────────────────────────────
+  const handleRetry = async (id: string) => {
+    try {
+      const res = await fetch('/api/knowledge/ingest', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const json = await res.json()
+      if (json.ok) { toast.success(`✅ Re-indexado: ${json.chunks} fragmentos`); await loadDocs() }
+      else toast.error(json.error || 'Error al re-indexar')
+    } catch (e: any) { toast.error(e.message) }
+  }
+
+  // ─── Aprender desde URL ────────────────────────────────────────────────────
+  const handleAprenderUrl = async () => {
+    if (!urlAprender.trim()) { toast.error('Ingresa una URL'); return }
+    setAprendiendo(true)
+    setLogAprender([`🌐 Leyendo URL: "${urlAprender}"...`])
+    setResultadoAprender(null)
+    try {
+      // Primero ingestar la URL directamente
+      const res = await fetch('/api/knowledge/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          titulo: `Página web: ${new URL(urlAprender).hostname}`,
+          tipo: 'articulo',
+          sourceUrl: urlAprender,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json.ok) throw new Error(json.error || 'Error leyendo la URL')
+      setLogAprender([
+        `✅ URL leída: ${json.chars?.toLocaleString() || 0} caracteres`,
+        `✅ Método: ${json.method || 'scraping'}`,
+        `✅ Indexados: ${json.chunks || 0} fragmentos`,
+        `🎉 La IA ya aprendió el contenido de esa página`,
+      ])
+      setResultadoAprender({ keywords: urlAprender, terminos: [urlAprender], fuentes: 1, documentos: 1, totalChunks: json.chunks || 0 })
+      toast.success(`✅ ${json.chunks} fragmentos aprendidos de la URL`)
+      await loadDocs()
+    } catch (e: any) {
+      toast.error(e.message)
+      setLogAprender(prev => [...prev, `❌ ${e.message}`])
+    } finally { setAprendiendo(false) }
   }
 
   // ─── Buscar libros online ──────────────────────────────────────────────────
@@ -272,7 +322,31 @@ export default function KnowledgeBaseView() {
               ))}
             </div>
 
-            <button onClick={handleAprender} disabled={aprendiendo || !keywords.trim()}
+          </>}
+
+          {modoFuente === 'url' && (
+            <div className="space-y-3">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
+                URL de página web a aprender
+              </label>
+              <input
+                value={urlAprender}
+                onChange={e => setUrlAprender(e.target.value)}
+                placeholder="https://ejemplo.com/articulo-sobre-aba"
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                disabled={aprendiendo}
+              />
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                <p className="text-xs text-blue-700 font-bold mb-1">¿Qué tipo de URLs funcionan?</p>
+                <p className="text-[11px] text-blue-600">✅ Artículos y blogs públicos · Wikipedia · Documentos PDF en internet</p>
+                <p className="text-[11px] text-blue-600">✅ Páginas de organizaciones ABA (BACB, ABAI, etc.)</p>
+                <p className="text-[11px] text-slate-400">❌ Páginas que requieren login · Contenido con JavaScript dinámico</p>
+              </div>
+            </div>
+          )}
+
+            <button onClick={modoFuente === 'url' ? handleAprenderUrl : handleAprender}
+              disabled={aprendiendo || (modoFuente === 'keywords' ? !keywords.trim() : !urlAprender.trim())}
               className="w-full py-3.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl font-black flex items-center justify-center gap-2 text-sm transition shadow-md">
               {aprendiendo
                 ? <><Loader2 size={16} className="animate-spin" /> Aprendiendo desde internet...</>
@@ -461,9 +535,9 @@ export default function KnowledgeBaseView() {
           ) : (
             <div className="space-y-2">
               {docsManual.length > 0 && <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1">Subidos manualmente ({docsManual.length})</p>}
-              {docsManual.map(doc => <DocCard key={doc.id} doc={doc} onDelete={handleDelete} />)}
+              {docsManual.map(doc => <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} />)}
               {docsAuto.length > 0 && <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1 pt-2">Auto-aprendidos ({docsAuto.length})</p>}
-              {docsAuto.map(doc => <DocCard key={doc.id} doc={doc} onDelete={handleDelete} />)}
+              {docsAuto.map(doc => <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} />)}
             </div>
           )}
         </div>
@@ -472,7 +546,7 @@ export default function KnowledgeBaseView() {
   )
 }
 
-function DocCard({ doc, onDelete }: { doc: any; onDelete: (id: string) => void }) {
+function DocCard({ doc, onDelete, onRetry }: { doc: any; onDelete: (id: string) => void; onRetry?: (id: string) => void }) {
   const isAuto = doc.source_url?.startsWith('auto:')
   return (
     <div className="bg-white rounded-xl border border-slate-100 p-3.5 flex items-center justify-between gap-3 hover:border-slate-200 transition">
@@ -492,9 +566,11 @@ function DocCard({ doc, onDelete }: { doc: any; onDelete: (id: string) => void }
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        {doc.procesado
+        {doc.procesado && doc.total_chunks > 0
           ? <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold"><CheckCircle2 size={12} />Listo</span>
-          : <span className="flex items-center gap-1 text-[10px] text-amber-500 font-bold"><Clock size={12} />Pendiente</span>}
+          : doc.procesado && doc.total_chunks === 0
+            ? <button onClick={() => onRetry?.(doc.id)} className="flex items-center gap-1 text-[10px] text-red-500 font-bold hover:underline"><RefreshCw size={11} />Re-indexar</button>
+            : <span className="flex items-center gap-1 text-[10px] text-amber-500 font-bold"><Clock size={12} />Pendiente</span>}
         <button onClick={() => onDelete(doc.id)} className="p-1.5 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition">
           <Trash2 size={14} />
         </button>
