@@ -365,7 +365,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
   const toggleCard = (id: string) => setExpandedCardId(expandedCardId === id ? null : id)
 
   return (
-    <div className="h-full flex flex-col gap-4 md:gap-6 animate-fade-in-up overflow-hidden">
+    <div className="flex flex-col gap-4 md:gap-6 animate-fade-in-up">
       <div className="bg-white p-4 md:p-6 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 flex-shrink-0">
         <h3 className="font-bold text-slate-700 text-lg md:text-xl flex items-center gap-2 md:gap-3 shrink-0">
           <div className="p-2 bg-purple-50 rounded-xl">
@@ -384,7 +384,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
       </div>
 
       {selectedChild ? (
-        <div className="flex-1 flex flex-col gap-3 md:gap-6 overflow-hidden min-h-0">
+        <div className="flex flex-col gap-3 md:gap-6">
 
             {/* ── TABS MÓVIL ── */}
             <div className="flex lg:hidden gap-1 bg-slate-100 p-1 rounded-2xl flex-shrink-0">
@@ -455,14 +455,14 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
             </div>
             
             {/* ── MAIN GRID ── */}
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 overflow-hidden min-h-0">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
 
             {/* ANAMNESIS (solo desktop XL) */}
-            <div className="hidden xl:flex xl:col-span-3 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex-col overflow-hidden">
+            <div className="hidden xl:flex xl:col-span-3 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex-col">
                 <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-slate-100 font-extrabold text-slate-700 text-xs uppercase tracking-[0.2em] flex items-center gap-2 sticky top-0 z-10">
                     <FileText size={16} className="text-blue-600"/> Ficha de Ingreso
                 </div>
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
+                <div className="p-4 md:p-6 space-y-5">
                     {historyData.anamnesis ? Object.entries(historyData.anamnesis).slice(0, 15).map(([key, value]: any) => (
                       <div key={key} className="group hover:bg-slate-50 p-3 rounded-xl transition-all">
                             <span className="text-[10px] font-black text-slate-400 uppercase block mb-1.5 tracking-wider">{key.replace(/_/g, ' ')}</span>
@@ -476,7 +476,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                     )}
                 </div>
             </div>            {/* HISTORIAL (desktop: columna fija, mobile: tab) */}
-            <div className={`col-span-1 lg:col-span-7 xl:col-span-5 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex-col overflow-hidden
+            <div className={`col-span-1 lg:col-span-7 xl:col-span-5 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col
               ${mobileTab === 'history' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="p-4 md:p-6 bg-white border-b border-slate-100 flex justify-between items-center sticky top-0 z-10 shadow-sm">
                     <span className="font-bold text-slate-700 text-sm uppercase tracking-widest flex items-center gap-2">
@@ -488,7 +488,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                     </span>
                 </div>
                 
-                <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-slate-50/50">
+                <div className="p-4 md:p-6 space-y-4 bg-slate-50/50">
                    {historyData.entorno.map((visita: any) => {
                         const isExpanded = expandedCardId === `entorno-${visita.id}`
                         const d = visita.datos || {}
@@ -590,7 +590,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
             </div>
 
             {/* CHAT IA (desktop: columna, mobile: tab chat) */}
-            <div className={`col-span-1 lg:col-span-5 xl:col-span-4 bg-white rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-200 flex-col overflow-hidden
+            <div className={`col-span-1 lg:col-span-5 xl:col-span-4 bg-white rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-200 flex flex-col
               ${mobileTab === 'chat' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="p-4 md:p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex justify-between items-center shadow-lg">
                    <div className="flex items-center gap-3">

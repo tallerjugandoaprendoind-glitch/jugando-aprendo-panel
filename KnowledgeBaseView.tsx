@@ -1,11 +1,6 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
-import { createClient } from '@supabase/supabase-js'
-
-const supabasePublic = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { supabase as supabasePublic } from '@/lib/supabase'
 import {
   Upload, BookOpen, Trash2, CheckCircle2, Clock, Loader2,
   FileText, File, Plus, X, Brain, Database, Zap, AlertTriangle, Save, Link
