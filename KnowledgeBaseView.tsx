@@ -3,26 +3,53 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase as supabasePublic } from '@/lib/supabase'
 import {
   Upload, BookOpen, Trash2, CheckCircle2, Clock, Loader2,
-  FileText, File, Plus, X, Brain, Database, Zap, AlertTriangle, Save, Link
+  FileText, Plus, X, Brain, Save, Search,
+  Sparkles, Cpu, BookMarked,
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 
-// Modos de ingesta
-type InputMode = 'archivo' | 'url' | 'texto'
+type InputMode = 'archivo' | 'url' | 'texto' | 'buscar'
+type Tab = 'aprender' | 'biblioteca'
 
 export default function KnowledgeBaseView() {
   const toast = useToast()
+  const [tab, setTab] = useState<Tab>('aprender')
   const [documentos, setDocumentos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+
+  // ─── MODO APRENDER ────────────────────────────────────────────────────────
+  const [keywords, setKeywords] = useState('')
+  const [modo, setModo] = useState<'completo' | 'rapido'>('completo')
+  const [aprendiendo, setAprendiendo] = useState(false)
+  const [logAprender, setLogAprender] = useState<string[]>([])
+  const [resultadoAprender, setResultadoAprender] = useState<any>(null)
+  const temasSugeridos = [
+    'Reforzamiento positivo ABA',
+    'Comunicación aumentativa AAC TEA',
+    'Análisis funcional de conducta',
+    'Habilidades sociales autismo',
+    'Control de impulsos TDAH',
+    'Moldeamiento shaping ABA',
+    'Entrenamiento de habilidades diarias',
+    'Regulación emocional niños',
+    'Terapia de juego ABA',
+    'Lenguaje verbal comportamental',
+    'Reducción de conductas repetitivas',
+    'Integración sensorial TEA',
+  ]
+
+  // ─── MODO SUBIR MANUAL ────────────────────────────────────────────────────
+  const [inputMode, setInputMode] = useState<InputMode>('archivo')
   const [uploading, setUploading] = useState(false)
   const [showForm, setShowForm] = useState(false)
-  const [showInstrucciones, setShowInstrucciones] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({ titulo: '', tipo: 'libro', descripcion: '', texto: '', url: '' })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [uploadProgress, setUploadProgress] = useState<string>('')
-  // ✅ NUEVO: modo de entrada
-  const [inputMode, setInputMode] = useState<InputMode>('archivo')
+  const [uploadProgress, setUploadProgress] = useState('')
+  const [busqueda, setBusqueda] = useState('')
+  const [buscando, setBuscando] = useState(false)
+  const [resultadosBusqueda, setResultadosBusqueda] = useState<any[]>([])
+  const [libroSeleccionado, setLibroSeleccionado] = useState<any>(null)
 
   const loadDocs = async () => {
     setLoading(true)
@@ -36,458 +63,441 @@ export default function KnowledgeBaseView() {
 
   useEffect(() => { loadDocs() }, [])
 
+  // ─── Aprender desde internet ───────────────────────────────────────────────
+  const handleAprender = async () => {
+    if (!keywords.trim()) { toast.error('Escribe palabras clave'); return }
+    setAprendiendo(true)
+    setLogAprender([`🚀 Iniciando aprendizaje: "${keywords}"...`])
+    setResultadoAprender(null)
+
+    try {
+      const res = await fetch('/api/knowledge/aprender', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ keywords: keywords.trim(), modo }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setLogAprender(json.log || [])
+      setResultadoAprender(json)
+      toast.success(`✅ ${json.totalChunks} fragmentos aprendidos`)
+      await loadDocs()
+    } catch (e: any) {
+      toast.error(e.message)
+      setLogAprender(prev => [...prev, `❌ Error: ${e.message}`])
+    } finally {
+      setAprendiendo(false)
+    }
+  }
+
+  // ─── Buscar libros online ──────────────────────────────────────────────────
+  const buscarLibros = async () => {
+    if (!busqueda.trim()) return
+    setBuscando(true); setResultadosBusqueda([]); setLibroSeleccionado(null)
+    try {
+      const res = await fetch(`/api/knowledge/buscar-libro?q=${encodeURIComponent(busqueda)}`)
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      setResultadosBusqueda(json.resultados || [])
+      if (!json.resultados?.length) toast.error('Sin resultados. Prueba otro título.')
+    } catch (e: any) { toast.error(e.message) }
+    finally { setBuscando(false) }
+  }
+
+  // ─── Upload manual ────────────────────────────────────────────────────────
   const handleUpload = async () => {
     if (!form.titulo) { toast.error('El título es requerido'); return }
-
-    // Validar según modo
     if (inputMode === 'archivo' && !selectedFile) { toast.error('Selecciona un archivo'); return }
     if (inputMode === 'url' && !form.url.trim()) { toast.error('Ingresa una URL válida'); return }
-    if (inputMode === 'texto' && !form.texto.trim()) { toast.error('Pega el contenido del documento'); return }
-
-    // Validar URL básica
-    if (inputMode === 'url') {
-      try { new URL(form.url) } catch {
-        toast.error('La URL no es válida. Ejemplo: https://drive.google.com/...')
-        return
-      }
-    }
+    if (inputMode === 'texto' && !form.texto.trim()) { toast.error('Pega el contenido'); return }
+    if (inputMode === 'buscar' && !libroSeleccionado) { toast.error('Selecciona un libro'); return }
 
     setUploading(true)
     try {
       let body: Record<string, any> = {
-        titulo: form.titulo,
-        tipo: form.tipo,
-        descripcion: form.descripcion,
+        titulo: form.titulo, tipo: form.tipo, descripcion: form.descripcion,
       }
-
-      // ── Modo: Archivo ────────────────────────────────────────────────────
       if (inputMode === 'archivo' && selectedFile) {
-        const MAX_SIZE = 100 * 1024 * 1024
-        if (selectedFile.size > MAX_SIZE) {
-          toast.error(`Archivo muy grande (${Math.round(selectedFile.size / 1024 / 1024)}MB). Máx: 100MB. Usá el modo URL en su lugar.`)
-          return
-        }
-        setUploadProgress(`Subiendo archivo (${Math.round(selectedFile.size / 1024 / 1024)}MB)...`)
-        const safeName = `knowledge/${Date.now()}_${selectedFile.name.replace(/\s+/g, '_')}`
-
-        const { error: uploadError } = await supabasePublic.storage
-          .from('knowledge-base')
-          .upload(safeName, selectedFile, { contentType: selectedFile.type, upsert: false })
-
-        if (uploadError) throw new Error(`Error al subir: ${uploadError.message}`)
-
-        const { data: signedData, error: signedError } = await supabasePublic.storage
-          .from('knowledge-base')
-          .createSignedUrl(safeName, 3600)
-
-        if (signedError || !signedData?.signedUrl) throw new Error('No se pudo obtener la URL del archivo')
-
-        body.storageUrl = signedData.signedUrl
-        body.fileName = selectedFile.name
-        setUploadProgress('Extrayendo texto...')
-      }
-
-      // ── Modo: URL ────────────────────────────────────────────────────────
-      if (inputMode === 'url') {
-        setUploadProgress('Descargando y procesando URL...')
+        setUploadProgress('Subiendo archivo...')
+        const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
+        const { data: up, error: upErr } = await supabasePublic.storage
+          .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
+        if (upErr) throw new Error(`Upload error: ${upErr.message}`)
+        const { data: signed } = await supabasePublic.storage
+          .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
+        body.storageUrl = signed?.signedUrl; body.fileName = selectedFile.name
+      } else if (inputMode === 'url') {
         body.sourceUrl = form.url.trim()
-      }
-
-      // ── Modo: Texto ──────────────────────────────────────────────────────
-      if (inputMode === 'texto') {
+      } else if (inputMode === 'texto') {
         body.texto = form.texto
+      } else if (inputMode === 'buscar' && libroSeleccionado) {
+        body.sourceUrl = libroSeleccionado.url
+        if (!form.titulo) body.titulo = libroSeleccionado.titulo
       }
-
+      setUploadProgress('Procesando e indexando...')
       const res = await fetch('/api/knowledge/ingest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
-
       const json = await res.json()
-      if (json.error) throw new Error(json.error)
-
-      toast.success(`✅ "${form.titulo}" recibido — indexando en background`)
-      setForm({ titulo: '', tipo: 'libro', descripcion: '', texto: '', url: '' })
-      setSelectedFile(null)
-      setUploadProgress('')
-      setInputMode('archivo')
+      if (!res.ok) throw new Error(json.error || 'Error')
+      toast.success(`✅ ${json.chunks || 0} fragmentos indexados`)
       setShowForm(false)
-      setTimeout(loadDocs, 3000)
-    } catch (e: any) {
-      setUploadProgress('')
-      toast.error(e.message)
-    } finally { setUploading(false) }
+      setForm({ titulo: '', tipo: 'libro', descripcion: '', texto: '', url: '' })
+      setSelectedFile(null); setLibroSeleccionado(null)
+      await loadDocs()
+    } catch (e: any) { toast.error(e.message) }
+    finally { setUploading(false); setUploadProgress('') }
   }
 
-  const handleDelete = async (id: string, titulo: string) => {
-    if (!confirm(`¿Eliminar "${titulo}" de la base de conocimiento?`)) return
-    try {
-      await fetch('/api/knowledge/ingest', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
-      })
-      toast.success('Documento eliminado')
-      loadDocs()
-    } catch { toast.error('Error eliminando') }
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Eliminar este documento?')) return
+    await fetch('/api/knowledge/ingest', {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+    toast.success('Documento eliminado')
+    await loadDocs()
   }
 
-  const stats = {
-    total: documentos.length,
-    procesados: documentos.filter(d => d.procesado).length,
-    chunks: documentos.reduce((a, d) => a + (d.total_chunks || 0), 0),
-  }
-
-  const tipoConfig: Record<string, { emoji: string; label: string; color: string }> = {
-    libro:    { emoji: '📗', label: 'Libro', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-    protocolo:{ emoji: '📋', label: 'Protocolo', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-    guia:     { emoji: '🧭', label: 'Guía', color: 'bg-violet-50 text-violet-700 border-violet-200' },
-    programa: { emoji: '🎯', label: 'Programa', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-    centro:   { emoji: '🏥', label: 'Del centro', color: 'bg-pink-50 text-pink-700 border-pink-200' },
-  }
-
-  const modoConfig: { id: InputMode; label: string; icon: any; desc: string }[] = [
-    { id: 'archivo', label: 'Archivo', icon: Upload,   desc: 'PDF, TXT, MD (hasta 100MB)' },
-    { id: 'url',     label: 'URL',     icon: Link,     desc: 'Google Drive, Dropbox, web' },
-    { id: 'texto',   label: 'Texto',   icon: FileText, desc: 'Pegar contenido directo' },
-  ]
+  const docsAuto = documentos.filter(d => d.source_url?.startsWith('auto:'))
+  const docsManual = documentos.filter(d => !d.source_url?.startsWith('auto:'))
+  const totalChunks = documentos.reduce((a, d) => a + (d.total_chunks || 0), 0)
 
   return (
-    <div className="space-y-6 pb-10">
-      {/* Header */}
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h2 className="font-black text-2xl text-slate-800 flex items-center gap-3">
-            <div className="p-2.5 bg-violet-100 rounded-2xl">
-              <Brain className="text-violet-600" size={24} />
+    <div className="space-y-4 md:space-y-6 max-w-5xl mx-auto">
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl md:rounded-3xl p-5 md:p-7 text-white shadow-xl">
+        <div className="flex items-start gap-4">
+          <div className="bg-white/20 rounded-2xl p-3">
+            <Brain size={28} className="text-white" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-xl md:text-2xl font-black">Cerebro IA</h2>
+            <p className="text-violet-200 text-sm mt-1">Base de conocimiento especializada en ABA, TEA y neurodivergencia</p>
+          </div>
+        </div>
+        <div className="grid grid-cols-3 gap-3 mt-5">
+          <div className="bg-white/10 rounded-xl p-3 text-center">
+            <p className="text-2xl font-black">{documentos.length}</p>
+            <p className="text-violet-200 text-xs mt-0.5">Documentos</p>
+          </div>
+          <div className="bg-white/10 rounded-xl p-3 text-center">
+            <p className="text-2xl font-black">{totalChunks.toLocaleString()}</p>
+            <p className="text-violet-200 text-xs mt-0.5">Fragmentos</p>
+          </div>
+          <div className="bg-white/10 rounded-xl p-3 text-center">
+            <p className="text-2xl font-black">{docsAuto.length}</p>
+            <p className="text-violet-200 text-xs mt-0.5">Auto-aprendidos</p>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Tabs ───────────────────────────────────────────────────────────── */}
+      <div className="flex bg-white rounded-2xl p-1 border border-slate-100 shadow-sm gap-1">
+        <button onClick={() => setTab('aprender')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all
+            ${tab === 'aprender' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+          <Sparkles size={15} /> Aprender de Internet
+        </button>
+        <button onClick={() => setTab('biblioteca')}
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all
+            ${tab === 'biblioteca' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+          <BookMarked size={15} /> Biblioteca ({documentos.length})
+        </button>
+      </div>
+
+      {/* ══ TAB: APRENDER ═══════════════════════════════════════════════════ */}
+      {tab === 'aprender' && (
+        <div className="space-y-4">
+
+          {/* Cómo funciona */}
+          <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Cpu size={16} className="text-violet-600" />
+              <span className="font-bold text-violet-800 text-sm">¿Cómo funciona el aprendizaje automático?</span>
             </div>
-            Cerebro de ARIA
-          </h2>
-          <p className="text-slate-400 text-sm mt-1">Base de conocimiento clínico que usa la IA en cada análisis</p>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={() => setShowInstrucciones(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-violet-400 hover:text-violet-600 transition-all">
-            <Zap size={14} /> Instrucciones del centro
-          </button>
-          <button onClick={() => setShowForm(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 text-white rounded-xl text-sm font-bold hover:bg-violet-700 transition-all shadow-lg shadow-violet-200">
-            <Plus size={14} /> Agregar documento
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          { label: 'Documentos', value: stats.total, icon: BookOpen, color: 'text-violet-600', bg: 'bg-violet-50' },
-          { label: 'Procesados', value: stats.procesados, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Fragmentos indexados', value: stats.chunks.toLocaleString(), icon: Database, color: 'text-blue-600', bg: 'bg-blue-50' },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-2xl p-4`}>
-            <s.icon size={20} className={`${s.color} mb-2`} />
-            <p className={`font-black text-2xl ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-slate-500 font-medium">{s.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Info box */}
-      <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 flex gap-3">
-        <Brain size={18} className="text-violet-500 shrink-0 mt-0.5" />
-        <div>
-          <p className="font-black text-violet-800 text-sm">¿Cómo funciona?</p>
-          <p className="text-violet-700 text-xs mt-0.5 leading-relaxed">
-            Cada documento que subas se fragmenta y convierte en vectores semánticos. Cuando ARIA responde una consulta, busca automáticamente los fragmentos más relevantes y los incluye en su razonamiento. Cuanto más documentos indexes, más precisa y fundamentada será la IA.
-          </p>
-        </div>
-      </div>
-
-      {/* Lista de documentos */}
-      {loading ? (
-        <div className="flex flex-col items-center py-16 gap-3">
-          <Loader2 className="animate-spin text-violet-400" size={28} />
-          <p className="text-slate-400 text-sm">Cargando base de conocimiento...</p>
-        </div>
-      ) : documentos.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center">
-          <div className="w-14 h-14 bg-violet-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
-            <BookOpen size={26} className="text-violet-300" />
-          </div>
-          <p className="font-bold text-slate-500 mb-1">Base de conocimiento vacía</p>
-          <p className="text-xs text-slate-300 mb-4">Sube los libros y protocolos que usa tu centro</p>
-          <button onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-violet-600 text-white rounded-xl text-sm font-bold hover:bg-violet-700">
-            Subir primer documento
-          </button>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {documentos.map(doc => {
-            const tipo = tipoConfig[doc.tipo] || tipoConfig.libro
-            return (
-              <div key={doc.id} className="bg-white rounded-2xl border border-slate-100 p-4 flex items-center gap-4 hover:border-violet-100 transition-all">
-                <div className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-xl shrink-0 border">
-                  {tipo.emoji}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+              {[
+                { icon: '🔍', t: 'Expande palabras clave', d: 'La IA genera 8-12 términos técnicos relacionados' },
+                { icon: '🌐', t: 'Busca en internet', d: 'Wikipedia ES/EN + artículos PubMed científicos' },
+                { icon: '🤖', t: 'Sintetiza con IA', d: 'Genera resumen clínico estructurado para ABA' },
+                { icon: '🧠', t: 'Indexa en el Cerebro', d: 'ARIA y todos los agentes ya saben ese tema' },
+              ].map((s, i) => (
+                <div key={i} className="bg-white rounded-xl p-3 border border-violet-100">
+                  <p className="text-xl mb-1">{s.icon}</p>
+                  <p className="text-xs font-bold text-violet-700">{s.t}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">{s.d}</p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-bold text-slate-800 text-sm">{doc.titulo}</p>
-                    <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${tipo.color}`}>{tipo.label}</span>
-                    {doc.source_url && (
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full border bg-blue-50 text-blue-600 border-blue-200 flex items-center gap-1">
-                        <Link size={8} /> URL
-                      </span>
-                    )}
-                  </div>
-                  {doc.descripcion && <p className="text-xs text-slate-400 mt-0.5 truncate">{doc.descripcion}</p>}
-                  <div className="flex items-center gap-3 mt-1">
-                    {doc.procesado ? (
-                      <span className="text-[10px] text-emerald-600 font-bold flex items-center gap-1">
-                        <CheckCircle2 size={10} /> {doc.total_chunks} fragmentos indexados
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1">
-                        <Loader2 size={10} className="animate-spin" /> Indexando...
-                      </span>
-                    )}
-                    <span className="text-[10px] text-slate-300">
-                      {new Date(doc.created_at).toLocaleDateString('es-PE')}
-                    </span>
-                  </div>
-                </div>
-                <button onClick={() => handleDelete(doc.id, doc.titulo)}
-                  className="p-2 text-slate-300 hover:text-red-400 transition-all">
-                  <Trash2 size={16} />
+              ))}
+            </div>
+          </div>
+
+          {/* Input */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
+              ¿Qué tema quieres que aprenda la IA?
+            </label>
+            <textarea
+              value={keywords}
+              onChange={e => setKeywords(e.target.value)}
+              placeholder="Ejemplos: reforzamiento positivo, comunicación AAC, habilidades sociales TEA, regulación emocional TDAH..."
+              className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
+              rows={3}
+              disabled={aprendiendo}
+            />
+
+            {/* Sugerencias */}
+            <div>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">Temas sugeridos — toca para seleccionar:</p>
+              <div className="flex flex-wrap gap-1.5">
+                {temasSugeridos.map(tema => (
+                  <button key={tema} onClick={() => setKeywords(tema)} disabled={aprendiendo}
+                    className="text-[11px] bg-slate-50 hover:bg-violet-50 hover:text-violet-700 border border-slate-200 hover:border-violet-200 px-2.5 py-1 rounded-full transition">
+                    {tema}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Modo */}
+            <div className="flex gap-2">
+              {([['completo', '🔬 Completo', 'Más fuentes, más fragmentos, más rico'], ['rapido', '⚡ Rápido', 'Solo síntesis IA, más veloz']] as const).map(([m, label, desc]) => (
+                <button key={m} onClick={() => setModo(m)}
+                  className={`flex-1 p-3 rounded-xl border text-left transition ${modo === m ? 'bg-violet-600 text-white border-violet-600' : 'border-slate-200 text-slate-500 hover:border-violet-200'}`}>
+                  <p className="text-xs font-bold">{label}</p>
+                  <p className={`text-[10px] mt-0.5 ${modo === m ? 'text-violet-200' : 'text-slate-400'}`}>{desc}</p>
                 </button>
+              ))}
+            </div>
+
+            <button onClick={handleAprender} disabled={aprendiendo || !keywords.trim()}
+              className="w-full py-3.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl font-black flex items-center justify-center gap-2 text-sm transition shadow-md">
+              {aprendiendo
+                ? <><Loader2 size={16} className="animate-spin" /> Aprendiendo desde internet...</>
+                : <><Sparkles size={16} /> Aprender ahora</>}
+            </button>
+          </div>
+
+          {/* Log */}
+          {logAprender.length > 0 && (
+            <div className="bg-slate-900 rounded-2xl p-4 font-mono text-xs space-y-1.5">
+              <p className="text-slate-400 text-[10px] uppercase tracking-widest mb-2">Progreso en tiempo real</p>
+              {logAprender.map((line, i) => (
+                <p key={i} className={`${
+                  line.startsWith('✅') ? 'text-emerald-400' :
+                  line.startsWith('❌') ? 'text-red-400' :
+                  line.startsWith('⚠️') ? 'text-amber-400' :
+                  line.startsWith('🎉') ? 'text-violet-300 font-bold' :
+                  'text-slate-300'
+                }`}>{line}</p>
+              ))}
+              {aprendiendo && <p className="text-violet-400 animate-pulse">⟳ Procesando...</p>}
+            </div>
+          )}
+
+          {/* Resultado */}
+          {resultadoAprender && !aprendiendo && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle2 size={20} className="text-emerald-500" />
+                <span className="font-black text-emerald-800">¡Aprendizaje completado!</span>
               </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Modal: Agregar documento */}
-      {showForm && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-5">
-                <h3 className="font-black text-lg text-slate-800">Agregar a la base de conocimiento</h3>
-                <button onClick={() => setShowForm(false)} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
+              <div className="grid grid-cols-3 gap-3 mb-3">
+                {[
+                  { v: resultadoAprender.fuentes, l: 'Fuentes' },
+                  { v: resultadoAprender.documentos, l: 'Documentos' },
+                  { v: resultadoAprender.totalChunks, l: 'Fragmentos' },
+                ].map((s, i) => (
+                  <div key={i} className="bg-white rounded-xl p-3 text-center border border-emerald-100">
+                    <p className="text-xl font-black text-emerald-700">{s.v}</p>
+                    <p className="text-[11px] text-slate-500">{s.l}</p>
+                  </div>
+                ))}
               </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">Título *</label>
-                  <input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
-                    placeholder="ej: Principios de Conducta - Malott 8va Ed."
-                    className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400" />
+              <p className="text-xs text-emerald-700 bg-white rounded-xl px-3 py-2.5 border border-emerald-100">
+                🤖 ARIA y todos los agentes IA ya conocen sobre <strong>"{resultadoAprender.keywords}"</strong>. Prueba preguntarle a ARIA sobre este tema ahora.
+              </p>
+              <div className="mt-3">
+                <p className="text-[11px] font-bold text-emerald-700 mb-1.5">Términos aprendidos:</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(resultadoAprender.terminos || []).map((t: string, i: number) => (
+                    <span key={i} className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{t}</span>
+                  ))}
                 </div>
-                <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Tipo</label>
-                  <div className="flex flex-wrap gap-2">
-                    {Object.entries(tipoConfig).map(([k, v]) => (
-                      <button key={k} onClick={() => setForm(f => ({ ...f, tipo: k }))}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                          form.tipo === k ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-500 border-slate-200'
-                        }`}>
-                        {v.emoji} {v.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">Descripción</label>
-                  <input value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
-                    placeholder="Breve descripción del contenido"
-                    className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-violet-400" />
-                </div>
+              </div>
+            </div>
+          )}
 
-                {/* ── Selector de modo de entrada ── */}
-                <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Fuente del documento</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {modoConfig.map(m => (
-                      <button key={m.id} onClick={() => setInputMode(m.id)}
-                        className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center ${
-                          inputMode === m.id
-                            ? 'border-violet-500 bg-violet-50 text-violet-700'
-                            : 'border-slate-200 bg-white text-slate-400 hover:border-slate-300'
-                        }`}>
-                        <m.icon size={18} />
-                        <span className="text-xs font-black">{m.label}</span>
-                        <span className="text-[10px] leading-tight">{m.desc}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* ── Modo: Archivo ── */}
-                {inputMode === 'archivo' && (
-                  <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:border-violet-300 transition-all cursor-pointer"
-                    onClick={() => fileRef.current?.click()}>
-                    <input ref={fileRef} type="file" accept=".pdf,.txt,.md" className="hidden"
-                      onChange={e => setSelectedFile(e.target.files?.[0] || null)} />
-                    {selectedFile ? (
-                      <div className="flex items-center gap-3 justify-center">
-                        <FileText size={20} className="text-violet-500" />
-                        <span className="font-bold text-slate-700 text-sm">{selectedFile.name}</span>
-                        <button onClick={e => { e.stopPropagation(); setSelectedFile(null) }}
-                          className="text-slate-300 hover:text-red-400"><X size={14} /></button>
+          {/* Temas ya aprendidos */}
+          {docsAuto.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+              <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
+                Temas ya aprendidos por la IA ({docsAuto.length})
+              </p>
+              <div className="space-y-2">
+                {docsAuto.map(doc => (
+                  <div key={doc.id} className="flex items-center justify-between bg-violet-50 rounded-xl px-3 py-2 border border-violet-100">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-base">🧠</span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-slate-700 truncate">{doc.titulo.replace('[IA] ', '')}</p>
+                        <p className="text-[10px] text-slate-400">{doc.total_chunks || 0} fragmentos · {new Date(doc.created_at).toLocaleDateString('es-ES')}</p>
                       </div>
-                    ) : (
-                      <>
-                        <Upload size={24} className="text-slate-300 mx-auto mb-2" />
-                        <p className="font-bold text-slate-500 text-sm">Arrastra un PDF o haz clic</p>
-                        <p className="text-xs text-slate-300 mt-1">PDF, TXT o Markdown · Hasta 100MB</p>
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* ── Modo: URL ── */}
-                {inputMode === 'url' && (
-                  <div className="space-y-2">
-                    <div className="relative">
-                      <Link size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                      <input
-                        value={form.url}
-                        onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
-                        placeholder="https://drive.google.com/file/d/... o cualquier URL pública"
-                        className="w-full pl-9 pr-3 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-violet-400"
-                      />
                     </div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
-                      <p className="text-xs font-black text-blue-700 mb-1">📎 URLs compatibles</p>
-                      <ul className="text-xs text-blue-600 space-y-0.5">
-                        <li>• <strong>Google Drive:</strong> compartir → "Cualquier persona con el enlace"</li>
-                        <li>• <strong>Dropbox:</strong> usar enlace directo (dl=1)</li>
-                        <li>• <strong>Web pública:</strong> cualquier página HTML o PDF online</li>
-                        <li>• <strong>Archive.org, libgen, etc.</strong></li>
-                      </ul>
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                      {doc.procesado ? <CheckCircle2 size={13} className="text-emerald-500" /> : <Clock size={13} className="text-amber-400" />}
+                      <button onClick={() => handleDelete(doc.id)} className="p-1 text-slate-300 hover:text-red-400 transition">
+                        <Trash2 size={13} />
+                      </button>
                     </div>
                   </div>
-                )}
-
-                {/* ── Modo: Texto ── */}
-                {inputMode === 'texto' && (
-                  <textarea value={form.texto} onChange={e => setForm(f => ({ ...f, texto: e.target.value }))}
-                    rows={6} placeholder="Pega aquí el contenido del documento..."
-                    className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-violet-400" />
-                )}
-
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">
-                  <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700">El indexado puede tardar 2-5 minutos para libros largos. Puedes cerrar esta ventana — el proceso continúa en background.</p>
-                </div>
-              </div>
-              <div className="flex gap-3 mt-5">
-                <button onClick={() => setShowForm(false)}
-                  className="flex-1 py-3 text-slate-400 font-bold border-2 border-slate-100 rounded-xl">Cancelar</button>
-                <button onClick={handleUpload} disabled={uploading}
-                  className="flex-[2] py-3 bg-violet-600 text-white rounded-xl font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2">
-                  {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-                  {uploading ? (uploadProgress || 'Procesando...') : 'Subir e Indexar'}
-                </button>
+                ))}
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
-      {showInstrucciones && <InstruccionesModal onClose={() => setShowInstrucciones(false)} />}
+      {/* ══ TAB: BIBLIOTECA ══════════════════════════════════════════════════ */}
+      {tab === 'biblioteca' && (
+        <div className="space-y-4">
+          <button onClick={() => setShowForm(v => !v)}
+            className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 text-sm transition">
+            {showForm ? <><X size={16} /> Cancelar</> : <><Plus size={16} /> Agregar documento manualmente</>}
+          </button>
+
+          {showForm && (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
+              <p className="font-bold text-slate-700 text-sm">Agregar documento</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {([['archivo', '📎', 'Archivo PDF/TXT'], ['url', '🔗', 'URL'], ['texto', '📝', 'Pegar texto'], ['buscar', '🔍', 'Buscar libro']] as const).map(([m, icon, label]) => (
+                  <button key={m} onClick={() => { setInputMode(m); setLibroSeleccionado(null) }}
+                    className={`p-2.5 rounded-xl border text-xs font-bold transition text-center ${inputMode === m ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-violet-200'}`}>
+                    <span className="text-lg block mb-0.5">{icon}</span>{label}
+                  </button>
+                ))}
+              </div>
+
+              <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                placeholder="Título del documento *"
+                value={form.titulo} onChange={e => setForm(p => ({ ...p, titulo: e.target.value }))} />
+
+              <div className="flex gap-2">
+                {['libro', 'articulo', 'guia', 'protocolo'].map(t => (
+                  <button key={t} onClick={() => setForm(p => ({ ...p, tipo: t }))}
+                    className={`flex-1 py-1.5 text-xs rounded-lg border font-bold transition capitalize ${form.tipo === t ? 'bg-slate-800 text-white border-slate-800' : 'border-slate-200 text-slate-500'}`}>{t}</button>
+                ))}
+              </div>
+
+              {inputMode === 'archivo' && (
+                <div onClick={() => fileRef.current?.click()}
+                  className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer hover:border-violet-300 hover:bg-violet-50 transition">
+                  <Upload size={20} className="text-slate-400 mx-auto mb-2" />
+                  {selectedFile
+                    ? <p className="text-sm font-semibold text-slate-700">{selectedFile.name}</p>
+                    : <p className="text-sm text-slate-400">Click para seleccionar PDF o TXT</p>}
+                  <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt,.doc,.docx"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) { setSelectedFile(f); if (!form.titulo) setForm(p => ({ ...p, titulo: f.name.replace(/\.[^.]+$/, '') })) } }} />
+                </div>
+              )}
+
+              {inputMode === 'url' && (
+                <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                  placeholder="https://drive.google.com/..."
+                  value={form.url} onChange={e => setForm(p => ({ ...p, url: e.target.value }))} />
+              )}
+
+              {inputMode === 'texto' && (
+                <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"
+                  placeholder="Pega aquí el contenido del documento..."
+                  rows={6} value={form.texto} onChange={e => setForm(p => ({ ...p, texto: e.target.value }))} />
+              )}
+
+              {inputMode === 'buscar' && (
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <input className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                      placeholder="Buscar libro en Archive.org..." value={busqueda}
+                      onChange={e => setBusqueda(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && buscarLibros()} />
+                    <button onClick={buscarLibros} disabled={buscando}
+                      className="px-4 bg-violet-600 text-white rounded-xl text-sm font-bold disabled:opacity-50">
+                      {buscando ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+                    </button>
+                  </div>
+                  <div className="space-y-1 max-h-48 overflow-y-auto">
+                    {resultadosBusqueda.map(libro => (
+                      <div key={libro.id} onClick={() => { setLibroSeleccionado(libro); setForm(p => ({ ...p, titulo: libro.titulo })) }}
+                        className={`p-3 rounded-xl border cursor-pointer transition ${libroSeleccionado?.id === libro.id ? 'bg-violet-50 border-violet-300' : 'border-slate-200 hover:border-violet-200'}`}>
+                        <p className="font-semibold text-slate-800 text-xs truncate">{libro.titulo}</p>
+                        <p className="text-[10px] text-slate-500">{libro.autor} · {libro.fuente} · {libro.formato}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"
+                placeholder="Descripción (opcional)" rows={2}
+                value={form.descripcion} onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))} />
+
+              <button onClick={handleUpload} disabled={uploading}
+                className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50">
+                {uploading ? <><Loader2 size={14} className="animate-spin" /> {uploadProgress || 'Procesando...'}</> : <><Save size={14} /> Indexar en el Cerebro</>}
+              </button>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-violet-400" /></div>
+          ) : documentos.length === 0 ? (
+            <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-10 text-center">
+              <Brain size={32} className="text-slate-200 mx-auto mb-3" />
+              <p className="text-slate-400 font-semibold">Biblioteca vacía</p>
+              <p className="text-slate-400 text-sm mt-1">Usa "Aprender de Internet" para empezar</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {docsManual.length > 0 && <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1">Subidos manualmente ({docsManual.length})</p>}
+              {docsManual.map(doc => <DocCard key={doc.id} doc={doc} onDelete={handleDelete} />)}
+              {docsAuto.length > 0 && <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1 pt-2">Auto-aprendidos ({docsAuto.length})</p>}
+              {docsAuto.map(doc => <DocCard key={doc.id} doc={doc} onDelete={handleDelete} />)}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }
 
-function InstruccionesModal({ onClose }: { onClose: () => void }) {
-  const toast = useToast()
-  const [instrucciones, setInstrucciones] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [nueva, setNueva] = useState({ categoria: 'protocolo', titulo: '', contenido: '', prioridad: 5 })
-
-  useEffect(() => {
-    fetch('/api/knowledge/instrucciones')
-      .then(r => r.json())
-      .then(d => setInstrucciones(d.data || []))
-      .catch(() => {})
-      .finally(() => setLoading(false))
-  }, [])
-
-  const handleSave = async () => {
-    if (!nueva.titulo || !nueva.contenido) { toast.error('Título y contenido son requeridos'); return }
-    setSaving(true)
-    try {
-      await fetch('/api/knowledge/instrucciones', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nueva),
-      })
-      toast.success('Instrucción guardada')
-      setNueva({ categoria: 'protocolo', titulo: '', contenido: '', prioridad: 5 })
-      const res = await fetch('/api/knowledge/instrucciones')
-      const json = await res.json()
-      setInstrucciones(json.data || [])
-    } catch { toast.error('Error guardando') }
-    finally { setSaving(false) }
-  }
-
+function DocCard({ doc, onDelete }: { doc: any; onDelete: (id: string) => void }) {
+  const isAuto = doc.source_url?.startsWith('auto:')
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-5">
-            <div>
-              <h3 className="font-black text-lg text-slate-800">⚡ Instrucciones del Centro</h3>
-              <p className="text-xs text-slate-400 mt-0.5">ARIA las incluye siempre en su contexto</p>
-            </div>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
-          </div>
-
-          {loading ? <Loader2 className="animate-spin mx-auto" size={20} /> : (
-            <div className="space-y-2 mb-5">
-              {instrucciones.map((inst: any) => (
-                <div key={inst.id} className="bg-slate-50 rounded-xl p-3 border border-slate-100">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-black px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full">{inst.categoria}</span>
-                    <span className="font-bold text-slate-700 text-sm">{inst.titulo}</span>
-                    <span className="ml-auto text-[10px] text-slate-300">P: {inst.prioridad}</span>
-                  </div>
-                  <p className="text-xs text-slate-500 leading-relaxed">{inst.contenido}</p>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="border-t border-slate-100 pt-4 space-y-3">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">+ Nueva instrucción</p>
-            <div className="grid grid-cols-2 gap-3">
-              <select value={nueva.categoria} onChange={e => setNueva(n => ({ ...n, categoria: e.target.value }))}
-                className="p-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-violet-400">
-                <option value="protocolo">Protocolo</option>
-                <option value="estilo">Estilo de comunicación</option>
-                <option value="terminologia">Terminología</option>
-                <option value="regla">Regla clínica</option>
-              </select>
-              <input type="number" min="1" max="10" value={nueva.prioridad}
-                onChange={e => setNueva(n => ({ ...n, prioridad: Number(e.target.value) }))}
-                className="p-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-violet-400"
-                placeholder="Prioridad 1-10" />
-            </div>
-            <input value={nueva.titulo} onChange={e => setNueva(n => ({ ...n, titulo: e.target.value }))}
-              placeholder="ej: Criterio de dominio estándar"
-              className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400" />
-            <textarea value={nueva.contenido} onChange={e => setNueva(n => ({ ...n, contenido: e.target.value }))}
-              rows={3} placeholder="Instrucción que ARIA debe seguir siempre..."
-              className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-violet-400" />
-            <button onClick={handleSave} disabled={saving}
-              className="w-full py-3 bg-violet-600 text-white rounded-xl font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2">
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-              Guardar instrucción
-            </button>
+    <div className="bg-white rounded-xl border border-slate-100 p-3.5 flex items-center justify-between gap-3 hover:border-slate-200 transition">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isAuto ? 'bg-violet-100' : 'bg-slate-100'}`}>
+          {isAuto ? <Sparkles size={16} className="text-violet-600" /> : <FileText size={16} className="text-slate-500" />}
+        </div>
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-slate-800 truncate">{doc.titulo.replace('[IA] ', '')}</p>
+          <div className="flex items-center gap-2 mt-0.5">
+            <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md ${isAuto ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-500'}`}>
+              {isAuto ? 'auto' : doc.tipo}
+            </span>
+            <span className="text-[10px] text-slate-400">{doc.total_chunks || 0} fragmentos</span>
+            <span className="text-[10px] text-slate-400">{new Date(doc.created_at).toLocaleDateString('es-ES')}</span>
           </div>
         </div>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {doc.procesado
+          ? <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold"><CheckCircle2 size={12} />Listo</span>
+          : <span className="flex items-center gap-1 text-[10px] text-amber-500 font-bold"><Clock size={12} />Pendiente</span>}
+        <button onClick={() => onDelete(doc.id)} className="p-1.5 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition">
+          <Trash2 size={14} />
+        </button>
       </div>
     </div>
   )

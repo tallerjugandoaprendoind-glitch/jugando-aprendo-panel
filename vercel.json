@@ -35,6 +35,9 @@
     },
     "app/api/knowledge/index/route.ts": {
       "maxDuration": 300
+    },
+    "app/api/knowledge/aprender/route.ts": {
+      "maxDuration": 120
     }
   }
 }
