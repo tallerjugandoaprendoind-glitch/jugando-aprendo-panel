@@ -322,7 +322,8 @@ export default function KnowledgeBaseView() {
               ))}
             </div>
 
-          </>}
+          </>
+          }
 
           {modoFuente === 'url' && (
             <div className="space-y-3">
