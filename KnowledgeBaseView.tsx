@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase as supabasePublic } from '@/lib/supabase'
 import {
-  Upload, BookOpen, Trash2, CheckCircle2, Clock, Loader2,
+  Upload, Trash2, CheckCircle2, Clock, Loader2,
   FileText, Plus, X, Brain, Save, Search,
   Sparkles, Cpu, BookMarked, RefreshCw,
 } from 'lucide-react'
@@ -17,7 +17,6 @@ export default function KnowledgeBaseView() {
   const [documentos, setDocumentos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  // ─── MODO APRENDER ────────────────────────────────────────────────────────
   const [keywords, setKeywords] = useState('')
   const [modo, setModo] = useState<'completo' | 'rapido'>('completo')
   const [aprendiendo, setAprendiendo] = useState(false)
@@ -25,6 +24,7 @@ export default function KnowledgeBaseView() {
   const [resultadoAprender, setResultadoAprender] = useState<any>(null)
   const [urlAprender, setUrlAprender] = useState('')
   const [modoFuente, setModoFuente] = useState<'keywords' | 'url'>('keywords')
+
   const temasSugeridos = [
     'Reforzamiento positivo ABA',
     'Comunicación aumentativa AAC TEA',
@@ -40,7 +40,6 @@ export default function KnowledgeBaseView() {
     'Integración sensorial TEA',
   ]
 
-  // ─── MODO SUBIR MANUAL ────────────────────────────────────────────────────
   const [inputMode, setInputMode] = useState<InputMode>('archivo')
   const [uploading, setUploading] = useState(false)
   const [showForm, setShowForm] = useState(false)
@@ -65,13 +64,11 @@ export default function KnowledgeBaseView() {
 
   useEffect(() => { loadDocs() }, [])
 
-  // ─── Aprender desde internet ───────────────────────────────────────────────
   const handleAprender = async () => {
     if (!keywords.trim()) { toast.error('Escribe palabras clave'); return }
     setAprendiendo(true)
     setLogAprender([`🚀 Iniciando aprendizaje: "${keywords}"...`])
     setResultadoAprender(null)
-
     try {
       const res = await fetch('/api/knowledge/aprender', {
         method: 'POST',
@@ -87,12 +84,9 @@ export default function KnowledgeBaseView() {
     } catch (e: any) {
       toast.error(e.message)
       setLogAprender(prev => [...prev, `❌ Error: ${e.message}`])
-    } finally {
-      setAprendiendo(false)
-    }
+    } finally { setAprendiendo(false) }
   }
 
-  // ─── Reintentar indexado de doc fallido ───────────────────────────────────
   const handleRetry = async (id: string) => {
     try {
       const res = await fetch('/api/knowledge/ingest', {
@@ -106,19 +100,19 @@ export default function KnowledgeBaseView() {
     } catch (e: any) { toast.error(e.message) }
   }
 
-  // ─── Aprender desde URL ────────────────────────────────────────────────────
   const handleAprenderUrl = async () => {
     if (!urlAprender.trim()) { toast.error('Ingresa una URL'); return }
     setAprendiendo(true)
     setLogAprender([`🌐 Leyendo URL: "${urlAprender}"...`])
     setResultadoAprender(null)
     try {
-      // Primero ingestar la URL directamente
+      let hostname = urlAprender
+      try { hostname = new URL(urlAprender).hostname } catch { /* keep raw */ }
       const res = await fetch('/api/knowledge/ingest', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          titulo: `Página web: ${new URL(urlAprender).hostname}`,
+        body: JSON.stringify({
+          titulo: `Página web: ${hostname}`,
           tipo: 'articulo',
           sourceUrl: urlAprender,
         }),
@@ -140,7 +134,6 @@ export default function KnowledgeBaseView() {
     } finally { setAprendiendo(false) }
   }
 
-  // ─── Buscar libros online ──────────────────────────────────────────────────
   const buscarLibros = async () => {
     if (!busqueda.trim()) return
     setBuscando(true); setResultadosBusqueda([]); setLibroSeleccionado(null)
@@ -154,19 +147,15 @@ export default function KnowledgeBaseView() {
     finally { setBuscando(false) }
   }
 
-  // ─── Upload manual ────────────────────────────────────────────────────────
   const handleUpload = async () => {
     if (!form.titulo) { toast.error('El título es requerido'); return }
     if (inputMode === 'archivo' && !selectedFile) { toast.error('Selecciona un archivo'); return }
     if (inputMode === 'url' && !form.url.trim()) { toast.error('Ingresa una URL válida'); return }
     if (inputMode === 'texto' && !form.texto.trim()) { toast.error('Pega el contenido'); return }
     if (inputMode === 'buscar' && !libroSeleccionado) { toast.error('Selecciona un libro'); return }
-
     setUploading(true)
     try {
-      let body: Record<string, any> = {
-        titulo: form.titulo, tipo: form.tipo, descripcion: form.descripcion,
-      }
+      const body: Record<string, any> = { titulo: form.titulo, tipo: form.tipo, descripcion: form.descripcion }
       if (inputMode === 'archivo' && selectedFile) {
         setUploadProgress('Subiendo archivo...')
         const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
@@ -175,7 +164,8 @@ export default function KnowledgeBaseView() {
         if (upErr) throw new Error(`Upload error: ${upErr.message}`)
         const { data: signed } = await supabasePublic.storage
           .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
-        body.storageUrl = signed?.signedUrl; body.fileName = selectedFile.name
+        body.storageUrl = signed?.signedUrl
+        body.fileName = selectedFile.name
       } else if (inputMode === 'url') {
         body.sourceUrl = form.url.trim()
       } else if (inputMode === 'texto') {
@@ -217,7 +207,7 @@ export default function KnowledgeBaseView() {
   return (
     <div className="space-y-4 md:space-y-6 max-w-5xl mx-auto">
 
-      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      {/* Header */}
       <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl md:rounded-3xl p-5 md:p-7 text-white shadow-xl">
         <div className="flex items-start gap-4">
           <div className="bg-white/20 rounded-2xl p-3">
@@ -244,21 +234,19 @@ export default function KnowledgeBaseView() {
         </div>
       </div>
 
-      {/* ── Tabs ───────────────────────────────────────────────────────────── */}
+      {/* Tabs */}
       <div className="flex bg-white rounded-2xl p-1 border border-slate-100 shadow-sm gap-1">
         <button onClick={() => setTab('aprender')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all
-            ${tab === 'aprender' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'aprender' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
           <Sparkles size={15} /> Aprender de Internet
         </button>
         <button onClick={() => setTab('biblioteca')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all
-            ${tab === 'biblioteca' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'biblioteca' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
           <BookMarked size={15} /> Biblioteca ({documentos.length})
         </button>
       </div>
 
-      {/* ══ TAB: APRENDER ═══════════════════════════════════════════════════ */}
+      {/* ══ TAB: APRENDER ══ */}
       {tab === 'aprender' && (
         <div className="space-y-4">
 
@@ -284,69 +272,85 @@ export default function KnowledgeBaseView() {
             </div>
           </div>
 
-          {/* Input */}
+          {/* Input box */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
-              ¿Qué tema quieres que aprenda la IA?
-            </label>
-            <textarea
-              value={keywords}
-              onChange={e => setKeywords(e.target.value)}
-              placeholder="Ejemplos: reforzamiento positivo, comunicación AAC, habilidades sociales TEA, regulación emocional TDAH..."
-              className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
-              rows={3}
-              disabled={aprendiendo}
-            />
 
-            {/* Sugerencias */}
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">Temas sugeridos — toca para seleccionar:</p>
-              <div className="flex flex-wrap gap-1.5">
-                {temasSugeridos.map(tema => (
-                  <button key={tema} onClick={() => setKeywords(tema)} disabled={aprendiendo}
-                    className="text-[11px] bg-slate-50 hover:bg-violet-50 hover:text-violet-700 border border-slate-200 hover:border-violet-200 px-2.5 py-1 rounded-full transition">
-                    {tema}
-                  </button>
-                ))}
+            {/* Selector keywords vs URL */}
+            <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
+              <button onClick={() => setModoFuente('keywords')}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'keywords' ? 'bg-white shadow text-violet-700' : 'text-slate-500'}`}>
+                🔍 Palabras clave
+              </button>
+              <button onClick={() => setModoFuente('url')}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'url' ? 'bg-white shadow text-violet-700' : 'text-slate-500'}`}>
+                🌐 URL de página web
+              </button>
+            </div>
+
+            {/* Keywords section */}
+            {modoFuente === 'keywords' && (
+              <div className="space-y-4">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
+                  ¿Qué tema quieres que aprenda la IA?
+                </label>
+                <textarea
+                  value={keywords}
+                  onChange={e => setKeywords(e.target.value)}
+                  placeholder="Ejemplos: reforzamiento positivo, comunicación AAC, habilidades sociales TEA..."
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  rows={3}
+                  disabled={aprendiendo}
+                />
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">Temas sugeridos:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {temasSugeridos.map(tema => (
+                      <button key={tema} onClick={() => setKeywords(tema)} disabled={aprendiendo}
+                        className="text-[11px] bg-slate-50 hover:bg-violet-50 hover:text-violet-700 border border-slate-200 hover:border-violet-200 px-2.5 py-1 rounded-full transition">
+                        {tema}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {(['completo', 'rapido'] as const).map(m => (
+                    <button key={m} onClick={() => setModo(m)}
+                      className={`flex-1 p-3 rounded-xl border text-left transition ${modo === m ? 'bg-violet-600 text-white border-violet-600' : 'border-slate-200 text-slate-500 hover:border-violet-200'}`}>
+                      <p className="text-xs font-bold">{m === 'completo' ? '🔬 Completo' : '⚡ Rápido'}</p>
+                      <p className={`text-[10px] mt-0.5 ${modo === m ? 'text-violet-200' : 'text-slate-400'}`}>
+                        {m === 'completo' ? 'Más fuentes, más fragmentos, más rico' : 'Solo síntesis IA, más veloz'}
+                      </p>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Modo */}
-            <div className="flex gap-2">
-              {([['completo', '🔬 Completo', 'Más fuentes, más fragmentos, más rico'], ['rapido', '⚡ Rápido', 'Solo síntesis IA, más veloz']] as const).map(([m, label, desc]) => (
-                <button key={m} onClick={() => setModo(m)}
-                  className={`flex-1 p-3 rounded-xl border text-left transition ${modo === m ? 'bg-violet-600 text-white border-violet-600' : 'border-slate-200 text-slate-500 hover:border-violet-200'}`}>
-                  <p className="text-xs font-bold">{label}</p>
-                  <p className={`text-[10px] mt-0.5 ${modo === m ? 'text-violet-200' : 'text-slate-400'}`}>{desc}</p>
-                </button>
-              ))}
-            </div>
-
-          </>
-          }
-
-          {modoFuente === 'url' && (
-            <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
-                URL de página web a aprender
-              </label>
-              <input
-                value={urlAprender}
-                onChange={e => setUrlAprender(e.target.value)}
-                placeholder="https://ejemplo.com/articulo-sobre-aba"
-                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
-                disabled={aprendiendo}
-              />
-              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                <p className="text-xs text-blue-700 font-bold mb-1">¿Qué tipo de URLs funcionan?</p>
-                <p className="text-[11px] text-blue-600">✅ Artículos y blogs públicos · Wikipedia · Documentos PDF en internet</p>
-                <p className="text-[11px] text-blue-600">✅ Páginas de organizaciones ABA (BACB, ABAI, etc.)</p>
-                <p className="text-[11px] text-slate-400">❌ Páginas que requieren login · Contenido con JavaScript dinámico</p>
+            {/* URL section */}
+            {modoFuente === 'url' && (
+              <div className="space-y-3">
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
+                  URL de página web a aprender
+                </label>
+                <input
+                  value={urlAprender}
+                  onChange={e => setUrlAprender(e.target.value)}
+                  placeholder="https://ejemplo.com/articulo-sobre-aba"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
+                  disabled={aprendiendo}
+                />
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
+                  <p className="text-xs text-blue-700 font-bold mb-1">¿Qué tipo de URLs funcionan?</p>
+                  <p className="text-[11px] text-blue-600">✅ Artículos y blogs públicos · Wikipedia · PDFs en internet</p>
+                  <p className="text-[11px] text-blue-600">✅ Páginas de organizaciones ABA (BACB, ABAI, etc.)</p>
+                  <p className="text-[11px] text-slate-400">❌ Páginas que requieren login · JavaScript dinámico</p>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-            <button onClick={modoFuente === 'url' ? handleAprenderUrl : handleAprender}
+            {/* Botón aprender */}
+            <button
+              onClick={modoFuente === 'url' ? handleAprenderUrl : handleAprender}
               disabled={aprendiendo || (modoFuente === 'keywords' ? !keywords.trim() : !urlAprender.trim())}
               className="w-full py-3.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl font-black flex items-center justify-center gap-2 text-sm transition shadow-md">
               {aprendiendo
@@ -360,13 +364,13 @@ export default function KnowledgeBaseView() {
             <div className="bg-slate-900 rounded-2xl p-4 font-mono text-xs space-y-1.5">
               <p className="text-slate-400 text-[10px] uppercase tracking-widest mb-2">Progreso en tiempo real</p>
               {logAprender.map((line, i) => (
-                <p key={i} className={`${
+                <p key={i} className={
                   line.startsWith('✅') ? 'text-emerald-400' :
                   line.startsWith('❌') ? 'text-red-400' :
                   line.startsWith('⚠️') ? 'text-amber-400' :
                   line.startsWith('🎉') ? 'text-violet-300 font-bold' :
                   'text-slate-300'
-                }`}>{line}</p>
+                }>{line}</p>
               ))}
               {aprendiendo && <p className="text-violet-400 animate-pulse">⟳ Procesando...</p>}
             </div>
@@ -392,16 +396,18 @@ export default function KnowledgeBaseView() {
                 ))}
               </div>
               <p className="text-xs text-emerald-700 bg-white rounded-xl px-3 py-2.5 border border-emerald-100">
-                🤖 ARIA y todos los agentes IA ya conocen sobre <strong>"{resultadoAprender.keywords}"</strong>. Prueba preguntarle a ARIA sobre este tema ahora.
+                🤖 ARIA ya conoce sobre <strong>"{resultadoAprender.keywords}"</strong>. Prueba preguntarle ahora.
               </p>
-              <div className="mt-3">
-                <p className="text-[11px] font-bold text-emerald-700 mb-1.5">Términos aprendidos:</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {(resultadoAprender.terminos || []).map((t: string, i: number) => (
-                    <span key={i} className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{t}</span>
-                  ))}
+              {resultadoAprender.terminos?.length > 0 && (
+                <div className="mt-3">
+                  <p className="text-[11px] font-bold text-emerald-700 mb-1.5">Términos aprendidos:</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {resultadoAprender.terminos.map((t: string, i: number) => (
+                      <span key={i} className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{t}</span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
@@ -435,7 +441,7 @@ export default function KnowledgeBaseView() {
         </div>
       )}
 
-      {/* ══ TAB: BIBLIOTECA ══════════════════════════════════════════════════ */}
+      {/* ══ TAB: BIBLIOTECA ══ */}
       {tab === 'biblioteca' && (
         <div className="space-y-4">
           <button onClick={() => setShowForm(v => !v)}
@@ -447,12 +453,16 @@ export default function KnowledgeBaseView() {
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
               <p className="font-bold text-slate-700 text-sm">Agregar documento</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {([['archivo', '📎', 'Archivo PDF/TXT'], ['url', '🔗', 'URL'], ['texto', '📝', 'Pegar texto'], ['buscar', '🔍', 'Buscar libro']] as const).map(([m, icon, label]) => (
-                  <button key={m} onClick={() => { setInputMode(m); setLibroSeleccionado(null) }}
-                    className={`p-2.5 rounded-xl border text-xs font-bold transition text-center ${inputMode === m ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-violet-200'}`}>
-                    <span className="text-lg block mb-0.5">{icon}</span>{label}
-                  </button>
-                ))}
+                {(['archivo', 'url', 'texto', 'buscar'] as const).map(m => {
+                  const icons: Record<string, string> = { archivo: '📎', url: '🔗', texto: '📝', buscar: '🔍' }
+                  const labels: Record<string, string> = { archivo: 'Archivo PDF/TXT', url: 'URL', texto: 'Pegar texto', buscar: 'Buscar libro' }
+                  return (
+                    <button key={m} onClick={() => { setInputMode(m); setLibroSeleccionado(null) }}
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition text-center ${inputMode === m ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-violet-200'}`}>
+                      <span className="text-lg block mb-0.5">{icons[m]}</span>{labels[m]}
+                    </button>
+                  )
+                })}
               </div>
 
               <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
@@ -462,7 +472,9 @@ export default function KnowledgeBaseView() {
               <div className="flex gap-2">
                 {['libro', 'articulo', 'guia', 'protocolo'].map(t => (
                   <button key={t} onClick={() => setForm(p => ({ ...p, tipo: t }))}
-                    className={`flex-1 py-1.5 text-xs rounded-lg border font-bold transition capitalize ${form.tipo === t ? 'bg-slate-800 text-white border-slate-800' : 'border-slate-200 text-slate-500'}`}>{t}</button>
+                    className={`flex-1 py-1.5 text-xs rounded-lg border font-bold transition capitalize ${form.tipo === t ? 'bg-slate-800 text-white border-slate-800' : 'border-slate-200 text-slate-500'}`}>
+                    {t}
+                  </button>
                 ))}
               </div>
 
@@ -474,7 +486,10 @@ export default function KnowledgeBaseView() {
                     ? <p className="text-sm font-semibold text-slate-700">{selectedFile.name}</p>
                     : <p className="text-sm text-slate-400">Click para seleccionar PDF o TXT</p>}
                   <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt,.doc,.docx"
-                    onChange={e => { const f = e.target.files?.[0]; if (f) { setSelectedFile(f); if (!form.titulo) setForm(p => ({ ...p, titulo: f.name.replace(/\.[^.]+$/, '') })) } }} />
+                    onChange={e => {
+                      const f = e.target.files?.[0]
+                      if (f) { setSelectedFile(f); if (!form.titulo) setForm(p => ({ ...p, titulo: f.name.replace(/\.[^.]+$/, '') })) }
+                    }} />
                 </div>
               )}
 
@@ -504,7 +519,8 @@ export default function KnowledgeBaseView() {
                   </div>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
                     {resultadosBusqueda.map(libro => (
-                      <div key={libro.id} onClick={() => { setLibroSeleccionado(libro); setForm(p => ({ ...p, titulo: libro.titulo })) }}
+                      <div key={libro.id}
+                        onClick={() => { setLibroSeleccionado(libro); setForm(p => ({ ...p, titulo: libro.titulo })) }}
                         className={`p-3 rounded-xl border cursor-pointer transition ${libroSeleccionado?.id === libro.id ? 'bg-violet-50 border-violet-300' : 'border-slate-200 hover:border-violet-200'}`}>
                         <p className="font-semibold text-slate-800 text-xs truncate">{libro.titulo}</p>
                         <p className="text-[10px] text-slate-500">{libro.autor} · {libro.fuente} · {libro.formato}</p>
@@ -520,7 +536,9 @@ export default function KnowledgeBaseView() {
 
               <button onClick={handleUpload} disabled={uploading}
                 className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50">
-                {uploading ? <><Loader2 size={14} className="animate-spin" /> {uploadProgress || 'Procesando...'}</> : <><Save size={14} /> Indexar en el Cerebro</>}
+                {uploading
+                  ? <><Loader2 size={14} className="animate-spin" /> {uploadProgress || 'Procesando...'}</>
+                  : <><Save size={14} /> Indexar en el Cerebro</>}
               </button>
             </div>
           )}
@@ -535,10 +553,22 @@ export default function KnowledgeBaseView() {
             </div>
           ) : (
             <div className="space-y-2">
-              {docsManual.length > 0 && <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1">Subidos manualmente ({docsManual.length})</p>}
-              {docsManual.map(doc => <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} />)}
-              {docsAuto.length > 0 && <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1 pt-2">Auto-aprendidos ({docsAuto.length})</p>}
-              {docsAuto.map(doc => <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} />)}
+              {docsManual.length > 0 && (
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1">
+                  Subidos manualmente ({docsManual.length})
+                </p>
+              )}
+              {docsManual.map(doc => (
+                <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} />
+              ))}
+              {docsAuto.length > 0 && (
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1 pt-2">
+                  Auto-aprendidos ({docsAuto.length})
+                </p>
+              )}
+              {docsAuto.map(doc => (
+                <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} />
+              ))}
             </div>
           )}
         </div>
@@ -547,13 +577,19 @@ export default function KnowledgeBaseView() {
   )
 }
 
-function DocCard({ doc, onDelete, onRetry }: { doc: any; onDelete: (id: string) => void; onRetry?: (id: string) => void }) {
+function DocCard({ doc, onDelete, onRetry }: {
+  doc: any
+  onDelete: (id: string) => void
+  onRetry?: (id: string) => void
+}) {
   const isAuto = doc.source_url?.startsWith('auto:')
   return (
     <div className="bg-white rounded-xl border border-slate-100 p-3.5 flex items-center justify-between gap-3 hover:border-slate-200 transition">
       <div className="flex items-center gap-3 min-w-0">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isAuto ? 'bg-violet-100' : 'bg-slate-100'}`}>
-          {isAuto ? <Sparkles size={16} className="text-violet-600" /> : <FileText size={16} className="text-slate-500" />}
+          {isAuto
+            ? <Sparkles size={16} className="text-violet-600" />
+            : <FileText size={16} className="text-slate-500" />}
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-slate-800 truncate">{doc.titulo.replace('[IA] ', '')}</p>
@@ -567,12 +603,22 @@ function DocCard({ doc, onDelete, onRetry }: { doc: any; onDelete: (id: string) 
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        {doc.procesado && doc.total_chunks > 0
-          ? <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold"><CheckCircle2 size={12} />Listo</span>
-          : doc.procesado && doc.total_chunks === 0
-            ? <button onClick={() => onRetry?.(doc.id)} className="flex items-center gap-1 text-[10px] text-red-500 font-bold hover:underline"><RefreshCw size={11} />Re-indexar</button>
-            : <span className="flex items-center gap-1 text-[10px] text-amber-500 font-bold"><Clock size={12} />Pendiente</span>}
-        <button onClick={() => onDelete(doc.id)} className="p-1.5 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition">
+        {doc.procesado && doc.total_chunks > 0 ? (
+          <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
+            <CheckCircle2 size={12} />Listo
+          </span>
+        ) : doc.procesado && doc.total_chunks === 0 ? (
+          <button onClick={() => onRetry?.(doc.id)}
+            className="flex items-center gap-1 text-[10px] text-red-500 font-bold hover:underline">
+            <RefreshCw size={11} />Re-indexar
+          </button>
+        ) : (
+          <span className="flex items-center gap-1 text-[10px] text-amber-500 font-bold">
+            <Clock size={12} />Pendiente
+          </span>
+        )}
+        <button onClick={() => onDelete(doc.id)}
+          className="p-1.5 text-slate-300 hover:text-red-400 hover:bg-red-50 rounded-lg transition">
           <Trash2 size={14} />
         </button>
       </div>
