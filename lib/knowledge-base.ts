@@ -18,13 +18,13 @@ function getAI() {
   return new GoogleGenAI({ apiKey })
 }
 
-// ── Generar embedding — FIXED: "content" singular, no "contents" plural ──────
+// ── Generar embedding ─────────────────────────────────────────────────────────
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
     const ai = getAI()
     const response = await ai.models.embedContent({
       model: EMBEDDING_MODEL,
-      content: text.slice(0, 8000),  // ← FIXED: "content" no "contents"
+      contents: text.slice(0, 8000),
     })
     // SDK v1.41 response shape: { embeddings: [{ values: number[] }] }
     const vals = (response as any).embeddings?.[0]?.values
