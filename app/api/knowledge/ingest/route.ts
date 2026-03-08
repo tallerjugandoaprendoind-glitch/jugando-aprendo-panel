@@ -83,15 +83,24 @@ export async function POST(request: NextRequest) {
 
     const documentId = docRecord.id
 
-    // 2. Responder inmediatamente al cliente (el indexado puede tardar)
-    // Procesamos en background usando waitUntil o simplemente async
-    processAndIndex(documentId, { storageUrl, fileName, sourceUrl, texto, titulo, tipo })
-      .catch(err => console.error('[ingest] Error indexando en background:', err))
+    // 2. Procesar de forma SÍNCRONA (maxDuration: 300s en vercel.json)
+    // NO usar fire-and-forget: Vercel mata el proceso al enviar la respuesta
+    const result = await processAndIndex(documentId, { storageUrl, fileName, sourceUrl, texto, titulo, tipo })
+
+    if (!result.success) {
+      return NextResponse.json({
+        success: false,
+        documentId,
+        error: result.error || 'El indexado falló',
+        chunks: 0,
+      }, { status: 500 })
+    }
 
     return NextResponse.json({
       success: true,
       documentId,
-      message: 'Documento recibido. El indexado comenzará en unos segundos.',
+      chunks: result.chunks,
+      message: `Documento indexado correctamente (${result.chunks} fragmentos).`,
     })
 
   } catch (error: any) {
@@ -111,7 +120,7 @@ async function processAndIndex(
     titulo: string
     tipo: string
   }
-) {
+): Promise<{ success: boolean; chunks: number; error?: string }> {
   try {
     let fullText = ''
 
@@ -134,8 +143,9 @@ async function processAndIndex(
     }
 
     if (!fullText || fullText.trim().length < 30) {
-      await markFailed(documentId, 'No se pudo extraer texto del documento. Verifica que el archivo no esté protegido.')
-      return
+      const errMsg = 'No se pudo extraer texto del documento. Verifica que el archivo no esté protegido.'
+      await markFailed(documentId, errMsg)
+      return { success: false, chunks: 0, error: errMsg }
     }
 
     console.log(`[ingest] Texto extraído: ${fullText.length} caracteres. Indexando...`)
@@ -153,13 +163,16 @@ async function processAndIndex(
     if (!result.success) {
       await markFailed(documentId, result.error || 'El indexado falló — verifica GEMINI_API_KEY')
       console.error(`[ingest] Falló indexado doc ${documentId}:`, result.error)
-    } else {
-      console.log(`[ingest] ✅ Doc ${documentId} indexado: ${result.chunks} chunks`)
+      return { success: false, chunks: 0, error: result.error }
     }
+
+    console.log(`[ingest] ✅ Doc ${documentId} indexado: ${result.chunks} chunks`)
+    return { success: true, chunks: result.chunks }
 
   } catch (error: any) {
     console.error(`[ingest] Error procesando ${documentId}:`, error)
     await markFailed(documentId, error.message)
+    return { success: false, chunks: 0, error: error.message }
   }
 }
 

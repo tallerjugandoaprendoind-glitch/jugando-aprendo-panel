@@ -174,14 +174,15 @@ export default function KnowledgeBaseView() {
         body.sourceUrl = libroSeleccionado.url
         if (!form.titulo) body.titulo = libroSeleccionado.titulo
       }
-      setUploadProgress('Procesando e indexando...')
+      setUploadProgress('Procesando e indexando... (puede tardar 1-2 min para PDFs grandes)')
       const res = await fetch('/api/knowledge/ingest', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Error')
-      toast.success(`✅ ${json.chunks || 0} fragmentos indexados`)
+      if (!res.ok) throw new Error(json.error || 'Error al indexar')
+      if (!json.success) throw new Error(json.error || 'El indexado falló')
+      toast.success(`✅ ${json.chunks} fragmentos indexados correctamente`)
       setShowForm(false)
       setForm({ titulo: '', tipo: 'libro', descripcion: '', texto: '', url: '' })
       setSelectedFile(null); setLibroSeleccionado(null)
