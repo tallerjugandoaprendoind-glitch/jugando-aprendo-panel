@@ -147,29 +147,33 @@ export default function KnowledgeBaseView() {
     finally { setBuscando(false) }
   }
 
-  // ── Extraer texto de PDF en el navegador (sin límite de tamaño) ─────────────
+  // ── Extraer texto de PDF en el navegador usando pdfjs-dist (npm) ────────────
   const extractPdfTextInBrowser = async (file: File, onProgress: (p: string) => void): Promise<string> => {
     onProgress('Cargando lector de PDF...')
-    // Cargar pdfjs dinámicamente desde CDN
-    const pdfjs = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs' as any)
-    pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs'
+
+    const pdfjs = await import('pdfjs-dist')
+    // Worker inline — evita problemas de CORS con archivos externos
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString()
 
     const arrayBuffer = await file.arrayBuffer()
     const loadingTask = pdfjs.getDocument({ data: arrayBuffer })
     const pdf = await loadingTask.promise
 
     const totalPages = pdf.numPages
-    onProgress(`Leyendo ${totalPages} páginas del PDF...`)
+    onProgress(`Leyendo ${totalPages} páginas...`)
 
     const textos: string[] = []
     for (let i = 1; i <= totalPages; i++) {
-      if (i % 20 === 0 || i === totalPages) {
+      if (i % 30 === 0 || i === totalPages) {
         onProgress(`Leyendo página ${i} de ${totalPages}...`)
       }
       const page = await pdf.getPage(i)
-      const content = await page.getTextContent()
-      const pageText = content.items
-        .map((item: any) => item.str)
+      const textContent = await page.getTextContent()
+      const pageText = textContent.items
+        .map((item: any) => item.str || '')
         .join(' ')
         .replace(/\s+/g, ' ')
         .trim()
@@ -177,7 +181,7 @@ export default function KnowledgeBaseView() {
     }
 
     const fullText = textos.join('\n\n')
-    onProgress(`✅ ${totalPages} páginas leídas (${Math.round(fullText.length / 1000)}k caracteres)`)
+    onProgress(`✅ ${totalPages} páginas leídas — ${Math.round(fullText.length / 1000)}k caracteres`)
     return fullText
   }
 
