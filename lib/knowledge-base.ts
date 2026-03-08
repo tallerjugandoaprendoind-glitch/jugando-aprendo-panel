@@ -1,43 +1,81 @@
-// lib/knowledge-base.ts — v3 FIXED
-// Cambios en esta versión:
-// 1. PDFs grandes (>4MB): se divide en lotes para no superar el límite de Gemini
-// 2. Gemini API: usa el SDK correcto (@google/genai v1.x)
-// 3. indexDocument: batching más robusto con reintentos por chunk fallido
-// 4. chunkText: tamaño aumentado a 800 palabras para mejor contexto clínico
-// 5. generateEmbedding: maneja respuestas vacías sin crashear
+// lib/knowledge-base.ts — v4
+// Embeddings: Hugging Face (gratis, 768 dims) → Gemini (fallback) → texto plano
+// PDFs: Gemini Vision (lee texto + imágenes + escaneados)
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { GoogleGenAI } from '@google/genai'
 
-const EMBEDDING_MODEL = 'text-embedding-004'
-const CHUNK_SIZE      = 800   // palabras por chunk (subido de 600 → 800)
-const CHUNK_OVERLAP   = 100   // overlap entre chunks
-const MAX_PDF_BYTES   = 4 * 1024 * 1024  // 4MB límite por llamada a Gemini
+const CHUNK_SIZE    = 800
+const CHUNK_OVERLAP = 100
+const MAX_PDF_BYTES = 4 * 1024 * 1024
+
+// Hugging Face: modelo gratuito, 768 dims (igual que Gemini text-embedding-004)
+// Registro gratis en https://huggingface.co → Settings → Access Tokens
+const HF_EMBEDDING_MODEL = 'sentence-transformers/all-mpnet-base-v2'
+const HF_API_URL = `https://api-inference.huggingface.co/models/${HF_EMBEDDING_MODEL}`
 
 function getAI() {
   const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) throw new Error('GEMINI_API_KEY no configurada en variables de entorno')
+  if (!apiKey) throw new Error('GEMINI_API_KEY no configurada')
   return new GoogleGenAI({ apiKey })
 }
 
-// ── Generar embedding vectorial ───────────────────────────────────────────────
+// ── Embedding con Hugging Face (gratis) ───────────────────────────────────────
+async function generateEmbeddingHF(text: string): Promise<number[]> {
+  const hfKey = process.env.HF_API_KEY
+  if (!hfKey) return []
+
+  const res = await fetch(HF_API_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${hfKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ inputs: text.slice(0, 8000), options: { wait_for_model: true } }),
+  })
+
+  if (!res.ok) {
+    const err = await res.text()
+    throw new Error(`HF error ${res.status}: ${err.slice(0, 200)}`)
+  }
+
+  const data = await res.json()
+  // Respuesta puede ser [num, num, ...] o [[num, num, ...]]
+  const vec = Array.isArray(data[0]) ? data[0] : data
+  return Array.isArray(vec) && vec.length > 0 ? vec : []
+}
+
+// ── Embedding con Gemini (fallback) ───────────────────────────────────────────
+async function generateEmbeddingGemini(text: string): Promise<number[]> {
+  const ai = getAI()
+  const response = await ai.models.embedContent({
+    model: 'text-embedding-004',
+    contents: text.slice(0, 8000),
+  })
+  const vals =
+    (response as any).embeddings?.[0]?.values ??
+    (response as any).embedding?.values ??
+    []
+  return Array.isArray(vals) ? vals : []
+}
+
+// ── generateEmbedding: HF → Gemini → vacío (usa búsqueda FTS) ────────────────
 export async function generateEmbedding(text: string): Promise<number[]> {
   try {
-    const ai = getAI()
-    const response = await ai.models.embedContent({
-      model: EMBEDDING_MODEL,
-      contents: text.slice(0, 8000),
-    })
-    // SDK v1.x: response puede tener forma {embeddings:[{values:[...]}]} o {embedding:{values:[...]}}
-    const vals =
-      (response as any).embeddings?.[0]?.values ??
-      (response as any).embedding?.values ??
-      []
-    return Array.isArray(vals) ? vals : []
+    const vec = await generateEmbeddingHF(text)
+    if (vec.length > 0) return vec
   } catch (e: any) {
-    console.error('[embedding] Error:', e?.message || e)
-    return []
+    console.warn('[embedding] HF falló, probando Gemini:', e?.message)
   }
+
+  try {
+    const vec = await generateEmbeddingGemini(text)
+    if (vec.length > 0) return vec
+  } catch (e: any) {
+    console.warn('[embedding] Gemini falló:', e?.message)
+  }
+
+  return []  // Modo texto plano como último fallback
 }
 
 // ── Extraer texto de PDF con Gemini Vision ────────────────────────────────────
@@ -229,9 +267,9 @@ export async function indexDocument(
 
     console.log(`[index] Indexando ${chunks.length} chunks para doc ${documentId}`)
 
-    let indexed    = 0
-    let errores    = 0
-    const batchSize = 3  // Bajado de 5 a 3 para no superar rate limit de Gemini
+    let indexed = 0
+    let conEmbedding = 0
+    const batchSize = 5
 
     for (let b = 0; b < chunks.length; b += batchSize) {
       const batch = chunks.slice(b, b + batchSize)
@@ -240,72 +278,58 @@ export async function indexDocument(
         batch.map(async (chunk, idx) => {
           const chunkIdx = b + idx
           try {
-            // Generar embedding
-            const embedding = await generateEmbedding(chunk)
-
-            if (embedding.length === 0) {
-              console.warn(`[index] Chunk ${chunkIdx}: embedding vacío, reintentando...`)
-              // Reintento con espera
-              await new Promise(r => setTimeout(r, 2000))
-              const retry = await generateEmbedding(chunk)
-              if (retry.length === 0) {
-                errores++
-                return
+            // Intentar embedding — si falla por cuota, guardar chunk igual (modo texto)
+            let embeddingValue: string | null = null
+            try {
+              const embedding = await generateEmbedding(chunk)
+              if (embedding.length > 0) {
+                embeddingValue = `[${embedding.join(',')}]`
+                conEmbedding++
               }
-              embedding.push(...retry)
+            } catch {
+              // Sin cuota de embeddings — modo búsqueda por texto completo
             }
 
-            // Guardar chunk con embedding en Supabase
+            // Guardar chunk SIEMPRE, con o sin embedding
             await supabaseAdmin.from('knowledge_chunks').insert({
               document_id: documentId,
               chunk_index: chunkIdx,
               contenido:   chunk,
-              embedding:   `[${embedding.join(',')}]`,
+              embedding:   embeddingValue,
               metadata: {
                 ...metadata,
-                chunk_index:  chunkIdx,
-                total_chunks: chunks.length,
-                char_count:   chunk.length,
+                chunk_index:   chunkIdx,
+                total_chunks:  chunks.length,
+                char_count:    chunk.length,
+                sin_embedding: embeddingValue === null,
               },
             })
             indexed++
           } catch (e: any) {
             console.warn(`[index] Chunk ${chunkIdx} falló:`, e?.message)
-            errores++
           }
         })
       )
 
-      // Log de progreso
-      if ((b + batchSize) % 30 === 0 || b + batchSize >= chunks.length) {
+      if ((b + batchSize) % 50 === 0 || b + batchSize >= chunks.length) {
         console.log(`[index] Progreso: ${Math.min(b + batchSize, chunks.length)}/${chunks.length} chunks`)
       }
 
-      // Pausa entre lotes para respetar rate limits de Gemini (300 req/min)
       if (b + batchSize < chunks.length) {
-        await new Promise(r => setTimeout(r, 400))
+        await new Promise(r => setTimeout(r, 150))
       }
     }
 
-    // Actualizar estado del documento
-    // Solo marcar como procesado si se indexó al menos 50% de los chunks
     const exitoso = indexed > 0 && indexed >= Math.floor(chunks.length * 0.5)
     await supabaseAdmin
       .from('knowledge_documents')
-      .update({
-        procesado:    exitoso,
-        total_chunks: indexed,
-      })
+      .update({ procesado: exitoso, total_chunks: indexed })
       .eq('id', documentId)
 
-    console.log(`[index] Resultado doc ${documentId}: ${indexed} chunks indexados, ${errores} errores`)
+    console.log(`[index] Doc ${documentId}: ${indexed} chunks (${conEmbedding} con vector, ${indexed - conEmbedding} solo texto)`)
 
     if (indexed === 0) {
-      return {
-        success: false,
-        chunks: 0,
-        error: `Todos los embeddings fallaron. Verifica que GEMINI_API_KEY sea válida y tenga cuota disponible.`,
-      }
+      return { success: false, chunks: 0, error: 'No se pudo guardar ningún fragmento del documento.' }
     }
 
     return { success: exitoso, chunks: indexed }
@@ -321,29 +345,75 @@ export async function searchKnowledge(
   query: string,
   options: { maxResults?: number; threshold?: number } = {}
 ): Promise<KnowledgeResult[]> {
-  const { maxResults = 6, threshold = 0.55 } = options  // threshold bajado a 0.55
+  const { maxResults = 6, threshold = 0.55 } = options
 
   try {
+    // Intentar búsqueda semántica (requiere cuota de embeddings)
     const queryEmbedding = await generateEmbedding(query)
-    if (queryEmbedding.length === 0) {
-      console.warn('[search] Embedding de la query vacío')
-      return []
+
+    if (queryEmbedding.length > 0) {
+      try {
+        const { data, error } = await supabaseAdmin.rpc('buscar_conocimiento', {
+          query_embedding:      `[${queryEmbedding.join(',')}]`,
+          match_count:          maxResults,
+          similarity_threshold: threshold,
+        })
+        if (!error && data && data.length > 0) {
+          return data.map((r: any) => ({
+            contenido: r.contenido,
+            fuente:    r.titulo_doc,
+            similitud: Math.round(r.similarity * 100),
+            metadata:  r.metadata,
+          }))
+        }
+      } catch { /* fallback a texto */ }
     }
 
-    const { data, error } = await supabaseAdmin.rpc('buscar_conocimiento', {
-      query_embedding:    `[${queryEmbedding.join(',')}]`,
-      match_count:        maxResults,
-      similarity_threshold: threshold,
-    })
+    // Fallback: búsqueda por texto completo (PostgreSQL ILIKE)
+    // Funciona aunque no haya cuota de embeddings en Gemini
+    console.log('[search] Usando búsqueda por texto completo (sin embeddings)')
+    const keywords = query.toLowerCase()
+      .split(' ')
+      .map((w: string) => w.replace(/[^a-záéíóúñü0-9]/gi, ''))
+      .filter((w: string) => w.length > 3)
+      .slice(0, 5)
 
-    if (error) throw error
+    if (keywords.length === 0) return []
 
-    return (data || []).map((r: any) => ({
-      contenido:  r.contenido,
-      fuente:     r.titulo_doc,
-      similitud:  Math.round(r.similarity * 100),
-      metadata:   r.metadata,
+    const { data: rows, error: ftsError } = await supabaseAdmin
+      .from('knowledge_chunks')
+      .select('contenido, metadata, document_id')
+      .ilike('contenido', `%${keywords[0]}%`)
+      .limit(maxResults * 4)
+
+    if (ftsError || !rows) return []
+
+    // Rankear por número de keywords encontradas en el chunk
+    const scored = rows
+      .map((row: any) => ({
+        ...row,
+        score: keywords.filter((kw: string) => row.contenido.toLowerCase().includes(kw)).length,
+      }))
+      .filter((r: any) => r.score > 0)
+      .sort((a: any, b: any) => b.score - a.score)
+      .slice(0, maxResults)
+
+    const docIds = [...new Set(scored.map((r: any) => r.document_id))] as string[]
+    const { data: docs } = await supabaseAdmin
+      .from('knowledge_documents')
+      .select('id, titulo')
+      .in('id', docIds)
+
+    const docMap: Record<string, string> = {}
+    docs?.forEach((d: any) => { docMap[d.id] = d.titulo })
+
+    return scored.map((r: any) => ({
+      contenido: r.contenido,
+      fuente:    docMap[r.document_id] || 'Documento',
+      similitud: Math.min(95, r.score * 20 + 40),
+      metadata:  r.metadata,
     }))
+
   } catch (error: any) {
     console.error('[search] Error:', error?.message)
     return []
