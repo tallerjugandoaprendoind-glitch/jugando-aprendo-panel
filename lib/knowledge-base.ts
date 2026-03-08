@@ -26,7 +26,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
     const ai = getAI()
     const response = await ai.models.embedContent({
       model: EMBEDDING_MODEL,
-      content: text.slice(0, 8000),
+      contents: text.slice(0, 8000),
     })
     // SDK v1.x: response puede tener forma {embeddings:[{values:[...]}]} o {embedding:{values:[...]}}
     const vals =
