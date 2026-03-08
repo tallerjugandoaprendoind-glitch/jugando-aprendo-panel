@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import {
-  extractTextFromPdfWithGemini,
+  extractTextFromPdf,
   extractTextFromHtml,
   indexDocument,
   chunkText,
@@ -198,7 +198,7 @@ async function fetchAndExtractFromUrl(url: string): Promise<string> {
   // PDF
   if (contentType.includes('pdf') || url.toLowerCase().includes('.pdf')) {
     const buffer = await response.arrayBuffer()
-    return extractTextFromPdfWithGemini(buffer)
+    return extractTextFromPdf(buffer)
   }
 
   // Texto plano / Markdown
@@ -235,7 +235,7 @@ async function fetchAndExtractFromStorage(storageUrl: string, fileName: string):
   // PDF — usar Gemini Vision (lee texto + imágenes + escaneados)
   if (ext === 'pdf') {
     console.log(`[ingest] Extrayendo PDF con Gemini Vision (${Math.round(buffer.byteLength / 1024)}KB)`)
-    return extractTextFromPdfWithGemini(buffer)
+    return extractTextFromPdf(buffer)
   }
 
   // TXT / Markdown — leer directamente

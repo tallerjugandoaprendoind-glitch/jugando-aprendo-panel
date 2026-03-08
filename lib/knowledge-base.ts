@@ -78,6 +78,38 @@ export async function generateEmbedding(text: string): Promise<number[]> {
   return []  // Modo texto plano como último fallback
 }
 
+// ── Extraer texto de PDF con pdf-parse (sin IA, gratis, sin límites) ────────────
+// Funciona perfecto con PDFs digitales (libros, artículos, guías)
+// No funciona con PDFs escaneados (solo imágenes) → fallback a Gemini Vision
+async function extractTextWithPdfParse(buffer: ArrayBuffer): Promise<string> {
+  try {
+    const pdfParse = (await import('pdf-parse')).default
+    const data = await pdfParse(Buffer.from(buffer))
+    const text = data.text?.trim() || ''
+    console.log(`[pdf-parse] Extraído: ${text.length} chars, ${data.numpages} páginas`)
+    return text
+  } catch (e: any) {
+    console.warn('[pdf-parse] Error:', e?.message)
+    return ''
+  }
+}
+
+// ── extractTextFromPdfWithGemini: ahora es pdf-parse primero → Gemini fallback ─
+// pdf-parse: gratis, sin API, sin límites, instantáneo
+// Gemini Vision: solo para PDFs escaneados o cuando pdf-parse falla
+export async function extractTextFromPdf(buffer: ArrayBuffer): Promise<string> {
+  // 1. Intentar con pdf-parse (gratis, sin IA)
+  const textoPdfParse = await extractTextWithPdfParse(buffer)
+  if (textoPdfParse.length > 200) {
+    console.log('[pdf] ✅ Texto extraído con pdf-parse (sin IA)')
+    return textoPdfParse
+  }
+
+  // 2. Fallback: Gemini Vision (para PDFs escaneados)
+  console.log('[pdf] pdf-parse insuficiente, usando Gemini Vision...')
+  return extractTextFromPdfWithGemini(buffer)
+}
+
 // ── Extraer texto de PDF con Gemini Vision ────────────────────────────────────
 // Gemini 1.5 Flash acepta PDFs de hasta ~20MB vía inlineData.
 // Para libros muy grandes, extraemos en fragmentos de 4MB.
