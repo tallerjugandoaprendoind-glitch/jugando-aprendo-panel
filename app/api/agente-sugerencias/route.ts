@@ -57,7 +57,8 @@ async function analizarPaciente(childId: string, childName: string): Promise<Sug
   // ── REGLA 1: Objetivo estancado > 4 semanas ──────────────────────────────
   const sesiones4sem = sesiones.filter(s => s.fecha_sesion >= hace4semanas.toISOString().split('T')[0])
   if (sesiones4sem.length >= 4) {
-    const logros4sem = sesiones4sem.map(s => parseLogro(s.datos?.nivel_logro_objetivos))
+    const logros4sem = sesiones4sem.map(s => parseLogro(s.datos?.nivel_logro_objetivos)).filter((v): v is number => v !== null)
+    if (logros4sem.length === 0) { /* no hay datos suficientes */ } else {
     const prom4sem = logros4sem.reduce((a, b) => a + b, 0) / logros4sem.length
     const max4sem = Math.max(...logros4sem)
     const min4sem = Math.min(...logros4sem)
@@ -76,6 +77,7 @@ async function analizarPaciente(childId: string, childName: string): Promise<Sug
         dato_clave: `Logro promedio: ${Math.round(prom4sem)}%`
       })
     }
+    } // end logros4sem.length check
   }
 
   // ── REGLA 2: Objetivos listos para subir de fase ────────────────────────
@@ -120,7 +122,8 @@ async function analizarPaciente(childId: string, childName: string): Promise<Sug
 
   // ── REGLA 4: Progreso excelente — celebrar y capitalizar ─────────────────
   if (sesiones4sem.length >= 3) {
-    const logros = sesiones4sem.map(s => parseLogro(s.datos?.nivel_logro_objetivos))
+    const logros = sesiones4sem.map(s => parseLogro(s.datos?.nivel_logro_objetivos)).filter((v): v is number => v !== null)
+    if (logros.length > 0) {
     const prom = logros.reduce((a, b) => a + b, 0) / logros.length
     if (prom >= 80) {
       sugerencias.push({
@@ -135,7 +138,8 @@ async function analizarPaciente(childId: string, childName: string): Promise<Sug
         dato_clave: `Promedio: ${Math.round(prom)}%`
       })
     }
-  }
+    } // end if(logros.length > 0)
+  } // end if(sesiones4sem.length >= 3)
 
   // ── REGLA 5: Pocas sesiones recientes (baja frecuencia) ─────────────────
   if (sesiones.length > 0) {

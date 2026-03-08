@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
         .lt('fecha_sesion', fechaHasta.toISOString().split('T')[0])
         .order('fecha_sesion', { ascending: true })
 
-      const logs = sesiones?.map(s => parseLogro(s.datos?.nivel_logro_objetivos)) || []
+      const logs = (sesiones?.map(s => parseLogro(s.datos?.nivel_logro_objetivos)).filter((v): v is number => v !== null) || []) as number[]
       const atns = sesiones?.map(s => Number(s.datos?.nivel_atencion || 0) * 20).filter(v => v > 0) || []
       const tols = sesiones?.map(s => Number(s.datos?.tolerancia_frustracion || 0) * 20).filter(v => v > 0) || []
       const coms = sesiones?.map(s => Number(s.datos?.iniciativa_comunicativa || 0) * 20).filter(v => v > 0) || []
@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       .gte('fecha_sesion', fechaBase.toISOString().split('T')[0])
       .order('fecha_sesion', { ascending: true })
 
-    const todosLogros = todasSesiones?.map(s => parseLogro(s.datos?.nivel_logro_objetivos)) || []
+    const todosLogros = (todasSesiones?.map(s => parseLogro(s.datos?.nivel_logro_objetivos)).filter((v): v is number => v !== null) || []) as number[]
     const pendiente = calcularPendiente(todosLogros)
     const ultimoLogro = todosLogros[todosLogros.length - 1] || 50
 
