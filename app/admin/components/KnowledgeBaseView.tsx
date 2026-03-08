@@ -243,15 +243,60 @@ export default function KnowledgeBaseView() {
         if (!form.titulo) body.titulo = libroSeleccionado.titulo
       }
 
-      setUploadProgress('Indexando en el Cerebro IA... (puede tardar 1-3 min)')
-      const res = await fetch('/api/knowledge/ingest', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Error al indexar')
-      if (!json.success) throw new Error(json.error || 'El indexado falló')
-      toast.success(`✅ ${json.chunks} fragmentos indexados correctamente`)
+      // Si el texto es muy grande, dividirlo en partes de 300KB
+      // para no superar el límite de 4.5MB de Vercel por request
+      const MAX_BODY_BYTES = 300 * 1024 // 300KB de texto por parte
+      const textoCompleto: string | undefined = body.texto
+
+      if (textoCompleto && new Blob([textoCompleto]).size > MAX_BODY_BYTES) {
+        // Dividir en partes
+        const partes: string[] = []
+        let offset = 0
+        while (offset < textoCompleto.length) {
+          // Cortar en el siguiente punto/salto de línea para no romper frases
+          let end = offset + MAX_BODY_BYTES
+          if (end < textoCompleto.length) {
+            const nextBreak = textoCompleto.indexOf('\n', end)
+            if (nextBreak !== -1 && nextBreak - end < 2000) end = nextBreak
+          }
+          partes.push(textoCompleto.slice(offset, end))
+          offset = end
+        }
+
+        let totalChunksIndexados = 0
+        for (let i = 0; i < partes.length; i++) {
+          setUploadProgress(`Indexando parte ${i + 1} de ${partes.length}...`)
+          const partBody = {
+            ...body,
+            titulo: partes.length > 1 ? `${body.titulo} (Parte ${i + 1}/${partes.length})` : body.titulo,
+            texto: partes[i],
+          }
+          const res = await fetch('/api/knowledge/ingest', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(partBody),
+          })
+          let json: any
+          try { json = await res.json() }
+          catch { throw new Error(await res.text() || `Error HTTP ${res.status}`) }
+          if (!res.ok) throw new Error(json.error || `Error en parte ${i + 1}`)
+          totalChunksIndexados += json.chunks || 0
+        }
+        toast.success(`✅ ${totalChunksIndexados} fragmentos indexados en ${partes.length} partes`)
+      } else {
+        // Texto pequeño o no es texto → request único normal
+        setUploadProgress('Indexando en el Cerebro IA... (puede tardar 1-3 min)')
+        const res = await fetch('/api/knowledge/ingest', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        })
+        let json: any
+        try { json = await res.json() }
+        catch { throw new Error(await res.text() || `Error HTTP ${res.status}`) }
+        if (!res.ok) throw new Error(json.error || 'Error al indexar')
+        if (!json.success) throw new Error(json.error || 'El indexado falló')
+        toast.success(`✅ ${json.chunks} fragmentos indexados correctamente`)
+      }
+
       setShowForm(false)
       setForm({ titulo: '', tipo: 'libro', descripcion: '', texto: '', url: '' })
       setSelectedFile(null); setLibroSeleccionado(null)
