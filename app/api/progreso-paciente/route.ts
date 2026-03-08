@@ -74,12 +74,22 @@ export async function GET(request: NextRequest) {
 
   try {
     // ── 1. Sesiones ABA del período ─────────────────────────────────────────
-    const { data: sesiones } = await supabaseAdmin
+    // NOTA: NO filtrar por fecha con gte() — las sesiones pueden tener
+    // fecha_sesion nulo, vacío o en formato incorrecto. Traer todas y filtrar en código.
+    const { data: todasSesiones } = await supabaseAdmin
       .from('registro_aba')
       .select('id, fecha_sesion, datos, ai_analysis, asistio')
       .eq('child_id', childId)
-      .gte('fecha_sesion', fechaInicioStr)
       .order('fecha_sesion', { ascending: true })
+
+    // Filtrar por período solo si la sesión tiene fecha válida
+    // Sesiones sin fecha se incluyen siempre (para no perder datos)
+    const fechaInicioMs = new Date(fechaInicioStr).getTime()
+    const sesiones = (todasSesiones || []).filter((s: any) => {
+      if (!s.fecha_sesion) return true  // sin fecha → incluir
+      const ts = new Date(s.fecha_sesion).getTime()
+      return isNaN(ts) || ts >= fechaInicioMs
+    })
 
     // ── 2. Programas ABA activos con datos de sesiones ──────────────────────
     // NOTA: NO usar !inner — si no hay sesiones en el rango, devuelve array vacío
@@ -197,6 +207,8 @@ export async function GET(request: NextRequest) {
 
     // ── 6. Calcular asistencia ──────────────────────────────────────────────
     const sesionesTodas = sesiones || []
+    // asistio: true → asistió, false → faltó, null/undefined → contar como asistió
+    // (registros viejos no tienen el campo, asumir que si hay registro hubo sesión)
     const asistidas = sesionesTodas.filter((s: any) => s.asistio !== false).length
     const tasaAsistencia = sesionesTodas.length > 0
       ? Math.round((asistidas / sesionesTodas.length) * 100)
