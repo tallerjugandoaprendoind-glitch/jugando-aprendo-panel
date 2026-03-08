@@ -83,7 +83,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 // No funciona con PDFs escaneados (solo imágenes) → fallback a Gemini Vision
 async function extractTextWithPdfParse(buffer: ArrayBuffer): Promise<string> {
   try {
-    const pdfModule = await import('pdf-parse')
+    const pdfModule = await import('pdf-parse') as any
     const pdfParse = pdfModule.default ?? pdfModule
     const data = await pdfParse(Buffer.from(buffer))
     const text = data.text?.trim() || ''
