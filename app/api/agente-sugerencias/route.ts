@@ -19,14 +19,21 @@ interface Sugerencia {
   dato_clave: string
 }
 
-function parseLogro(val: any): number {
-  if (val == null) return 0
-  if (typeof val === 'number') return Math.min(100, Math.max(0, val))
-  const s = String(val).toLowerCase()
-  if (s.includes('completamente') || s.includes('76')) return 88
-  if (s.includes('mayormente') || s.includes('51')) return 63
-  if (s.includes('parcialmente') || s.includes('26')) return 38
-  const n = parseInt(s); return isNaN(n) ? 13 : Math.min(100, n)
+function parseLogro(val: any): number | null {
+  if (val == null || val === "") return null
+  if (typeof val === "number") return Math.min(100, Math.max(0, Math.round(val)))
+  const s = String(val).trim()
+  const range = s.match(/(\d+)\s*[-–]\s*(\d+)/)
+  if (range) return Math.round((parseInt(range[1]) + parseInt(range[2])) / 2)
+  const num = s.match(/(\d+)/)
+  if (num) return Math.min(100, Math.max(0, parseInt(num[1])))
+  const lower = s.toLowerCase()
+  if (lower.includes("completamente") || lower.includes("dominado")) return 90
+  if (lower.includes("mayormente") || lower.includes("alto")) return 75
+  if (lower.includes("parcialmente") || lower.includes("medio") || lower.includes("proceso")) return 50
+  if (lower.includes("mínimo") || lower.includes("bajo") || lower.includes("emergente")) return 20
+  if (lower.includes("no logrado")) return 5
+  return null
 }
 
 async function analizarPaciente(childId: string, childName: string): Promise<Sugerencia[]> {

@@ -1,251 +1,286 @@
-// app/api/knowledge/ingest/route.ts — FIXED v2
-// Cambios:
-// 1. PDFs: usa Gemini Vision (lee texto + imágenes + PDFs escaneados)
-// 2. URLs: scraping mejorado + opción de leer con Gemini si el HTML es escaso
-// 3. Errores: devuelve mensaje exacto, no silencioso
-// 4. Re-indexado: si total_chunks=0, permite reintentar
+// app/api/knowledge/ingest/route.ts
+// ============================================================================
+// API: Ingesta e Indexado de Documentos — Base de Conocimiento de ARIA
+// Soporta: PDF (vía Gemini Vision), URL, texto plano, markdown
+// ============================================================================
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { indexDocument, extractTextFromPdfWithGemini, extractTextFromHtml } from '@/lib/knowledge-base'
+import {
+  extractTextFromPdfWithGemini,
+  extractTextFromHtml,
+  indexDocument,
+  chunkText,
+} from '@/lib/knowledge-base'
 
-const LARGE_TEXT_THRESHOLD = 200_000
-
-// ── GET: listar documentos ────────────────────────────────────────────────────
+// ── GET: Listar documentos de la base de conocimiento ──────────────────────
 export async function GET() {
-  const { data, error } = await supabaseAdmin
-    .from('knowledge_documents')
-    .select('id, titulo, tipo, descripcion, procesado, total_chunks, created_at, source_url')
-    .order('created_at', { ascending: false })
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ data })
-}
-
-// ── DELETE: eliminar documento ────────────────────────────────────────────────
-export async function DELETE(req: NextRequest) {
-  const { id } = await req.json()
-  if (!id) return NextResponse.json({ error: 'id requerido' }, { status: 400 })
-  await supabaseAdmin.from('knowledge_chunks').delete().eq('document_id', id)
-  await supabaseAdmin.from('knowledge_documents').delete().eq('id', id)
-  return NextResponse.json({ ok: true })
-}
-
-// ── PATCH: reintentar indexado de un documento ya existente ──────────────────
-export async function PATCH(req: NextRequest) {
-  const { id } = await req.json()
-  if (!id) return NextResponse.json({ error: 'id requerido' }, { status: 400 })
-  
-  const { data: doc } = await supabaseAdmin
-    .from('knowledge_documents')
-    .select('*').eq('id', id).single()
-  
-  if (!doc) return NextResponse.json({ error: 'Documento no encontrado' }, { status: 404 })
-  if (!doc.texto_extraido) return NextResponse.json({ error: 'Sin texto extraído para re-indexar' }, { status: 422 })
-  
-  // Limpiar chunks anteriores
-  await supabaseAdmin.from('knowledge_chunks').delete().eq('document_id', id)
-  await supabaseAdmin.from('knowledge_documents').update({ procesado: false, total_chunks: 0 }).eq('id', id)
-  
-  const result = await indexDocument(id, doc.texto_extraido, { titulo: doc.titulo, tipo: doc.tipo })
-  return NextResponse.json({ ok: result.success, chunks: result.chunks, error: result.error })
-}
-
-// ── POST: ingestar documento ──────────────────────────────────────────────────
-export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { titulo, tipo, descripcion, texto, storageUrl, fileName, sourceUrl } = body
+    const { data, error } = await supabaseAdmin
+      .from('knowledge_documents')
+      .select('id, titulo, tipo, descripcion, procesado, total_chunks, source_url, created_at')
+      .order('created_at', { ascending: false })
 
-    if (!titulo) return NextResponse.json({ error: 'título requerido' }, { status: 400 })
+    if (error) throw error
+    return NextResponse.json({ data: data || [] })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
 
-    // 1. Crear registro
-    const { data: doc, error: dbError } = await supabaseAdmin
+// ── DELETE: Eliminar documento y sus chunks ────────────────────────────────
+export async function DELETE(request: NextRequest) {
+  try {
+    const { id } = await request.json()
+    if (!id) return NextResponse.json({ error: 'id requerido' }, { status: 400 })
+
+    // Borrar chunks primero
+    await supabaseAdmin
+      .from('knowledge_chunks')
+      .delete()
+      .eq('document_id', id)
+
+    // Borrar documento
+    const { error } = await supabaseAdmin
+      .from('knowledge_documents')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+// ── POST: Ingestar e indexar un documento nuevo ────────────────────────────
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { titulo, tipo = 'libro', descripcion, storageUrl, fileName, sourceUrl, texto } = body
+
+    if (!titulo) {
+      return NextResponse.json({ error: 'titulo es requerido' }, { status: 400 })
+    }
+
+    // 1. Crear registro del documento en BD
+    const { data: docRecord, error: docError } = await supabaseAdmin
       .from('knowledge_documents')
       .insert({
         titulo,
-        tipo: tipo || 'libro',
+        tipo,
         descripcion: descripcion || '',
         procesado: false,
+        total_chunks: 0,
         source_url: sourceUrl || null,
       })
-      .select().single()
+      .select('id')
+      .single()
 
-    if (dbError) throw new Error(dbError.message)
-    const docId = doc.id
-
-    // 2. Extraer texto
-    let fullText = ''
-    let extractionMethod = 'unknown'
-
-    try {
-      if (texto) {
-        fullText = texto
-        extractionMethod = 'texto_directo'
-      } else if (storageUrl) {
-        const { text, method } = await extractFromStorageUrl(storageUrl, fileName || '')
-        fullText = text
-        extractionMethod = method
-      } else if (sourceUrl) {
-        const { text, method } = await extractFromUrl(sourceUrl)
-        fullText = text
-        extractionMethod = method
-      } else {
-        await supabaseAdmin.from('knowledge_documents').delete().eq('id', docId)
-        return NextResponse.json({ error: 'Se requiere texto, storageUrl o sourceUrl' }, { status: 400 })
-      }
-    } catch (extractErr: any) {
-      await supabaseAdmin.from('knowledge_documents').delete().eq('id', docId)
-      return NextResponse.json({ 
-        error: `Error extrayendo contenido: ${extractErr.message}`,
-        hint: 'Verifica que el archivo sea accesible y no esté protegido'
-      }, { status: 422 })
+    if (docError || !docRecord) {
+      throw new Error(docError?.message || 'No se pudo crear el registro del documento')
     }
 
-    // 3. Validar texto extraído
-    const cleanText = fullText.trim()
-    if (cleanText.length < 50) {
-      await supabaseAdmin.from('knowledge_documents').delete().eq('id', docId)
-      return NextResponse.json({
-        error: `Texto extraído insuficiente (${cleanText.length} chars). ` +
-          (extractionMethod.includes('fallback') 
-            ? 'El PDF puede ser escaneado sin capa de texto — prueba subir como imagen o pegar el texto manualmente.'
-            : 'El documento puede estar vacío o protegido.')
-      }, { status: 422 })
-    }
+    const documentId = docRecord.id
 
-    // 4. Guardar texto extraído
-    await supabaseAdmin
-      .from('knowledge_documents')
-      .update({ texto_extraido: cleanText.slice(0, 500_000), descripcion: descripcion || `Extraído via ${extractionMethod}` })
-      .eq('id', docId)
+    // 2. Responder inmediatamente al cliente (el indexado puede tardar)
+    // Procesamos en background usando waitUntil o simplemente async
+    processAndIndex(documentId, { storageUrl, fileName, sourceUrl, texto, titulo, tipo })
+      .catch(err => console.error('[ingest] Error indexando en background:', err))
 
-    // 5. Indexar
-    if (cleanText.length <= LARGE_TEXT_THRESHOLD) {
-      const result = await indexDocument(docId, cleanText, { titulo, tipo, fuente: sourceUrl || fileName || 'texto' })
-      
-      if (!result.success) {
-        // No borrar — el texto ya está guardado, puede reintentarse
-        return NextResponse.json({ 
-          ok: false, docId, chars: cleanText.length, indexed: false, chunks: 0,
-          error: result.error,
-          hint: 'El texto fue guardado pero el indexado falló. Verifica GEMINI_API_KEY o reintenta más tarde.'
-        })
-      }
-      
-      return NextResponse.json({ 
-        ok: true, docId, chars: cleanText.length, indexed: true, 
-        chunks: result.chunks, method: extractionMethod 
-      })
-    }
-
-    // Texto grande: responder y el cliente dispara /api/knowledge/index
-    return NextResponse.json({ 
-      ok: true, docId, chars: cleanText.length, indexed: false, 
-      needsIndex: true, method: extractionMethod 
+    return NextResponse.json({
+      success: true,
+      documentId,
+      message: 'Documento recibido. El indexado comenzará en unos segundos.',
     })
 
-  } catch (e: any) {
-    console.error('[ingest] Error:', e)
-    return NextResponse.json({ error: e.message }, { status: 500 })
+  } catch (error: any) {
+    console.error('[ingest] Error POST:', error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
-// ── Extraer desde Supabase Storage ───────────────────────────────────────────
-async function extractFromStorageUrl(url: string, fileName: string): Promise<{ text: string; method: string }> {
-  const res = await fetch(url, { signal: AbortSignal.timeout(30000) })
-  if (!res.ok) throw new Error(`No se pudo descargar: HTTP ${res.status}`)
-  
-  const ext = fileName.split('.').pop()?.toLowerCase() || ''
-  
-  if (ext === 'pdf' || url.includes('.pdf')) {
-    const buffer = await res.arrayBuffer()
-    // Intentar con Gemini Vision primero (lee imágenes + texto escaneado)
-    const geminiText = await extractTextFromPdfWithGemini(buffer)
-    if (geminiText.length > 200) return { text: geminiText, method: 'gemini_vision_pdf' }
-    // Si Gemini falla, avisar claramente
-    throw new Error('Gemini no pudo leer el PDF. Verifica que GEMINI_API_KEY esté activa con la API de Gemini 1.5.')
+// ── Función principal de procesamiento e indexado ──────────────────────────
+async function processAndIndex(
+  documentId: string,
+  source: {
+    storageUrl?: string
+    fileName?: string
+    sourceUrl?: string
+    texto?: string
+    titulo: string
+    tipo: string
   }
-  
-  if (['txt', 'md', 'csv'].includes(ext)) {
-    return { text: await res.text(), method: 'texto_plano' }
+) {
+  try {
+    let fullText = ''
+
+    // ── A) Texto directo (modo texto/markdown) ───────────────────────────
+    if (source.texto && source.texto.trim().length > 20) {
+      console.log(`[ingest] Modo texto directo para doc ${documentId}`)
+      fullText = source.texto.trim()
+    }
+
+    // ── B) URL externa (web o archivo público) ───────────────────────────
+    else if (source.sourceUrl) {
+      console.log(`[ingest] Descargando URL: ${source.sourceUrl}`)
+      fullText = await fetchAndExtractFromUrl(source.sourceUrl)
+    }
+
+    // ── C) Archivo desde Supabase Storage ───────────────────────────────
+    else if (source.storageUrl) {
+      console.log(`[ingest] Descargando desde Storage: ${source.fileName}`)
+      fullText = await fetchAndExtractFromStorage(source.storageUrl, source.fileName || '')
+    }
+
+    if (!fullText || fullText.trim().length < 30) {
+      await markFailed(documentId, 'No se pudo extraer texto del documento. Verifica que el archivo no esté protegido.')
+      return
+    }
+
+    console.log(`[ingest] Texto extraído: ${fullText.length} caracteres. Indexando...`)
+
+    // Limpiar el texto antes de indexar
+    fullText = cleanText(fullText)
+
+    // Indexar (genera chunks + embeddings + guarda en knowledge_chunks)
+    const result = await indexDocument(documentId, fullText, {
+      titulo: source.titulo,
+      tipo: source.tipo,
+      fuente: source.sourceUrl || source.fileName || 'subida manual',
+    })
+
+    if (!result.success) {
+      await markFailed(documentId, result.error || 'El indexado falló — verifica GEMINI_API_KEY')
+      console.error(`[ingest] Falló indexado doc ${documentId}:`, result.error)
+    } else {
+      console.log(`[ingest] ✅ Doc ${documentId} indexado: ${result.chunks} chunks`)
+    }
+
+  } catch (error: any) {
+    console.error(`[ingest] Error procesando ${documentId}:`, error)
+    await markFailed(documentId, error.message)
   }
-  
-  // HTML u otros
-  const content = await res.text()
-  const contentType = res.headers.get('content-type') || ''
-  if (contentType.includes('html')) {
-    return { text: extractTextFromHtml(content), method: 'html_scraping' }
-  }
-  return { text: content, method: 'raw_text' }
 }
 
-// ── Extraer desde URL externa ─────────────────────────────────────────────────
-async function extractFromUrl(rawUrl: string): Promise<{ text: string; method: string }> {
-  const url = normalizeUrl(rawUrl)
-  
-  const res = await fetch(url, {
+// ── Descargar y extraer desde URL externa ─────────────────────────────────
+async function fetchAndExtractFromUrl(url: string): Promise<string> {
+  // Convertir URLs de Google Drive al formato de descarga directa
+  const processedUrl = convertGoogleDriveUrl(url)
+
+  const response = await fetch(processedUrl, {
     headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/pdf,text/plain,*/*',
-      'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+      'User-Agent': 'Mozilla/5.0 (compatible; Vanty-Bot/1.0)',
+      'Accept': 'text/html,application/pdf,*/*',
     },
-    signal: AbortSignal.timeout(30000),
+    redirect: 'follow',
   })
-  
-  if (!res.ok) throw new Error(`URL no accesible (HTTP ${res.status}). La página puede requerir login.`)
-  
-  const contentType = res.headers.get('content-type') || ''
-  
+
+  if (!response.ok) {
+    throw new Error(`No se pudo descargar la URL (${response.status}: ${response.statusText}). Verifica que sea pública.`)
+  }
+
+  const contentType = response.headers.get('content-type') || ''
+
   // PDF
   if (contentType.includes('pdf') || url.toLowerCase().includes('.pdf')) {
-    const buffer = await res.arrayBuffer()
-    const geminiText = await extractTextFromPdfWithGemini(buffer)
-    if (geminiText.length > 200) return { text: geminiText, method: 'gemini_vision_pdf_url' }
-    throw new Error('No se pudo extraer texto del PDF en esa URL')
+    const buffer = await response.arrayBuffer()
+    return extractTextFromPdfWithGemini(buffer)
   }
-  
-  // HTML: extraer texto + si el resultado es escaso usar Gemini para leer la página
-  if (contentType.includes('html')) {
-    const html = await res.text()
-    const extracted = extractTextFromHtml(html)
-    
-    // Si el texto extraído es muy escaso (sitio con JS dinámico), intentar con Gemini
-    if (extracted.length < 500 && process.env.GEMINI_API_KEY) {
-      try {
-        const { GoogleGenAI } = await import('@google/genai')
-        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! })
-        const r = await ai.models.generateContent({
-          model: 'gemini-1.5-flash',
-          contents: [{
-            role: 'user',
-            parts: [{ text: `Extrae todo el texto útil y legible de este HTML. Solo texto, sin código:\n\n${html.slice(0, 30000)}` }]
-          }]
-        })
-        const geminiExtracted = r.candidates?.[0]?.content?.parts?.[0]?.text || ''
-        if (geminiExtracted.length > extracted.length) {
-          return { text: geminiExtracted, method: 'gemini_html_extraction' }
-        }
-      } catch { /* usar lo que ya tenemos */ }
-    }
-    
-    return { text: extracted, method: 'html_scraping' }
+
+  // Texto plano / Markdown
+  if (contentType.includes('text/plain') || url.endsWith('.txt') || url.endsWith('.md')) {
+    return response.text()
   }
-  
-  return { text: await res.text(), method: 'raw_url' }
+
+  // HTML (página web)
+  if (contentType.includes('text/html') || contentType.includes('html')) {
+    const html = await response.text()
+    return extractTextFromHtml(html)
+  }
+
+  // Intentar como texto de todas formas
+  const text = await response.text()
+  if (text.trim().length > 100) return text
+
+  throw new Error(`Tipo de archivo no soportado: ${contentType}`)
 }
 
-function normalizeUrl(url: string): string {
-  // Google Drive
-  const gdrive = url.match(/drive\.google\.com\/file\/d\/([^/]+)/)
-  if (gdrive) return `https://drive.google.com/uc?export=download&id=${gdrive[1]}`
-  const gdriveOpen = url.match(/drive\.google\.com\/open\?id=([^&]+)/)
-  if (gdriveOpen) return `https://drive.google.com/uc?export=download&id=${gdriveOpen[1]}`
-  // Dropbox
-  if (url.includes('dropbox.com')) return url.replace('?dl=0', '?dl=1').replace('www.dropbox.com', 'dl.dropboxusercontent.com')
-  // Archive.org
-  if (url.includes('archive.org/details/')) {
-    const id = url.split('/details/')[1]?.split('/')[0]
-    if (id) return `https://archive.org/download/${id}/${id}_djvu.txt`
+// ── Descargar desde Supabase Storage y extraer texto ─────────────────────
+async function fetchAndExtractFromStorage(storageUrl: string, fileName: string): Promise<string> {
+  const response = await fetch(storageUrl, {
+    headers: { 'User-Agent': 'Vanty-Bot/1.0' },
+  })
+
+  if (!response.ok) {
+    throw new Error(`No se pudo descargar el archivo desde Storage (${response.status})`)
   }
+
+  const buffer = await response.arrayBuffer()
+  const ext = fileName.toLowerCase().split('.').pop() || ''
+
+  // PDF — usar Gemini Vision (lee texto + imágenes + escaneados)
+  if (ext === 'pdf') {
+    console.log(`[ingest] Extrayendo PDF con Gemini Vision (${Math.round(buffer.byteLength / 1024)}KB)`)
+    return extractTextFromPdfWithGemini(buffer)
+  }
+
+  // TXT / Markdown — leer directamente
+  if (ext === 'txt' || ext === 'md' || ext === 'markdown') {
+    return new TextDecoder('utf-8').decode(new Uint8Array(buffer))
+  }
+
+  // Intentar como texto genérico
+  const text = new TextDecoder('utf-8', { fatal: false }).decode(new Uint8Array(buffer))
+  if (text.trim().length > 100) return text
+
+  throw new Error(`Formato de archivo no soportado: .${ext}`)
+}
+
+// ── Convertir URL de Google Drive a descarga directa ──────────────────────
+function convertGoogleDriveUrl(url: string): string {
+  // https://drive.google.com/file/d/FILE_ID/view → descarga directa
+  const driveMatch = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/)
+  if (driveMatch) {
+    return `https://drive.google.com/uc?export=download&id=${driveMatch[1]}`
+  }
+
+  // https://drive.google.com/open?id=FILE_ID
+  const openMatch = url.match(/drive\.google\.com\/open\?id=([a-zA-Z0-9_-]+)/)
+  if (openMatch) {
+    return `https://drive.google.com/uc?export=download&id=${openMatch[1]}`
+  }
+
+  // Dropbox: cambiar dl=0 a dl=1
+  if (url.includes('dropbox.com')) {
+    return url.replace('dl=0', 'dl=1').replace('?dl=0', '?dl=1')
+  }
+
   return url
+}
+
+// ── Limpiar texto extraído ─────────────────────────────────────────────────
+function cleanText(text: string): string {
+  return text
+    // Eliminar caracteres de control excepto saltos de línea y tabs
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ')
+    // Normalizar espacios en blanco múltiples
+    .replace(/[ \t]+/g, ' ')
+    // Máximo 3 líneas en blanco consecutivas
+    .replace(/\n{4,}/g, '\n\n\n')
+    // Eliminar líneas que solo tienen números de página o caracteres solos
+    .replace(/^\s*\d+\s*$/gm, '')
+    .trim()
+}
+
+// ── Marcar documento como fallido ─────────────────────────────────────────
+async function markFailed(documentId: string, errorMsg: string) {
+  await supabaseAdmin
+    .from('knowledge_documents')
+    .update({
+      procesado: false,
+      total_chunks: 0,
+      descripcion: `❌ Error: ${errorMsg.slice(0, 200)}`,
+    })
+    .eq('id', documentId)
 }

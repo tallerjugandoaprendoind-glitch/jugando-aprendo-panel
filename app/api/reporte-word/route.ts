@@ -11,6 +11,25 @@ import {
   HeadingLevel, PageNumber, Footer, Header
 } from 'docx'
 
+// ── FIX: Helper universal para parsear nivel_logro_objetivos ─────────────────
+// Maneja: número, "75", "75%", "51-75%", "mayormente logrado", "alto", etc.
+function parseNivelLogro(val: any): number | null {
+  if (val === null || val === undefined || val === '') return null
+  if (typeof val === 'number' && !isNaN(val)) return Math.min(100, Math.max(0, Math.round(val)))
+  const s = String(val).trim()
+  const range = s.match(/(\d+)\s*[-–]\s*(\d+)/)
+  if (range) return Math.round((parseInt(range[1]) + parseInt(range[2])) / 2)
+  const num = s.match(/(\d+)/)
+  if (num) return Math.min(100, Math.max(0, parseInt(num[1])))
+  const lower = s.toLowerCase()
+  if (lower.includes('completamente') || lower.includes('independiente') || lower.includes('dominado')) return 90
+  if (lower.includes('mayormente') || lower.includes('alto') || lower.includes('excelente')) return 75
+  if (lower.includes('parcialmente') || lower.includes('medio') || lower.includes('proceso')) return 50
+  if (lower.includes('mínimo') || lower.includes('bajo') || lower.includes('emergente') || lower.includes('inicial')) return 20
+  if (lower.includes('no logrado') || lower.includes('sin respuesta')) return 5
+  return null
+}
+
 const BD = { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' }
 const BDR = { top: BD, bottom: BD, left: BD, right: BD }
 const NBD = { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' }
@@ -106,10 +125,16 @@ async function generarReportePadres(childId: string): Promise<{ doc: Document; f
     .in('estado', ['activo', 'intervencion']).limit(8)
 
   const promedioLogro = sesiones && sesiones.length > 0
-    ? Math.round(sesiones.reduce((a: number, s: any) => {
-        const v = s.datos?.porcentaje_exito ?? s.datos?.logro ?? 0
-        return a + (typeof v === 'number' ? v : parseFloat(v) || 0)
-      }, 0) / sesiones.length)
+    ? (() => {
+        const vals = (sesiones as any[]).map(s =>
+          parseNivelLogro(s.datos?.nivel_logro_objetivos) ??
+          parseNivelLogro(s.datos?.porcentaje_logro) ??
+          parseNivelLogro(s.datos?.porcentaje_exito) ??
+          parseNivelLogro(s.datos?.logro_objetivos) ??
+          parseNivelLogro(s.datos?.logro)
+        ).filter((v): v is number => v !== null)
+        return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
+      })()
     : 0
 
   const fechaInicio = sesiones && sesiones.length > 0
@@ -199,7 +224,15 @@ async function generarReporteSeguro(childId: string): Promise<{ doc: Document; f
 
   const totalSesiones = sesiones?.length || 0
   const promedioLogro = totalSesiones > 0
-    ? Math.round((sesiones || []).reduce((a: number, s: any) => a + (s.datos?.porcentaje_exito || 0), 0) / totalSesiones)
+    ? (() => {
+        const vals = (sesiones || []).map((s: any) =>
+          parseNivelLogro(s.datos?.nivel_logro_objetivos) ??
+          parseNivelLogro(s.datos?.porcentaje_logro) ??
+          parseNivelLogro(s.datos?.porcentaje_exito) ??
+          parseNivelLogro(s.datos?.logro_objetivos)
+        ).filter((v): v is number => v !== null)
+        return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
+      })()
     : 0
 
   const hoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -296,7 +329,16 @@ async function generarReporteComparativo(childId: string): Promise<{ doc: Docume
   const mitad = Math.floor(total / 2)
   const periodo1 = sesiones?.slice(0, mitad) || []
   const periodo2 = sesiones?.slice(mitad) || []
-  const avg = (arr: any[]) => arr.length === 0 ? 0 : Math.round(arr.reduce((a: number, s: any) => a + (s.datos?.porcentaje_exito || 0), 0) / arr.length)
+  const avg = (arr: any[]) => {
+    if (arr.length === 0) return 0
+    const vals = arr.map((s: any) =>
+      parseNivelLogro(s.datos?.nivel_logro_objetivos) ??
+      parseNivelLogro(s.datos?.porcentaje_logro) ??
+      parseNivelLogro(s.datos?.porcentaje_exito) ??
+      parseNivelLogro(s.datos?.logro_objetivos)
+    ).filter((v): v is number => v !== null)
+    return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
+  }
   const avg1 = avg(periodo1), avg2 = avg(periodo2)
   const diferencia = avg2 - avg1
   const pendiente = total > 1

@@ -125,7 +125,8 @@ export default function ReportGenerator({
           reportType:   evaluationType,
           childName,
           childAge,
-          reportData:   evaluationData,
+          childId,           // ← CRÍTICO: pasar childId explícito para enriquecer datos
+          reportData:   { ...evaluationData, child_id: childId },
           evaluationId,
         }),
       })

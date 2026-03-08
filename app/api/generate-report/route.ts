@@ -9,6 +9,24 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { buildAIContext } from '@/lib/ai-context-builder'
 
+// ── Helper: parseo robusto de nivel_logro → número 0-100 ─────────────────────
+function parseNivelLogroReport(val: any): number | null {
+  if (val === null || val === undefined || val === '') return null
+  if (typeof val === 'number') return Math.min(100, Math.max(0, Math.round(val)))
+  const s = String(val).trim()
+  const range = s.match(/(\d+)\s*[-–]\s*(\d+)/)
+  if (range) return Math.round((parseInt(range[1]) + parseInt(range[2])) / 2)
+  const num = s.match(/(\d+)/)
+  if (num) return Math.min(100, Math.max(0, parseInt(num[1])))
+  const lower = s.toLowerCase()
+  if (lower.includes('completamente') || lower.includes('independiente') || lower.includes('dominado')) return 90
+  if (lower.includes('mayormente') || lower.includes('alto') || lower.includes('excelente')) return 75
+  if (lower.includes('parcialmente') || lower.includes('medio') || lower.includes('proceso')) return 50
+  if (lower.includes('mínimo') || lower.includes('bajo') || lower.includes('emergente')) return 20
+  if (lower.includes('no logrado') || lower.includes('sin respuesta')) return 5
+  return null
+}
+
 // ── Tipos de reporte y sus configuraciones ──────────────────────────────────
 const REPORTE_CONFIG: Record<string, {
   titulo: string
@@ -711,25 +729,84 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 1. Obtener contexto clínico del niño desde la BD
+    // 1. Obtener childId desde múltiples fuentes posibles
+    const childId = reportData?.child_id || reportData?.childId || body.childId
+
+    // 2. Obtener contexto clínico completo del niño desde la BD
     let contextoClinico = ''
+    let datosEnriquecidos = { ...reportData }
+
     try {
-      // Buscar child_id en los datos si está disponible
-      const childId = reportData?.child_id || reportData?.childId
       if (childId) {
         const ctx = await buildAIContext(childId, childName, childAge?.toString(), reportType)
         contextoClinico = ctx.historialTexto
+
+        // Enriquecer con datos reales de sesiones ABA
+        const { data: sesionesRecientes } = await supabaseAdmin
+          .from('registro_aba')
+          .select('fecha_sesion, datos, ai_analysis')
+          .eq('child_id', childId)
+          .order('fecha_sesion', { ascending: false })
+          .limit(10)
+
+        if (sesionesRecientes && sesionesRecientes.length > 0) {
+          // Calcular promedio de logro real usando el parser robusto
+          const logros = (sesionesRecientes as any[]).map(s => {
+            const d = s.datos || {}
+            const ai = s.ai_analysis || {}
+            return parseNivelLogroReport(
+              d.nivel_logro_objetivos ?? d.porcentaje_logro ?? d.logro_objetivos ??
+              d.porcentaje_exito ?? ai.nivel_logro_objetivos ?? ai.porcentaje_logro
+            )
+          }).filter((v): v is number => v !== null)
+
+          const promedioLogro = logros.length > 0
+            ? Math.round(logros.reduce((a, b) => a + b, 0) / logros.length)
+            : 0
+
+          datosEnriquecidos = {
+            ...datosEnriquecidos,
+            promedio_logro_real: promedioLogro,
+            total_sesiones: sesionesRecientes.length,
+            ultima_sesion: (sesionesRecientes[0] as any).fecha_sesion,
+            logros_historicos: logros,
+          }
+        }
+
+        // Enriquecer con programas activos
+        const { data: programas } = await supabaseAdmin
+          .from('programas_aba')
+          .select('titulo, area, fase_actual, criterio_dominio_pct, sesiones_datos_aba(porcentaje_exito, fecha)')
+          .eq('child_id', childId)
+          .eq('estado', 'activo')
+          .limit(8)
+
+        if (programas && programas.length > 0) {
+          datosEnriquecidos.programas_activos = (programas as any[]).map(p => {
+            const sesiones = p.sesiones_datos_aba || []
+            const promSesiones = sesiones.length > 0
+              ? Math.round(sesiones.reduce((a: number, s: any) => a + (s.porcentaje_exito || 0), 0) / sesiones.length)
+              : null
+            return {
+              titulo: p.titulo,
+              area: p.area,
+              fase: p.fase_actual,
+              criterio_dominio: p.criterio_dominio_pct,
+              promedio_sesiones: promSesiones,
+            }
+          })
+        }
       }
     } catch (err) {
       console.warn('No se pudo cargar contexto clínico:', err)
     }
 
-    // 2. Generar contenido del reporte con IA
+    // 3. Generar contenido del reporte con IA
     const contenido = await generarContenidoReporte(
       reportType,
       childName,
       childAge,
-      reportData,
+      datosEnriquecidos,
       contextoClinico
     )
 
@@ -740,7 +817,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 3. Convertir a DOCX profesional
+    // 4. Convertir a DOCX profesional
     const fileData = await generarDocx(reportType, childName, childAge, contenido)
     const fileName = getTituloArchivo(reportType, childName)
 

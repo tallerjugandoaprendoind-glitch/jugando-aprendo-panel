@@ -82,16 +82,17 @@ export async function GET(request: NextRequest) {
       .order('fecha_sesion', { ascending: true })
 
     // ── 2. Programas ABA activos con datos de sesiones ──────────────────────
+    // NOTA: NO usar !inner — si no hay sesiones en el rango, devuelve array vacío
+    // en lugar de bloquear todo el resultado
     const { data: programas } = await supabaseAdmin
       .from('programas_aba')
       .select(`
         id, titulo, area, fase_actual, criterio_dominio_pct,
-        sesiones_datos_aba!inner(fecha, porcentaje_exito, fase, nivel_ayuda, notas)
+        sesiones_datos_aba(fecha, porcentaje_exito, fase, nivel_ayuda, notas)
       `)
       .eq('child_id', childId)
       .eq('estado', 'activo')
-      .gte('sesiones_datos_aba.fecha', fechaInicioStr)
-      .order('sesiones_datos_aba.fecha', { ascending: true })
+      .order('created_at', { ascending: false })
 
     // ── 3. Tareas del hogar ─────────────────────────────────────────────────
     const { data: tareasData } = await supabaseAdmin
