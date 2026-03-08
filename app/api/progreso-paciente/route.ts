@@ -92,8 +92,8 @@ export async function GET(request: NextRequest) {
     })
 
     // ── 2. Programas ABA activos con datos de sesiones ──────────────────────
-    // NOTA: NO usar !inner — si no hay sesiones en el rango, devuelve array vacío
-    // en lugar de bloquear todo el resultado
+    // Traer TODOS los programas del paciente (activos, dominados, pausados)
+    // sin filtrar por estado para no perder sesiones históricas
     const { data: programas } = await supabaseAdmin
       .from('programas_aba')
       .select(`
@@ -101,7 +101,6 @@ export async function GET(request: NextRequest) {
         sesiones_datos_aba(fecha, porcentaje_exito, fase, nivel_ayuda, notas)
       `)
       .eq('child_id', childId)
-      .eq('estado', 'activo')
       .order('created_at', { ascending: false })
 
     // ── 3. Tareas del hogar ─────────────────────────────────────────────────
@@ -157,22 +156,31 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // También incluir programas no activos si tienen sesiones recientes
-    if (!programas || (programas as any[]).length === 0) {
-      // Buscar sesiones directamente sin filtro de estado
-      const { data: todasSesionesPrograma } = await supabaseAdmin
-        .from('sesiones_datos_aba')
-        .select('fecha, porcentaje_exito, programa_id, programas_aba(titulo)')
-        .eq('programas_aba.child_id', childId)
-        .order('fecha', { ascending: true })
-      
-      if (todasSesionesPrograma) {
-        for (const s of todasSesionesPrograma as any[]) {
-          const fecha = (s.fecha || '').split('T')[0]
-          if (!fecha) continue
-          if (!sesionesDePrograma[fecha]) sesionesDePrograma[fecha] = { logros: [], programas: [] }
-          if (s.porcentaje_exito !== null) {
-            sesionesDePrograma[fecha].logros.push(Number(s.porcentaje_exito))
+    // Si aún no hay sesiones, buscar directamente por programa_ids del paciente
+    if (Object.keys(sesionesDePrograma).length === 0) {
+      const programaIds = ((programas as any[]) || []).map((p: any) => p.id).filter(Boolean)
+      if (programaIds.length > 0) {
+        const { data: sesionesDirectas } = await supabaseAdmin
+          .from('sesiones_datos_aba')
+          .select('fecha, porcentaje_exito, programa_id')
+          .in('programa_id', programaIds)
+          .order('fecha', { ascending: true })
+        
+        if (sesionesDirectas) {
+          const progNombres: Record<string, string> = {}
+          ;((programas as any[]) || []).forEach((p: any) => { progNombres[p.id] = p.titulo })
+          
+          for (const s of sesionesDirectas as any[]) {
+            const fecha = (s.fecha || '').split('T')[0]
+            if (!fecha) continue
+            if (!sesionesDePrograma[fecha]) sesionesDePrograma[fecha] = { logros: [], programas: [] }
+            if (s.porcentaje_exito !== null && s.porcentaje_exito !== undefined) {
+              sesionesDePrograma[fecha].logros.push(Number(s.porcentaje_exito))
+            }
+            const nombre = progNombres[s.programa_id] || 'Programa ABA'
+            if (!sesionesDePrograma[fecha].programas.includes(nombre)) {
+              sesionesDePrograma[fecha].programas.push(nombre)
+            }
           }
         }
       }
