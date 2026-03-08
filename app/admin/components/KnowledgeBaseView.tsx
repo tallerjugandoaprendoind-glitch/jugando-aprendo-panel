@@ -147,6 +147,40 @@ export default function KnowledgeBaseView() {
     finally { setBuscando(false) }
   }
 
+  // ── Extraer texto de PDF en el navegador (sin límite de tamaño) ─────────────
+  const extractPdfTextInBrowser = async (file: File, onProgress: (p: string) => void): Promise<string> => {
+    onProgress('Cargando lector de PDF...')
+    // Cargar pdfjs dinámicamente desde CDN
+    const pdfjs = await import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs' as any)
+    pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs'
+
+    const arrayBuffer = await file.arrayBuffer()
+    const loadingTask = pdfjs.getDocument({ data: arrayBuffer })
+    const pdf = await loadingTask.promise
+
+    const totalPages = pdf.numPages
+    onProgress(`Leyendo ${totalPages} páginas del PDF...`)
+
+    const textos: string[] = []
+    for (let i = 1; i <= totalPages; i++) {
+      if (i % 20 === 0 || i === totalPages) {
+        onProgress(`Leyendo página ${i} de ${totalPages}...`)
+      }
+      const page = await pdf.getPage(i)
+      const content = await page.getTextContent()
+      const pageText = content.items
+        .map((item: any) => item.str)
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      if (pageText.length > 10) textos.push(pageText)
+    }
+
+    const fullText = textos.join('\n\n')
+    onProgress(`✅ ${totalPages} páginas leídas (${Math.round(fullText.length / 1000)}k caracteres)`)
+    return fullText
+  }
+
   const handleUpload = async () => {
     if (!form.titulo) { toast.error('El título es requerido'); return }
     if (inputMode === 'archivo' && !selectedFile) { toast.error('Selecciona un archivo'); return }
@@ -156,16 +190,46 @@ export default function KnowledgeBaseView() {
     setUploading(true)
     try {
       const body: Record<string, any> = { titulo: form.titulo, tipo: form.tipo, descripcion: form.descripcion }
+
       if (inputMode === 'archivo' && selectedFile) {
-        setUploadProgress('Subiendo archivo...')
-        const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
-        const { data: up, error: upErr } = await supabasePublic.storage
-          .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
-        if (upErr) throw new Error(`Upload error: ${upErr.message}`)
-        const { data: signed } = await supabasePublic.storage
-          .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
-        body.storageUrl = signed?.signedUrl
-        body.fileName = selectedFile.name
+        const isPdf = selectedFile.name.toLowerCase().endsWith('.pdf')
+        const isBig = selectedFile.size > 10 * 1024 * 1024 // >10MB
+
+        if (isPdf && isBig) {
+          // ── Archivos grandes: extraer texto en el navegador ──────────────
+          setUploadProgress(`Archivo grande (${Math.round(selectedFile.size / 1024 / 1024)}MB) — extrayendo texto localmente...`)
+          try {
+            const texto = await extractPdfTextInBrowser(selectedFile, setUploadProgress)
+            if (!texto || texto.trim().length < 100) {
+              throw new Error('No se pudo extraer texto del PDF. El archivo puede estar escaneado o protegido.')
+            }
+            body.texto = texto
+            body.fileName = selectedFile.name
+          } catch (pdfErr: any) {
+            // Si pdfjs falla, intentar subir a Storage de todas formas
+            console.warn('pdfjs falló, subiendo archivo directo:', pdfErr.message)
+            setUploadProgress('Subiendo archivo a servidor...')
+            const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
+            const { data: up, error: upErr } = await supabasePublic.storage
+              .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
+            if (upErr) throw new Error(`Error al subir: ${upErr.message}`)
+            const { data: signed } = await supabasePublic.storage
+              .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
+            body.storageUrl = signed?.signedUrl
+            body.fileName = selectedFile.name
+          }
+        } else {
+          // ── Archivos pequeños (<10MB): subir a Storage normal ────────────
+          setUploadProgress('Subiendo archivo...')
+          const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
+          const { data: up, error: upErr } = await supabasePublic.storage
+            .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
+          if (upErr) throw new Error(`Error al subir: ${upErr.message}`)
+          const { data: signed } = await supabasePublic.storage
+            .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
+          body.storageUrl = signed?.signedUrl
+          body.fileName = selectedFile.name
+        }
       } else if (inputMode === 'url') {
         body.sourceUrl = form.url.trim()
       } else if (inputMode === 'texto') {
@@ -174,7 +238,8 @@ export default function KnowledgeBaseView() {
         body.sourceUrl = libroSeleccionado.url
         if (!form.titulo) body.titulo = libroSeleccionado.titulo
       }
-      setUploadProgress('Procesando e indexando... (puede tardar 1-2 min para PDFs grandes)')
+
+      setUploadProgress('Indexando en el Cerebro IA... (puede tardar 1-3 min)')
       const res = await fetch('/api/knowledge/ingest', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -483,14 +548,35 @@ export default function KnowledgeBaseView() {
                 <div onClick={() => fileRef.current?.click()}
                   className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer hover:border-violet-300 hover:bg-violet-50 transition">
                   <Upload size={20} className="text-slate-400 mx-auto mb-2" />
-                  {selectedFile
-                    ? <p className="text-sm font-semibold text-slate-700">{selectedFile.name}</p>
-                    : <p className="text-sm text-slate-400">Click para seleccionar PDF o TXT</p>}
-                  <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt,.doc,.docx"
+                  {selectedFile ? (
+                    <div>
+                      <p className="text-sm font-semibold text-slate-700">{selectedFile.name}</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
+                        {selectedFile.size > 10 * 1024 * 1024 && (
+                          <span className="ml-2 text-violet-500 font-medium">⚡ Se extraerá el texto localmente (sin límite)</span>
+                        )}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-slate-400">Click para seleccionar PDF o TXT</p>
+                      <p className="text-xs text-slate-300 mt-1">Sin límite de tamaño — archivos grandes se procesan en el navegador</p>
+                    </div>
+                  )}
+                  <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt,.md"
                     onChange={e => {
                       const f = e.target.files?.[0]
                       if (f) { setSelectedFile(f); if (!form.titulo) setForm(p => ({ ...p, titulo: f.name.replace(/\.[^.]+$/, '') })) }
                     }} />
+                </div>
+              )}
+              {uploading && uploadProgress && (
+                <div className="bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 mt-2">
+                  <div className="flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin text-violet-500 flex-shrink-0" />
+                    <p className="text-xs text-violet-700 font-medium">{uploadProgress}</p>
+                  </div>
                 </div>
               )}
 
