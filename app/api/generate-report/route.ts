@@ -313,7 +313,7 @@ async function generarDocx(
   const docx = await import('docx')
   const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType,
     BorderStyle, TableRow, TableCell, Table, WidthType, ShadingType,
-    PageBreak, Header, Footer, PageNumber, NumberFormat } = docx
+    PageBreak, Header, Footer, PageNumber, NumberFormat, ExternalHyperlink } = docx
 
   // ── Estilos de colores clínicos ──
   const COLOR_PRIMARIO   = '1B3A6B'  // Azul marino profesional
@@ -658,12 +658,16 @@ async function generarDocx(
             new Paragraph({
               children: [
                 new TextRun({
-                  text: 'Generado por Vanty — Sistema de Gestión Clínica Neuropsicológica  |  Página ',
+                  children: [
+                    'Generado por Vanty — Sistema de Gestión Clínica Neuropsicológica  |  Página ',
+                    PageNumber.CURRENT,
+                    ' de ',
+                    PageNumber.TOTAL_PAGES,
+                  ],
                   size: 16,
                   color: COLOR_GRIS,
                   font: 'Calibri',
                 }),
-                new PageNumber(),
               ],
               alignment: AlignmentType.CENTER,
               border: { top: { style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' } },
