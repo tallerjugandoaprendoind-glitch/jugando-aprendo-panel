@@ -197,8 +197,11 @@ export async function GET(request: NextRequest) {
 
     // B) Sesiones desde registro_aba (notas clínicas)
     const puntosRegistro = (sesiones || []).map((s: any) => {
-      const d = s.datos || {}
-      const ai = s.ai_analysis || {}
+      // datos puede venir como string JSON o como objeto — forzar parseo
+      let d: any = s.datos || {}
+      if (typeof d === 'string') { try { d = JSON.parse(d) } catch { d = {} } }
+      let ai: any = s.ai_analysis || {}
+      if (typeof ai === 'string') { try { ai = JSON.parse(ai) } catch { ai = {} } }
       const fecha = (s.fecha_sesion || '').split('T')[0] || new Date().toISOString().split('T')[0]
 
       let logro = parsearLogro(d.nivel_logro_objetivos)
@@ -316,6 +319,18 @@ Escribe UN párrafo clínico de 2-3 oraciones con observaciones del período y u
       tareas,
       evaluaciones,
       reporteSemanal,
+      _debug: {
+        sesiones_encontradas: sesiones?.length || 0,
+        puntos_programa: puntosPrograma.length,
+        puntos_registro: puntosRegistro.length,
+        primer_dato_raw: sesiones?.[0] ? {
+          fecha: sesiones[0].fecha_sesion,
+          tipo_datos: typeof sesiones[0].datos,
+          nivel_logro: typeof sesiones[0].datos === 'object' 
+            ? sesiones[0].datos?.nivel_logro_objetivos
+            : 'DATOS_ES_STRING',
+        } : null,
+      },
     })
 
   } catch (error: any) {
