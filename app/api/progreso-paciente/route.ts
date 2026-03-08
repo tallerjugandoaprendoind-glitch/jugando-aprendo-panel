@@ -134,90 +134,104 @@ export async function GET(request: NextRequest) {
     }
 
     // ── 5. Construir graficaABA ─────────────────────────────────────────────
-    // Estrategia: usar registro_aba primero. Si hay programas con sesiones_datos_aba,
-    // enriquecer con porcentaje_exito de la sesión más cercana por fecha.
-    
-    // Agrupar sesiones de programas por fecha para lookup
-    const programaSesionesPorFecha: Record<string, number[]> = {}
+    // FUENTE PRIMARIA: sesiones_datos_aba (donde Programas ABA guarda los datos reales)
+    // FUENTE SECUNDARIA: registro_aba (formulario de nota clínica)
+    // Combinar ambas y ordenar por fecha
+
+    // A) Sesiones desde sesiones_datos_aba (agrupadas por fecha, promediando programas del día)
+    const sesionesDePrograma: Record<string, { logros: number[]; programas: string[] }> = {}
     if (programas) {
       for (const prog of programas as any[]) {
         const sesionData = prog.sesiones_datos_aba || []
         for (const s of sesionData) {
-          const fecha = s.fecha?.split('T')[0] || s.fecha
-          if (!programaSesionesPorFecha[fecha]) programaSesionesPorFecha[fecha] = []
+          const fecha = (s.fecha || '').split('T')[0]
+          if (!fecha) continue
+          if (!sesionesDePrograma[fecha]) sesionesDePrograma[fecha] = { logros: [], programas: [] }
           if (s.porcentaje_exito !== null && s.porcentaje_exito !== undefined) {
-            programaSesionesPorFecha[fecha].push(Number(s.porcentaje_exito))
+            sesionesDePrograma[fecha].logros.push(Number(s.porcentaje_exito))
+          }
+          if (!sesionesDePrograma[fecha].programas.includes(prog.titulo)) {
+            sesionesDePrograma[fecha].programas.push(prog.titulo)
           }
         }
       }
     }
 
-    const graficaABA = (sesiones || []).map((s: any) => {
+    // También incluir programas no activos si tienen sesiones recientes
+    if (!programas || (programas as any[]).length === 0) {
+      // Buscar sesiones directamente sin filtro de estado
+      const { data: todasSesionesPrograma } = await supabaseAdmin
+        .from('sesiones_datos_aba')
+        .select('fecha, porcentaje_exito, programa_id, programas_aba(titulo)')
+        .eq('programas_aba.child_id', childId)
+        .order('fecha', { ascending: true })
+      
+      if (todasSesionesPrograma) {
+        for (const s of todasSesionesPrograma as any[]) {
+          const fecha = (s.fecha || '').split('T')[0]
+          if (!fecha) continue
+          if (!sesionesDePrograma[fecha]) sesionesDePrograma[fecha] = { logros: [], programas: [] }
+          if (s.porcentaje_exito !== null) {
+            sesionesDePrograma[fecha].logros.push(Number(s.porcentaje_exito))
+          }
+        }
+      }
+    }
+
+    // Construir puntos de gráfica desde sesiones_datos_aba
+    const puntosPrograma = Object.entries(sesionesDePrograma).map(([fecha, data]) => {
+      const logro = data.logros.length > 0
+        ? Math.round(data.logros.reduce((a, b) => a + b, 0) / data.logros.length)
+        : 0
+      return { fecha, logro, atencion: logro, tolerancia: logro, comunicacion: logro,
+               objetivo: data.programas.join(', '), tecnicas: '', asistio: true, notas: '' }
+    })
+
+    // B) Sesiones desde registro_aba (notas clínicas)
+    const puntosRegistro = (sesiones || []).map((s: any) => {
       const d = s.datos || {}
       const ai = s.ai_analysis || {}
-      const fecha = s.fecha_sesion?.split('T')[0] || s.fecha_sesion
+      const fecha = (s.fecha_sesion || '').split('T')[0] || new Date().toISOString().split('T')[0]
 
-      // ── FIX PRINCIPAL: parseo robusto del logro ──
-      // Prioridad: nivel_logro_objetivos → porcentaje_exito del programa → ai_logro → 0
       let logro = parsearLogro(d.nivel_logro_objetivos)
-
       if (logro === null) logro = parsearLogro(d.porcentaje_logro)
       if (logro === null) logro = parsearLogro(d.logro_objetivos)
       if (logro === null) logro = parsearLogro(d.porcentaje_exito)
       if (logro === null) logro = parsearLogro(d.nivel_logro)
       if (logro === null) logro = parsearLogro(ai.porcentaje_logro)
-      if (logro === null) logro = parsearLogro(ai.nivel_logro_objetivos)
-
-      // Si sigue sin datos, usar promedio de programas de ese día
-      if (logro === null && programaSesionesPorFecha[fecha]?.length) {
-        const proms = programaSesionesPorFecha[fecha]
-        logro = Math.round(proms.reduce((a, b) => a + b, 0) / proms.length)
-      }
-
       if (logro === null) logro = 0
 
-      // ── Atención, tolerancia, comunicación ──
-      const atencion = parsearPct(
-        d.nivel_atencion ?? d.atencion ?? d.atencion_nivel ?? ai.nivel_atencion, 
-        logro > 0 ? Math.min(100, logro + Math.round(Math.random() * 10 - 5)) : 0
-      )
-      const tolerancia = parsearPct(
-        d.nivel_tolerancia ?? d.tolerancia ?? ai.nivel_tolerancia,
-        logro > 0 ? Math.min(100, logro + Math.round(Math.random() * 10 - 5)) : 0
-      )
-      const comunicacion = parsearPct(
-        d.nivel_comunicacion ?? d.comunicacion ?? ai.nivel_comunicacion,
-        logro > 0 ? Math.min(100, logro + Math.round(Math.random() * 10 - 5)) : 0
-      )
-
       return {
-        fecha,
-        logro,
-        atencion,
-        tolerancia,
-        comunicacion,
-        objetivo: d.objetivo_principal || '',
-        tecnicas: Array.isArray(d.tecnicas_aplicadas)
-          ? d.tecnicas_aplicadas.join(', ')
-          : (d.tecnicas_aplicadas || ''),
-        asistio: s.asistio !== false,
-        notas: d.observaciones || d.notas || '',
+        fecha, logro,
+        atencion:     parsearPct(d.nivel_atencion ?? d.atencion, logro),
+        tolerancia:   parsearPct(d.nivel_tolerancia ?? d.tolerancia, logro),
+        comunicacion: parsearPct(d.nivel_comunicacion ?? d.comunicacion, logro),
+        objetivo:     d.objetivo_principal || d.conducta || '',
+        tecnicas:     Array.isArray(d.tecnicas_aplicadas) ? d.tecnicas_aplicadas.join(', ') : (d.tecnicas_aplicadas || ''),
+        asistio:      s.asistio !== false,
+        notas:        d.observaciones || d.observaciones_tecnicas || d.notas || '',
       }
     })
 
+    // C) Combinar y deduplicar por fecha (priorizar datos de programa si la fecha coincide)
+    const fechasPrograma = new Set(puntosPrograma.map(p => p.fecha))
+    const puntosRegistroFiltrados = puntosRegistro.filter(p => !fechasPrograma.has(p.fecha))
+    
+    const graficaABA = [...puntosPrograma, ...puntosRegistroFiltrados]
+      .sort((a, b) => a.fecha.localeCompare(b.fecha))
+
     // ── 6. Calcular asistencia ──────────────────────────────────────────────
-    const sesionesTodas = sesiones || []
-    // asistio: true → asistió, false → faltó, null/undefined → contar como asistió
-    // (registros viejos no tienen el campo, asumir que si hay registro hubo sesión)
-    const asistidas = sesionesTodas.filter((s: any) => s.asistio !== false).length
-    const tasaAsistencia = sesionesTodas.length > 0
-      ? Math.round((asistidas / sesionesTodas.length) * 100)
+    // Usar graficaABA que incluye sesiones_datos_aba + registro_aba
+    const totalSesionesGrafica = graficaABA.length
+    const asistidas = graficaABA.filter((s: any) => s.asistio !== false).length
+    const tasaAsistencia = totalSesionesGrafica > 0
+      ? Math.round((asistidas / totalSesionesGrafica) * 100)
       : 0
 
     const asistencia = {
       tasa: tasaAsistencia,
       asistidas,
-      total: sesionesTodas.length,
+      total: totalSesionesGrafica,
     }
 
     // ── 7. Calcular adherencia a tareas ─────────────────────────────────────
