@@ -603,9 +603,9 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         <div className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Sesiones', val: resultado.total_sesiones || 0 },
+              { label: 'Sesiones', val: resultado.sesiones_analizadas || 0 },
               { label: 'Patrones', val: resultado.patrones?.length || 0 },
-              { label: 'Programas', val: resultado.programas_analizados || 0 },
+              { label: 'Urgentes', val: resultado.patrones_urgentes || 0 },
             ].map(m => (
               <div key={m.label} className="bg-white rounded-xl border border-slate-100 p-3 text-center">
                 <p className="text-2xl font-black text-slate-800">{m.val}</p>
@@ -624,10 +624,10 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
               <p className="text-xs font-semibold text-slate-700 mt-2 bg-slate-50 rounded-lg px-3 py-2">💡 {p.accion_sugerida}</p>
             </div>
           ))}
-          {resultado.resumen_ia && (
+          {(resultado.analisis_ia || resultado.resumen) && (
             <div className="bg-violet-50 rounded-xl border border-violet-100 p-4">
               <p className="text-xs font-bold text-violet-700 mb-2">Resumen IA</p>
-              <p className="text-sm text-violet-800">{resultado.resumen_ia}</p>
+              <p className="text-sm text-violet-800">{resultado.analisis_ia || resultado.resumen}</p>
             </div>
           )}
         </div>
@@ -748,17 +748,21 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabSugerencias() {
   const [sugerencias, setSugerencias] = useState<any[]>([])
+  const [insightGlobal, setInsightGlobal] = useState<string | null>(null)
+  const [meta, setMeta] = useState<{ urgentes: number; pacientes_analizados: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
   const cargar = async () => {
     setLoading(true); setError('')
     try {
-      const res = await fetch('/api/agente-sugerencias', { method: 'POST',
-        headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) })
+      // ✅ FIX: usar GET (no POST). POST solo sirve para marcar sugerencias como resueltas.
+      const res = await fetch('/api/agente-sugerencias')
       const json = await res.json()
       if (json.error) throw new Error(json.error)
       setSugerencias(json.sugerencias || [])
+      setInsightGlobal(json.insight_global || null)
+      setMeta({ urgentes: json.urgentes || 0, pacientes_analizados: json.pacientes_analizados || 0 })
     } catch (e: any) { setError(e.message) }
     finally { setLoading(false) }
   }
@@ -780,11 +784,27 @@ function TabSugerencias() {
             <span className="font-bold text-orange-800 text-sm">Alertas Proactivas — CAPA 4</span>
           </div>
           <p className="text-xs text-orange-600">La IA analiza todos los pacientes y alerta antes de que haya un problema.</p>
+          {meta && (
+            <p className="text-[11px] text-orange-500 mt-1">
+              {meta.pacientes_analizados} pacientes analizados · {meta.urgentes} alertas urgentes
+            </p>
+          )}
         </div>
         <button onClick={cargar} disabled={loading} className="p-2 hover:bg-orange-100 rounded-xl transition">
           <RefreshCw size={14} className={`text-orange-600 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>
+
+      {/* Insight global IA (solo aparece si hay ≥2 alertas urgentes) */}
+      {insightGlobal && (
+        <div className="bg-white rounded-xl border border-orange-200 p-4">
+          <p className="text-[10px] font-black text-orange-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <Sparkles size={10} /> RESUMEN EJECUTIVO IA
+          </p>
+          <p className="text-sm text-slate-700 leading-relaxed">{insightGlobal}</p>
+        </div>
+      )}
+
       {error && <p className="text-red-500 text-xs">{error}</p>}
       {loading && <div className="flex justify-center py-8"><RefreshCw size={24} className="animate-spin text-orange-400" /></div>}
       {!loading && sugerencias.length === 0 && (
