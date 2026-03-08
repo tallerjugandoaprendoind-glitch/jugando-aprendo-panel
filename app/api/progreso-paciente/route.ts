@@ -211,15 +211,20 @@ export async function GET(request: NextRequest) {
 
       return {
         fecha, logro,
-        atencion:     parsearPct(d.nivel_atencion ?? d.atencion, logro),
-        tolerancia:   parsearPct(d.nivel_tolerancia ?? d.tolerancia, logro),
-        comunicacion: parsearPct(d.nivel_comunicacion ?? d.comunicacion, logro),
+        // nivel_atencion se guarda en escala 1-5, convertir a porcentaje 0-100
+        atencion:     d.nivel_atencion ? Math.round(((d.nivel_atencion - 1) / 4) * 100) : logro,
+        tolerancia:   d.nivel_tolerancia ? Math.round(((d.nivel_tolerancia - 1) / 4) * 100) : logro,
+        comunicacion: d.iniciativa_comunicativa ? Math.round(((d.iniciativa_comunicativa - 1) / 4) * 100) : logro,
         objetivo:     d.objetivo_principal || d.conducta || '',
         tecnicas:     Array.isArray(d.tecnicas_aplicadas) ? d.tecnicas_aplicadas.join(', ') : (d.tecnicas_aplicadas || ''),
         asistio:      s.asistio !== false,
         notas:        d.observaciones || d.observaciones_tecnicas || d.notas || '',
       }
     })
+
+    console.log('[progreso] registro_aba sesiones encontradas:', sesiones?.length || 0)
+    console.log('[progreso] puntosPrograma:', puntosPrograma.length)
+    console.log('[progreso] puntosRegistro:', puntosRegistro.length, puntosRegistro.map(p => ({fecha: p.fecha, logro: p.logro})))
 
     // C) Combinar y deduplicar por fecha (priorizar datos de programa si la fecha coincide)
     const fechasPrograma = new Set(puntosPrograma.map(p => p.fecha))
