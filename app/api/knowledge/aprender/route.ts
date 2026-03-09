@@ -39,35 +39,6 @@ const FUENTES_BASE = [
   },
 ]
 
-// ─── Expandir palabras clave con IA ──────────────────────────────────────────
-async function expandirConceptos(keywords: string): Promise<string[]> {
-  const prompt = `Eres un experto en ABA, TEA, TDAH y terapia infantil.
-
-El usuario quiere que la IA aprenda sobre: "${keywords}"
-
-Genera una lista de 8-12 términos de búsqueda específicos en ESPAÑOL e INGLÉS que cubran:
-- El concepto principal
-- Subconceptos clínicos importantes
-- Términos técnicos usados en ABA
-- Variaciones del término
-
-RESPONDE SOLO JSON: {"terminos": ["término1", "término2", ...]}
-Sin texto adicional, sin markdown.`
-
-  try {
-    const raw = await callGroqSimple(
-      'Experto en ABA y psicología clínica. Siempre respondes con JSON válido.',
-      prompt,
-      { model: GROQ_MODELS.FAST, temperature: 0.3, maxTokens: 400 }
-    )
-    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
-    return parsed.terminos || [keywords]
-  } catch {
-    // Fallback: split por comas y añadir inglés básico
-    return [keywords, ...keywords.split(',').map((k: string) => k.trim()).filter(Boolean)]
-  }
-}
-
 // ─── Expandir palabras clave con IA (enfoque ABA clínico) ────────────────────
 async function expandirConceptos(keywords: string): Promise<string[]> {
   const prompt = `Eres un BCBA experto en ABA, TEA, TDAH y terapia conductual infantil.

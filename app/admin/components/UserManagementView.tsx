@@ -710,7 +710,6 @@ export default function UserManagementView() {
                       </div>
                     )
                   })()}
-                    </div>
                   </div>
                 </div>
               )}
