@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     // ── 1. Sesiones de registro_aba ──────────────────────────────────────
     const { data: sesiones, error: err1 } = await db
       .from('registro_aba')
-      .select('id, fecha_sesion, datos, ai_analysis, asistio')
+      .select('id, fecha_sesion, datos, asistio')
       .eq('child_id', childId)
       .order('fecha_sesion', { ascending: true })
 
