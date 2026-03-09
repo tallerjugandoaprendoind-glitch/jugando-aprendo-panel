@@ -327,9 +327,9 @@ function GameHub() {
 
   const gameInfo = GAMES_INFO.find(g => g.id === gameId)!
 
-  const cardBtn = (bg: string, border: string, extra?: object) => ({
-    border: 'none', cursor: 'pointer', fontFamily: "'Baloo 2',cursive", fontWeight: 700, transition: 'all .25s',
-    background: bg, borderRadius: 14, border: `2.5px solid ${border}`, color: '#1c1917', ...extra,
+  const cardBtn = (bg: string, borderColor: string, extra?: object) => ({
+    cursor: 'pointer', fontFamily: "'Baloo 2',cursive", fontWeight: 700, transition: 'all .25s',
+    background: bg, borderRadius: 14, border: `2.5px solid ${borderColor}`, color: '#1c1917', ...extra,
   })
 
   // ── SELECT ──────────────────────────────────────────────────────────────────
