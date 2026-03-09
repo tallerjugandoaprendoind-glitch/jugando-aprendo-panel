@@ -458,43 +458,44 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
 
             {/* ANAMNESIS (solo desktop XL) */}
-            <div className="hidden xl:flex xl:col-span-3 bg-white dark:bg-slate-800 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-700 flex-col">
-                <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-slate-100 font-extrabold text-slate-700 text-xs uppercase tracking-[0.2em] flex items-center gap-2 sticky top-0 z-10">
-                    <FileText size={16} className="text-blue-600"/> Ficha de Ingreso
+            <div className="hidden xl:flex xl:col-span-3 rounded-3xl md:rounded-[2.5rem] shadow-sm flex-col overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+                <div className="p-4 md:p-6 border-b font-extrabold text-xs uppercase tracking-[0.2em] flex items-center gap-2 sticky top-0 z-10" style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)', color: 'var(--text-secondary)' }}>
+                    <FileText size={16} className="text-blue-500"/> Ficha de Ingreso
                 </div>
                 <div className="p-4 md:p-6 space-y-5">
                     {historyData.anamnesis ? Object.entries(historyData.anamnesis).slice(0, 15).map(([key, value]: any) => (
-                      <div key={key} className="group hover:bg-slate-50 p-3 rounded-xl transition-all">
-                            <span className="text-[10px] font-black text-slate-400 uppercase block mb-1.5 tracking-wider">{key.replace(/_/g, ' ')}</span>
-                            <p className="text-sm text-slate-700 font-bold leading-tight">{String(value)}</p>
+                      <div key={key} className="p-3 rounded-xl transition-all hover:opacity-80" style={{ borderBottom: '1px solid var(--card-border)' }}>
+                            <span className="text-[10px] font-black uppercase block mb-1.5 tracking-wider" style={{ color: 'var(--text-muted)' }}>{key.replace(/_/g, ' ')}</span>
+                            <p className="text-sm font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{String(value)}</p>
                       </div>
                     )) : (
                         <div className="text-center py-20">
-                            <FileText className="mx-auto text-slate-200 mb-3" size={48}/>
-                            <p className="text-xs text-slate-300 mt-2">No hay datos</p>
+                            <FileText className="mx-auto mb-3" size={48} style={{ color: 'var(--card-border)' }}/>
+                            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>No hay datos</p>
                         </div>
                     )}
                 </div>
             </div>            {/* HISTORIAL (desktop: columna fija, mobile: tab) */}
-            <div className={`col-span-1 lg:col-span-7 xl:col-span-5 bg-white dark:bg-slate-800 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col
-              ${mobileTab === 'history' ? 'flex' : 'hidden lg:flex'}`}>
-                <div className="p-4 md:p-6 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sticky top-0 z-10 shadow-sm">
-                    <span className="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-widest flex items-center gap-2">
+            <div className={`col-span-1 lg:col-span-7 xl:col-span-5 rounded-3xl md:rounded-[2.5rem] shadow-sm flex flex-col overflow-hidden
+              ${mobileTab === 'history' ? 'flex' : 'hidden lg:flex'}`}
+              style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+                <div className="p-4 md:p-6 border-b flex justify-between items-center sticky top-0 z-10 shadow-sm" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
+                    <span className="font-bold text-sm uppercase tracking-widest flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
                       <History size={18} className="text-orange-500"/> 
                       Registro Clínico
                     </span>
-                    <span className="text-[10px] bg-slate-100 px-3 py-1 rounded-full font-bold text-slate-500">
+                    <span className="text-[10px] px-3 py-1 rounded-full font-bold" style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)' }}>
                       {historyData.aba.length + historyData.entorno.length} Registros
                     </span>
                 </div>
                 
-                <div className="p-4 md:p-6 space-y-4 bg-slate-50/50 dark:bg-slate-900/50">
+                <div className="p-4 md:p-6 space-y-4" style={{ background: 'var(--background)' }}>
                    {historyData.entorno.map((visita: any) => {
                         const isExpanded = expandedCardId === `entorno-${visita.id}`
                         const d = visita.datos || {}
 
                         return (
-                            <div key={`entorno-${visita.id}`} className={`bg-gradient-to-br from-green-50 to-white rounded-2xl md:rounded-[1.5rem] border-2 transition-all duration-300 ${isExpanded ? 'border-green-400 shadow-xl ring-4 ring-green-50' : 'border-green-100 hover:border-green-200'}`}>
+                            <div key={`entorno-${visita.id}`} className={`rounded-2xl md:rounded-[1.5rem] border-2 transition-all duration-300 ${isExpanded ? 'border-green-500 shadow-xl' : 'border-green-800/30 hover:border-green-500/50'}`} style={{ background: 'var(--card)' }}>
                                 <div className="p-4 md:p-5 cursor-pointer flex items-center justify-between" onClick={() => toggleCard(`entorno-${visita.id}`)}>
                                     <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
                                         <div className="flex flex-col items-center justify-center bg-green-600 text-white rounded-xl p-3 min-w-[70px] shadow-lg">
@@ -502,17 +503,17 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                                             <span className="text-[10px] font-bold uppercase opacity-80 mt-1">Hogar</span>
                                         </div>
                                         <div className="flex flex-col overflow-hidden">
-                                            <p className="text-sm font-black text-slate-700 truncate">Visita Domiciliaria</p>
-                                            <span className="text-xs text-green-600 font-bold">{visita.fecha_visita}</span>
+                                            <p className="text-sm font-black truncate" style={{ color: 'var(--text-primary)' }}>Visita Domiciliaria</p>
+                                            <span className="text-xs text-green-500 font-bold">{visita.fecha_visita}</span>
                                         </div>
                                     </div>
-                                    <div className={`p-2.5 rounded-full transition-all ${isExpanded ? 'bg-green-600 text-white rotate-180' : 'bg-green-50 text-green-400'}`}>
+                                    <div className={`p-2.5 rounded-full transition-all ${isExpanded ? 'bg-green-600 text-white rotate-180' : 'text-green-500'}`} style={!isExpanded ? { background: 'var(--muted-bg)' } : {}}>
                                       <ChevronDown size={20}/>
                                     </div>
                                 </div>
 
                                 {isExpanded && (
-                                    <div className="p-6 pt-0 border-t border-green-50 dark:border-green-900/20 bg-white dark:bg-slate-800 animate-fade-in">
+                                    <div className="p-6 pt-0 border-t animate-fade-in" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
                                         <div className="flex flex-col gap-4 mt-6">
                                             <DetailBox title="Personas Presentes" content={d.personas_presentes} icon={<Users size={14}/>} color="bg-blue-50 border-blue-100 text-blue-900" full/>
                                             <DetailBox title="Comportamiento" content={d.comportamiento_observado} icon={<Eye size={14}/>} color="bg-purple-50 border-purple-100 text-purple-900" full/>
@@ -536,26 +537,26 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                         const d = sesion.datos || {}
 
                         return (
-                            <div key={`aba-${sesion.id}`} className={`bg-white dark:bg-slate-800 rounded-2xl md:rounded-[1.5rem] border-2 transition-all duration-300 ${isExpanded ? 'border-blue-400 shadow-xl ring-4 ring-blue-50' : 'border-slate-100 hover:border-blue-200'}`}>
+                            <div key={`aba-${sesion.id}`} className={`rounded-2xl md:rounded-[1.5rem] border-2 transition-all duration-300 ${isExpanded ? 'border-blue-500 shadow-xl' : 'hover:border-blue-400/50'}`} style={{ background: 'var(--card)', borderColor: isExpanded ? undefined : 'var(--card-border)' }}>
                                 <div className="p-5 cursor-pointer flex items-center justify-between" onClick={() => toggleCard(`aba-${sesion.id}`)}>
                                     <div className="flex items-center gap-4 overflow-hidden">
-                                        <div className="flex flex-col items-center justify-center bg-slate-800 text-white rounded-xl p-3 min-w-[70px] shadow-lg">
+                                        <div className="flex flex-col items-center justify-center bg-violet-700 text-white rounded-xl p-3 min-w-[70px] shadow-lg">
                                             <span className="text-[10px] font-bold uppercase opacity-60">
                                               {new Date(sesion.fecha_sesion).toLocaleString('default', { month: 'short' })}
                                             </span>
                                             <span className="text-xl font-black">{new Date(sesion.fecha_sesion).getDate() + 1}</span>
                                         </div>
                                         <div className="flex flex-col overflow-hidden">
-                                            <p className="text-sm font-black text-slate-700 truncate">{d.conducta || "Sesión ABA"}</p>
+                                            <p className="text-sm font-black truncate" style={{ color: 'var(--text-primary)' }}>{d.conducta || "Sesión ABA"}</p>
                                         </div>
                                     </div>
-                                    <div className={`p-2.5 rounded-full transition-all ${isExpanded ? 'bg-blue-600 text-white rotate-180' : 'bg-slate-50 text-slate-400'}`}>
+                                    <div className={`p-2.5 rounded-full transition-all ${isExpanded ? 'bg-blue-600 text-white rotate-180' : ''}`} style={!isExpanded ? { background: 'var(--muted-bg)', color: 'var(--text-muted)' } : {}}>
                                       <ChevronDown size={20}/>
                                     </div>
                                 </div>
 
                                 {isExpanded && (
-                                    <div className="p-6 pt-0 border-t border-slate-50 dark:border-slate-700 bg-white dark:bg-slate-800 animate-fade-in">
+                                    <div className="p-6 pt-0 border-t animate-fade-in" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
                                         <div className="flex flex-col gap-4 mt-6">
                                             <DetailBox title="Objetivo" content={d.objetivo_principal} icon={<Target size={14}/>} color="bg-blue-50 border-blue-100 text-blue-900" full/>
                                             <DetailBox title="Observaciones" content={d.observaciones_tecnicas} icon={<Eye size={14}/>} color="bg-slate-50 border-slate-100" full/>
@@ -565,13 +566,13 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                                                 <DetailBox title="Intervención" content={d.estrategias_manejo} icon={<Zap size={14}/>} color="bg-orange-50 border-orange-100 text-orange-900"/>
                                             </div>
 
-                                            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-3">
+                                            <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-3">
                                               <div className="flex items-center gap-2 mb-2">
-                                                <MessageCircle size={12} className="text-amber-600"/>
-                                                <span className="text-xs font-black text-amber-700 uppercase tracking-widest">Mensaje Padres</span>
-                                                <span className="ml-auto px-1.5 py-0.5 bg-amber-100 text-amber-600 text-[9px] font-black rounded-full border border-amber-300">⏳ En Bandeja</span>
+                                                <MessageCircle size={12} className="text-amber-500"/>
+                                                <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Mensaje Padres</span>
+                                                <span className="ml-auto px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[9px] font-black rounded-full border border-amber-500/30">⏳ En Bandeja</span>
                                               </div>
-                                              <p className="text-xs text-amber-700 italic">"{d.mensaje_padres}"</p>
+                                              <p className="text-xs text-amber-400 italic">"{d.mensaje_padres}"</p>
                                             </div>
                                         </div>
                                     </div>
@@ -581,8 +582,8 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                     })}
                     
                     {(historyData.aba.length === 0 && historyData.entorno.length === 0) && (
-                      <div className="h-full flex flex-col items-center justify-center text-slate-300 py-20">
-                        <History size={80} className="mb-6"/>
+                      <div className="h-full flex flex-col items-center justify-center py-20" style={{ color: 'var(--text-muted)' }}>
+                        <History size={80} className="mb-6 opacity-20"/>
                         <p className="text-lg font-black uppercase tracking-[0.3em]">Sin Registros</p>
                       </div>
                     )}
@@ -590,8 +591,9 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
             </div>
 
             {/* CHAT IA (desktop: columna, mobile: tab chat) */}
-            <div className={`col-span-1 lg:col-span-5 xl:col-span-4 bg-white dark:bg-slate-800 rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-200 flex flex-col
-              ${mobileTab === 'chat' ? 'flex' : 'hidden lg:flex'}`}>
+            <div className={`col-span-1 lg:col-span-5 xl:col-span-4 rounded-3xl md:rounded-[3rem] shadow-2xl flex flex-col overflow-hidden
+              ${mobileTab === 'chat' ? 'flex' : 'hidden lg:flex'}`}
+              style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
                 <div className="p-4 md:p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex justify-between items-center shadow-lg">
                    <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
@@ -630,16 +632,19 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                 )}
                 
                 <div 
-                  className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-5 bg-gradient-to-br from-slate-50 to-white" 
+                  className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-5" 
+                  style={{ background: 'var(--background)' }}
                   ref={chatContainerRef}
                 >
                     {messages.map((m, i) => (
                         <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                            <div className={`max-w-[90%] p-4 rounded-2xl md:rounded-[1.5rem] text-sm leading-relaxed shadow-md ${
-                              m.role === 'user' 
-                                ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-none border-b-4 border-blue-800' 
-                                : 'bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-100 rounded-bl-none'
-                            }`}>
+                            <div
+                              className={`max-w-[90%] p-4 rounded-2xl md:rounded-[1.5rem] text-sm leading-relaxed shadow-md`}
+                              style={m.role === 'user'
+                                ? { background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: '#fff', borderRadius: '1.5rem 1.5rem 0.25rem 1.5rem', borderBottom: '3px solid #1e3a8a' }
+                                : { background: 'var(--muted-bg)', border: '1.5px solid var(--card-border)', color: 'var(--text-primary)', borderRadius: '0.25rem 1.5rem 1.5rem 1.5rem' }
+                              }
+                            >
                                 {m.role === 'ai' ? (
                                   <p className="font-medium whitespace-pre-wrap" dangerouslySetInnerHTML={{
                                     __html: m.text
@@ -652,20 +657,21 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                     ))}
                     {typing && (
                       <div className="flex justify-start animate-fade-in">
-                        <div className="bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 px-5 py-3 rounded-2xl rounded-bl-none flex items-center gap-2">
-                          <Loader2 className="animate-spin text-blue-600" size={16}/>
-                          <span className="text-xs font-bold text-slate-400">Analizando...</span>
+                        <div className="px-5 py-3 rounded-2xl flex items-center gap-2" style={{ background: 'var(--muted-bg)', border: '1.5px solid var(--card-border)' }}>
+                          <Loader2 className="animate-spin text-blue-500" size={16}/>
+                          <span className="text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>Analizando...</span>
                         </div>
                       </div>
                     )}
                 </div>
 
-                <div className="p-4 md:p-5 border-t-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex gap-2 shadow-lg">
+                <div className="p-4 md:p-5 flex gap-2 shadow-lg" style={{ background: 'var(--card)', borderTop: '1.5px solid var(--card-border)' }}>
                     <input 
-                        className="flex-1 border-2 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all"
+                        className="flex-1 border-2 rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all"
                         style={{
-                          background: listening ? '#fef2f2' : '#f8fafc',
-                          borderColor: listening ? '#fca5a5' : '#e2e8f0',
+                          background: listening ? '#fef2f2' : 'var(--input-bg)',
+                          borderColor: listening ? '#fca5a5' : 'var(--input-border)',
+                          color: 'var(--text-primary)',
                         }}
                         placeholder={listening ? '🎤 Escuchando...' : 'Pregunta sobre evolución...'}
                         value={input}

@@ -247,7 +247,7 @@ export default function ResourcesManagementView() {
                   <button onClick={() => handleEdit(resource)} className="p-1.5 rounded-lg bg-white/80 dark:bg-slate-700/80 text-slate-400 hover:text-indigo-500 transition-all">
                     <Pencil size={14}/>
                   </button>
-                  <button onClick={() => handleDelete(resource.id)} className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 bg-white/80 text-slate-400 hover:text-red-500 transition-all">
+                  <button onClick={() => handleDelete(resource.id)} className="p-1.5 rounded-lg bg-white/80 dark:bg-slate-700/80 text-slate-400 hover:text-red-500 transition-all">
                     <Trash2 size={14}/>
                   </button>
                 </div>

@@ -35,7 +35,7 @@ function TooltipABA({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   const logro = payload.find((p: any) => p.dataKey === 'logro')?.value
   return (
-    <div className="bg-white border-2 border-slate-200 rounded-2xl shadow-2xl p-3 text-xs min-w-[160px]">
+    <div style={{ background: "var(--card)", border: "1px solid var(--card-border)", color: "var(--text-primary)" }} className="rounded-2xl shadow-2xl p-3 text-xs min-w-[160px]">
       <p className="font-black text-slate-700 mb-2 border-b border-slate-100 pb-1">{fmtFecha(label)}</p>
       {payload.map((p: any, i: number) => (
         <div key={i} className="flex justify-between gap-3 mb-1">
@@ -125,10 +125,10 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
 
       {/* Controles */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+        <div className="flex gap-1 p-1 rounded-xl" style={{ background: 'var(--muted-bg)' }}>
           {[4, 8, 12, 24].map(s => (
             <button key={s} onClick={() => setSemanas(s)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${semanas === s ? 'bg-white text-violet-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${semanas === s ? "text-violet-600 shadow-sm" : ""}`} style={{ background: semanas === s ? "var(--card)" : "transparent", color: semanas === s ? undefined : "var(--text-secondary)" }}>
               {s} sem
             </button>
           ))}
@@ -136,12 +136,13 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
         {!modoParent && (
           <div className="relative">
             <button onClick={() => setSelector(!selector)}
-              className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-bold text-slate-600 hover:border-violet-400 shadow-sm transition-all">
+              className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold hover:border-violet-400 shadow-sm transition-all"
+              style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
               {tipoActual?.emoji} {tipoActual?.label}
               <svg className={`w-3 h-3 text-slate-400 transition-transform ${selector ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
             </button>
             {selector && (
-              <div className="absolute right-0 top-11 z-30 bg-white border border-slate-200 rounded-2xl shadow-2xl p-2 w-52">
+              <div className="absolute right-0 top-11 z-30 rounded-2xl shadow-2xl p-2 w-52" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 py-1.5">Tipo de gráfico</p>
                 {TIPOS.map(t => (
                   <button key={t.id} onClick={() => { setTipo(t.id); setSelector(false) }}
@@ -187,7 +188,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           { label: 'Asistencia', val: asistencia?.tasa ?? 0, sub: `${asistencia?.asistidas ?? 0} de ${asistencia?.total ?? 0} sesiones`, color: 'text-violet-700', bar: 'bg-violet-500' },
           { label: 'Tareas en casa', val: tareas?.adherencia ?? 0, sub: `${tareas?.completadas ?? 0} de ${tareas?.total ?? 0} tareas`, color: 'text-emerald-600', bar: 'bg-emerald-500' },
         ].map(stat => (
-          <div key={stat.label} className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+          <div key={stat.label} className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{stat.label}</p>
             <p className={`text-3xl font-black tabular-nums ${stat.color}`}>{stat.val}%</p>
             <p className="text-xs text-slate-400 mt-1">{stat.sub}</p>
@@ -200,7 +201,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
 
       {/* Gráfico principal */}
       {graficaABA.length > 0 ? (
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+        <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="font-black text-slate-800 text-sm">{tipoActual?.emoji} Progreso ABA — {tipoActual?.label}</h3>
@@ -225,11 +226,11 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                 <ReferenceLine y={CRITERIO_PCT} stroke={C.criterio} strokeDasharray="6 3" strokeWidth={2}
                   label={{ value: `Meta ${CRITERIO_PCT}%`, position: 'insideTopRight', fontSize: 9, fill: C.criterio, fontWeight: 700 }} />
-                <Line type="monotone" dataKey="logro" stroke={C.logro} strokeWidth={3} dot={{ r: 5, fill: C.logro, stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 7 }} name="Logro obj." />
+                <Line type="linear" dataKey="logro" stroke={C.logro} strokeWidth={3} dot={{ r: 5, fill: C.logro, stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 7 }} name="Logro obj." />
                 {!modoParent && <>
-                  <Line type="monotone" dataKey="atencion"     stroke={C.atencion}     strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Atención" />
-                  <Line type="monotone" dataKey="tolerancia"   stroke={C.tolerancia}   strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Tolerancia" />
-                  <Line type="monotone" dataKey="comunicacion" stroke={C.comunicacion} strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Comunicación" />
+                  <Line type="linear" dataKey="atencion"     stroke={C.atencion}     strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Atención" />
+                  <Line type="linear" dataKey="tolerancia"   stroke={C.tolerancia}   strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Tolerancia" />
+                  <Line type="linear" dataKey="comunicacion" stroke={C.comunicacion} strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Comunicación" />
                 </>}
               </LineChart>
             </ResponsiveContainer>
@@ -269,11 +270,11 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                 <Tooltip content={<TooltipABA />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                 <ReferenceLine y={CRITERIO_PCT} stroke={C.criterio} strokeDasharray="6 3" strokeWidth={2} />
-                <Area type="monotone" dataKey="logro" fill="url(#gLogro)" stroke={C.logro} strokeWidth={2.5} name="Logro obj." dot={{ r: 4, fill: C.logro, stroke: '#fff', strokeWidth: 2 }} />
+                <Area type="linear" dataKey="logro" fill="url(#gLogro)" stroke={C.logro} strokeWidth={2.5} name="Logro obj." dot={{ r: 4, fill: C.logro, stroke: '#fff', strokeWidth: 2 }} />
                 {!modoParent && <>
-                  <Line type="monotone" dataKey="atencion"     stroke={C.atencion}     strokeWidth={1.5} name="Atención"     dot={false} strokeDasharray="4 2" />
-                  <Line type="monotone" dataKey="tolerancia"   stroke={C.tolerancia}   strokeWidth={1.5} name="Tolerancia"   dot={false} strokeDasharray="4 2" />
-                  <Line type="monotone" dataKey="comunicacion" stroke={C.comunicacion} strokeWidth={1.5} name="Comunicación" dot={false} strokeDasharray="4 2" />
+                  <Line type="linear" dataKey="atencion"     stroke={C.atencion}     strokeWidth={1.5} name="Atención"     dot={false} strokeDasharray="4 2" />
+                  <Line type="linear" dataKey="tolerancia"   stroke={C.tolerancia}   strokeWidth={1.5} name="Tolerancia"   dot={false} strokeDasharray="4 2" />
+                  <Line type="linear" dataKey="comunicacion" stroke={C.comunicacion} strokeWidth={1.5} name="Comunicación" dot={false} strokeDasharray="4 2" />
                 </>}
               </ComposedChart>
             </ResponsiveContainer>
@@ -397,7 +398,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           )}
         </div>
       ) : (
-        <div className="text-center py-16 bg-white border border-slate-100 rounded-2xl">
+        <div className="text-center py-16 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <p className="text-5xl mb-3">📊</p>
           <p className="text-slate-600 text-sm font-bold">Sin sesiones en este período</p>
           <p className="text-slate-400 text-xs mt-1">Registrá sesiones ABA para ver el progreso</p>
@@ -418,7 +419,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
 
       {/* Evaluaciones */}
       {!modoParent && evaluaciones && Object.keys(evaluaciones).length > 0 && (
-        <div className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm">
+        <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <h3 className="font-black text-slate-700 text-sm mb-3">🧪 Evaluaciones neuropsicológicas</h3>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(evaluaciones).map(([nombre, d]: [string, any]) => (

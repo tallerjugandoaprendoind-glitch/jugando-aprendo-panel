@@ -472,7 +472,7 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 font-sans text-slate-600 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 font-sans text-slate-700 overflow-hidden">
         
         {/* 🔔 PUSH NOTIFICATIONS BANNER */}
         <PushNotificationBanner userId={profile?.id || null} />
@@ -508,7 +508,7 @@ export default function ParentDashboard() {
         )}
 
         {/* === SIDEBAR (PC) === */}
-        <aside className="hidden lg:flex w-80 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 flex-col justify-between p-7 z-20 shadow-[4px_0_40px_rgba(0,0,0,0.03)]">
+        <aside className="hidden lg:flex w-72 bg-white border-r border-slate-100 flex-col justify-between p-6 z-20 shadow-sm">
             <div>
                 <div className="flex items-center gap-4 mb-12 px-2">
                     <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-blue-200/50 ring-4 ring-blue-100/50 relative group cursor-pointer">

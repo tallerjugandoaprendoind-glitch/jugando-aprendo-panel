@@ -290,7 +290,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                 { label: 'Nueva Evaluación', icon: FileText, view: 'evaluaciones', color: 'bg-blue-600 hover:bg-blue-700 text-white' },
                 { label: 'Agendar Cita', icon: Calendar, view: 'agenda', color: 'bg-slate-800 hover:bg-slate-900 text-white' },
                 { label: 'Historial & IA', icon: Brain, view: 'reportes', color: 'bg-violet-600 hover:bg-violet-700 text-white' },
-                { label: 'Ver Pacientes', icon: Users, view: 'ninos', color: 'bg-slate-100 hover:bg-slate-200 text-slate-700' },
+                { label: 'Ver Pacientes', icon: Users, view: 'ninos', color: 'bg-slate-700 hover:bg-slate-600 text-white' },
                 { label: 'Mensajes padres', icon: MessageCircle, view: 'mensajes', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700', badge: stats.mensajesPendientes },
               ].map(({ label, icon: Icon, view, color, badge }: any) => (
                 <button key={view} onClick={() => navigateTo(view)}
