@@ -24,6 +24,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true })
     }
 
+    if (accion === 'actualizar_completadas') {
+      const { planId, actividades, completadas_pct } = await req.json()
+      if (!planId) return NextResponse.json({ error: 'planId requerido' }, { status: 400 })
+      const { error } = await supabaseAdmin
+        .from('engagement_planes')
+        .update({ actividades, completadas_pct })
+        .eq('id', planId)
+      if (error) throw error
+      return NextResponse.json({ success: true })
+    }
+
     // Cargar datos del niño
     const { data: child } = await supabaseAdmin
       .from('children')

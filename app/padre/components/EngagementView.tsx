@@ -41,6 +41,7 @@ const DIFICULTAD_COLORS: Record<string, string> = {
 
 export default function EngagementView({ childId }: { childId: string }) {
   const [plan, setPlan] = useState<Plan | null>(null)
+  const [planId, setPlanId] = useState<string | null>(null)
   const [historial, setHistorial] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [generando, setGenerando] = useState(false)
@@ -54,7 +55,8 @@ export default function EngagementView({ childId }: { childId: string }) {
       const json = await res.json()
       if (json.plan) {
         setPlan(json.plan)
-        // Restaurar completadas
+        setPlanId(json.plan.id || null)
+        // Restaurar completadas desde Supabase
         const comp = new Set<number>()
         json.plan.actividades?.forEach((a: Actividad, i: number) => { if (a.completada) comp.add(i) })
         setCompletadas(comp)
@@ -75,19 +77,45 @@ export default function EngagementView({ childId }: { childId: string }) {
       const json = await res.json()
       if (json.error) throw new Error(json.error)
       setPlan(json.plan)
+      setPlanId(json.plan.id || null)
       setCompletadas(new Set())
     } catch (e: any) {
       alert('Error generando plan: ' + e.message)
     } finally { setGenerando(false) }
   }
 
-  const toggleCompletada = (idx: number) => {
-    setCompletadas(prev => {
-      const next = new Set(prev)
-      if (next.has(idx)) next.delete(idx)
-      else next.add(idx)
-      return next
-    })
+  const toggleCompletada = async (idx: number) => {
+    if (!plan) return
+
+    // Optimistic update en UI
+    const next = new Set(completadas)
+    if (next.has(idx)) next.delete(idx)
+    else next.add(idx)
+    setCompletadas(next)
+
+    // Construir actividades actualizadas con campo completada
+    const actividadesActualizadas = plan.actividades.map((a, i) => ({
+      ...a,
+      completada: next.has(i),
+    }))
+    const completadas_pct = Math.round((next.size / plan.actividades.length) * 100)
+
+    // Persistir en Supabase
+    try {
+      await fetch('/api/engagement-padres', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          childId,
+          accion: 'actualizar_completadas',
+          planId,
+          actividades: actividadesActualizadas,
+          completadas_pct,
+        }),
+      })
+    } catch (e) {
+      console.error('Error guardando progreso:', e)
+    }
   }
 
   useEffect(() => { if (childId) cargarPlan() }, [childId])
