@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildAIContext } from '@/lib/ai-context-builder'
 
 
 export async function POST(req: Request) {
@@ -69,7 +70,32 @@ Genera un JSON con la siguiente estructura EXACTA (sin markdown, solo JSON puro)
   "mensaje_equipo": "Mensaje motivador de 2-3 oraciones para el equipo terapéutico"
 }`;
 
-    const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
+
+    // ━━━ CEREBRO IA: buscar conocimiento clínico relevante ━━━
+
+
+    let _cerebroCtx = ''
+
+
+    try {
+
+
+      const _query = 'resumen paciente diagnóstico ABA TEA perfil clínico'
+
+
+      const _kb = await buildAIContext(undefined, undefined, undefined, _query)
+
+
+      _cerebroCtx = _kb.knowledgeContext
+
+
+    } catch { /* Cerebro IA no disponible */ }
+
+
+    // ━━━ FIN CEREBRO IA ━━━
+
+
+    const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',, prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
     const text = response || '';
     const clean = text.replace(/```json|```/g, '').trim();

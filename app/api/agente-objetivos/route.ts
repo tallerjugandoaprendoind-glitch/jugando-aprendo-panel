@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildAIContext } from '@/lib/ai-context-builder'
 
 export async function POST(req: NextRequest) {
   try {
@@ -144,8 +145,32 @@ Responde en JSON: {"objetivos_sugeridos": [{titulo, area, descripcion, criterio_
 SOLO JSON.`
     }
 
-    const respuestaRaw = await callGroqSimple(
-      'Eres un psicólogo conductual certificado BCBA especializado en diseño de programas ABA para niños con TEA y TDAH. Siempre respondes con JSON válido y sin texto adicional.',
+
+    // ━━━ CEREBRO IA: buscar conocimiento clínico relevante ━━━
+
+
+    let _cerebroCtx = ''
+
+
+    try {
+
+
+      const _query = 'objetivos ABA habilidades metas conducta'
+
+
+      const _kb = await buildAIContext(undefined, undefined, undefined, _query)
+
+
+      _cerebroCtx = _kb.knowledgeContext
+
+
+    } catch { /* Cerebro IA no disponible */ }
+
+
+    // ━━━ FIN CEREBRO IA ━━━
+
+
+    const respuestaRaw = await callGroqSimple('Eres un psicólogo conductual certificado BCBA especializado en diseño de programas ABA para niños con TEA y TDAH. Siempre respondes con JSON válido y sin texto adicional. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',,
       promptBase,
       { model: GROQ_MODELS.SMART, temperature: 0.3, maxTokens: 1500 }
     )

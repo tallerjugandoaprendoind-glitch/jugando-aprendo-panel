@@ -1,54 +1,97 @@
 // lib/ai-context-builder.ts
-// Construye el contexto completo para cualquier análisis clínico de la IA:
-// RAG (base de conocimiento) + historial del niño + instrucciones del centro
+// Contexto completo para TODAS las IAs:
+// Cerebro IA (knowledge base) + historial del niño + instrucciones del centro
 
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { createClient } from '@supabase/supabase-js'
 import { getChildHistory } from '@/lib/child-history'
+import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
-// ── Búsqueda semántica sin embeddings (fallback hasta que pgvector esté activo)
-// Busca por similitud de texto simple en los chunks indexados
-async function searchKnowledgeFallback(query: string, maxResults = 5): Promise<string> {
+function getAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+}
+
+// ── Búsqueda en Cerebro IA ────────────────────────────────────────────────────
+// Estrategia dual: vector search (si hay embeddings) + keyword fallback
+async function searchCerebroIA(query: string, maxResults = 6): Promise<string> {
+  if (!query?.trim()) return ''
+  const db = getAdmin()
+
   try {
-    // Palabras clave de la query para búsqueda parcial
+    // 1. Intentar búsqueda vectorial con RPC
+    const { data: vectorResults, error: vectorError } = await db
+      .rpc('buscar_conocimiento', {
+        query_text:      query.slice(0, 500),
+        similarity_threshold: 0.3,
+        match_count:     maxResults,
+      })
+
+    if (!vectorError && vectorResults && vectorResults.length > 0) {
+      return formatKnowledgeResults(vectorResults, 'vector')
+    }
+  } catch {}
+
+  try {
+    // 2. Fallback: búsqueda por keywords en knowledge_chunks
     const keywords = query
       .toLowerCase()
+      .replace(/[^\w\sáéíóúñü]/g, ' ')
       .split(/\s+/)
-      .filter(w => w.length > 3)
-      .slice(0, 5)
+      .filter(w => w.length > 4)
+      .slice(0, 6)
 
     if (keywords.length === 0) return ''
 
-    // Búsqueda por keywords en contenido de chunks
-    const { data } = await supabaseAdmin
+    const { data: keywordResults } = await db
       .from('knowledge_chunks')
-      .select('contenido, metadata, knowledge_documents(titulo)')
+      .select('contenido, metadata, knowledge_documents(titulo, tipo)')
       .or(keywords.map(k => `contenido.ilike.%${k}%`).join(','))
       .limit(maxResults)
 
-    if (!data || data.length === 0) return ''
+    if (keywordResults && keywordResults.length > 0) {
+      return formatKnowledgeResults(
+        keywordResults.map((r: any) => ({
+          contenido: r.contenido,
+          fuente: r.knowledge_documents?.titulo || r.metadata?.fuente || 'Cerebro IA',
+          similitud: 70,
+        })),
+        'keyword'
+      )
+    }
+  } catch {}
 
-    return `\n━━━ CONOCIMIENTO CLÍNICO RELEVANTE (${data.length} fuentes) ━━━\n` +
-      data.map((c: any, i: number) =>
-        `[Fuente ${i + 1}: ${c.knowledge_documents?.titulo || 'Base de conocimiento'}]\n${c.contenido.slice(0, 400)}...`
-      ).join('\n\n') +
-      `\n━━━ FIN CONOCIMIENTO ━━━\n`
-  } catch {
-    return ''
-  }
+  return ''
 }
 
-// ── Obtener instrucciones del centro (siempre incluidas)
+function formatKnowledgeResults(results: any[], tipo: string): string {
+  if (!results?.length) return ''
+  return (
+    `\n━━━ CONOCIMIENTO CLÍNICO — CEREBRO IA (${results.length} fuentes, búsqueda ${tipo}) ━━━\n` +
+    results.map((r: any, i: number) => {
+      const fuente = r.fuente || r.knowledge_documents?.titulo || 'Base de conocimiento'
+      const similitud = r.similitud ? ` | ${Math.round(r.similitud)}% relevancia` : ''
+      const contenido = (r.contenido || '').slice(0, 500)
+      return `[Fuente ${i + 1}: ${fuente}${similitud}]\n${contenido}...`
+    }).join('\n\n') +
+    `\n━━━ FIN CONOCIMIENTO CEREBRO IA ━━━\n`
+  )
+}
+
+// ── Instrucciones del centro ──────────────────────────────────────────────────
 async function getCentroContext(): Promise<string> {
   try {
-    const { data } = await supabaseAdmin
+    const db = getAdmin()
+    const { data } = await db
       .from('centro_instrucciones')
       .select('titulo, contenido, prioridad')
       .eq('activo', true)
       .order('prioridad', { ascending: false })
       .limit(6)
 
-    if (!data || data.length === 0) return ''
-
+    if (!data?.length) return ''
     return `\n━━━ INSTRUCCIONES DEL CENTRO ━━━\n` +
       data.map((i: any) => `[${i.titulo}]: ${i.contenido}`).join('\n') +
       `\n━━━ FIN INSTRUCCIONES ━━━\n`
@@ -57,79 +100,86 @@ async function getCentroContext(): Promise<string> {
   }
 }
 
-// ── Builder principal ────────────────────────────────────────────────────────
+// ── Builder principal ─────────────────────────────────────────────────────────
 export interface AIContextResult {
-  childName: string
-  childAge: string
-  diagnosis: string
-  historialTexto: string
+  childName:       string
+  childAge:        string
+  diagnosis:       string
+  historialTexto:  string
   knowledgeContext: string
-  centroContext: string
-  fullContext: string // todo junto para el prompt
+  centroContext:   string
+  fullContext:     string
 }
 
 export async function buildAIContext(
-  childId?: string,
+  childId?:           string,
   childNameFallback?: string,
-  childAgeFallback?: string,
-  searchQuery?: string
+  childAgeFallback?:  string,
+  searchQuery?:       string
 ): Promise<AIContextResult> {
-  // 1. Historial clínico del niño (paralelo con búsqueda de conocimiento)
+
   const [childHistory, knowledgeCtx, centroCtx] = await Promise.all([
     childId
       ? getChildHistory(childId, childNameFallback, childAgeFallback)
       : Promise.resolve({
           nombre: childNameFallback || 'Paciente',
-          edad: childAgeFallback || 'N/E',
+          edad:   childAgeFallback  || 'N/E',
           diagnostico: 'No especificado',
           historialTexto: '',
         }),
-    searchQuery ? searchKnowledgeFallback(searchQuery) : Promise.resolve(''),
+    searchQuery ? searchCerebroIA(searchQuery) : Promise.resolve(''),
     getCentroContext(),
   ])
 
-  const fullContext = [
-    centroCtx,
-    knowledgeCtx,
-    childHistory.historialTexto,
-  ].filter(Boolean).join('\n')
+  const fullContext = [centroCtx, knowledgeCtx, childHistory.historialTexto]
+    .filter(Boolean).join('\n')
 
   return {
-    childName: childHistory.nombre,
-    childAge: childHistory.edad,
-    diagnosis: childHistory.diagnostico,
-    historialTexto: childHistory.historialTexto,
+    childName:        childHistory.nombre,
+    childAge:         childHistory.edad,
+    diagnosis:        childHistory.diagnostico,
+    historialTexto:   childHistory.historialTexto,
     knowledgeContext: knowledgeCtx,
-    centroContext: centroCtx,
+    centroContext:    centroCtx,
     fullContext,
   }
 }
 
-// ── Retry helper IA — usa Groq por defecto, fallback a Gemini para PDFs ────
-import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
-
-// callGeminiSafe - ahora usa Groq internamente (más rápido y gratuito)
-// El parámetro 'ai' y 'model' se mantienen por compatibilidad pero se ignoran
-export async function callGeminiSafe(
-  ai: any,
-  model: string,
-  prompt: string,
-  config: any = {},
-  maxRetries = 3
+// ── Conectar admin-chat al Cerebro IA ─────────────────────────────────────────
+// Esta función se usa en admin-chat para inyectar el conocimiento clínico
+export async function buildAdminChatContext(
+  question: string,
+  existingContext: string
 ): Promise<string> {
-  try {
-    const result = await callGroqSimple(
-      'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo. Responde siempre en español.',
-      prompt,
-      { model: GROQ_MODELS.SMART, temperature: config.temperature ?? 0.5, maxTokens: config.maxOutputTokens ?? 2500, maxRetries }
-    )
-    return result
-  } catch (err: any) {
-    throw new Error(err.message || 'Error en IA')
-  }
+  const knowledgeCtx = await searchCerebroIA(question)
+  const centroCtx    = await getCentroContext()
+  return [centroCtx, knowledgeCtx, existingContext].filter(Boolean).join('\n')
 }
 
-// ── Parser JSON seguro ───────────────────────────────────────────────────────
+// ── Conectar parent-chat al Cerebro IA ────────────────────────────────────────
+export async function buildParentChatContext(
+  question: string,
+  existingContext: string
+): Promise<string> {
+  // Para padres: búsqueda más orientada a consejos prácticos
+  const query = `estrategias para padres ${question}`
+  const knowledgeCtx = await searchCerebroIA(query, 4)
+  return [knowledgeCtx, existingContext].filter(Boolean).join('\n')
+}
+
+// ── callGeminiSafe (compatibilidad — ahora usa Groq) ─────────────────────────
+export async function callGeminiSafe(
+  _ai: any, _model: string, prompt: string,
+  config: any = {}, maxRetries = 3
+): Promise<string> {
+  return callGroqSimple(
+    'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo. Responde en español.',
+    prompt,
+    { model: GROQ_MODELS.SMART, temperature: config.temperature ?? 0.5, maxTokens: config.maxOutputTokens ?? 2500, maxRetries }
+  )
+}
+
+// ── Parsers JSON ──────────────────────────────────────────────────────────────
 export function parseAIJson(rawText: string, fallback: any = {}): any {
   try {
     const match = rawText.match(/\{[\s\S]*\}/)
@@ -138,25 +188,18 @@ export function parseAIJson(rawText: string, fallback: any = {}): any {
   return { ...fallback, raw_text: rawText }
 }
 
-// ── Sanitizador JSON robusto para respuestas de Groq ─────────────────────────
-// Groq a veces incluye newlines literales y control chars dentro de strings JSON
 export function sanitizeGroqJson(raw: string): any {
   if (!raw) return {}
+  try { return JSON.parse(raw) } catch {}
   try {
-    // Intentar parseo directo primero
-    return JSON.parse(raw)
-  } catch {}
-  try {
-    // Extraer bloque JSON y limpiar caracteres de control
     const match = raw.match(/\{[\s\S]*\}/)
     if (!match) return {}
-    const cleaned = match[0]
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')  // control chars (no \t \n \r)
-      .replace(/(?<!\\)\n/g, '\\n')                      // unescaped newlines
-      .replace(/(?<!\\)\r/g, '\\r')                      // unescaped carriage returns
-      .replace(/(?<!\\)\t/g, '\\t')                      // unescaped tabs
-    return JSON.parse(cleaned)
-  } catch {
-    return {}
-  }
+    return JSON.parse(
+      match[0]
+        .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '')
+        .replace(/(?<!\\)\n/g, '\\n')
+        .replace(/(?<!\\)\r/g, '\\r')
+        .replace(/(?<!\\)\t/g, '\\t')
+    )
+  } catch { return {} }
 }

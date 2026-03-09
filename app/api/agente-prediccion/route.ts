@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildAIContext } from '@/lib/ai-context-builder'
 
 function parseNivelLogro(val: any): number | null {
   if (val === null || val === undefined || val === '') return null
@@ -133,11 +134,19 @@ Genera un análisis predictivo clínico con:
 
 Usa terminología ABA clínica. Sé específico, no genérico. Máximo 400 palabras.`
 
+    
+    // ━━━ CEREBRO IA ━━━
+    let _cerebroCtx = ''
+    try {
+      const _kb = await buildAIContext(undefined, undefined, undefined, 'predicción pronóstico ABA TEA neurodesarrollo')
+      _cerebroCtx = _kb.knowledgeContext
+    } catch { /* fallback */ }
+    // ━━━ FIN CEREBRO IA ━━━
     let analisis_ia: string | null = null
     try {
       analisis_ia = await callGroqSimple(
-        'Eres un psicólogo clínico ABA especializado en predicción de progreso terapéutico.',
-        promptIA,
+        'Eres un psicólogo clínico ABA especializado en predicción de progreso terapéutico. Fundamenta con libros clínicos del Cerebro IA.',
+        promptIA + (_cerebroCtx ? '\n\n━━━ CEREBRO IA ━━━\n' + _cerebroCtx : ''),
         { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 800 }
       )
     } catch (err) {

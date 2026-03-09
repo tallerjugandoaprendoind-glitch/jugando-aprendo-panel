@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildAIContext } from '@/lib/ai-context-builder'
 
 interface Sugerencia {
   tipo: 'objetivo_estancado' | 'cambio_fase' | 'reforzador' | 'conducta_desafiante' | 'logro_celebrar' | 'carga_sesiones'
@@ -228,16 +229,26 @@ export async function GET(req: NextRequest) {
     }
 
     // Generar insight global con IA si hay muchas sugerencias
+    
+    // ━━━ CEREBRO IA ━━━
+    let _cerebroCtx = ''
+    try {
+      const _kb = await buildAIContext(undefined, undefined, undefined, 'sugerencias estrategias ABA TEA intervención')
+      _cerebroCtx = _kb.knowledgeContext
+    } catch { /* fallback */ }
+    // ━━━ FIN CEREBRO IA ━━━
     let insightGlobal: string | null = null
     const urgentes = todasSugerencias.filter(s => s.prioridad === 'alta')
     if (urgentes.length >= 2) {
       try {
         insightGlobal = await callGroqSimple(
-          'Eres un supervisor clínico ABA analizando el estado del centro terapéutico.',
+          'Eres un supervisor clínico ABA analizando el estado del centro terapéutico. Fundamenta con libros clínicos del Cerebro IA.',
           `SUGERENCIAS URGENTES DETECTADAS EN EL CENTRO (${urgentes.length} de ${pacientes.length} pacientes):
 ${urgentes.slice(0, 5).map(s => `- ${s.titulo}: ${s.descripcion}`).join('\n')}
 
-Genera un RESUMEN EJECUTIVO para la directora del centro (2-3 oraciones). Qué patrón global ves y cuál es la prioridad de acción de esta semana.`,
+Genera un RESUMEN EJECUTIVO para la directora del centro (2-3 oraciones). Qué patrón global ves y cuál es la prioridad de acción de esta semana.
+
+CONOCIMIENTO CLÍNICO (Cerebro IA): ${_cerebroCtx || 'No disponible'}\`,
           { model: GROQ_MODELS.FAST, temperature: 0.3, maxTokens: 200 }
         )
       } catch { /* no bloquear */ }

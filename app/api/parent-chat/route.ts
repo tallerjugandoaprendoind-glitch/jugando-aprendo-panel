@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroq, callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildParentChatContext } from '@/lib/ai-context-builder'
 
 // FIX: calcular edad en años desde birth_date cuando age no está disponible
 function calcularEdad(birthDate: string | null | undefined, ageFallback: number | null | undefined): string {
@@ -211,6 +212,9 @@ async function generarRespuestaPadre(
   historial: any[],
   nombrePadre: string
 ): Promise<string> {
+  // 🧠 Buscar en Cerebro IA (libros clínicos) contexto relevante para la pregunta
+  const knowledgeCtx = await buildParentChatContext(mensaje, '')
+
   const systemPrompt = `Eres ARIA, el asistente virtual del Centro Jugando Aprendo para familias.
 Eres cálida, positiva y accesible. Conoces bien el caso de ${contexto.nombre}.
 
@@ -239,7 +243,13 @@ REGLAS CRITICAS:
 9. Trata al padre/madre por su nombre: ${nombrePadre}.
 10. Si hay tareas pendientes, recuérdalas con entusiasmo y explica cómo ayudan.
 11. Cuando pregunten "como le fue" usa el resumen de sesiones para dar datos reales.
-CONFIDENCIALIDAD: Comparte avances, logros, actividades y citas. NO compartas notas clínicas detalladas ni comparaciones con otros pacientes.`
+CONFIDENCIALIDAD: Comparte avances, logros, actividades y citas. NO compartas notas clínicas detalladas ni comparaciones con otros pacientes.
+
+${knowledgeCtx ? `
+━━━ CONOCIMIENTO CLÍNICO DE RESPALDO (Cerebro IA) ━━━
+${knowledgeCtx}
+Cuando sea útil, usa este conocimiento para dar consejos basados en evidencia, explicado en lenguaje simple para padres.
+━━━ FIN ━━━` : ''}\`
 
   // Build chat messages for Groq
   const groqMessages = [

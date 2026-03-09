@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildAIContext } from '@/lib/ai-context-builder'
 
 function parseLogro(val: any): number | null {
   if (val == null || val === "") return null
@@ -126,6 +127,31 @@ Escribe en lenguaje SIMPLE y ESPERANZADOR (máx. 300 palabras):
 
 Usa frases como "Hemos notado que...", "Los datos nos muestran que...", "Estamos muy contentos de compartir..."
 Nunca uses porcentajes directamente — tradúcelos: "${pred3meses}%" = "de cada 10 actividades, logrará ${Math.round(pred3meses/10)} bien"`
+
+
+    // ━━━ CEREBRO IA: buscar conocimiento clínico relevante ━━━
+
+
+    let _cerebroCtx = ''
+
+
+    try {
+
+
+      const _query = 'comparación progreso ABA evaluación neurodesarrollo'
+
+
+      const _kb = await buildAIContext(undefined, undefined, undefined, _query)
+
+
+      _cerebroCtx = _kb.knowledgeContext
+
+
+    } catch { /* Cerebro IA no disponible */ }
+
+
+    // ━━━ FIN CEREBRO IA ━━━
+
 
     const narrativa = await callGroqSimple(
       'Eres ARIA, asistente de comunicación familiar cálida del Centro Jugando Aprendo.',

@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildAIContext } from '@/lib/ai-context-builder'
 
 // ── POST /api/agente-conocimiento?accion=aprender ────────────────────────────
 // Procesa una sesión y extrae conocimiento anonimizado
@@ -60,8 +61,32 @@ Extrae exactamente esto en JSON (SIN nombres, SIN datos que identifiquen al paci
 }
 SOLO JSON, sin texto adicional.`
 
-  const respuestaRaw = await callGroqSimple(
-    'Eres un extractor de conocimiento clínico ABA que genera aprendizajes anonimizados para bases de conocimiento terapéutico.',
+
+  // ━━━ CEREBRO IA: buscar conocimiento clínico relevante ━━━
+
+
+  let _cerebroCtx = ''
+
+
+  try {
+
+
+    const _query = 'conocimiento clínico ABA aprendizaje sesión'
+
+
+    const _kb = await buildAIContext(undefined, undefined, undefined, _query)
+
+
+    _cerebroCtx = _kb.knowledgeContext
+
+
+  } catch { /* Cerebro IA no disponible */ }
+
+
+  // ━━━ FIN CEREBRO IA ━━━
+
+
+  const respuestaRaw = await callGroqSimple('Eres un extractor de conocimiento clínico ABA que genera aprendizajes anonimizados para bases de conocimiento terapéutico. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',,
     prompt,
     { model: GROQ_MODELS.FAST, temperature: 0.2, maxTokens: 600 }
   )

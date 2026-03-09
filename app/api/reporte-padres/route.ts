@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildAIContext } from '@/lib/ai-context-builder'
 
 function parseLogro(val: any): number | null {
   if (val == null || val === "") return null
@@ -154,6 +155,31 @@ ESCRIBE EL REPORTE CON ESTAS SECCIONES (en texto continuo, no como lista):
 7. MENSAJE MOTIVACIONAL — cierre cálido y esperanzador
 
 Dirígete a los padres como "ustedes" o por "familia".`
+
+
+    // ━━━ CEREBRO IA: buscar conocimiento clínico relevante ━━━
+
+
+    let _cerebroCtx = ''
+
+
+    try {
+
+
+      const _query = 'reporte padres ABA progreso comunicación familia'
+
+
+      const _kb = await buildAIContext(undefined, undefined, undefined, _query)
+
+
+      _cerebroCtx = _kb.knowledgeContext
+
+
+    } catch { /* Cerebro IA no disponible */ }
+
+
+    // ━━━ FIN CEREBRO IA ━━━
+
 
     const textoReporte = await callGroqSimple(
       'Eres ARIA, asistente de comunicación familiar cálida y profesional de un centro terapéutico.',

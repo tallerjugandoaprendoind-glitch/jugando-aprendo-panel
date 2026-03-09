@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildAIContext } from '@/lib/ai-context-builder'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 export async function POST(req: Request) {
@@ -38,8 +39,24 @@ export async function POST(req: Request) {
     `;
 
     // 5. Generar Análisis - Se asegura que el modelo sea un string fijo
-    const response = await callGroqSimple(
-        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+
+    // ━━━ CEREBRO IA: buscar conocimiento clínico relevante ━━━
+
+    let _cerebroCtx = ''
+
+    try {
+
+      const _query = 'progreso ABA análisis avance habilidades'
+
+      const _kb = await buildAIContext(undefined, undefined, undefined, _query)
+
+      _cerebroCtx = _kb.knowledgeContext
+
+    } catch { /* Cerebro IA no disponible */ }
+
+    // ━━━ FIN CEREBRO IA ━━━
+
+    const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',,
         prompt as string,
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
       );

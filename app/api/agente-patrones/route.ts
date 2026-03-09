@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { buildAIContext } from '@/lib/ai-context-builder'
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 interface PatronDetectado {
@@ -178,11 +179,19 @@ export async function POST(req: NextRequest) {
     const patrones = detectarPatrones(sesiones)
 
     // Análisis IA de los patrones detectados
+    
+    // ━━━ CEREBRO IA ━━━
+    let _cerebroCtx = ''
+    try {
+      const _kb = await buildAIContext(undefined, undefined, undefined, 'patrones conducta ABA TEA análisis')
+      _cerebroCtx = _kb.knowledgeContext
+    } catch { /* fallback */ }
+    // ━━━ FIN CEREBRO IA ━━━
     let analisis_ia: string | null = null
     if (patrones.length > 0) {
       try {
         analisis_ia = await callGroqSimple(
-          'Eres un psicólogo clínico ABA especializado en análisis de patrones de aprendizaje en niños neurodivergentes.',
+          'Eres un psicólogo clínico ABA especializado en análisis de patrones de aprendizaje en niños neurodivergentes. Fundamenta con libros clínicos del Cerebro IA.',
           `PACIENTE: ${childName || 'Paciente'}
 SESIONES ANALIZADAS: ${sesiones.length} (últimas ${semanas} semanas)
 
@@ -191,6 +200,9 @@ ${patrones.map(p => `- [${p.tipo.toUpperCase()}] ${p.area}: ${p.descripcion} (co
 
 Últimas 5 sesiones (datos raw):
 ${sesiones.slice(-5).map((s, i) => `Sesión ${i+1} (${s.fecha_sesion}): logro=${s.datos?.nivel_logro_objetivos}, atención=${s.datos?.nivel_atencion}/5, objetivo="${s.datos?.objetivo_principal || 'N/A'}"`).join('\n')}
+
+CONOCIMIENTO CLÍNICO (Cerebro IA):
+${_cerebroCtx || 'No disponible'}
 
 Proporciona:
 1. INTERPRETACIÓN CLÍNICA (2-3 oraciones): qué significan estos patrones juntos para el desarrollo del paciente

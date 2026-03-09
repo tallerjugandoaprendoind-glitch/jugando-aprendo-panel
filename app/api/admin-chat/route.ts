@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-// Se actualiza la importación según tu archivo de referencia
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
+import { buildAdminChatContext } from '@/lib/ai-context-builder';
 
 // FIX: calcular edad correctamente desde birth_date cuando age es null
 function calcularEdad(birthDate: string | null | undefined, ageFallback: number | null | undefined): string {
@@ -355,16 +355,17 @@ RESPONDE AHORA:
 `;
 
     // ===========================================================================
-    // 7. INVOCAR IA CON CONTEXTO COMPLETO (Actualizado según tu archivo)
+    // 7. ENRIQUECER CON CEREBRO IA + INVOCAR IA
     // ===========================================================================
     
-    // El cliente obtiene la API key automáticamente si está en el objeto de configuración
-    // o puedes pasarla directamente como en tu archivo de origen.
+    // Buscar conocimiento clínico relevante en el Cerebro IA (libros indexados)
+    const contextConCerebro = await buildAdminChatContext(question, context)
     
-    // Llamada actualizada siguiendo tu sintaxis exacta: ai.models.generateContent
     const response = await callGroqSimple(
-        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
-        context,
+        'Eres ARIA, neuropsicóloga clínica especializada en ABA, TEA y neurodesarrollo. ' +
+        'Cuando el Cerebro IA provea fuentes clínicas (Cooper, Malott, etc.), ÚSALAS para fundamentar tu respuesta y cita el libro. ' +
+        'Responde siempre en español con lenguaje clínico profesional.',
+        contextConCerebro,
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
       );
     
