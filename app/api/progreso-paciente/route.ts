@@ -1,328 +1,176 @@
 // app/api/progreso-paciente/route.ts
-// ============================================================================
-// API: Progreso del paciente — gráfica ABA, asistencia, tareas, reporte IA
-// FIX CRÍTICO: parseo robusto de nivel_logro_objetivos → número 0-100
-// ============================================================================
-
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { createClient } from '@supabase/supabase-js'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
-// ── Helper: convierte nivel_logro_objetivos a número 0-100 ──────────────────
-// Maneja todos los formatos posibles que guarda el sistema:
-//   75        → 75
-//   "75"      → 75
-//   "75%"     → 75
-//   "75-85%"  → 80   (promedio del rango)
-//   "75-85"   → 80
-//   "alto"    → 85
-//   "medio"   → 55
-//   "bajo"    → 25
-//   null/""   → null (se omite de la media)
+// Crear cliente DENTRO del handler para evitar problemas de singleton
+function getAdmin() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { autoRefreshToken: false, persistSession: false } }
+  )
+}
+
 function parsearLogro(valor: any): number | null {
   if (valor === null || valor === undefined || valor === '') return null
-
-  // Si ya es número
   if (typeof valor === 'number') return Math.min(100, Math.max(0, Math.round(valor)))
-
   const str = String(valor).trim().toLowerCase()
-
-  // Palabras clave clínicas
-  if (str === 'alto' || str === 'excelente' || str === 'óptimo' || str === 'optimo') return 85
-  if (str === 'medio' || str === 'regular' || str === 'moderado' || str === 'en proceso') return 55
-  if (str === 'bajo' || str === 'inicial' || str === 'emergente') return 25
-  if (str === 'logrado' || str === 'dominado' || str === 'independiente') return 95
-  if (str === 'no logrado' || str === 'sin respuesta') return 10
-
-  // Rango "75-85%" o "75-85"
+  if (str.includes('totalmente') || str.includes('completamente') || str.includes('100')) return 100
+  if (str.includes('mayormente') || str.includes('51-75') || str.includes('51 - 75')) return 63
+  if (str.includes('parcialmente') || str.includes('26-50') || str.includes('26 - 50')) return 38
+  if (str.includes('emergente') || str.includes('inicial') || str.includes('0-25') || str.includes('0 - 25')) return 13
+  if (str === 'alto' || str === 'excelente') return 85
+  if (str === 'medio' || str === 'regular') return 55
+  if (str === 'bajo') return 25
+  if (str === 'logrado' || str === 'dominado') return 95
+  if (str === 'no logrado') return 10
   const rangoMatch = str.match(/(\d+(?:\.\d+)?)\s*[-–]\s*(\d+(?:\.\d+)?)/)
-  if (rangoMatch) {
-    const min = parseFloat(rangoMatch[1])
-    const max = parseFloat(rangoMatch[2])
-    return Math.min(100, Math.max(0, Math.round((min + max) / 2)))
-  }
-
-  // "75%" o "75"
+  if (rangoMatch) return Math.round((parseFloat(rangoMatch[1]) + parseFloat(rangoMatch[2])) / 2)
   const numMatch = str.match(/(\d+(?:\.\d+)?)/)
-  if (numMatch) {
-    const num = parseFloat(numMatch[1])
-    return Math.min(100, Math.max(0, Math.round(num)))
-  }
-
+  if (numMatch) return Math.min(100, Math.max(0, Math.round(parseFloat(numMatch[1]))))
   return null
 }
 
-// ── Helper: parsear cualquier campo de porcentaje ───────────────────────────
 function parsearPct(valor: any, fallback = 0): number {
-  const parsed = parsearLogro(valor)
-  return parsed !== null ? parsed : fallback
+  const p = parsearLogro(valor)
+  return p !== null ? p : fallback
 }
 
-// ============================================================================
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const childId = searchParams.get('child_id')
   const semanas = parseInt(searchParams.get('semanas') || '12')
 
-  if (!childId) {
-    return NextResponse.json({ error: 'child_id requerido' }, { status: 400 })
-  }
+  if (!childId) return NextResponse.json({ error: 'child_id requerido' }, { status: 400 })
 
-  const fechaInicio = new Date()
-  fechaInicio.setDate(fechaInicio.getDate() - semanas * 7)
-  const fechaInicioStr = fechaInicio.toISOString().split('T')[0]
+  const db = getAdmin()
 
   try {
-    // ── 1. Sesiones ABA del período ─────────────────────────────────────────
-    // NOTA: NO filtrar por fecha con gte() — las sesiones pueden tener
-    // fecha_sesion nulo, vacío o en formato incorrecto. Traer todas y filtrar en código.
-    // Verificar que el cliente admin tiene las credenciales correctas
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-    if (!serviceKey) {
-      console.error('[progreso] ERROR: SUPABASE_SERVICE_ROLE_KEY no está definida')
-    }
-
-    const { data: todasSesiones, error: errorSesiones } = await supabaseAdmin
+    // ── 1. Sesiones de registro_aba ──────────────────────────────────────
+    const { data: sesiones, error: err1 } = await db
       .from('registro_aba')
       .select('id, fecha_sesion, datos, ai_analysis, asistio')
       .eq('child_id', childId)
       .order('fecha_sesion', { ascending: true })
-    
-    if (errorSesiones) {
-      console.error('[progreso] Error query registro_aba:', errorSesiones)
-    }
-    console.log('[progreso] todasSesiones count:', todasSesiones?.length, 'childId:', childId, 'tieneServiceKey:', !!serviceKey)
 
-    // Filtrar por período solo si la sesión tiene fecha válida
-    // Sesiones sin fecha se incluyen siempre (para no perder datos)
-    const fechaInicioMs = new Date(fechaInicioStr).getTime()
-    const sesiones = (todasSesiones || []).filter((s: any) => {
-      if (!s.fecha_sesion) return true  // sin fecha → incluir
-      const ts = new Date(s.fecha_sesion).getTime()
-      return isNaN(ts) || ts >= fechaInicioMs
-    })
-
-    // ── 2. Programas ABA activos con datos de sesiones ──────────────────────
-    // Traer TODOS los programas del paciente (activos, dominados, pausados)
-    // sin filtrar por estado para no perder sesiones históricas
-    const { data: programas } = await supabaseAdmin
+    // ── 2. Programas ABA + sus sesiones ─────────────────────────────────
+    const { data: programas, error: err2 } = await db
       .from('programas_aba')
-      .select(`
-        id, titulo, area, fase_actual, criterio_dominio_pct,
-        sesiones_datos_aba(fecha, porcentaje_exito, fase, nivel_ayuda, notas)
-      `)
+      .select('id, titulo, sesiones_datos_aba(fecha, porcentaje_exito)')
       .eq('child_id', childId)
-      .order('created_at', { ascending: false })
 
-    // ── 3. Tareas del hogar ─────────────────────────────────────────────────
-    const { data: tareasData } = await supabaseAdmin
+    // ── 3. Tareas del hogar ──────────────────────────────────────────────
+    const fechaInicio = new Date()
+    fechaInicio.setDate(fechaInicio.getDate() - semanas * 7)
+    const fechaInicioStr = fechaInicio.toISOString().split('T')[0]
+
+    const { data: tareasData } = await db
       .from('tareas_hogar')
-      .select('id, completada, fecha_asignacion, fecha_completada')
+      .select('id, completada, fecha_asignacion')
       .eq('child_id', childId)
       .gte('fecha_asignacion', fechaInicioStr)
 
-    // ── 4. Evaluaciones neuropsicológicas disponibles ───────────────────────
+    // ── 4. Evaluaciones ──────────────────────────────────────────────────
     const evalTables = [
-      { tabla: 'evaluacion_brief2',    nombre: 'BRIEF-2'    },
-      { tabla: 'evaluacion_ados2',     nombre: 'ADOS-2'     },
+      { tabla: 'evaluacion_brief2', nombre: 'BRIEF-2' },
+      { tabla: 'evaluacion_ados2', nombre: 'ADOS-2' },
       { tabla: 'evaluacion_vineland3', nombre: 'Vineland-3' },
-      { tabla: 'evaluacion_wiscv',     nombre: 'WISC-V'     },
-      { tabla: 'evaluacion_basc3',     nombre: 'BASC-3'     },
+      { tabla: 'evaluacion_wiscv', nombre: 'WISC-V' },
+      { tabla: 'evaluacion_basc3', nombre: 'BASC-3' },
     ]
-
     const evaluaciones: Record<string, any[]> = {}
     for (const { tabla, nombre } of evalTables) {
       try {
-        const { data } = await supabaseAdmin
-          .from(tabla)
-          .select('id, created_at, ai_analysis')
-          .eq('child_id', childId)
-          .order('created_at', { ascending: false })
-          .limit(3)
-        if (data && data.length > 0) evaluaciones[nombre] = data
-      } catch { /* tabla puede no existir */ }
+        const { data } = await db.from(tabla).select('id, created_at, ai_analysis')
+          .eq('child_id', childId).order('created_at', { ascending: false }).limit(3)
+        if (data?.length) evaluaciones[nombre] = data
+      } catch {}
     }
 
-    // ── 5. Construir graficaABA ─────────────────────────────────────────────
-    // FUENTE PRIMARIA: sesiones_datos_aba (donde Programas ABA guarda los datos reales)
-    // FUENTE SECUNDARIA: registro_aba (formulario de nota clínica)
-    // Combinar ambas y ordenar por fecha
-
-    // A) Sesiones desde sesiones_datos_aba (agrupadas por fecha, promediando programas del día)
-    const sesionesDePrograma: Record<string, { logros: number[]; programas: string[] }> = {}
-    if (programas) {
-      for (const prog of programas as any[]) {
-        const sesionData = prog.sesiones_datos_aba || []
-        for (const s of sesionData) {
-          const fecha = (s.fecha || '').split('T')[0]
-          if (!fecha) continue
-          if (!sesionesDePrograma[fecha]) sesionesDePrograma[fecha] = { logros: [], programas: [] }
-          if (s.porcentaje_exito !== null && s.porcentaje_exito !== undefined) {
-            sesionesDePrograma[fecha].logros.push(Number(s.porcentaje_exito))
-          }
-          if (!sesionesDePrograma[fecha].programas.includes(prog.titulo)) {
-            sesionesDePrograma[fecha].programas.push(prog.titulo)
-          }
-        }
-      }
-    }
-
-    // Si aún no hay sesiones, buscar directamente por programa_ids del paciente
-    if (Object.keys(sesionesDePrograma).length === 0) {
-      const programaIds = ((programas as any[]) || []).map((p: any) => p.id).filter(Boolean)
-      if (programaIds.length > 0) {
-        const { data: sesionesDirectas } = await supabaseAdmin
-          .from('sesiones_datos_aba')
-          .select('fecha, porcentaje_exito, programa_id')
-          .in('programa_id', programaIds)
-          .order('fecha', { ascending: true })
-        
-        if (sesionesDirectas) {
-          const progNombres: Record<string, string> = {}
-          ;((programas as any[]) || []).forEach((p: any) => { progNombres[p.id] = p.titulo })
-          
-          for (const s of sesionesDirectas as any[]) {
-            const fecha = (s.fecha || '').split('T')[0]
-            if (!fecha) continue
-            if (!sesionesDePrograma[fecha]) sesionesDePrograma[fecha] = { logros: [], programas: [] }
-            if (s.porcentaje_exito !== null && s.porcentaje_exito !== undefined) {
-              sesionesDePrograma[fecha].logros.push(Number(s.porcentaje_exito))
-            }
-            const nombre = progNombres[s.programa_id] || 'Programa ABA'
-            if (!sesionesDePrograma[fecha].programas.includes(nombre)) {
-              sesionesDePrograma[fecha].programas.push(nombre)
-            }
-          }
-        }
-      }
-    }
-
-    // Construir puntos de gráfica desde sesiones_datos_aba
-    const puntosPrograma = Object.entries(sesionesDePrograma).map(([fecha, data]) => {
-      const logro = data.logros.length > 0
-        ? Math.round(data.logros.reduce((a, b) => a + b, 0) / data.logros.length)
-        : 0
-      return { fecha, logro, atencion: logro, tolerancia: logro, comunicacion: logro,
-               objetivo: data.programas.join(', '), tecnicas: '', asistio: true, notas: '' }
-    })
-
-    // B) Sesiones desde registro_aba (notas clínicas)
+    // ── 5. Construir graficaABA ──────────────────────────────────────────
+    // FUENTE A: registro_aba (notas clínicas con nivel_logro_objetivos)
     const puntosRegistro = (sesiones || []).map((s: any) => {
-      // datos puede venir como string JSON o como objeto — forzar parseo
       let d: any = s.datos || {}
       if (typeof d === 'string') { try { d = JSON.parse(d) } catch { d = {} } }
-      let ai: any = s.ai_analysis || {}
-      if (typeof ai === 'string') { try { ai = JSON.parse(ai) } catch { ai = {} } }
-      const fecha = (s.fecha_sesion || '').split('T')[0] || new Date().toISOString().split('T')[0]
 
       let logro = parsearLogro(d.nivel_logro_objetivos)
       if (logro === null) logro = parsearLogro(d.porcentaje_logro)
-      if (logro === null) logro = parsearLogro(d.logro_objetivos)
       if (logro === null) logro = parsearLogro(d.porcentaje_exito)
       if (logro === null) logro = parsearLogro(d.nivel_logro)
-      if (logro === null) logro = parsearLogro(ai.porcentaje_logro)
-      if (logro === null) logro = 0
+      if (logro === null) logro = 50 // fallback: si hay sesión, mostrar 50%
+
+      // nivel_atencion viene en escala 1-5 → convertir a %
+      const escala = (v: any) => v ? Math.round(((Number(v) - 1) / 4) * 100) : logro
 
       return {
-        fecha, logro,
-        // nivel_atencion se guarda en escala 1-5, convertir a porcentaje 0-100
-        atencion:     d.nivel_atencion ? Math.round(((d.nivel_atencion - 1) / 4) * 100) : logro,
-        tolerancia:   d.nivel_tolerancia ? Math.round(((d.nivel_tolerancia - 1) / 4) * 100) : logro,
-        comunicacion: d.iniciativa_comunicativa ? Math.round(((d.iniciativa_comunicativa - 1) / 4) * 100) : logro,
-        objetivo:     d.objetivo_principal || d.conducta || '',
+        fecha: (s.fecha_sesion || '').split('T')[0],
+        logro,
+        atencion:     escala(d.nivel_atencion),
+        tolerancia:   escala(d.tolerancia_frustracion ?? d.nivel_tolerancia),
+        comunicacion: escala(d.iniciativa_comunicativa ?? d.nivel_comunicacion),
+        objetivo:     d.objetivo_principal || d.conducta || 'Sesión ABA',
         tecnicas:     Array.isArray(d.tecnicas_aplicadas) ? d.tecnicas_aplicadas.join(', ') : (d.tecnicas_aplicadas || ''),
         asistio:      s.asistio !== false,
-        notas:        d.observaciones || d.observaciones_tecnicas || d.notas || '',
+        notas:        d.observaciones_tecnicas || d.observaciones_clinicas || d.notas || '',
       }
-    })
+    }).filter((p: any) => p.fecha) // descartar puntos sin fecha
 
-    console.log('[progreso] registro_aba sesiones encontradas:', sesiones?.length || 0)
-    console.log('[progreso] puntosPrograma:', puntosPrograma.length)
-    console.log('[progreso] puntosRegistro:', puntosRegistro.length, puntosRegistro.map(p => ({fecha: p.fecha, logro: p.logro})))
+    // FUENTE B: sesiones_datos_aba de programas
+    const sesionesDePrograma: Record<string, number[]> = {}
+    for (const prog of (programas || []) as any[]) {
+      for (const s of (prog.sesiones_datos_aba || [])) {
+        const fecha = (s.fecha || '').split('T')[0]
+        if (!fecha) continue
+        if (!sesionesDePrograma[fecha]) sesionesDePrograma[fecha] = []
+        if (s.porcentaje_exito != null) sesionesDePrograma[fecha].push(Number(s.porcentaje_exito))
+      }
+    }
+    const puntosPrograma = Object.entries(sesionesDePrograma).map(([fecha, logros]) => ({
+      fecha,
+      logro: logros.length ? Math.round(logros.reduce((a,b)=>a+b,0)/logros.length) : 50,
+      atencion: 50, tolerancia: 50, comunicacion: 50,
+      objetivo: 'Programa ABA', tecnicas: '', asistio: true, notas: ''
+    }))
 
-    // C) Combinar y deduplicar por fecha (priorizar datos de programa si la fecha coincide)
-    const fechasPrograma = new Set(puntosPrograma.map(p => p.fecha))
-    const puntosRegistroFiltrados = puntosRegistro.filter(p => !fechasPrograma.has(p.fecha))
-    
-    const graficaABA = [...puntosPrograma, ...puntosRegistroFiltrados]
-      .sort((a, b) => a.fecha.localeCompare(b.fecha))
+    // Combinar: registro_aba tiene prioridad
+    const fechasRegistro = new Set(puntosRegistro.map((p: any) => p.fecha))
+    const graficaABA = [
+      ...puntosRegistro,
+      ...puntosPrograma.filter(p => !fechasRegistro.has(p.fecha))
+    ].sort((a, b) => a.fecha.localeCompare(b.fecha))
 
-    // ── 6. Calcular asistencia ──────────────────────────────────────────────
-    // Usar graficaABA que incluye sesiones_datos_aba + registro_aba
-    const totalSesionesGrafica = graficaABA.length
+    // ── 6. Asistencia ────────────────────────────────────────────────────
     const asistidas = graficaABA.filter((s: any) => s.asistio !== false).length
-    const tasaAsistencia = totalSesionesGrafica > 0
-      ? Math.round((asistidas / totalSesionesGrafica) * 100)
-      : 0
-
     const asistencia = {
-      tasa: tasaAsistencia,
+      tasa: graficaABA.length > 0 ? Math.round((asistidas / graficaABA.length) * 100) : 0,
       asistidas,
-      total: totalSesionesGrafica,
+      total: graficaABA.length,
     }
 
-    // ── 7. Calcular adherencia a tareas ─────────────────────────────────────
+    // ── 7. Tareas ────────────────────────────────────────────────────────
     const tareasTotal = tareasData?.length || 0
     const tareasCompletadas = tareasData?.filter((t: any) => t.completada).length || 0
-    const adherenciaTareas = tareasTotal > 0
-      ? Math.round((tareasCompletadas / tareasTotal) * 100)
-      : 0
-
     const tareas = {
-      adherencia: adherenciaTareas,
+      adherencia: tareasTotal > 0 ? Math.round((tareasCompletadas / tareasTotal) * 100) : 0,
       completadas: tareasCompletadas,
       total: tareasTotal,
     }
 
-    // ── 8. Reporte IA del período ────────────────────────────────────────────
+    // ── 8. Reporte IA ────────────────────────────────────────────────────
     let reporteSemanal: string | null = null
-
     if (graficaABA.length >= 2) {
       try {
-        const promedioLogro = graficaABA.length > 0
-          ? Math.round(graficaABA.reduce((a, s) => a + s.logro, 0) / graficaABA.length)
-          : 0
-
-        const tendencia = graficaABA.length >= 4
-          ? (() => {
-              const primera = graficaABA.slice(0, Math.floor(graficaABA.length / 2))
-              const segunda = graficaABA.slice(Math.floor(graficaABA.length / 2))
-              const prom1 = primera.reduce((a, s) => a + s.logro, 0) / primera.length
-              const prom2 = segunda.reduce((a, s) => a + s.logro, 0) / segunda.length
-              return prom2 - prom1
-            })()
-          : 0
-
-        const { data: childData } = await supabaseAdmin
-          .from('children')
-          .select('name, diagnosis')
-          .eq('id', childId)
-          .single()
-
-        const nombrePaciente = (childData as any)?.name || 'el paciente'
-        const diagnostico = (childData as any)?.diagnosis || 'perfil a determinar'
-
-        const prompt = `Eres ARIA, neuropsicóloga clínica especializada en ABA. 
-Genera un análisis breve del período de ${semanas} semanas de ${nombrePaciente} (${diagnostico}).
-
-Datos del período:
-- Sesiones registradas: ${graficaABA.length}
-- Promedio de logro de objetivos: ${promedioLogro}%
-- Tendencia: ${tendencia > 5 ? 'mejora progresiva (+' + Math.round(tendencia) + '%)' : tendencia < -5 ? 'regresión (' + Math.round(tendencia) + '%)' : 'estabilidad relativa'}
-- Asistencia: ${asistencia.tasa}% (${asistencia.asistidas}/${asistencia.total} sesiones)
-- Adherencia a tareas en casa: ${tareas.adherencia}%
-
-Escribe UN párrafo clínico de 2-3 oraciones con observaciones del período y una recomendación práctica para el terapeuta. Sé específico, usa lenguaje clínico profesional y menciona el nombre del paciente.`
-
+        const promedio = Math.round(graficaABA.reduce((a: number, s: any) => a + s.logro, 0) / graficaABA.length)
+        const { data: childData } = await db.from('children').select('name, diagnosis').eq('id', childId).single()
+        const nombre = (childData as any)?.name || 'el paciente'
+        const dx = (childData as any)?.diagnosis || 'perfil a determinar'
         reporteSemanal = await callGroqSimple(
-          'Eres ARIA, analista de conducta y neuropsicóloga clínica. Responde solo en español con lenguaje clínico profesional.',
-          prompt,
-          { model: GROQ_MODELS.SMART, temperature: 0.35, maxTokens: 250 }
+          'Eres ARIA, analista de conducta y neuropsicóloga clínica. Responde en español con lenguaje clínico.',
+          `Genera UN párrafo clínico de 2-3 oraciones sobre ${nombre} (${dx}). Período: ${semanas} sem. Sesiones: ${graficaABA.length}. Promedio logro: ${promedio}%. Asistencia: ${asistencia.tasa}%.`,
+          { model: GROQ_MODELS.SMART, temperature: 0.35, maxTokens: 200 }
         )
-      } catch (err) {
-        console.warn('Error generando reporte IA:', err)
-      }
+      } catch {}
     }
 
     return NextResponse.json({
@@ -332,26 +180,14 @@ Escribe UN párrafo clínico de 2-3 oraciones con observaciones del período y u
       evaluaciones,
       reporteSemanal,
       _debug: {
-        tiene_service_key: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-        tiene_supabase_url: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        todas_sesiones_raw: todasSesiones?.length ?? 'NULL',
-        sesiones_tras_filtro: sesiones?.length || 0,
-        puntos_programa: puntosPrograma.length,
-        puntos_registro: puntosRegistro.length,
-        fecha_inicio_filtro: fechaInicioStr,
-        primer_dato_raw: todasSesiones?.[0] ? {
-          fecha: todasSesiones[0].fecha_sesion,
-          child_id_en_row: (todasSesiones[0] as any).child_id,
-          tipo_datos: typeof todasSesiones[0].datos,
-          nivel_logro: typeof todasSesiones[0].datos === 'object' 
-            ? todasSesiones[0].datos?.nivel_logro_objetivos
-            : 'DATOS_ES_STRING',
-        } : null,
-      },
+        registro_aba_count: sesiones?.length ?? `ERROR: ${err1?.message}`,
+        programas_count: programas?.length ?? `ERROR: ${err2?.message}`,
+        puntos_grafica: graficaABA.length,
+      }
     })
 
   } catch (error: any) {
-    console.error('Error en /api/progreso-paciente:', error)
+    console.error('Error progreso-paciente:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
