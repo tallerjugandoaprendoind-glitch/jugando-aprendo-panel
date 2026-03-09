@@ -24,22 +24,22 @@
 }
 
 .dark {
-  --background: #0f1117;
+  --background: #0d1117;
   --foreground: #e2e8f0;
-  --card: #1a1f2e;
-  --card-border: #2d3348;
-  --sidebar-bg: #13161f;
-  --sidebar-border: #1e2230;
-  --input-bg: #1e2230;
-  --input-border: #2d3348;
+  --card: #161b22;
+  --card-border: #21262d;
+  --sidebar-bg: #0d1117;
+  --sidebar-border: #21262d;
+  --input-bg: #21262d;
+  --input-border: #30363d;
   --muted: #6b7280;
-  --muted-bg: #1e2230;
+  --muted-bg: #21262d;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
   --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.6);
   --text-primary: #e2e8f0;
   --text-secondary: #94a3b8;
-  --text-muted: #4b5563;
+  --text-muted: #6b7280;
 }
 
 body {
@@ -50,103 +50,163 @@ body {
 }
 
 /* ============================================================
-   DARK MODE GLOBAL
+   DARK MODE — solo afecta admin-content y modales fixed
+   NO usa !important para no romper dark: de Tailwind
    ============================================================ */
 
-.dark .admin-content { background: #0f1117; color: var(--foreground); }
+/* Fondo principal */
+.dark .admin-content {
+  background: var(--background);
+  color: var(--foreground);
+}
 
-/* Cards blancas */
+/* Cards blancas — solo dentro de admin y modales */
 .dark .admin-content .bg-white,
-.dark .fixed .bg-white { background-color: var(--card) !important; color: var(--foreground); }
+.dark .fixed > .bg-white,
+.dark .fixed > div > .bg-white {
+  background-color: var(--card) !important;
+}
 
-/* Fondos slate */
-.dark .admin-content .bg-slate-50,
-.dark .admin-content .bg-slate-100 { background-color: #1a1f2e !important; }
-.dark .admin-content .bg-slate-50\/50,
-.dark .admin-content .bg-slate-50\/30 { background-color: rgba(26,31,46,0.5) !important; }
-.dark .admin-content .bg-slate-900\/50,
-.dark .admin-content .bg-slate-900\/60 { background-color: rgba(0,0,0,0.7) !important; }
+/* Fondos slate — sin tocar dark:bg-* de Tailwind */
+.dark .admin-content .bg-slate-50:not([class*="dark:"]),
+.dark .admin-content .bg-slate-100:not([class*="dark:"]) {
+  background-color: var(--muted-bg) !important;
+}
 
 /* Borders */
-.dark .admin-content .border-slate-100,
-.dark .fixed .border-slate-100 { border-color: #1e2230 !important; }
-.dark .admin-content .border-slate-200,
-.dark .fixed .border-slate-200 { border-color: #2d3348 !important; }
-.dark .admin-content .border-slate-300 { border-color: #3d4463 !important; }
-.dark .admin-content .divide-slate-50 > * + * { border-color: #1e2230 !important; }
-.dark .admin-content .divide-y > * + * { border-color: #1e2230 !important; }
+.dark .admin-content .border-slate-100:not([class*="dark:"]),
+.dark .fixed .border-slate-100:not([class*="dark:"]) {
+  border-color: var(--card-border) !important;
+}
+.dark .admin-content .border-slate-200:not([class*="dark:"]),
+.dark .fixed .border-slate-200:not([class*="dark:"]) {
+  border-color: var(--input-border) !important;
+}
 
-/* Texto */
-.dark .admin-content .text-slate-900, .dark .fixed .text-slate-900 { color: #f1f5f9 !important; }
-.dark .admin-content .text-slate-800, .dark .fixed .text-slate-800 { color: #e2e8f0 !important; }
-.dark .admin-content .text-slate-700, .dark .fixed .text-slate-700 { color: #cbd5e1 !important; }
-.dark .admin-content .text-slate-600, .dark .fixed .text-slate-600 { color: #94a3b8 !important; }
-.dark .admin-content .text-slate-500, .dark .fixed .text-slate-500 { color: #6b7280 !important; }
-.dark .admin-content .text-slate-400 { color: #4b5563 !important; }
+/* Texto — el global sólo actúa si no hay dark: variant explícita */
+.dark .admin-content .text-slate-800:not([class*="dark:"]),
+.dark .fixed .text-slate-800:not([class*="dark:"]) {
+  color: var(--text-primary) !important;
+}
+.dark .admin-content .text-slate-700:not([class*="dark:"]),
+.dark .fixed .text-slate-700:not([class*="dark:"]) {
+  color: var(--text-secondary) !important;
+}
+.dark .admin-content .text-slate-600:not([class*="dark:"]),
+.dark .fixed .text-slate-600:not([class*="dark:"]) {
+  color: var(--text-secondary) !important;
+}
+.dark .admin-content .text-slate-500:not([class*="dark:"]) {
+  color: var(--text-muted) !important;
+}
+.dark .admin-content .text-slate-400:not([class*="dark:"]) {
+  color: #6b7280 !important;
+}
+.dark .admin-content .text-slate-900:not([class*="dark:"]),
+.dark .fixed .text-slate-900:not([class*="dark:"]) {
+  color: var(--foreground) !important;
+}
 
 /* Hovers */
 .dark .admin-content .hover\:bg-slate-50:hover,
-.dark .admin-content .hover\:bg-slate-100:hover { background-color: #1e2230 !important; }
-.dark .admin-content .hover\:bg-blue-50:hover { background-color: rgba(30,58,138,0.2) !important; }
+.dark .admin-content .hover\:bg-slate-100:hover {
+  background-color: var(--muted-bg) !important;
+}
 
-/* Inputs */
-.dark .admin-content input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
-.dark .admin-content select,
-.dark .admin-content textarea,
-.dark .fixed input:not([type="checkbox"]):not([type="radio"]),
-.dark .fixed select,
-.dark .fixed textarea {
-  background-color: #1e2230 !important;
-  border-color: #2d3348 !important;
-  color: #e2e8f0 !important;
+/* Inputs — solo los que NO tienen dark: prefix ya */
+.dark .admin-content input:not([class*="dark:"]),
+.dark .admin-content select:not([class*="dark:"]),
+.dark .admin-content textarea:not([class*="dark:"]),
+.dark .fixed input:not([class*="dark:"]),
+.dark .fixed select:not([class*="dark:"]),
+.dark .fixed textarea:not([class*="dark:"]) {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
 }
 .dark .admin-content input::placeholder,
 .dark .admin-content textarea::placeholder,
 .dark .fixed input::placeholder,
-.dark .fixed textarea::placeholder { color: #4b5563 !important; }
+.dark .fixed textarea::placeholder {
+  color: var(--text-muted) !important;
+}
 
 /* Tables */
 .dark .admin-content thead,
-.dark .admin-content thead th,
-.dark .admin-content .bg-slate-50.sticky { background-color: #1a1f2e !important; color: #6b7280 !important; }
+.dark .admin-content thead th {
+  background-color: var(--muted-bg) !important;
+  color: var(--text-muted) !important;
+}
 
-/* Calendar */
-.dark .admin-content .bg-blue-50 { background-color: rgba(30,58,138,0.2) !important; }
-.dark .admin-content .bg-blue-600 { background-color: #2563eb !important; }
+/* Status badges - ajustados para dark sin perder color */
+.dark .admin-content .bg-emerald-50:not([class*="dark:"]) {
+  background-color: rgba(6,78,59,0.25) !important;
+}
+.dark .admin-content .bg-amber-50:not([class*="dark:"]) {
+  background-color: rgba(92,57,0,0.25) !important;
+}
+.dark .admin-content .bg-red-50:not([class*="dark:"]) {
+  background-color: rgba(127,29,29,0.25) !important;
+}
+.dark .admin-content .bg-violet-50:not([class*="dark:"]) {
+  background-color: rgba(109,40,217,0.18) !important;
+}
+.dark .admin-content .bg-blue-50:not([class*="dark:"]) {
+  background-color: rgba(29,78,216,0.18) !important;
+}
+.dark .admin-content .bg-indigo-50:not([class*="dark:"]) {
+  background-color: rgba(55,48,163,0.18) !important;
+}
+.dark .admin-content .bg-purple-50:not([class*="dark:"]),
+.dark .admin-content .bg-purple-100:not([class*="dark:"]) {
+  background-color: rgba(109,40,217,0.18) !important;
+}
+.dark .admin-content .bg-blue-100:not([class*="dark:"]) {
+  background-color: rgba(29,78,216,0.18) !important;
+}
+.dark .admin-content .bg-slate-800:not([class*="dark:"]) {
+  background-color: var(--muted-bg) !important;
+}
 
-/* Status badges */
-.dark .admin-content .bg-emerald-50 { background-color: rgba(6,78,59,0.3) !important; }
-.dark .admin-content .bg-amber-50   { background-color: rgba(92,57,0,0.3) !important; }
-.dark .admin-content .bg-red-50     { background-color: rgba(127,29,29,0.3) !important; }
-.dark .admin-content .bg-violet-50  { background-color: rgba(109,40,217,0.2) !important; }
-.dark .admin-content .bg-blue-100   { background-color: rgba(29,78,216,0.25) !important; }
-.dark .admin-content .bg-purple-100 { background-color: rgba(109,40,217,0.25) !important; }
-.dark .admin-content .border-emerald-200 { border-color: #065f46 !important; }
-.dark .admin-content .border-amber-200   { border-color: #78350f !important; }
-.dark .admin-content .border-red-200     { border-color: #7f1d1d !important; }
-.dark .admin-content .text-emerald-700 { color: #6ee7b7 !important; }
-.dark .admin-content .text-amber-700   { color: #fcd34d !important; }
-.dark .admin-content .text-red-700     { color: #fca5a5 !important; }
-.dark .admin-content .text-blue-700    { color: #93c5fd !important; }
-.dark .admin-content .text-purple-700  { color: #c4b5fd !important; }
+/* Badge text colors */
+.dark .admin-content .text-emerald-700:not([class*="dark:"]) { color: #6ee7b7 !important; }
+.dark .admin-content .text-amber-700:not([class*="dark:"])   { color: #fcd34d !important; }
+.dark .admin-content .text-red-700:not([class*="dark:"])     { color: #fca5a5 !important; }
+.dark .admin-content .text-blue-700:not([class*="dark:"])    { color: #93c5fd !important; }
+.dark .admin-content .text-purple-700:not([class*="dark:"])  { color: #c4b5fd !important; }
+.dark .admin-content .text-violet-700:not([class*="dark:"])  { color: #c4b5fd !important; }
 
-/* Shadows */
-.dark .admin-content .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.4) !important; }
-.dark .admin-content .shadow-md { box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important; }
-.dark .admin-content .shadow-blue-200 { box-shadow: 0 4px 12px rgba(37,99,235,0.2) !important; }
+/* Borders de badges */
+.dark .admin-content .border-emerald-200:not([class*="dark:"]) { border-color: #065f46 !important; }
+.dark .admin-content .border-amber-200:not([class*="dark:"])   { border-color: #78350f !important; }
+.dark .admin-content .border-red-200:not([class*="dark:"])     { border-color: #7f1d1d !important; }
 
-/* Modal backdrops */
-.dark .admin-content .bg-slate-900\/60 { background-color: rgba(0,0,0,0.75) !important; }
+/* Divide */
+.dark .admin-content .divide-slate-50 > * + *,
+.dark .admin-content .divide-y > * + * {
+  border-color: var(--card-border) !important;
+}
 
 /* Modales fixed */
-.dark .fixed .bg-slate-50 { background-color: #1a1f2e !important; }
-.dark .fixed .hover\:bg-slate-100:hover { background-color: #1e2230 !important; }
+.dark .fixed .bg-white {
+  background-color: var(--card) !important;
+}
+.dark .fixed .bg-slate-50:not([class*="dark:"]) {
+  background-color: var(--muted-bg) !important;
+}
+.dark .fixed .text-slate-700:not([class*="dark:"]),
+.dark .fixed .text-slate-800:not([class*="dark:"]) {
+  color: var(--text-primary) !important;
+}
+.dark .fixed .hover\:bg-slate-100:hover {
+  background-color: var(--muted-bg) !important;
+}
 
 /* ============================================================
    GLASS MORPHISM
    ============================================================ */
 .glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); }
-.dark .glass { background: rgba(26,31,46,0.9); }
+.dark .glass { background: rgba(22,27,34,0.9); }
 
 /* ============================================================
    CARD PRO
@@ -224,11 +284,11 @@ body {
 .dark .role-padre        { background: #064e3b; color: #6ee7b7; border-color: #059669; }
 
 /* ============================================================
-   LOGIN PAGE - Protegida de dark mode
+   LOGIN PAGE - Protegida de dark mode global
    ============================================================ */
 .login-root { background: #f5f4fe !important; color: #1e1b4b !important; }
-.dark .login-root { background: #f5f4fe !important; }
-.dark .login-root * { background: revert; color: revert; border-color: revert; }
+.dark .login-root,
+.dark .login-root * { background: revert !important; color: revert !important; border-color: revert !important; }
 .dark .login-root { background: #f5f4fe !important; }
 
 /* ============================================================

@@ -392,10 +392,10 @@ export default function StoreManagementView() {
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h2 className="text-2xl font-black text-slate-800 flex items-center gap-3">
+          <h2 className="text-2xl font-black flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
             <ShoppingBag className="text-blue-600" size={28} /> Tienda
           </h2>
-          <p className="text-slate-400 text-sm mt-1">Gestiona productos, stock y pedidos de los padres</p>
+          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>Gestiona productos, stock y pedidos de los padres</p>
         </div>
         <button onClick={() => { setEditProduct(null); setShowModal(true) }}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow-md shadow-blue-200 transition-all hover:scale-105 active:scale-95 dark:shadow-none">
@@ -412,10 +412,10 @@ export default function StoreManagementView() {
           { label: 'Pedidos pendientes', value: stats.pedidosPendientes, icon: Clock, color: stats.pedidosPendientes > 0 ? 'text-amber-600' : 'text-slate-400', bg: stats.pedidosPendientes > 0 ? 'bg-amber-50' : 'bg-slate-50' },
           { label: 'Total vendido', value: `S/ ${stats.totalVendido.toFixed(2)}`, icon: DollarSign, color: 'text-violet-600', bg: 'bg-violet-50' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
-          <div key={label} className={`${bg} rounded-2xl p-4 border border-slate-100`}>
+          <div key={label} className="rounded-2xl p-4 border" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
             <Icon size={18} className={`${color} mb-2`} />
             <p className={`text-2xl font-black ${color}`}>{value}</p>
-            <p className="text-xs text-slate-400 font-medium mt-0.5">{label}</p>
+            <p className="text-xs font-medium mt-0.5" style={{ color: "var(--text-muted)" }}>{label}</p>
           </div>
         ))}
       </div>

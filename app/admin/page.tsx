@@ -80,18 +80,19 @@ function ProgramasABAViewGeneral({ navigateTo, userId }: { navigateTo: (v: strin
   )
 }
 
+// Roles: 'jefe'|'admin' ven todo. 'especialista'/'terapeuta' NO ven agenda ni tienda.
 const NAV_ITEMS = [
-  { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
-  { id: 'agenda',       icon: Calendar,        label: 'Agenda' },
-  { id: 'ninos',        icon: Users,           label: 'Pacientes' },
-  { id: 'programas',    icon: Activity,        label: 'Programas ABA' },
-  { id: 'evaluaciones', icon: FileText,        label: 'Evaluaciones' },
-  { id: 'reportes',     icon: Brain,           label: 'Historial & IA' },
-  { id: 'vadi',         icon: Sparkles,        label: 'ARIA Agente' },
-  { id: 'inteligencia', icon: Zap,             label: 'Hub IA' },
-  { id: 'cerebro',      icon: Database,        label: 'Cerebro IA' },
-  { id: 'recursos',     icon: BookOpen,        label: 'Recursos' },
-  { id: 'tienda',       icon: ShoppingBag,     label: 'Tienda' },
+  { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio',        roles: ['jefe','admin','especialista','terapeuta'] },
+  { id: 'agenda',       icon: Calendar,        label: 'Agenda',        roles: ['jefe','admin'] },
+  { id: 'ninos',        icon: Users,           label: 'Pacientes',     roles: ['jefe','admin','especialista','terapeuta'] },
+  { id: 'programas',    icon: Activity,        label: 'Programas ABA', roles: ['jefe','admin','especialista','terapeuta'] },
+  { id: 'evaluaciones', icon: FileText,        label: 'Evaluaciones',  roles: ['jefe','admin','especialista','terapeuta'] },
+  { id: 'reportes',     icon: Brain,           label: 'Historial & IA',roles: ['jefe','admin','especialista','terapeuta'] },
+  { id: 'vadi',         icon: Sparkles,        label: 'ARIA Agente',   roles: ['jefe','admin','especialista','terapeuta'] },
+  { id: 'inteligencia', icon: Zap,             label: 'Hub IA',        roles: ['jefe','admin','especialista'] },
+  { id: 'cerebro',      icon: Database,        label: 'Cerebro IA',    roles: ['jefe','admin'] },
+  { id: 'recursos',     icon: BookOpen,        label: 'Recursos',      roles: ['jefe','admin','especialista','terapeuta'] },
+  { id: 'tienda',       icon: ShoppingBag,     label: 'Tienda',        roles: ['jefe','admin'] },
 ]
 
 const MOBILE_NAV_ITEMS = [
@@ -274,7 +275,7 @@ export default function AdminDashboard() {
 
         {/* Main nav */}
         <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
-          {NAV_ITEMS.map(item => (
+          {NAV_ITEMS.filter(item => item.roles.includes(role) || role === 'admin' || role === 'jefe').map(item => (
             <SidebarLink
               key={item.id}
               icon={item.icon}

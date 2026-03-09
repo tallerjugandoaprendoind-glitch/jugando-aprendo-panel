@@ -526,7 +526,7 @@ export default function ParentDashboard() {
                 
                 <nav className="space-y-2">
                     <NavBtnDesktop icon={<Home size={20}/>} label="Inicio & Progreso" active={activeView==='home'} onClick={()=>setActiveView('home')} />
-                    <NavBtnDesktop icon={<Calendar size={20}/>} label="Agenda y Citas" active={activeView==='agenda' || activeView==='miscitas'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0) > 0 ? profile.tokens : null} />
+                    <NavBtnDesktop icon={<Calendar size={20}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                     <NavBtnDesktop icon={<Heart size={20}/>} label="Plan Semanal" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                     <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                     <NavBtnDesktop icon={<Bell size={20}/>} label="Mensajes del terapeuta" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />

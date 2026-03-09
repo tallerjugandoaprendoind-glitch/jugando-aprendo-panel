@@ -36,12 +36,12 @@ function TooltipABA({ active, payload, label }: any) {
   const logro = payload.find((p: any) => p.dataKey === 'logro')?.value
   return (
     <div style={{ background: "var(--card)", border: "1px solid var(--card-border)", color: "var(--text-primary)" }} className="rounded-2xl shadow-2xl p-3 text-xs min-w-[160px]">
-      <p className="font-black text-slate-700 mb-2 border-b border-slate-100 pb-1">{fmtFecha(label)}</p>
+      <p className="font-black mb-2 border-b pb-1" style={{ color: "var(--text-primary)", borderColor: "var(--card-border)" }}>{fmtFecha(label)}</p>
       {payload.map((p: any, i: number) => (
         <div key={i} className="flex justify-between gap-3 mb-1">
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full" style={{ background: p.color }} />
-            <span className="text-slate-500">{p.name}</span>
+            <span style={{ color: "var(--text-secondary)" }}>{p.name}</span>
           </span>
           <span className="font-black" style={{ color: p.color }}>{p.value}%</span>
         </div>
@@ -58,7 +58,7 @@ function TooltipABA({ active, payload, label }: any) {
 }
 
 function TickY({ x, y, payload }: any) {
-  return <text x={x} y={y} dy={4} textAnchor="end" fill={payload.value === 90 ? '#EF4444' : '#94a3b8'} fontSize={10} fontWeight={payload.value === 90 ? 700 : 400}>{payload.value}%</text>
+  return <text x={x} y={y} dy={4} textAnchor="end" fill={payload.value === 90 ? '#EF4444' : 'var(--text-muted)'} fontSize={10} fontWeight={payload.value === 90 ? 700 : 400}>{payload.value}%</text>
 }
 
 export default function ProgresoGraficas({ childId, modoParent = false }: ProgresoGraficasProps) {
@@ -80,10 +80,10 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
   if (cargando) return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <div className="animate-spin rounded-full h-10 w-10 border-4 border-violet-200 border-t-violet-600" />
-      <p className="text-slate-400 text-sm">Cargando datos clínicos...</p>
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Cargando datos clínicos...</p>
     </div>
   )
-  if (!datos) return <p className="text-slate-400 text-center py-8">Sin datos</p>
+  if (!datos) return <p className="text-center py-8" style={{ color: "var(--text-muted)" }}>Sin datos</p>
 
   const { graficaABA = [], asistencia, tareas, evaluaciones, reporteSemanal } = datos
 
@@ -143,12 +143,12 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
             </button>
             {selector && (
               <div className="absolute right-0 top-11 z-30 rounded-2xl shadow-2xl p-2 w-52" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider px-2 py-1.5">Tipo de gráfico</p>
+                <p className="text-[10px] font-black uppercase tracking-wider px-2 py-1.5" style={{ color: "var(--text-muted)" }}>Tipo de gráfico</p>
                 {TIPOS.map(t => (
                   <button key={t.id} onClick={() => { setTipo(t.id); setSelector(false) }}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all ${tipo === t.id ? 'bg-violet-50 text-violet-700' : 'hover:bg-slate-50 text-slate-600'}`}>
+                    className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all' style={{ background: tipo === t.id ? 'rgba(109,40,217,0.15)' : 'transparent', color: tipo === t.id ? '#a78bfa' : 'var(--text-secondary)' }}>
                     <span className="text-base">{t.emoji}</span>
-                    <div className="flex-1"><p className="text-xs font-bold">{t.label}</p><p className="text-[10px] text-slate-400">{t.desc}</p></div>
+                    <div className="flex-1"><p className="text-xs font-bold">{t.label}</p><p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{t.desc}</p></div>
                     {tipo === t.id && <svg className="w-4 h-4 text-violet-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7"/></svg>}
                   </button>
                 ))}
@@ -159,13 +159,13 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
       </div>
 
       {/* Criterio de dominio */}
-      <div className={`rounded-2xl p-4 border-2 ${cumplido ? 'bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-300' : consec > 0 ? 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300' : 'bg-slate-50 border-slate-200'}`}>
+      <div className='rounded-2xl p-4 border-2' style={{ background: cumplido ? 'rgba(6,78,59,0.15)' : consec > 0 ? 'rgba(92,57,0,0.15)' : 'var(--muted-bg)', borderColor: cumplido ? '#059669' : consec > 0 ? '#d97706' : 'var(--card-border)' }}>
         <div className="flex items-center gap-4">
           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${cumplido ? 'bg-emerald-100' : consec > 0 ? 'bg-amber-100' : 'bg-slate-100'}`}>
             {cumplido ? '🏆' : consec > 0 ? '🔥' : '🎯'}
           </div>
           <div className="flex-1">
-            <p className={`font-black text-sm ${cumplido ? 'text-emerald-800' : consec > 0 ? 'text-amber-800' : 'text-slate-700'}`}>
+            <p className={`font-black text-sm`} style={{ color: cumplido ? '#059669' : consec > 0 ? '#d97706' : 'var(--text-primary)' }}>
               Criterio de dominio: {CRITERIO_PCT}% en {CRITERIO_SESS} sesiones consecutivas
             </p>
             <p className={`text-xs mt-0.5 ${cumplido ? 'text-emerald-600' : consec > 0 ? 'text-amber-600' : 'text-slate-500'}`}>
@@ -176,8 +176,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
             </div>
           </div>
           <div className="text-right shrink-0">
-            <p className={`font-black text-3xl tabular-nums ${cumplido ? 'text-emerald-600' : consec > 0 ? 'text-amber-600' : 'text-slate-700'}`}>{promedio}%</p>
-            <p className="text-[10px] text-slate-400">promedio</p>
+            <p className='font-black text-3xl tabular-nums' style={{ color: cumplido ? '#059669' : consec > 0 ? '#d97706' : 'var(--text-primary)' }}>{promedio}%</p>
+            <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>promedio</p>
           </div>
         </div>
       </div>
@@ -189,10 +189,10 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           { label: 'Tareas en casa', val: tareas?.adherencia ?? 0, sub: `${tareas?.completadas ?? 0} de ${tareas?.total ?? 0} tareas`, color: 'text-emerald-600', bar: 'bg-emerald-500' },
         ].map(stat => (
           <div key={stat.label} className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">{stat.label}</p>
+            <p className="text-[10px] font-black uppercase tracking-wider mb-1" style={{ color: "var(--text-muted)" }}>{stat.label}</p>
             <p className={`text-3xl font-black tabular-nums ${stat.color}`}>{stat.val}%</p>
-            <p className="text-xs text-slate-400 mt-1">{stat.sub}</p>
-            <div className="mt-2 bg-slate-100 rounded-full h-2 overflow-hidden">
+            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{stat.sub}</p>
+            <div className="mt-2 rounded-full h-2 overflow-hidden" style={{ background: "var(--muted-bg)" }}>
               <div className={`${stat.bar} h-full rounded-full transition-all duration-500`} style={{ width: `${stat.val}%` }} />
             </div>
           </div>
@@ -204,8 +204,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
         <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-black text-slate-800 text-sm">{tipoActual?.emoji} Progreso ABA — {tipoActual?.label}</h3>
-              <p className="text-xs text-slate-400 mt-0.5">{graficaABA.length} sesiones · {semanas} semanas</p>
+              <h3 className="font-black text-sm" style={{ color: "var(--text-primary)" }}>{tipoActual?.emoji} Progreso ABA — {tipoActual?.label}</h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{graficaABA.length} sesiones · {semanas} semanas</p>
             </div>
             {['lineas','barras','combinado'].includes(tipo) && (
               <div className="flex items-center gap-1 text-[10px] text-red-400 font-bold bg-red-50 px-2 py-1 rounded-lg border border-red-100">
@@ -219,8 +219,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {tipo === 'lineas' && (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={graficaABA} margin={MARGINS}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 10 }} tickFormatter={fmtFecha} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
+                <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={fmtFecha} />
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
@@ -240,8 +240,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {tipo === 'barras' && (
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={conColor} margin={MARGINS}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 10 }} tickFormatter={fmtFecha} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
+                <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={fmtFecha} />
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <ReferenceLine y={CRITERIO_PCT} stroke={C.criterio} strokeDasharray="6 3" strokeWidth={2}
@@ -264,8 +264,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                     <stop offset="95%" stopColor={C.logro} stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 10 }} tickFormatter={fmtFecha} />
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
+                <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={fmtFecha} />
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
@@ -285,9 +285,9 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
             <div>
               <ResponsiveContainer width="100%" height={200}>
                 <BarChart data={histo} margin={MARGINS}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--text-muted)" }} />
+                  <YAxis tick={{ fontSize: 10, fill: "var(--text-muted)" }} allowDecimals={false} />
                   <Tooltip formatter={(v: any) => [`${v} sesión${v !== 1 ? 'es' : ''}`, '']} labelFormatter={(l: any) => `${l} — ${histo.find(h=>h.label===l)?.rango||''}`} />
                   <Bar dataKey="count" name="Sesiones" radius={[6, 6, 0, 0]} maxBarSize={60}>
                     {histo.map((e, i) => <Cell key={i} fill={e.color} />)}
@@ -348,7 +348,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                   <p className="text-xs text-slate-400 mb-1 text-center">Promedio últimas {ult3.length} sesiones</p>
                   <ResponsiveContainer width="100%" height={220}>
                     <RadarChart data={radarData} margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
-                      <PolarGrid stroke="#e2e8f0" />
+                      <PolarGrid stroke="var(--card-border)" />
                       <PolarAngleAxis dataKey="h" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} />
                       <Radar dataKey="v" stroke={C.logro} fill={C.logro} fillOpacity={0.15} strokeWidth={2.5} dot={{ r: 4, fill: C.logro }} />
                       <Tooltip formatter={(v: any) => [`${v}%`, '']} />
@@ -368,20 +368,20 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* Detalle de sesiones (click) */}
           {['lineas','barras','combinado'].includes(tipo) && (
             <div className="mt-4 border-t border-slate-100 pt-3">
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-wider mb-2">Sesiones — clic para ver detalle</p>
+              <p className="text-[10px] font-black uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>Sesiones — clic para ver detalle</p>
               <div className="flex gap-2 flex-wrap">
                 {graficaABA.map((s: any, i: number) => (
                   <button key={i} onClick={() => setDetalle(detalle?.fecha === s.fecha ? null : s)}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${detalle?.fecha === s.fecha ? 'border-violet-500 bg-violet-50 text-violet-700' : 'bg-white text-slate-600 hover:bg-slate-50'}`}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${detalle?.fecha === s.fecha ? 'border-violet-500 text-violet-400' : ''}`} style={detalle?.fecha !== s.fecha ? { background: 'var(--muted-bg)', color: 'var(--text-secondary)' } : { background: 'rgba(109,40,217,0.15)' }}
                     style={{ borderColor: detalle?.fecha === s.fecha ? undefined : colorLogro(s.logro) + '50' }}>
                     {fmtFecha(s.fecha)} <span className="font-black" style={{ color: colorLogro(s.logro) }}>{s.logro}%</span>
                   </button>
                 ))}
               </div>
               {detalle && (
-                <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5">
-                  <p className="font-black text-slate-700 mb-2">📋 {fmtFecha(detalle.fecha)}</p>
-                  {detalle.objetivo && <div><span className="text-slate-400 font-bold">Objetivo: </span><span className="text-slate-700">{detalle.objetivo}</span></div>}
+                <div className="mt-3 p-3 rounded-xl text-xs space-y-1.5" style={{ background: "var(--muted-bg)", border: "1px solid var(--card-border)" }}>
+                  <p className="font-black mb-2" style={{ color: "var(--text-primary)" }}>📋 {fmtFecha(detalle.fecha)}</p>
+                  {detalle.objetivo && <div><span className="font-bold" style={{ color: "var(--text-muted)" }}>Objetivo: </span><span style={{ color: "var(--text-primary)" }}>{detalle.objetivo}</span></div>}
                   {detalle.tecnicas && <div><span className="text-slate-400 font-bold">Técnicas: </span><span className="text-slate-700">{detalle.tecnicas}</span></div>}
                   {detalle.notas   && <div><span className="text-slate-400 font-bold">Observaciones: </span><span className="text-slate-700">{detalle.notas}</span></div>}
                   <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200">

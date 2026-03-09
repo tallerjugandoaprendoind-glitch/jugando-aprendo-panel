@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import GraficoProgramaABA from '@/components/graficos/GraficoProgramaABA'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine, ResponsiveContainer, Legend, Cell, PieChart, Pie, ComposedChart, Area
@@ -431,9 +432,9 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     {tipoGrafico === 'lineas' && (
                       <ResponsiveContainer width="100%" height={200}>
                         <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                          <XAxis dataKey="sesion" tick={{ fontSize: 10 }} label={{ value: 'Sesión', position: 'insideBottom', offset: -2, fontSize: 10 }} />
-                          <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
+                          <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: 'Sesión', position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
+                          <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
                             labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `Sesión ${label}` }}
@@ -472,9 +473,9 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     {tipoGrafico === 'barras' && (
                       <ResponsiveContainer width="100%" height={200}>
                         <BarChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                          <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                           <XAxis dataKey="sesion" tick={{ fontSize: 10 }} />
-                          <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
+                          <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
                             labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${d.set || ''}` : `Sesión ${label}` }}
@@ -507,7 +508,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       return (
                         <ResponsiveContainer width="100%" height={200}>
                           <BarChart data={histData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                            <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                             <XAxis dataKey="rango" tick={{ fontSize: 10 }} />
                             <YAxis tick={{ fontSize: 10 }} label={{ value: 'Sesiones', angle: -90, position: 'insideLeft', fontSize: 10 }} />
                             <Tooltip formatter={(v: any) => [`${v} sesiones`, 'Cantidad']} />

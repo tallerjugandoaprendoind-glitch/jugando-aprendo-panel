@@ -186,7 +186,7 @@ export default function ResourcesManagementView() {
           { label: 'Específicos', value: specificCount, color: 'indigo' },
           { label: 'Tipos', value: new Set(resources.map(r => r.resource_type)).size, color: 'emerald' },
         ].map(({ label, value, color }) => (
-          <div key={label} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+          <div key={label} className="rounded-2xl p-5 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{label}</p>
             <p className={`text-3xl font-black text-${color}-600 mt-1`}>{value}</p>
           </div>
@@ -198,9 +198,9 @@ export default function ResourcesManagementView() {
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
           <input type="text" placeholder="Buscar recurso..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all"/>
+            className="w-full pl-11 pr-4 py-3.5 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}/>
         </div>
-        <select value={filterType} onChange={e => setFilterType(e.target.value)} className="p-3.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all">
+        <select value={filterType} onChange={e => setFilterType(e.target.value)} className="p-3.5 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}>
           <option value="all">Todos los tipos</option>
           {RESOURCE_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
         </select>
@@ -223,7 +223,7 @@ export default function ResourcesManagementView() {
             const patient = patients.find(p => p.id === resource.child_id)
 
             return (
-              <div key={resource.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-lg transition-all group">
+              <div key={resource.id} className="rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-all group border" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                 <div className={`${typeInfo.bg} ${typeInfo.border} border-b px-5 py-4 flex items-center justify-between`}>
                   <div className="flex items-center gap-3">
                     <div className={`p-2 bg-white rounded-xl shadow-sm`}>
@@ -244,22 +244,22 @@ export default function ResourcesManagementView() {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => handleEdit(resource)} className="p-1.5 rounded-lg bg-white/80 dark:bg-slate-700/80 text-slate-400 hover:text-indigo-500 transition-all">
+                  <button onClick={() => handleEdit(resource)} className="p-1.5 rounded-lg transition-all hover:text-indigo-500" style={{ background: 'var(--card)', color: 'var(--text-secondary)' }}>
                     <Pencil size={14}/>
                   </button>
-                  <button onClick={() => handleDelete(resource.id)} className="p-1.5 rounded-lg bg-white/80 dark:bg-slate-700/80 text-slate-400 hover:text-red-500 transition-all">
+                  <button onClick={() => handleDelete(resource.id)} className="p-1.5 rounded-lg transition-all hover:text-red-500" style={{ background: 'var(--card)', color: 'var(--text-secondary)' }}>
                     <Trash2 size={14}/>
                   </button>
                 </div>
 
                 <div className="p-5">
-                  <h4 className="font-bold text-slate-800 mb-1 leading-tight">{resource.title}</h4>
-                  {resource.description && <p className="text-xs text-slate-500 font-medium line-clamp-2 mb-3">{resource.description}</p>}
+                  <h4 className="font-bold mb-1 leading-tight" style={{ color: "var(--text-primary)" }}>{resource.title}</h4>
+                  {resource.description && <p className="text-xs font-medium line-clamp-2 mb-3" style={{ color: "var(--text-secondary)" }}>{resource.description}</p>}
                   
                   {resource.tags?.length > 0 && (
                     <div className="flex flex-wrap gap-1 mb-3">
                       {resource.tags.map((tag: string) => (
-                        <span key={tag} className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[10px] font-bold rounded-full">{tag}</span>
+                        <span key={tag} className="px-2 py-0.5 text-[10px] font-bold rounded-full" style={{ background: "var(--muted-bg)", color: "var(--text-secondary)" }}>{tag}</span>
                       ))}
                     </div>
                   )}
@@ -271,7 +271,7 @@ export default function ResourcesManagementView() {
                     </a>
                   )}
                   
-                  <p className="text-[10px] text-slate-300 mt-3">{new Date(resource.created_at).toLocaleDateString('es-PE')}</p>
+                  <p className="text-[10px] mt-3" style={{ color: "var(--text-muted)" }}>{new Date(resource.created_at).toLocaleDateString('es-PE')}</p>
                 </div>
               </div>
             )
@@ -282,9 +282,9 @@ export default function ResourcesManagementView() {
       {/* Modal: New Resource */}
       {showForm && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto" style={{ background: "var(--card)" }}>
             <div className="flex justify-between items-center mb-6">
-              <h3 className="font-black text-xl text-slate-800 flex items-center gap-2">
+              <h3 className="font-black text-xl flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
                 {editingId ? <Pencil size={20} className="text-indigo-600"/> : <Gift size={20} className="text-violet-600"/>}
                 {editingId ? 'Editar Recurso' : 'Compartir Recurso'}
               </h3>
@@ -294,13 +294,13 @@ export default function ResourcesManagementView() {
             <div className="space-y-5">
               {/* Resource type */}
               <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-3">Tipo de Recurso</label>
+                <label className="text-xs font-black uppercase tracking-widest block mb-3" style={{ color: "var(--text-muted)" }}>Tipo de Recurso</label>
                 <div className="grid grid-cols-3 gap-2">
                   {RESOURCE_TYPES.map(type => {
                     const Icon = type.icon
                     return (
                       <button key={type.id} onClick={() => setNewResource(p => ({ ...p, resource_type: type.id }))}
-                        className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all ${newResource.resource_type === type.id ? `${type.bg} ${type.border} shadow-md` : 'bg-white border-slate-200 hover:border-slate-300'}`}>
+                        className={`p-3 rounded-xl border-2 flex flex-col items-center gap-1.5 transition-all ${newResource.resource_type === type.id ? `${type.bg} ${type.border} shadow-md` : 'border-slate-200 hover:border-slate-300'}`} style={newResource.resource_type !== type.id ? { background: 'var(--muted-bg)' } : {}}>
                         <Icon size={18} className={newResource.resource_type === type.id ? type.color : 'text-slate-400'}/>
                         <span className={`text-[10px] font-black ${newResource.resource_type === type.id ? type.color : 'text-slate-500'}`}>{type.label}</span>
                       </button>
@@ -313,14 +313,14 @@ export default function ResourcesManagementView() {
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Título *</label>
                 <input type="text" value={newResource.title} onChange={e => setNewResource(p => ({ ...p, title: e.target.value }))}
                   placeholder="Ej: Técnicas de relajación para niños con TEA"
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all"/>
+                  className="w-full p-4 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}/>
               </div>
 
               <div>
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Descripción</label>
                 <textarea rows={2} value={newResource.description} onChange={e => setNewResource(p => ({ ...p, description: e.target.value }))}
                   placeholder="Breve descripción de este material..."
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all resize-none"/>
+                  className="w-full p-4 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all resize-none border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}/>
               </div>
 
               <div>
@@ -332,7 +332,7 @@ export default function ResourcesManagementView() {
                 </label>
                 <input type="url" value={newResource.url} onChange={e => setNewResource(p => ({ ...p, url: e.target.value }))}
                   placeholder="https://..."
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all font-mono text-xs"/>
+                  className="w-full p-4 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all font-mono text-xs border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}/>
               </div>
 
               {/* Tags */}
@@ -341,7 +341,7 @@ export default function ResourcesManagementView() {
                 <div className="flex flex-wrap gap-2">
                   {RESOURCE_TAGS.map(tag => (
                     <button key={tag} type="button" onClick={() => toggleTag(tag)}
-                      className={`px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition-all ${newResource.tags.includes(tag) ? 'bg-violet-600 text-white border-violet-600' : 'bg-white border-slate-200 text-slate-500 hover:border-violet-300'}`}>
+                      className={`px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition-all ${newResource.tags.includes(tag) ? 'bg-violet-600 text-white border-violet-600' : 'border-slate-200 text-slate-500 hover:border-violet-300'}`} style={!newResource.tags.includes(tag) ? { background: 'var(--muted-bg)' } : {}}>
                       {tag}
                     </button>
                   ))}
@@ -353,17 +353,17 @@ export default function ResourcesManagementView() {
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-3">¿Para quién?</label>
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <button onClick={() => setNewResource(p => ({ ...p, is_global: true, parent_id: '' }))}
-                    className={`p-4 rounded-xl border-2 flex items-center gap-3 transition-all ${newResource.is_global ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'}`}>
+                    className={`p-4 rounded-xl border-2 flex items-center gap-3 transition-all ${newResource.is_global ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200' : 'text-slate-600 border-slate-200 hover:border-blue-300'}`} style={newResource.is_global ? {} : { background: 'var(--muted-bg)' }}>
                     <Globe size={18}/><span className="font-bold text-sm">Todas las familias</span>
                   </button>
                   <button onClick={() => setNewResource(p => ({ ...p, is_global: false }))}
-                    className={`p-4 rounded-xl border-2 flex items-center gap-3 transition-all ${!newResource.is_global ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200' : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'}`}>
+                    className={`p-4 rounded-xl border-2 flex items-center gap-3 transition-all ${!newResource.is_global ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200' : 'text-slate-600 border-slate-200 hover:border-indigo-300'}`} style={!newResource.is_global ? {} : { background: 'var(--muted-bg)' }}>
                     <User size={18}/><span className="font-bold text-sm">Paciente específico</span>
                   </button>
                 </div>
                 {!newResource.is_global && (
                   <select value={newResource.child_id} onChange={e => setNewResource(p => ({ ...p, child_id: e.target.value }))}
-                    className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 transition-all">
+                    className="w-full p-4 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 transition-all border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}>
                     <option value="">Seleccionar paciente...</option>
                     {patients.map(p => <option key={p.id} value={p.id}>{p.name}{p.age ? ` (${p.age})` : ''}</option>)}
                   </select>
