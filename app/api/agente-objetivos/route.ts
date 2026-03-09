@@ -170,7 +170,7 @@ SOLO JSON.`
     // ━━━ FIN CEREBRO IA ━━━
 
 
-    const respuestaRaw = await callGroqSimple('Eres un psicólogo conductual certificado BCBA especializado en diseño de programas ABA para niños con TEA y TDAH. Siempre respondes con JSON válido y sin texto adicional. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',,
+    const respuestaRaw = await callGroqSimple('Eres un psicólogo conductual certificado BCBA especializado en diseño de programas ABA para niños con TEA y TDAH. Siempre respondes con JSON válido y sin texto adicional. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',
       promptBase,
       { model: GROQ_MODELS.SMART, temperature: 0.3, maxTokens: 1500 }
     )

@@ -95,7 +95,7 @@ Genera un JSON con la siguiente estructura EXACTA (sin markdown, solo JSON puro)
     // ━━━ FIN CEREBRO IA ━━━
 
 
-    const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',, prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
+    const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 });
 
     const text = response || '';
     const clean = text.replace(/```json|```/g, '').trim();

@@ -86,7 +86,7 @@ SOLO JSON, sin texto adicional.`
   // ━━━ FIN CEREBRO IA ━━━
 
 
-  const respuestaRaw = await callGroqSimple('Eres un extractor de conocimiento clínico ABA que genera aprendizajes anonimizados para bases de conocimiento terapéutico. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',,
+  const respuestaRaw = await callGroqSimple('Eres un extractor de conocimiento clínico ABA que genera aprendizajes anonimizados para bases de conocimiento terapéutico. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',
     prompt,
     { model: GROQ_MODELS.FAST, temperature: 0.2, maxTokens: 600 }
   )

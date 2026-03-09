@@ -248,7 +248,7 @@ ${urgentes.slice(0, 5).map(s => `- ${s.titulo}: ${s.descripcion}`).join('\n')}
 
 Genera un RESUMEN EJECUTIVO para la directora del centro (2-3 oraciones). Qué patrón global ves y cuál es la prioridad de acción de esta semana.
 
-CONOCIMIENTO CLÍNICO (Cerebro IA): ${_cerebroCtx || 'No disponible'}\`,
+CONOCIMIENTO CLÍNICO (Cerebro IA): ${_cerebroCtx || 'No disponible'}`,
           { model: GROQ_MODELS.FAST, temperature: 0.3, maxTokens: 200 }
         )
       } catch { /* no bloquear */ }

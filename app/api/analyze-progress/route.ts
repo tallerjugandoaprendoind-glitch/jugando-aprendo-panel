@@ -56,7 +56,7 @@ export async function POST(req: Request) {
 
     // ━━━ FIN CEREBRO IA ━━━
 
-    const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',,
+    const response = await callGroqSimple('Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo. Fundamenta tus respuestas con los libros del Cerebro IA cuando estén disponibles.',
         prompt as string,
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
       );

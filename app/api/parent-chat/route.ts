@@ -249,7 +249,7 @@ ${knowledgeCtx ? `
 ━━━ CONOCIMIENTO CLÍNICO DE RESPALDO (Cerebro IA) ━━━
 ${knowledgeCtx}
 Cuando sea útil, usa este conocimiento para dar consejos basados en evidencia, explicado en lenguaje simple para padres.
-━━━ FIN ━━━` : ''}\`
+━━━ FIN ━━━` : ''}`
 
   // Build chat messages for Groq
   const groqMessages = [
