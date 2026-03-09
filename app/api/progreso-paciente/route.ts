@@ -76,11 +76,23 @@ export async function GET(request: NextRequest) {
     // ── 1. Sesiones ABA del período ─────────────────────────────────────────
     // NOTA: NO filtrar por fecha con gte() — las sesiones pueden tener
     // fecha_sesion nulo, vacío o en formato incorrecto. Traer todas y filtrar en código.
-    const { data: todasSesiones } = await supabaseAdmin
+    // Verificar que el cliente admin tiene las credenciales correctas
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!serviceKey) {
+      console.error('[progreso] ERROR: SUPABASE_SERVICE_ROLE_KEY no está definida')
+    }
+
+    const { data: todasSesiones, error: errorSesiones } = await supabaseAdmin
       .from('registro_aba')
       .select('id, fecha_sesion, datos, ai_analysis, asistio')
       .eq('child_id', childId)
       .order('fecha_sesion', { ascending: true })
+    
+    if (errorSesiones) {
+      console.error('[progreso] Error query registro_aba:', errorSesiones)
+    }
+    console.log('[progreso] todasSesiones count:', todasSesiones?.length, 'childId:', childId, 'tieneServiceKey:', !!serviceKey)
 
     // Filtrar por período solo si la sesión tiene fecha válida
     // Sesiones sin fecha se incluyen siempre (para no perder datos)
@@ -320,14 +332,19 @@ Escribe UN párrafo clínico de 2-3 oraciones con observaciones del período y u
       evaluaciones,
       reporteSemanal,
       _debug: {
-        sesiones_encontradas: sesiones?.length || 0,
+        tiene_service_key: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        tiene_supabase_url: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        todas_sesiones_raw: todasSesiones?.length ?? 'NULL',
+        sesiones_tras_filtro: sesiones?.length || 0,
         puntos_programa: puntosPrograma.length,
         puntos_registro: puntosRegistro.length,
-        primer_dato_raw: sesiones?.[0] ? {
-          fecha: sesiones[0].fecha_sesion,
-          tipo_datos: typeof sesiones[0].datos,
-          nivel_logro: typeof sesiones[0].datos === 'object' 
-            ? sesiones[0].datos?.nivel_logro_objetivos
+        fecha_inicio_filtro: fechaInicioStr,
+        primer_dato_raw: todasSesiones?.[0] ? {
+          fecha: todasSesiones[0].fecha_sesion,
+          child_id_en_row: (todasSesiones[0] as any).child_id,
+          tipo_datos: typeof todasSesiones[0].datos,
+          nivel_logro: typeof todasSesiones[0].datos === 'object' 
+            ? todasSesiones[0].datos?.nivel_logro_objetivos
             : 'DATOS_ES_STRING',
         } : null,
       },
