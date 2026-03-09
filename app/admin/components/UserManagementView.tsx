@@ -132,6 +132,29 @@ function StatCard({ value, label, icon: Icon, color }: any) {
   )
 }
 
+function PacientesVinculados({ userId, getChildrenOfParent }: { userId: string; getChildrenOfParent: (id: string) => any[] }) {
+  const hijos = getChildrenOfParent(userId)
+  if (hijos.length === 0) return (
+    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+      <p className="text-xs text-amber-600 font-medium flex items-center gap-1.5">
+        <AlertCircle size={11} /> Sin pacientes vinculados — usa el botón &quot;Vincular paciente&quot;
+      </p>
+    </div>
+  )
+  return (
+    <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Pacientes vinculados</p>
+      <div className="flex flex-wrap gap-2">
+        {hijos.map((h: any) => (
+          <span key={h.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-xs font-bold text-pink-700">
+            <Heart size={10} /> {h.name}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function UserManagementView() {
   const toast = useToast()
   const [users, setUsers] = useState<UserData[]>([])
@@ -688,28 +711,7 @@ export default function UserManagementView() {
                   </div>
 
                   {/* Pacientes vinculados (si es padre) */}
-                  {role === 'padre' && (() => {
-                    const hijos = getChildrenOfParent(user.id)
-                    if (hijos.length === 0) return (
-                      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                        <p className="text-xs text-amber-600 font-medium flex items-center gap-1.5">
-                          <AlertCircle size={11} /> Sin pacientes vinculados — usa el botón &quot;Vincular paciente&quot;
-                        </p>
-                      </div>
-                    )
-                    return (
-                      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Pacientes vinculados</p>
-                        <div className="flex flex-wrap gap-2">
-                          {hijos.map(h => (
-                            <span key={h.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-xs font-bold text-pink-700">
-                              <Heart size={10} /> {h.name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )
-                  })()}
+                  {role === 'padre' && <PacientesVinculados userId={user.id} getChildrenOfParent={getChildrenOfParent} />}
                   </div>
                 </div>
               )}
