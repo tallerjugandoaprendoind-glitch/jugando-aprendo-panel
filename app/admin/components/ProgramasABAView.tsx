@@ -174,7 +174,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
           <p className="text-slate-400 text-sm">Cargando programas...</p>
         </div>
       ) : programasFiltrados.length === 0 ? (
-        <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center">
+        <div className="bg-white dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-3xl p-14 text-center">
           <div className="w-14 h-14 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
             <BarChart3 size={26} className="text-indigo-300" />
           </div>
@@ -281,7 +281,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
   }
 
   return (
-    <div className="bg-white rounded-2xl border-2 border-slate-100 shadow-sm overflow-hidden hover:border-indigo-100 transition-all">
+    <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden hover:border-indigo-100 transition-all">
       {/* Header */}
       <div className="p-5 cursor-pointer" onClick={loadDetalle}>
         <div className="flex items-start gap-3">
@@ -615,7 +615,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
               {(detalle.sd_estimulo || detalle.reforzadores || detalle.materiales) && (
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📌 Procedimiento</p>
-                  <div className="bg-white rounded-xl p-4 border border-slate-100 space-y-2 text-xs text-slate-600">
+                  <div className="bg-white dark:bg-slate-700 rounded-xl p-4 border border-slate-100 dark:border-slate-600 space-y-2 text-xs text-slate-600 dark:text-slate-300">
                     {detalle.sd_estimulo && <p><span className="font-bold">Sd:</span> {detalle.sd_estimulo}</p>}
                     {detalle.correccion_error && <p><span className="font-bold">Corrección:</span> {detalle.correccion_error}</p>}
                     {detalle.reforzadores && <p><span className="font-bold">Reforzadores:</span> {detalle.reforzadores}</p>}
@@ -704,7 +704,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-5">
             <div>
@@ -855,7 +855,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-2">
             <h3 className="font-black text-lg text-slate-800">Nuevo Programa ABA</h3>

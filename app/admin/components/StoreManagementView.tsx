@@ -142,7 +142,7 @@ function ProductModal({
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
       <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="sticky top-0 bg-white px-7 py-5 border-b border-slate-100 flex items-center justify-between z-10">
+        <div className="sticky top-0 bg-white dark:bg-slate-900 px-7 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between z-10">
           <div>
             <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">{product ? 'Editar producto' : 'Nuevo producto'}</h2>
             <p className="text-xs text-slate-400 mt-0.5">{product ? `ID: ${product.id.slice(0, 8)}...` : 'Completa la información del artículo'}</p>
@@ -168,7 +168,7 @@ function ProductModal({
                 <div className="relative">
                   <img src={imagePreview} alt="Preview" className="w-full h-48 object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-all flex items-center justify-center">
-                    <div className="bg-white rounded-xl px-4 py-2 text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <div className="bg-white dark:bg-slate-700 rounded-xl px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-2">
                       <Upload size={16} /> Cambiar imagen
                     </div>
                   </div>
@@ -282,7 +282,7 @@ function ProductModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-white px-7 py-5 border-t border-slate-100 flex gap-3">
+        <div className="sticky bottom-0 bg-white dark:bg-slate-900 px-7 py-5 border-t border-slate-100 dark:border-slate-700 flex gap-3">
           <button onClick={onClose} className="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-all">
             Cancelar
           </button>
@@ -449,7 +449,7 @@ export default function StoreManagementView() {
             </div>
             {['todos', 'fisico', 'digital'].map(f => (
               <button key={f} onClick={() => setFilterTipo(f)}
-                className={`px-4 py-2.5 rounded-xl border text-sm font-bold capitalize transition-all ${filterTipo === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'}`}>
+                className={`px-4 py-2.5 rounded-xl border text-sm font-bold capitalize transition-all ${filterTipo === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-blue-300'}`}>
                 {f === 'todos' ? 'Todos' : f === 'fisico' ? '📦 Físicos' : '📄 Digitales'}
               </button>
             ))}
@@ -457,7 +457,7 @@ export default function StoreManagementView() {
 
           {/* Grid productos */}
           {filteredProducts.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-2xl py-20 text-center">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-20 text-center">
               <Package size={40} className="text-slate-200 mx-auto mb-3" />
               <p className="text-slate-400 font-bold">No hay productos</p>
               <button onClick={() => { setEditProduct(null); setShowModal(true) }}
@@ -468,7 +468,7 @@ export default function StoreManagementView() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredProducts.map(p => (
-                <div key={p.id} className={`bg-white rounded-2xl border-2 overflow-hidden transition-all hover:shadow-md ${p.activo ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
+                <div key={p.id} className={`bg-white dark:bg-slate-800 rounded-2xl border-2 overflow-hidden transition-all hover:shadow-md ${p.activo ? 'border-slate-200' : 'border-slate-100 opacity-60'}`}>
                   {/* Imagen */}
                   <div className="relative h-44 bg-gradient-to-br from-slate-100 to-slate-50">
                     {p.imagen_url ? (
@@ -548,7 +548,7 @@ export default function StoreManagementView() {
           </div>
 
           {filteredOrders.length === 0 ? (
-            <div className="bg-white border border-slate-200 rounded-2xl py-20 text-center">
+            <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-20 text-center">
               <ShoppingBag size={40} className="text-slate-200 mx-auto mb-3" />
               <p className="text-slate-400 font-bold">Sin pedidos{filterEstado !== 'todos' ? ` "${ESTADO_CFG[filterEstado]?.label}"` : ''}</p>
             </div>
@@ -560,7 +560,7 @@ export default function StoreManagementView() {
                 const open = expandedOrder === order.id
 
                 return (
-                  <div key={order.id} className={`bg-white rounded-2xl border-2 overflow-hidden transition-all ${open ? 'border-blue-200 shadow-md' : 'border-slate-200'}`}>
+                  <div key={order.id} className={`bg-white dark:bg-slate-800 rounded-2xl border-2 overflow-hidden transition-all ${open ? 'border-blue-200 shadow-md' : 'border-slate-200'}`}>
                     {/* Fila principal */}
                     <div className="p-5 flex items-center gap-4 flex-wrap">
                       {/* Estado dot */}
@@ -603,7 +603,7 @@ export default function StoreManagementView() {
                         <div className="p-5 space-y-3">
                           <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Artículos del pedido</p>
                           {(order.store_order_items || []).map(item => (
-                            <div key={item.id} className="flex items-center gap-3 bg-white rounded-xl p-3 border border-slate-100">
+                            <div key={item.id} className="flex items-center gap-3 bg-white dark:bg-slate-700 rounded-xl p-3 border border-slate-100 dark:border-slate-600">
                               <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0">
                                 {item.product_imagen
                                   ? <img src={item.product_imagen} alt="" className="w-full h-full object-cover" />
@@ -634,7 +634,7 @@ export default function StoreManagementView() {
                               rows={2}
                               placeholder="Ej: Pagó en efectivo, retirar el jueves..."
                               onBlur={e => updateAdminNota(order.id, e.target.value)}
-                              className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-blue-400 transition-all resize-none"
+                              className="w-full px-4 py-3 bg-white dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-blue-400 transition-all resize-none"
                             />
                           </div>
 

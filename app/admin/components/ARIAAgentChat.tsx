@@ -104,7 +104,7 @@ export default function ARIAAgentChat({
   }
 
   return (
-    <div className={`flex flex-col bg-white rounded-3xl border-2 border-slate-100 shadow-sm overflow-hidden ${compact ? 'h-[500px]' : 'h-[680px]'}`}>
+    <div className={`flex flex-col bg-white dark:bg-slate-800 rounded-3xl border-2 border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden ${compact ? 'h-[500px]' : 'h-[680px]'}`}>
       {/* Header */}
       <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4 flex items-center gap-3">
         <div className="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center">
@@ -126,7 +126,7 @@ export default function ARIAAgentChat({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 dark:bg-slate-800">
         {messages.map((msg, i) => (
           <MessageBubble key={i} message={msg} />
         ))}
@@ -135,9 +135,9 @@ export default function ARIAAgentChat({
             <div className="w-8 h-8 bg-violet-100 rounded-2xl flex items-center justify-center shrink-0">
               <Brain size={14} className="text-violet-600" />
             </div>
-            <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
+            <div className="bg-slate-100 dark:bg-slate-700 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
               <Loader2 size={14} className="animate-spin text-violet-500" />
-              <span className="text-sm text-slate-500">ARIA está pensando...</span>
+              <span className="text-sm text-slate-500 dark:text-slate-300">ARIA está pensando...</span>
             </div>
           </div>
         )}
@@ -146,12 +146,12 @@ export default function ARIAAgentChat({
 
       {/* Sugerencias rápidas (solo si no hay conversación) */}
       {messages.length <= 1 && (
-        <div className="px-4 pb-2">
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2">Preguntas sugeridas</p>
+        <div className="px-4 pb-2 dark:bg-slate-800">
+          <p className="text-[10px] font-black text-slate-300 dark:text-slate-500 uppercase tracking-widest mb-2">Preguntas sugeridas</p>
           <div className="flex flex-wrap gap-2">
             {sugerencias.slice(0, 3).map((s, i) => (
               <button key={i} onClick={() => sendMessage(s)}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-600 hover:border-violet-300 hover:text-violet-600 transition-all text-left leading-tight">
+                className="px-3 py-1.5 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 hover:border-violet-300 hover:text-violet-600 transition-all text-left leading-tight">
                 {s}
               </button>
             ))}
@@ -160,7 +160,7 @@ export default function ARIAAgentChat({
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-slate-100">
+      <div className="p-4 border-t border-slate-100 dark:border-slate-700 dark:bg-slate-800">
         <div className="flex gap-2 items-end">
           <textarea
             ref={inputRef}
@@ -169,7 +169,7 @@ export default function ARIAAgentChat({
             onKeyDown={handleKeyDown}
             rows={1}
             placeholder="Pregúntale a ARIA sobre el caso, protocolos ABA, DSM-5..."
-            className="flex-1 p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-sm resize-none outline-none focus:border-violet-400 transition-all leading-relaxed max-h-28"
+            className="flex-1 p-3 bg-slate-50 dark:bg-slate-700 dark:text-slate-100 dark:placeholder-slate-400 border-2 border-slate-200 dark:border-slate-600 rounded-2xl text-sm resize-none outline-none focus:border-violet-400 transition-all leading-relaxed max-h-28"
             style={{ minHeight: '44px' }}
           />
           <button onClick={() => sendMessage()} disabled={!input.trim() || loading}

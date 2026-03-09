@@ -350,7 +350,7 @@ export default function KnowledgeBaseView() {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-white rounded-2xl p-1 border border-slate-100 shadow-sm gap-1">
+      <div className="flex bg-white dark:bg-slate-800 rounded-2xl p-1 border border-slate-100 dark:border-slate-700 shadow-sm gap-1">
         <button onClick={() => setTab('aprender')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'aprender' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
           <Sparkles size={15} /> Aprender de Internet
@@ -378,7 +378,7 @@ export default function KnowledgeBaseView() {
                 { icon: '🤖', t: 'Sintetiza con IA', d: 'Genera resumen clínico estructurado para ABA' },
                 { icon: '🧠', t: 'Indexa en el Cerebro', d: 'ARIA y todos los agentes ya saben ese tema' },
               ].map((s, i) => (
-                <div key={i} className="bg-white rounded-xl p-3 border border-violet-100">
+                <div key={i} className="bg-white dark:bg-slate-700 rounded-xl p-3 border border-violet-100 dark:border-violet-900/30">
                   <p className="text-xl mb-1">{s.icon}</p>
                   <p className="text-xs font-bold text-violet-700">{s.t}</p>
                   <p className="text-[11px] text-slate-500 mt-0.5">{s.d}</p>
@@ -388,7 +388,7 @@ export default function KnowledgeBaseView() {
           </div>
 
           {/* Input box */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-4">
 
             {/* Selector keywords vs URL */}
             <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
@@ -528,7 +528,7 @@ export default function KnowledgeBaseView() {
 
           {/* Temas ya aprendidos */}
           {docsAuto.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
                 Temas ya aprendidos por la IA ({docsAuto.length})
               </p>
@@ -565,7 +565,7 @@ export default function KnowledgeBaseView() {
           </button>
 
           {showForm && (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-4">
               <p className="font-bold text-slate-700 text-sm">Agregar documento</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {(['archivo', 'url', 'texto', 'buscar'] as const).map(m => {
@@ -682,7 +682,7 @@ export default function KnowledgeBaseView() {
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-violet-400" /></div>
           ) : documentos.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-10 text-center">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600 p-10 text-center">
               <Brain size={32} className="text-slate-200 mx-auto mb-3" />
               <p className="text-slate-400 font-semibold">Biblioteca vacía</p>
               <p className="text-slate-400 text-sm mt-1">Usa "Aprender de Internet" para empezar</p>
@@ -720,7 +720,7 @@ function DocCard({ doc, onDelete, onRetry }: {
 }) {
   const isAuto = doc.source_url?.startsWith('auto:')
   return (
-    <div className="bg-white rounded-xl border border-slate-100 p-3.5 flex items-center justify-between gap-3 hover:border-slate-200 transition">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3.5 flex items-center justify-between gap-3 hover:border-slate-200 transition">
       <div className="flex items-center gap-3 min-w-0">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isAuto ? 'bg-violet-100' : 'bg-slate-100'}`}>
           {isAuto

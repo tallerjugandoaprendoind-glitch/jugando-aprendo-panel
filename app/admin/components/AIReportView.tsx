@@ -395,7 +395,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                 { id: 'graficas' as const,label: '📊 Gráficas'  },
               ]).map(t => (
                 <button key={t.id} onClick={() => setMobileTab(t.id)}
-                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${mobileTab === t.id ? 'bg-white shadow text-slate-800' : 'text-slate-500'}`}>
+                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${mobileTab === t.id ? 'bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}>
                   {t.label}
                 </button>
               ))}
@@ -403,7 +403,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
 
             {/* ── REPORTES (desktop: top bar, mobile: tab) ── */}
             <div className={`flex-shrink-0 ${mobileTab !== 'reports' ? 'hidden lg:block' : ''}`}>
-              <div className="bg-white rounded-2xl md:rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
                 <button
                   onClick={() => setShowReportPanel(!showReportPanel)}
                   className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-slate-50 transition-colors"
@@ -458,7 +458,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
 
             {/* ANAMNESIS (solo desktop XL) */}
-            <div className="hidden xl:flex xl:col-span-3 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex-col">
+            <div className="hidden xl:flex xl:col-span-3 bg-white dark:bg-slate-800 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-700 flex-col">
                 <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-slate-100 font-extrabold text-slate-700 text-xs uppercase tracking-[0.2em] flex items-center gap-2 sticky top-0 z-10">
                     <FileText size={16} className="text-blue-600"/> Ficha de Ingreso
                 </div>
@@ -476,7 +476,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                     )}
                 </div>
             </div>            {/* HISTORIAL (desktop: columna fija, mobile: tab) */}
-            <div className={`col-span-1 lg:col-span-7 xl:col-span-5 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col
+            <div className={`col-span-1 lg:col-span-7 xl:col-span-5 bg-white dark:bg-slate-800 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col
               ${mobileTab === 'history' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="p-4 md:p-6 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sticky top-0 z-10 shadow-sm">
                     <span className="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-widest flex items-center gap-2">
@@ -512,7 +512,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                                 </div>
 
                                 {isExpanded && (
-                                    <div className="p-6 pt-0 border-t border-green-50 bg-white animate-fade-in">
+                                    <div className="p-6 pt-0 border-t border-green-50 dark:border-green-900/20 bg-white dark:bg-slate-800 animate-fade-in">
                                         <div className="flex flex-col gap-4 mt-6">
                                             <DetailBox title="Personas Presentes" content={d.personas_presentes} icon={<Users size={14}/>} color="bg-blue-50 border-blue-100 text-blue-900" full/>
                                             <DetailBox title="Comportamiento" content={d.comportamiento_observado} icon={<Eye size={14}/>} color="bg-purple-50 border-purple-100 text-purple-900" full/>
@@ -536,7 +536,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                         const d = sesion.datos || {}
 
                         return (
-                            <div key={`aba-${sesion.id}`} className={`bg-white rounded-2xl md:rounded-[1.5rem] border-2 transition-all duration-300 ${isExpanded ? 'border-blue-400 shadow-xl ring-4 ring-blue-50' : 'border-slate-100 hover:border-blue-200'}`}>
+                            <div key={`aba-${sesion.id}`} className={`bg-white dark:bg-slate-800 rounded-2xl md:rounded-[1.5rem] border-2 transition-all duration-300 ${isExpanded ? 'border-blue-400 shadow-xl ring-4 ring-blue-50' : 'border-slate-100 hover:border-blue-200'}`}>
                                 <div className="p-5 cursor-pointer flex items-center justify-between" onClick={() => toggleCard(`aba-${sesion.id}`)}>
                                     <div className="flex items-center gap-4 overflow-hidden">
                                         <div className="flex flex-col items-center justify-center bg-slate-800 text-white rounded-xl p-3 min-w-[70px] shadow-lg">
@@ -555,7 +555,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                                 </div>
 
                                 {isExpanded && (
-                                    <div className="p-6 pt-0 border-t border-slate-50 bg-white animate-fade-in">
+                                    <div className="p-6 pt-0 border-t border-slate-50 dark:border-slate-700 bg-white dark:bg-slate-800 animate-fade-in">
                                         <div className="flex flex-col gap-4 mt-6">
                                             <DetailBox title="Objetivo" content={d.objetivo_principal} icon={<Target size={14}/>} color="bg-blue-50 border-blue-100 text-blue-900" full/>
                                             <DetailBox title="Observaciones" content={d.observaciones_tecnicas} icon={<Eye size={14}/>} color="bg-slate-50 border-slate-100" full/>
@@ -590,7 +590,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
             </div>
 
             {/* CHAT IA (desktop: columna, mobile: tab chat) */}
-            <div className={`col-span-1 lg:col-span-5 xl:col-span-4 bg-white rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-200 flex flex-col
+            <div className={`col-span-1 lg:col-span-5 xl:col-span-4 bg-white dark:bg-slate-800 rounded-3xl md:rounded-[3rem] shadow-2xl border border-slate-200 flex flex-col
               ${mobileTab === 'chat' ? 'flex' : 'hidden lg:flex'}`}>
                 <div className="p-4 md:p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex justify-between items-center shadow-lg">
                    <div className="flex items-center gap-3">
@@ -638,7 +638,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                             <div className={`max-w-[90%] p-4 rounded-2xl md:rounded-[1.5rem] text-sm leading-relaxed shadow-md ${
                               m.role === 'user' 
                                 ? 'bg-gradient-to-br from-blue-600 to-blue-700 text-white rounded-br-none border-b-4 border-blue-800' 
-                                : 'bg-white border-2 border-slate-200 text-slate-700 rounded-bl-none'
+                                : 'bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-100 rounded-bl-none'
                             }`}>
                                 {m.role === 'ai' ? (
                                   <p className="font-medium whitespace-pre-wrap" dangerouslySetInnerHTML={{
@@ -652,7 +652,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                     ))}
                     {typing && (
                       <div className="flex justify-start animate-fade-in">
-                        <div className="bg-white border-2 border-slate-200 px-5 py-3 rounded-2xl rounded-bl-none flex items-center gap-2">
+                        <div className="bg-white dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 px-5 py-3 rounded-2xl rounded-bl-none flex items-center gap-2">
                           <Loader2 className="animate-spin text-blue-600" size={16}/>
                           <span className="text-xs font-bold text-slate-400">Analizando...</span>
                         </div>
@@ -660,7 +660,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                     )}
                 </div>
 
-                <div className="p-4 md:p-5 border-t-2 border-slate-200 bg-white flex gap-2 shadow-lg">
+                <div className="p-4 md:p-5 border-t-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex gap-2 shadow-lg">
                     <input 
                         className="flex-1 border-2 rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all"
                         style={{
@@ -716,7 +716,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
 
             {/* ── PANEL GRÁFICAS (mobile tab) ── */}
             {mobileTab === 'graficas' && (
-              <div className="lg:hidden flex-1 overflow-y-auto bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+              <div className="lg:hidden flex-1 overflow-y-auto bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 shadow-sm p-4">
                 <div className="flex items-center gap-2 mb-4">
                   <div className="p-2 bg-violet-50 rounded-xl">
                     <span className="text-lg">📊</span>
@@ -728,7 +728,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
             )}
 
             {/* ── PANEL GRÁFICAS (desktop: siempre visible como columna extra) ── */}
-            <div className="hidden lg:block flex-shrink-0 w-full bg-white rounded-3xl border border-slate-200 shadow-sm p-5">
+            <div className="hidden lg:block flex-shrink-0 w-full bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 shadow-sm p-5">
               <div className="flex items-center gap-2 mb-4">
                 <div className="p-2 bg-violet-50 rounded-xl">
                   <span className="text-lg">📊</span>
@@ -803,7 +803,7 @@ function ReporteHistorialCard({ reporte }: { reporte: any }) {
   const badge     = BADGE_REPORTE[reporte.tipo_reporte]   || 'bg-slate-100 text-slate-600 border-slate-200'
 
   return (
-    <div className="bg-white border-2 border-slate-100 hover:border-blue-300 hover:shadow-lg rounded-2xl overflow-hidden transition-all duration-200 group">
+    <div className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 hover:border-blue-300 hover:shadow-lg rounded-2xl overflow-hidden transition-all duration-200 group">
       {/* Barra superior con color del tipo */}
       <div className={`bg-gradient-to-r ${gradiente} p-4 flex items-center gap-3`}>
         <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
