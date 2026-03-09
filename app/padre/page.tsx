@@ -1,1275 +1,1436 @@
 'use client'
 
-import { supabase } from '@/lib/supabase'
+import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
-import { useRouter } from 'next/navigation'
-import { 
-  Home, Calendar, MessageCircle, User, LogOut, Plus, 
-  Clock, Ticket, CheckCircle2, AlertCircle, ChevronRight, Menu, 
-  Sparkles, Send, Lock, X, Loader2, TrendingUp, Activity, Heart, Brain, Trash2, RefreshCw,
-  Award, Target, Smile, Book, Star, Zap, Bell, Download, Share2, Eye, Mail, Phone,
-  Settings, HelpCircle, FileText, Video, Headphones, Image as ImageIcon, ExternalLink,
-  Camera, Upload, Gift, PartyPopper, Flame, TrendingDown, Baby, Stethoscope, PlayCircle,
-  CalendarDays, ShoppingBag
+import {
+  Heart, Users, MapPin, CheckCircle, ArrowRight, HelpCircle,
+  Brain, Calendar, Sparkles, LineChart, MessageSquareHeart,
+  Star, Clock, Phone, Mail, Instagram, Facebook, ChevronDown,
+  Quote, Play, Video, Image as ImageIcon,
+  BookOpen, ClipboardList, Bell, Shield, ChevronLeft, ChevronRight, X, Zap
 } from 'lucide-react'
 
-import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './components/shared'
-import VideoCallModal from '@/components/VideoCallModal'
-import { ThemeToggleButton } from '@/components/ThemeContext'
-import AgendaView from './components/AgendaView'
-import HomeViewInnovative from './components/HomeView'
-import ResourcesView from './components/ResourcesView'
-import ParentFormsView from './components/ParentFormsView'
-import MisCitasView from './components/MisCitasView'
-import ProfileView from './components/ProfileView'
-import StoreView from './components/StoreView'
-import ChatInterface from './components/ChatInterface'
-import MensajesView from './components/MensajesView'
-import EngagementView from './components/EngagementView'
-import PushNotificationBanner from '../../components/PushNotificationBanner'
-import { TIME_SLOTS, calculateAge } from './utils/helpers'
+// ═══════════════════════════════════════════════════════════════
+//  EDITA TUS VIDEOS AQUÍ — soporta YouTube, TikTok, Drive, Vimeo
+// ═══════════════════════════════════════════════════════════════
+const VIDEOS = [
+  {
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    title: '¿Qué es la terapia ABA?',
+    desc: 'Conoce la metodología que usamos en cada sesión',
+  },
+  {
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    title: 'Testimonio: Familia Rodríguez',
+    desc: 'Una mamá comparte su experiencia con nosotros',
+  },
+  {
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    title: 'Cómo funciona nuestra plataforma',
+    desc: 'Tour rápido por la app para padres',
+  },
+]
+// ═══════════════════════════════════════════════════════════════
 
-export default function ParentDashboard() {
-  const router = useRouter()
-   
-  const [loading, setLoading] = useState(true)
-  const [profile, setProfile] = useState<any>(null)
-  
-  // --- NUEVOS ESTADOS PARA NOTIFICACIONES ---
-  const [notifications, setNotifications] = useState<any[]>([])
-  const unreadCount = notifications.filter(n => !n.is_read).length
-  // ------------------------------------------
+function detectPlatform(url: string): 'youtube' | 'tiktok' | 'drive' | 'vimeo' | 'other' {
+  try {
+    const u = new URL(url)
+    if (u.hostname.includes('youtube') || u.hostname === 'youtu.be') return 'youtube'
+    if (u.hostname.includes('tiktok')) return 'tiktok'
+    if (u.hostname.includes('drive.google')) return 'drive'
+    if (u.hostname.includes('vimeo')) return 'vimeo'
+  } catch {}
+  return 'other'
+}
 
-  const [pendingFormsCount, setPendingFormsCount] = useState(0)
-  const [myChildren, setMyChildren] = useState<any[]>([])
-  const [selectedChild, setSelectedChild] = useState<any>(null)
-  const [refreshTrigger, setRefreshTrigger] = useState(0)
-  const [activeView, setActiveView] = useState('home') 
-   
-  const [selectedDate, setSelectedDate] = useState('')
-  const [takenSlots, setTakenSlots] = useState<string[]>([])
-  const [bookingLoading, setBookingLoading] = useState(false)
-
-  const [showAddChild, setShowAddChild] = useState(false)
-  const [showChangePass, setShowChangePass] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
-  const [selectedNoti, setSelectedNoti] = useState<any>(null)
-  const [showEditProfile, setShowEditProfile] = useState(false)
-  const [showPrivacy, setShowPrivacy] = useState(false)
-  const [showHelp, setShowHelp] = useState(false)
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
-  const [celebrationMessage, setCelebrationMessage] = useState('')
-  const [videoCallSession, setVideoCallSession] = useState<{roomUrl:string;sessionId:string}|null>(null)
-
-  useEffect(() => {
-    setSelectedDate(new Date().toISOString().split('T')[0])
-  }, [])
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession()
-        let parentEmail = session?.user?.email
-
-        if (!parentEmail) {
-           parentEmail = localStorage.getItem('padre_email') || undefined
-        }
-
-        if (!parentEmail) { 
-            console.log("No se encontró sesión ni email guardado")
-            router.push('/login')
-            return 
-        }
-
-        const { data: parent, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('email', parentEmail)
-            .single()
-        
-        if (error || !parent) throw new Error("Perfil no encontrado")
-
-        setProfile(parent)
-
-        // --- CONTAR FORMULARIOS PENDIENTES ---
-        if (parent?.id) {
-          const { count } = await supabase
-            .from('parent_forms')
-            .select('*', { count: 'exact', head: true })
-            .eq('parent_id', parent.id)
-            .neq('status', 'completed')
-          setPendingFormsCount(count || 0)
-        }
-        // -------------------------------------
-
-        // --- CARGAR NOTIFICACIONES REALES ---
-        if (session?.user?.id) {
-            const { data: notis } = await supabase
-                .from('notifications')
-                .select('*')
-                .eq('user_id', session.user.id)
-                .order('created_at', { ascending: false })
-            
-            if (notis) setNotifications(notis)
-        }
-        // ------------------------------------
-
-        const { data: children } = await supabase
-            .from('children')
-            .select('*')
-            .eq('parent_id', parent.id)
-            .order('created_at', { ascending: true })
-
-        if (children && children.length > 0) {
-            setMyChildren(children)
-            if(!selectedChild) setSelectedChild(children[0])
-        }
-
-      } catch (error) {
-        console.error("Error de carga:", error)
-      } finally {
-        setLoading(false)
-      }
+function getEmbedUrl(url: string): string {
+  try {
+    const u = new URL(url)
+    const platform = detectPlatform(url)
+    if (platform === 'youtube') {
+      let id = ''
+      if (u.hostname === 'youtu.be') id = u.pathname.slice(1)
+      else if (u.pathname.includes('/shorts/')) id = u.pathname.split('/shorts/')[1].split('/')[0]
+      else id = u.searchParams.get('v') || ''
+      return `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`
     }
-    loadData()
-  }, [refreshTrigger]) 
-
-  useEffect(() => {
-    const fetchSlots = async () => {
-        const { data } = await supabase.from('appointments').select('appointment_time').eq('appointment_date', selectedDate)
-        if(data) setTakenSlots(data.map(d => d.appointment_time?.slice(0,5) ?? '').filter(Boolean))
+    if (platform === 'tiktok') {
+      // TikTok URL: tiktok.com/@user/video/12345 or vm.tiktok.com/ABC
+      const match = u.pathname.match(/\/video\/(\d+)/)
+      if (match) return `https://www.tiktok.com/embed/v2/${match[1]}`
+      return url
     }
-    fetchSlots()
-  }, [selectedDate, refreshTrigger])
+    if (platform === 'drive') {
+      // drive.google.com/file/d/ID/view → /preview
+      const match = u.pathname.match(/\/d\/([^/]+)/)
+      if (match) return `https://drive.google.com/file/d/${match[1]}/preview`
+      return url
+    }
+    if (platform === 'vimeo') {
+      const id = u.pathname.replace('/', '').split('/')[0]
+      return `https://player.vimeo.com/video/${id}?autoplay=1`
+    }
+  } catch {}
+  return url
+}
 
-  const triggerCelebration = (message: string) => {
-    setCelebrationMessage(message)
-    setShowSuccessAnimation(true)
-    setTimeout(() => setShowSuccessAnimation(false), 3000)
+function getThumbUrl(url: string): string {
+  try {
+    const platform = detectPlatform(url)
+    const u = new URL(url)
+    if (platform === 'youtube') {
+      let id = ''
+      if (u.hostname === 'youtu.be') id = u.pathname.slice(1)
+      else if (u.pathname.includes('/shorts/')) id = u.pathname.split('/shorts/')[1].split('/')[0]
+      else id = u.searchParams.get('v') || ''
+      return `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+    }
+  } catch {}
+  return '/images/hero-image.jpg'
+}
+
+function getPlatformLabel(url: string) {
+  const p = detectPlatform(url)
+  const labels: Record<string, { label: string; color: string }> = {
+    youtube: { label: 'YouTube', color: '#ff0000' },
+    tiktok:  { label: 'TikTok',  color: '#010101' },
+    drive:   { label: 'Drive',   color: '#1a73e8' },
+    vimeo:   { label: 'Vimeo',   color: '#1ab7ea' },
+    other:   { label: 'Video',   color: '#6b7280' },
   }
+  return labels[p]
+}
 
-  // --- FUNCIÓN PARA ABRIR Y MARCAR LEÍDAS ---
-  const handleOpenNotifications = async () => {
-    setShowNotifications(true)
-
-    // Si hay notificaciones sin leer, marcarlas como leídas visualmente y en BD
-    if (unreadCount > 0) {
-        // 1. Actualización optimista (Visual)
-        const updatedNotis = notifications.map(n => ({ ...n, is_read: true }))
-        setNotifications(updatedNotis)
-
-        // 2. Actualización en Supabase
-        const { data: { session } } = await supabase.auth.getSession()
-        if (session?.user) {
-            await supabase
-                .from('notifications')
-                .update({ is_read: true })
-                .eq('user_id', session.user.id)
-                .eq('is_read', false)
-        }
-    }
-  }
-  // ------------------------------------------
-
-  const handleBookAppointment = async (time: string) => {
-    if(!profile || !selectedChild) return
-    if((profile.tokens || 0) <= 0) return alert("No tienes suficientes tokens para agendar.")
-    
-    if(!confirm(`¿Confirmar cita para ${selectedChild.name} el ${selectedDate} a las ${time}?`)) return
-
-    setBookingLoading(true)
-    try {
-        const { error: aptError } = await supabase.from('appointments').insert([{
-            child_id: selectedChild.id,
-            parent_id: profile.id,
-            appointment_date: selectedDate,
-            appointment_time: time,
-            service_type: 'Terapia ABA',
-            status: 'confirmed'
-        }])
-        if(aptError) throw aptError
-
-        const newTokens = (profile.tokens || 0) - 1
-        await supabase.from('profiles').update({ tokens: newTokens }).eq('id', profile.id)
-        
-        setProfile({...profile, tokens: newTokens})
-        triggerCelebration('🎉 ¡Cita agendada exitosamente!')
-        setRefreshTrigger(prev => prev + 1)
-        setActiveView('home')
-    } catch (error: any) {
-        alert("Error: " + error.message)
-    } finally {
-        setBookingLoading(false)
-    }
-  }
-
-  const handleCancelAppointment = async (appointmentId: string, isReschedule: boolean = false) => {
-    if(!confirm(isReschedule 
-        ? "¿Quieres cambiar la fecha? Se cancelará la cita actual, se te devolverá el token y podrás elegir un nuevo horario." 
-        : "¿Seguro que deseas cancelar? Se te reembolsará el token inmediatamente."
-    )) return
-
-    setBookingLoading(true)
-    try {
-        const { error: delError } = await supabase.from('appointments').delete().eq('id', appointmentId)
-        if(delError) throw delError
-
-        const newTokens = (profile.tokens || 0) + 1
-        await supabase.from('profiles').update({ tokens: newTokens }).eq('id', profile.id)
-        
-        setProfile({...profile, tokens: newTokens})
-        setRefreshTrigger(prev => prev + 1) 
-
-        if(isReschedule) {
-            alert("Cita cancelada. Ahora elige tu nuevo horario.")
-            setActiveView('agenda') 
-        } else {
-            triggerCelebration('✅ Token reembolsado correctamente')
-        }
-
-    } catch (error: any) {
-        alert("Error al cancelar: " + error.message)
-    } finally {
-        setBookingLoading(false)
-    }
-  }
-
-  const handleAddChild = async (e: any) => {
-    e.preventDefault()
-    
-    const name = e.target.name.value
-    const dob = e.target.dob.value
-    const diagnosis = e.target.diagnosis?.value || 'En evaluación'
-    
-    if(!profile?.id) {
-        alert("❌ Error: No se encontró tu perfil")
-        return
-    }
-
-    if(!name.trim()) {
-        alert("❌ El nombre es obligatorio")
-        return
-    }
-
-    if(!dob) {
-        alert("❌ La fecha de nacimiento es obligatoria")
-        return
-    }
-
-    try {
-        const age = calculateAge(dob)
-
-        const { data, error } = await supabase.from('children').insert([{
-            parent_id: profile.id, 
-            name: name.trim(), 
-            birth_date: dob,
-            age: age,
-            diagnosis: diagnosis || 'En evaluación'
-        }]).select()
-
-        if (error) {
-            alert("❌ Error al guardar: " + error.message)
-            return
-        }
-
-        if (!data || data.length === 0) {
-            alert("⚠️ No se pudo crear el registro. Verifica los permisos en Supabase.")
-            return
-        }
-
-        setMyChildren([...myChildren, data[0]])
-        if(!selectedChild) setSelectedChild(data[0])
-        setShowAddChild(false)
-        triggerCelebration(`🎊 ${name} agregado correctamente`)
-        setRefreshTrigger(prev => prev + 1)
-
-    } catch (err: any) {
-        alert("❌ Error inesperado: " + err.message)
-    }
-  }
-
-  const handleUpdateProfile = async (e: any) => {
-    e.preventDefault()
-    const fullName = e.target.fullName.value
-    const phone = e.target.phone.value
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          full_name: fullName,
-          phone: phone 
-        })
-        .eq('id', profile.id)
-      
-      if (error) throw error
-      
-      setProfile({...profile, full_name: fullName, phone: phone})
-      triggerCelebration('✨ Perfil actualizado')
-      setShowEditProfile(false)
-      setRefreshTrigger(prev => prev + 1)
-    } catch (error: any) {
-      alert("Error al actualizar: " + error.message)
-    }
-  }
-
-  const handleChangePassword = async (e: any) => {
-    e.preventDefault()
-    const newPass = e.target.newPassword.value
-    const confirmPass = e.target.confirmPassword.value
-    
-    if (newPass !== confirmPass) {
-      alert("❌ Las contraseñas no coinciden")
-      return
-    }
-    
-    if (newPass.length < 6) {
-      alert("❌ La contraseña debe tener al menos 6 caracteres")
-      return
-    }
-    
-    try {
-      const { error } = await supabase.auth.updateUser({ password: newPass })
-      if (error) throw error
-      
-      triggerCelebration('🔐 Contraseña actualizada')
-      setShowChangePass(false)
-    } catch (error: any) {
-      alert("Error: " + error.message)
-    }
-  }
-
-  if (loading) return (
-    <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 gap-4">
-      <div className="relative">
-        <Loader2 className="animate-spin text-blue-600" size={56}/>
-        <div className="absolute inset-0 animate-ping">
-          <Loader2 className="text-blue-300 opacity-40" size={56}/>
-        </div>
-      </div>
-      <p className="text-slate-500 font-bold text-sm tracking-widest uppercase animate-pulse">Cargando tu información...</p>
-    </div>
-  )
-
-  // ── ONBOARDING para primer acceso (sin hijos registrados) ─────────────────
-  if (!loading && myChildren.length === 0 && profile && !showAddChild) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-blue-50 to-indigo-50 flex items-center justify-center p-6">
-        <div className="max-w-lg w-full">
-          {/* Progress steps */}
-          <div className="flex items-center justify-center gap-3 mb-10">
-            {['Bienvenida', 'Tu hijo/a', 'Primera cita'].map((step, i) => (
-              <div key={step} className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i === 0 ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
-                  {i + 1}
-                </div>
-                <span className={`text-xs font-bold ${i === 0 ? 'text-violet-600' : 'text-slate-400'}`}>{step}</span>
-                {i < 2 && <div className="w-8 h-px bg-slate-200" />}
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-violet-100 border border-violet-100 text-center">
-            {/* Avatar */}
-            <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-[22px] flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-violet-200 mx-auto mb-6">
-              {profile?.full_name?.charAt(0) || 'F'}
-            </div>
-
-            <h1 className="text-2xl font-black text-slate-800 mb-3">
-              ¡Bienvenido/a, {profile?.full_name?.split(' ')[0]}! 🎉
-            </h1>
-            <p className="text-slate-500 text-base leading-relaxed mb-8">
-              Estamos felices de tenerte en <strong className="text-violet-600">Jugando Aprendo</strong>.
-              Para comenzar, necesitamos registrar a tu hijo/a y podrás acceder a todo el sistema de seguimiento con IA.
-            </p>
-
-            {/* Features preview */}
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              {[
-                { icon: '📊', label: 'Progreso en tiempo real' },
-                { icon: '🤖', label: 'Asistente IA 24/7' },
-                { icon: '📅', label: 'Citas con 1 click' },
-              ].map(({ icon, label }) => (
-                <div key={label} className="bg-violet-50 rounded-2xl p-4 border border-violet-100">
-                  <div className="text-2xl mb-2">{icon}</div>
-                  <p className="text-xs font-bold text-violet-700 leading-tight">{label}</p>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setShowAddChild(true)}
-              className="w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white py-4 rounded-2xl font-bold text-base shadow-lg shadow-violet-200 hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[.98] flex items-center justify-center gap-3"
-            >
-              <Baby size={20} /> Registrar a mi hijo/a ahora
-            </button>
-
-            <p className="text-xs text-slate-400 mt-4">
-              Solo toma 1 minuto · Tus datos están protegidos
-            </p>
-          </div>
-
-          {/* Help contact */}
-          <p className="text-center text-sm text-slate-400 mt-6">
-            ¿Tienes dudas? Escríbenos:{' '}
-            <a href="https://wa.me/51924807183" className="text-violet-600 font-bold hover:underline">
-              +51 924 807 183
-            </a>
-          </p>
-        </div>
-
-        {/* El modal de agregar hijo ya existe en el código principal */}
-        {showAddChild && (
-          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50"></div>
-              <div className="relative z-10">
-                <div className="flex justify-between items-center mb-6">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-                      <Baby size={24} className="text-white"/>
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-2xl text-slate-800">Paso 2: Tu hijo/a</h3>
-                      <p className="text-sm text-slate-400 font-medium">Ingresa sus datos básicos</p>
-                    </div>
-                  </div>
-                  <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
-                    <X size={22}/>
-                  </button>
-                </div>
-                <form onSubmit={handleAddChild} className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Nombre Completo *</label>
-                    <input name="name" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder="Ej: María Fernanda López"/>
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Fecha de Nacimiento *</label>
-                    <input name="dob" type="date" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all"/>
-                  </div>
-                  <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Diagnóstico (Opcional)</label>
-                    <input name="diagnosis" className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder="Ej: TEA Nivel 2"/>
-                  </div>
-                  <div className="bg-violet-50 border-2 border-violet-100 rounded-2xl p-4">
-                    <p className="text-xs text-violet-700 font-bold flex items-center gap-2">
-                      <Sparkles size={14}/> La edad se calculará automáticamente
-                    </p>
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <button type="button" onClick={()=>setShowAddChild(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all">Cancelar</button>
-                    <button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-                      <CheckCircle2 size={18}/> Guardar y continuar
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
+// ── Chat IA illustration ───────────────────────────────────────────────────────
+function ARIAChatIllustration() {
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/20 font-sans text-slate-600 overflow-hidden">
-        
-        {/* 🔔 PUSH NOTIFICATIONS BANNER */}
-        <PushNotificationBanner userId={profile?.id || null} />
-
-        {/* 📹 VIDEOLLAMADA MODAL */}
-        {videoCallSession && (
-          <VideoCallModal
-            roomUrl={videoCallSession.roomUrl}
-            sessionId={videoCallSession.sessionId}
-            participantName={profile?.full_name || 'Padre/Madre'}
-            onClose={() => setVideoCallSession(null)}
-          />
-        )}
-
-        {/* 🎉 ANIMACIÓN DE ÉXITO */}
-        {showSuccessAnimation && (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
-                <div className="bg-white/95 backdrop-blur-xl p-12 rounded-[3rem] shadow-2xl border-4 border-green-500 animate-bounce">
-                    <div className="flex flex-col items-center gap-6">
-                        <div className="relative">
-                            <PartyPopper size={80} className="text-green-500 animate-pulse"/>
-                            <div className="absolute inset-0 bg-green-400 blur-3xl opacity-50 animate-ping"></div>
-                        </div>
-                        <h2 className="text-4xl font-black text-slate-800 text-center">{celebrationMessage}</h2>
-                        <div className="flex gap-3">
-                            <Star size={32} className="text-yellow-400 animate-spin"/>
-                            <Star size={32} className="text-yellow-400 animate-spin" style={{animationDelay: '0.2s'}}/>
-                            <Star size={32} className="text-yellow-400 animate-spin" style={{animationDelay: '0.4s'}}/>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        {/* === SIDEBAR (PC) === */}
-        <aside className="hidden lg:flex w-80 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 flex-col justify-between p-7 z-20 shadow-[4px_0_40px_rgba(0,0,0,0.03)]">
-            <div>
-                <div className="flex items-center gap-4 mb-12 px-2">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-blue-200/50 ring-4 ring-blue-100/50 relative group cursor-pointer">
-                        {profile?.full_name?.charAt(0) || 'F'}
-                        <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bienvenida</p>
-                        <h2 className="font-bold text-slate-800 text-lg leading-tight">Fam. {profile?.full_name?.split(' ')[0]}</h2>
-                        <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
-                            <Sparkles size={10}/> Portal de padres
-                        </p>
-                    </div>
-                </div>
-                
-                <nav className="space-y-2">
-                    <NavBtnDesktop icon={<Home size={20}/>} label="Inicio & Progreso" active={activeView==='home'} onClick={()=>setActiveView('home')} />
-                    <NavBtnDesktop icon={<Calendar size={20}/>} label="Agenda y Citas" active={activeView==='agenda' || activeView==='miscitas'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0) > 0 ? profile.tokens : null} />
-                    <NavBtnDesktop icon={<Heart size={20}/>} label="Plan Semanal" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
-                    <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
-                    <NavBtnDesktop icon={<Bell size={20}/>} label="Mensajes del terapeuta" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
-                    <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
-                    <NavBtnDesktop icon={<ShoppingBag size={20}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
-                    <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
-                    <NavBtnDesktop icon={<User size={20}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
-                </nav>
-            </div>
-            
-            <div className="space-y-4">
-                {/* 🎯 TARJETA DE TOKENS MEJORADA */}
-                <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-7 rounded-3xl relative overflow-hidden group cursor-pointer transition-all hover:scale-[1.02] hover:shadow-2xl shadow-xl">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Ticket size={80}/>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <span className="text-xs font-bold uppercase text-slate-400 tracking-wider">Mis Tokens</span>
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-xl shadow-lg animate-pulse">
-                            <Ticket size={18} className="text-yellow-400"/>
-                        </div>
-                    </div>
-                    <div className="text-5xl font-black relative z-10 mb-2 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                        {profile?.tokens || 0}
-                    </div>
-                    <p className="text-xs text-slate-400 relative z-10 font-medium">Sesiones disponibles para agendar</p>
-                    
-                    {(profile?.tokens || 0) <= 2 && (profile?.tokens || 0) > 0 && (
-                        <div className="mt-4 bg-yellow-500/20 border border-yellow-500/30 rounded-xl p-3 relative z-10 animate-pulse">
-                            <p className="text-xs text-yellow-200 font-bold flex items-center gap-2">
-                                <AlertCircle size={14}/> Tus tokens están por agotarse
-                            </p>
-                        </div>
-                    )}
-
-                    {(profile?.tokens || 0) === 0 && (
-                        <div className="mt-4 bg-red-500/20 border border-red-500/30 rounded-xl p-3 relative z-10">
-                            <p className="text-xs text-red-200 font-bold flex items-center gap-2">
-                                <AlertCircle size={14}/> Sin tokens disponibles
-                            </p>
-                        </div>
-                    )}
-
-                    {(profile?.tokens || 0) > 5 && (
-                        <div className="mt-4 bg-green-500/20 border border-green-500/30 rounded-xl p-3 relative z-10">
-                            <p className="text-xs text-green-200 font-bold flex items-center gap-2">
-                                <CheckCircle2 size={14}/> ¡Excelente! Tienes suficientes sesiones
-                            </p>
-                        </div>
-                    )}
-                </div>
-                
-                {/* BOTÓN NOTIFICACIONES SIDEBAR MEJORADO */}
-                <button 
-                    onClick={handleOpenNotifications}
-                    className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-blue-100 hover:scale-105 active:scale-95 shadow-sm hover:shadow-lg relative group"
-                >
-                    <Bell size={16} className="group-hover:animate-bounce"/>
-                    Ver Notificaciones
-                    {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">
-                            {unreadCount}
-                        </span>
-                    )}
-                </button>
-            </div>
-        </aside>
-
-        {/* === CONTENIDO PRINCIPAL === */}
-        <div className="flex-1 flex flex-col h-full relative">
-            
-            {/* 📱 HEADER MÓVIL MEJORADO */}
-            <header className="lg:hidden bg-white/90 backdrop-blur-xl p-4 flex justify-between items-center border-b border-slate-200/60 sticky top-0 z-30 shadow-sm">
-                <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg relative">
-                        {profile?.full_name?.charAt(0)}
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
-                    </div>
-                    <div>
-                        <p className="font-bold text-slate-800 text-sm leading-tight">{profile?.full_name?.split(' ')[0]}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide flex items-center gap-1">
-                            <Sparkles size={10}/> Portal Padres
-                        </p>
-                    </div>
-                </div>
-                <div className="flex items-center gap-3">
-                    <ThemeToggleButton />
-                    <button onClick={handleOpenNotifications} className="p-2 rounded-xl bg-blue-50 text-blue-600 relative hover:scale-110 active:scale-95 transition-transform">
-                        <Bell size={18}/>
-                        {unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
-                        )}
-                    </button>
-                    <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg relative group">
-                        <Ticket size={14} className="text-yellow-400 group-hover:animate-spin"/> 
-                        <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">{profile?.tokens || 0}</span>
-                    </div>
-                </div>
-            </header>
-
-            {/* 👶 SELECTOR DE HIJOS MEJORADO */}
-            <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 py-4 px-4 md:px-8 flex gap-3 overflow-x-auto items-center scrollbar-hide shadow-sm">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0 mr-2 flex items-center gap-2">
-                    <User size={12}/> Viendo a:
-                </span>
-                {myChildren.length > 0 ? myChildren.map(child => (
-                    <button 
-                        key={child.id} onClick={()=>setSelectedChild(child)}
-                        className={`flex items-center gap-3 px-5 py-2.5 rounded-2xl transition-all whitespace-nowrap border-2 shadow-sm hover:shadow-md group ${
-                            selectedChild?.id === child.id 
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 border-blue-500 text-white shadow-blue-200 scale-105' 
-                            : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'
-                        }`}
-                    >
-                        <div className={`w-2.5 h-2.5 rounded-full ${selectedChild?.id === child.id ? 'bg-white animate-pulse' : 'bg-slate-300 group-hover:bg-blue-400'}`}></div>
-                        <div className="text-left">
-                            <span className="font-bold text-sm block">{child.name.split(' ')[0]}</span>
-                            <span className={`text-[10px] font-semibold flex items-center gap-1 ${selectedChild?.id === child.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                                <Baby size={10}/> {calculateAge(child.birth_date)} años
-                            </span>
-                        </div>
-                    </button>
-                )) : <span className="text-xs text-slate-400 italic">Sin pacientes registrados</span>}
-                <button 
-                    onClick={()=>setShowAddChild(true)} 
-                    className="w-10 h-10 rounded-2xl bg-blue-50 border-2 border-dashed border-blue-200 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shrink-0 hover:scale-110 active:scale-95 hover:rotate-90"
-                >
-                    <Plus size={18}/>
-                </button>
-            </div>
-
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 lg:pb-8">
-                <div className="max-w-6xl mx-auto">
-                    {activeView === 'home' && (
-                        <HomeViewInnovative 
-                            child={selectedChild} 
-                            onChangeView={setActiveView} 
-                            refreshTrigger={refreshTrigger}
-                            onCancelAppointment={handleCancelAppointment} 
-                        />
-                    )}
-                    
-                    {(activeView === 'agenda' || activeView === 'miscitas') && (
-                        <div className="animate-fade-in">
-                          {/* Tabs */}
-                          <div className="flex gap-2 mb-6 bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 border border-slate-200/60 shadow-sm">
-                            <button
-                              onClick={() => setActiveView('agenda')}
-                              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeView === 'agenda' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50'}`}
-                            >
-                              <Calendar size={15}/> Agendar Cita
-                            </button>
-                            <button
-                              onClick={() => setActiveView('miscitas')}
-                              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeView === 'miscitas' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50'}`}
-                            >
-                              <CalendarDays size={15}/> Mis Citas
-                            </button>
-                          </div>
-                          {activeView === 'agenda' && (
-                            <AgendaView 
-                              profile={profile}
-                              selectedDate={selectedDate}
-                              setSelectedDate={setSelectedDate}
-                              takenSlots={takenSlots}
-                              bookingLoading={bookingLoading}
-                              handleBookAppointment={handleBookAppointment}
-                            />
-                          )}
-                          {activeView === 'miscitas' && (
-                            <MisCitasView
-                              profile={profile}
-                              selectedChild={selectedChild}
-                              onCancelAppointment={handleCancelAppointment}
-                              onChangeView={setActiveView}
-                            />
-                          )}
-                        </div>
-                    )}
-
-                    {activeView === 'chat' && (
-                          <div className="h-[calc(100vh-180px)] lg:h-[calc(100vh-120px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
-                            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-white flex justify-between items-center z-10 shadow-lg">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
-                                        <Sparkles size={24} className="text-white"/>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-base">Asistente Clínico Inteligente</h3>
-                                        <p className="text-xs text-indigo-100 font-semibold flex items-center gap-2">
-                                            <Brain size={12}/> Especializado en {selectedChild?.name || 'Terapia ABA'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button className="p-2 bg-white/10 rounded-xl backdrop-blur-sm hover:bg-white/20 transition-all hover:rotate-180 duration-300">
-                                    <RefreshCw size={18}/>
-                                </button>
-                            </div>
-                            <ChatInterface childId={selectedChild?.id} childName={selectedChild?.name} onNavigateToStore={() => setActiveView('tienda')} parentId={profile?.id} />
-                        </div>
-                    )}
-
-                    {activeView === 'resources' && <ResourcesView profile={profile} />}
-                    {activeView === 'tienda'    && <StoreView profile={profile} />}
-                    {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} />}
-                    {activeView === 'mensajes' && <MensajesView profile={profile} />}
-                    {activeView === 'engagement' && <EngagementView childId={selectedChild?.id || ''} />}
-
-                    {activeView === 'profile' && (
-                        <ProfileView 
-                            profile={profile} 
-                            onLogout={()=>{localStorage.removeItem('padre_email'); router.push('/login')}} 
-                            onChangePass={()=>setShowChangePass(true)}
-                            onEditProfile={()=>setShowEditProfile(true)}
-                            onPrivacy={()=>setShowPrivacy(true)}
-                            onHelp={()=>setShowHelp(true)}
-                        />
-                    )}
-                </div>
-            </main>
-
-            {/* 📱 NAVEGACIÓN INFERIOR MÓVIL MEJORADA */}
-            <nav className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 p-3 flex justify-around items-center fixed bottom-0 w-full z-30 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
-                <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
-                <NavBtnMobile icon={<Calendar size={22}/>} label="Agenda" active={activeView==='agenda' || activeView==='miscitas'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0)} />
-                <div className="relative -top-8">
-                    <button 
-                        onClick={()=>setActiveView('chat')} 
-                        className={`w-16 h-16 rounded-[2rem] flex items-center justify-center shadow-2xl border-[6px] border-white transition-all active:scale-95 relative group ${
-                            activeView==='chat'
-                            ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-purple-300' 
-                            : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-indigo-300'
-                        }`}
-                    >
-                        <Sparkles size={28} className="group-hover:animate-spin"/>
-                        {activeView !== 'chat' && (
-                            <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full animate-bounce">
-                                IA
-                            </span>
-                        )}
-                    </button>
-                </div>
-                <NavBtnMobile icon={<Book size={22}/>} label="Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
-                <NavBtnMobile icon={<ShoppingBag size={22}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
-                <NavBtnMobile icon={<User size={22}/>} label="Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
-            </nav>
+    <div style={{ position: 'relative', width: 340, maxWidth: '100%' }}>
+      {/* ARIA avatar circle */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20 }}>
+        {/* Avatar */}
+        <div style={{
+          width: 96, height: 96, borderRadius: '50%',
+          background: 'linear-gradient(135deg,#f97316,#ea580c)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: '0 0 0 8px rgba(249,115,22,.12), 0 16px 40px rgba(249,115,22,.25)',
+          animation: 'ariaFloat 4s ease-in-out infinite',
+          position: 'relative',
+        }}>
+          <Brain size={44} color="#fff" />
+          {/* Online dot */}
+          <div style={{ position: 'absolute', bottom: 6, right: 6, width: 18, height: 18, background: '#22c55e', borderRadius: '50%', border: '3px solid #fff', boxShadow: '0 0 8px rgba(34,197,94,.5)' }} />
         </div>
 
-        {/* 🎨 MODAL - AGREGAR HIJO MEJORADO */}
-        {showAddChild && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in relative overflow-hidden">
-                    {/* Decoración de fondo */}
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50"></div>
-                    <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-100 to-yellow-100 rounded-full blur-3xl opacity-50"></div>
-                    
-                    <div className="relative z-10">
-                        <div className="flex justify-between items-center mb-6">
-                            <div className="flex items-center gap-3">
-                                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg">
-                                    <Baby size={24} className="text-white"/>
-                                </div>
-                                <div>
-                                    <h3 className="font-bold text-2xl text-slate-800">Nuevo Paciente</h3>
-                                    <p className="text-sm text-slate-400 font-medium">Agrega la información del niño/a</p>
-                                </div>
-                            </div>
-                            <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
-                                <X size={22}/>
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleAddChild} className="space-y-4">
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
-                                    <User size={14}/> Nombre Completo <span className="text-red-500">*</span>
-                                </label>
-                                <input 
-                                    name="name" 
-                                    required 
-                                    className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all hover:bg-white" 
-                                    placeholder="Ej: María Fernanda López"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
-                                    <Calendar size={14}/> Fecha de Nacimiento <span className="text-red-500">*</span>
-                                </label>
-                                <input 
-                                    name="dob" 
-                                    type="date" 
-                                    required 
-                                    className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all hover:bg-white"
-                                />
-                            </div>
-                            
-                            <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
-                                    <Stethoscope size={14}/> Diagnóstico (Opcional)
-                                </label>
-                                <input 
-                                    name="diagnosis" 
-                                    className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all hover:bg-white" 
-                                    placeholder="Ej: TEA Nivel 2"
-                                />
-                            </div>
-
-                            <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-4">
-                                <p className="text-xs text-blue-700 font-bold flex items-center gap-2">
-                                    <Sparkles size={14}/> La edad se calculará automáticamente
-                                </p>
-                            </div>
-                            
-                            <div className="flex gap-3 pt-4">
-                                <button 
-                                    type="button" 
-                                    onClick={()=>setShowAddChild(false)} 
-                                    className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all hover:scale-105 active:scale-95"
-                                >
-                                    Cancelar
-                                </button>
-                                <button 
-                                    type="submit" 
-                                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
-                                >
-                                    <CheckCircle2 size={18}/> Guardar
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+        {/* Chat bubbles */}
+        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* ARIA message */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#f97316,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Brain size={16} color="#fff" />
             </div>
-        )}
-
-        {/* 🔐 MODAL - CAMBIAR CONTRASEÑA */}
-        {showChangePass && (
-             <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl animate-scale-in">
-                    <div className="flex justify-between items-center mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
-                                <Lock size={24} className="text-white"/>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-2xl text-slate-800">Cambiar Contraseña</h3>
-                                <p className="text-sm text-slate-400">Ingresa tu nueva clave de acceso</p>
-                            </div>
-                        </div>
-                        <button onClick={()=>setShowChangePass(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
-                            <X size={22}/>
-                        </button>
-                    </div>
-                    <form onSubmit={handleChangePassword} className="space-y-4">
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">
-                                Nueva Contraseña
-                            </label>
-                            <input 
-                                name="newPassword" 
-                                type="password" 
-                                required 
-                                minLength={6}
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white transition-all" 
-                                placeholder="Mínimo 6 caracteres"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">
-                                Confirmar Contraseña
-                            </label>
-                            <input 
-                                name="confirmPassword" 
-                                type="password" 
-                                required 
-                                minLength={6}
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white transition-all" 
-                                placeholder="Repite la contraseña"
-                            />
-                        </div>
-                        <div className="flex gap-3 pt-2">
-                            <button 
-                                type="button" 
-                                onClick={()=>setShowChangePass(false)} 
-                                className="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl transition-all hover:scale-105 active:scale-95"
-                            >
-                                Cancelar
-                            </button>
-                            <button 
-                                type="submit" 
-                                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-purple-700 transition-all hover:scale-105 active:scale-95"
-                            >
-                                Actualizar
-                            </button>
-                        </div>
-                    </form>
-                </div>
-             </div>
-        )}
-
-        {/* ✏️ MODAL - EDITAR PERFIL */}
-        {showEditProfile && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in">
-                    <div className="flex justify-between items-center mb-6">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
-                                <User size={24} className="text-white"/>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-2xl text-slate-800">Editar Perfil</h3>
-                                <p className="text-sm text-slate-400">Actualiza tu información personal</p>
-                            </div>
-                        </div>
-                        <button onClick={()=>setShowEditProfile(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
-                            <X size={22}/>
-                        </button>
-                    </div>
-                    <form onSubmit={handleUpdateProfile} className="space-y-4">
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
-                                <User size={14}/> Nombre Completo
-                            </label>
-                            <input 
-                                name="fullName" 
-                                defaultValue={profile?.full_name}
-                                required 
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-green-400 transition-all hover:bg-white" 
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
-                                <Phone size={14}/> Teléfono
-                            </label>
-                            <input 
-                                name="phone" 
-                                type="tel"
-                                defaultValue={profile?.phone}
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-green-400 transition-all hover:bg-white" 
-                                placeholder="+51 924 807 183"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
-                                <Mail size={14}/> Email (no editable)
-                            </label>
-                            <input 
-                                value={profile?.email}
-                                disabled
-                                className="w-full p-4 bg-slate-100 rounded-2xl font-semibold text-slate-400 cursor-not-allowed" 
-                            />
-                        </div>
-                        <div className="flex gap-3 pt-2">
-                            <button 
-                                type="button" 
-                                onClick={()=>setShowEditProfile(false)} 
-                                className="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl transition-all hover:scale-105 active:scale-95"
-                            >
-                                Cancelar
-                            </button>
-                            <button 
-                                type="submit" 
-                                className="flex-1 bg-gradient-to-r from-green-600 to-teal-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95"
-                            >
-                                Guardar Cambios
-                            </button>
-                        </div>
-                    </form>
-                </div>
+            <div style={{ background: '#fff', border: '1.5px solid #fed7aa', borderRadius: '18px 18px 18px 4px', padding: '12px 16px', fontSize: 13, color: '#44403c', lineHeight: 1.6, boxShadow: '0 4px 16px rgba(249,115,22,.08)', maxWidth: 260 }}>
+              ¡Hola! Hoy Rodrigo logró <strong style={{ color: '#f97316' }}>3 nuevas habilidades</strong> en su sesión. ¿Quieres ver el reporte?
             </div>
-        )}
-
-        {/* 🔔 MODAL - NOTIFICACIONES (FIXED: iconos + modal detalle) */}
-        {showNotifications && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" onClick={()=>{ setShowNotifications(false); setSelectedNoti(null) }}>
-                <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden max-h-[85vh] flex flex-col" onClick={e=>e.stopPropagation()}>
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                                <Bell size={24}/>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-lg">Centro de Notificaciones</h3>
-                                <p className="text-xs text-blue-100">{notifications.length} notificacion{notifications.length!==1?'es':''} · {unreadCount > 0 ? `${unreadCount} sin leer` : 'todas leídas'}</p>
-                            </div>
-                        </div>
-                        <button onClick={()=>{ setShowNotifications(false); setSelectedNoti(null) }} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
-                            <X size={20}/>
-                        </button>
-                    </div>
-
-                    {/* Detalle de notificación seleccionada */}
-                    {selectedNoti ? (
-                        <div className="flex-1 overflow-y-auto p-5 space-y-4">
-                            <button onClick={()=>setSelectedNoti(null)} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">
-                                <ChevronRight size={14} className="rotate-180"/> Volver
-                            </button>
-                            {(()=>{
-                                const ft = selectedNoti.metadata?.form_type || selectedNoti.metadata?.source || selectedNoti.type || ''
-                                const cfg =
-                                    ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-700', border:'border-indigo-200', label:'Sesión ABA'} :
-                                    ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Historia Clínica'} :
-                                    ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-700',  border:'border-green-200',  label:'Entorno del Hogar'} :
-                                    ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-700', border:'border-purple-200', label:'Evaluación Clínica'} :
-                                    selectedNoti.type==='video_call'      ? {icon:<Video size={20}/>,         bg:'bg-indigo-100', text:'text-indigo-700', border:'border-indigo-200', label:'Videollamada'} :
-                                    selectedNoti.type==='form_request'    ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-700', border:'border-orange-200', label:'Nuevo formulario'} :
-                                    selectedNoti.type==='parent_message'  ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
-                                    selectedNoti.type==='success'         ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-700', border:'border-yellow-200', label:'¡Buenas noticias!'} :
-                                    selectedNoti.type==='warning'         ? {icon:<AlertCircle size={20}/>,   bg:'bg-red-100',    text:'text-red-700',    border:'border-red-200',    label:'Aviso'} :
-                                                                             {icon:<Bell size={20}/>,           bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Notificación'}
-                                return (
-                                    <div className="space-y-4">
-                                        <div className={`flex items-center gap-3 p-4 rounded-2xl border ${cfg.border}`}>
-                                            <div className={`${cfg.bg} ${cfg.text} p-3 rounded-xl`}>{cfg.icon}</div>
-                                            <div>
-                                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{cfg.label}</p>
-                                                <p className="font-bold text-slate-800 text-sm">{selectedNoti.title}</p>
-                                            </div>
-                                        </div>
-                                        <div className="bg-slate-50 rounded-2xl p-5">
-                                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{selectedNoti.message}</p>
-                                        </div>
-                                        {/* ── Botón unirse a videollamada ── */}
-                                        {selectedNoti.type === 'video_call' && selectedNoti.metadata?.room_url && (
-                                          <button
-                                            onClick={() => {
-                                              setVideoCallSession({ roomUrl: selectedNoti.metadata.room_url, sessionId: selectedNoti.metadata.session_id || '' })
-                                              setShowNotifications(false)
-                                              setSelectedNoti(null)
-                                            }}
-                                            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black text-white text-base shadow-xl transition-all hover:scale-[1.02] active:scale-[.98]"
-                                            style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6)',boxShadow:'0 8px 30px rgba(99,102,241,0.4)'}}
-                                          >
-                                            <Video size={20}/> Unirse a la videollamada
-                                          </button>
-                                        )}
-
-                                        {selectedNoti.metadata?.source_title && (
-                                            <div className="bg-blue-50 rounded-xl p-3 flex items-center gap-2">
-                                                <FileText size={14} className="text-blue-500 flex-shrink-0"/>
-                                                <div>
-                                                    <p className="text-xs text-blue-400">Generado por</p>
-                                                    <p className="text-sm font-semibold text-blue-700">{selectedNoti.metadata.source_title}</p>
-                                                </div>
-                                            </div>
-                                        )}
-                                        <p className="text-xs text-slate-400 flex items-center gap-1">
-                                            <Clock size={11}/> {new Date(selectedNoti.created_at).toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}
-                                        </p>
-                                    </div>
-                                )
-                            })()}
-                        </div>
-                    ) : (
-                    <div className="p-5 space-y-3 overflow-y-auto flex-1">
-                        {/* ── Banner videollamadas activas ── */}
-                        {notifications.filter(n => n.type==='video_call' && n.metadata?.room_url).map(n => (
-                          <button key={`vcall-${n.id}`}
-                            onClick={() => { setVideoCallSession({roomUrl:n.metadata.room_url, sessionId:n.metadata.session_id||''}); setShowNotifications(false) }}
-                            className="w-full flex items-center gap-3 p-4 rounded-2xl border-2 border-indigo-300 text-left transition-all hover:scale-[1.01] active:scale-[.99]"
-                            style={{background:'linear-gradient(135deg,rgba(99,102,241,0.1),rgba(139,92,246,0.1))'}}>
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 animate-pulse" style={{background:'linear-gradient(135deg,#6366f1,#8b5cf6)'}}>
-                              <Video size={20} className="text-white"/>
-                            </div>
-                            <div className="flex-1 text-left">
-                              <p className="font-black text-indigo-700 text-sm">📹 Videollamada activa</p>
-                              <p className="text-xs text-indigo-500 font-semibold">Tu terapeuta te espera · Toca para unirte</p>
-                            </div>
-                            <ChevronRight size={18} className="text-indigo-400 shrink-0"/>
-                          </button>
-                        ))}
-                        {notifications.length === 0 ? (
-                            <div className="text-center py-16">
-                                <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                                    <Bell size={40} className="text-slate-300"/>
-                                </div>
-                                <p className="font-bold text-slate-400 text-base">Sin notificaciones aún</p>
-                                <p className="text-slate-300 text-sm mt-1">Aquí verás los mensajes del terapeuta</p>
-                            </div>
-                        ) : (
-                            notifications.map((noti) => {
-                                const ft = noti.metadata?.form_type || noti.metadata?.source || noti.type || ''
-                                const iconConfig =
-                                    ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-200', label:'Sesión ABA'} :
-                                    ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Historia Clínica'} :
-                                    ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-600',  border:'border-green-200',  label:'Entorno del Hogar'} :
-                                    ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-600', border:'border-purple-200', label:'Evaluación Clínica'} :
-                                    noti.type==='video_call'     ? {icon:<Video size={20}/>,         bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-200', label:'Videollamada'} :
-                                    noti.type==='form_request'   ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-600', border:'border-orange-200', label:'Nuevo formulario'} :
-                                    noti.type==='parent_message' ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
-                                    noti.type==='success'        ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-600', border:'border-yellow-200', label:'¡Buenas noticias!'} :
-                                    noti.type==='warning'        ? {icon:<AlertCircle size={20}/>,   bg:'bg-red-100',    text:'text-red-600',    border:'border-red-200',    label:'Aviso'} :
-                                                                   {icon:<Bell size={20}/>,           bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Notificación'}
-                                return (
-                                    <button key={noti.id} onClick={()=>setSelectedNoti(noti)}
-                                        className={`w-full text-left bg-slate-50 rounded-2xl border ${iconConfig.border} overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all`}>
-                                        <div className="p-4 flex gap-3 items-start">
-                                            <div className={`${iconConfig.bg} ${iconConfig.text} p-3 rounded-xl shrink-0 shadow-sm`}>
-                                                {iconConfig.icon}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center justify-between gap-2">
-                                                    <p className="font-bold text-slate-800 text-sm leading-snug">{noti.title}</p>
-                                                    <ChevronRight size={14} className="text-slate-300 flex-shrink-0"/>
-                                                </div>
-                                                <p className="text-xs font-medium text-slate-400 mb-1">{iconConfig.label}</p>
-                                                <p className="text-slate-500 text-xs leading-relaxed line-clamp-2">{noti.message}</p>
-                                                <p className="text-slate-300 text-[10px] font-bold mt-2 flex items-center gap-1">
-                                                    <Clock size={10}/> {new Date(noti.created_at).toLocaleDateString('es-PE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
-                                                    <span className="ml-1 text-blue-400">· Toca para leer</span>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </button>
-                                )
-                            })
-                        )}
-                    </div>
-                    )}
-                </div>
+          </div>
+          {/* Parent reply */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)', borderRadius: '18px 18px 4px 18px', padding: '12px 16px', fontSize: 13, color: '#fff', lineHeight: 1.6, maxWidth: 200 }}>
+              Sí, ¡qué emoción! ¿Cómo lo refuerzo en casa?
             </div>
-        )}
-
-        {/* 🔒 MODAL - PRIVACIDAD */}
-        {showPrivacy && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
-                    <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                                <Lock size={24}/>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-lg">Privacidad y Seguridad</h3>
-                                <p className="text-xs text-purple-100">Tus datos están protegidos</p>
-                            </div>
-                        </div>
-                        <button onClick={()=>setShowPrivacy(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
-                            <X size={20}/>
-                        </button>
-                    </div>
-                    <div className="p-6 space-y-4 overflow-y-auto">
-                        <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100">
-                            <h4 className="font-bold text-purple-900 mb-2 flex items-center gap-2">
-                                <Lock size={16}/> Protección de Datos
-                            </h4>
-                            <p className="text-sm text-purple-700 leading-relaxed">
-                                Toda la información de tu familia está cifrada y protegida según estándares internacionales. Solo tú y los profesionales autorizados pueden acceder a los datos clínicos.
-                            </p>
-                        </div>
-                        
-                        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
-                            <h4 className="font-bold text-blue-900 mb-2">Compartir Información</h4>
-                            <p className="text-sm text-blue-700 leading-relaxed mb-3">
-                                Puedes compartir acceso temporal con:
-                            </p>
-                            <ul className="text-sm text-blue-700 space-y-1 ml-4">
-                                <li>• Familiares cercanos</li>
-                                <li>• Otros profesionales de salud</li>
-                                <li>• Instituciones educativas (con tu autorización)</li>
-                            </ul>
-                        </div>
-
-                        <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
-                            <h4 className="font-bold text-green-900 mb-2">Control Total</h4>
-                            <p className="text-sm text-green-700 leading-relaxed">
-                                Puedes exportar, eliminar o modificar cualquier información en cualquier momento. Tienes control absoluto sobre tus datos.
-                            </p>
-                        </div>
-
-                        <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95">
-                            Leer Política Completa
-                        </button>
-                    </div>
-                </div>
+          </div>
+          {/* ARIA response */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#f97316,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Brain size={16} color="#fff" />
             </div>
-        )}
-
-        {/* ❓ MODAL - AYUDA */}
-        {showHelp && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
-                    <div className="bg-gradient-to-r from-green-600 to-teal-600 p-6 text-white flex justify-between items-center">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
-                                <HelpCircle size={24}/>
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-lg">Centro de Ayuda</h3>
-                                <p className="text-xs text-green-100">Estamos aquí para ti</p>
-                            </div>
-                        </div>
-                        <button onClick={()=>setShowHelp(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
-                            <X size={20}/>
-                        </button>
-                    </div>
-                    <div className="p-6 space-y-3 overflow-y-auto">
-                        <HelpItem 
-                            icon={<Calendar className="text-blue-600"/>}
-                            title="¿Cómo agendar una cita?"
-                            description="Ve a 'Agendar Cita', selecciona fecha y horario disponible. Se descontará 1 token automáticamente."
-                        />
-                        <HelpItem 
-                            icon={<Ticket className="text-yellow-600"/>}
-                            title="¿Qué son los tokens?"
-                            description="Los tokens son créditos que te permiten agendar sesiones. Cada sesión requiere 1 token. Contacta al centro para recargar."
-                        />
-                        <HelpItem 
-                            icon={<MessageCircle className="text-purple-600"/>}
-                            title="¿Cómo usar el Asistente IA?"
-                            description="El asistente puede responder dudas sobre el progreso de tu hijo/a, dar consejos y explicar los reportes de las sesiones."
-                        />
-                        <HelpItem 
-                            icon={<Book className="text-green-600"/>}
-                            title="¿Dónde encuentro recursos?"
-                            description="En la sección 'Biblioteca' encontrarás guías, videos y artículos sobre terapia ABA y desarrollo infantil."
-                        />
-                        
-                        <div className="mt-6 bg-gradient-to-br from-green-50 to-teal-50 p-6 rounded-2xl border border-green-200">
-                            <h4 className="font-bold text-green-900 mb-3 flex items-center gap-2">
-                                <Phone size={18}/> Contacto Directo
-                            </h4>
-                            <div className="space-y-2 text-sm text-green-700">
-                                <p className="flex items-center gap-2">
-                                    <Mail size={14}/> <a href="mailto:tallerjugandoaprendoind@gmail.com" className="hover:underline">tallerjugandoaprendoind@gmail.com</a>
-                                </p>
-                                <p className="flex items-center gap-2">
-                                    <Phone size={14}/> <a href="tel:+51924807183" className="hover:underline">+51 924 807 183</a>
-                                </p>
-                                <p className="text-xs text-green-600 mt-2">Horario: Lun-Vie 8:00 AM - 6:00 PM</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div style={{ background: '#fff', border: '1.5px solid #fed7aa', borderRadius: '18px 18px 18px 4px', padding: '12px 16px', fontSize: 13, color: '#44403c', lineHeight: 1.6, boxShadow: '0 4px 16px rgba(249,115,22,.08)', maxWidth: 260 }}>
+              Te recomiendo <strong style={{ color: '#f97316' }}>3 actividades</strong> basadas en los datos de esta semana...
+              <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
+                {[1,2,3].map(i => <div key={i} style={{ height: 4, flex: 1, background: '#fed7aa', borderRadius: 99, overflow: 'hidden' }}><div style={{ height: '100%', width: `${i*30}%`, background: '#f97316', borderRadius: 99 }} /></div>)}
+              </div>
             </div>
-        )}
+          </div>
+          {/* Typing indicator */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10 }}>
+            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg,#f97316,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: 0.5 }}>
+              <Brain size={16} color="#fff" />
+            </div>
+            <div style={{ background: '#fff', border: '1.5px solid #fed7aa', borderRadius: '18px 18px 18px 4px', padding: '12px 20px', boxShadow: '0 4px 16px rgba(249,115,22,.08)', display: 'flex', gap: 5, alignItems: 'center' }}>
+              {[0,1,2].map(i => <div key={i} style={{ width: 8, height: 8, borderRadius: '50%', background: '#f97316', opacity: 0.4, animation: `ariaLed ${0.8+i*.2}s ease-in-out infinite` }} />)}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
 
-// ==============================================================================
-// SUB-COMPONENTES Y VISTAS
-// ==============================================================================
+// ══════════════════════════════════════════════════════════════════════════════
+//  JUEGOS ABA — datos y componente
+// ══════════════════════════════════════════════════════════════════════════════
+type GameId = 'emociones' | 'vocabulario' | 'instrucciones' | 'atencion'
+type GameLevel = 1 | 2 | 3
 
+const GAMES_INFO = [
+  { id: 'emociones'    as GameId, emoji: '😊', color: '#f43f5e', bg: '#fff1f2', border: '#fecdd3', title: 'Reconocer Emociones', desc: 'Identifica cómo se sienten los personajes', aba: 'Regulación emocional · ABA' },
+  { id: 'vocabulario'  as GameId, emoji: '🗣️', color: '#8b5cf6', bg: '#faf5ff', border: '#e9d5ff', title: 'Vocabulario',           desc: 'Aprende y practica nuevas palabras',        aba: 'Comunicación verbal · ABA' },
+  { id: 'instrucciones'as GameId, emoji: '👂', color: '#0ea5e9', bg: '#f0f9ff', border: '#bae6fd', title: 'Sigue Instrucciones',  desc: 'Escucha y responde correctamente',           aba: 'Conducta operante · ABA'  },
+  { id: 'atencion'     as GameId, emoji: '🔍', color: '#10b981', bg: '#f0fdf4', border: '#bbf7d0', title: 'Atención',             desc: '¿Qué desapareció de la imagen?',            aba: 'Discriminación visual · ABA'},
+]
+const NIVEL_LABELS: Record<GameLevel, { label: string; desc: string; emoji: string }> = {
+  1: { label: 'Principiante', desc: '2–4 años · inicio de terapia',    emoji: '🌱' },
+  2: { label: 'Intermedio',   desc: '4–7 años · en progreso',          emoji: '🌿' },
+  3: { label: 'Avanzado',     desc: '7+ años · habilidades sólidas',   emoji: '🌳' },
+}
+
+type EmoItem   = { emoji: string; nombre: string; opciones: string[] }
+type VocabItem = { emoji: string; palabra: string; opciones: string[] }
+type InstrItem = { instruccion: string; opciones: { emoji: string; label: string; correcto: boolean }[] }
+type AtencItem = { todos: string[]; falta: string; opciones: string[] }
+type AnyQ      = EmoItem | VocabItem | InstrItem | AtencItem
+
+const EMOCIONES_D: Record<GameLevel, EmoItem[]> = {
+  1: [
+    { emoji: '😊', nombre: 'Feliz',   opciones: ['Feliz','Triste','Enojado'] },
+    { emoji: '😢', nombre: 'Triste',  opciones: ['Feliz','Triste','Asustado'] },
+    { emoji: '😡', nombre: 'Enojado', opciones: ['Enojado','Feliz','Cansado'] },
+    { emoji: '😴', nombre: 'Cansado', opciones: ['Feliz','Enojado','Cansado'] },
+  ],
+  2: [
+    { emoji: '😨', nombre: 'Asustado',    opciones: ['Asustado','Emocionado','Triste','Enojado'] },
+    { emoji: '🤗', nombre: 'Cariñoso',    opciones: ['Aburrido','Cariñoso','Asustado','Triste'] },
+    { emoji: '😤', nombre: 'Frustrado',   opciones: ['Feliz','Frustrado','Cansado','Emocionado'] },
+    { emoji: '😮', nombre: 'Sorprendido', opciones: ['Enojado','Triste','Sorprendido','Cansado'] },
+    { emoji: '😌', nombre: 'Tranquilo',   opciones: ['Tranquilo','Asustado','Frustrado','Feliz'] },
+  ],
+  3: [
+    { emoji: '😔', nombre: 'Decepcionado', opciones: ['Triste','Decepcionado','Aburrido','Cansado'] },
+    { emoji: '🥺', nombre: 'Preocupado',   opciones: ['Asustado','Preocupado','Triste','Nervioso'] },
+    { emoji: '😬', nombre: 'Nervioso',     opciones: ['Nervioso','Preocupado','Frustrado','Confundido'] },
+    { emoji: '🤩', nombre: 'Emocionado',   opciones: ['Feliz','Orgulloso','Emocionado','Cariñoso'] },
+    { emoji: '😒', nombre: 'Aburrido',     opciones: ['Cansado','Triste','Aburrido','Decepcionado'] },
+  ],
+}
+const VOCABULARIO_D: Record<GameLevel, VocabItem[]> = {
+  1: [
+    { emoji: '🐶', palabra: 'Perro',   opciones: ['Gato','Perro','Pájaro'] },
+    { emoji: '🍎', palabra: 'Manzana', opciones: ['Manzana','Pelota','Silla'] },
+    { emoji: '🏠', palabra: 'Casa',    opciones: ['Mesa','Casa','Árbol'] },
+    { emoji: '🚗', palabra: 'Carro',   opciones: ['Carro','Bicicleta','Avión'] },
+    { emoji: '👧', palabra: 'Niña',    opciones: ['Niño','Niña','Mamá'] },
+  ],
+  2: [
+    { emoji: '🏃', palabra: 'Correr', opciones: ['Dormir','Correr','Comer','Saltar'] },
+    { emoji: '🎨', palabra: 'Pintar', opciones: ['Dibujar','Colorear','Pintar','Escribir'] },
+    { emoji: '🌧️', palabra: 'Lluvia', opciones: ['Sol','Lluvia','Nieve','Viento'] },
+    { emoji: '📚', palabra: 'Libros', opciones: ['Cuaderno','Lápiz','Libros','Mochila'] },
+    { emoji: '🎵', palabra: 'Música', opciones: ['Baile','Música','Canto','Sonido'] },
+  ],
+  3: [
+    { emoji: '🤝', palabra: 'Compartir', opciones: ['Ayudar','Compartir','Jugar','Saludar'] },
+    { emoji: '💬', palabra: 'Comunicar', opciones: ['Hablar','Escuchar','Comunicar','Preguntar'] },
+    { emoji: '🧩', palabra: 'Resolver',  opciones: ['Jugar','Pensar','Resolver','Crear'] },
+    { emoji: '🌱', palabra: 'Crecer',    opciones: ['Plantar','Regar','Crecer','Cuidar'] },
+    { emoji: '🎭', palabra: 'Actuar',    opciones: ['Cantar','Bailar','Actuar','Dibujar'] },
+  ],
+}
+const INSTRUCCIONES_D: Record<GameLevel, InstrItem[]> = {
+  1: [
+    { instruccion: 'Toca el perro',    opciones: [{emoji:'🐶',label:'Perro',correcto:true},{emoji:'🐱',label:'Gato',correcto:false},{emoji:'🐦',label:'Pájaro',correcto:false}] },
+    { instruccion: 'Toca la manzana', opciones: [{emoji:'🍌',label:'Plátano',correcto:false},{emoji:'🍎',label:'Manzana',correcto:true},{emoji:'🍇',label:'Uvas',correcto:false}] },
+    { instruccion: 'Toca el sol',      opciones: [{emoji:'🌙',label:'Luna',correcto:false},{emoji:'⭐',label:'Estrella',correcto:false},{emoji:'☀️',label:'Sol',correcto:true}] },
+    { instruccion: 'Toca el carro',    opciones: [{emoji:'✈️',label:'Avión',correcto:false},{emoji:'🚗',label:'Carro',correcto:true},{emoji:'🚢',label:'Barco',correcto:false}] },
+  ],
+  2: [
+    { instruccion: 'Toca el animal que vuela',       opciones: [{emoji:'🐶',label:'Perro',correcto:false},{emoji:'🐦',label:'Pájaro',correcto:true},{emoji:'🐢',label:'Tortuga',correcto:false},{emoji:'🐠',label:'Pez',correcto:false}] },
+    { instruccion: 'Toca la fruta',                  opciones: [{emoji:'🥕',label:'Zanahoria',correcto:false},{emoji:'🍕',label:'Pizza',correcto:false},{emoji:'🍓',label:'Fresa',correcto:true},{emoji:'🎂',label:'Torta',correcto:false}] },
+    { instruccion: 'Toca algo para leer',            opciones: [{emoji:'⚽',label:'Pelota',correcto:false},{emoji:'📖',label:'Libro',correcto:true},{emoji:'🎸',label:'Guitarra',correcto:false},{emoji:'🎨',label:'Pintura',correcto:false}] },
+    { instruccion: 'Toca lo que necesitas para dormir', opciones: [{emoji:'🛏️',label:'Cama',correcto:true},{emoji:'🍴',label:'Tenedor',correcto:false},{emoji:'📱',label:'Celular',correcto:false},{emoji:'💡',label:'Lámpara',correcto:false}] },
+  ],
+  3: [
+    { instruccion: 'Toca lo que haces cuando alguien está triste', opciones: [{emoji:'😂',label:'Reír solo',correcto:false},{emoji:'🤗',label:'Abrazar',correcto:true},{emoji:'🏃',label:'Huir',correcto:false},{emoji:'📺',label:'Ver TV',correcto:false}] },
+    { instruccion: 'Toca lo que ayuda a crecer sano',               opciones: [{emoji:'🍬',label:'Dulces',correcto:false},{emoji:'🥦',label:'Verduras',correcto:true},{emoji:'📱',label:'Celular todo el día',correcto:false},{emoji:'💤',label:'No dormir',correcto:false}] },
+    { instruccion: 'Toca lo que usas para comunicarte',             opciones: [{emoji:'📱',label:'Teléfono',correcto:true},{emoji:'🍴',label:'Tenedor',correcto:false},{emoji:'🛏️',label:'Cama',correcto:false},{emoji:'🔑',label:'Llave',correcto:false}] },
+    { instruccion: 'Toca lo que haces para pedir ayuda',            opciones: [{emoji:'🏃',label:'Correr',correcto:false},{emoji:'🤫',label:'Callarte',correcto:false},{emoji:'✋',label:'Levantar la mano',correcto:true},{emoji:'😡',label:'Enojarte',correcto:false}] },
+  ],
+}
+const ATENCION_D: Record<GameLevel, AtencItem[]> = {
+  1: [
+    { todos: ['🐶','🐱','🐦','🍎'], falta: '🐱', opciones: ['🐶','🐱','🐦','🍎'] },
+    { todos: ['🍎','🍌','🍇','🍓'], falta: '🍇', opciones: ['🍎','🍌','🍇','🍓'] },
+    { todos: ['⭐','🌙','☀️','🌈'], falta: '☀️', opciones: ['⭐','🌙','☀️','🌈'] },
+    { todos: ['🚗','✈️','🚢','🚂'], falta: '🚢', opciones: ['🚗','✈️','🚢','🚂'] },
+  ],
+  2: [
+    { todos: ['🐶','🐱','🐦','🐠','🐢','🦁'], falta: '🐢', opciones: ['🐢','🦁','🐶','🐱'] },
+    { todos: ['🍎','🍌','🍇','🍓','🍊','🍋'], falta: '🍊', opciones: ['🍊','🍋','🍇','🍓'] },
+    { todos: ['⭐','🌙','☀️','🌈','⚡','❄️'], falta: '🌈', opciones: ['🌈','⚡','⭐','❄️'] },
+    { todos: ['📚','✏️','📐','🎨','📏','🔬'], falta: '📏', opciones: ['📚','📏','📐','🔬'] },
+  ],
+  3: [
+    { todos: ['🐶','🐱','🐦','🐠','🐢','🦁','🐘','🦒','🦓'], falta: '🦁', opciones: ['🦓','🦁','🐘','🦒'] },
+    { todos: ['🍎','🍌','🍇','🍓','🍊','🍋','🍑','🍒','🥝'], falta: '🍑', opciones: ['🍒','🍑','🥝','🍊'] },
+    { todos: ['😊','😢','😡','😨','🤗','😮','😌','😤','😴'], falta: '😮', opciones: ['😮','😌','😤','😴'] },
+    { todos: ['⭐','🌙','☀️','🌈','⚡','❄️','🌊','🌸','🍀'], falta: '🌊', opciones: ['🌊','🌸','⭐','🍀'] },
+  ],
+}
+
+const ABA_TIPS: Record<GameId, string> = {
+  emociones:    'Practica en casa señalando emociones en cuentos o películas. Nombrar lo que siente refuerza la regulación emocional.',
+  vocabulario:  'Usa objetos reales del hogar. Señala y nombra juntos durante el día para consolidar el vocabulario aprendido.',
+  instrucciones:'Da instrucciones simples en casa y celebra cada vez que las sigue. Aumenta la dificultad gradualmente.',
+  atencion:     'Jueguen a "¿qué cambió?" en la habitación. Mover objetos y que los encuentre mejora la atención y memoria visual.',
+}
+
+function GameHub() {
+  const [screen,   setScreen]   = useState<'select'|'level'|'play'|'done'>('select')
+  const [gameId,   setGameId]   = useState<GameId>('emociones')
+  const [level,    setLevel]    = useState<GameLevel>(1)
+  const [qIndex,   setQIndex]   = useState(0)
+  const [score,    setScore]    = useState(0)
+  const [selected, setSelected] = useState<string|null>(null)
+  const [atPhase,  setAtPhase]  = useState<'memorize'|'answer'>('memorize')
+  const atTimer = useRef<number|null>(null)
+
+  const getQs = (g: GameId, l: GameLevel): AnyQ[] => {
+    if (g === 'emociones')    return EMOCIONES_D[l]
+    if (g === 'vocabulario')  return VOCABULARIO_D[l]
+    if (g === 'instrucciones')return INSTRUCCIONES_D[l]
+    return ATENCION_D[l]
+  }
+  const questions = getQs(gameId, level)
+  const total = questions.length
+  const currentQ = questions[qIndex]
+
+  const startGame = (g: GameId, l: GameLevel) => {
+    setGameId(g); setLevel(l); setQIndex(0); setScore(0); setSelected(null); setAtPhase('memorize'); setScreen('play')
+  }
+  const handleAnswer = (answer: string, correct: string) => {
+    if (selected !== null) return
+    setSelected(answer)
+    if (answer === correct) setScore(s => s + 1)
+    setTimeout(() => {
+      if (qIndex + 1 >= total) { setScreen('done') }
+      else { setQIndex(q => q + 1); setSelected(null); setAtPhase('memorize') }
+    }, 1200)
+  }
+  const reset = () => { setScreen('select'); setQIndex(0); setScore(0); setSelected(null); setAtPhase('memorize') }
+
+  useEffect(() => {
+    if (gameId === 'atencion' && screen === 'play' && atPhase === 'memorize') {
+      const delay = level === 1 ? 3500 : level === 2 ? 2800 : 2200
+      atTimer.current = window.setTimeout(() => setAtPhase('answer'), delay)
+    }
+    return () => { if (atTimer.current) window.clearTimeout(atTimer.current) }
+  }, [gameId, screen, atPhase, qIndex, level])
+
+  const gameInfo = GAMES_INFO.find(g => g.id === gameId)!
+
+  const cardBtn = (bg: string, border: string, extra?: object) => ({
+    border: 'none', cursor: 'pointer', fontFamily: "'Baloo 2',cursive", fontWeight: 700, transition: 'all .25s',
+    background: bg, borderRadius: 14, border: `2.5px solid ${border}`, color: '#1c1917', ...extra,
+  })
+
+  // ── SELECT ──────────────────────────────────────────────────────────────────
+  if (screen === 'select') return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 14 }}>
+      {GAMES_INFO.map(g => (
+        <div key={g.id} onClick={() => { setGameId(g.id); setScreen('level') }}
+          style={{ background: '#fff', border: `2.5px solid ${g.border}`, borderRadius: 20, padding: '22px 16px', cursor: 'pointer', transition: 'all .25s' }}
+          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-4px)'; (e.currentTarget as HTMLElement).style.boxShadow = `0 12px 32px ${g.color}33` }}
+          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = '' }}>
+          <div style={{ fontSize: 36, marginBottom: 8 }}>{g.emoji}</div>
+          <h4 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 14, color: '#1c1917', marginBottom: 4 }}>{g.title}</h4>
+          <p style={{ fontSize: 12, color: '#78716c', lineHeight: 1.5, marginBottom: 8 }}>{g.desc}</p>
+          <div style={{ display: 'inline-block', background: g.bg, border: `1.5px solid ${g.border}`, color: g.color, borderRadius: 99, padding: '2px 10px', fontSize: 10, fontFamily: "'Baloo 2',cursive", fontWeight: 700 }}>{g.aba}</div>
+        </div>
+      ))}
+    </div>
+  )
+
+  // ── LEVEL ───────────────────────────────────────────────────────────────────
+  if (screen === 'level') return (
+    <div>
+      <button onClick={() => setScreen('select')} style={{ background: 'none', border: 'none', color: '#78716c', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 13, cursor: 'pointer', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 4 }}>← Volver</button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+        <span style={{ fontSize: 30 }}>{gameInfo.emoji}</span>
+        <h3 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 18, color: '#1c1917' }}>{gameInfo.title}</h3>
+      </div>
+      <div style={{ display: 'inline-block', background: gameInfo.bg, border: `1.5px solid ${gameInfo.border}`, color: gameInfo.color, borderRadius: 99, padding: '2px 12px', fontSize: 11, fontFamily: "'Baloo 2',cursive", fontWeight: 700, marginBottom: 16 }}>{gameInfo.aba}</div>
+      <p style={{ fontSize: 13, color: '#78716c', marginBottom: 14 }}>Elige el nivel según las habilidades del niño/a:</p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {([1, 2, 3] as GameLevel[]).map(lv => {
+          const nl = NIVEL_LABELS[lv]
+          return (
+            <div key={lv} onClick={() => startGame(gameId, lv)}
+              style={{ background: '#fff', border: '2.5px solid #fef3c7', borderRadius: 16, padding: '15px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, transition: 'all .2s' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#f97316'; (e.currentTarget as HTMLElement).style.background = '#fff7ed' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = '#fef3c7'; (e.currentTarget as HTMLElement).style.background = '#fff' }}>
+              <span style={{ fontSize: 26 }}>{nl.emoji}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 14, color: '#1c1917' }}>Nivel {lv} — {nl.label}</div>
+                <div style={{ fontSize: 11, color: '#a8a29e' }}>{nl.desc}</div>
+              </div>
+              <span style={{ color: '#f97316', fontSize: 18 }}>▶</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+
+  // ── DONE ────────────────────────────────────────────────────────────────────
+  if (screen === 'done') {
+    const pct = Math.round((score / total) * 100)
+    const medal = pct === 100 ? '🏆' : pct >= 60 ? '🌟' : '💪'
+    const msg   = pct === 100 ? '¡Perfecto!' : pct >= 60 ? '¡Muy bien!' : '¡Sigue practicando!'
+    const col   = pct === 100 ? '#10b981' : pct >= 60 ? '#f97316' : '#f43f5e'
+    return (
+      <div style={{ textAlign: 'center', padding: '12px 0' }}>
+        <div style={{ fontSize: 60, marginBottom: 10 }}>{medal}</div>
+        <h3 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 22, color: col, marginBottom: 4 }}>{msg}</h3>
+        <p style={{ color: '#78716c', fontSize: 14, marginBottom: 12 }}>Aciertos: <strong style={{ color: col }}>{score} de {total}</strong></p>
+        <div style={{ background: '#f5f5f4', borderRadius: 99, height: 10, maxWidth: 200, margin: '0 auto 20px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg,${col},${col}88)`, borderRadius: 99, transition: 'width 1s ease' }} />
+        </div>
+        <div style={{ background: '#fff7ed', border: '2px solid #fed7aa', borderRadius: 16, padding: '14px 18px', marginBottom: 20, textAlign: 'left' }}>
+          <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#c2410c', marginBottom: 4 }}>💡 Consejo para papá y mamá:</p>
+          <p style={{ fontSize: 12, color: '#78716c', lineHeight: 1.65 }}>{ABA_TIPS[gameId]}</p>
+        </div>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <button onClick={() => startGame(gameId, level)} style={{ padding: '11px 22px', background: 'linear-gradient(135deg,#f97316,#ea580c)', color: '#fff', border: 'none', borderRadius: 99, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>🔄 Repetir</button>
+          <button onClick={reset} style={{ padding: '11px 22px', background: '#fff', border: '2px solid #fed7aa', color: '#78350f', borderRadius: 99, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>🎮 Otros juegos</button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── PLAY ────────────────────────────────────────────────────────────────────
+  return (
+    <div>
+      {/* Barra de progreso */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+        <button onClick={reset} style={{ background: 'none', border: 'none', color: '#78716c', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, cursor: 'pointer' }}>✕ Salir</button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#a8a29e' }}>{qIndex+1}/{total}</span>
+          <div style={{ background: '#f5f5f4', borderRadius: 99, height: 7, width: 100, overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${((qIndex+1)/total)*100}%`, background: 'linear-gradient(90deg,#f97316,#fbbf24)', borderRadius: 99, transition: 'width .4s' }} />
+          </div>
+        </div>
+        <div style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 13, color: '#10b981' }}>⭐ {score}</div>
+      </div>
+
+      {/* EMOCIONES */}
+      {gameId === 'emociones' && (() => {
+        const q = currentQ as EmoItem
+        return (
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, color: '#78716c', marginBottom: 14 }}>¿Cómo se siente este personaje?</p>
+            <div style={{ fontSize: 88, marginBottom: 20, lineHeight: 1, filter: selected ? (selected === q.nombre ? 'drop-shadow(0 0 20px #10b98188)' : 'drop-shadow(0 0 20px #f43f5e88)') : 'none', transition: 'filter .3s' }}>{q.emoji}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: q.opciones.length === 3 ? 'repeat(3,1fr)' : 'repeat(2,1fr)', gap: 10 }}>
+              {q.opciones.map(op => {
+                const isSel = selected === op; const isOk = op === q.nombre
+                const bg = selected ? (isOk ? '#dcfce7' : isSel ? '#fee2e2' : '#fff') : '#fff'
+                const bdr = selected ? (isOk ? '#10b981' : isSel ? '#f43f5e' : '#fef3c7') : '#fef3c7'
+                return <button key={op} onClick={() => handleAnswer(op, q.nombre)} style={{ padding: '13px 8px', fontSize: 14, borderRadius: 14, background: bg, border: `2.5px solid ${bdr}`, color: '#1c1917', cursor: selected ? 'default' : 'pointer', fontFamily: "'Baloo 2',cursive", fontWeight: 700, transition: 'all .25s' }}>{op}{selected && isOk && ' ✅'}{selected && isSel && !isOk && ' ❌'}</button>
+              })}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* VOCABULARIO */}
+      {gameId === 'vocabulario' && (() => {
+        const q = currentQ as VocabItem
+        return (
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, color: '#78716c', marginBottom: 14 }}>¿Cómo se llama esto?</p>
+            <div style={{ fontSize: 84, marginBottom: 20, lineHeight: 1 }}>{q.emoji}</div>
+            <div style={{ display: 'grid', gridTemplateColumns: q.opciones.length === 3 ? 'repeat(3,1fr)' : 'repeat(2,1fr)', gap: 10 }}>
+              {q.opciones.map(op => {
+                const isSel = selected === op; const isOk = op === q.palabra
+                const bg = selected ? (isOk ? '#dcfce7' : isSel ? '#fee2e2' : '#fff') : '#fff'
+                const bdr = selected ? (isOk ? '#10b981' : isSel ? '#f43f5e' : '#fef3c7') : '#fef3c7'
+                return <button key={op} onClick={() => handleAnswer(op, q.palabra)} style={{ padding: '13px 8px', fontSize: 14, borderRadius: 14, background: bg, border: `2.5px solid ${bdr}`, color: '#1c1917', cursor: selected ? 'default' : 'pointer', fontFamily: "'Baloo 2',cursive", fontWeight: 700, transition: 'all .25s' }}>{op}{selected && isOk && ' ✅'}{selected && isSel && !isOk && ' ❌'}</button>
+              })}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* INSTRUCCIONES */}
+      {gameId === 'instrucciones' && (() => {
+        const q = currentQ as InstrItem
+        const correctLabel = q.opciones.find(o => o.correcto)!.label
+        return (
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ background: '#fff7ed', border: '2.5px solid #fed7aa', borderRadius: 16, padding: '16px 18px', marginBottom: 20 }}>
+              <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 16, color: '#c2410c' }}>📢 {q.instruccion}</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: q.opciones.length === 3 ? 'repeat(3,1fr)' : 'repeat(2,1fr)', gap: 12 }}>
+              {q.opciones.map(op => {
+                const isSel = selected === op.label
+                const bg = selected ? (op.correcto ? '#dcfce7' : isSel ? '#fee2e2' : '#fff') : '#fff'
+                const bdr = selected ? (op.correcto ? '#10b981' : isSel ? '#f43f5e' : '#fef3c7') : '#fef3c7'
+                return (
+                  <button key={op.label} onClick={() => handleAnswer(op.label, correctLabel)}
+                    style={{ padding: '16px 8px', fontSize: 12, borderRadius: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, background: bg, border: `2.5px solid ${bdr}`, color: '#1c1917', cursor: selected ? 'default' : 'pointer', fontFamily: "'Baloo 2',cursive", fontWeight: 700, transition: 'all .25s' }}>
+                    <span style={{ fontSize: 40 }}>{op.emoji}</span>{op.label}{selected && op.correcto && ' ✅'}{selected && isSel && !op.correcto && ' ❌'}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* ATENCIÓN */}
+      {gameId === 'atencion' && (() => {
+        const q = currentQ as AtencItem
+        if (atPhase === 'memorize') return (
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, color: '#78716c', marginBottom: 4 }}>👀 ¡Memoriza bien lo que ves!</p>
+            <p style={{ fontSize: 11, color: '#a8a29e', marginBottom: 16 }}>En unos segundos desaparecerá uno...</p>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${q.todos.length <= 4 ? 4 : 3},1fr)`, gap: 8, maxWidth: 320, margin: '0 auto' }}>
+              {q.todos.map((em, i) => <div key={i} style={{ background: '#fff', border: '2.5px solid #fef3c7', borderRadius: 12, padding: '12px 6px', textAlign: 'center', fontSize: q.todos.length > 6 ? 26 : 32 }}>{em}</div>)}
+            </div>
+          </div>
+        )
+        const shown = q.todos.filter(e => e !== q.falta)
+        return (
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 15, color: '#1c1917', marginBottom: 12 }}>🔍 ¿Qué elemento falta?</p>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${q.todos.length <= 4 ? 4 : 3},1fr)`, gap: 8, maxWidth: 320, margin: '0 auto 16px' }}>
+              {shown.map((em, i) => <div key={i} style={{ background: '#fff', border: '2.5px solid #fef3c7', borderRadius: 12, padding: '12px 6px', textAlign: 'center', fontSize: q.todos.length > 6 ? 26 : 32 }}>{em}</div>)}
+              <div style={{ background: '#f5f5f4', border: '2.5px dashed #d4d4d4', borderRadius: 12, padding: '12px 6px', textAlign: 'center', fontSize: 22 }}>❓</div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 10, maxWidth: 240, margin: '0 auto' }}>
+              {q.opciones.map(op => {
+                const isSel = selected === op; const isOk = op === q.falta
+                const bg = selected ? (isOk ? '#dcfce7' : isSel ? '#fee2e2' : '#fff') : '#fff'
+                const bdr = selected ? (isOk ? '#10b981' : isSel ? '#f43f5e' : '#fef3c7') : '#fef3c7'
+                return <button key={op} onClick={() => handleAnswer(op, q.falta)} style={{ padding: '14px 8px', fontSize: q.todos.length > 6 ? 28 : 36, borderRadius: 14, background: bg, border: `2.5px solid ${bdr}`, cursor: selected ? 'default' : 'pointer', fontFamily: "'Baloo 2',cursive", fontWeight: 700, transition: 'all .25s' }}>{op}</button>
+              })}
+            </div>
+          </div>
+        )
+      })()}
+    </div>
+  )
+}
+
+export default function LandingPage() {
+  const [isScrolled, setIsScrolled] = useState(false)
+  const [activeAccordion, setActiveAccordion] = useState<number | null>(null)
+  const [count50, setCount50] = useState(0)
+  const [activeImg, setActiveImg] = useState(0)
+  const [playingVideo, setPlayingVideo] = useState<number | null>(null)
+  const statsRef = useRef<HTMLDivElement>(null)
+  const counted = useRef(false)
+
+  // ── JUEGO DE MEMORIA ──────────────────────────────────────────
+  type GameCard = { id: number; emoji: string; pairId: number }
+  const EMOJIS = ['🐶','🐱','🦁','🐸','🦋','🌈','⭐','🍎']
+  const initCards = (): GameCard[] => {
+    const pairs = [...EMOJIS, ...EMOJIS].map((emoji, i) => ({ id: i, emoji, pairId: EMOJIS.indexOf(emoji) }))
+    return pairs.sort(() => Math.random() - 0.5)
+  }
+  const [gameCards, setGameCards] = useState<GameCard[]>(initCards)
+  const [flippedIds, setFlippedIds] = useState<number[]>([])
+  const [matchedPairs, setMatchedPairs] = useState<number[]>([])
+  const [gameMoves, setGameMoves] = useState(0)
+  const [gameWon, setGameWon] = useState(false)
+  const lockRef = useRef(false)
+
+  const handleCardClick = (card: GameCard) => {
+    if (lockRef.current) return
+    if (flippedIds.includes(card.id)) return
+    if (matchedPairs.includes(card.pairId)) return
+    const newFlipped = [...flippedIds, card.id]
+    setFlippedIds(newFlipped)
+    if (newFlipped.length === 2) {
+      setGameMoves(m => m + 1)
+      const [a, b] = newFlipped.map(id => gameCards.find(c => c.id === id)!)
+      if (a.pairId === b.pairId) {
+        const newMatched = [...matchedPairs, a.pairId]
+        setMatchedPairs(newMatched)
+        setFlippedIds([])
+        if (newMatched.length === EMOJIS.length) setGameWon(true)
+      } else {
+        lockRef.current = true
+        setTimeout(() => { setFlippedIds([]); lockRef.current = false }, 900)
+      }
+    }
+  }
+
+  const resetGame = () => {
+    setGameCards(initCards())
+    setFlippedIds([])
+    setMatchedPairs([])
+    setGameMoves(0)
+    setGameWon(false)
+    lockRef.current = false
+  }
+
+  useEffect(() => {
+    const fn = () => setIsScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', fn)
+    return () => window.removeEventListener('scroll', fn)
+  }, [])
+
+  useEffect(() => {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !counted.current) {
+        counted.current = true
+        let n = 0
+        const t = setInterval(() => { n += 2; setCount50(n); if (n >= 50) clearInterval(t) }, 40)
+      }
+    }, { threshold: 0.4 })
+    if (statsRef.current) obs.observe(statsRef.current)
+    return () => obs.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const t = setInterval(() => setActiveImg(p => (p + 1) % 4), 4500)
+    return () => clearInterval(t)
+  }, [])
+
+  const waMsg = encodeURIComponent('Hola, vi su página web y me interesa conocer más sobre sus servicios de terapia para mi hijo/a.')
+  const waUrl = `https://wa.me/51924807183?text=${waMsg}`
+
+  const imgs = [
+    { src: '/images/hero-image.jpg', caption: 'Sesiones personalizadas de terapia ABA' },
+    { src: '/images/hero-image.jpg', caption: 'Talleres de habilidades sociales' },
+    { src: '/images/hero-image.jpg', caption: 'Escuela para Padres' },
+    { src: '/images/hero-image.jpg', caption: 'Evaluaciones especializadas' },
+  ]
+
+  const testimonials = [
+    { name: 'María G.', desc: 'Mamá de Rodrigo, 6 años · TEA Nivel 2', a: 'M', color: '#f97316', text: 'En 3 meses mi hijo empezó a comunicarse con frases completas. Los reportes con IA nos ayudan a entender su progreso sin tecnicismos. ¡Los recomiendo al 100%!' },
+    { name: 'Carlos R.', desc: 'Papá de Valentina, 4 años · TDAH', a: 'C', color: '#10b981', text: 'Lo que más me sorprendió fue poder seguir el avance semana a semana desde mi celular. El asistente IA nos da consejos para trabajar en casa. Valentina ha mejorado muchísimo.' },
+    { name: 'Rosa T.', desc: 'Mamá de Mateo, 5 años · TEA Nivel 1', a: 'R', color: '#8b5cf6', text: 'Al principio tenía miedo de no entender los términos clínicos. La terapeuta y el sistema de reportes lo explican todo de manera muy sencilla. Me siento acompañada.' },
+  ]
+
+  const benefits = [
+    { icon: <ClipboardList size={20} color="#fff" />, bg: 'linear-gradient(135deg,#f97316,#fb923c)', title: 'Reportes diarios', desc: 'Resumen claro de cada sesión con logros y observaciones.' },
+    { icon: <LineChart size={20} color="#fff" />, bg: 'linear-gradient(135deg,#0ea5e9,#38bdf8)', title: 'Gráficos de progreso', desc: 'Evolución de tu hijo semana a semana en habilidades y conducta.' },
+    { icon: <MessageSquareHeart size={20} color="#fff" />, bg: 'linear-gradient(135deg,#10b981,#34d399)', title: 'Chat con especialistas', desc: 'Comunícate directamente con el equipo terapéutico desde la app.' },
+    { icon: <Brain size={20} color="#fff" />, bg: 'linear-gradient(135deg,#8b5cf6,#a78bfa)', title: 'ARIA 24/7', desc: 'Nuestra IA analiza datos y te da sugerencias personalizadas.' },
+    { icon: <Calendar size={20} color="#fff" />, bg: 'linear-gradient(135deg,#f43f5e,#fb7185)', title: 'Agenda de citas', desc: 'Reserva y confirma sesiones en un solo lugar, sin llamadas.' },
+    { icon: <BookOpen size={20} color="#fff" />, bg: 'linear-gradient(135deg,#14b8a6,#2dd4bf)', title: 'Biblioteca de recursos', desc: 'Guías, videos y actividades ABA para reforzar en casa.' },
+    { icon: <Bell size={20} color="#fff" />, bg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', title: 'Notificaciones', desc: 'Alertas de progreso, citas y mensajes en tiempo real.' },
+    { icon: <Shield size={20} color="#fff" />, bg: 'linear-gradient(135deg,#059669,#10b981)', title: 'Datos protegidos', desc: 'Información 100% segura con estándares clínicos.' },
+  ]
+
+  return (
+    <>
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap');
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Nunito', sans-serif; background: #fffbf5; color: #2d1b69; overflow-x: hidden; }
+        ::-webkit-scrollbar { width: 7px; }
+        ::-webkit-scrollbar-track { background: #fef3c7; }
+        ::-webkit-scrollbar-thumb { background: #f97316; border-radius: 99px; }
+
+        /* ─ NAV ─ */
+        .lp-nav { position: sticky; top: 0; z-index: 100; transition: all .3s; }
+        .lp-nav.scrolled { background: rgba(255,251,245,.97); backdrop-filter: blur(16px); box-shadow: 0 4px 24px rgba(249,115,22,.12); border-bottom: 2px solid #fed7aa; }
+        .lp-nav-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; height: 68px; display: flex; align-items: center; justify-content: space-between; }
+        .lp-nav-links { display: none; gap: 24px; }
+        @media(min-width:768px){ .lp-nav-links { display: flex; } }
+        .lp-nav-links a { font-family: 'Baloo 2',cursive; font-size: 14px; font-weight: 700; color: #78350f; text-decoration: none; transition: color .2s; }
+        .lp-nav-links a:hover { color: #f97316; }
+        .lp-btn-ghost { padding: 8px 20px; border: 2px solid #fed7aa; border-radius: 99px; font-family: 'Baloo 2',cursive; font-size: 13px; font-weight: 700; color: #78350f; text-decoration: none; transition: all .2s; background: #fff; }
+        .lp-btn-ghost:hover { border-color: #f97316; color: #f97316; }
+        .lp-btn-fill { padding: 8px 20px; background: linear-gradient(135deg,#f97316,#ea580c); border-radius: 99px; font-family: 'Baloo 2',cursive; font-size: 13px; font-weight: 700; color: #fff; text-decoration: none; transition: all .2s; box-shadow: 0 4px 14px rgba(249,115,22,.3); }
+        .lp-btn-fill:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(249,115,22,.4); }
+
+        /* ─ HERO ─ */
+        .lp-hero { min-height: 92vh; display: flex; align-items: center; background: linear-gradient(160deg,#fff7ed 0%,#fffbf5 55%,#ecfdf5 100%); position: relative; overflow: hidden; padding: 80px 20px 60px; }
+        .lp-hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; gap: 48px; position: relative; z-index: 1; align-items: center; }
+        @media(min-width:900px){ .lp-hero-inner { grid-template-columns: 1fr 1fr; } }
+
+        /* ─ BOTONES ─ */
+        .btn-wa { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; background: #25d366; color: #fff; border-radius: 99px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 15px; text-decoration: none; transition: all .25s; box-shadow: 0 6px 20px rgba(37,211,102,.3); }
+        .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(37,211,102,.4); }
+        .btn-orange { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; background: linear-gradient(135deg,#f97316,#ea580c); color: #fff; border-radius: 99px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 15px; text-decoration: none; transition: all .25s; box-shadow: 0 6px 20px rgba(249,115,22,.3); }
+        .btn-orange:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(249,115,22,.4); }
+        .btn-outline { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; border: 2.5px solid #fed7aa; color: #78350f; border-radius: 99px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 15px; text-decoration: none; background: #fff; transition: all .25s; cursor: pointer; }
+        .btn-outline:hover { border-color: #f97316; color: #f97316; }
+        @keyframes lp-up { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+        /* ─ STATS ─ */
+        .lp-stats-inner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; }
+        @media(min-width:640px){ .lp-stats-inner { grid-template-columns: repeat(4,1fr); } }
+
+        /* ─ SECTIONS ─ */
+        .lp-section { padding: 80px 20px; }
+        .lp-inner { max-width: 1200px; margin: 0 auto; }
+        .lp-tag { display: inline-flex; align-items: center; gap: 6px; background: #fff7ed; border: 2px solid #fed7aa; color: #c2410c; border-radius: 99px; padding: 4px 14px; font-family: 'Baloo 2',cursive; font-size: 12px; font-weight: 700; margin-bottom: 12px; }
+        .lp-h2 { font-family: 'Baloo 2',cursive; font-size: clamp(26px,4vw,42px); font-weight: 800; color: #1c1917; line-height: 1.2; margin-bottom: 14px; }
+        .lp-sub { font-size: 16px; color: #78716c; line-height: 1.85; max-width: 580px; }
+
+        /* ─ GRID ─ */
+        .lp-grid-3 { display: grid; gap: 20px; }
+        @media(min-width:640px){ .lp-grid-3 { grid-template-columns: repeat(2,1fr); } }
+        @media(min-width:900px){ .lp-grid-3 { grid-template-columns: repeat(3,1fr); } }
+        .lp-grid-4 { display: grid; gap: 16px; }
+        @media(min-width:540px){ .lp-grid-4 { grid-template-columns: repeat(2,1fr); } }
+        @media(min-width:960px){ .lp-grid-4 { grid-template-columns: repeat(4,1fr); } }
+
+        /* ─ CARDS ─ */
+        .lp-benefit-card { background: #fff; border: 2px solid #fef3c7; border-radius: 20px; padding: 24px 20px; transition: all .3s; }
+        .lp-benefit-card:hover { border-color: #fed7aa; box-shadow: 0 14px 36px rgba(249,115,22,.1); transform: translateY(-4px) rotate(-.5deg); }
+        .lp-testi-card { background: #fff; border-radius: 22px; padding: 28px; border: 2px solid #fef3c7; transition: all .3s; }
+        .lp-testi-card:hover { border-color: #fed7aa; box-shadow: 0 16px 40px rgba(249,115,22,.08); transform: translateY(-4px); }
+        .lp-svc-card { background: #fff; border-radius: 22px; padding: 32px; border: 2px solid #fef3c7; transition: all .3s; position: relative; overflow: hidden; }
+        .lp-svc-card::before { content:''; position:absolute; top:0; left:0; right:0; height:5px; background:linear-gradient(90deg,#f97316,#fbbf24); transform:scaleX(0); transform-origin:left; transition:transform .35s; }
+        .lp-svc-card:hover::before { transform:scaleX(1); }
+        .lp-svc-card:hover { border-color: #fed7aa; box-shadow: 0 20px 60px rgba(249,115,22,.12); transform: translateY(-4px); }
+        .lp-svc-card.featured { background: linear-gradient(145deg,#f97316,#ea580c); border-color: transparent; }
+        .lp-svc-card.featured::before { display: none; }
+        .lp-team-card { background: #fff; border-radius: 22px; padding: 28px; border: 2px solid #fef3c7; text-align: center; transition: all .3s; }
+        .lp-team-card:hover { border-color: #fed7aa; box-shadow: 0 16px 40px rgba(249,115,22,.1); transform: translateY(-4px) rotate(.5deg); }
+        .lp-faq-item { border: 2.5px solid #fef3c7; border-radius: 16px; overflow: hidden; cursor: pointer; transition: all .2s; margin-bottom: 12px; background: #fff; }
+        .lp-faq-item:hover { border-color: #fed7aa; }
+        .lp-faq-item.open { border-color: #fb923c; background: #fff7ed; }
+
+        /* ─ FLOATING SHAPES ─ */
+        .lp-gallery-main { position: relative; border-radius: 24px; overflow: hidden; aspect-ratio: 16/9; box-shadow: 0 20px 60px rgba(0,0,0,.15); }
+        .lp-gallery-caption { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent,rgba(0,0,0,.65)); padding: 28px 20px 16px; color: #fff; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 14px; }
+        .lp-gallery-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,.9); border: none; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; }
+        .lp-gallery-btn:hover { background: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.2); }
+        .lp-thumbs { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 12px; }
+        .lp-thumb { border-radius: 12px; overflow: hidden; cursor: pointer; border: 3px solid transparent; transition: all .25s; aspect-ratio: 16/9; position: relative; }
+        .lp-thumb.active { border-color: #f97316; box-shadow: 0 4px 14px rgba(249,115,22,.3); }
+
+        /* ─ VIDEO CARDS ─ */
+        .lp-video-card { background: #fff; border: 2px solid #fef3c7; border-radius: 20px; overflow: hidden; transition: all .3s; cursor: pointer; }
+        .lp-video-card:hover { border-color: #fed7aa; box-shadow: 0 16px 48px rgba(249,115,22,.12); transform: translateY(-4px); }
+        .lp-video-thumb { position: relative; aspect-ratio: 16/9; background: #1c1917; overflow: hidden; }
+        .lp-video-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.3); transition: background .2s; }
+        .lp-video-card:hover .lp-video-overlay { background: rgba(249,115,22,.4); }
+        .lp-play-btn { width: 54px; height: 54px; background: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(0,0,0,.3); transition: transform .2s; }
+        .lp-video-card:hover .lp-play-btn { transform: scale(1.1); }
+
+        /* ─ MODAL VIDEO ─ */
+        .lp-modal { position: fixed; inset: 0; background: rgba(0,0,0,.88); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px; animation: lp-up .2s ease; }
+        .lp-modal-inner { position: relative; width: 100%; max-width: 880px; border-radius: 20px; overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,.6); background: #000; }
+        .lp-modal iframe { width: 100%; aspect-ratio: 16/9; border: none; display: block; }
+        .lp-modal-x { position: absolute; top: -14px; right: -14px; background: #fff; border: none; border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.3); transition: transform .2s; z-index: 10; }
+        .lp-modal-x:hover { transform: scale(1.1) rotate(90deg); }
+
+        /* ─ MAP ─ */
+        .lp-map-section { position: relative; }
+        .lp-map-card { background: #fff; padding: 28px; border: 2px solid #fef3c7; }
+@media(min-width:640px){ .lp-map-section { height: 500px; } .lp-map-card { position: absolute; top: 50%; left: 48px; transform: translateY(-50%); border-radius: 22px; box-shadow: 0 24px 60px rgba(0,0,0,.15); max-width: 360px; } }
+
+        /* ─ FOOTER ─ */
+        .lp-footer { background: #1c1917; color: rgba(255,255,255,.4); padding: 64px 20px 28px; }
+        .lp-footer-inner { max-width: 1200px; margin: 0 auto; display: grid; gap: 36px; margin-bottom: 40px; }
+        @media(min-width:768px){ .lp-footer-inner { grid-template-columns: 2fr 1fr 1fr 1fr; } }
+        .lp-footer h4 { font-family: 'Baloo 2',cursive; color: #fff; font-weight: 700; font-size: 14px; margin-bottom: 14px; }
+        .lp-footer ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+        .lp-footer ul li a { color: rgba(255,255,255,.4); text-decoration: none; font-size: 13px; transition: color .2s; }
+        .lp-footer ul li a:hover { color: #fb923c; }
+        .lp-social { width: 38px; height: 38px; background: rgba(255,255,255,.07); border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; color: rgba(255,255,255,.45); transition: all .2s; text-decoration: none; margin-right: 8px; }
+        .lp-social:hover { background: #f97316; color: #fff; transform: translateY(-2px); }
+
+        /* ─ WA FLOAT ─ */
+        @keyframes waFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        @keyframes waPing { 75%,100%{transform:scale(2);opacity:0} }
+        .lp-wa { position: fixed; bottom: 22px; right: 22px; z-index: 998; width: 60px; height: 60px; background: #25d366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(37,211,102,.45); animation: waFloat 3s ease-in-out infinite; text-decoration: none; }
+        .lp-wa-ping { position: absolute; top: -3px; right: -3px; width: 18px; height: 18px; background: #ef4444; border-radius: 50%; }
+        .lp-wa-ping::before { content:''; position:absolute; inset:0; background:#ef4444; border-radius:50%; animation: waPing 1.5s cubic-bezier(0,0,.2,1) infinite; }
+
+        /* ─ ARIA FLOAT ─ */
+        @keyframes ariaFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+        @keyframes ariaLed { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+        /* ─ ARIA CARDS GRID ─ */
+        .aria-cards-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media(min-width:900px){ .aria-cards-grid { grid-template-columns: 1fr; } }
+
+        /* ─ ARIA LAYOUT ─ */
+        .lp-ia-layout { display: grid; gap: 56px; align-items: center; }
+        @media(min-width:900px){ .lp-ia-layout { grid-template-columns: 1fr 420px; } }
+
+        /* ─ FLOATING SHAPES ─ */
+        @keyframes shapeFloat1 { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-16px) rotate(10deg)} }
+        @keyframes shapeFloat2 { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-12px) rotate(-8deg)} }
+
+        /* ─ MOBILE FIXES ─ */
+        @media(max-width:639px){
+          .lp-hero { padding: 70px 16px 50px; min-height: 100svh; overflow: hidden; }
+          .lp-hero-inner { gap: 32px; }
+          .lp-ia { padding: 72px 16px; }
+          .lp-ia-layout { gap: 32px; }
+          .lp-section { padding: 64px 16px; }
+          .lp-stats { padding: 40px 16px; }
+          .lp-footer { padding: 48px 16px 24px; }
+
+          /* Map: stack vertically on mobile */
+          .lp-map-section { height: auto; min-height: 0; }
+          .lp-map-card { position: static; transform: none; margin: 0; border-radius: 0; box-shadow: 0 -4px 20px rgba(0,0,0,.08); max-width: 100%; width: 100%; }
+
+          .lp-modal { padding: 8px; }
+          .lp-modal-x { top: 8px; right: 8px; }
+          .lp-nav-inner { height: 60px; }
+
+          /* ARIA section: 2-col cards on mobile, hide chat panel */
+          .aria-cards-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+          .aria-card { flex-direction: column !important; gap: 10px !important; padding: 14px !important; }
+          .aria-chat-panel { display: none !important; }
+
+          /* Nav button always visible */
+
+          /* Gallery thumbs: 2 cols on very small screens */
+          .lp-thumbs { grid-template-columns: repeat(2,1fr) !important; }
+        }
+      `}</style>
+
+      <a href={waUrl} target="_blank" rel="noopener noreferrer" className="lp-wa" aria-label="WhatsApp">
+        <Phone size={26} color="#fff" />
+        <div className="lp-wa-ping" />
+      </a>
+
+      {/* MODAL VIDEO */}
+      {playingVideo !== null && (
+        <div className="lp-modal" onClick={() => setPlayingVideo(null)}>
+          <div className="lp-modal-inner" onClick={e => e.stopPropagation()}>
+            <button className="lp-modal-x" onClick={() => setPlayingVideo(null)}><X size={18} color="#1c1917" /></button>
+            <iframe src={getEmbedUrl(VIDEOS[playingVideo].url)} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title={VIDEOS[playingVideo].title} />
+          </div>
+        </div>
+      )}
+
+      {/* NAV */}
+      <nav className={`lp-nav ${isScrolled ? 'scrolled' : ''}`} style={{ background: isScrolled ? undefined : 'transparent' }}>
+        <div className="lp-nav-inner">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ position: 'relative', width: 42, height: 42 }}>
+              <Image src="/images/logo.png?v=2" alt="Logo" fill style={{ objectFit: 'contain' }} priority unoptimized />
+            </div>
+            <div>
+              <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 16, color: '#1c1917', lineHeight: 1.1 }}>Jugando Aprendo</p>
+              <p style={{ fontSize: 10, color: '#a8a29e', fontWeight: 600 }}>Centro de Desarrollo Infantil · Pisco</p>
+            </div>
+          </div>
+          <div className="lp-nav-links">
+            <a href="#para-padres">Para Padres</a>
+            <a href="#aria">Asistente ARIA</a>
+            <a href="#servicios">Servicios</a>
+            <a href="#juegos">🎮 Juegos</a>
+            <a href="#galeria">Galería</a>
+            <a href="#faq">Preguntas</a>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <Link href="/login" className="lp-btn-fill">Ingresar</Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* HERO */}
+      <header className="lp-hero">
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle,rgba(249,115,22,.08) 2px,transparent 2px)', backgroundSize: '40px 40px' }} />
+        <div style={{ position: 'absolute', width: 500, height: 500, background: 'radial-gradient(circle,rgba(251,191,36,.14) 0%,transparent 70%)', top: -140, right: -60, borderRadius: '50%' }} />
+        <div style={{ position: 'absolute', width: 340, height: 340, background: 'radial-gradient(circle,rgba(16,185,129,.1) 0%,transparent 70%)', bottom: -80, left: -60, borderRadius: '50%' }} />
+        {/* Floating shapes */}
+        <div style={{ position: 'absolute', top: 90, left: '8%', width: 56, height: 56, background: '#fef08a', borderRadius: '50%', opacity: .55, animation: 'shapeFloat1 6s ease-in-out infinite' }} />
+        <div style={{ position: 'absolute', bottom: 130, right: '10%', width: 38, height: 38, background: '#bbf7d0', borderRadius: '12px', opacity: .6, animation: 'shapeFloat2 5s ease-in-out infinite 1s', transform: 'rotate(25deg)' }} />
+        <div style={{ position: 'absolute', top: '40%', left: '4%', width: 26, height: 26, background: '#fecdd3', borderRadius: '50%', opacity: .7, animation: 'shapeFloat1 7s ease-in-out infinite .5s' }} />
+
+        <div className="lp-hero-inner">
+          <div style={{ animation: 'lp-up .6s ease both' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff7ed', border: '2px solid #fed7aa', borderRadius: 99, padding: '6px 16px', fontFamily: "'Baloo 2',cursive", fontSize: 13, fontWeight: 700, color: '#c2410c', marginBottom: 18 }}>
+              <Heart size={13} style={{ fill: 'currentColor' }} /> Terapia · Tecnología · Amor
+            </div>
+            <h1 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(34px,5vw,58px)', fontWeight: 800, lineHeight: 1.15, color: '#1c1917', marginBottom: 18 }}>
+              Impulsando el potencial de{' '}
+              <span style={{ color: '#f97316', position: 'relative', display: 'inline-block' }}>
+                mentes brillantes.
+                <span style={{ position: 'absolute', bottom: 3, left: 0, right: 0, height: 7, background: '#fef08a', borderRadius: 99, zIndex: -1 }} />
+              </span>
+            </h1>
+            <p style={{ fontSize: 17, color: '#57534e', lineHeight: 1.85, marginBottom: 32, maxWidth: 480 }}>
+              Centro especializado en neurodivergencia en Pisco. Combinamos terapia ABA basada en evidencia, seguimiento digital en tiempo real y la calidez de nuestro equipo.
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 36 }}>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn-wa">
+                <Phone size={16} /> Contáctanos
+              </a>
+              <button className="btn-outline" onClick={() => document.getElementById('para-padres')?.scrollIntoView({ behavior: 'smooth' })}>
+                <Sparkles size={16} color="#f97316" /> ¿Qué ofrecemos?
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+              {[
+                { bg: '#dcfce7', icon: <CheckCircle size={16} color="#16a34a" />, label: 'Metodología ABA' },
+                { bg: '#fef9c3', icon: <Star size={16} color="#ca8a04" fill="#ca8a04" />, label: '+50 Familias' },
+                { bg: '#fce7f3', icon: <Brain size={16} color="#db2777" />, label: 'IA Incluida' },
+              ].map(({ bg, icon, label }) => (
+                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 36, height: 36, background: bg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
+                  <span style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 13, color: '#44403c' }}>{label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ position: 'relative', animation: 'lp-up .7s .15s ease both' }}>
+            <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 28px 72px rgba(0,0,0,.14)', aspectRatio: '4/3', position: 'relative', border: '5px solid #fff', transition: 'transform .4s' }}
+              onMouseEnter={e => (e.currentTarget.style.transform = 'rotate(0deg)')}
+              onMouseLeave={e => (e.currentTarget.style.transform = '')}>
+              <Image src="/images/hero-image.jpg?v=2" alt="Niños en terapia ABA" fill style={{ objectFit: 'cover' }} priority unoptimized />
+            </div>
+            <div style={{ position: 'absolute', top: 18, left: 10, background: '#fff', borderRadius: 14, padding: '10px 14px', boxShadow: '0 8px 28px rgba(0,0,0,.1)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#1c1917', border: '2px solid #fef3c7' }}>
+              <div style={{ width: 30, height: 30, background: '#fef9c3', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Brain size={15} color="#d97706" /></div>
+              Metodología ABA
+            </div>
+            <div style={{ position: 'absolute', bottom: 18, right: 10, background: '#fff', borderRadius: 14, padding: '10px 14px', boxShadow: '0 8px 28px rgba(0,0,0,.1)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#1c1917', border: '2px solid #d1fae5' }}>
+              <CheckCircle size={18} color="#10b981" style={{ flexShrink: 0 }} /> 100% Personalizado
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* STATS */}
+      <div ref={statsRef} style={{ background: '#fff', borderTop: '1.5px solid #fef3c7', borderBottom: '1.5px solid #fef3c7', padding: '48px 20px' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 24 }} className="lp-stats-inner">
+          {[
+            { num: `+${count50}`, lbl: 'Familias felices', icon: '👨‍👩‍👧' },
+            { num: '100%', lbl: 'Personalizado', icon: '🎯' },
+            { num: 'ABA', lbl: 'Metodología', icon: '🧠' },
+            { num: 'Pisco', lbl: 'Sede Central', icon: '📍' },
+          ].map(({ num, lbl, icon }) => (
+            <div key={lbl} style={{ textAlign: 'center', padding: '24px 16px', background: '#fff7ed', borderRadius: 20, border: '2px solid #fed7aa' }}>
+              <div style={{ fontSize: 28, marginBottom: 6 }}>{icon}</div>
+              <div style={{ fontFamily: "'Baloo 2',cursive", fontSize: 38, fontWeight: 800, color: '#f97316', lineHeight: 1, marginBottom: 6 }}>{num}</div>
+              <div style={{ fontSize: 12, color: '#a8a29e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{lbl}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* PARA PADRES */}
+      <section id="para-padres" className="lp-section" style={{ background: '#fffbf5' }}>
+        <div className="lp-inner">
+          <div style={{ textAlign: 'center', marginBottom: 52 }}>
+            <div className="lp-tag"><Heart size={12} /> Para las familias</div>
+            <h2 className="lp-h2">Todo lo que brindamos<br/>a los padres</h2>
+            <p className="lp-sub" style={{ margin: '0 auto' }}>Acompañar a tu hijo es un camino compartido. Herramientas digitales y humanas para que siempre estés informado, empoderado y parte activa del proceso.</p>
+          </div>
+          <div className="lp-grid-4">
+            {benefits.map(({ icon, bg, title, desc }) => (
+              <div key={title} className="lp-benefit-card">
+                <div style={{ width: 48, height: 48, borderRadius: 14, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>{icon}</div>
+                <h4 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 15, fontWeight: 700, color: '#1c1917', marginBottom: 6 }}>{title}</h4>
+                <p style={{ fontSize: 13, color: '#78716c', lineHeight: 1.7 }}>{desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* ── MINI-JUEGO PARA NIÑOS ───────────────────────── */}
+          <div style={{ marginTop: 64, background: 'linear-gradient(135deg,#fff7ed 0%,#fef9f0 100%)', border: '3px dashed #fed7aa', borderRadius: 28, padding: '40px 28px', position: 'relative', overflow: 'hidden' }}>
+            {/* Decorative shapes */}
+            <div style={{ position:'absolute', top:-28, right:-28, width:110, height:110, background:'#fef08a', borderRadius:'50%', opacity:.35, pointerEvents:'none' }} />
+            <div style={{ position:'absolute', bottom:-20, left:-20, width:80, height:80, background:'#bbf7d0', borderRadius:'50%', opacity:.4, pointerEvents:'none' }} />
+
+            <div style={{ textAlign:'center', marginBottom:28, position:'relative', zIndex:1 }}>
+              <div style={{ display:'inline-flex', alignItems:'center', gap:7, background:'#fff', border:'2.5px solid #fed7aa', color:'#c2410c', borderRadius:99, padding:'5px 18px', fontFamily:"'Baloo 2',cursive", fontSize:12, fontWeight:700, marginBottom:12 }}>
+                🎮 Juego Educativo para los Peques
+              </div>
+              <h3 style={{ fontFamily:"'Baloo 2',cursive", fontSize:'clamp(20px,3vw,28px)', fontWeight:800, color:'#1c1917', marginBottom:8 }}>
+                ¡Juego de Memoria! 🧠✨
+              </h3>
+              <p style={{ color:'#78716c', fontSize:14, lineHeight:1.7, maxWidth:420, margin:'0 auto' }}>
+                Mientras usas la plataforma, ¡tu hijo/a puede jugar! Voltea las tarjetas y encuentra los pares iguales.
+              </p>
+              <div style={{ display:'flex', justifyContent:'center', gap:24, marginTop:14, flexWrap:'wrap' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:"'Baloo 2',cursive", fontWeight:700, fontSize:13, color:'#78716c' }}>
+                  🎯 Movimientos: <span style={{ color:'#f97316', fontSize:16 }}>{gameMoves}</span>
+                </div>
+                <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:"'Baloo 2',cursive", fontWeight:700, fontSize:13, color:'#78716c' }}>
+                  ✅ Pares: <span style={{ color:'#10b981', fontSize:16 }}>{matchedPairs.length}/{EMOJIS.length}</span>
+                </div>
+              </div>
+            </div>
+
+            {gameWon ? (
+              <div style={{ textAlign:'center', padding:'32px 20px', position:'relative', zIndex:1 }}>
+                <div style={{ fontSize:64, marginBottom:12, animation:'ariaFloat 2s ease-in-out infinite' }}>🏆</div>
+                <h3 style={{ fontFamily:"'Baloo 2',cursive", fontWeight:800, fontSize:24, color:'#f97316', marginBottom:6 }}>¡Ganaste! 🎉</h3>
+                <p style={{ color:'#78716c', fontSize:14, marginBottom:20 }}>Completaste el juego en <strong>{gameMoves} movimientos</strong>. ¡Excelente memoria!</p>
+                <button onClick={resetGame} style={{ display:'inline-flex', alignItems:'center', gap:8, padding:'12px 28px', background:'linear-gradient(135deg,#f97316,#ea580c)', color:'#fff', border:'none', borderRadius:99, fontFamily:"'Baloo 2',cursive", fontWeight:700, fontSize:15, cursor:'pointer', boxShadow:'0 6px 20px rgba(249,115,22,.35)' }}>
+                  🔄 Jugar de nuevo
+                </button>
+              </div>
+            ) : (
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'clamp(8px,2vw,14px)', maxWidth:480, margin:'0 auto', position:'relative', zIndex:1 }}>
+                {gameCards.map(card => {
+                  const isFlipped = flippedIds.includes(card.id) || matchedPairs.includes(card.pairId)
+                  const isMatched = matchedPairs.includes(card.pairId)
+                  return (
+                    <div
+                      key={card.id}
+                      onClick={() => handleCardClick(card)}
+                      style={{
+                        aspectRatio:'1', borderRadius:16,
+                        display:'flex', alignItems:'center', justifyContent:'center',
+                        fontSize:'clamp(22px,5vw,34px)',
+                        cursor: isMatched ? 'default' : 'pointer',
+                        userSelect:'none',
+                        transition:'all .25s cubic-bezier(.34,1.56,.64,1)',
+                        transform: isFlipped ? 'rotateY(0deg) scale(1)' : 'rotateY(0deg)',
+                        background: isMatched
+                          ? 'linear-gradient(135deg,#d1fae5,#a7f3d0)'
+                          : isFlipped
+                            ? '#fff'
+                            : 'linear-gradient(135deg,#f97316,#ea580c)',
+                        border: isMatched
+                          ? '3px solid #10b981'
+                          : isFlipped
+                            ? '3px solid #fed7aa'
+                            : '3px solid #fb923c',
+                        boxShadow: isMatched
+                          ? '0 4px 16px rgba(16,185,129,.2)'
+                          : isFlipped
+                            ? '0 8px 24px rgba(249,115,22,.2)'
+                            : '0 4px 14px rgba(249,115,22,.25)',
+                      }}
+                    >
+                      {isFlipped
+                        ? <span style={{ filter: isMatched ? 'none' : 'none' }}>{card.emoji}</span>
+                        : <span style={{ fontSize:'clamp(18px,4vw,26px)', filter:'brightness(0) invert(1)', opacity:.6 }}>❓</span>
+                      }
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {!gameWon && (
+              <div style={{ textAlign:'center', marginTop:22, position:'relative', zIndex:1 }}>
+                <button onClick={resetGame} style={{ background:'none', border:'2px solid #fed7aa', color:'#c2410c', borderRadius:99, padding:'7px 20px', fontFamily:"'Baloo 2',cursive", fontWeight:700, fontSize:13, cursor:'pointer', transition:'all .2s' }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background='#fff7ed' }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background='none' }}>
+                  🔄 Reiniciar juego
+                </button>
+              </div>
+            )}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 48 }}>
+            <Link href="/login?mode=signup" className="btn-orange" style={{ display: 'inline-flex' }}>
+              Accede a la plataforma de padres <ArrowRight size={16} />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIOS */}
+      <section style={{ background: '#fff7ed', padding: '80px 20px' }}>
+        <div className="lp-inner">
+          <div style={{ textAlign: 'center', marginBottom: 52 }}>
+            <div className="lp-tag"><Quote size={12} /> Familias reales</div>
+            <h2 className="lp-h2">Resultados que hablan por sí solos</h2>
+          </div>
+          <div className="lp-grid-3">
+            {testimonials.map(({ name, desc, a, color, text }) => (
+              <div key={name} className="lp-testi-card">
+                <div style={{ display: 'flex', gap: 3, marginBottom: 12 }}>
+                  {[1,2,3,4,5].map(i => <Star key={i} size={14} color="#f59e0b" fill="#f59e0b" />)}
+                </div>
+                <p style={{ color: '#44403c', fontSize: 14, lineHeight: 1.85, marginBottom: 20, fontStyle: 'italic' }}>&ldquo;{text}&rdquo;</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 14, background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 18, color: '#fff' }}>{a}</div>
+                  <div>
+                    <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, color: '#1c1917' }}>{name}</p>
+                    <p style={{ fontSize: 11, color: '#a8a29e' }}>{desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: 44 }}>
+            <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn-orange" style={{ display: 'inline-flex' }}>
+              Quiero resultados para mi hijo/a <ArrowRight size={16} />
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* ── ASISTENTE ARIA ─────────────────────────────────────── */}
+      <section id="aria" style={{ background: '#fff', padding: '72px 20px', position: 'relative', overflow: 'hidden' }}>
+        {/* Subtle bg pattern */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle, rgba(249,115,22,.04) 1px, transparent 1px)', backgroundSize: '28px 28px', pointerEvents: 'none' }} />
+        {/* Orange glow top right */}
+        <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(249,115,22,.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+
+        <div style={{ maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 40 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#fff7ed', border: '2px solid #fed7aa', color: '#c2410c', borderRadius: 99, padding: '5px 16px', fontFamily: "'Baloo 2',cursive", fontSize: 12, fontWeight: 700, marginBottom: 14 }}>
+              <Sparkles size={13} /> Inteligencia Artificial
+            </div>
+            <h2 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(26px,4vw,46px)', fontWeight: 800, color: '#1c1917', lineHeight: 1.15, marginBottom: 12 }}>
+              Conoce a <span style={{ color: '#f97316' }}>ARIA</span>
+            </h2>
+            <p style={{ color: '#78716c', fontSize: 15, lineHeight: 1.75, maxWidth: 520, margin: '0 auto' }}>
+              Tu asistente clínica inteligente. Aprende de los registros diarios de tu hijo y te acompaña 24/7 entre sesiones.
+            </p>
+          </div>
+
+          {/* Layout: cards left | chat right */}
+          <div style={{ display: 'grid', gap: 48, alignItems: 'center' }} className="lp-ia-layout">
+            {/* LEFT: Feature cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {/* Mobile: 2-col grid | Desktop: stacked list */}
+              <div className="aria-cards-grid">
+                {[
+                  { icon: <LineChart size={18} color="#f97316" />, bg: '#fff7ed', border: '#fed7aa', title: 'Seguimiento Preciso', desc: 'ARIA analiza tendencias conductuales sesión a sesión.' },
+                  { icon: <MessageSquareHeart size={18} color="#10b981" />, bg: '#f0fdf4', border: '#bbf7d0', title: 'Apoyo 24/7', desc: 'Resúmenes sencillos y recomendaciones para reforzar en casa.' },
+                  { icon: <Brain size={18} color="#8b5cf6" />, bg: '#faf5ff', border: '#e9d5ff', title: 'Progreso Visible', desc: 'Gráficos del avance en tiempo real de cada sesión.' },
+                  { icon: <Zap size={18} color="#f59e0b" />, bg: '#fffbeb', border: '#fde68a', title: 'Respuestas Rápidas', desc: 'Pregúntale a ARIA sobre actividades o dudas al instante.' },
+                ].map(({ icon, bg, border, title, desc }) => (
+                  <div key={title} className="aria-card" style={{ background: '#fff', border: `2px solid ${border}`, borderRadius: 16, padding: '16px', display: 'flex', gap: 12, alignItems: 'flex-start', transition: 'all .3s', boxShadow: '0 2px 12px rgba(0,0,0,.04)' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 28px rgba(249,115,22,.1)'; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = '0 2px 12px rgba(0,0,0,.04)'; }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 12, background: bg, border: `1.5px solid ${border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
+                    <div>
+                      <h4 style={{ fontFamily: "'Baloo 2',cursive", color: '#1c1917', fontWeight: 700, fontSize: 14, marginBottom: 4 }}>{title}</h4>
+                      <p style={{ color: '#78716c', fontSize: 12, lineHeight: 1.6 }}>{desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <Link href="/login?mode=signup" className="btn-orange" style={{ display: 'inline-flex' }}>
+                  Habla con ARIA ahora <ArrowRight size={16} />
+                </Link>
+              </div>
+            </div>
+
+            {/* RIGHT: Chat illustration — hidden on mobile via CSS */}
+            <div className="aria-chat-panel" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+              <div style={{ background: '#f8fafc', border: '2px solid #f1f5f9', borderRadius: 28, padding: '28px 24px', width: '100%', maxWidth: 380, boxShadow: '0 20px 60px rgba(0,0,0,.06)' }}>
+                {/* Header bar */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, paddingBottom: 18, borderBottom: '1.5px solid #f1f5f9' }}>
+                  <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'linear-gradient(135deg,#f97316,#ea580c)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(249,115,22,.3)' }}>
+                    <Brain size={22} color="#fff" />
+                  </div>
+                  <div>
+                    <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 15, color: '#1c1917' }}>ARIA</p>
+                    <p style={{ fontSize: 11, color: '#22c55e', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} /> En línea · 24/7
+                    </p>
+                  </div>
+                  <div style={{ marginLeft: 'auto', display: 'flex', gap: 5 }}>
+                    {['#ef4444','#f59e0b','#22c55e'].map((c,i) => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
+                  </div>
+                </div>
+                <ARIAChatIllustration />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* GALERÍA DE IMÁGENES */}
+      <section id="galeria" className="lp-section" style={{ background: '#fffbf5' }}>
+        <div className="lp-inner">
+          <div style={{ textAlign: 'center', marginBottom: 44 }}>
+            <div className="lp-tag"><ImageIcon size={12} /> Galería de fotos</div>
+            <h2 className="lp-h2">Nuestro centro en imágenes</h2>
+            <p className="lp-sub" style={{ margin: '0 auto' }}>Conoce el ambiente seguro, cálido y estimulante donde los niños aprenden y crecen.</p>
+          </div>
+          <div className="lp-gallery-main">
+            <Image src={imgs[activeImg].src} alt={imgs[activeImg].caption} fill style={{ objectFit: 'cover' }} unoptimized />
+            <div className="lp-gallery-caption">{imgs[activeImg].caption}</div>
+            <button className="lp-gallery-btn" style={{ left: 12 }} onClick={() => setActiveImg((activeImg - 1 + 4) % 4)}><ChevronLeft size={18} color="#1c1917" /></button>
+            <button className="lp-gallery-btn" style={{ right: 12 }} onClick={() => setActiveImg((activeImg + 1) % 4)}><ChevronRight size={18} color="#1c1917" /></button>
+            <div style={{ position: 'absolute', bottom: 48, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: 7 }}>
+              {[0,1,2,3].map(i => <div key={i} onClick={() => setActiveImg(i)} style={{ width: 8, height: 8, borderRadius: '50%', background: activeImg === i ? '#fff' : 'rgba(255,255,255,.4)', cursor: 'pointer', transition: 'all .2s', transform: activeImg === i ? 'scale(1.3)' : 'scale(1)' }} />)}
+            </div>
+          </div>
+          <div className="lp-thumbs">
+            {imgs.map((img, i) => (
+              <div key={i} className={`lp-thumb ${activeImg === i ? 'active' : ''}`} onClick={() => setActiveImg(i)}>
+                <Image src={img.src} alt={img.caption} fill style={{ objectFit: 'cover' }} unoptimized />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* GALERÍA DE VIDEOS — OCULTO TEMPORALMENTE */}
+      {false && <section className="lp-section" style={{ background: '#fff7ed' }}>
+        <div className="lp-inner">
+          <div style={{ textAlign: 'center', marginBottom: 44 }}>
+            <div className="lp-tag"><Video size={12} /> Videos</div>
+            <h2 className="lp-h2">Conoce cómo trabajamos</h2>
+            <p className="lp-sub" style={{ margin: '0 auto' }}>Mira nuestros métodos, conoce familias reales y entiende cómo ARIA potencia cada sesión.</p>
+          </div>
+
+          <div className="lp-grid-3">
+            {VIDEOS.map((v, i) => {
+              const pl = getPlatformLabel(v.url)
+              return (
+                <div key={i} className="lp-video-card" onClick={() => setPlayingVideo(i)}>
+                  <div className="lp-video-thumb">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={getThumbUrl(v.url)} alt={v.title} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <div className="lp-video-overlay">
+                      <div className="lp-play-btn">
+                        <Play size={20} color="#f97316" fill="#f97316" style={{ marginLeft: 3 }} />
+                      </div>
+                    </div>
+                    {/* Platform badge */}
+                    <div style={{ position: 'absolute', top: 10, left: 10, background: pl.color, color: '#fff', borderRadius: 6, padding: '3px 10px', fontSize: 11, fontFamily: "'Baloo 2',cursive", fontWeight: 700 }}>{pl.label}</div>
+                  </div>
+                  <div style={{ padding: '18px 20px' }}>
+                    <h4 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 15, fontWeight: 700, color: '#1c1917', marginBottom: 5 }}>{v.title}</h4>
+                    <p style={{ fontSize: 13, color: '#a8a29e' }}>{v.desc}</p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+
+          <div style={{ marginTop: 24, background: '#fff', borderRadius: 18, padding: '24px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, border: '2px solid #fef3c7' }}>
+            <div>
+              <h4 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 16, color: '#1c1917', marginBottom: 3 }}>¿Quieres ver más contenido?</h4>
+              <p style={{ color: '#78716c', fontSize: 13 }}>Síguenos en redes para actividades, consejos y novedades.</p>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="btn-orange" style={{ padding: '9px 18px', fontSize: 13 }}><Facebook size={15} /> Facebook</a>
+              <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 18px', background: 'linear-gradient(135deg,#f43f5e,#ec4899)', color: '#fff', borderRadius: 99, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 13, textDecoration: 'none' }}><Instagram size={15} /> Instagram</a>
+            </div>
+          </div>
+        </div>
+      </section>}
+
+      {/* SERVICIOS */}
+      <section id="servicios" className="lp-section" style={{ background: '#fffbf5' }}>
+        <div className="lp-inner">
+          <div style={{ textAlign: 'center', marginBottom: 52 }}>
+            <div className="lp-tag"><Star size={12} /> Nuestros Servicios</div>
+            <h2 className="lp-h2">Soluciones integrales para el desarrollo</h2>
+          </div>
+          <div className="lp-grid-3">
+            <div className="lp-svc-card">
+              <div style={{ width: 56, height: 56, background: '#dbeafe', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Brain size={26} color="#2563eb" /></div>
+              <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#1c1917', marginBottom: 10 }}>Terapia ABA</h3>
+              <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>Intervención basada en evidencia para mejorar habilidades sociales, comunicación y aprendizaje.</p>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#f97316', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contáctanos <ArrowRight size={15} /></a>
+            </div>
+            <div className="lp-svc-card featured">
+              <div style={{ position: 'absolute', top: 16, right: 16, background: '#fbbf24', color: '#1c1917', fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 99, fontFamily: "'Baloo 2',cursive" }}>Popular</div>
+              <div style={{ width: 56, height: 56, background: 'rgba(255,255,255,.2)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Users size={26} color="#fff" /></div>
+              <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Habilidades Sociales</h3>
+              <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>Talleres grupales donde los niños aprenden a interactuar en un entorno seguro y lúdico.</p>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#fff', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contáctanos <ArrowRight size={15} /></a>
+            </div>
+            <div className="lp-svc-card">
+              <div style={{ width: 56, height: 56, background: '#dcfce7', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Calendar size={26} color="#16a34a" /></div>
+              <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#1c1917', marginBottom: 10 }}>Escuela para Padres</h3>
+              <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>Capacitación constante para que las familias sean parte activa del proceso de desarrollo.</p>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#10b981', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Más información <ArrowRight size={15} /></a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* EQUIPO — OCULTO TEMPORALMENTE */}
+      {false && <section className="lp-section" style={{ background: '#fff7ed' }}>
+        <div className="lp-inner">
+          <div style={{ textAlign: 'center', marginBottom: 52 }}>
+            <div className="lp-tag"><Heart size={12} /> Nuestro Equipo</div>
+            <h2 className="lp-h2">Profesionales que aman lo que hacen</h2>
+          </div>
+          <div className="lp-grid-3">
+            {[
+              { i: 'S', color: 'linear-gradient(135deg,#f97316,#ea580c)', name: 'Terapeuta Principal', role: 'Especialista en Análisis Conductual Aplicado (ABA)', spec: 'Autismo · TDAH · TEA' },
+              { i: 'A', color: 'linear-gradient(135deg,#0ea5e9,#0284c7)', name: 'Psicóloga Clínica', role: 'Evaluación y diagnóstico neuropsicológico infantil', spec: 'Evaluaciones · Reportes · Familias' },
+              { i: 'M', color: 'linear-gradient(135deg,#10b981,#059669)', name: 'Coordinadora', role: 'Gestión de casos y seguimiento familiar', spec: 'Comunicación · Agenda · Soporte' },
+            ].map(({ i, color, name, role, spec }) => (
+              <div key={name} className="lp-team-card">
+                <div style={{ width: 76, height: 76, borderRadius: 22, background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 28, color: '#fff', margin: '0 auto 14px' }}>{i}</div>
+                <h3 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 17, color: '#1c1917', marginBottom: 5 }}>{name}</h3>
+                <p style={{ fontSize: 13, color: '#78716c', lineHeight: 1.7, marginBottom: 10 }}>{role}</p>
+                <div style={{ display: 'inline-block', background: '#fff7ed', border: '1.5px solid #fed7aa', color: '#c2410c', borderRadius: 99, padding: '3px 12px', fontSize: 11, fontFamily: "'Baloo 2',cursive", fontWeight: 700 }}>{spec}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>}
+
+      {/* ── JUEGOS ABA ─────────────────────────────────────────────────── */}
+      <section id="juegos" style={{ background: 'linear-gradient(160deg,#fff7ed 0%,#fffbf5 60%,#f0fdf4 100%)', padding: '80px 20px', position: 'relative', overflow: 'hidden' }}>
+        {/* Decorative bg dots */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle,rgba(249,115,22,.05) 2px,transparent 2px)', backgroundSize: '36px 36px', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 260, height: 260, background: 'radial-gradient(circle,rgba(251,191,36,.12),transparent 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: -40, width: 200, height: 200, background: 'radial-gradient(circle,rgba(16,185,129,.08),transparent 70%)', borderRadius: '50%', pointerEvents: 'none' }} />
+
+        <div className="lp-inner" style={{ position: 'relative', zIndex: 1 }}>
+          {/* Header */}
+          <div style={{ textAlign: 'center', marginBottom: 52 }}>
+            <div className="lp-tag"><Brain size={12} /> Juegos Terapéuticos</div>
+            <h2 className="lp-h2">Aprende jugando 🎮</h2>
+            <p className="lp-sub" style={{ margin: '0 auto' }}>Juegos diseñados con metodología ABA para trabajar emociones, vocabulario, atención e instrucciones. Cada juego se adapta al nivel del niño/a.</p>
+          </div>
+
+          {/* Layout: descripción izq | juego der */}
+          <div style={{ display: 'grid', gap: 40, alignItems: 'start' }} className="lp-ia-layout">
+            {/* LEFT: columna informativa */}
+            <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 28 }}>
+                {GAMES_INFO.map(g => (
+                  <div key={g.id} style={{ background: '#fff', border: `2px solid ${g.border}`, borderRadius: 16, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ width: 44, height: 44, background: g.bg, border: `1.5px solid ${g.border}`, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>{g.emoji}</div>
+                    <div>
+                      <div style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 13, color: '#1c1917', marginBottom: 2 }}>{g.title}</div>
+                      <div style={{ fontSize: 11, color: '#78716c' }}>{g.desc}</div>
+                    </div>
+                    <div style={{ marginLeft: 'auto', background: g.bg, border: `1.5px solid ${g.border}`, color: g.color, borderRadius: 99, padding: '2px 8px', fontSize: 9, fontFamily: "'Baloo 2',cursive", fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0 }}>ABA</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background: '#fff7ed', border: '2px solid #fed7aa', borderRadius: 16, padding: '18px 20px' }}>
+                <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 13, color: '#c2410c', marginBottom: 6 }}>🎯 ¿Para qué sirve?</p>
+                <p style={{ fontSize: 13, color: '#78716c', lineHeight: 1.7 }}>Cada juego refuerza habilidades trabajadas en las sesiones de terapia. Los 3 niveles se adaptan a la etapa del desarrollo del niño/a, desde los 2 años hasta los 12+.</p>
+              </div>
+            </div>
+
+            {/* RIGHT: panel del juego */}
+            <div style={{ background: '#fff', border: '2.5px solid #fef3c7', borderRadius: 28, padding: '28px 24px', boxShadow: '0 20px 60px rgba(249,115,22,.08)' }}>
+              {/* Header del panel */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22, paddingBottom: 18, borderBottom: '1.5px solid #fef3c7' }}>
+                <div style={{ width: 40, height: 40, background: 'linear-gradient(135deg,#f97316,#ea580c)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>🎮</div>
+                <div>
+                  <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 15, color: '#1c1917' }}>Zona de Juegos</p>
+                  <p style={{ fontSize: 11, color: '#a8a29e' }}>Elige un juego para comenzar</p>
+                </div>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 5 }}>
+                  {['#ef4444','#f59e0b','#22c55e'].map((c,i) => <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: c }} />)}
+                </div>
+              </div>
+              <GameHub />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section id="faq" className="lp-section" style={{ background: '#fffbf5' }}>
+        <div className="lp-inner" style={{ maxWidth: 760 }}>
+          <div style={{ textAlign: 'center', marginBottom: 48 }}>
+            <div className="lp-tag"><HelpCircle size={12} /> Preguntas Frecuentes</div>
+            <h2 className="lp-h2">Resolvemos tus dudas</h2>
+          </div>
+          {[
+            { q: '¿A qué edad pueden empezar las terapias?', a: 'Atendemos niños desde los 1 año en adelante. La intervención temprana es clave. Nuestro equipo adapta las sesiones según la edad y necesidades de cada niño.' },
+            { q: '¿Cómo puedo empezar?', a: 'Es muy sencillo. Contáctanos por WhatsApp y nuestro equipo te orientará sobre el proceso de admisión y los servicios que mejor se adaptan a las necesidades de tu hijo/a.' },
+            { q: '¿Cómo veo el progreso de mi hijo?', a: 'A través de nuestra plataforma verás reportes diarios, gráficos de avance y observaciones de cada sesión. ARIA genera resúmenes semanales en lenguaje sencillo.' },
+            { q: '¿Qué metodología utilizan?', a: 'Trabajamos con la metodología ABA (Applied Behavior Analysis), reconocida como el enfoque más efectivo con respaldo científico para la neurodivergencia.' },
+            { q: '¿Qué incluye la plataforma para padres?', a: 'Incluye: reportes diarios, gráficos de progreso, chat con el equipo, asistente ARIA 24/7, agenda de citas, biblioteca de recursos y notificaciones en tiempo real.' },
+          ].map((faq, i) => (
+            <div key={i} className={`lp-faq-item ${activeAccordion === i ? 'open' : ''}`} onClick={() => setActiveAccordion(activeAccordion === i ? null : i)}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 22px' }}>
+                <h4 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 15, fontWeight: 700, color: '#1c1917', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 28, height: 28, background: '#fff7ed', border: '2px solid #fed7aa', borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#f97316', flexShrink: 0 }}>{i+1}</span>
+                  {faq.q}
+                </h4>
+                <ChevronDown size={19} color="#a8a29e" style={{ transform: activeAccordion === i ? 'rotate(180deg)' : '', transition: 'transform .3s', flexShrink: 0 }} />
+              </div>
+              {activeAccordion === i && <div style={{ padding: '0 22px 20px', fontSize: 14, color: '#78716c', lineHeight: 1.8 }}>{faq.a}</div>}
+            </div>
+          ))}
+
+          <div style={{ marginTop: 44, background: 'linear-gradient(135deg,#f97316,#ea580c)', borderRadius: 22, padding: '38px 32px', textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 10 }}>🌟</div>
+            <h3 style={{ fontFamily: "'Baloo 2',cursive", color: '#fff', fontWeight: 800, fontSize: 22, marginBottom: 8 }}>¿Listo para dar el primer paso?</h3>
+            <p style={{ color: 'rgba(255,255,255,.8)', fontSize: 14, marginBottom: 24 }}>Escríbenos hoy y da el primer paso hacia el desarrollo de tu hijo/a.</p>
+            <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '13px 28px', background: '#fff', color: '#f97316', borderRadius: 99, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
+              <Phone size={17} /> Hablar con un especialista
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* MAPA */}
+      <section id="ubicacion" className="lp-map-section">
+        <div style={{ position: 'relative', height: 340 }}>
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3876.4229091779425!2d-76.0288421240214!3d-13.692817174731204!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91104331c0093305%3A0x21adbeb7d8eb168d!2sC.%20Victor%20Raul%20Haya%20de%20la%20Torre%2C%2011641!5e0!3m2!1ses-419!2spe!4v1770256602309!5m2!1ses-419!2spe"
+            width="100%" height="100%" style={{ border: 0, position: 'absolute', inset: 0 }} allowFullScreen loading="lazy" title="Ubicación" />
+        </div>
+        <div className="lp-map-card">
+          <h3 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 20, color: '#1c1917', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 7 }}>
+            <MapPin color="#ef4444" size={20} /> Visítanos
+          </h3>
+          <p style={{ color: '#78716c', fontSize: 13, lineHeight: 1.75, marginBottom: 18 }}>Independencia, Pisco. Un ambiente seguro y adaptado para tus hijos.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 20 }}>
+            {[
+              { icon: <Clock size={15} color="#f97316" />, text: <><strong>Lun - Vie:</strong> 8:00 AM - 6:00 PM</> },
+              { icon: <Phone size={15} color="#25d366" />, text: '+51 924 807 183' },
+              { icon: <Mail size={15} color="#f59e0b" />, text: 'tallerjugandoaprendoind@gmail.com' },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 9, fontSize: 13, color: '#44403c' }}>
+                {item.icon}<span>{item.text}</span>
+              </div>
+            ))}
+          </div>
+          <a href="https://maps.app.goo.gl/fv9HhtWj5R45a5paA" target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '12px', background: 'linear-gradient(135deg,#f97316,#ea580c)', color: '#fff', borderRadius: 99, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 13, textDecoration: 'none' }}>
+            <MapPin size={16} /> Ver en Google Maps
+          </a>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="lp-footer">
+        <div className="lp-footer-inner">
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+              <div style={{ position: 'relative', width: 40, height: 40 }}>
+                <Image src="/images/logo.png?v=2" alt="Logo" fill style={{ objectFit: 'contain' }} unoptimized />
+              </div>
+              <span style={{ fontFamily: "'Baloo 2',cursive", color: '#fff', fontWeight: 800, fontSize: 17 }}>Jugando Aprendo</span>
+            </div>
+            <p style={{ fontSize: 13, lineHeight: 1.75, marginBottom: 18 }}>Centro especializado en terapia ABA y desarrollo infantil potenciado por IA. Pisco, Ica, Perú.</p>
+            <div>
+              <a href="https://www.facebook.com" className="lp-social" aria-label="Facebook"><Facebook size={15} /></a>
+              <a href="https://www.instagram.com" className="lp-social" aria-label="Instagram"><Instagram size={15} /></a>
+            </div>
+          </div>
+          <div>
+            <h4>Servicios</h4>
+            <ul>
+              {['Terapia ABA','Habilidades Sociales','Escuela para Padres','Evaluación Gratuita'].map(s => <li key={s}><a href={waUrl}>{s}</a></li>)}
+            </ul>
+          </div>
+          <div>
+            <h4>Plataforma</h4>
+            <ul>
+              <li><a href="/login">Ingresar</a></li>
+              <li><a href="/login?mode=signup">Registrarse</a></li>
+              <li><a href="#para-padres">Para Padres</a></li>
+              <li><a href="#aria">Asistente ARIA</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4>Horarios</h4>
+            <p style={{ fontSize: 13, marginBottom: 6 }}>Lun - Vie: 8AM - 6PM</p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,.22)', marginBottom: 3 }}>Sábado: Cerrado</p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,.22)', marginBottom: 14 }}>Domingo: Cerrado</p>
+            <p style={{ fontSize: 12 }}>Independencia, Pisco, Ica</p>
+          </div>
+        </div>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', paddingTop: 22, textAlign: 'center', fontSize: 12 }}>
+          © 2025 Jugando Aprendo — Centro de Desarrollo Infantil · Pisco, Ica, Perú. Todos los derechos reservados.
+        </div>
+      </footer>
+    </>
+  )
+}
