@@ -711,8 +711,9 @@ export default function UserManagementView() {
                   </div>
 
                   {/* Pacientes vinculados (si es padre) */}
-                  {role === 'padre' && <PacientesVinculados userId={user.id} getChildrenOfParent={getChildrenOfParent} />}
-                  </div>
+                  {role === 'padre' ? (
+                    <PacientesVinculados userId={user.id} getChildrenOfParent={getChildrenOfParent} />
+                  ) : null}
                 </div>
               )}
             </div>
