@@ -29,7 +29,7 @@ const FASE_COLORS: Record<string, string> = {
 function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolean }) {
   const sesiones = programa.sesiones_datos_aba || []
   const data = sesiones.map((s: any, i: number) => ({
-    sesion: i + 1, pct: s.porcentaje_exito, fase: s.fase, fecha: s.fecha
+    sesion: i + 1, pct: s.porcentaje_exito, fase: s.fase, fecha: s.fecha, set: s.set_actual || s.fase
   }))
   const cambiosFase: number[] = []
   for (let i = 1; i < data.length; i++) {
@@ -47,11 +47,16 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
     : ultimoPct < prevPct - 3 ? 'down'
     : 'stable'
 
+  // Detectar logro ABA: ≥90% en 2 sesiones consecutivas
+  const logroABA = data.length >= 2 &&
+    data[data.length - 1].pct >= 90 &&
+    data[data.length - 2].pct >= 90
+
   const area = AREA_CONFIG[programa.area] || { color: 'text-slate-600', bg: 'bg-slate-50 border-slate-200', label: programa.area, emoji: '📋' }
 
   return (
     <div className="bg-white rounded-xl border border-slate-100 p-4">
-      <div className="flex items-start gap-2 mb-2">
+      <div className="flex items-start gap-2 mb-2 flex-wrap">
         <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border ${area.bg} ${area.color}`}>
           {area.emoji} {area.label}
         </span>
@@ -63,6 +68,11 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
         }`}>
           {faseLabel[programa.fase_actual] || programa.fase_actual}
         </span>
+        {logroABA && (
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-black border bg-emerald-100 border-emerald-300 text-emerald-700 flex items-center gap-1">
+            🏆 LOGRO ABA
+          </span>
+        )}
         {ultimoPct !== null && (
           <span className={`ml-auto font-black text-sm flex items-center gap-1 ${
             tendencia === 'up' ? 'text-emerald-600' : tendencia === 'down' ? 'text-red-500' : 'text-slate-500'
@@ -113,7 +123,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
                 ))}
                 <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="5 3" strokeWidth={1.5}
                   label={{ value: `${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 9, fill: '#10b981' }} />
-                <Line type="monotone" dataKey="pct" stroke="#6366f1" strokeWidth={2}
+                <Line type="linear" dataKey="pct" stroke="#6366f1" strokeWidth={2}
                   dot={{ r: 3, fill: '#6366f1', strokeWidth: 0 }} activeDot={{ r: 5 }} />
               </LineChart>
             </ResponsiveContainer>
@@ -121,7 +131,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
         ) : (
           <ResponsiveContainer width="100%" height={56}>
             <LineChart data={data} margin={{ top: 2, right: 2, bottom: 2, left: 0 }}>
-              <Line type="monotone" dataKey="pct" stroke="#6366f1" strokeWidth={2} dot={false} />
+              <Line type="linear" dataKey="pct" stroke="#6366f1" strokeWidth={2} dot={false} />
               <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="4 2" strokeWidth={1} />
             </LineChart>
           </ResponsiveContainer>

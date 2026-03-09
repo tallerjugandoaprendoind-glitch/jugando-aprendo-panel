@@ -69,35 +69,35 @@ const CLINICAL_FORMS = [
     id: 'brief2', title: 'BRIEF-2', subtitle: 'Función ejecutiva (Padres/Maestros)',
     category: 'cognitivo', icon: '🧠', tags: ['Ejecutivo', 'BRIEF-2', 'Cognitivo'],
     color: 'from-indigo-500 to-purple-600', estimatedMinutes: 25, targetRole: 'admin',
-    description: 'Inventario de Evaluación del Comportamiento de la Función Ejecutiva, 2ª edición',
+    description: 'Función ejecutiva — Registra resultados (requiere plataforma oficial BRIEF-2 Virtual)',
     formKey: 'brief2'
   },
   {
     id: 'ados2', title: 'ADOS-2', subtitle: 'Observación diagnóstica de autismo',
     category: 'tea', icon: '🔬', tags: ['TEA', 'ADOS', 'Diagnóstico'],
     color: 'from-purple-600 to-violet-700', estimatedMinutes: 45, targetRole: 'admin',
-    description: 'Escala de Observación para el Diagnóstico del Autismo, 2ª edición',
+    description: 'Escala de Observación para el Diagnóstico del Autismo, 2ª edición — Registra resultados (requiere plataforma externa ADOS-2)',
     formKey: 'ados2'
   },
   {
     id: 'vineland3', title: 'Vineland-3', subtitle: 'Conducta adaptativa',
     category: 'habilidades', icon: '🌟', tags: ['Adaptativo', 'Vineland', 'Funcional'],
     color: 'from-green-500 to-emerald-600', estimatedMinutes: 35, targetRole: 'admin',
-    description: 'Escalas de Comportamiento Adaptativo Vineland, 3ª edición',
+    description: 'Conducta adaptativa — Registra puntuaciones compuestas y perfil (requiere plataforma Vineland-3)',
     formKey: 'vineland3'
   },
   {
     id: 'wiscv', title: 'WISC-V', subtitle: 'Inteligencia (6-16 años)',
     category: 'cognitivo', icon: '📊', tags: ['CI', 'Inteligencia', 'WISC'],
     color: 'from-blue-600 to-cyan-600', estimatedMinutes: 60, targetRole: 'admin',
-    description: 'Escala de Inteligencia de Wechsler para Niños, 5ª edición',
+    description: 'Escala de Inteligencia de Wechsler para Niños — Registra resultados y percentiles (requiere plataforma externa WISC-V)',
     formKey: 'wiscv'
   },
   {
     id: 'basc3', title: 'BASC-3', subtitle: 'Sistema de evaluación conductual',
     category: 'conductual', icon: '📈', tags: ['Conductual', 'BASC', 'Emocional'],
     color: 'from-amber-500 to-orange-600', estimatedMinutes: 30, targetRole: 'admin',
-    description: 'Sistema de Evaluación de la Conducta de Niños y Adolescentes, 3ª edición',
+    description: 'Evaluación conductual y emocional — Registra T-scores y escalas (requiere plataforma BASC-3)',
     formKey: 'basc3'
   },
 ]

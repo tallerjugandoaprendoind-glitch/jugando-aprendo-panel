@@ -242,6 +242,18 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
               </div>
             )}
 
+            {/* Criterio de logro ABA */}
+            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-start gap-3">
+              <span className="text-indigo-500 text-lg leading-none">🎯</span>
+              <div>
+                <p className="text-xs font-black text-indigo-700 uppercase tracking-wide mb-0.5">Criterio de Logro ABA</p>
+                <p className="text-xs text-indigo-600 leading-relaxed">
+                  <strong>≥ 90% en 2 sesiones consecutivas</strong> en el mismo SET se considera logro.
+                  La proyección se basa en la media/mediana del historial de sesiones registradas.
+                </p>
+              </div>
+            </div>
+
             {/* Áreas */}
             {(prediccion.areas_fortaleza.length > 0 || prediccion.areas_riesgo.length > 0) && (
               <div className="grid grid-cols-2 gap-3">

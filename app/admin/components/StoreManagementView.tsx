@@ -140,11 +140,11 @@ function ProductModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="sticky top-0 bg-white px-7 py-5 border-b border-slate-100 flex items-center justify-between z-10">
           <div>
-            <h2 className="text-xl font-black text-slate-800">{product ? 'Editar producto' : 'Nuevo producto'}</h2>
+            <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">{product ? 'Editar producto' : 'Nuevo producto'}</h2>
             <p className="text-xs text-slate-400 mt-0.5">{product ? `ID: ${product.id.slice(0, 8)}...` : 'Completa la información del artículo'}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
@@ -398,7 +398,7 @@ export default function StoreManagementView() {
           <p className="text-slate-400 text-sm mt-1">Gestiona productos, stock y pedidos de los padres</p>
         </div>
         <button onClick={() => { setEditProduct(null); setShowModal(true) }}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow-md shadow-blue-200 transition-all hover:scale-105 active:scale-95">
+          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow-md shadow-blue-200 transition-all hover:scale-105 active:scale-95 dark:shadow-none">
           <Plus size={18} /> Nuevo producto
         </button>
       </div>

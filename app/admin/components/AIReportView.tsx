@@ -17,7 +17,7 @@ declare global {
 // ── Hook Text-to-Speech con ElevenLabs (Ivanna) ──────────────────────────────
 function useTextToSpeech() {
   const [speaking, setSpeaking] = useState(false)
-  const [voiceEnabled, setVoiceEnabled] = useState(true)
+  const [voiceEnabled, setVoiceEnabled] = useState(false)  // Desactivado por defecto para evitar audio inesperado
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -366,15 +366,15 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
 
   return (
     <div className="flex flex-col gap-4 md:gap-6 animate-fade-in-up">
-      <div className="bg-white p-4 md:p-6 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 flex-shrink-0">
-        <h3 className="font-bold text-slate-700 text-lg md:text-xl flex items-center gap-2 md:gap-3 shrink-0">
+      <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 flex-shrink-0">
+        <h3 className="font-bold text-slate-700 dark:text-slate-200 text-lg md:text-xl flex items-center gap-2 md:gap-3 shrink-0">
           <div className="p-2 bg-purple-50 rounded-xl">
             <Brain size={24} className="text-purple-600"/>
           </div>
           Analizador Inteligente
         </h3>
         <select 
-          className="p-3 md:p-4 bg-slate-50 border-2 border-slate-200 rounded-xl md:rounded-2xl outline-none font-bold text-slate-700 text-sm w-full md:w-[400px] focus:bg-white focus:ring-4 focus:ring-purple-50 focus:border-purple-500 transition-all" 
+          className="p-3 md:p-4 bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-xl md:rounded-2xl outline-none font-bold text-slate-700 dark:text-slate-200 text-sm w-full md:w-[400px] focus:bg-white dark:focus:bg-slate-600 focus:ring-4 focus:ring-purple-50 focus:border-purple-500 transition-all" 
           onChange={(e) => handleSelectChild(e.target.value)}
           value={selectedChild}
         >
@@ -478,8 +478,8 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
             </div>            {/* HISTORIAL (desktop: columna fija, mobile: tab) */}
             <div className={`col-span-1 lg:col-span-7 xl:col-span-5 bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 flex flex-col
               ${mobileTab === 'history' ? 'flex' : 'hidden lg:flex'}`}>
-                <div className="p-4 md:p-6 bg-white border-b border-slate-100 flex justify-between items-center sticky top-0 z-10 shadow-sm">
-                    <span className="font-bold text-slate-700 text-sm uppercase tracking-widest flex items-center gap-2">
+                <div className="p-4 md:p-6 bg-white dark:bg-slate-800 border-b border-slate-100 dark:border-slate-700 flex justify-between items-center sticky top-0 z-10 shadow-sm">
+                    <span className="font-bold text-slate-700 dark:text-slate-200 text-sm uppercase tracking-widest flex items-center gap-2">
                       <History size={18} className="text-orange-500"/> 
                       Registro Clínico
                     </span>
@@ -488,7 +488,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
                     </span>
                 </div>
                 
-                <div className="p-4 md:p-6 space-y-4 bg-slate-50/50">
+                <div className="p-4 md:p-6 space-y-4 bg-slate-50/50 dark:bg-slate-900/50">
                    {historyData.entorno.map((visita: any) => {
                         const isExpanded = expandedCardId === `entorno-${visita.id}`
                         const d = visita.datos || {}

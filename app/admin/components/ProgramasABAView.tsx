@@ -330,7 +330,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
           <div className="mt-3 h-16">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={chartData} margin={{ top: 2, right: 4, bottom: 2, left: 0 }}>
-                <Line type="monotone" dataKey="pct" stroke="#6366f1" strokeWidth={2} dot={false} />
+                <Line type="linear" dataKey="pct" stroke="#6366f1" strokeWidth={2} dot={false} />
                 <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="4 2" strokeWidth={1} />
               </LineChart>
             </ResponsiveContainer>
@@ -396,6 +396,37 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       </span>
                     </div>
 
+                    {/* ── SET band labels (Thread Learning style) ── */}
+                    {tipoGrafico === 'lineas' && chartData.length > 0 && (() => {
+                      // Build set bands: consecutive sessions with same 'set' value
+                      type Band = { set: string; start: number; end: number; label: string }
+                      const bands: Band[] = []
+                      let bandStart = 0
+                      let currentSet = chartData[0]?.set || 'SET 1'
+                      chartData.forEach((d: any, i: number) => {
+                        if (d.set !== currentSet || i === chartData.length - 1) {
+                          bands.push({ set: currentSet, start: bandStart, end: i === chartData.length - 1 ? i : i - 1, label: currentSet || `SET ${bands.length + 1}` })
+                          currentSet = d.set
+                          bandStart = i
+                        }
+                      })
+                      if (bands.length === 0) return null
+                      const total = chartData.length
+                      return (
+                        <div className="flex mb-1 rounded-lg overflow-hidden border border-slate-100 text-[10px] font-black">
+                          {bands.map((b, i) => {
+                            const width = ((b.end - b.start + 1) / total) * 100
+                            const colors = ['bg-indigo-100 text-indigo-700', 'bg-violet-100 text-violet-700', 'bg-blue-100 text-blue-700', 'bg-purple-100 text-purple-700', 'bg-fuchsia-100 text-fuchsia-700']
+                            return (
+                              <div key={i} className={`${colors[i % colors.length]} flex items-center justify-center py-1 px-1 truncate`} style={{ width: `${width}%`, minWidth: '24px' }}>
+                                {b.label}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      )
+                    })()}
+
                     {/* ── Líneas ── */}
                     {tipoGrafico === 'lineas' && (
                       <ResponsiveContainer width="100%" height={200}>
@@ -405,18 +436,39 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}` : `Sesión ${label}` }}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `Sesión ${label}` }}
                           />
-                          {cambiosFase.map(x => <ReferenceLine key={x} x={x} stroke="#cbd5e1" strokeDasharray="3 3" />)}
+                          {cambiosFase.map(x => <ReferenceLine key={x} x={x} stroke="#a5b4fc" strokeDasharray="4 2" strokeWidth={1.5} />)}
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
-                            label={{ value: `${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
-                          <Line type="monotone" dataKey="pct" stroke="#6366f1" strokeWidth={2.5}
+                            label={{ value: `🏆 ${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
+                          <Line type="linear" dataKey="pct" stroke="#6366f1" strokeWidth={2.5}
                             dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }} activeDot={{ r: 6 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     )}
 
                     {/* ── Barras (color por nivel) ── */}
+                    {tipoGrafico === 'barras' && chartData.length > 0 && (() => {
+                      type Band = { set: string; start: number; end: number }
+                      const bands: Band[] = []
+                      let bStart = 0; let cSet = chartData[0]?.set || 'SET 1'
+                      chartData.forEach((d: any, i: number) => {
+                        if (d.set !== cSet || i === chartData.length - 1) {
+                          bands.push({ set: cSet, start: bStart, end: i === chartData.length - 1 ? i : i - 1 })
+                          cSet = d.set; bStart = i
+                        }
+                      })
+                      const total = chartData.length
+                      return bands.length > 1 ? (
+                        <div className="flex mb-1 rounded-lg overflow-hidden border border-slate-100 text-[10px] font-black">
+                          {bands.map((b, i) => {
+                            const colors = ['bg-amber-100 text-amber-700', 'bg-orange-100 text-orange-700', 'bg-yellow-100 text-yellow-700']
+                            return <div key={i} className={`${colors[i % colors.length]} flex items-center justify-center py-1 truncate`} style={{ width: `${((b.end - b.start + 1) / total) * 100}%`, minWidth: '24px' }}>{b.set}</div>
+                          })}
+                        </div>
+                      ) : null
+                    })()}
+
                     {tipoGrafico === 'barras' && (
                       <ResponsiveContainer width="100%" height={200}>
                         <BarChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
@@ -425,10 +477,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha}` : `Sesión ${label}` }}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${d.set || ''}` : `Sesión ${label}` }}
                           />
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
-                            label={{ value: `${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
+                            label={{ value: `🏆 ${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
                           <Bar dataKey="pct" radius={[4, 4, 0, 0]}>
                             {chartData.map((entry: any, index: number) => (
                               <Cell key={index} fill={

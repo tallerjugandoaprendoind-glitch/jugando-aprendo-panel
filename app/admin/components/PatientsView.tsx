@@ -11,6 +11,69 @@ import { calcularEdad } from '../utils/helpers'
 import ProgramasABAView from './ProgramasABAView'
 import ARIAAgentChat from './ARIAAgentChat'
 
+
+// ── Historial de evaluaciones del paciente (mini view dentro de ficha) ────────
+function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string; childName: string }) {
+  const [evaluaciones, setEvaluaciones] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const cargar = async () => {
+      setLoading(true)
+      try {
+        // Cargar desde múltiples tablas de evaluaciones
+        const { createClient } = await import('@supabase/supabase-js')
+        const sb = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const [r1, r2, r3, r4] = await Promise.all([
+          sb.from('form_responses').select('id, form_title, form_type, ai_analysis, created_at').eq('child_id', childId).order('created_at', { ascending: false }).limit(15),
+          sb.from('anamnesis_completa').select('id, form_title, created_at').eq('child_id', childId).order('created_at', { ascending: false }).limit(5),
+          sb.from('registro_aba').select('id, form_title, fecha_sesion, created_at').eq('child_id', childId).order('fecha_sesion', { ascending: false }).limit(5),
+          sb.from('registro_entorno_hogar').select('id, form_title, created_at').eq('child_id', childId).order('created_at', { ascending: false }).limit(5),
+        ])
+        const all = [
+          ...(r1.data || []).map((e: any) => ({ ...e, tipo: e.form_type || 'evaluacion', fuente: '📋' })),
+          ...(r2.data || []).map((e: any) => ({ ...e, form_title: e.form_title || 'Anamnesis', tipo: 'anamnesis', fuente: '📄' })),
+          ...(r3.data || []).map((e: any) => ({ ...e, created_at: e.fecha_sesion || e.created_at, form_title: e.form_title || 'Sesión ABA', tipo: 'aba', fuente: '🎯' })),
+          ...(r4.data || []).map((e: any) => ({ ...e, form_title: e.form_title || 'Entorno Hogar', tipo: 'entorno', fuente: '🏠' })),
+        ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        setEvaluaciones(all)
+      } catch {}
+      setLoading(false)
+    }
+    cargar()
+  }, [childId])
+
+  if (loading) return <div className="flex items-center gap-2 py-8 justify-center text-slate-400"><Loader2 className="animate-spin" size={20}/> Cargando historial...</div>
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Historial de evaluaciones · {childName}</p>
+        <span className="text-[10px] bg-slate-100 px-2 py-1 rounded-full font-bold text-slate-500">{evaluaciones.length} registros</span>
+      </div>
+      {evaluaciones.length === 0 ? (
+        <div className="py-8 text-center">
+          <ClipboardList className="mx-auto text-slate-200 mb-2" size={36}/>
+          <p className="text-slate-400 text-sm font-bold">Sin evaluaciones registradas</p>
+          <p className="text-slate-300 text-xs mt-1">Las evaluaciones aparecerán aquí al crearlas desde el módulo de Evaluaciones</p>
+        </div>
+      ) : evaluaciones.map((ev, i) => (
+        <div key={ev.id || i} className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-start gap-3">
+          <span className="text-lg">{ev.fuente}</span>
+          <div className="flex-1 min-w-0">
+            <p className="font-bold text-slate-700 text-sm truncate">{ev.form_title}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{ev.tipo} · {new Date(ev.created_at).toLocaleDateString('es-PE', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+            {ev.ai_analysis && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{typeof ev.ai_analysis === 'string' ? ev.ai_analysis.slice(0, 120) + '...' : ''}</p>}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function PatientsView() {
     const [listaNinos, setListaNinos] = useState<any[]>([])
     const [listaNinosFiltrada, setListaNinosFiltrada] = useState<any[]>([])
@@ -19,7 +82,7 @@ function PatientsView() {
     const [filterDiagnosis, setFilterDiagnosis] = useState('todos')
     const [sortBy, setSortBy] = useState('nombre')
     const [ultimasSesiones, setUltimasSesiones] = useState<Record<string, string>>({})
-    const [patientTab, setPatientTab] = useState<'info' | 'programas' | 'vadi'>('info')
+    const [patientTab, setPatientTab] = useState<'info' | 'programas' | 'vadi' | 'evaluaciones'>('info')
 
     const [selectedPatient, setSelectedPatient] = useState<any>(null)
     const [showPatientModal, setShowPatientModal] = useState(false)
@@ -277,7 +340,10 @@ function PatientsView() {
                                             })()}
                                         </td>
                                         <td className="p-4 lg:p-6 text-right lg:pr-10">
-                                            <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> Ver</button>
+                                            <div className="flex items-center justify-end gap-2">
+                                              <button onClick={() => { verDetallePaciente(nino); setPatientTab('programas') }} className="px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5"><BarChart3 size={13}/> Programas</button>
+                                              <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> Ver</button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -289,7 +355,7 @@ function PatientsView() {
 
             {showPatientModal && selectedPatient && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-scale-in">
+                    <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl animate-scale-in">
                         <div className={`p-6 text-white transition-colors ${isEditing ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-blue-600 to-blue-700'}`}>
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-4">
@@ -299,26 +365,40 @@ function PatientsView() {
                                     <div>
                                         <h3 className="text-2xl font-black">{isEditing ? 'Editar Paciente' : selectedPatient.name}</h3>
                                         <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || "Diagnóstico pendiente"}</p>
+                                        {!isEditing && selectedPatient.age && (
+                                          <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} años</p>
+                                        )}
                                     </div>
                                 </div>
-                                <button onClick={() => {setShowPatientModal(false); setIsEditing(false)}} className="p-2 hover:bg-white/20 rounded-xl transition-colors"><X size={24}/></button>
+                                <div className="flex items-center gap-2">
+                                  {!isEditing && patientTab !== 'programas' && (
+                                    <button
+                                      onClick={() => setPatientTab('programas')}
+                                      className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
+                                    >
+                                      <Activity size={13}/> Ver programas
+                                    </button>
+                                  )}
+                                  <button onClick={() => {setShowPatientModal(false); setIsEditing(false)}} className="p-2 hover:bg-white/20 rounded-xl transition-colors"><X size={24}/></button>
+                                </div>
                             </div>
                         </div>
 
                         <div className="p-6 space-y-4">
                             {/* Tabs */}
                             {!isEditing && (
-                              <div className="flex gap-2 mb-4">
+                              <div className="flex gap-2 mb-4 border-b border-slate-100 pb-4">
                                 {[
                                   { id: 'info', label: '📋 Info', icon: User },
                                   { id: 'programas', label: '📈 Programas ABA', icon: Activity },
-                                  { id: 'vadi', label: '✨ ARIA', icon: Brain },
+                                  { id: 'evaluaciones', label: '📝 Evaluaciones', icon: ClipboardList },
+                                  { id: 'vadi', label: '🤖 ARIA', icon: Brain },
                                 ].map(tab => (
                                   <button key={tab.id} onClick={() => setPatientTab(tab.id as any)}
-                                    className={`px-3 py-2 rounded-xl text-xs font-black transition-all border ${
+                                    className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all border ${
                                       patientTab === tab.id
-                                        ? 'bg-blue-600 text-white border-blue-600'
-                                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-300'
+                                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
+                                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-300 hover:text-blue-600'
                                     }`}>
                                     {tab.label}
                                   </button>
@@ -337,6 +417,9 @@ function PatientsView() {
                                 childId={selectedPatient.id}
                                 childName={selectedPatient.name}
                               />
+                            )}
+                            {!isEditing && patientTab === 'evaluaciones' && (
+                              <EvaluacionesHistorialPaciente childId={selectedPatient.id} childName={selectedPatient.name} />
                             )}
                             {!isEditing && patientTab === 'vadi' && (
                               <ARIAAgentChat

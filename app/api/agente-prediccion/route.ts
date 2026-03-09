@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
     }))
 
     // Llamar a Groq para análisis predictivo
-    const promptIA = `Eres un psicólogo clínico especializado en ABA con 15 años de experiencia analizando patrones de aprendizaje en niños neurodivergentes.
+    const promptIA = `Eres un BCBA (Board Certified Behavior Analyst) especializado en análisis de datos ABA. Tu informe va dirigido al TERAPEUTA o SUPERVISORA clínica, NO al paciente ni a los padres. Usa terminología técnica ABA apropiada para profesionales.
 
 PACIENTE: ${childName}
 SESIONES ANALIZADAS: ${sesiones.length} (últimas ${semanas} semanas)
@@ -129,7 +129,7 @@ Genera un análisis predictivo clínico con:
 1. INTERPRETACIÓN DEL PATRÓN (2-3 oraciones): qué dice la tendencia sobre el desarrollo del paciente
 2. FACTORES PREDICTIVOS CLAVE (3 puntos): qué variables están impulsando o frenando el progreso  
 3. RIESGO DE ESTANCAMIENTO: bajo/moderado/alto + explicación breve
-4. RECOMENDACIONES PARA ACELERAR PROGRESO (3-4 puntos concretos y técnicos)
+4. AJUSTES CLÍNICOS SUGERIDOS AL TERAPEUTA (3-4 puntos técnicos: cambios en procedimientos, fases, sets, antecedentes, consecuencias)
 5. HITO ESPERADO A 90 DÍAS: qué habilidad o nivel debería lograr si continúa la tendencia
 
 Usa terminología ABA clínica. Sé específico, no genérico. Máximo 400 palabras.`
@@ -145,7 +145,7 @@ Usa terminología ABA clínica. Sé específico, no genérico. Máximo 400 palab
     let analisis_ia: string | null = null
     try {
       analisis_ia = await callGroqSimple(
-        'Eres un psicólogo clínico ABA especializado en predicción de progreso terapéutico. Fundamenta con libros clínicos del Cerebro IA.',
+        'Eres un BCBA experto en análisis de datos ABA. Tu audiencia es el terapeuta/supervisora, no el paciente. Usa terminología técnica ABA. Fundamenta con JABA, Cooper, Malott.',
         promptIA + (_cerebroCtx ? '\n\n━━━ CEREBRO IA ━━━\n' + _cerebroCtx : ''),
         { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 800 }
       )

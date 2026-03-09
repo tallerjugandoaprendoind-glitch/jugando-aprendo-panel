@@ -13,10 +13,10 @@ import { useToast } from '@/components/Toast'
 const ROLES = [
   {
     value: 'jefe',
-    label: 'Jefe',
+    label: 'Director',
     description: 'Acceso total al sistema',
     icon: Crown,
-    badgeClass: 'role-jefe',
+    badgeClass: 'role-director',
     dotColor: 'bg-purple-500',
   },
   {
@@ -73,7 +73,7 @@ function RoleSelector({ currentRole, onSelect, disabled }: {
         <ChevronDown size={12} className="text-slate-400" />
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 z-50 bg-white dark:bg-slate-800 border border-slate-200
+        <div className="absolute bottom-full left-0 mb-1 z-50 bg-white dark:bg-slate-800 border border-slate-200
           dark:border-slate-700 rounded-xl shadow-lg min-w-[200px] overflow-hidden animate-scale-in">
           {ROLES.map(r => {
             const RIcon = r.icon
@@ -136,11 +136,17 @@ export default function UserManagementView() {
   const toast = useToast()
   const [users, setUsers] = useState<UserData[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [activeTab, setActiveTab] = useState<'jefe' | 'especialista' | 'padre' | 'todos'>('todos')
   const [searchTerm, setSearchTerm] = useState('')
   const [filterRole, setFilterRole] = useState('todos')
   const [expandedUser, setExpandedUser] = useState<string | null>(null)
   const [savingRole, setSavingRole] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [children, setChildren] = useState<{ id: string; name: string; parent_id: string | null }[]>([])
+  const [linkingParent, setLinkingParent] = useState<UserData | null>(null)
+  const [selectedChildId, setSelectedChildId] = useState('')
+  const [savingLink, setSavingLink] = useState(false)
 
   // Password change state
   const [changingPasswordFor, setChangingPasswordFor] = useState<UserData | null>(null)
@@ -161,10 +167,33 @@ export default function UserManagementView() {
   const cargarUsuarios = useCallback(async () => {
     setIsLoading(true)
     try {
-      const res = await fetch('/api/admin/users')
-      const json = await res.json()
+      // Get current user ID to prevent self-demotion
+    try {
+      const { createClient: cc } = await import('@supabase/supabase-js')
+      const sb = cc(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+      const { data: { user } } = await sb.auth.getUser()
+      if (user) setCurrentUserId(user.id)
+    } catch {}
+
+    const [resUsers, resChildren] = await Promise.all([
+        fetch('/api/admin/users'),
+        fetch('/api/admin/children-list').catch(() => null),
+      ])
+      const json = await resUsers.json()
       if (json.error) throw new Error(json.error)
       setUsers(json.data || [])
+
+      // Intentar cargar niños directamente desde Supabase si el endpoint no existe
+      try {
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        const sb = createClient(supabaseUrl, supabaseKey)
+        const { data: kids } = await sb.from('children').select('id, name, parent_id').order('name')
+        if (kids) setChildren(kids)
+      } catch {
+        // Si falla, children permanece vacío
+      }
     } catch (err: any) {
       toast.error('Error cargando usuarios: ' + err.message)
     } finally {
@@ -275,6 +304,37 @@ export default function UserManagementView() {
     }
   }
 
+  const handleLinkParentChild = async () => {
+    if (!linkingParent || !selectedChildId) return
+    setSavingLink(true)
+    try {
+      const { createClient } = await import('@supabase/supabase-js')
+      const sb = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      const { error } = await sb
+        .from('children')
+        .update({ parent_id: linkingParent.id })
+        .eq('id', selectedChildId)
+      if (error) throw new Error(error.message)
+      toast.success(`✅ Paciente vinculado a ${linkingParent.profile?.full_name || linkingParent.email}`)
+      // Actualizar children localmente
+      setChildren(prev => prev.map(c =>
+        c.id === selectedChildId ? { ...c, parent_id: linkingParent.id } : c
+      ))
+      setLinkingParent(null)
+      setSelectedChildId('')
+    } catch (err: any) {
+      toast.error('Error vinculando: ' + err.message)
+    } finally {
+      setSavingLink(false)
+    }
+  }
+
+  const getChildrenOfParent = (userId: string) =>
+    children.filter(c => c.parent_id === userId)
+
   const handleCreateUser = async () => {
     if (!createForm.email || !createForm.password) {
       toast.error('Email y contraseña son requeridos')
@@ -309,7 +369,10 @@ export default function UserManagementView() {
     const matchRole = filterRole === 'todos' ||
       (filterRole === 'jefe' && (role === 'jefe' || role === 'admin')) ||
       filterRole === role
-    return matchSearch && matchRole
+    const matchTab = activeTab === 'todos' ||
+      (activeTab === 'jefe' && (role === 'jefe' || role === 'admin')) ||
+      activeTab === role
+    return matchSearch && matchRole && matchTab
   })
 
   // Stats
@@ -352,10 +415,42 @@ export default function UserManagementView() {
         </div>
       </div>
 
+      {/* Tabs por rol */}
+      <div className="flex gap-2 border-b border-slate-200 dark:border-slate-700 pb-0">
+        {[
+          { id: 'todos', label: 'Todos', count: users.length, icon: Users, color: 'text-slate-600' },
+          { id: 'jefe', label: 'Directores', count: totalJefes, icon: Crown, color: 'text-purple-600' },
+          { id: 'especialista', label: 'Especialistas', count: totalEspecialistas, icon: Stethoscope, color: 'text-blue-600' },
+          { id: 'padre', label: 'Padres', count: totalPadres, icon: Heart, color: 'text-pink-600' },
+        ].map(tab => {
+          const Icon = tab.icon
+          const isActive = activeTab === tab.id
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id as any)}
+              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-t-xl border-b-2 transition-all ${
+                isActive
+                  ? `border-blue-600 ${tab.color} bg-blue-50 dark:bg-blue-900/20`
+                  : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+              }`}
+            >
+              <Icon size={14} />
+              {tab.label}
+              <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black ${
+                isActive ? 'bg-blue-600 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard value={totalActivos} label="Activos" icon={UserCheck} color="bg-emerald-500" />
-        <StatCard value={totalJefes} label="Jefes" icon={Crown} color="bg-purple-500" />
+        <StatCard value={totalJefes} label="Directores" icon={Crown} color="bg-purple-500" />
         <StatCard value={totalEspecialistas} label="Especialistas" icon={Stethoscope} color="bg-blue-500" />
         <StatCard value={totalPadres} label="Padres" icon={Heart} color="bg-pink-500" />
       </div>
@@ -449,13 +544,15 @@ export default function UserManagementView() {
                     <RoleSelector
                       currentRole={role}
                       onSelect={(newRole) => handleChangeRole(user, newRole)}
+                      disabled={user.id === currentUserId && (role === 'jefe' || role === 'admin')}
                     />
                   )}
 
-                  {/* Toggle active */}
+                  {/* Toggle active — disabled for self */}
                   <button
-                    onClick={() => handleToggleActive(user)}
-                    title={isActive ? 'Desactivar usuario' : 'Activar usuario'}
+                    onClick={() => user.id !== currentUserId ? handleToggleActive(user) : null}
+                    title={user.id === currentUserId ? 'No puedes desactivarte a ti mismo' : isActive ? 'Desactivar usuario' : 'Activar usuario'}
+                    disabled={user.id === currentUserId}
                     className={`p-2 rounded-lg transition-colors ${isActive
                       ? 'text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
                       : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
@@ -576,6 +673,43 @@ export default function UserManagementView() {
                           <CheckCircle2 size={12} /> Confirmar email
                         </button>
                       )}
+
+                      {/* Vincular hijo — solo para padres */}
+                      {role === 'padre' && (
+                        <button
+                          onClick={() => { setLinkingParent(user); setSelectedChildId('') }}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold
+                            bg-pink-50 border border-pink-200 text-pink-700 hover:bg-pink-100 transition-all"
+                        >
+                          <Heart size={12} /> Vincular paciente
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Pacientes vinculados (si es padre) */}
+                  {role === 'padre' && (() => {
+                    const hijos = getChildrenOfParent(user.id)
+                    if (hijos.length === 0) return (
+                      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <p className="text-xs text-amber-600 font-medium flex items-center gap-1.5">
+                          <AlertCircle size={11} /> Sin pacientes vinculados — usa el botón &quot;Vincular paciente&quot;
+                        </p>
+                      </div>
+                    )
+                    return (
+                      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Pacientes vinculados</p>
+                        <div className="flex flex-wrap gap-2">
+                          {hijos.map(h => (
+                            <span key={h.id} className="flex items-center gap-1.5 px-3 py-1.5 bg-pink-50 border border-pink-200 rounded-xl text-xs font-bold text-pink-700">
+                              <Heart size={10} /> {h.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })()}
                     </div>
                   </div>
                 </div>
@@ -704,6 +838,59 @@ export default function UserManagementView() {
             >
               {creatingUser ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
               Crear usuario
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Link Parent-Child Modal */}
+      {linkingParent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-6 w-full max-w-sm animate-scale-in">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-black text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                <Heart size={18} className="text-pink-500" />
+                Vincular paciente
+              </h3>
+              <button onClick={() => setLinkingParent(null)}
+                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400">
+                <X size={16} />
+              </button>
+            </div>
+            <p className="text-sm text-slate-500 mb-4">
+              Padre/Tutor: <strong className="text-slate-700 dark:text-slate-300">
+                {linkingParent.profile?.full_name || linkingParent.email}
+              </strong>
+            </p>
+            <div className="space-y-3">
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest block">
+                Selecciona el paciente
+              </label>
+              <select
+                value={selectedChildId}
+                onChange={e => setSelectedChildId(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700
+                  bg-slate-50 dark:bg-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-pink-500"
+              >
+                <option value="">— Seleccionar paciente —</option>
+                {children.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}{c.parent_id && c.parent_id !== linkingParent.id ? ' (ya vinculado)' : ''}
+                  </option>
+                ))}
+              </select>
+              {children.length === 0 && (
+                <p className="text-xs text-amber-600 font-medium">No hay pacientes registrados en el sistema.</p>
+              )}
+            </div>
+            <button
+              onClick={handleLinkParentChild}
+              disabled={savingLink || !selectedChildId}
+              className="mt-4 w-full py-2.5 rounded-xl bg-pink-600 hover:bg-pink-700 text-white font-semibold
+                text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {savingLink ? <Loader2 size={16} className="animate-spin" /> : <Heart size={16} />}
+              Vincular
             </button>
           </div>
         </div>

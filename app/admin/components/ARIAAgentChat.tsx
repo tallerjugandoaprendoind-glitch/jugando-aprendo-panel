@@ -46,7 +46,7 @@ export default function ARIAAgentChat({
       role: 'assistant',
       content: childId
         ? `¡Hola! Soy **ARIA**, tu asistente clínico. Estoy revisando el expediente de **${childName || 'tu paciente'}** y tengo acceso a todo su historial, programas ABA y evaluaciones previas.\n\n¿En qué te puedo ayudar hoy? Puedo analizar tendencias de progreso, sugerirte estrategias basadas en Malott, o responder dudas clínicas sobre el caso.`
-        : `¡Hola! Soy **ARIA**, el cerebro clínico de Vanty. Tengo acceso a los libros de ABA, DSM-5, guías éticas IBAO y todos los expedientes del sistema.\n\n¿Cómo puedo ayudarte hoy?`,
+        : `¡Hola! 👋 Soy **ARIA**, tu asistente clínica de **Vanty**. Estoy entrenada en evaluación e intervención de población infantil, con base en **ABA**, ética clínica, neuropsicología, educación especial y mucho más.\n\n¿En qué puedo ayudarte hoy? 🧠`,
       timestamp: new Date().toISOString(),
     }])
   }, [childId, childName])
@@ -212,7 +212,7 @@ function MessageBubble({ message }: { message: Message }) {
         <div className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
           isUser
             ? 'bg-indigo-600 text-white rounded-tr-sm'
-            : 'bg-slate-100 text-slate-800 rounded-tl-sm'
+            : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-100 rounded-tl-sm'
         }`}>
           {formatContent(message.content)}
         </div>

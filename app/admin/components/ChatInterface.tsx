@@ -226,10 +226,10 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
 
       <div className="max-w-[82%] flex flex-col gap-2">
         {/* Burbuja principal */}
-        <div className={`rounded-3xl rounded-tl-lg px-5 py-4 shadow-sm text-sm font-medium leading-relaxed text-slate-700
+        <div className={`rounded-3xl rounded-tl-lg px-5 py-4 shadow-sm text-sm font-medium leading-relaxed text-slate-700 dark:text-slate-100
           ${m.type === 'emotional'
-            ? 'border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50'
-            : 'bg-white border border-slate-100'
+            ? 'border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/40 dark:to-indigo-900/40 dark:border-blue-700'
+            : 'bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600'
           }`}
           style={{ boxShadow: '0 2px 16px rgba(0,0,0,.06)' }}>
           {m.type === 'emotional' && (
@@ -289,7 +289,7 @@ function TypingIndicator() {
         style={{ background: 'linear-gradient(135deg,#eef2ff,#dbeafe)', padding: 4 }}>
         <RobotAvatar size={28} animated />
       </div>
-      <div className="bg-white border border-slate-100 rounded-3xl rounded-tl-lg px-5 py-3.5 shadow-sm flex items-center gap-1.5">
+      <div className="bg-white dark:bg-slate-700 border border-slate-100 dark:border-slate-600 rounded-3xl rounded-tl-lg px-5 py-3.5 shadow-sm flex items-center gap-1.5">
         {[0, .2, .4].map(d => (
           <div key={d} className="w-2 h-2 rounded-full bg-indigo-400"
             style={{ animation: `typingDot 1.2s ease-in-out infinite`, animationDelay: `${d}s` }} />
@@ -642,7 +642,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
                 placeholder={listening ? '🎤 Escuchando...' : childName ? `Pregúntame sobre ${childName}...` : 'Escribe tu pregunta...'}
                 disabled={typing || listening}
-                className="w-full text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
+                className="w-full text-sm font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
                 style={{
                   background: listening ? '#fef2f2' : '#f1f5f9',
                   border: `2px solid ${listening ? '#fca5a5' : 'transparent'}`,

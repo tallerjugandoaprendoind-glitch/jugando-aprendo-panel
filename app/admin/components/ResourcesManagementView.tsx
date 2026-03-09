@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   BookOpen, Plus, Trash2, Send, Globe, User, Video, FileText,
   Link as LinkIcon, Image as ImageIcon, Music, X, Loader2, RefreshCw,
-  CheckCircle2, Eye, Search, Filter, Gift
+  CheckCircle2, Eye, Search, Filter, Gift, Pencil
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
@@ -30,6 +30,7 @@ export default function ResourcesManagementView() {
   const [isLoading, setIsLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('all')
 
@@ -73,19 +74,36 @@ export default function ResourcesManagementView() {
         parentId = (child as any)?.parent_id || null
       }
 
-      const res = await fetch('/api/admin/resources', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...newResource,
-          parent_id: parentId,
+      if (editingId) {
+        // Update existing resource
+        const { error } = await supabase.from('resources').update({
+          title: newResource.title,
+          description: newResource.description,
+          resource_type: newResource.resource_type,
+          url: newResource.url,
+          is_global: newResource.is_global,
           child_id: newResource.is_global ? null : newResource.child_id,
-        }),
-      })
-      const json = await res.json()
-      if (json.error) throw new Error(json.error)
-      toast.success('✅ Recurso compartido correctamente')
+          parent_id: parentId,
+          tags: newResource.tags,
+        }).eq('id', editingId)
+        if (error) throw new Error(error.message)
+        toast.success('✅ Recurso actualizado correctamente')
+      } else {
+        const res = await fetch('/api/admin/resources', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...newResource,
+            parent_id: parentId,
+            child_id: newResource.is_global ? null : newResource.child_id,
+          }),
+        })
+        const json = await res.json()
+        if (json.error) throw new Error(json.error)
+        toast.success('✅ Recurso compartido correctamente')
+      }
       setShowForm(false)
+      setEditingId(null)
       setNewResource({ title: '', description: '', resource_type: 'video', url: '', is_global: true, child_id: '', tags: [] })
       load()
     } catch (err: any) {
@@ -104,6 +122,20 @@ export default function ResourcesManagementView() {
     } catch (err: any) {
       toast.error('Error: ' + err.message)
     }
+  }
+
+  const handleEdit = (resource: any) => {
+    setEditingId(resource.id)
+    setNewResource({
+      title: resource.title || '',
+      description: resource.description || '',
+      resource_type: resource.resource_type || 'video',
+      url: resource.url || '',
+      is_global: resource.is_global !== false,
+      child_id: resource.child_id || '',
+      tags: resource.tags || [],
+    })
+    setShowForm(true)
   }
 
   const toggleTag = (tag: string) => {
@@ -212,6 +244,9 @@ export default function ResourcesManagementView() {
                       </div>
                     </div>
                   </div>
+                  <button onClick={() => handleEdit(resource)} className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 bg-white/80 text-slate-400 hover:text-indigo-500 transition-all">
+                    <Pencil size={14}/>
+                  </button>
                   <button onClick={() => handleDelete(resource.id)} className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 bg-white/80 text-slate-400 hover:text-red-500 transition-all">
                     <Trash2 size={14}/>
                   </button>
@@ -250,9 +285,10 @@ export default function ResourcesManagementView() {
           <div className="bg-white rounded-3xl p-6 md:p-8 w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-black text-xl text-slate-800 flex items-center gap-2">
-                <Gift size={20} className="text-violet-600"/> Compartir Recurso
+                {editingId ? <Pencil size={20} className="text-indigo-600"/> : <Gift size={20} className="text-violet-600"/>}
+                {editingId ? 'Editar Recurso' : 'Compartir Recurso'}
               </h3>
-              <button onClick={() => setShowForm(false)} className="p-2 rounded-full hover:bg-slate-100 transition-all"><X size={20}/></button>
+              <button onClick={() => { setShowForm(false); setEditingId(null); setNewResource({ title: '', description: '', resource_type: 'video', url: '', is_global: true, child_id: '', tags: [] }) }} className="p-2 rounded-full hover:bg-slate-100 transition-all"><X size={20}/></button>
             </div>
 
             <div className="space-y-5">
@@ -335,7 +371,7 @@ export default function ResourcesManagementView() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button onClick={() => setShowForm(false)} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl border-2 border-slate-100 transition-all">
+                <button onClick={() => { setShowForm(false); setEditingId(null); setNewResource({ title: '', description: '', resource_type: 'video', url: '', is_global: true, child_id: '', tags: [] }) }} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl border-2 border-slate-100 transition-all">
                   Cancelar
                 </button>
                 <button onClick={handleSave} disabled={isSaving}
