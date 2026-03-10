@@ -84,19 +84,22 @@ export async function getChildHistory(childId: string, fallbackName?: string, fa
     const evalResults: string[] = []
     for (const { table, label } of evalTables) {
       try {
-        const { data } = await supabaseAdmin
+        // Usar .limit(1) sin .maybeSingle() para evitar error 406 en tablas sin RLS o inexistentes
+        const { data, error } = await supabaseAdmin
           .from(table)
           .select('created_at, ai_analysis')
           .eq('child_id', childId)
           .order('created_at', { ascending: false })
           .limit(1)
-          .maybeSingle()
 
-        if (data && (data as any).ai_analysis) {
-          const ai = (data as any).ai_analysis
+        if (error || !data || data.length === 0) continue
+
+        const row = data[0]
+        if (row && (row as any).ai_analysis) {
+          const ai = (row as any).ai_analysis
           const resumen = ai.resumen_ejecutivo || ai.analisis_clinico || ai.perfil_cognitivo_ia || ''
           if (resumen) {
-            evalResults.push(`${label} (${new Date((data as any).created_at).toLocaleDateString('es-PE')}):\n  ${resumen.slice(0, 300)}${resumen.length > 300 ? '...' : ''}`)
+            evalResults.push(`${label} (${new Date((row as any).created_at).toLocaleDateString('es-PE')}):\n  ${resumen.slice(0, 300)}${resumen.length > 300 ? '...' : ''}`)
           }
         }
       } catch { /* tabla puede no existir */ }

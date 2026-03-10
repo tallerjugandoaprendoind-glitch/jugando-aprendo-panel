@@ -385,13 +385,13 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                 <div className="mt-3 p-3 rounded-xl text-xs space-y-1.5" style={{ background: "var(--muted-bg)", border: "1px solid var(--card-border)" }}>
                   <p className="font-black mb-2" style={{ color: "var(--text-primary)" }}>📋 {fmtFecha(detalle.fecha)}</p>
                   {detalle.objetivo && <div><span className="font-bold" style={{ color: "var(--text-muted)" }}>Objetivo: </span><span style={{ color: "var(--text-primary)" }}>{detalle.objetivo}</span></div>}
-                  {detalle.tecnicas && <div><span className="text-slate-400 font-bold">Técnicas: </span><span className="text-slate-700">{detalle.tecnicas}</span></div>}
-                  {detalle.notas   && <div><span className="text-slate-400 font-bold">Observaciones: </span><span className="text-slate-700">{detalle.notas}</span></div>}
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200">
+                  {detalle.tecnicas && <div><span className="font-bold" style={{ color: "var(--text-muted)" }}>Técnicas: </span><span style={{ color: "var(--text-primary)" }}>{detalle.tecnicas}</span></div>}
+                  {detalle.notas   && <div><span className="font-bold" style={{ color: "var(--text-muted)" }}>Observaciones: </span><span style={{ color: "var(--text-primary)" }}>{detalle.notas}</span></div>}
+                  <div className="grid grid-cols-3 gap-2 pt-2 border-t" style={{ borderColor: "var(--card-border)" }}>
                     {[['Atención', detalle.atencion, C.atencion], ['Tolerancia', detalle.tolerancia, C.tolerancia], ['Comunicación', detalle.comunicacion, C.comunicacion]].map(([l, v, c]: any) => (
-                      <div key={l} className="text-center p-2 bg-white rounded-lg border border-slate-100">
+                      <div key={l} className="text-center p-2 rounded-lg" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
                         <p className="font-black text-base tabular-nums" style={{ color: c }}>{v}%</p>
-                        <p className="text-[10px] text-slate-400">{l}</p>
+                        <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{l}</p>
                       </div>
                     ))}
                   </div>
@@ -403,8 +403,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
       ) : (
         <div className="text-center py-16 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <p className="text-5xl mb-3">📊</p>
-          <p className="text-slate-600 text-sm font-bold">Sin sesiones en este período</p>
-          <p className="text-slate-400 text-xs mt-1">Registrá sesiones ABA para ver el progreso</p>
+          <p className="text-sm font-bold" style={{ color: "var(--text-secondary)" }}>Sin sesiones en este período</p>
+          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Registrá sesiones ABA para ver el progreso</p>
         </div>
       )}
 

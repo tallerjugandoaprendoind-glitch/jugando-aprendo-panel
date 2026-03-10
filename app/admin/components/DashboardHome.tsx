@@ -15,7 +15,8 @@ function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any
   return (
     <div
       onClick={onClick}
-      className={`bg-white rounded-2xl p-5 border shadow-sm transition-all duration-200 ${onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5' : ''} ${alert ? 'border-red-200 bg-red-50/30' : 'border-slate-200'}`}
+      className={`rounded-2xl p-5 border shadow-sm transition-all duration-200 ${onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5' : ''}`}
+      style={{ background: alert ? 'rgba(254,202,202,0.1)' : 'var(--card)', borderColor: alert ? '#fca5a5' : 'var(--card-border)' }}
     >
       <div className="flex items-center justify-between mb-4">
         <div className={`p-2.5 rounded-xl ${accent.bg}`}>
@@ -25,8 +26,8 @@ function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any
           {alert ? '⚠️ Atención' : sub}
         </span>
       </div>
-      <p className={`text-3xl font-black mb-1 ${alert ? 'text-red-600' : 'text-slate-800'}`}>{value}</p>
-      <p className="text-xs font-medium text-slate-400">{title}</p>
+      <p className="text-3xl font-black mb-1" style={{ color: alert ? '#dc2626' : 'var(--text-primary)' }}>{value}</p>
+      <p className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>{title}</p>
     </div>
   )
 }
@@ -45,8 +46,8 @@ function CitaRow({ cita }: { cita: any }) {
         <span className="text-sm font-black leading-none">{dia}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold text-slate-700 truncate">{cita.children?.name || 'Sin nombre'}</p>
-        <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
+        <p className="text-sm font-bold truncate" style={{ color: "var(--text-primary)" }}>{cita.children?.name || 'Sin nombre'}</p>
+        <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: "var(--text-muted)" }}>
           <Clock size={10} /> {cita.appointment_time?.slice(0, 5)}
           {esHoy && <span className="ml-1 text-blue-600 font-bold">• HOY</span>}
         </p>
@@ -70,8 +71,8 @@ function AlertaClinica({ tipo, paciente, mensaje, onClick }: any) {
       <span className="text-lg shrink-0 mt-0.5">{c.icon}</span>
       <div className="flex-1 min-w-0">
         <p className={`text-xs font-black uppercase tracking-wide mb-0.5 ${c.text}`}>{c.label}</p>
-        <p className="text-sm font-bold text-slate-700 truncate">{paciente}</p>
-        <p className="text-xs text-slate-500 leading-relaxed">{mensaje}</p>
+        <p className="text-sm font-bold truncate" style={{ color: "var(--text-primary)" }}>{paciente}</p>
+        <p className="text-xs leading-relaxed" style={{ color: "var(--text-secondary)" }}>{mensaje}</p>
       </div>
       <ChevronRight size={14} className="text-slate-400 shrink-0 mt-1" />
     </button>
@@ -87,12 +88,12 @@ function BienestarPanel({ data }: { data: any[] }) {
     dificil: data.filter(d => (d.responses?.answer || d.form_title || '').includes('Difícil')).length,
   }
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+    <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
       <div className="flex items-center gap-2 mb-4">
         <div className="w-7 h-7 bg-pink-50 rounded-lg flex items-center justify-center">
           <Heart size={14} className="text-pink-600" />
         </div>
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Bienestar de padres este mes</p>
+        <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Bienestar de padres este mes</p>
         <span className="ml-auto text-xs bg-pink-50 text-pink-600 font-bold px-2 py-0.5 rounded-full">{data.length} respuestas</span>
       </div>
       <div className="grid grid-cols-3 gap-3 mb-3">
@@ -256,12 +257,12 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
 
       {/* ALERTAS CLÍNICAS */}
       {alertasClinicas.length > 0 && (
-        <div className="bg-white rounded-2xl border border-amber-200 shadow-sm p-5">
+        <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid #d97706" }}>
           <div className="flex items-center gap-2 mb-4">
             <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center">
               <Bell size={14} className="text-amber-600" />
             </div>
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Alertas clínicas</p>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Alertas clínicas</p>
             <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-black px-2 py-0.5 rounded-full animate-pulse">
               {alertasClinicas.length} nueva{alertasClinicas.length > 1 ? 's' : ''}
             </span>
@@ -283,27 +284,28 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         {/* Acciones rápidas + Créditos */}
         <div className="space-y-4">
           {/* Acciones */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Acciones rápidas</p>
+          <div className="rounded-2xl border shadow-sm p-5" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
+            <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Acciones rápidas</p>
             <div className="space-y-2">
               {[
-                { label: 'Nueva Evaluación', icon: FileText, view: 'evaluaciones', color: 'bg-blue-600 hover:bg-blue-700 text-white' },
-                { label: 'Agendar Cita', icon: Calendar, view: 'agenda', color: 'bg-slate-800 hover:bg-slate-900 text-white' },
-                { label: 'Historial & IA', icon: Brain, view: 'reportes', color: 'bg-violet-600 hover:bg-violet-700 text-white' },
-                { label: 'Ver Pacientes', icon: Users, view: 'ninos', color: 'bg-slate-700 hover:bg-slate-600 text-white' },
-                { label: 'Mensajes padres', icon: MessageCircle, view: 'mensajes', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700', badge: stats.mensajesPendientes },
-              ].map(({ label, icon: Icon, view, color, badge }: any) => (
+                { label: 'Nueva Evaluación',  icon: FileText,      view: 'evaluaciones', bg: '#2563eb', fg: '#ffffff' },
+                { label: 'Agendar Cita',      icon: Calendar,      view: 'agenda',       bg: '#1e293b', fg: '#ffffff' },
+                { label: 'Historial & IA',    icon: Brain,         view: 'reportes',     bg: '#7c3aed', fg: '#ffffff' },
+                { label: 'Ver Pacientes',     icon: Users,         view: 'ninos',        bg: '#334155', fg: '#ffffff' },
+                { label: 'Mensajes padres',   icon: MessageCircle, view: 'mensajes',     bg: '#d1fae5', fg: '#065f46', badge: stats.mensajesPendientes },
+              ].map(({ label, icon: Icon, view, bg, fg, badge }: any) => (
                 <button key={view} onClick={() => navigateTo(view)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all ${color}`}>
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98]"
+                  style={{ background: bg, color: fg }}>
                   <div className="flex items-center gap-2.5">
                     <Icon size={16} />
                     {label}
                   </div>
                   <div className="flex items-center gap-2">
                     {badge > 0 && (
-                      <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">{badge}</span>
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full" style={{ background: '#ef4444', color: '#fff' }}>{badge}</span>
                     )}
-                    <ChevronRight size={15} className="opacity-60" />
+                    <ChevronRight size={15} style={{ opacity: 0.6 }} />
                   </div>
                 </button>
               ))}
@@ -312,7 +314,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
 
           {/* Créditos - Administrar desde el módulo de Usuarios */}
           {false && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+          <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Cargar créditos</p>
             <p className="text-xs text-slate-400 mb-3">Total en circulación: <strong className="text-slate-700">{stats.creditosActivos}</strong></p>
             <input
@@ -336,9 +338,9 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         </div>
 
         {/* Próximas citas */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Próximas citas</p>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Próximas citas</p>
             <span className="text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-full">
               {proximasCitas.length} agendadas
             </span>
@@ -351,7 +353,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                   <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-3">
                     <Calendar size={28} className="text-slate-300" />
                   </div>
-                  <p className="text-sm font-bold text-slate-400">Sin citas próximas</p>
+                  <p className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>Sin citas próximas</p>
                   <button onClick={() => navigateTo('agenda')}
                     className="mt-3 text-xs font-bold text-blue-600 hover:underline">
                     Agendar ahora →
@@ -369,7 +371,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         </div>
 
         {/* Actividad reciente */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
+        <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Actividad reciente</p>
             <Activity size={14} className="text-slate-300" />
