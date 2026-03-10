@@ -224,7 +224,7 @@ export default function ResourcesManagementView() {
 
             return (
               <div key={resource.id} className="rounded-2xl shadow-sm overflow-hidden hover:shadow-lg transition-all group border" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
-                <div className={`${typeInfo.bg} ${typeInfo.border} border-b px-5 py-4 flex items-center justify-between`}>
+                <div className="border-b px-5 py-4 flex items-center justify-between" style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)' }}>
                   <div className="flex items-center gap-3">
                     <div className={`p-2 bg-white rounded-xl shadow-sm`}>
                       <IconComp size={18} className={typeInfo.color}/>
@@ -244,12 +244,20 @@ export default function ResourcesManagementView() {
                       </div>
                     </div>
                   </div>
-                  <button onClick={() => handleEdit(resource)} className="p-1.5 rounded-lg transition-all hover:text-indigo-500" style={{ background: 'var(--card)', color: 'var(--text-secondary)' }}>
-                    <Pencil size={14}/>
-                  </button>
-                  <button onClick={() => handleDelete(resource.id)} className="p-1.5 rounded-lg transition-all hover:text-red-500" style={{ background: 'var(--card)', color: 'var(--text-secondary)' }}>
-                    <Trash2 size={14}/>
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button onClick={() => handleEdit(resource)}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+                      style={{ background: '#ede9fe', color: '#7c3aed' }}
+                      title="Editar">
+                      <Pencil size={12}/> Editar
+                    </button>
+                    <button onClick={() => handleDelete(resource.id)}
+                      className="p-1.5 rounded-lg transition-all"
+                      style={{ background: '#fee2e2', color: '#dc2626' }}
+                      title="Eliminar">
+                      <Trash2 size={14}/>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="p-5">

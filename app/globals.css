@@ -73,6 +73,16 @@ body {
   background-color: var(--muted-bg) !important;
 }
 
+
+/* CRÍTICO: Preservar inline styles — los !important del CSS global NO deben
+   sobreescribir background/color definidos como atributos style= en el HTML.
+   Los estilos inline tienen mayor especificidad que cualquier clase CSS. */
+
+/* Asegurarse que bg-slate-700 y bg-slate-800 NO se sobreescriban en dark */
+.dark .admin-content .bg-slate-700 { background-color: #334155 !important; }
+.dark .admin-content .bg-slate-800 { background-color: #1e293b !important; }
+.dark .admin-content .bg-slate-900 { background-color: #0f172a !important; }
+
 /* Borders */
 .dark .admin-content .border-slate-100:not([class*="dark:"]),
 .dark .fixed .border-slate-100:not([class*="dark:"]) {
