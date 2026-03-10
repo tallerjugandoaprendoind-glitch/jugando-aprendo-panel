@@ -372,8 +372,11 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
               <div className="flex gap-2 flex-wrap">
                 {graficaABA.map((s: any, i: number) => (
                   <button key={i} onClick={() => setDetalle(detalle?.fecha === s.fecha ? null : s)}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${detalle?.fecha === s.fecha ? 'border-violet-500 text-violet-400' : ''}`} style={detalle?.fecha !== s.fecha ? { background: 'var(--muted-bg)', color: 'var(--text-secondary)' } : { background: 'rgba(109,40,217,0.15)' }}
-                    style={{ borderColor: detalle?.fecha === s.fecha ? undefined : colorLogro(s.logro) + '50' }}>
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border-2 transition-all ${detalle?.fecha === s.fecha ? 'border-violet-500 text-violet-400' : ''}`}
+                    style={detalle?.fecha === s.fecha
+                      ? { background: 'rgba(109,40,217,0.15)' }
+                      : { background: 'var(--muted-bg)', color: 'var(--text-secondary)', borderColor: colorLogro(s.logro) + '50' }
+                    }>
                     {fmtFecha(s.fecha)} <span className="font-black" style={{ color: colorLogro(s.logro) }}>{s.logro}%</span>
                   </button>
                 ))}
