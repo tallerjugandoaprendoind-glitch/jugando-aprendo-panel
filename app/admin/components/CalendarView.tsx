@@ -104,6 +104,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 function MonthlyCalendarView() {
   const toast = useToast()
   const { t, locale } = useI18n()
+  const [apts, setApts] = useState<any[]>([])
   const [ninos, setNinos] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
