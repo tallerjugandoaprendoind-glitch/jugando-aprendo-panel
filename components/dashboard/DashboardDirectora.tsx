@@ -1,6 +1,7 @@
 'use client'
 // components/dashboard/DashboardDirectora.tsx
 import { useEffect, useState } from 'react'
+import { useI18n } from '@/lib/i18n-context'
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 
 interface Metricas {
