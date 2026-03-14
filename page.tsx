@@ -126,9 +126,9 @@ const CONTENT = {
       popular: 'Popular',
       moreInfo: 'Más información',
       items: [
-        { title: 'Terapia ABA', desc: 'Intervención basada en evidencia para mejorar habilidades sociales, comunicación y aprendizaje.', color: '#2563eb', bg: '#dbeafe' },
-        { title: 'Habilidades Sociales', desc: 'Talleres grupales donde los niños aprenden a interactuar en un entorno seguro y lúdico.', featured: true },
-        { title: 'Escuela para Padres', desc: 'Capacitación constante para que las familias sean parte activa del proceso de desarrollo.', color: '#16a34a', bg: '#dcfce7', altCta: true },
+        { title: 'Terapia ABA', desc: 'Intervención basada en evidencia para mejorar habilidades sociales, comunicación y aprendizaje.', color: '#2563eb', bg: '#dbeafe', featured: false, altCta: false },
+        { title: 'Habilidades Sociales', desc: 'Talleres grupales donde los niños aprenden a interactuar en un entorno seguro y lúdico.', featured: true, color: '', bg: '', altCta: false },
+        { title: 'Escuela para Padres', desc: 'Capacitación constante para que las familias sean parte activa del proceso de desarrollo.', color: '#16a34a', bg: '#dcfce7', altCta: true, featured: false },
       ],
     },
     faq: {
@@ -254,9 +254,9 @@ const CONTENT = {
       popular: 'Popular',
       moreInfo: 'More information',
       items: [
-        { title: 'ABA Therapy', desc: 'Evidence-based intervention to improve social skills, communication, and learning.', color: '#2563eb', bg: '#dbeafe' },
-        { title: 'Social Skills', desc: 'Group workshops where children learn to interact in a safe, playful environment.', featured: true },
-        { title: 'Parent School', desc: 'Ongoing training so families become active participants in the development process.', color: '#16a34a', bg: '#dcfce7', altCta: true },
+        { title: 'ABA Therapy', desc: 'Evidence-based intervention to improve social skills, communication, and learning.', color: '#2563eb', bg: '#dbeafe', featured: false, altCta: false },
+        { title: 'Social Skills', desc: 'Group workshops where children learn to interact in a safe, playful environment.', featured: true, color: '', bg: '', altCta: false },
+        { title: 'Parent School', desc: 'Ongoing training so families become active participants in the development process.', color: '#16a34a', bg: '#dcfce7', altCta: true, featured: false },
       ],
     },
     faq: {
