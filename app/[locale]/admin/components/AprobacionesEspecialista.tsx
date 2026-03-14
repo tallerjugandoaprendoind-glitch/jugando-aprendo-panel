@@ -10,14 +10,14 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
-const getTIPO_LABEL = (isEN: boolean) => ({
+const getTIPO_LABEL = (isEN: boolean): Record<string, string> => ({
   conducta: isEN?'Behavior Assessment':'Evaluación de Conducta',
   progreso: isEN?'Progress Report':'Reporte de Progreso',
   sesion: isEN?'Session Note':'Nota de Sesión',
   familia: isEN?'Family Recommendations':'Recomendaciones para Familia',
 })
 
-const getStatusCfg = (isEN: boolean) => ({
+const getStatusCfg = (isEN: boolean): Record<string, any>: Record<string, any> => ({
   pending_approval: { label: isEN?'Pending':'Pendiente', color: '#f59e0b', bg: '#f59e0b15', border: '#f59e0b30', icon: Clock },
   approved:         { label: isEN?'Approved':'Aprobado',  color: '#10b981', bg: '#10b98115', border: '#10b98130', icon: CheckCircle },
   rejected:         { label: isEN?'Rejected':'Rechazado', color: '#ef4444', bg: '#ef444415', border: '#ef444430', icon: XCircle },

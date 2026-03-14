@@ -32,7 +32,7 @@ function colorPorPct(pct: number) {
 }
 
 // ── Colores por área ────────────────────────────────────────────────────────
-const getAreaConfig = (isEN: boolean): Record<string, { color: string; bg: string; label: string; emoji: string }> => ({
+const getAreaConfig = (isEN: boolean): Record<string, any> => ({
   comunicacion: { color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200',   label: isEN ? 'Communication' : 'Comunicación',   emoji: '💬' },
   conducta:     { color: 'text-red-700',    bg: 'bg-red-50 border-red-200',     label: isEN ? 'Behavior' : 'Conducta',       emoji: '🎯' },
   cognitivo:    { color: 'text-violet-700', bg: 'bg-violet-50 border-violet-200',label: isEN ? 'Cognitive' : 'Cognitivo',     emoji: '🧠' },

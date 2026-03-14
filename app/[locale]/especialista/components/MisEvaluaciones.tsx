@@ -16,7 +16,7 @@ const getStatus = (isEN: boolean): Record<string, any> => ({
   rejected:         { label: isEN?'Rejected':'Rechazado',   color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',    icon: XCircle },
 })
 
-const getTipos = (isEN: boolean) => [
+const getTipos = (isEN: boolean): Record<string, any>[] => [
   { id: 'conducta', label: isEN?'Behavior':'Conducta',      desc: isEN?'ABC Analysis':'Análisis ABC',          color: 'bg-purple-50 text-purple-700 border-purple-200' },
   { id: 'progreso', label: isEN?'Progress':'Progreso',       desc: isEN?'Therapeutic progress':'Avance terapéutico',    color: 'bg-blue-50 text-blue-700 border-blue-200' },
   { id: 'sesion',   label: isEN?'Session note':'Nota de sesión', desc: isEN?'Clinical record':'Registro clínico',      color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
@@ -154,7 +154,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
       ) : (
         <div className="space-y-2">
           {filtradas.map(ev => {
-            const cfg = getStatus(isEN)[ev.status] || STATUS.pending_approval
+            const cfg = getStatus(isEN)[ev.status] || getStatus(isEN)['pending_approval']
             const Icon = cfg.icon
             const abierto = expandido === ev.id
             const tipo = getTipos(isEN).find(t => t.id === ev.tipo)

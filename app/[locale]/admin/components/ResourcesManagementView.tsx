@@ -12,7 +12,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
-const getResourceTypes = (isEN: boolean) => [
+const getResourceTypes = (isEN: boolean): Record<string, any>[] => [
   { id: 'video', label: 'Video', icon: Video, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', hint: isEN?'YouTube, Vimeo, video URL...':'YouTube, Vimeo, URL de video...' },
   { id: 'pdf', label: 'PDF / Doc', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', hint: 'URL de PDF o documento en Google Drive' },
   { id: 'link', label: isEN?'Web link':'Enlace web', icon: LinkIcon, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200', hint: isEN?'Any useful web page...':'Cualquier página web útil...' },

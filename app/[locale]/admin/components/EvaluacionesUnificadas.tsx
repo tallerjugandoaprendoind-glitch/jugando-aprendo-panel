@@ -1332,7 +1332,7 @@ export default function EvaluacionesUnificadas() {
   const stats = {
     total: ALL_UNIFIED_FORMS.length,
     neuro: ALL_FORMS.length,
-    clinical: CLINICAL_FORMS.length,
+    clinical: getClinicalForms(isEN).length,
     sent: sentForms.length,
     pending: sentForms.filter(f => f.status === 'pending').length,
     completed: sentForms.filter(f => f.status === 'completed').length,

@@ -95,7 +95,7 @@ const SERVICES = [
   'Evaluación Vineland-3','Evaluación WISC-V','Evaluación BASC-3',
   'Sesión Familiar','Sesión de Orientación','Visita Domiciliaria',
 ]
-const getStatusConfig = (isEN: boolean): Record<string, { label: string; color: string; bg: string }> => ({
+const getStatusConfig = (isEN: boolean): Record<string, any> => ({
   confirmed: { label: isEN ? 'Confirmed' : 'Confirmada', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
   pending:   { label: isEN ? 'Pending' : 'Pendiente',  color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200'   },
   cancelled: { label: isEN ? 'Cancelled' : 'Cancelada',  color: 'text-red-700',     bg: 'bg-red-50 border-red-200'       },

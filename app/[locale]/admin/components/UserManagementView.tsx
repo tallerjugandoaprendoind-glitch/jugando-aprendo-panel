@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 
-const getRoles = (isEN: boolean) => [
+const getRoles = (isEN: boolean): Record<string, any>[] => [
   { value: 'jefe',        label: isEN?'Director':'Director',     description: isEN?'Full system access':'Acceso total al sistema', icon: Crown,       dotColor: 'bg-purple-500', badgeClass: 'role-director'    },
   { value: 'especialista',label: isEN?'Specialist':'Especialista',  description: isEN?'Therapist / Clinician':'Terapeuta / Clínico',     icon: Stethoscope, dotColor: 'bg-blue-500',   badgeClass: 'role-especialista' },
   { value: 'padre',       label: isEN?'Parent / Guardian':'Padre / Tutor', description: isEN?'Family portal':'Portal de familias',      icon: Heart,       dotColor: 'bg-pink-500',   badgeClass: 'role-padre'       },
