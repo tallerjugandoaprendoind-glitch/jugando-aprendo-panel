@@ -823,6 +823,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
 
 // ── Modal: Crear Programa ────────────────────────────────────────────────────
 function CrearProgramaModal({ childId, onClose, onCreated }: any) {
+  const { t } = useI18n()
   const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [step, setStep] = useState(1)

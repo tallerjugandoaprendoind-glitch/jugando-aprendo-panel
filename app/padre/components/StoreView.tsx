@@ -464,6 +464,7 @@ export default function StoreView({ profile }: { profile: any }) {
 
 // ── Tarjeta de producto ───────────────────────────────────────────────────────
 function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured }: any) {
+  const { t } = useI18n()
   const sinStock = p.tipo === 'fisico' && p.stock === 0
   return (
     <div className={`bg-white rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${featured ? 'border-amber-200' : 'border-slate-200'}`}>
@@ -506,6 +507,7 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
 
 // ── Detalle de producto (modal) ───────────────────────────────────────────────
 function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
+  const { t } = useI18n()
   const sinStock = p.tipo === 'fisico' && p.stock === 0
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>

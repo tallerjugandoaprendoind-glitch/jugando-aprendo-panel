@@ -18,6 +18,7 @@ import {
 
 // ─── DYNAMIC FORM RENDERER ───────────────────────────────────────────────────
 function DynamicFormQuestion({ question, value, onChange }: any) {
+  const { t } = useI18n()
   const freq = ['Nunca', 'Raramente', 'A veces', 'Frecuentemente', 'Casi siempre', 'Siempre']
 
   if (question.type === 'frequency') {
