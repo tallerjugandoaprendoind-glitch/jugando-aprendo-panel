@@ -356,6 +356,7 @@ function RecordCard({ item }: { item: any }) {
 
 // ── AI Summary Tab ─────────────────────────────────────────────────────────────
 function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
+  const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState<any>(null)
   const [error, setError] = useState('')

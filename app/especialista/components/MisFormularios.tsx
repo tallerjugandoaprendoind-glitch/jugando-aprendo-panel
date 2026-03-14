@@ -49,6 +49,7 @@ const ALL_SPECIALIST_FORMS = [
 
 // ─── QUESTION RENDERER ───────────────────────────────────────────────────────
 function QuestionField({ q, value, onChange }: any) {
+  const { t } = useI18n()
   const base = "w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
 
   if (q.type === 'select' || q.type === 'frequency') return (

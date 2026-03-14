@@ -15,6 +15,7 @@ import { useToast } from '@/components/Toast'
 
 // ── Tarjeta de estadística principal ───────────────────────────────────────
 function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any) {
+  const { t } = useI18n()
   return (
     <div
       onClick={onClick}
@@ -37,6 +38,7 @@ function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any
 
 // ── Fila de cita próxima ────────────────────────────────────────────────────
 function CitaRow({ cita }: { cita: any }) {
+  const { t } = useI18n()
   if (!cita.appointment_date) return null
   const fecha = new Date(cita.appointment_date + 'T00:00:00')
   const mesCorto = fecha.toLocaleString('es', { month: 'short' }).toUpperCase()

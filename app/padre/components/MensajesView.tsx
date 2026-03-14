@@ -42,6 +42,7 @@ function formatDate(dateStr: string) {
 }
 
 function AnalysisCard({ analysis }: { analysis: any }) {
+  const { t } = useI18n()
   if (!analysis) return null
   const { resumen_ejecutivo, areas_fortaleza, areas_trabajo, actividades_en_casa, recomendaciones } = analysis
   if (!resumen_ejecutivo && !areas_fortaleza?.length) return null

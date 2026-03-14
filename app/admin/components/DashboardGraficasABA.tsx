@@ -29,6 +29,7 @@ const FASE_COLORS: Record<string, string> = {
 }
 
 function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolean }) {
+  const { t } = useI18n()
   const sesiones = programa.sesiones_datos_aba || []
   const data = sesiones.map((s: any, i: number) => ({
     sesion: i + 1, pct: s.porcentaje_exito, fase: s.fase, fecha: s.fecha, set: s.set_actual || s.fase
