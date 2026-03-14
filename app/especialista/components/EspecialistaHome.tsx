@@ -196,7 +196,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             )}
             <button onClick={() => setActiveView('evaluaciones')}
               className="flex items-center gap-2 px-4 py-2 bg-white/15 hover:bg-white/25 rounded-xl text-sm font-semibold transition-all border border-white/20">
-              <Plus size={14} /> Nueva evaluación
+              <Plus size={14} /> {t('especialista.nuevaEvaluacion')}
             </button>
           </div>
         </div>
@@ -244,11 +244,11 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             <div className="flex items-center gap-2">
               <button onClick={() => setActiveView('evaluaciones')}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-all">
-                <Plus size={12} /> Nueva
+                <Plus size={12} /> {t('especialista.nueva2')}
               </button>
               <button onClick={() => setActiveView('evaluaciones')}
                 className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline">
-                Ver todo <ChevronRight size={13} />
+                {t('especialista.verTodo')} <ChevronRight size={13} />
               </button>
             </div>
           </div>
@@ -259,10 +259,10 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
                 <FileText size={28} className="text-slate-300" />
               </div>
               <p className="text-slate-400 text-sm font-bold mb-1">{t('ui.no_recent_evals')}</p>
-              <p className="text-slate-300 text-xs mb-4 max-w-xs mx-auto">Crea tu primera evaluación. Pasará por revisión antes de llegar a los padres.</p>
+              <p className="text-slate-300 text-xs mb-4 max-w-xs mx-auto">{t('especialista.primeraEvaluacion').split('.')[0]}. Pasará por revisión antes de llegar a los padres.</p>
               <button onClick={() => setActiveView('evaluaciones')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all">
-                <Plus size={14} /> Crear evaluación
+                <Plus size={14} /> {t('especialista.nuevaEvaluacion')}
               </button>
             </div>
           ) : (
@@ -301,7 +301,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             <div className="px-6 py-4 border-t border-slate-50">
               <button onClick={() => setActiveView('evaluaciones')}
                 className="w-full py-2.5 border-2 border-dashed border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
-                <Plus size={14} /> Nueva evaluación
+                <Plus size={14} /> {t('especialista.nuevaEvaluacion')}
               </button>
             </div>
           )}

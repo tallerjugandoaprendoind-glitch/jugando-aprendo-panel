@@ -357,7 +357,7 @@ export default function KnowledgeBaseView() {
       <div className="flex bg-white dark:bg-slate-800 rounded-2xl p-1 border border-slate-100 dark:border-slate-700 shadow-sm gap-1">
         <button onClick={() => setTab('aprender')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'aprender' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
-          <Sparkles size={15} /> Aprender de Internet
+          <Sparkles size={15} /> {t('whatsapp.aprenderInternet')}
         </button>
         <button onClick={() => setTab('diagnosticos')}
           className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${tab === 'diagnosticos' ? 'bg-violet-600 text-white' : ''}`}
@@ -505,7 +505,7 @@ export default function KnowledgeBaseView() {
             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 size={20} className="text-emerald-500" />
-                <span className="font-black text-emerald-800">¡Aprendizaje completado!</span>
+                <span className="font-black text-emerald-800">{t('whatsapp.aprendizajeCompleto')}</span>
               </div>
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {[
@@ -618,7 +618,7 @@ export default function KnowledgeBaseView() {
                     </div>
                   ) : (
                     <div>
-                      <p className="text-sm text-slate-400">Click para seleccionar PDF o TXT</p>
+                      <p className="text-sm text-slate-400">{t('whatsapp.clickPDF')}</p>
                       <p className="text-xs text-slate-300 mt-1">Sin límite de tamaño — archivos grandes se procesan en el navegador</p>
                     </div>
                   )}
@@ -694,7 +694,7 @@ export default function KnowledgeBaseView() {
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600 p-10 text-center">
               <Brain size={32} className="text-slate-200 mx-auto mb-3" />
               <p className="text-slate-400 font-semibold">Biblioteca vacía</p>
-              <p className="text-slate-400 text-sm mt-1">Usa "Aprender de Internet" para empezar</p>
+              <p className="text-slate-400 text-sm mt-1">Usa "{t('whatsapp.aprenderInternet')}" para empezar</p>
             </div>
           ) : (
             <div className="space-y-2">

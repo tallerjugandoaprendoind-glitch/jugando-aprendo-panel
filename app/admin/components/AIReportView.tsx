@@ -307,7 +307,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
     parentForms: parentFormsCompleted || [],
   })
     
-const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
+const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes').toLowerCase();
   const totalEvaluaciones = [resolvedBrief2, resolvedAdos2, resolvedVineland, resolvedWiscv, resolvedBasc3].filter(Boolean).length;
   const totalFormularios = (filteredFormResponses.length || 0) + (parentFormsCompleted?.length || 0)
   const parentFormsText = (parentFormsCompleted || []).length > 0
@@ -451,7 +451,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
               <input
                 className="flex-1 border rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 style={{ background: listening ? 'rgba(239,68,68,0.05)' : 'var(--input-bg)', borderColor: listening ? '#fca5a5' : 'var(--input-border)', color: 'var(--text-primary)' }}
-                placeholder={listening ? '🎤 Escuchando...' : 'Preguntá sobre el paciente, ABA, protocolos...'}
+                placeholder={listening ? t('aria.escuchando') : t('aria.preguntaSobre')}
                 value={input} onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !listening && sendMessage()}
                 disabled={listening}

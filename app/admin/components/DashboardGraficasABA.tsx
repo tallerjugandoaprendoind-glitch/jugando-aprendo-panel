@@ -111,7 +111,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
             <ResponsiveContainer width="100%" height={180}>
               <LineChart data={data} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="sesion" tick={{ fontSize: 9 }} label={{ value: 'Sesión', position: 'insideBottom', offset: -2, fontSize: 9 }} />
+                <XAxis dataKey="sesion" tick={{ fontSize: 9 }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 9 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} tickFormatter={v => `${v}%`} />
                 <Tooltip
                   formatter={(v: any) => [`${v}%`, 'Éxito']}
@@ -143,13 +143,13 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
           <BarChart3 size={12} /> {data.length === 0 ? 'Sin sesiones aún' : 'Se necesitan 2+ sesiones para la gráfica'}
         </div>
       )}
-      <div className="mt-2 text-[10px] text-slate-400 text-right">{sesiones.length} sesión{sesiones.length !== 1 ? 'es' : ''}</div>
+      <div className="mt-2 text-[10px] text-slate-400 text-right">{sesiones.length} {sesiones.length !== 1 ? t('programas.sesionesPlural') : t('programas.sesionPlural')}</div>
     </div>
   )
 }
 
 export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPacientes: () => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [pacientes, setPacientes] = useState<any[]>([])
   const [programasPorPaciente, setProgramasPorPaciente] = useState<Record<string, any[]>>({})
   const [loading, setLoading] = useState(true)
@@ -171,7 +171,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
       const programasPorPac: Record<string, any[]> = {}
       await Promise.all(
         ninos.map(async (n: any) => {
-          const res = await fetch(`/api/programas-aba?child_id=${n.id}`)
+          const res = await fetch(`/api/programas-aba?child_id=${n.id}&locale=${locale || 'es'}`)
           const json = await res.json()
           programasPorPac[n.id] = json.data || []
         })
@@ -202,7 +202,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
   if (loading) return (
     <div className="flex flex-col items-center justify-center py-24 gap-3">
       <Loader2 className="animate-spin text-indigo-400" size={32} />
-      <p className="text-sm text-slate-400">Cargando datos de todos los pacientes...</p>
+      <p className="text-sm text-slate-400">{t('common.cargandoPacientes')}</p>
     </div>
   )
 

@@ -1,4 +1,5 @@
 'use client'
+import { useI18n } from '@/lib/i18n-context'
 // components/agenda/AgendaSesiones.tsx
 import { useState, useEffect } from 'react'
 
@@ -11,6 +12,7 @@ const ESTADOS: Record<string, { label: string; color: string; bg: string }> = {
 }
 
 export default function AgendaSesiones({ childId }: { childId?: string }) {
+  const { t } = useI18n()
   const [sesiones, setSesiones]   = useState<any[]>([])
   const [cargando, setCargando]   = useState(true)
   const [vista, setVista]         = useState<'semana' | 'mes'>('semana')
@@ -99,7 +101,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
       {/* Header */}
       <div className="bg-blue-700 text-white p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Agenda de Sesiones</h2>
+          <h2 className="text-lg font-bold">{t('agenda.sesiones')}</h2>
           <button onClick={() => setModalNueva(true)}
             className="bg-white text-blue-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
             + Nueva
@@ -203,7 +205,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-gray-800">Nueva sesión</h3>
+              <h3 className="font-bold text-gray-800">{t('agenda.nuevaSesion')}</h3>
               <button onClick={() => setModalNueva(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
             </div>
             <div className="space-y-3">

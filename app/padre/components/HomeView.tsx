@@ -326,8 +326,8 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-400/20 rounded-full blur-2xl translate-y-8" />
         <div className="relative z-10 flex items-start justify-between gap-4">
           <div className="flex-1">
-            <p className="text-purple-200 text-xs font-semibold uppercase tracking-widest mb-1">Paciente Activo</p>
-            <h1 className="text-2xl font-black leading-tight mb-3">{child?.name || 'Sin paciente seleccionado'}</h1>
+            <p className="text-purple-200 text-xs font-semibold uppercase tracking-widest mb-1">{t('pacientes.pacienteActivo')}</p>
+            <h1 className="text-2xl font-black leading-tight mb-3">{child?.name || t('pacientes.sinPacienteSeleccionado')}</h1>
             <div className="flex flex-wrap gap-2">
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
                 <Baby size={11} /> {age} años
@@ -357,14 +357,14 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           },
           {
             value: stats.goalsAchieved, label: 'OBJETIVOS LOGRADOS',
-            sub: stats.masteryRate > 0 ? `${stats.masteryRate}% dominio` : 'En progreso',
+            sub: stats.masteryRate > 0 ? `${stats.masteryRate}% ${t('familias.dominio')}` : t('familias.enProgreso'),
             icon: <Target size={18} className="text-emerald-600" />,
             bg: 'bg-emerald-50', border: 'border-emerald-100', subColor: 'text-emerald-600',
             celebrate: stats.goalsAchieved > 0,
           },
           {
             value: `${stats.hoursTotal}h`, label: 'HORAS ACUMULADAS',
-            sub: stats.sessions > 0 ? `~${Math.round(stats.hoursTotal/stats.sessions*10)/10}h/sesión` : 'Sin sesiones',
+            sub: stats.sessions > 0 ? `~${Math.round(stats.hoursTotal/stats.sessions*10)/10}${t('familias.porHoraSesion')}` : 'Sin sesiones',
             icon: <Clock size={18} className="text-violet-600" />,
             bg: 'bg-violet-50', border: 'border-violet-100', subColor: 'text-violet-600'
           },
@@ -395,7 +395,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-slate-50">
           <CalendarDays size={16} className="text-violet-600" />
-          <h2 className="font-black text-slate-700 text-sm uppercase tracking-wide">Próxima Sesión</h2>
+          <h2 className="font-black text-slate-700 text-sm uppercase tracking-wide">{t('agenda.proximaSesion')}</h2>
         </div>
 
         {loading ? (

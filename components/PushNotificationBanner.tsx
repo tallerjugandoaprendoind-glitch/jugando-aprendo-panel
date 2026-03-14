@@ -1,6 +1,6 @@
 'use client'
-
-import { useState, useEffect } from 'react'
+import { useI18n } from '@/lib/i18n-context'
+mport { useState, useEffect } from 'react'
 import { Bell, BellOff, X, Smartphone } from 'lucide-react'
 import { usePushNotifications } from '../lib/usePushNotifications'
 
@@ -10,6 +10,7 @@ interface Props {
 
 export default function PushNotificationBanner({ userId }: Props) {
   const { permission, isSubscribed, isLoading, requestPermission, unsubscribe } = usePushNotifications(userId)
+  const { t } = useI18n()
   const [dismissed, setDismissed] = useState(false)
   const [justEnabled, setJustEnabled] = useState(false)
 

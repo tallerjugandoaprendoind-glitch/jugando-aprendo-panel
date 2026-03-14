@@ -227,7 +227,7 @@ export default function WhatsAppConfigView() {
               target="_blank" rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"
             >
-              Ver guía oficial de Meta <ExternalLink size={11} />
+              {t('ui.verGuiaOficial')} <ExternalLink size={11} />
             </a>
           </div>
         </div>
@@ -252,7 +252,7 @@ export default function WhatsAppConfigView() {
                 item.active
                   ? 'bg-green-100 text-green-700'
                   : 'bg-slate-100 text-slate-400'
-              }`}>{item.active ? 'Activo' : 'Pronto'}</span>
+              }`}>{item.active ? t('common.activo2') : t('common.pronto')}</span>
             </div>
           ))}
         </div>

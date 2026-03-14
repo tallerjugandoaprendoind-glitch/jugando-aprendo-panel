@@ -1,4 +1,5 @@
 'use client'
+import { useI18n } from '@/lib/i18n-context'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { 
@@ -45,6 +46,7 @@ interface Trend {
 // COMPONENTE PRINCIPAL
 // ==============================================================================
 export default function AnalyticsDashboard({ childId, childName, onClose }: AnalyticsDashboardProps) {
+  const { locale } = useI18n()
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
@@ -104,7 +106,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
     try {
       const res = await fetch('/api/reporte-word', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
         body: JSON.stringify({ childId, tipo: 'padres' }),
       })
       if (!res.ok) {
@@ -193,7 +195,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
                   color="blue"
                 />
                 <KPICard
-                  title="Progreso Promedio"
+                  title={t("dashboard.progresoPromedio")}
                   value={`${kpiData.avgProgress}%`}
                   change={kpiData.progressGrowth}
                   icon={<TrendingUp className="w-6 h-6" />}
@@ -220,7 +222,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
             {chartData.length > 0 && (
               <div className="bg-white rounded-2xl shadow-md border-2 border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-black text-gray-800">Evolución del Progreso</h3>
+                  <h3 className="text-xl font-black text-gray-800">{t('dashboard.evolucionProgreso')}</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Activity className="w-4 h-4" />
                     <span>Últimas {chartData.length} sesiones</span>

@@ -30,7 +30,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
   }
 
   const cambiarPassword = async () => {
-    if (pass.nueva.length < 6) { toast.error('Mínimo 6 caracteres'); return }
+    if (pass.nueva.length < 6) { toast.error(t('especialista.min6Chars')); return }
     if (pass.nueva !== pass.confirmar) { toast.error('Las contraseñas no coinciden'); return }
     setGuardando(true)
     try {
@@ -56,9 +56,9 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
           {profile?.full_name?.[0]?.toUpperCase() || 'E'}
         </div>
         <h3 className="text-2xl font-black text-white mb-1">{profile?.full_name}</h3>
-        <p className="text-blue-200 text-sm font-medium mb-4">{profile?.specialty || 'Especialista Clínico'}</p>
+        <p className="text-blue-200 text-sm font-medium mb-4">{profile?.specialty || t('especialista.especialistaClinico')}</p>
         <div className="inline-flex items-center gap-2 bg-white/15 border border-white/25 text-white px-4 py-2 rounded-full text-sm font-bold">
-          <Shield size={13} /> Especialista verificado
+          <Shield size={13} /> {t('especialista.especialistaVerificado')}
         </div>
       </div>
 

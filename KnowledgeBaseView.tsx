@@ -1,4 +1,5 @@
 'use client'
+import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect, useRef } from 'react'
 import { supabase as supabasePublic } from '@/lib/supabase'
 import {
@@ -13,6 +14,7 @@ type Tab = 'aprender' | 'biblioteca'
 
 export default function KnowledgeBaseView() {
   const toast = useToast()
+  const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('aprender')
   const [documentos, setDocumentos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -362,7 +364,7 @@ export default function KnowledgeBaseView() {
           {/* Log */}
           {logAprender.length > 0 && (
             <div className="bg-slate-900 rounded-2xl p-4 font-mono text-xs space-y-1.5">
-              <p className="text-slate-400 text-[10px] uppercase tracking-widest mb-2">Progreso en tiempo real</p>
+              <p className="text-slate-400 text-[10px] uppercase tracking-widest mb-2">{t('ui.progresoTiempoReal')}</p>
               {logAprender.map((line, i) => (
                 <p key={i} className={
                   line.startsWith('✅') ? 'text-emerald-400' :
@@ -446,7 +448,7 @@ export default function KnowledgeBaseView() {
         <div className="space-y-4">
           <button onClick={() => setShowForm(v => !v)}
             className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 text-sm transition">
-            {showForm ? <><X size={16} /> Cancelar</> : <><Plus size={16} /> Agregar documento manualmente</>}
+            {showForm ? <><X size={16} /> Cancelar</> : <><Plus size={16} /> {t('ui.agregarDocManual')}</>}
           </button>
 
           {showForm && (

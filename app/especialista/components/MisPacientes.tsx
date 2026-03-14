@@ -140,7 +140,7 @@ function WordBtn({ report }: { report: any }) {
   }
   return (
     <button onClick={dl} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
-      <Download size={13} /> Descargar reporte Word
+      <Download size={13} /> {t('pacientes.descargarReporte')}
     </button>
   )
 }
@@ -153,7 +153,7 @@ function ABADetail({ r }: { r: any }) {
     <div className="space-y-3">
       <Bloque title={t('ui.session')} icon={Calendar} color="bg-blue-50">
         <Field label="Objetivo principal" value={d.objetivo_principal} />
-        <Field label="Tipo de sesión" value={d.tipo_sesion} />
+        <Field label={t("pacientes.tipoSesion")} value={d.tipo_sesion} />
         <Field label="Duración" value={d.duracion_minutos ? `${d.duracion_minutos} min` : null} />
       </Bloque>
       <Bloque title={t('ui.abc_record')} icon={Activity} color="bg-blue-50">
@@ -172,7 +172,7 @@ function ABADetail({ r }: { r: any }) {
       <Bloque title={t('ui.observations')} icon={ClipboardList} color="bg-blue-50">
         <div className="col-span-2"><Field label="Clínicas" value={d.observaciones_clinicas} /></div>
         <Field label="Tarea para casa" value={d.tarea_casa} />
-        <div className="col-span-2"><Field label="Mensaje familia" value={d.mensaje_familia} /></div>
+        <div className="col-span-2"><Field label={t("pacientes.mensajeFamilia")} value={d.mensaje_familia} /></div>
       </Bloque>
       <AIBlock analysis={r.ai_analysis} />
     </div>
@@ -235,7 +235,7 @@ function EntornoDetail({ r }: { r: any }) {
       </Bloque>
       <Bloque title="Recomendaciones para el hogar" icon={Home} color="bg-green-50">
         <div className="col-span-2"><Field label="Mensaje a padres" value={d.mensaje_padres_entorno} /></div>
-        <div className="col-span-2"><Field label="Actividades en casa" value={d.actividades_casa || d.actividades_sugeridas} /></div>
+        <div className="col-span-2"><Field label={t("especialista.activCasa")} value={d.actividades_casa || d.actividades_sugeridas} /></div>
         <Field label="Espacio físico" value={d.recomendaciones_espacio} />
         <Field label="Rutinas" value={d.recomendaciones_rutinas} />
       </Bloque>
@@ -297,7 +297,7 @@ function GenericDetail({ r }: { r: any }) {
   return (
     <div className="space-y-3">
       {entries.length > 0 && (
-        <Bloque title="Respuestas del formulario" icon={FileText}>
+        <Bloque title={t("pacientes.respuestasFormulario")} icon={FileText}>
           {entries.map(([k, v]) => (
             <Field key={k} label={k.replace(/_/g, ' ')}
               value={Array.isArray(v) ? (v as any[]).join(', ') : String(v)} />
@@ -317,7 +317,7 @@ function RecordCard({ item }: { item: any }) {
   const hasFull = !!item._fullData
 
   const renderDetail = () => {
-    if (item._type === 'Sesión ABA') return <ABADetail r={item._fullData} />
+    if (item._type === 'Sesión ABA' || item._type === 'ABA Session') return <ABADetail r={item._fullData} />
     if (item._type === 'Anamnesis') return <AnamnesisDetail r={item._fullData} />
     if (item._type === 'Visita Domiciliaria') return <EntornoDetail r={item._fullData} />
     if (['BRIEF-2','ADOS-2','Vineland-3','WISC-V','BASC-3'].includes(item._type)) return <EvalDetail r={item._fullData} tipo={item._type} />
@@ -424,7 +424,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
           Genera un análisis completo del paciente con perfil clínico, áreas prioritarias, plan de tratamiento personalizado y estrategias para el hogar.
         </p>
         {records.length === 0 ? (
-          <p className="text-sm text-slate-400 italic">No hay registros suficientes para generar un resumen.</p>
+          <p className="text-sm text-slate-400 italic">{t('pacientes.sinRegistros').split('para')[0]} resumen.</p>
         ) : (
           <button onClick={generarResumen}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-bold text-sm shadow-md transition-all">

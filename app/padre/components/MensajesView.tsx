@@ -96,7 +96,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
       {actividades_en_casa?.length > 0 && (
         <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4">
           <p className="text-xs font-black text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <Home size={13} /> Actividades para practicar en casa
+            <Home size={13} /> {t('familias.actividadesCasa')}
           </p>
           <ul className="space-y-2">
             {actividades_en_casa.map((a: string, i: number) => (
@@ -114,7 +114,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
       {recomendaciones?.length > 0 && (
         <div className="bg-violet-50 rounded-2xl border border-violet-100 p-4">
           <p className="text-xs font-black text-violet-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <BookOpen size={13} /> Recomendaciones del terapeuta
+            <BookOpen size={13} /> {t('mensajes.recomendacionesTerapeuta')}
           </p>
           <ul className="space-y-2">
             {recomendaciones.slice(0, 3).map((r: string, i: number) => (
@@ -171,7 +171,7 @@ export default function MensajesView({ profile }: { profile: any }) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
         <div className="w-10 h-10 rounded-full border-4 border-violet-200 border-t-violet-500 animate-spin" />
-        <p className="text-slate-400 text-sm font-medium">Cargando mensajes...</p>
+        <p className="text-slate-400 text-sm font-medium">{t('common.cargandoMensajes')}</p>
       </div>
     )
   }
@@ -294,7 +294,7 @@ export default function MensajesView({ profile }: { profile: any }) {
                       style={{ background: 'linear-gradient(135deg, #5b21b6, #6d28d9, #7c3aed)' }}
                     >
                       <p className="text-xs font-black text-purple-300 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <MessageCircle size={12} /> Mensaje de tu terapeuta
+                        <MessageCircle size={12} /> {t('mensajes.mensajeDeTuTerapeuta')}
                       </p>
                       <p className="text-white text-base md:text-lg leading-relaxed whitespace-pre-wrap font-medium">
                         {noti.message}

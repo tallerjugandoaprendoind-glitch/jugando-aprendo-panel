@@ -26,7 +26,7 @@ function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any
           <Icon size={18} className={accent.icon} />
         </div>
         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${alert ? 'bg-red-100 text-red-600' : accent.badge}`}>
-          {alert ? '⚠️ Atención' : sub}
+          {alert ? '{t('dashboard.atencion')}' : sub}
         </span>
       </div>
       <p className="text-3xl font-black mb-1" style={{ color: alert ? '#dc2626' : 'var(--text-primary)' }}>{value}</p>
@@ -49,10 +49,10 @@ function CitaRow({ cita }: { cita: any }) {
         <span className="text-sm font-black leading-none">{dia}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold truncate" style={{ color: "var(--text-primary)" }}>{cita.children?.name || 'Sin nombre'}</p>
+        <p className="text-sm font-bold truncate" style={{ color: "var(--text-primary)" }}>{cita.children?.name || t('common.sinNombre')}</p>
         <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: "var(--text-muted)" }}>
           <Clock size={10} /> {cita.appointment_time?.slice(0, 5)}
-          {esHoy && <span className="ml-1 text-blue-600 font-bold">• HOY</span>}
+          {esHoy && <span className="ml-1 text-blue-600 font-bold">• {t('common.hoy2')}</span>}
         </p>
       </div>
       <ChevronRight size={15} className="text-slate-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
@@ -118,7 +118,7 @@ function BienestarPanel({ data }: { data: any[] }) {
         <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
           <AlertTriangle size={14} className="text-red-600 shrink-0 mt-0.5" />
           <p className="text-xs text-red-700 font-bold">
-            {counts.dificil} familia{counts.dificil > 1 ? 's' : ''} necesita{counts.dificil === 1 ? '' : 'n'} apoyo emocional adicional esta semana.
+            {counts.dificil} {t('dashboard.familiasNecesitan')} emocional adicional esta semana.
           </p>
         </div>
       )}

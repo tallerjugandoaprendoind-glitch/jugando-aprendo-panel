@@ -300,7 +300,7 @@ export default function AdminDashboard() {
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
               >
-                <LogOut size={14} /> Cerrar sesión
+                <LogOut size={14} /> {t('common.cerrarSesion')}
               </button>
             </div>
           )}

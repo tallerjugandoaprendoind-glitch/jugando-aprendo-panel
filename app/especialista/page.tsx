@@ -18,6 +18,8 @@ import MisEvaluaciones from './components/MisEvaluaciones'
 import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
 import MisFormularios from './components/MisFormularios'
+import LocaleSelector from '@/app/components/LocaleSelector'
+import { ThemeToggleButton } from '@/components/ThemeContext'
 
 
 
@@ -120,7 +122,7 @@ export default function EspecialistaDashboard() {
           <Stethoscope size={28} className="text-white" />
         </div>
         <Loader2 size={20} className="animate-spin text-blue-600" />
-        <p className="text-sm font-medium text-slate-500">Cargando panel clínico...</p>
+        <p className="text-sm font-medium text-slate-500">{t('especialista.cargandoPanel')}</p>
       </div>
     </div>
   )
@@ -178,7 +180,7 @@ export default function EspecialistaDashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold truncate text-slate-700">{userName}</p>
-              <p className="text-[10px] truncate text-slate-400">{profile?.specialty || 'Especialista Clínico'}</p>
+              <p className="text-[10px] truncate text-slate-400">{profile?.specialty || t('especialista.especialistaClinico')}</p>
             </div>
             <Settings size={14} className="text-slate-400 flex-shrink-0" />
           </div>
@@ -222,12 +224,14 @@ export default function EspecialistaDashboard() {
                 {PAGE_TITLES[activeView] || 'Panel'}
               </h1>
               <p className="text-xs hidden sm:block text-slate-400">
-                Jugando Aprendo · Panel Especialista
+                Jugando Aprendo · {t('especialista.titulo')}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <LocaleSelector compact={true} />
+            <ThemeToggleButton />
             <button
               onClick={() => setActiveView('perfil')}
               className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition-colors"

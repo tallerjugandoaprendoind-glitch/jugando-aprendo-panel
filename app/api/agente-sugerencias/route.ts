@@ -173,6 +173,7 @@ function getLangInstruction(locale?: string | null): string {
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
+  const userLocale = searchParams.get('locale') || req.headers.get('x-locale') || 'es'
   const childId = searchParams.get('child_id')
   const soloGuardadas = searchParams.get('guardadas') === 'true'
 

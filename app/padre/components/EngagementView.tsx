@@ -69,7 +69,7 @@ export default function EngagementView({ childId }: { childId: string }) {
     finally { setLoading(false) }
   }
 
-  const DISCLAIMER_IA = '📋 Estas actividades complementan el programa terapéutico diseñado por tu especialista. Siempre consultá con el terapeuta ante cualquier duda.'
+  const DISCLAIMER_IA = '📋 {t('familias.actividadesCasa')} diseñado por tu especialista. Siempre consultá con el terapeuta ante cualquier duda.'
 
 const generarPlan = async () => {
     setGenerando(true)
@@ -143,7 +143,7 @@ const generarPlan = async () => {
           </div>
           <div>
             <h2 className="text-xl font-black text-slate-800">{t('ui.plan_week')}</h2>
-            <p className="text-xs text-slate-400">Actividades diseñadas para ti y {plan?.child_name || 'tu hijo/a'}</p>
+            <p className="text-xs text-slate-400">{t('familias.actividadesDise')} {plan?.child_name || 'tu hijo/a'}</p>
           </div>
         </div>
         <button onClick={generarPlan} disabled={generando}
@@ -157,7 +157,7 @@ const generarPlan = async () => {
         <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
           <Brain size={40} className="text-slate-300 mx-auto mb-4" />
           <p className="text-slate-500 font-medium mb-2">{t('ui.no_plan')}</p>
-          <p className="text-slate-400 text-sm mb-5">La IA generará actividades personalizadas basadas en el progreso de tu hijo/a</p>
+          <p className="text-slate-400 text-sm mb-5">{t('familias.iaGenerara')}as en el progreso de tu hijo/a</p>
           <button onClick={generarPlan} disabled={generando}
             className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold flex items-center gap-2 mx-auto transition">
             <Sparkles size={16} />
@@ -169,7 +169,7 @@ const generarPlan = async () => {
           {/* Disclaimer complemento terapeuta */}
           <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-2">
             <span className="text-blue-400 shrink-0 mt-0.5">📋</span>
-            <p className="text-xs text-blue-600 leading-relaxed">Estas actividades complementan el programa terapéutico diseñado por tu especialista. Consultá con el terapeuta ante cualquier duda.</p>
+            <p className="text-xs text-blue-600 leading-relaxed">{t('familias.actividadesCasa')} diseñado por tu especialista. Consultá con el terapeuta ante cualquier duda.</p>
           </div>
 
           {/* Mensaje motivacional */}
@@ -264,7 +264,7 @@ const generarPlan = async () => {
           {historial.length > 1 && (
             <div className="bg-white rounded-2xl border border-slate-100 p-4">
               <p className="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                <TrendingUp size={16} className="text-violet-500" /> Tu historial de participación
+                <TrendingUp size={16} className="text-violet-500" /> {t('familias.actividadesEnCasa')}
               </p>
               <div className="space-y-2">
                 {historial.slice(0, 5).map((h, i) => (

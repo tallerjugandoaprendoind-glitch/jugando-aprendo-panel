@@ -184,7 +184,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
       const res = await fetch('/api/agente-prediccion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ childId: p.id, childName: p.name, semanas: 12 , locale: localStorage.getItem('vanty_locale') || 'es' })
+        body: JSON.stringify({ locale: locale || 'es', childId: p.id, childName: p.name, semanas: 12 , locale: localStorage.getItem('vanty_locale') || 'es' })
       })
       const data = await res.json()
       setPrediccion(data)
@@ -208,7 +208,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
       <div className="lg:col-span-1  rounded-2xl border border-slate-200 shadow-sm overflow-hidden" style={{ background: "var(--card)" }}>
         <div className="p-4 border-b" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
           <h3 className="font-black flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-            <Users size={16} className="text-blue-600" /> Selecciona un paciente
+            <Users size={16} className="text-blue-600" /> {t('ui.generarPrediccion2')}
           </h3>
           <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>La IA analizará sus últimas 12 semanas</p>
         </div>
@@ -237,7 +237,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
         {!selectedPaciente && !loading && (
           <div className="rounded-2xl p-12 text-center" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <Brain size={48} className="text-slate-200 mx-auto mb-4" />
-            <p className="font-medium" style={{ color: "var(--text-muted)" }}>Selecciona un paciente para generar predicciones con IA</p>
+            <p className="font-medium" style={{ color: "var(--text-muted)" }}>{t('ui.seleccionaPacientePrediccion').replace(' para generar predicción','')} {t('ui.seleccionaPacientePrediccion').split(' para')[1] || ''} predicciones con IA</p>
           </div>
         )}
 
@@ -273,7 +273,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             {((prediccion as any).programas_analizados === 0) && (
               <div className="rounded-xl p-6 text-center border-2 border-dashed" style={{ borderColor: "var(--card-border)", background: "var(--muted-bg)" }}>
                 <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>Sin programas ABA activos</p>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Crea programas en la ficha del paciente para generar análisis por nivel.</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{t('hub.creaProgramas')}el paciente para generar análisis por nivel.</p>
               </div>
             )}
 
@@ -303,7 +303,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                     <>
                       <div className="grid grid-cols-3 gap-2">
                         {[
-                          { label: 'Última sesión', value: `${prog.ultimo_porcentaje}%`, highlight: prog.ultimo_porcentaje >= prog.criterio_dominio },
+                          { label: t('hub.ultimaSesion'), value: `${prog.ultimo_porcentaje}%`, highlight: prog.ultimo_porcentaje >= prog.criterio_dominio },
                           { label: "Media", value: `${prog.media}%`, highlight: false },
                           { label: "Mediana", value: `${prog.mediana}%`, highlight: false },
                         ].map(m => (
@@ -648,7 +648,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
       const res = await fetch('/api/agente-patrones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ childId: selected.id, childName: selected.name , locale: localStorage.getItem('vanty_locale') || 'es' }),
+        body: JSON.stringify({ locale: locale || 'es', childId: selected.id, childName: selected.name , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -764,7 +764,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
       const res = await fetch('/api/agente-objetivos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ childId: selected.id, childName: selected.name, accion , locale: localStorage.getItem('vanty_locale') || 'es' }),
+        body: JSON.stringify({ locale: locale || 'es', childId: selected.id, childName: selected.name, accion , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -965,7 +965,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       const res = await fetch('/api/reporte-word', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ childId: selected.id, tipo , locale: localStorage.getItem('vanty_locale') || 'es' }),
+        body: JSON.stringify({ locale: locale || 'es', childId: selected.id, tipo , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       if (!res.ok) {
         const err = await res.json()

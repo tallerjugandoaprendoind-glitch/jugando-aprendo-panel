@@ -155,7 +155,7 @@ export default function ResourcesView({ profile }: Props) {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-3">
           <div className="w-10 h-10 rounded-full border-4 border-violet-200 border-t-violet-600 animate-spin"/>
-          <p className="text-slate-400 text-sm font-medium">Cargando recursos...</p>
+          <p className="text-slate-400 text-sm font-medium">{t('common.cargandoRecursos')}</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-12 text-center">

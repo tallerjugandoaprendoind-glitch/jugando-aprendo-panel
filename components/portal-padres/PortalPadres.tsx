@@ -1,4 +1,5 @@
 'use client'
+import { useI18n } from '@/lib/i18n-context'
 // components/portal-padres/PortalPadres.tsx
 import { useState } from 'react'
 import ChatPadres from './ChatPadres'
@@ -12,6 +13,7 @@ interface PortalPadresProps {
 }
 
 export default function PortalPadres({ childId, parentUserId, childName }: PortalPadresProps) {
+  const { locale } = useI18n()
   const [tab, setTab] = useState<'inicio' | 'chat' | 'tareas' | 'progreso' | 'citas'>('inicio')
 
   const tabs = [
@@ -72,8 +74,8 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
 
   useState(() => {
     Promise.all([
-      fetch(`/api/progreso-paciente?child_id=${childId}&semanas=4`).then(r => r.json()),
-      fetch(`/api/tareas-hogar?child_id=${childId}&activas=true`).then(r => r.json()),
+      fetch(`/api/progreso-paciente?child_id=${childId}&semanas=4&locale=${locale || 'es'}`).then(r => r.json()),
+      fetch(`/api/tareas-hogar?child_id=${childId}&activas=true&locale=${locale || 'es'}`).then(r => r.json()),
       fetch(`/api/agenda?child_id=${childId}`).then(r => r.json()),
     ]).then(([progreso, tareas, agenda]) => {
       setDatos({ progreso, tareas, agenda })

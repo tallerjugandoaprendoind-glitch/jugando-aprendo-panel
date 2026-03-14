@@ -349,7 +349,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
         Tu asistente clínico de Jugando Aprendo
       </p>
       <p className="text-xs text-slate-400 mb-6 leading-relaxed max-w-xs">
-        He revisado el historial completo de <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> y estoy lista para ayudarte en lo que necesites.
+        {t('aria.revisadoHistorial')} <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> y estoy lista para ayudarte en lo que necesites.
       </p>
 
       {/* Capacidades */}
@@ -637,7 +637,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
         {!showWelcome && messages.length > 0 && !typing && (
           <div className="shrink-0 px-4 pb-2">
             <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {['📋 Última sesión', '🏠 Tips para casa', '🎯 Objetivos', '💙 Apoyo'].map((q, i) => {
+              {[t('aria.pregSugerida_sesion'), t('aria.pregSugerida_casa'), t('aria.pregSugerida_objetivos'), t('aria.pregSugerida_apoyo')].map((q, i) => {
                 const texts = ['¿Cómo le fue en la última sesión?', 'Dame consejos para actividades en casa', '¿Qué objetivos está trabajando?', 'Necesito apoyo emocional']
                 return (
                   <button key={i} onClick={() => send(texts[i])}

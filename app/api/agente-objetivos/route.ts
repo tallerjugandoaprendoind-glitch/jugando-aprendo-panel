@@ -17,7 +17,9 @@ function getLangInstruction(locale: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { childId, childName, accion = 'generar' } = await req.json()
+    const rawBody = await req.json()
+  const userLocale = rawBody.locale || req.headers.get('x-locale') || 'es'
+  const { childId, childName, accion = 'generar' } = await req.json()
     // accion: 'generar' | 'ajustar' | 'evaluar_dominio'
     if (!childId) return NextResponse.json({ error: 'childId requerido' }, { status: 400 })
 

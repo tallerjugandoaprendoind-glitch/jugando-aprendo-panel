@@ -139,7 +139,7 @@ function QuestionField({ q, value, onChange }: any) {
       ) : (
         <div className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400 flex items-center gap-2">
           <Sparkles size={14} className="text-purple-400 flex-shrink-0" />
-          <span>Se completará automáticamente al presionar <strong className="text-purple-600">✨ Analizar con IA</strong></span>
+          <span>{t('evaluaciones.seCompletara')} <strong className="text-purple-600">{t('evaluaciones.analizarConIA2')}</strong>lizar con IA</strong></span>
         </div>
       )
     }
@@ -148,7 +148,7 @@ function QuestionField({ q, value, onChange }: any) {
     ) : (
       <div className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400 flex items-center gap-2">
         <Sparkles size={14} className="text-purple-400 flex-shrink-0" />
-        <span>Se completará al presionar <strong className="text-purple-600">✨ Analizar con IA</strong></span>
+        <span>{t('evaluaciones.seCompletara2')} <strong className="text-purple-600">{t('evaluaciones.analizarConIA2')}</strong>rong></span>
       </div>
     )
   }
@@ -313,7 +313,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         <CheckCircle2 size={40} className="text-emerald-600" />
       </div>
       <div>
-        <h3 className="text-2xl font-black text-slate-800 mb-2">¡Formulario enviado!</h3>
+        <h3 className="text-2xl font-black text-slate-800 mb-2">{t('evaluaciones.formularioEnviado')}</h3>
         <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
           El análisis fue guardado. El jefe lo revisará antes de enviarlo al padre/madre.
         </p>

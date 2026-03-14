@@ -1,4 +1,5 @@
 'use client'
+import { useI18n } from '@/lib/i18n-context'
 // components/portal-padres/ChatPadres.tsx
 import { useState, useEffect, useRef } from 'react'
 
@@ -24,6 +25,7 @@ const SUGERENCIAS = [
 ]
 
 export default function ChatPadres({ childId, parentUserId, childName }: ChatPadresProps) {
+  const { locale } = useI18n()
   const [mensajes, setMensajes]   = useState<Mensaje[]>([])
   const [input, setInput]         = useState('')
   const [enviando, setEnviando]   = useState(false)
@@ -60,8 +62,8 @@ export default function ChatPadres({ childId, parentUserId, childName }: ChatPad
     try {
       const res = await fetch('/api/parent-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mensaje: msg, childId, parentUserId })
+        headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale: locale || 'es', mensaje: msg, childId, parentUserId })
       })
       const data = await res.json()
 
@@ -106,7 +108,7 @@ export default function ChatPadres({ childId, parentUserId, childName }: ChatPad
           <div className="text-center py-6">
             <p className="text-3xl mb-3">💬</p>
             <p className="text-gray-600 font-medium text-sm">¡Hola! Soy el asistente de {childName}.</p>
-            <p className="text-gray-400 text-xs mt-1">Puedes preguntarme sobre el progreso, tareas y citas.</p>
+            <p className="text-gray-400 text-xs mt-1">{t('familias.preguntarProgreso')}itas.</p>
           </div>
         )}
 

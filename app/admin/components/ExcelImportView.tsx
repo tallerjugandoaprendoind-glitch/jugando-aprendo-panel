@@ -151,7 +151,7 @@ export default function ExcelImportView() {
         ) : (
           <div>
             <p className="font-semibold text-gray-700 dark:text-gray-200">Arrastra tu CSV aquí</p>
-            <p className="text-sm text-gray-500 mt-1">o haz clic para seleccionar</p>
+            <p className="text-sm text-gray-500 mt-1">{t('ui.oHazClic')}</p>
           </div>
         )}
       </div>

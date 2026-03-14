@@ -126,7 +126,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
         <div className="text-5xl mb-4">⚠️</div>
         <h3 className="font-black text-slate-800 text-lg mb-2">{t('ui.form_not_available')}</h3>
         <p className="text-slate-500 text-sm mb-2">El tipo <strong className="text-red-500">"{form.form_type}"</strong> no se encontró en el sistema.</p>
-        <p className="text-slate-400 text-xs mb-6">Pide al administrador que vuelva a asignar el formulario.</p>
+        <p className="text-slate-400 text-xs mb-6">{t('evaluaciones.administradorAsigne')}</p>
         <button onClick={onClose} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">{t('common.cerrar')}</button>
       </div>
     </div>
@@ -136,7 +136,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl p-8 text-center">
         <Loader2 className="animate-spin text-blue-600 mx-auto mb-3" size={32}/>
-        <p className="text-slate-500 text-sm">Cargando formulario...</p>
+        <p className="text-slate-500 text-sm">{t('common.cargandoFormulario')}</p>
       </div>
     </div>
   )
@@ -486,7 +486,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
                       </div>
                       <button onClick={() => setActiveForm(form)}
                         className="mt-4 w-full py-3.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-200/50 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
-                        <FileText size={16}/> Completar Formulario
+                        <FileText size={16}/> {t('evaluaciones.completarFormulario')}
                       </button>
                     </div>
                   </div>

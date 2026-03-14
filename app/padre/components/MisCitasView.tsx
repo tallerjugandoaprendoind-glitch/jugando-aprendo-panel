@@ -306,7 +306,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
       {loading ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4">
           <div className="w-12 h-12 rounded-full border-4 border-violet-200 border-t-violet-600 animate-spin"/>
-          <p className="text-slate-400 font-medium">Cargando citas...</p>
+          <p className="text-slate-400 font-medium">{t('common.cargandoCitas')}</p>
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-3xl p-10 text-center shadow-sm border border-slate-100">
@@ -440,8 +440,8 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                                   <div className="flex items-center gap-2 px-3 py-2.5 bg-indigo-50 border border-indigo-200 rounded-xl">
                                     <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse shrink-0"/>
                                     <div className="flex-1">
-                                      <p className="text-xs text-indigo-700 font-bold">Cita virtual · Esperando al terapeuta</p>
-                                      <p className="text-[10px] text-indigo-500 mt-0.5">El botón para unirte aparecerá aquí cuando la sesión inicie</p>
+                                      <p className="text-xs text-indigo-700 font-bold">{t('agenda.citaVirtual')}</p>
+                                      <p className="text-[10px] text-indigo-500 mt-0.5">{t('agenda.botonApareceInicio')}do la sesión inicie</p>
                                     </div>
                                     <Video size={14} className="text-indigo-400 shrink-0"/>
                                   </div>

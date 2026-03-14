@@ -15,7 +15,7 @@ import ProgramasABAView from './ProgramasABAView'
 import ARIAAgentChat from './ARIAAgentChat'
 
 
-// ── Historial de evaluaciones del paciente (mini view dentro de ficha) ────────
+// ── {t('pacientes.historiaEvaluaciones')} del paciente (mini view dentro de ficha) ────────
 function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string; childName: string }) {
   const { t, locale } = useI18n()
   const [evaluaciones, setEvaluaciones] = useState<any[]>([])
@@ -55,7 +55,7 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Historial de evaluaciones · {childName}</p>
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('pacientes.historiaEvaluaciones')} · {childName}</p>
         <span className="text-[10px] bg-slate-100 px-2 py-1 rounded-full font-bold text-slate-500" style={{ color: "var(--text-muted)" }}>{evaluaciones.length} registros</span>
       </div>
       {evaluaciones.length === 0 ? (

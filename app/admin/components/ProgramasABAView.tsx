@@ -163,7 +163,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       {loadingAI && (
         <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 flex items-center gap-3">
           <Loader2 size={16} className="animate-spin text-violet-500" />
-          <p className="text-sm text-violet-700 font-medium">ARIA analizando progreso...</p>
+          <p className="text-sm text-violet-700 font-medium">{t('dashboard.ariAnalizando')}</p>
         </div>
       )}
       {aiAnalysis && aiAnalysis.alertas?.length > 0 && (
@@ -200,7 +200,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       {loading ? (
         <div className="flex flex-col items-center py-16 gap-3">
           <Loader2 className="animate-spin text-indigo-400" size={28} />
-          <p className="text-slate-400 text-sm">Cargando programas...</p>
+          <p className="text-slate-400 text-sm">{t('programas.sinProgramas')}</p>
         </div>
       ) : programasFiltrados.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-3xl p-14 text-center">
@@ -466,11 +466,11 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       <ResponsiveContainer width="100%" height={200}>
                         <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                          <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: 'Sesión', position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
+                          <XAxis dataKey="sesion" label={{ value: t('programas.sesionLabel') }} tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `Sesión ${label}` }}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           {cambiosFase.map(x => <ReferenceLine key={x} x={x} stroke="#a5b4fc" strokeDasharray="4 2" strokeWidth={1.5} />)}
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
@@ -511,7 +511,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${d.set || ''}` : `Sesión ${label}` }}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
                             label={{ value: `🏆 ${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
@@ -893,7 +893,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
       <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-black text-lg text-slate-800">Nuevo Programa ABA</h3>
+            <h3 className="font-black text-lg text-slate-800">{t('programas.nuevoPrograma')}</h3>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
           </div>
 

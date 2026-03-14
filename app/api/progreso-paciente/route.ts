@@ -47,6 +47,7 @@ function getLangInstruction(locale: string): string {
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
+  const userLocale = searchParams.get('locale') || request.headers.get('x-locale') || 'es'
   const childId = searchParams.get('child_id')
   const semanas = parseInt(searchParams.get('semanas') || '12')
   if (!childId) return NextResponse.json({ error: 'child_id requerido' }, { status: 400 })

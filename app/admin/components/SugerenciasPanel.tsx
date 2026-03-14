@@ -42,7 +42,7 @@ const PRIORIDAD_CONFIG = {
 }
 
 function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: string) => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [expandido, setExpandido] = useState(false)
   const [resolviendo, setResolviendo] = useState(false)
   const cfg = TIPO_CONFIG[s.tipo] || TIPO_CONFIG.objetivo_estancado
@@ -53,7 +53,7 @@ function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: str
     if (!s.id) return
     setResolviendo(true)
     try {
-      await fetch('/api/agente-sugerencias', {
+      await fetch(`/api/agente-sugerencias?locale=${locale || 'es'}`', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({ sugerenciaId: s.id, nota: 'Marcado como resuelto desde el panel' , locale: localStorage.getItem('vanty_locale') || 'es' })
@@ -121,7 +121,7 @@ function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: str
 }
 
 export default function SugerenciasPanel({ childId }: { childId?: string }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   const [sugerencias, setSugerencias] = useState<Sugerencia[]>([])
   const [insight, setInsight] = useState<string | null>(null)

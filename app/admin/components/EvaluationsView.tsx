@@ -509,7 +509,7 @@ function DynamicEvaluationsView() {
                      value={selectedChild} 
                      onChange={(e) => setSelectedChild(e.target.value)}
                    >
-                      <option value="">-- Buscar paciente --</option>
+                      <option value="">{t('ui.buscarPaciente2')}</option>
                       {listaNinos.map(n=><option key={n.id} value={n.id}>{n.name}</option>)}
                    </select>
                </div>

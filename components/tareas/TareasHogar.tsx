@@ -1,4 +1,5 @@
 'use client'
+import { useI18n } from '@/lib/i18n-context'
 // components/tareas/TareasHogar.tsx
 import { useState, useEffect } from 'react'
 
@@ -9,6 +10,7 @@ interface TareasHogarProps {
 }
 
 export default function TareasHogar({ childId, modoParent = false, parentUserId }: TareasHogarProps) {
+  const { locale } = useI18n()
   const [tareas, setTareas]       = useState<any[]>([])
   const [cargando, setCargando]   = useState(true)
   const [completando, setCompletando] = useState<string | null>(null)
@@ -32,8 +34,8 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
     try {
       await fetch('/api/tareas-hogar', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'completar', id, nota_padre: notaPadre, dificultad_reportada: dificultad })
+        headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale: locale || 'es', action: 'completar', id, nota_padre: notaPadre, dificultad_reportada: dificultad })
       })
       setTareas(prev => prev.map(t => t.id === id ? { ...t, completada: true } : t))
       setModalAbierto(false)
@@ -179,7 +181,7 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
             <textarea
               value={notaPadre}
               onChange={e => setNotaPadre(e.target.value)}
-              placeholder="Nota opcional: ¿algo que quieras comentarle al terapeuta?"
+              placeholder="{t('familias.notaOpcional')}"
               rows={3}
               className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-blue-400 resize-none"
             />

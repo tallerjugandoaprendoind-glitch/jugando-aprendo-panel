@@ -130,7 +130,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
                 <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Nota para el centro (opcional)</label>
                 <textarea
                   value={nota} onChange={e => setNota(e.target.value)}
-                  rows={2} placeholder="Ej: Pueden guardar el pedido hasta el viernes..."
+                  rows={2} placeholder={t("tienda.pedidoGuardar")}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-blue-400 focus:bg-white transition-all resize-none"
                 />
               </div>

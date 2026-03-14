@@ -274,19 +274,19 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
         </div>
 
         <div className="bg-indigo-50 rounded-xl p-4 mb-6 border border-indigo-100">
-          <p className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1">Formulario a Enviar</p>
+          <p className="text-xs font-black text-indigo-400 uppercase tracking-widest mb-1">{t('evaluaciones.formularioEnviar')}</p>
           <p className="font-bold text-indigo-800">{form.title}</p>
           <p className="text-xs text-indigo-600 mt-0.5">{form.estimatedMinutes} min aprox.</p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Paciente *</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">{t('evaluaciones.pacienteStar')}</label>
             <select value={childId} onChange={e => setChildId(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all">
               <option value="">{t('ui.select_patient_option')}</option>
               {children.map((c: any) => <option key={c.id} value={c.id}>{c.name}{c.age ? ` - ${c.age}` : ''}</option>)}
             </select>
-            <p className="text-xs text-slate-400 mt-1.5">El formulario se enviará al padre/madre vinculado al paciente.</p>
+            <p className="text-xs text-slate-400 mt-1.5">{t('evaluaciones.irABiblioteca')}</p>
           </div>
           <div>
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Mensaje a los Padres</label>
@@ -521,7 +521,7 @@ export default function NeuroFormsView() {
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-bold text-slate-400">
                 <span>{t('common.seccion')} {currentStep + 1} {t('common.de')} {totalSteps}</span>
-                <span>{Math.round(progress)}% completado</span>
+                <span>{Math.round(progress)}% {t('ui.porcentajeCompletado').replace('% ','')}</span>
               </div>
               <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}/>

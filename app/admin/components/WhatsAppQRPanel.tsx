@@ -107,7 +107,7 @@ export default function WhatsAppQRPanel() {
             </div>
           </div>
           <div className="mt-4 space-y-1.5">
-            {['Cita confirmada o cancelada','Nuevo informe disponible','Formulario para completar','Mensaje del terapeuta'].map(t => (
+            {[t('notificaciones.nuevaCita'),t('notificaciones.informeDisponible'),t('notificaciones.formularioActualizado'),t('notificaciones.mensajeNuevo')].map(t => (
               <p key={t} className="text-xs text-green-700 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0"/>
                 {t}

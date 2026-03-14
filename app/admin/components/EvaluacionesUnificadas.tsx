@@ -265,7 +265,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
           ) : (
             <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center gap-2 text-slate-400 text-sm">
               <Sparkles size={15} className="text-violet-300 flex-shrink-0" />
-              <span>Se completará automáticamente al presionar <strong className="text-violet-500">Analizar con IA</strong></span>
+              <span>{t('evaluaciones.seCompletara')} <strong className="text-violet-500">{t('evaluaciones.analizarConIA2')}</strong><br/>zar con IA</strong></span>
             </div>
           )}
         </div>
@@ -283,7 +283,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
         ) : (
           <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center gap-2 text-slate-400 text-sm">
             <Sparkles size={15} className="text-violet-300 flex-shrink-0" />
-            <span>Se completará al presionar <strong className="text-violet-500">Analizar con IA</strong></span>
+            <span>{t('evaluaciones.seCompletara2')} <strong className="text-violet-500">{t('evaluaciones.analizarConIA2')}</strong>ng></span>
           </div>
         )}
       </div>
@@ -545,7 +545,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
 
       if (error) throw error
 
-      const childName = (sf as any).children?.name || 'Paciente'
+      const childName = (sf as any).children?.name || t('nav.pacientes')
       const reportData = {
         responses: fullRecord?.responses || fullRecord?.datos || {},
         ai_analysis: fullRecord?.ai_analysis,
@@ -627,7 +627,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
             )}
           </div>
           <p className="text-xs text-slate-400 flex items-center gap-1">
-            <Baby size={10} /> {(sf as any).children?.name || 'Paciente'} · {new Date(sf.created_at).toLocaleDateString(toBCP47(locale))}
+            <Baby size={10} /> {(sf as any).children?.name || t('nav.pacientes')} · {new Date(sf.created_at).toLocaleDateString(toBCP47(locale))}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
@@ -674,26 +674,26 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
       <div className=" rounded-3xl p-8 w-full max-w-md shadow-2xl" style={{ background: "var(--card)" }}>
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-black text-xl text-slate-800 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-            <Send size={20} className="text-violet-600" /> Enviar a Padres
+            <Send size={20} className="text-violet-600" /> {t('common.enviarPadres')}
           </h3>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={20} /></button>
         </div>
 
         <div className="bg-violet-50 rounded-xl p-4 mb-6 border border-violet-100">
-          <p className="text-xs font-black text-violet-400 uppercase tracking-widest mb-1">Formulario</p>
+          <p className="text-xs font-black text-violet-400 uppercase tracking-widest mb-1">{t('evaluaciones.titulo')}</p>
           <p className="font-bold text-violet-800">{form.title}</p>
           <p className="text-xs text-violet-600 mt-0.5">{form.estimatedMinutes} min aprox.</p>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Paciente *</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">{t('evaluaciones.pacienteStar')}</label>
             <select value={childId} onChange={e => setChildId(e.target.value)}
               className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all">
               <option value="">{t('ui.select_patient_option')}</option>
               {children.map((c: any) => <option key={c.id} value={c.id}>{c.name}{c.age ? ` (${c.age})` : ''}</option>)}
             </select>
-            <p className="text-xs text-slate-400 mt-1.5">El formulario se enviará al padre/madre vinculado al paciente.</p>
+            <p className="text-xs text-slate-400 mt-1.5">{t('evaluaciones.irABiblioteca')}</p>
           </div>
           <div>
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Mensaje</label>
@@ -776,7 +776,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
           body: JSON.stringify({
             formType: form.id,
             formData: responses,
-            childName: child?.name || 'Paciente',
+            childName: child?.name || t('nav.pacientes'),
             childAge: child?.age || calcularEdadNumerica(child?.birth_date) || 'N/E',
             diagnosis: child?.diagnosis || '',
             childId: selectedChild,
@@ -790,7 +790,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         setEditedMessage(nfAnalysis?.mensaje_padres || '')
         setEditedActividades(nfAnalysis?.actividades_casa || nfAnalysis?.actividad_casa || '')
       } else {
-        const childName = child?.name || 'Paciente'
+        const childName = child?.name || t('nav.pacientes')
         const childAge  = child?.age || calcularEdadNumerica(child?.birth_date) || 'N/E'
         const diagnosis = child?.diagnosis || ''
 
@@ -968,7 +968,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
       setIsGeneratingReport(true)
       try {
         const child = children.find((c: any) => c.id === savedChildId) as any
-        const childName = child?.name || 'Paciente'
+        const childName = child?.name || t('nav.pacientes')
         const childAge  = child?.age  || calcularEdadNumerica(child?.birth_date)
         const reportType = isClinicalForm ? (form.id || 'neuroforma') : (form.formKey || form.id)
 

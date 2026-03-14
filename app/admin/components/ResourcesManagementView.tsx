@@ -242,7 +242,7 @@ export default function ResourcesManagementView() {
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-[9px] font-bold text-indigo-600">
-                            <User size={9}/> {patient?.name || 'Paciente específico'}
+                            <User size={9}/> {patient?.name || t('recursos.pacienteEspecifico')}
                           </span>
                         )}
                       </div>
@@ -253,7 +253,7 @@ export default function ResourcesManagementView() {
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all"
                       style={{ background: '#ede9fe', color: '#7c3aed' }}
                       title={t('common.editar')}>
-                      <Pencil size={12}/> Editar
+                      <Pencil size={12}/> {t('common.editar')}
                     </button>
                     <button onClick={() => handleDelete(resource.id)}
                       className="p-1.5 rounded-lg transition-all"

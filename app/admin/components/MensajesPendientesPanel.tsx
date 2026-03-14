@@ -238,8 +238,8 @@ export default function MensajesPendientesPanel() {
                         </span>
                       </div>
                       <div className="flex items-center gap-3 flex-wrap text-xs text-slate-400">
-                        <span className="flex items-center gap-1"><Baby size={10}/> {msg.children?.name || 'Paciente'}</span>
-                        <span className="flex items-center gap-1"><User size={10}/> {msg.profiles?.full_name || 'Padre/Madre'}</span>
+                        <span className="flex items-center gap-1"><Baby size={10}/> {msg.children?.name || t('nav.pacientes')}</span>
+                        <span className="flex items-center gap-1"><User size={10}/> {msg.profiles?.full_name || t('usuarios.padre')}</span>
                         <span className="flex items-center gap-1"><Clock size={10}/> {new Date(msg.created_at).toLocaleDateString(toBCP47(locale), { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</span>
                       </div>
                       <p className="text-xs text-slate-500 mt-2 italic line-clamp-2">"{msg.edited_message || msg.ai_message}"</p>
@@ -285,7 +285,7 @@ export default function MensajesPendientesPanel() {
 
                         {analysis.actividades_en_casa?.length > 0 && (
                           <div>
-                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">🏠 Actividades en Casa</p>
+                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">🏠 {t('mensajes.actividades').replace('🏠 ','')}<idades en Casa</p>
                             <ul className="space-y-1">
                               {analysis.actividades_en_casa.map((a: string, i: number) => (
                                 <li key={i} className="text-xs text-slate-600 bg-blue-50 rounded-lg p-2 border border-blue-100 flex items-start gap-2">
@@ -324,12 +324,12 @@ export default function MensajesPendientesPanel() {
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                            <Edit3 size={12}/> {isEditing ? 'Editando mensaje...' : 'Mensaje a enviar'}
+                            <Edit3 size={12}/> {isEditing ? 't('evaluaciones.editandoMsg') : t('evaluaciones.mensajeEnviar')}
                           </p>
                           {!isEditing && (
                             <button onClick={() => startEdit(msg)}
                               className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1 px-3 py-1.5 bg-blue-50 rounded-lg border border-blue-200 hover:bg-blue-100 transition-all">
-                              <Edit3 size={11}/> Editar
+                              <Edit3 size={11}/> {t('mensajes.editar')}
                             </button>
                           )}
                         </div>
@@ -350,7 +350,7 @@ export default function MensajesPendientesPanel() {
                               </button>
                               <button onClick={() => saveEdit(msg.id)} disabled={!!isLoadingSave}
                                 className="px-4 py-2 text-blue-600 font-bold text-sm bg-blue-50 border-2 border-blue-200 rounded-xl hover:bg-blue-100 transition-all disabled:opacity-50 flex items-center gap-1.5">
-                                {isLoadingSave ? <Loader2 size={14} className="animate-spin"/> : null} Guardar cambios
+                                {isLoadingSave ? <Loader2 size={14} className="animate-spin"/> : null} {t('mensajes.guardarCambios2')}
                               </button>
                             </div>
                           </div>
@@ -380,7 +380,7 @@ export default function MensajesPendientesPanel() {
                     {msg.status === 'approved' && (
                       <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
                         <p className="text-sm font-bold text-emerald-700 flex items-center gap-2">
-                          <CheckCircle size={16}/> Enviado al padre/madre
+                          <CheckCircle size={16}/> {t('mensajes.enviadoPadre')}
                         </p>
                         {msg.approved_at && <p className="text-xs text-emerald-600 mt-1">{new Date(msg.approved_at).toLocaleDateString(toBCP47(locale), { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}</p>}
                         <div className="mt-3 bg-gradient-to-br from-emerald-600 to-green-600 rounded-xl p-3 text-white">

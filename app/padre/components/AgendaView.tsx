@@ -53,7 +53,7 @@ export default function AgendaView({ selectedChild }: { selectedChild?: any }) {
       <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3">
         <Phone size={15} className="text-blue-500 shrink-0 mt-0.5"/>
         <div>
-          <p className="text-sm font-bold text-blue-700">¿Necesitás cambiar o cancelar?</p>
+          <p className="text-sm font-bold text-blue-700">{t('agenda.necesitasCambiar')}</p>
           <p className="text-xs text-blue-600 mt-0.5">Contactá directamente al centro — te ayudarán a coordinar el horario.</p>
           <div className="flex gap-3 mt-2">
             <a href="tel:+51924807183" className="text-xs font-bold text-blue-700 flex items-center gap-1 hover:underline">
@@ -78,7 +78,7 @@ export default function AgendaView({ selectedChild }: { selectedChild?: any }) {
               <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center">
                 <Calendar size={28} className="text-slate-200 mx-auto mb-2"/>
                 <p className="font-bold text-slate-400 text-sm">{t('ui.no_upcoming_appts')}</p>
-                <p className="text-xs text-slate-300 mt-1">El centro te notificará cuando programe tu próxima sesión.</p>
+                <p className="text-xs text-slate-300 mt-1">{t('agenda.centroteNotificara')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -95,7 +95,7 @@ export default function AgendaView({ selectedChild }: { selectedChild?: any }) {
                         <span className="text-2xl font-black text-slate-800">{fecha.getDate()}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-slate-800 text-sm">{cita.service_type || 'Terapia ABA'}</p>
+                        <p className="font-black text-slate-800 text-sm">{cita.service_type || t('nav.programas').split(' ')[0]}</p>
                         <p className="text-xs text-slate-500 flex items-center gap-1 mt-0.5">
                           <Clock size={11}/> {cita.appointment_time}
                         </p>

@@ -109,7 +109,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
         </div>
         <button onClick={() => setMostrarForm(true)}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-sm shadow-blue-200 transition-all flex-shrink-0">
-          <Plus size={16} /> Nueva
+          <Plus size={16} /> {t('especialista.nueva2')}
         </button>
       </div>
 
@@ -229,7 +229,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
               <div>
                 <h3 className="font-black text-slate-800 text-lg">{t('evaluaciones.nuevo')}</h3>
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full mt-1.5">
-                  <Clock size={10} /> Pendiente de aprobación al enviar
+                  <Clock size={10} /> {t('evaluaciones.pendienteAprobacion')}
                 </span>
               </div>
               <button onClick={() => setMostrarForm(false)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
@@ -240,7 +240,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
             <div className="p-6 space-y-5">
               {/* Tipo + botón de plantilla */}
               <div>
-                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Tipo de evaluación *</label>
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('especialista.tipoEval')} *</label>
                 <div className="grid grid-cols-2 gap-2 mb-3">
                   {TIPOS.map(t => (
                     <button key={t.id} type="button"
@@ -267,7 +267,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
 
               {/* Paciente */}
               <div>
-                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Paciente *</label>
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('evaluaciones.pacienteStar')}</label>
                 <select value={form.child_id} onChange={e => setForm(f => ({ ...f, child_id: e.target.value }))}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">{t('ui.select_option')}</option>

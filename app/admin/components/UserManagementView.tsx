@@ -140,7 +140,7 @@ function PacientesVinculados({ userId, children, onUnlink }: {
   if (hijos.length === 0) return (
     <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--card-border)' }}>
       <p className="text-xs text-amber-500 font-medium flex items-center gap-1.5">
-        <AlertCircle size={11} /> Sin pacientes vinculados — usá el botón &quot;Vincular paciente&quot;
+        <AlertCircle size={11} /> {t('usuarios.sinPacientesVinculados')} — {t('usuarios.vincularPaciente')}
       </p>
     </div>
   )
@@ -443,7 +443,7 @@ export default function UserManagementView() {
           </button>
           <button onClick={() => setShowCreateModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold transition-all shadow-sm">
-            <Plus size={16} /> Nuevo usuario
+            <Plus size={16} /> {t('usuarios.nuevo')}
           </button>
         </div>
       </div>
@@ -595,7 +595,7 @@ export default function UserManagementView() {
                       <button onClick={() => handleSendResetEmail(user)}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                         style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
-                        <Send size={12} /> Enviar reset
+                        <Send size={12} /> {t('common.enviandoReset')}
                       </button>
 
                       {editingTokensFor === user.id ? (
@@ -605,7 +605,7 @@ export default function UserManagementView() {
                             style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }} />
                           <button onClick={() => handleUpdateTokens(user.id)} disabled={savingTokens}
                             className="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-50">
-                            {savingTokens ? <Loader2 size={12} className="animate-spin" /> : 'Guardar'}
+                            {savingTokens ? <Loader2 size={12} className="animate-spin" /> : t('common.guardar')}
                           </button>
                           <button onClick={() => setEditingTokensFor(null)} className="px-2 py-1.5 rounded-lg hover:text-red-500 transition-colors" style={{ color: 'var(--text-muted)' }}>
                             <X size={14} />
@@ -639,7 +639,7 @@ export default function UserManagementView() {
                         <button onClick={() => { setLinkingParent(user); setSelectedChildId('') }}
                           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                           style={{ background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.3)', color: '#be185d' }}>
-                          <Link2 size={12} /> Vincular paciente
+                          <Link2 size={12} /> {t('common.vincular')}
                         </button>
                       )}
                     </div>

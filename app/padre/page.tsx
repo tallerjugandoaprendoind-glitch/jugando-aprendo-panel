@@ -318,7 +318,7 @@ export default function ParentDashboard() {
           <Loader2 className="text-blue-300 opacity-40" size={56}/>
         </div>
       </div>
-      <p className="text-slate-500 font-bold text-sm tracking-widest uppercase animate-pulse">Cargando tu información...</p>
+      <p className="text-slate-500 font-bold text-sm tracking-widest uppercase animate-pulse">{t('familias.cargandoInfo')}</p>
     </div>
   )
 
@@ -329,7 +329,7 @@ export default function ParentDashboard() {
         <div className="max-w-lg w-full">
           {/* Progress steps */}
           <div className="flex items-center justify-center gap-3 mb-10">
-            {['Bienvenida', 'Tu hijo/a', 'Primera cita'].map((step, i) => (
+            {[t('familias.bienvenida'), t('familias.tuHijoA'), t('familias.primeraCita')].map((step, i) => (
               <div key={step} className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i === 0 ? 'bg-violet-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
                   {i + 1}
@@ -430,7 +430,7 @@ export default function ParentDashboard() {
                   <div className="flex gap-3 pt-2">
                     <button type="button" onClick={()=>setShowAddChild(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all">{t('common.cancelar')}</button>
                     <button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
-                      <CheckCircle2 size={18}/> Guardar y continuar
+                      <CheckCircle2 size={18}/> {t('familias.guardarContinuar')}
                     </button>
                   </div>
                 </form>
@@ -496,11 +496,11 @@ export default function ParentDashboard() {
                 </div>
                 
                 <nav className="space-y-2">
-                    <NavBtnDesktop icon={<Home size={20}/>} label="Inicio & Progreso" active={activeView==='home'} onClick={()=>setActiveView('home')} />
+                    <NavBtnDesktop icon={<Home size={20}/>} label=t('familias.inicioProgreso') active={activeView==='home'} onClick={()=>setActiveView('home')} />
                     <NavBtnDesktop icon={<Calendar size={20}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                     <NavBtnDesktop icon={<Heart size={20}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
-                    <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
-                    <NavBtnDesktop icon={<Bell size={20}/>} label="Mensajes del terapeuta" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
+                    <NavBtnDesktop icon={<MessageCircle size={20}/>} label=t('familias.asistente') active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
+                    <NavBtnDesktop icon={<Bell size={20}/>} label=t('familias.mensajesTerapeuta') active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
                     <NavBtnDesktop icon={<ShoppingBag size={20}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
                     <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
@@ -566,7 +566,7 @@ export default function ParentDashboard() {
             {/* 👶 SELECTOR DE HIJOS MEJORADO */}
             <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 py-4 px-4 md:px-8 flex gap-3 overflow-x-auto items-center scrollbar-hide shadow-sm">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0 mr-2 flex items-center gap-2">
-                    <User size={12}/> Viendo a:
+                    <User size={12}/> {t('ui.viendo')}
                 </span>
                 {myChildren.length > 0 ? myChildren.map(child => (
                     <button 

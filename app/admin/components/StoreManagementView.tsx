@@ -148,7 +148,7 @@ function ProductModal({
         {/* Header */}
         <div className="sticky top-0 px-7 py-5 border-b flex items-center justify-between z-10" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
           <div>
-            <h2 className="text-xl font-black" style={{ color: "var(--text-primary)" }}>{product ? 'Editar producto' : 'Nuevo producto'}</h2>
+            <h2 className="text-xl font-black" style={{ color: "var(--text-primary)" }}>{product ? t('tienda.editarProducto') : t('tienda.nuevoProducto')}</h2>
             <p className="text-xs text-slate-400 mt-0.5">{product ? `ID: ${product.id.slice(0, 8)}...` : 'Completa la información del artículo'}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
@@ -194,7 +194,7 @@ function ProductModal({
 
           {/* Nombre */}
           <div>
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Nombre *</label>
+            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('tienda.nombre2')}</label>
             <input
               value={form.nombre} onChange={e => setForm((f: any) => ({ ...f, nombre: e.target.value }))}
               {...{placeholder: t('ui.product_name')}}
@@ -404,7 +404,7 @@ export default function StoreManagementView() {
         </div>
         <button onClick={() => { setEditProduct(null); setShowModal(true) }}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow-md shadow-blue-200 transition-all hover:scale-105 active:scale-95 dark:shadow-none">
-          <Plus size={18} /> Nuevo producto
+          <Plus size={18} /> {t('tienda.nuevoProducto')}
         </button>
       </div>
 

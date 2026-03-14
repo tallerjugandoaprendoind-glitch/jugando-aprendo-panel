@@ -53,7 +53,7 @@ export default function AuthCallbackPage() {
         animation: 'spin 1s linear infinite'
       }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-      <p style={{ fontSize: 16, opacity: .8 }}>Iniciando sesión con Google…</p>
+      <p style={{ fontSize: 16, opacity: .8 }}>{t ? t('common.iniciandoGoogle') : 'Iniciando sesión con Google…'}</p>
     </div>
   )
 }
