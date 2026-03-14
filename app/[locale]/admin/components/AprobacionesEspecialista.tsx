@@ -17,7 +17,7 @@ const getTIPO_LABEL = (isEN: boolean): Record<string, string> => ({
   familia: isEN?'Family Recommendations':'Recomendaciones para Familia',
 })
 
-const getStatusCfg = (isEN: boolean): Record<string, any>: Record<string, any> => ({
+const getStatusCfg = (isEN: boolean): Record<string, any> => ({
   pending_approval: { label: isEN?'Pending':'Pendiente', color: '#f59e0b', bg: '#f59e0b15', border: '#f59e0b30', icon: Clock },
   approved:         { label: isEN?'Approved':'Aprobado',  color: '#10b981', bg: '#10b98115', border: '#10b98130', icon: CheckCircle },
   rejected:         { label: isEN?'Rejected':'Rechazado', color: '#ef4444', bg: '#ef444415', border: '#ef444430', icon: XCircle },
