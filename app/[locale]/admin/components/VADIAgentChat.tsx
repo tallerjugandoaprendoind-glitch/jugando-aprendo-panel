@@ -27,6 +27,7 @@ export default function VADIAgentChat({
   userId, childId, childName, contexto = 'general', compact = false
 }: VADIAgentChatProps) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)

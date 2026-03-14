@@ -31,7 +31,7 @@ const CAT_STYLES: Record<string, { pill: string; icon: string; activePill: strin
 const defaultS = { pill: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'bg-blue-100 text-blue-600', activePill: 'bg-blue-600 text-white border-blue-600' }
 
 // ─── FORMULARIOS CLÍNICOS PROFESIONALES ─────────────────────────────────────
-const CLINICAL_FORMS: any[] = [
+const getClinicalForms = (isEN: boolean): any[] => [
   { id: 'anamnesis',    formKey: 'anamnesis',    title: isEN?'Clinical History':'Historia Clínica',              subtitle: isEN?'Comprehensive patient clinical history':'Historia clínica integral del paciente',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: ANAMNESIS_DATA },
   { id: 'aba',          formKey: 'aba',          title: isEN?'ABA Record':'Registro ABA',                    subtitle: isEN?'Applied Behavior Analysis':'Análisis Aplicado de la Conducta',               category: 'conductual',icon: '🎯', estimatedMinutes: 20, sections: ABA_DATA },
   { id: 'entorno_hogar',formKey: 'entorno_hogar',title: isEN?'Home Environment Assessment':'Evaluación del Entorno del Hogar',subtitle: isEN?'Home visit and family environment':'Visita domiciliaria y entorno familiar',          category: 'familia',   icon: '🏠', estimatedMinutes: 25, sections: ENTORNO_HOGAR_DATA },
@@ -42,8 +42,8 @@ const CLINICAL_FORMS: any[] = [
   { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                          subtitle: isEN?'Behavioral Assessment System':'Sistema de Evaluación Conductual',              category: 'conductual',icon: '📈', estimatedMinutes: 30, sections: BASC3_DATA,  evalType: 'BASC3' },
 ]
 
-const ALL_SPECIALIST_FORMS = [
-  ...CLINICAL_FORMS,
+const getAllSpecialistForms = (isEN: boolean) => [
+  ...getClinicalForms(isEN),
   ...ALL_FORMS.map(f => ({ ...f, formKey: f.id, isSoft: true })),
 ]
 
@@ -575,7 +575,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
     <FormFillView form={selectedForm} children={children} onBack={() => setSelectedForm(null)} userId={userId} toast={toast} />
   )
 
-  const filtered = ALL_SPECIALIST_FORMS.filter((f: any) => {
+  const filtered = getAllSpecialistForms(isEN).filter((f: any) => {
     const cat = f.category || 'clinico'
     const matchTab = activeTab === 'all' || cat === activeTab
     const matchSearch = !search || f.title.toLowerCase().includes(search.toLowerCase()) || (f.subtitle || f.description || '').toLowerCase().includes(search.toLowerCase())

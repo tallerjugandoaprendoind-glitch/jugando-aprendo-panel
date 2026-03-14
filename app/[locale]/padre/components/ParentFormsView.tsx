@@ -14,6 +14,7 @@ import { supabase } from '@/lib/supabase'
 // ─── DYNAMIC FORM RENDERER (simplified for parents) ─────────────────────────
 function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: (r: any) => void; onClose: () => void }) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [responses, setResponses] = useState<Record<string, any>>({})
   const [currentStep, setCurrentStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -319,6 +320,7 @@ function ResourceCard({ resource }: { resource: any }) {
 // ─── MAIN PARENT FORMS + RESOURCES VIEW ─────────────────────────────────────
 function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { profile: any; selectedChild: any; onFormsLoaded?: (count: number) => void }) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const [activeTab, setActiveTab] = useState<'forms' | 'resources'>('forms')
   const [pendingForms, setPendingForms] = useState<any[]>([])

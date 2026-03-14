@@ -52,13 +52,13 @@ interface OrderItem {
 }
 
 // ── Configuración de estados ──────────────────────────────────────────────────
-const ESTADO_CFG: Record<string, any> = {
+const getEstadoCfg = (isEN: boolean): Record<string, any> => ({
   pendiente:  { label: isEN?'Pending':'Pendiente',   icon: Clock,       bg: 'bg-amber-50',   border: 'border-amber-200',  text: 'text-amber-700',   dot: 'bg-amber-400'  },
   confirmado: { label: isEN?'Confirmed':'Confirmado', icon: CheckCircle, bg: 'bg-blue-50',    border: 'border-blue-200',   text: 'text-blue-700',    dot: 'bg-blue-400'   },
   listo:      { label: isEN?'Ready':'Listo',       icon: Package,     bg: 'bg-violet-50',  border: 'border-violet-200', text: 'text-violet-700',  dot: 'bg-violet-400' },
   entregado:  { label: isEN?'Delivered':'Entregado',  icon: CheckCircle, bg: 'bg-emerald-50', border: 'border-emerald-200',text: 'text-emerald-700', dot: 'bg-emerald-400'},
   cancelado:  { label: isEN?'Cancelled':'Cancelado',  icon: XCircle,     bg: 'bg-red-50',     border: 'border-red-200',    text: 'text-red-700',     dot: 'bg-red-400'    },
-}
+})
 
 const CATEGORIAS = ['material', 'guia', 'juego', 'libro', 'otro']
 const ESTADOS_FLUJO = ['pendiente', 'confirmado', 'listo', 'entregado', 'cancelado']
@@ -77,6 +77,7 @@ function ProductModal({
   const toast = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [form, setForm] = useState<any>(product ? {
     nombre: product.nombre, descripcion: product.descripcion || '',
     precio_soles: String(product.precio_soles), stock: String(product.stock),
@@ -357,7 +358,7 @@ export default function StoreManagementView() {
     setUpdatingOrder(orderId)
     await supabase.from('store_orders').update({ estado, updated_at: new Date().toISOString() }).eq('id', orderId)
     setOrders(prev => prev.map(o => o.id === orderId ? { ...o, estado } : o))
-    toast.success(`Pedido marcado como: ${ESTADO_CFG[estado]?.label}`)
+    toast.success(`Pedido marcado como: ${getEstadoCfg(isEN)[estado]?.label}`)
     setUpdatingOrder(null)
   }
 
@@ -536,7 +537,7 @@ export default function StoreManagementView() {
           {/* Filtro por estado */}
           <div className="flex gap-2 flex-wrap">
             {['todos', ...ESTADOS_FLUJO].map(e => {
-              const cfg = ESTADO_CFG[e]
+              const cfg = getEstadoCfg(isEN)[e]
               const count = e === 'todos' ? orders.length : orders.filter(o => o.estado === e).length
               return (
                 <button key={e} onClick={() => setFilterEstado(e)}
@@ -555,12 +556,12 @@ export default function StoreManagementView() {
           {filteredOrders.length === 0 ? (
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-20 text-center">
               <ShoppingBag size={40} className="text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-400 font-bold">Sin pedidos{filterEstado !== 'todos' ? ` "${ESTADO_CFG[filterEstado]?.label}"` : ''}</p>
+              <p className="text-slate-400 font-bold">Sin pedidos{filterEstado !== 'todos' ? ` "${getEstadoCfg(isEN)[filterEstado]?.label}"` : ''}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {filteredOrders.map(order => {
-                const cfg = ESTADO_CFG[order.estado] || ESTADO_CFG.pendiente
+                const cfg = getEstadoCfg(isEN)[order.estado] || getEstadoCfg(isEN).pendiente
                 const StatusIcon = cfg.icon
                 const open = expandedOrder === order.id
 
@@ -648,7 +649,7 @@ export default function StoreManagementView() {
                             <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('tienda.actualizarEstado')}</p>
                             <div className="flex flex-wrap gap-2">
                               {ESTADOS_FLUJO.map(e => {
-                                const c = ESTADO_CFG[e]
+                                const c = getEstadoCfg(isEN)[e]
                                 const isActive = order.estado === e
                                 return (
                                   <button key={e} onClick={() => updateOrderEstado(order.id, e)}
@@ -669,7 +670,7 @@ export default function StoreManagementView() {
                           {/* WhatsApp quick contact */}
                           {order.parent_phone && (
                             <a
-                              href={`https://wa.me/51${order.parent_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola! Su pedido de Jugando Aprendo está ${ESTADO_CFG[order.estado]?.label?.toLowerCase()}. Total: S/ ${Number(order.total_soles).toFixed(2)}`)}`}
+                              href={`https://wa.me/51${order.parent_phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hola! Su pedido de Jugando Aprendo está ${getEstadoCfg(isEN)[order.estado]?.label?.toLowerCase()}. Total: S/ ${Number(order.total_soles).toFixed(2)}`)}`}
                               target="_blank" rel="noopener noreferrer"
                               className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 hover:bg-green-600 text-white font-bold text-sm rounded-xl transition-all"
                             >

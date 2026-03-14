@@ -8,6 +8,7 @@ import { Bell, CheckCircle, XCircle, ExternalLink, Copy, Send, MessageCircle } f
 
 export default function WhatsAppConfigView() {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [status, setStatus] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)

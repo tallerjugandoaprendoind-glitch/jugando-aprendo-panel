@@ -29,6 +29,7 @@ const RESOURCE_TAGS = [
 export default function ResourcesManagementView() {
   const toast = useToast()
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [resources, setResources] = useState<any[]>([])
   const [patients, setPatients] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)

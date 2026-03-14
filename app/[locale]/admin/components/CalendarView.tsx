@@ -115,7 +115,7 @@ function MonthlyCalendarView() {
   const [currentMonth, setCurrentMonth] = useState<Date | null>(null)
   const [tipoSesion, setTipoSesion] = useState<'individual'|'grupal'>('individual')
   const [modalidadCita, setModalidadCita] = useState<'presencial'|'virtual'>('presencial')
-  const [newApt, setNewApt] = useState({ child_id:'', date:'', time:'09:00', service: isEN ? 'ABA Therapy' : 'Terapia ABA', notes:'', group_name:'', status:'confirmed' })
+  const [newApt, setNewApt] = useState({ child_id:'', date:'', time:'09:00', service:'ABA Therapy', notes:'', group_name:'', status:'confirmed' })
   const [recurrencia, setRecurrencia] = useState<'none'|'weekly'|'biweekly'>('none')
   const [recurrenciaSemanas, setRecurrenciaSemanas] = useState(4)
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([])

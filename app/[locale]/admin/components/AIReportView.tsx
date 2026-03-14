@@ -127,6 +127,7 @@ import ReportGenerator from '@/components/ReportGenerator'
 
 function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, name: string} | null) => void }) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [listaNinos, setListaNinos] = useState<any[]>([])
   const [selectedChild, setSelectedChild] = useState('')
   const [historyData, setHistoryData] = useState<any>({ anamnesis: null, aba: [], entorno: [] })
@@ -137,7 +138,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   const [mobileTab, setMobileTab] = useState<'chat' | 'history' | 'reports' | 'graficas'>('chat')
   
   const [messages, setMessages] = useState<any[]>([
-      { role: 'ai', text: isEN ? 'Hello 👋. Select a patient to start the clinical analysis.' : 'Hola 👋. Selecciona un paciente para iniciar el análisis clínico.' }
+      { role: 'ai', text: 'Hola 👋. Selecciona un paciente para iniciar el análisis clínico.' }
   ])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
@@ -152,6 +153,10 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   }, []) // eslint-disable-line
 
   const { listening, supported: micSupported, startListening, stopListening } = useSpeechToText(handleVoiceResult)
+
+  useEffect(() => {
+    setMessages([{ role: 'ai', text: isEN ? 'Hello 👋. Select a patient to start the clinical analysis.' : 'Hola 👋. Selecciona un paciente para iniciar el análisis clínico.' }])
+  }, [isEN]) // eslint-disable-line
 
   useEffect(() => {
     supabase.from('children').select('id, name').then(({ data }) => data && setListaNinos(data))

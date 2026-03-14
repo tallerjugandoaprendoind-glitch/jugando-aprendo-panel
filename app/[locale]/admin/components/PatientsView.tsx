@@ -18,6 +18,7 @@ import ARIAAgentChat from './ARIAAgentChat'
 // ── {t('pacientes.historiaEvaluaciones')} del paciente (mini view dentro de ficha) ────────
 function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string; childName: string }) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [evaluaciones, setEvaluaciones] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 

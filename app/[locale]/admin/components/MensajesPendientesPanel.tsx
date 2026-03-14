@@ -32,6 +32,7 @@ interface PendingMessage {
 export default function MensajesPendientesPanel() {
   const toast = useToast()
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [messages, setMessages] = useState<PendingMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<'pending_approval' | 'approved' | 'rejected'>('pending_approval')

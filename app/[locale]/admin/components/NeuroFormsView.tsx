@@ -20,6 +20,7 @@ import {
 // ─── DYNAMIC FORM RENDERER ───────────────────────────────────────────────────
 function DynamicFormQuestion({ question, value, onChange }: any) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const freq = isEN ? ['Never','Rarely','Sometimes','Frequently','Almost always','Always'] : ['Nunca','Raramente','A veces','Frecuentemente','Casi siempre','Siempre']
 
   if (question.type === 'frequency') {
