@@ -466,7 +466,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       <ResponsiveContainer width="100%" height={200}>
                         <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                          <XAxis dataKey="sesion" label={{ value: t('programas.sesionLabel') }} tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
+                          <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
