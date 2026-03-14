@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useRef } from 'react'
 import { Upload, FileText, CheckCircle, XCircle, Loader2, Download, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -24,6 +26,7 @@ interface ImportResult {
 }
 
 export default function ExcelImportView() {
+  const { t } = useI18n()
   const [file, setFile]         = useState<File | null>(null)
   const [preview, setPreview]   = useState<ImportRow[]>([])
   const [headers, setHeaders]   = useState<string[]>([])
@@ -192,17 +195,17 @@ export default function ExcelImportView() {
             <div className="flex-1 bg-green-50 dark:bg-green-900/20 rounded-xl p-4 text-center">
               <CheckCircle className="w-6 h-6 text-green-500 mx-auto mb-1" />
               <p className="text-2xl font-bold text-green-700 dark:text-green-300">{result.exitosos}</p>
-              <p className="text-xs text-green-600 dark:text-green-400">Importados</p>
+              <p className="text-xs text-green-600 dark:text-green-400">{t('ui.imported')}</p>
             </div>
             <div className="flex-1 bg-red-50 dark:bg-red-900/20 rounded-xl p-4 text-center">
               <XCircle className="w-6 h-6 text-red-500 mx-auto mb-1" />
               <p className="text-2xl font-bold text-red-700 dark:text-red-300">{result.errores.length}</p>
-              <p className="text-xs text-red-600 dark:text-red-400">Errores</p>
+              <p className="text-xs text-red-600 dark:text-red-400">{t('common.error')}</p>
             </div>
             <div className="flex-1 bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 text-center">
               <FileText className="w-6 h-6 text-gray-400 mx-auto mb-1" />
               <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{result.total}</p>
-              <p className="text-xs text-gray-500">Total</p>
+              <p className="text-xs text-gray-500">{t('common.total')}</p>
             </div>
           </div>
           {result.errores.length > 0 && (

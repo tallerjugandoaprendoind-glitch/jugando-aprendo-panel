@@ -7,9 +7,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale?: string | null): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
+  return ''
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { childId, accion = 'generar_plan' } = await req.json()
+    const { childId, accion = 'generar_plan', locale = 'es' } = await req.json()
     // accion: 'generar_plan' | 'registrar_actividad' | 'obtener_historial'
 
     if (!childId) return NextResponse.json({ error: 'childId requerido' }, { status: 400 })
@@ -84,7 +91,11 @@ export async function POST(req: NextRequest) {
       ? programas.map((p: any) => `${p.area}: ${p.titulo} (fase: ${p.fase_actual})`).join(', ')
       : 'Sin programas activos'
 
-    const prompt = `Eres un especialista en ABA y participación familiar. Genera un plan de engagement SEMANAL para los padres de ${childName} (${diagnostico}).
+    const localeNames: Record<string,string> = { es:'español', en:'English', pt:'português', fr:'français', de:'Deutsch', it:'italiano' }
+    const langInstruction = locale !== 'es' ? `\n\n[RESPONDE OBLIGATORIAMENTE EN: ${localeNames[locale] || 'español'}]` : ''
+    const prompt = `Eres un especialista en ABA y participación familiar. IMPORTANTE: Estas actividades deben reforzar EN CASA los objetivos del programa ABA diseñado por el terapeuta. NO inventes objetivos nuevos. Basate ESTRICTAMENTE en los programas activos.
+
+Genera actividades de refuerzo en casa para los padres de ${childName} (${diagnostico}), siguiendo el programa terapéutico del especialista.
 
 CONTEXTO CLÍNICO:
 - Programas activos: ${resumenProgramas}
@@ -119,7 +130,7 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones:
   ]
 }`
 
-    const respuestaRaw = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.6, maxTokens: 2000 })
+    const respuestaRaw = await callGroqSimple('', prompt + langInstruction, { model: GROQ_MODELS.SMART, temperature: 0.6, maxTokens: 2000 })
 
     let plan: any
     try {

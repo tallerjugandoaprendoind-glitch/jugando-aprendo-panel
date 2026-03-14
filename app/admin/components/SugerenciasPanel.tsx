@@ -1,4 +1,6 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 // app/admin/components/SugerenciasPanel.tsx
 // 🏆 CAPA 4 — Panel de sugerencias proactivas para terapeutas
 // Se muestra en el Dashboard principal y en la vista del paciente
@@ -40,6 +42,7 @@ const PRIORIDAD_CONFIG = {
 }
 
 function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: string) => void }) {
+  const { t } = useI18n()
   const [expandido, setExpandido] = useState(false)
   const [resolviendo, setResolviendo] = useState(false)
   const cfg = TIPO_CONFIG[s.tipo] || TIPO_CONFIG.objetivo_estancado
@@ -52,8 +55,8 @@ function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: str
     try {
       await fetch('/api/agente-sugerencias', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sugerenciaId: s.id, nota: 'Marcado como resuelto desde el panel' })
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ sugerenciaId: s.id, nota: 'Marcado como resuelto desde el panel' , locale: localStorage.getItem('vanty_locale') || 'es' })
       })
       onResolver(s.id)
     } catch { /* */ }
@@ -95,7 +98,7 @@ function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: str
             <div className="flex items-start gap-2 bg-white/60 rounded-xl p-3">
               <Lightbulb size={14} className="text-amber-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-1">Acción recomendada</p>
+                <p className="text-[11px] font-black text-slate-600 uppercase tracking-wider mb-1">{t('ui.recommended_action')}</p>
                 <p className="text-xs text-slate-700 leading-relaxed">{s.accion_concreta}</p>
               </div>
             </div>
@@ -118,6 +121,8 @@ function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: str
 }
 
 export default function SugerenciasPanel({ childId }: { childId?: string }) {
+  const { t } = useI18n()
+
   const [sugerencias, setSugerencias] = useState<Sugerencia[]>([])
   const [insight, setInsight] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -202,8 +207,8 @@ export default function SugerenciasPanel({ childId }: { childId?: string }) {
         {!loading && filtradas.length === 0 && (
           <div className="py-8 text-center">
             <CheckCircle size={28} className="text-emerald-400 mx-auto mb-2" />
-            <p className="text-sm font-bold text-slate-600">Todo en orden</p>
-            <p className="text-xs text-slate-400 mt-1">No hay sugerencias pendientes</p>
+            <p className="text-sm font-bold text-slate-600">{t('ui.all_good')}</p>
+            <p className="text-xs text-slate-400 mt-1">{t('ui.no_suggestions')}</p>
           </div>
         )}
 

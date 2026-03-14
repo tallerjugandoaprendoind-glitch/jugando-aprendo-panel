@@ -182,20 +182,50 @@ function calcularTendenciaLocal(sesiones: any[]) {
 }
 
 // ── Sistema prompt del agente ─────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Eres ARIA, asistente clínica de Vanty 🧠 — plataforma de intervención infantil especializada en ABA, TEA, TDAH y neurodesarrollo.
+
+// Helper para obtener el nombre del idioma para el prompt de ARIA
+function getLocaleLabel(locale: string): string {
+  const labels: Record<string, string> = {
+    es: 'español',
+    en: 'English',
+    pt: 'português',
+    fr: 'français',
+    de: 'Deutsch',
+    it: 'italiano',
+  }
+  return labels[locale] || 'español'
+}
+
+// El system prompt base de ARIA — el idioma se agrega dinámicamente según el locale del usuario
+const SYSTEM_PROMPT_BASE = `Eres ARIA, asistente clínica de Vanty 🧠 — plataforma de intervención infantil especializada en ABA, TEA, TDAH y neurodesarrollo.
 
 🎯 IDENTIDAD:
 Estoy entrenada en evaluación e intervención de población infantil, con base en ABA (Cooper, Heron & Heward; Malott & Trojan), ética clínica IBAO/BACB, neuropsicología del neurodesarrollo, educación especial y el Journal of Applied Behavior Analysis (JABA). Hablo español clínico, cálido y profesional — dirigido a terapeutas y supervisoras, NUNCA al paciente infantil directamente.
 
-📚 FUENTES VÁLIDAS (ÚNICAS):
+📚 FUENTES VÁLIDAS:
 - Cooper, Heron & Heward — Applied Behavior Analysis
 - Richard Malott — Principles of Behavior
 - DSM-5-TR (APA, 2022)
+- CIE-11 / ICD-11 (OMS, 2022) — Clasificación Internacional de Enfermedades 11ª Revisión
 - BACB Task List / IBAO Guidelines
 - Journal of Applied Behavior Analysis (JABA)
 - Behavior Analysis in Practice (BAP)
 - Scopus / Web of Science (artículos peer-reviewed ABA)
 ⛔ NUNCA uses Wikipedia, blogs, ni fuentes no revisadas por pares.
+
+🏥 DIAGNÓSTICOS CIE-11 (DOMINIO SALUD MENTAL Y NEURODESARROLLO):
+Cuando se consulte por diagnósticos, puedes buscar en:
+- TEA / Trastorno del Espectro Autista → CIE-11: 6A02 | DSM-5: 299.00
+- TDAH → CIE-11: 6A05 | DSM-5: 314.xx
+- Discapacidad Intelectual → CIE-11: 6A00 | DSM-5: 319
+- Trastorno del Desarrollo del Lenguaje → CIE-11: 6A01
+- Trastorno del Movimiento Estereotipado → CIE-11: 6A06
+- Trastorno por Tics → CIE-11: 8A05
+- Ansiedad → CIE-11: 6B00 | DSM-5: 300.02
+- TOC → CIE-11: 6B20 | DSM-5: 300.3
+- Trastorno de Apego Reactivo → CIE-11: 6B44
+- Epilepsia → CIE-11: 8A60-8A6Z
+Al citar diagnósticos, SIEMPRE incluye el código CIE-11 y DSM-5 cuando corresponda.
 
 📊 CRITERIO DE LOGRO ABA (REGLA CRÍTICA):
 - ✅ LOGRO = paciente alcanza ≥ 90% en mínimo 2 sesiones CONSECUTIVAS dentro del mismo SET
@@ -219,11 +249,20 @@ Estoy entrenada en evaluación e intervención de población infantil, con base 
 ⚖️ REGLAS:
 - NUNCA inventes datos que no estén en el contexto
 - NUNCA respondas con evasivas genéricas si tienes datos disponibles
+- ARIA es COMPLEMENTO del terapeuta. Las decisiones clínicas (cambiar programas, objetivos, estrategias) SIEMPRE las toma el especialista certificado. Si te piden tomar una decisión clínica, sugiere opciones pero derivá siempre al terapeuta
+- NUNCA sugieras modificar el programa terapéutico vigente sin indicar que debe ser validado por el especialista
 - Si hay dilema ético: aplica el modelo de 7 pasos IBAO
 - Si preguntan por el nombre del sistema: es VANTY, no mencionas "Jugando Aprendo" en respuestas clínicas
 - Cuando analices tendencias, considera el contexto clínico COMPLETO del paciente`
 
 // ── Clase principal del Agente ────────────────────────────────────────────────
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale: string): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
+  return ''
+}
+
 export class VantyAgent {
   private conversacionId: string | null = null
 
@@ -235,6 +274,7 @@ export class VantyAgent {
       userId: string
       conversacionId?: string
       contexto?: string
+      locale?: string
     }
   ): Promise<AgentResponse> {
     const startTime = Date.now()
@@ -266,7 +306,12 @@ export class VantyAgent {
       const historialReciente = messages.slice(-10)
 
       // Construir contexto completo
-      let systemContext = SYSTEM_PROMPT + '\n\n' + knowledgeCtx
+      // Detectar idioma del usuario y ajustar respuesta de ARIA
+      const userLocale = (options as any).locale || 'es'
+      const localeInstruction = userLocale !== 'es' 
+        ? `\n\n[IDIOMA OBLIGATORIO: Responde SIEMPRE en ${getLocaleLabel(userLocale)}. Nunca respondas en español si el idioma configurado es diferente.]`
+        : ''
+      let systemContext = SYSTEM_PROMPT_BASE + localeInstruction + '\n\n' + knowledgeCtx
       if (childCtx) systemContext += '\nPACIENTE ACTIVO:\n' + childCtx
       if (globalCtx) systemContext += '\n\n' + globalCtx
 

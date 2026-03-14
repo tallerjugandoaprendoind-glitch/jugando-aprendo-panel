@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 import ProgresoGraficas from '@/components/graficos/ProgresoGraficas'
 import {
@@ -16,6 +18,7 @@ declare global {
 
 // ── Hook Text-to-Speech con ElevenLabs (Ivanna) ──────────────────────────────
 function useTextToSpeech() {
+  const { t } = useI18n()
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(false)  // Desactivado por defecto para evitar audio inesperado
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -33,8 +36,8 @@ function useTextToSpeech() {
     try {
       const res = await fetch('/api/elevenlabs-tts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ text, locale: localStorage.getItem('vanty_locale') || 'es' }),
         signal: abortRef.current.signal,
       })
 
@@ -121,6 +124,7 @@ import { useToast } from '@/components/Toast'
 import ReportGenerator from '@/components/ReportGenerator'
 
 function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, name: string} | null) => void }) {
+  const { t } = useI18n()
   const [listaNinos, setListaNinos] = useState<any[]>([])
   const [selectedChild, setSelectedChild] = useState('')
   const [historyData, setHistoryData] = useState<any>({ anamnesis: null, aba: [], entorno: [] })
@@ -342,8 +346,8 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
     try {
       const response = await fetch('/api/admin-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: text, childId: selectedChild })
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ question: text, childId: selectedChild , locale: localStorage.getItem('vanty_locale') || 'es' })
       })
       const data = await response.json()
       setMessages(prev => [...prev, { role: 'ai', text: data.text }])
@@ -384,365 +388,241 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
       </div>
 
       {selectedChild ? (
-        <div className="flex flex-col gap-3 md:gap-6">
+        <div className="flex flex-col gap-3">
 
-            {/* ── TABS MÓVIL ── */}
-            <div className="flex lg:hidden gap-1 bg-slate-100 p-1 rounded-2xl flex-shrink-0">
-              {([
-                { id: 'chat' as const,    label: '🤖 IA Chat'  },
-                { id: 'history' as const, label: '📋 Historial' },
-                { id: 'reports' as const, label: '📄 Reportes'  },
-                { id: 'graficas' as const,label: '📊 Gráficas'  },
-              ]).map(t => (
-                <button key={t.id} onClick={() => setMobileTab(t.id)}
-                  className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${mobileTab === t.id ? 'bg-white dark:bg-slate-700 shadow text-slate-800 dark:text-slate-100' : 'text-slate-500 dark:text-slate-400'}`}>
-                  {t.label}
+          {/* ══ SECCIÓN 1: ASISTENTE IA (siempre visible, arriba) ══ */}
+          <AccordionSection
+            id="chat"
+            title={t('ui.ai_assistant')}
+            icon={<Sparkles size={16} className="text-purple-400"/>}
+            badge={<span className="text-[9px] px-2 py-0.5 rounded-full font-black bg-green-500/20 text-green-400 border border-green-500/30 flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse inline-block"/>{speaking ? 'Hablando' : 'Activa'}</span>}
+            defaultOpen={true}
+          >
+            {/* Chat header */}
+            <div className="flex items-center justify-between px-4 py-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
+              <button onClick={toggleVoice} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
+                style={{ background: voiceEnabled ? 'rgba(134,239,172,0.15)' : 'var(--muted-bg)', color: voiceEnabled ? '#86efac' : 'var(--text-muted)', border: '1px solid var(--card-border)' }}>
+                {voiceEnabled ? <Volume2 size={13}/> : <VolumeX size={13}/>}
+                {voiceEnabled ? 'Voz ON' : 'Voz OFF'}
+              </button>
+            </div>
+
+            {listening && (
+              <div className="mx-4 mt-3 rounded-xl px-3 py-2.5 flex items-center gap-3" style={{ background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)' }}>
+                <div className="w-6 h-6 rounded-full bg-red-500 flex items-center justify-center shrink-0 animate-pulse">
+                  <Mic size={11} className="text-white"/>
+                </div>
+                <p className="text-xs font-black text-red-400 flex-1">Escuchando... habla ahora</p>
+                <button onClick={stopListening} className="p-1 rounded-lg" style={{ background: 'rgba(239,68,68,0.2)' }}>
+                  <StopCircle size={13} className="text-red-400"/>
                 </button>
-              ))}
-            </div>
-
-            {/* ── REPORTES (desktop: top bar, mobile: tab) ── */}
-            <div className={`flex-shrink-0 ${mobileTab !== 'reports' ? 'hidden lg:block' : ''}`}>
-              <div className="bg-white dark:bg-slate-800 rounded-2xl md:rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden">
-                <button
-                  onClick={() => setShowReportPanel(!showReportPanel)}
-                  className="w-full flex items-center justify-between p-4 md:p-5 hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-50 rounded-xl">
-                      <FileText size={18} className="text-blue-600" />
-                    </div>
-                    <span className="font-black text-slate-700 text-sm uppercase tracking-widest">
-                      Reportes Word Generados
-                    </span>
-                    {reportesHistorial.length > 0 && (
-                      <span className="text-xs bg-blue-600 text-white px-2.5 py-1 rounded-full font-black shadow-sm">
-                        {reportesHistorial.length}
-                      </span>
-                    )}
-                  </div>
-                  <ChevronDown
-                    size={18}
-                    className={`text-slate-400 transition-transform duration-200 ${showReportPanel ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {showReportPanel && (
-                  <div className="border-t border-slate-100 p-4 md:p-5">
-                    {loadingReportes ? (
-                      <div className="flex items-center justify-center gap-2 py-6 text-slate-400">
-                        <Loader2 className="animate-spin" size={20} />
-                        <span className="text-xs font-bold">Cargando reportes...</span>
-                      </div>
-                    ) : reportesHistorial.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center py-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200">
-                        <FileText size={36} className="text-slate-200 mb-3" />
-                        <p className="text-sm font-black text-slate-400">Sin reportes Word generados</p>
-                        <p className="text-xs text-slate-300 mt-1.5 text-center max-w-xs">
-                          Los reportes aparecerán aquí cuando los generes desde Evaluaciones
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3">
-                        {reportesHistorial.map((rep) => (
-                          <ReporteHistorialCard key={rep.id} reporte={rep} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* ── MAIN GRID ── */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
-
-            {/* ANAMNESIS (solo desktop XL) */}
-            <div className="hidden xl:flex xl:col-span-3 rounded-3xl md:rounded-[2.5rem] shadow-sm flex-col overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                <div className="p-4 md:p-6 border-b font-extrabold text-xs uppercase tracking-[0.2em] flex items-center gap-2 sticky top-0 z-10" style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)', color: 'var(--text-secondary)' }}>
-                    <FileText size={16} className="text-blue-500"/> Ficha de Ingreso
-                </div>
-                <div className="p-4 md:p-6 space-y-5">
-                    {historyData.anamnesis ? Object.entries(historyData.anamnesis).slice(0, 15).map(([key, value]: any) => (
-                      <div key={key} className="p-3 rounded-xl transition-all hover:opacity-80" style={{ borderBottom: '1px solid var(--card-border)' }}>
-                            <span className="text-[10px] font-black uppercase block mb-1.5 tracking-wider" style={{ color: 'var(--text-muted)' }}>{key.replace(/_/g, ' ')}</span>
-                            <p className="text-sm font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>{String(value)}</p>
-                      </div>
-                    )) : (
-                        <div className="text-center py-20">
-                            <FileText className="mx-auto mb-3" size={48} style={{ color: 'var(--card-border)' }}/>
-                            <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>No hay datos</p>
-                        </div>
-                    )}
-                </div>
-            </div>            {/* HISTORIAL (desktop: columna fija, mobile: tab) */}
-            <div className={`col-span-1 lg:col-span-7 xl:col-span-5 rounded-3xl md:rounded-[2.5rem] shadow-sm flex flex-col overflow-hidden
-              ${mobileTab === 'history' ? 'flex' : 'hidden lg:flex'}`}
-              style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                <div className="p-4 md:p-6 border-b flex justify-between items-center sticky top-0 z-10 shadow-sm" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
-                    <span className="font-bold text-sm uppercase tracking-widest flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                      <History size={18} className="text-orange-500"/> 
-                      Registro Clínico
-                    </span>
-                    <span className="text-[10px] px-3 py-1 rounded-full font-bold" style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)' }}>
-                      {historyData.aba.length + historyData.entorno.length} Registros
-                    </span>
-                </div>
-                
-                <div className="p-4 md:p-6 space-y-4" style={{ background: 'var(--background)' }}>
-                   {historyData.entorno.map((visita: any) => {
-                        const isExpanded = expandedCardId === `entorno-${visita.id}`
-                        const d = visita.datos || {}
-
-                        return (
-                            <div key={`entorno-${visita.id}`} className={`rounded-2xl md:rounded-[1.5rem] border-2 transition-all duration-300 ${isExpanded ? 'border-green-500 shadow-xl' : 'border-green-800/30 hover:border-green-500/50'}`} style={{ background: 'var(--card)' }}>
-                                <div className="p-4 md:p-5 cursor-pointer flex items-center justify-between" onClick={() => toggleCard(`entorno-${visita.id}`)}>
-                                    <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-                                        <div className="flex flex-col items-center justify-center bg-green-600 text-white rounded-xl p-3 min-w-[70px] shadow-lg">
-                                            <Home size={20}/>
-                                            <span className="text-[10px] font-bold uppercase opacity-80 mt-1">Hogar</span>
-                                        </div>
-                                        <div className="flex flex-col overflow-hidden">
-                                            <p className="text-sm font-black truncate" style={{ color: 'var(--text-primary)' }}>Visita Domiciliaria</p>
-                                            <span className="text-xs text-green-500 font-bold">{visita.fecha_visita}</span>
-                                        </div>
-                                    </div>
-                                    <div className={`p-2.5 rounded-full transition-all ${isExpanded ? 'bg-green-600 text-white rotate-180' : 'text-green-500'}`} style={!isExpanded ? { background: 'var(--muted-bg)' } : {}}>
-                                      <ChevronDown size={20}/>
-                                    </div>
-                                </div>
-
-                                {isExpanded && (
-                                    <div className="p-6 pt-0 border-t animate-fade-in" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
-                                        <div className="flex flex-col gap-4 mt-6">
-                                            <DetailBox title="Personas Presentes" content={d.personas_presentes} icon={<Users size={14}/>} color="bg-blue-50 border-blue-100 text-blue-900" full/>
-                                            <DetailBox title="Comportamiento" content={d.comportamiento_observado} icon={<Eye size={14}/>} color="bg-purple-50 border-purple-100 text-purple-900" full/>
-                                            <DetailBox title="Impresión IA" content={d.impresion_general} icon={<Brain size={14}/>} color="bg-indigo-50 border-indigo-100 text-indigo-900" full/>
-                                            
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <DetailBox title="Barreras" content={d.barreras_identificadas} icon={<ShieldAlert size={14}/>} color="bg-red-50 border-red-100 text-red-900"/>
-                                                <DetailBox title="Facilitadores" content={d.facilitadores} icon={<CheckCircle2 size={14}/>} color="bg-green-50 border-green-100 text-green-900"/>
-                                            </div>
-
-                                            <DetailBox title="Mensaje Padres" content={d.mensaje_padres_entorno} icon={<MessageCircle size={14}/>} color="bg-green-50 border-green-100 text-green-900" full/>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    })}
-
-                    {historyData.aba.map((sesion: any) => {
-                        const isExpanded = expandedCardId === `aba-${sesion.id}`
-                        const d = sesion.datos || {}
-
-                        return (
-                            <div key={`aba-${sesion.id}`} className={`rounded-2xl md:rounded-[1.5rem] border-2 transition-all duration-300 ${isExpanded ? 'border-blue-500 shadow-xl' : 'hover:border-blue-400/50'}`} style={{ background: 'var(--card)', borderColor: isExpanded ? undefined : 'var(--card-border)' }}>
-                                <div className="p-5 cursor-pointer flex items-center justify-between" onClick={() => toggleCard(`aba-${sesion.id}`)}>
-                                    <div className="flex items-center gap-4 overflow-hidden">
-                                        <div className="flex flex-col items-center justify-center bg-violet-700 text-white rounded-xl p-3 min-w-[70px] shadow-lg">
-                                            <span className="text-[10px] font-bold uppercase opacity-60">
-                                              {new Date(sesion.fecha_sesion).toLocaleString('default', { month: 'short' })}
-                                            </span>
-                                            <span className="text-xl font-black">{new Date(sesion.fecha_sesion).getDate() + 1}</span>
-                                        </div>
-                                        <div className="flex flex-col overflow-hidden">
-                                            <p className="text-sm font-black truncate" style={{ color: 'var(--text-primary)' }}>{d.conducta || "Sesión ABA"}</p>
-                                        </div>
-                                    </div>
-                                    <div className={`p-2.5 rounded-full transition-all ${isExpanded ? 'bg-blue-600 text-white rotate-180' : ''}`} style={!isExpanded ? { background: 'var(--muted-bg)', color: 'var(--text-muted)' } : {}}>
-                                      <ChevronDown size={20}/>
-                                    </div>
-                                </div>
-
-                                {isExpanded && (
-                                    <div className="p-6 pt-0 border-t animate-fade-in" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
-                                        <div className="flex flex-col gap-4 mt-6">
-                                            <DetailBox title="Objetivo" content={d.objetivo_principal} icon={<Target size={14}/>} color="bg-blue-50 border-blue-100 text-blue-900" full/>
-                                            <DetailBox title="Observaciones" content={d.observaciones_tecnicas} icon={<Eye size={14}/>} color="bg-slate-50 border-slate-100" full/>
-                                            
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <DetailBox title="ABC" content={d.antecedente} icon={<Activity size={14}/>} color="bg-purple-50 border-purple-100 text-purple-900"/>
-                                                <DetailBox title="Intervención" content={d.estrategias_manejo} icon={<Zap size={14}/>} color="bg-orange-50 border-orange-100 text-orange-900"/>
-                                            </div>
-
-                                            <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-3">
-                                              <div className="flex items-center gap-2 mb-2">
-                                                <MessageCircle size={12} className="text-amber-500"/>
-                                                <span className="text-xs font-black text-amber-500 uppercase tracking-widest">Mensaje Padres</span>
-                                                <span className="ml-auto px-1.5 py-0.5 bg-amber-500/20 text-amber-400 text-[9px] font-black rounded-full border border-amber-500/30">⏳ En Bandeja</span>
-                                              </div>
-                                              <p className="text-xs text-amber-400 italic">"{d.mensaje_padres}"</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )
-                    })}
-                    
-                    {(historyData.aba.length === 0 && historyData.entorno.length === 0) && (
-                      <div className="h-full flex flex-col items-center justify-center py-20" style={{ color: 'var(--text-muted)' }}>
-                        <History size={80} className="mb-6 opacity-20"/>
-                        <p className="text-lg font-black uppercase tracking-[0.3em]">Sin Registros</p>
-                      </div>
-                    )}
-                </div>
-            </div>
-
-            {/* CHAT IA (desktop: columna, mobile: tab chat) */}
-            <div className={`col-span-1 lg:col-span-5 xl:col-span-4 rounded-3xl md:rounded-[3rem] shadow-2xl flex flex-col overflow-hidden
-              ${mobileTab === 'chat' ? 'flex' : 'hidden lg:flex'}`}
-              style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                <div className="p-4 md:p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex justify-between items-center shadow-lg">
-                   <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                          <Sparkles size={22}/>
-                        </div>
-                        <div>
-                            <span className="font-black text-sm uppercase tracking-widest">Asistente IA</span>
-                            <span className="text-[10px] text-green-400 font-bold uppercase flex items-center gap-1">
-                                <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div> 
-                             {speaking ? '🔊 Hablando...' : 'IA clinica v4.0'}
-                            </span>
-                        </div>
-                    </div>
-                    {/* Botón silenciar */}
-                    <button onClick={toggleVoice} title={voiceEnabled ? 'Silenciar voz' : 'Activar voz'}
-                      className="p-2 rounded-xl hover:bg-white/10 transition-all"
-                      style={{ color: voiceEnabled ? '#86efac' : '#94a3b8' }}>
-                      {voiceEnabled ? <Volume2 size={16}/> : <VolumeX size={16}/>}
-                    </button>
-                </div>
-
-                {/* Banner escuchando */}
-                {listening && (
-                  <div className="mx-4 mt-3 rounded-2xl px-4 py-3 flex items-center gap-3 bg-red-50 border-2 border-red-200">
-                    <div className="w-7 h-7 rounded-full bg-red-500 flex items-center justify-center shrink-0 animate-pulse">
-                      <Mic size={13} className="text-white"/>
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-black text-red-700">Escuchando...</p>
-                      <p className="text-[10px] text-red-500 font-medium">Habla ahora, se enviará automáticamente</p>
-                    </div>
-                    <button onClick={stopListening} className="p-1.5 rounded-xl bg-red-100 hover:bg-red-200 transition-all">
-                      <StopCircle size={14} className="text-red-600"/>
-                    </button>
-                  </div>
-                )}
-                
-                <div 
-                  className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-5" 
-                  style={{ background: 'var(--background)' }}
-                  ref={chatContainerRef}
-                >
-                    {messages.map((m, i) => (
-                        <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
-                            <div
-                              className={`max-w-[90%] p-4 rounded-2xl md:rounded-[1.5rem] text-sm leading-relaxed shadow-md`}
-                              style={m.role === 'user'
-                                ? { background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: '#fff', borderRadius: '1.5rem 1.5rem 0.25rem 1.5rem', borderBottom: '3px solid #1e3a8a' }
-                                : { background: 'var(--muted-bg)', border: '1.5px solid var(--card-border)', color: 'var(--text-primary)', borderRadius: '0.25rem 1.5rem 1.5rem 1.5rem' }
-                              }
-                            >
-                                {m.role === 'ai' ? (
-                                  <p className="font-medium whitespace-pre-wrap" dangerouslySetInnerHTML={{
-                                    __html: m.text
-                                      .replace(/\*\*(.*?)\*\*/g, '<b class="font-black">$1</b>')
-                                      .replace(/\n/g, '<br/>')
-                                  }}></p>
-                                ) : m.text}
-                            </div>
-                        </div>
-                    ))}
-                    {typing && (
-                      <div className="flex justify-start animate-fade-in">
-                        <div className="px-5 py-3 rounded-2xl flex items-center gap-2" style={{ background: 'var(--muted-bg)', border: '1.5px solid var(--card-border)' }}>
-                          <Loader2 className="animate-spin text-blue-500" size={16}/>
-                          <span className="text-xs font-bold" style={{ color: 'var(--text-secondary)' }}>Analizando...</span>
-                        </div>
-                      </div>
-                    )}
-                </div>
-
-                <div className="p-4 md:p-5 flex gap-2 shadow-lg" style={{ background: 'var(--card)', borderTop: '1.5px solid var(--card-border)' }}>
-                    <input 
-                        className="flex-1 border-2 rounded-2xl px-5 py-4 text-sm font-bold outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all"
-                        style={{
-                          background: listening ? '#fef2f2' : 'var(--input-bg)',
-                          borderColor: listening ? '#fca5a5' : 'var(--input-border)',
-                          color: 'var(--text-primary)',
-                        }}
-                        placeholder={listening ? '🎤 Escuchando...' : 'Pregunta sobre evolución...'}
-                        value={input}
-                        onChange={e => setInput(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && !listening && sendMessage()}
-                        disabled={listening}
-                    />
-                    {/* Botón micrófono */}
-                    {micSupported && (
-                      <button
-                        onClick={handleMicClick}
-                        disabled={typing}
-                        title={listening ? 'Detener grabación' : 'Hablar con IA'}
-                        className="p-4 rounded-2xl transition-all disabled:opacity-40 hover:scale-105 active:scale-95"
-                        style={{
-                          background: listening ? 'linear-gradient(135deg,#ef4444,#dc2626)' : '#f1f5f9',
-                          boxShadow: listening ? '0 4px 14px rgba(239,68,68,.4)' : 'none',
-                        }}>
-                        {listening
-                          ? <MicOff size={18} className="text-white"/>
-                          : <Mic size={18} className="text-slate-500"/>
-                        }
-                      </button>
-                    )}
-                    {/* Botón enviar / detener voz */}
-                    {speaking ? (
-                      <button onClick={stopSpeaking} title="Detener voz"
-                        className="p-4 bg-gradient-to-br from-purple-600 to-indigo-600 text-white rounded-2xl hover:scale-105 active:scale-95 transition shadow-xl animate-pulse">
-                        <StopCircle size={20}/>
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={sendMessage} 
-                        disabled={!input.trim() || listening}
-                        className="p-4 bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl hover:scale-105 active:scale-95 transition shadow-xl disabled:opacity-50"
-                      >
-                        <Send size={20}/>
-                      </button>
-                    )}
-                </div>
-                {micSupported && (
-                  <p className="text-center text-[10px] text-slate-300 pb-2 font-medium">
-                    {listening ? '🔴 Grabando · Habla claro' : '🎤 Micrófono disponible · Enter o botón para enviar'}
-                  </p>
-                )}
-            </div>
-            </div>{/* end main grid */}
-
-            {/* ── PANEL GRÁFICAS (mobile tab) ── */}
-            {mobileTab === 'graficas' && (
-              <div className="lg:hidden flex-1 overflow-y-auto bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 shadow-sm p-4">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="p-2 bg-violet-50 rounded-xl">
-                    <span className="text-lg">📊</span>
-                  </div>
-                  <span className="font-black text-slate-700 text-sm uppercase tracking-widest">Gráficas ABA</span>
-                </div>
-                <ProgresoGraficas childId={selectedChild} modoParent={false} />
               </div>
             )}
 
-            {/* ── PANEL GRÁFICAS (desktop: siempre visible como columna extra) ── */}
-            <div className="hidden lg:block flex-shrink-0 w-full bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 shadow-sm p-5">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="p-2 bg-violet-50 rounded-xl">
-                  <span className="text-lg">📊</span>
+            <div className="overflow-y-auto p-4 space-y-3" style={{ maxHeight: '360px', background: 'var(--background)' }} ref={chatContainerRef}>
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in`}>
+                  <div className="max-w-[88%] p-3.5 rounded-2xl text-sm leading-relaxed shadow-sm"
+                    style={m.role === 'user'
+                      ? { background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: '#fff', borderRadius: '1.2rem 1.2rem 0.2rem 1.2rem' }
+                      : { background: 'var(--muted-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', borderRadius: '0.2rem 1.2rem 1.2rem 1.2rem' }
+                    }>
+                    {m.role === 'ai' ? (
+                      <p className="font-medium whitespace-pre-wrap" dangerouslySetInnerHTML={{
+                        __html: m.text.replace(/\*\*(.*?)\*\*/g, '<b class="font-black">$1</b>').replace(/\n/g, '<br/>')
+                      }}/>
+                    ) : m.text}
+                  </div>
                 </div>
-                <span className="font-black text-slate-700 text-sm uppercase tracking-widest">Gráficas ABA</span>
-              </div>
+              ))}
+              {typing && (
+                <div className="flex justify-start">
+                  <div className="px-4 py-2.5 rounded-2xl flex items-center gap-2" style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
+                    <Loader2 className="animate-spin text-blue-500" size={14}/>
+                    <span className="text-xs font-bold" style={{ color: 'var(--text-muted)' }}>{t('common.analizando')}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-3 flex gap-2 border-t" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
+              <input
+                className="flex-1 border rounded-xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                style={{ background: listening ? 'rgba(239,68,68,0.05)' : 'var(--input-bg)', borderColor: listening ? '#fca5a5' : 'var(--input-border)', color: 'var(--text-primary)' }}
+                placeholder={listening ? '🎤 Escuchando...' : 'Preguntá sobre el paciente, ABA, protocolos...'}
+                value={input} onChange={e => setInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && !listening && sendMessage()}
+                disabled={listening}
+              />
+              {micSupported && (
+                <button onClick={handleMicClick} disabled={typing}
+                  className="p-3 rounded-xl transition-all disabled:opacity-40"
+                  style={{ background: listening ? 'linear-gradient(135deg,#ef4444,#dc2626)' : 'var(--muted-bg)', boxShadow: listening ? '0 4px 14px rgba(239,68,68,.3)' : 'none' }}>
+                  {listening ? <MicOff size={16} className="text-white"/> : <Mic size={16} style={{ color: 'var(--text-muted)' }}/>}
+                </button>
+              )}
+              {speaking ? (
+                <button onClick={stopSpeaking} className="p-3 rounded-xl text-white" style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)' }}>
+                  <StopCircle size={16}/>
+                </button>
+              ) : (
+                <button onClick={sendMessage} disabled={!input.trim() || listening}
+                  className="p-3 rounded-xl text-white transition-all disabled:opacity-40"
+                  style={{ background: 'linear-gradient(135deg,#1e293b,#0f172a)' }}>
+                  <Send size={16}/>
+                </button>
+              )}
+            </div>
+          </AccordionSection>
+
+          {/* ══ SECCIÓN 2: REGISTRO CLÍNICO (cerrado por defecto) ══ */}
+          <AccordionSection
+            id="historial"
+            title={t('ui.clinical_record')}
+            icon={<History size={16} className="text-orange-400"/>}
+            badge={<span className="text-[10px] px-2 py-0.5 rounded-full font-black" style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)' }}>{historyData.aba.length + historyData.entorno.length} registros</span>}
+            defaultOpen={false}
+          >
+            <div className="p-4 space-y-3" style={{ background: 'var(--background)' }}>
+              {historyData.entorno.map((visita: any) => {
+                const isExpanded = expandedCardId === `entorno-${visita.id}`
+                const d = visita.datos || {}
+                return (
+                  <div key={`entorno-${visita.id}`} className="rounded-2xl border-2 transition-all duration-200"
+                    style={{ background: 'var(--card)', borderColor: isExpanded ? '#22c55e' : 'var(--card-border)' }}>
+                    <div className="p-4 cursor-pointer flex items-center justify-between" onClick={() => toggleCard(`entorno-${visita.id}`)}>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-center justify-center bg-green-600 text-white rounded-xl p-2.5 min-w-[56px] shadow">
+                          <Home size={16}/>
+                          <span className="text-[9px] font-bold uppercase opacity-80 mt-0.5">{t('ui.home_env')}</span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>Visita Domiciliaria</p>
+                          <span className="text-xs text-green-500 font-bold">{visita.fecha_visita}</span>
+                        </div>
+                      </div>
+                      <ChevronDown size={18} className={`transition-transform ${isExpanded ? 'rotate-180 text-green-400' : ''}`} style={{ color: isExpanded ? undefined : 'var(--text-muted)' }}/>
+                    </div>
+                    {isExpanded && (
+                      <div className="px-4 pb-4 border-t pt-3 animate-fade-in space-y-3" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
+                        <DetailBox title={t('ui.people_present')} content={d.personas_presentes} icon={<Users size={13}/>} color="bg-blue-500/10 border-blue-500/20 text-blue-300" full/>
+                        <DetailBox title={t('ui.behavior')} content={d.comportamiento_observado} icon={<Eye size={13}/>} color="bg-purple-500/10 border-purple-500/20 text-purple-300" full/>
+                        <DetailBox title={t('ui.ai_impression')} content={d.impresion_general} icon={<Brain size={13}/>} color="bg-indigo-500/10 border-indigo-500/20 text-indigo-300" full/>
+                        <div className="grid grid-cols-2 gap-3">
+                          <DetailBox title={t('ui.barriers')} content={d.barreras_identificadas} icon={<ShieldAlert size={13}/>} color="bg-red-500/10 border-red-500/20 text-red-300"/>
+                          <DetailBox title={t('ui.facilitators')} content={d.facilitadores} icon={<CheckCircle2 size={13}/>} color="bg-green-500/10 border-green-500/20 text-green-300"/>
+                        </div>
+                        <DetailBox title="Mensaje Padres" content={d.mensaje_padres_entorno} icon={<MessageCircle size={13}/>} color="bg-green-500/10 border-green-500/20 text-green-300" full/>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+              {historyData.aba.map((sesion: any) => {
+                const isExpanded = expandedCardId === `aba-${sesion.id}`
+                const d = sesion.datos || {}
+                return (
+                  <div key={`aba-${sesion.id}`} className="rounded-2xl border-2 transition-all duration-200"
+                    style={{ background: 'var(--card)', borderColor: isExpanded ? '#6366f1' : 'var(--card-border)' }}>
+                    <div className="p-4 cursor-pointer flex items-center justify-between" onClick={() => toggleCard(`aba-${sesion.id}`)}>
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col items-center justify-center bg-violet-700 text-white rounded-xl p-2.5 min-w-[56px] shadow">
+                          <span className="text-[9px] font-bold uppercase opacity-60">{new Date(sesion.fecha_sesion).toLocaleString('default', { month: 'short' })}</span>
+                          <span className="text-lg font-black leading-none">{new Date(sesion.fecha_sesion).getDate() + 1}</span>
+                        </div>
+                        <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>{d.conducta || 'Sesión ABA'}</p>
+                      </div>
+                      <ChevronDown size={18} className={`transition-transform ${isExpanded ? 'rotate-180 text-indigo-400' : ''}`} style={{ color: isExpanded ? undefined : 'var(--text-muted)' }}/>
+                    </div>
+                    {isExpanded && (
+                      <div className="px-4 pb-4 border-t pt-3 animate-fade-in space-y-3" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
+                        <DetailBox title="Objetivo" content={d.objetivo_principal} icon={<Target size={13}/>} color="bg-blue-500/10 border-blue-500/20 text-blue-300" full/>
+                        <DetailBox title={t('ui.observations')} content={d.observaciones_tecnicas} icon={<Eye size={13}/>} color="bg-slate-500/10 border-slate-500/20 text-slate-300" full/>
+                        <div className="grid grid-cols-2 gap-3">
+                          <DetailBox title="ABC" content={d.antecedente} icon={<Activity size={13}/>} color="bg-purple-500/10 border-purple-500/20 text-purple-300"/>
+                          <DetailBox title="Intervención" content={d.estrategias_manejo} icon={<Zap size={13}/>} color="bg-orange-500/10 border-orange-500/20 text-orange-300"/>
+                        </div>
+                        <div className="rounded-xl p-3" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                          <div className="flex items-center gap-2 mb-1.5">
+                            <MessageCircle size={11} className="text-amber-400"/>
+                            <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Mensaje Padres</span>
+                            <span className="ml-auto text-[9px] font-black text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-full">⏳ En Bandeja</span>
+                          </div>
+                          <p className="text-xs text-amber-300 italic">"{d.mensaje_padres}"</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+              {(historyData.aba.length === 0 && historyData.entorno.length === 0) && (
+                <div className="py-16 text-center" style={{ color: 'var(--text-muted)' }}>
+                  <History size={48} className="mx-auto mb-3 opacity-20"/>
+                  <p className="font-black uppercase tracking-widest text-sm">Sin registros</p>
+                </div>
+              )}
+            </div>
+          </AccordionSection>
+
+          {/* ══ SECCIÓN 3: FICHA DE INGRESO (cerrado por defecto) ══ */}
+          <AccordionSection
+            id="anamnesis"
+            title="Ficha de Ingreso"
+            icon={<FileText size={16} className="text-blue-400"/>}
+            defaultOpen={false}
+          >
+            <div className="p-4 space-y-2" style={{ background: 'var(--background)' }}>
+              {historyData.anamnesis ? Object.entries(historyData.anamnesis).slice(0, 20).map(([key, value]: any) => (
+                <div key={key} className="px-3 py-2.5 rounded-xl" style={{ borderBottom: '1px solid var(--card-border)' }}>
+                  <span className="text-[10px] font-black uppercase block mb-0.5 tracking-wider" style={{ color: 'var(--text-muted)' }}>{key.replace(/_/g, ' ')}</span>
+                  <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>{String(value)}</p>
+                </div>
+              )) : (
+                <div className="py-12 text-center">
+                  <FileText size={36} className="mx-auto mb-2 opacity-20" style={{ color: 'var(--text-muted)' }}/>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin ficha de ingreso</p>
+                </div>
+              )}
+            </div>
+          </AccordionSection>
+
+          {/* ══ SECCIÓN 4: REPORTES WORD (cerrado por defecto) ══ */}
+          <AccordionSection
+            id="reportes"
+            title="Reportes Word Generados"
+            icon={<FileText size={16} className="text-blue-400"/>}
+            badge={reportesHistorial.length > 0 ? <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-black">{reportesHistorial.length}</span> : undefined}
+            defaultOpen={false}
+          >
+            <div className="p-4" style={{ background: 'var(--background)' }}>
+              {loadingReportes ? (
+                <div className="flex items-center justify-center gap-2 py-8" style={{ color: 'var(--text-muted)' }}>
+                  <Loader2 className="animate-spin" size={18}/><span className="text-xs font-bold">{t('common.cargando')}</span>
+                </div>
+              ) : reportesHistorial.length === 0 ? (
+                <div className="py-10 text-center rounded-xl border-2 border-dashed" style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)' }}>
+                  <FileText size={32} className="mx-auto mb-2 opacity-20" style={{ color: 'var(--text-muted)' }}/>
+                  <p className="text-sm font-black" style={{ color: 'var(--text-muted)' }}>Sin reportes generados</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {reportesHistorial.map(rep => <ReporteHistorialCard key={rep.id} reporte={rep}/>)}
+                </div>
+              )}
+            </div>
+          </AccordionSection>
+
+          {/* ══ SECCIÓN 5: GRÁFICAS ABA (cerrado por defecto) ══ */}
+          <AccordionSection
+            id="graficas"
+            title="Gráficas ABA"
+            icon={<span className="text-base">📊</span>}
+            defaultOpen={true}
+          >
+            <div className="p-4" style={{ background: 'var(--background)' }}>
               <ProgresoGraficas childId={selectedChild} modoParent={false} />
             </div>
+          </AccordionSection>
 
         </div>
       ) : (
@@ -754,6 +634,35 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
     </div>
   )
 }
+
+// ── Componente acordeón reutilizable ──────────────────────────────────────────
+function AccordionSection({ id, title, icon, badge, defaultOpen, children }: {
+  id: string
+  title: string
+  icon: React.ReactNode
+  badge?: React.ReactNode
+  defaultOpen?: boolean
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen ?? false)
+  return (
+    <div className="rounded-2xl overflow-hidden shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-4 transition-all hover:opacity-80"
+      >
+        <div className="flex items-center gap-3">
+          {icon}
+          <span className="font-black text-sm uppercase tracking-widest" style={{ color: "var(--text-primary)" }}>{title}</span>
+          {badge}
+        </div>
+        <ChevronDown size={16} className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`} style={{ color: "var(--text-muted)" }} />
+      </button>
+      {open && <div className="border-t" style={{ borderColor: "var(--card-border)" }}>{children}</div>}
+    </div>
+  )
+}
+
 
 // ==============================================================================
 // SUBCOMPONENTE: TARJETA DE REPORTE EN HISTORIAL

@@ -1,8 +1,14 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 // app/admin/components/InteligenciaHubView.tsx
 // 🧠 Hub de Inteligencia Artificial — Predicciones + Seguridad + Engagement Padres
 
 import { useState, useEffect, useCallback } from 'react'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine, Area, ComposedChart,
+} from 'recharts'
 import {
   Brain, Shield, TrendingUp, TrendingDown, Minus,
   AlertTriangle, CheckCircle, RefreshCw, Users, Target,
@@ -50,6 +56,8 @@ interface Seguridad {
 
 // ─── Helpers visuales ────────────────────────────────────────────────────────
 function ScoreRing({ score, size = 80, color }: { score: number; size?: number; color: string }) {
+  const { t } = useI18n()
+
   const r = size / 2 - 8
   const circ = 2 * Math.PI * r
   const dash = (score / 100) * circ
@@ -69,6 +77,8 @@ function ScoreRing({ score, size = 80, color }: { score: number; size?: number; 
 }
 
 function Badge({ label, color }: { label: string; color: string }) {
+  const { t } = useI18n()
+
   const colors: Record<string, string> = {
     green: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     red: 'bg-red-50 text-red-700 border-red-200',
@@ -85,6 +95,7 @@ function Badge({ label, color }: { label: string; color: string }) {
 
 // ─── Mini Barra de Progreso ──────────────────────────────────────────────────
 function ProgressBar({ value, max = 100, color = 'blue' }: { value: number; max?: number; color?: string }) {
+
   const pct = Math.min(100, (value / max) * 100)
   const colors: Record<string, string> = {
     blue: 'bg-blue-500', green: 'bg-emerald-500', red: 'bg-red-500',
@@ -98,18 +109,60 @@ function ProgressBar({ value, max = 100, color = 'blue' }: { value: number; max?
   )
 }
 
-// ─── Sparkline mini-chart ────────────────────────────────────────────────────
+// ─── Sparkline con Recharts ──────────────────────────────────────────────────
 function Sparkline({ data, color = '#3b82f6' }: { data: number[]; color?: string }) {
-  if (!data || data.length < 2) return <span className="text-xs text-slate-400">Sin datos</span>
-  const max = Math.max(...data)
-  const min = Math.min(...data)
-  const range = max - min || 1
-  const w = 80; const h = 30
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - ((v - min) / range) * h}`).join(' ')
+  const { t } = useI18n()
+  if (!data || data.length < 2) return <span className="text-xs text-slate-400">{t('common.sinDatos')}</span>
+  const pts = data.map((v, i) => ({ i, v }))
   return (
-    <svg width={w} height={h} className="overflow-visible">
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <ResponsiveContainer width={100} height={36}>
+      <LineChart data={pts} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+        <Line type="monotone" dataKey="v" stroke={color} strokeWidth={2} dot={false} />
+        <ReferenceLine y={90} stroke="#10b981" strokeDasharray="3 2" strokeWidth={1} />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
+// ─── Gráfico de líneas de progreso ABA (para analytics) ──────────────────────
+function LineChartProgreso({ sesiones, criterio = 90, color = '#7c3aed', titulo = '' }: {
+
+  sesiones: { fecha: string; porcentaje_exito: number; fase?: string }[]
+  criterio?: number
+  color?: string
+  titulo?: string
+}) {
+  const { t } = useI18n()
+  if (!sesiones || sesiones.length < 2) return (
+    <div className="flex items-center justify-center h-24 rounded-xl border" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
+      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('ui.few_sessions')}</p>
+    </div>
+  )
+
+  const data = sesiones.map((s, i) => ({
+    n: i + 1,
+    pct: s.porcentaje_exito,
+    fecha: s.fecha?.slice(5) || '',
+  }))
+
+  return (
+    <div className="w-full">
+      {titulo && <p className="text-xs font-bold mb-1" style={{ color: 'var(--text-secondary)' }}>{titulo}</p>}
+      <ResponsiveContainer width="100%" height={120}>
+        <ComposedChart data={data} margin={{ top: 4, right: 4, bottom: 4, left: -20 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
+          <XAxis dataKey="n" tick={{ fontSize: 9, fill: 'var(--text-muted)' }} />
+          <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--text-muted)' }} />
+          <Tooltip
+            contentStyle={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 10, fontSize: 11 }}
+            formatter={(v: any) => [`${v}%`, 'Logro']}
+          />
+          <ReferenceLine y={criterio} stroke="#10b981" strokeDasharray="4 2" strokeWidth={1.5} />
+          <Area type="monotone" dataKey="pct" fill={`${color}18`} stroke="none" />
+          <Line type="monotone" dataKey="pct" stroke={color} strokeWidth={2.5} dot={{ r: 3, fill: color }} activeDot={{ r: 5 }} />
+        </ComposedChart>
+      </ResponsiveContainer>
+    </div>
   )
 }
 
@@ -117,7 +170,9 @@ function Sparkline({ data, color = '#3b82f6' }: { data: number[]; color?: string
 // TAB: PREDICCIONES
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
-  const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null)
+    const { t } = useI18n()
+
+    const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null)
   const [prediccion, setPrediccion] = useState<Prediccion | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -128,8 +183,8 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
     try {
       const res = await fetch('/api/agente-prediccion', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId: p.id, childName: p.name, semanas: 12 })
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ childId: p.id, childName: p.name, semanas: 12 , locale: localStorage.getItem('vanty_locale') || 'es' })
       })
       const data = await res.json()
       setPrediccion(data)
@@ -150,26 +205,26 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
       {/* Lista de pacientes */}
-      <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <h3 className="font-black text-slate-800 flex items-center gap-2">
+      <div className="lg:col-span-1  rounded-2xl border border-slate-200 shadow-sm overflow-hidden" style={{ background: "var(--card)" }}>
+        <div className="p-4 border-b" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
+          <h3 className="font-black flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
             <Users size={16} className="text-blue-600" /> Selecciona un paciente
           </h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">La IA analizará sus últimas 12 semanas</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>La IA analizará sus últimas 12 semanas</p>
         </div>
         <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto">
           {pacientes.length === 0 && (
-            <p className="p-4 text-sm text-slate-400 text-center">Sin pacientes registrados</p>
+            <p className="p-4 text-sm text-slate-400 text-center">{t('ui.no_patients')}</p>
           )}
           {pacientes.map(p => (
             <button key={p.id} onClick={() => generarPrediccion(p)}
-              className={`w-full text-left p-3.5 hover:bg-blue-50/50 transition-colors flex items-center gap-3 ${selectedPaciente?.id === p.id ? 'bg-blue-50 border-l-2 border-blue-500' : ''}`}>
+              className={`w-full text-left p-3.5 transition-colors flex items-center gap-3 ${selectedPaciente?.id === p.id ? 'border-l-2 border-blue-500' : ''}`} style={{ background: selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.1)' : 'transparent' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.1)' : 'var(--muted-bg)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.1)' : 'transparent'}>
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
                 <span className="text-white font-black text-sm">{(p.name || p.nombre || '?').charAt(0)}</span>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-bold text-sm text-slate-800 truncate">{p.name}</p>
-                <p className="text-[11px] text-slate-400 truncate">{p.diagnosis || 'Sin diagnóstico'}</p>
+                <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{p.name}</p>
+                <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>{p.diagnosis || 'Sin diagnóstico'}</p>
               </div>
               <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
             </button>
@@ -180,17 +235,17 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
       {/* Panel predicciones */}
       <div className="lg:col-span-2 space-y-4">
         {!selectedPaciente && !loading && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+          <div className="rounded-2xl p-12 text-center" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <Brain size={48} className="text-slate-200 mx-auto mb-4" />
-            <p className="text-slate-400 font-medium">Selecciona un paciente para generar predicciones con IA</p>
+            <p className="font-medium" style={{ color: "var(--text-muted)" }}>Selecciona un paciente para generar predicciones con IA</p>
           </div>
         )}
 
         {loading && (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+          <div className="rounded-2xl p-12 text-center" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
             <p className="text-slate-600 font-medium">Analizando patrones con IA...</p>
-            <p className="text-xs text-slate-400 mt-1">Calculando tendencias y proyecciones</p>
+            <p className="text-xs text-slate-400 mt-1">{t('ui.calculating')}</p>
           </div>
         )}
 
@@ -200,94 +255,111 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Predicción IA</p>
+                  <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Análisis por Programa / Nivel</p>
                   <h3 className="text-xl font-black">{selectedPaciente.name}</h3>
-                  <p className="text-blue-200 text-sm mt-0.5">{prediccion.sesiones_analizadas} sesiones analizadas</p>
+                  <p className="text-blue-200 text-sm mt-0.5">
+                    {(prediccion as any).programas_analizados || 0} programas · {(prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) || 0} sesiones totales
+                  </p>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1.5 justify-end mb-1">
-                    {tendenciaIcon}
-                    <Badge label={prediccion.tendencia} color={tendenciaColor} />
-                  </div>
-                  <p className="text-blue-200 text-xs">Confianza: <span className="text-white font-black">{prediccion.confianza}%</span></p>
+                <div className="bg-white/15 rounded-xl px-3 py-2 text-center">
+                  <p className="text-white/70 text-[10px] uppercase tracking-wide">{t('ui.criteria')}</p>
+                  <p className="text-white font-black text-sm">≥90% × 2</p>
+                  <p className="text-white/70 text-[10px]">sesiones consecutivas</p>
                 </div>
               </div>
             </div>
 
-            {/* Métricas predicción */}
-            {prediccion.prediccion_30d !== null ? (
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Logro actual', value: `${prediccion.ultimo_logro}%`, sub: 'Última sesión', color: 'slate' },
-                  { label: 'Proyección 30 días', value: `${prediccion.prediccion_30d}%`, sub: 'Con tendencia actual', color: 'blue' },
-                  { label: 'Proyección 90 días', value: `${prediccion.prediccion_90d}%`, sub: 'Estimado', color: 'indigo' },
-                ].map(m => (
-                  <div key={m.label} className="bg-white rounded-xl border border-slate-200 p-4 text-center">
-                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2">{m.label}</p>
-                    <p className={`text-2xl font-black ${m.color === 'blue' ? 'text-blue-600' : m.color === 'indigo' ? 'text-indigo-600' : 'text-slate-700'}`}>
-                      {m.value}
-                    </p>
-                    <p className="text-[10px] text-slate-400 mt-1">{m.sub}</p>
-                    {m.color !== 'slate' && (
-                      <div className="mt-2">
-                        <ProgressBar value={parseInt(m.value)} color={m.color === 'blue' ? 'blue' : 'purple'} />
+            {/* Sin programas */}
+            {((prediccion as any).programas_analizados === 0) && (
+              <div className="rounded-xl p-6 text-center border-2 border-dashed" style={{ borderColor: "var(--card-border)", background: "var(--muted-bg)" }}>
+                <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>Sin programas ABA activos</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>Crea programas en la ficha del paciente para generar análisis por nivel.</p>
+              </div>
+            )}
+
+            {/* Por programa */}
+            {((prediccion as any).analisis_por_programa || []).map((prog: any) => (
+              <div key={prog.programa_id} className="rounded-2xl border overflow-hidden" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
+                {/* Header del programa */}
+                <div className="px-4 py-3 border-b flex items-center justify-between" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black text-sm truncate" style={{ color: "var(--text-primary)" }}>{prog.nombre}</p>
+                    <p className="text-xs truncate mt-0.5" style={{ color: "var(--text-muted)" }}>{prog.objetivo}</p>
+                  </div>
+                  <span className={`ml-3 shrink-0 text-[10px] font-black px-2.5 py-1 rounded-full border ${
+                    prog.criterio_logrado
+                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                      : prog.ultimo_porcentaje >= prog.criterio_dominio
+                      ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                      : "bg-amber-500/10 text-amber-400 border-amber-500/30"
+                  }`}>
+                    {prog.estado_general}
+                  </span>
+                </div>
+
+                <div className="p-4 space-y-3">
+                  {/* Métricas clave */}
+                  {prog.total_sesiones > 0 ? (
+                    <>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { label: 'Última sesión', value: `${prog.ultimo_porcentaje}%`, highlight: prog.ultimo_porcentaje >= prog.criterio_dominio },
+                          { label: "Media", value: `${prog.media}%`, highlight: false },
+                          { label: "Mediana", value: `${prog.mediana}%`, highlight: false },
+                        ].map(m => (
+                          <div key={m.label} className="rounded-xl p-2.5 text-center border" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
+                            <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>{m.label}</p>
+                            <p className={`text-lg font-black ${m.highlight ? "text-emerald-400" : ""}`} style={!m.highlight ? { color: "var(--text-primary)" } : {}}>
+                              {m.value}
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center">
-                <p className="text-amber-700 font-medium text-sm">{prediccion.analisis_ia || 'Se necesitan más sesiones para generar predicciones precisas.'}</p>
-              </div>
-            )}
 
-            {/* Criterio de logro ABA */}
-            <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-3 flex items-start gap-3">
-              <span className="text-indigo-500 text-lg leading-none">🎯</span>
-              <div>
-                <p className="text-xs font-black text-indigo-700 uppercase tracking-wide mb-0.5">Criterio de Logro ABA</p>
-                <p className="text-xs text-indigo-600 leading-relaxed">
-                  <strong>≥ 90% en 2 sesiones consecutivas</strong> en el mismo SET se considera logro.
-                  La proyección se basa en la media/mediana del historial de sesiones registradas.
+                      {/* Sets */}
+                      {prog.sets && prog.sets.length > 0 && (
+                        <div className="space-y-1.5">
+                          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t('ui.sets')}</p>
+                          {prog.sets.map((set: any) => (
+                            <div key={set.nombre} className="flex items-center justify-between rounded-lg px-3 py-2 border" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${set.criterio_logrado ? "bg-emerald-400" : "bg-amber-400"}`}/>
+                                <span className="text-xs font-bold truncate" style={{ color: "var(--text-primary)" }}>{set.nombre}</span>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0 ml-2">
+                                <span className="text-xs" style={{ color: "var(--text-muted)" }}>media {set.media}%</span>
+                                <span className={`text-xs font-black ${set.criterio_logrado ? "text-emerald-400" : "text-amber-400"}`}>
+                                  {set.criterio_logrado ? "✅ Logrado" : `${set.ultimo_pct}%`}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Tendencia */}
+                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                        Tendencia: <span className={`font-bold ${prog.tendencia_slope > 0 ? "text-emerald-400" : prog.tendencia_slope < 0 ? "text-red-400" : ""}`}>
+                          {prog.tendencia_descripcion}
+                        </span>
+                        {" · "}{prog.total_sesiones} sesiones
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-xs text-center py-3" style={{ color: "var(--text-muted)" }}>{t('ui.no_sessions')}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Análisis IA general */}
+            {(prediccion as any).resumen_general && (
+              <div className="rounded-xl border p-5" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
+                <p className="text-xs font-black uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: "var(--text-muted)" }}>
+                  <Sparkles size={12} className="text-blue-500" /> ANÁLISIS CLÍNICO IA — SUPERVISORA
                 </p>
-              </div>
-            </div>
-
-            {/* Áreas */}
-            {(prediccion.areas_fortaleza.length > 0 || prediccion.areas_riesgo.length > 0) && (
-              <div className="grid grid-cols-2 gap-3">
-                {prediccion.areas_fortaleza.length > 0 && (
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                    <p className="text-xs font-black text-emerald-700 mb-2 flex items-center gap-1.5">
-                      <CheckCircle size={12} /> FORTALEZAS
-                    </p>
-                    {prediccion.areas_fortaleza.map(a => (
-                      <p key={a} className="text-xs text-emerald-700 py-0.5">• {a}</p>
-                    ))}
-                  </div>
-                )}
-                {prediccion.areas_riesgo.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-                    <p className="text-xs font-black text-red-700 mb-2 flex items-center gap-1.5">
-                      <AlertTriangle size={12} /> ÁREAS EN RIESGO
-                    </p>
-                    {prediccion.areas_riesgo.map(a => (
-                      <p key={a} className="text-xs text-red-700 py-0.5">• {a}</p>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Análisis IA */}
-            {prediccion.analisis_ia && (
-              <div className="bg-white rounded-xl border border-slate-200 p-5">
-                <p className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                  <Sparkles size={12} className="text-blue-500" /> ANÁLISIS CLÍNICO PREDICTIVO
-                </p>
-                <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-                  {prediccion.analisis_ia}
+                <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
+                  {(prediccion as any).resumen_general}
                 </div>
               </div>
             )}
@@ -336,7 +408,7 @@ function TabSeguridad() {
     <div className="space-y-5">
       {/* Score header */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="md:col-span-1 bg-white rounded-2xl border border-slate-200 p-5 flex flex-col items-center justify-center">
+        <div className="md:col-span-1  rounded-2xl border border-slate-200 p-5 flex flex-col items-center justify-center" style={{ background: "var(--card)" }}>
           <div className="relative">
             <ScoreRing score={datos?.scoreSeguridad || 0} size={100} color={scoreColor} />
             <div className="absolute inset-0 flex items-center justify-center">
@@ -352,7 +424,7 @@ function TabSeguridad() {
           { icon: AlertTriangle, label: 'Alertas activas', value: datos?.alertasActivas || 0, color: (datos?.alertasActivas || 0) > 0 ? 'red' : 'green' },
           { icon: Shield, label: 'Exportaciones', value: datos?.exportacionesTotal || 0, color: 'purple' },
         ].map(m => (
-          <div key={m.label} className="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col justify-between">
+          <div key={m.label} className=" rounded-2xl border border-slate-200 p-5 flex flex-col justify-between" style={{ background: "var(--card)" }}>
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
               m.color === 'blue' ? 'bg-blue-50' : m.color === 'red' ? 'bg-red-50' : m.color === 'green' ? 'bg-emerald-50' : 'bg-purple-50'
             }`}>
@@ -370,7 +442,7 @@ function TabSeguridad() {
 
       {/* Accesos por rol */}
       {datos?.accesosPorRol && Object.keys(datos.accesosPorRol).length > 0 && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className=" rounded-2xl border border-slate-200 p-5" style={{ background: "var(--card)" }}>
           <h4 className="font-black text-slate-700 text-sm mb-4 flex items-center gap-2">
             <Users size={14} className="text-blue-500" /> Accesos por Rol (últimos 7 días)
           </h4>
@@ -393,7 +465,7 @@ function TabSeguridad() {
       )}
 
       {/* Alertas activas */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div className=" rounded-2xl border border-slate-200 overflow-hidden" style={{ background: "var(--card)" }}>
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h4 className="font-black text-slate-700 text-sm flex items-center gap-2">
             <AlertTriangle size={14} className="text-amber-500" /> Alertas de Seguridad
@@ -415,7 +487,7 @@ function TabSeguridad() {
                   <AlertTriangle size={14} className={a.nivel === 'critico' ? 'text-red-600' : 'text-amber-600'} />
                 </div>
                 <div>
-                  <p className="font-black text-sm text-slate-800">{a.tipo?.replace(/_/g, ' ')}</p>
+                  <p className="font-black text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{a.tipo?.replace(/_/g, ' ')}</p>
                   <p className="text-xs text-slate-600 mt-0.5">{a.descripcion}</p>
                   <p className="text-[10px] text-slate-400 mt-1">{new Date(a.timestamp).toLocaleString('es')}</p>
                 </div>
@@ -432,6 +504,8 @@ function TabSeguridad() {
 // TAB: COMPETITIVIDAD
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabCompetitividad() {
+  const { t } = useI18n()
+
   const [datos, setDatos] = useState<Benchmark | null>(null)
   const [loading, setLoading] = useState(true)
   const [dias, setDias] = useState(30)
@@ -501,7 +575,7 @@ function TabCompetitividad() {
       </div>
 
       {/* Métricas detalladas */}
-      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div className=" rounded-2xl border border-slate-200 overflow-hidden" style={{ background: "var(--card)" }}>
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h4 className="font-black text-slate-700 text-sm flex items-center gap-2">
             <BarChart3 size={14} className="text-purple-500" /> Métricas vs Estándares de Industria
@@ -525,7 +599,7 @@ function TabCompetitividad() {
                   <div className="flex items-center justify-between mb-1.5">
                     <p className="text-sm font-bold text-slate-700 truncate">{m.benchmark.label}</p>
                     <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                      <span className="text-sm font-black text-slate-800">{m.valor}</span>
+                      <span className="text-sm font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{m.valor}</span>
                       <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${
                         scoreColor === 'green' ? 'bg-emerald-100 text-emerald-700' :
                         scoreColor === 'yellow' ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
@@ -543,7 +617,7 @@ function TabCompetitividad() {
 
       {/* Análisis estratégico IA */}
       {datos.analisisEstrategico && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5">
+        <div className=" rounded-2xl border border-slate-200 p-5" style={{ background: "var(--card)" }}>
           <p className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
             <Sparkles size={12} className="text-purple-500" /> ANÁLISIS ESTRATÉGICO IA
           </p>
@@ -560,6 +634,8 @@ function TabCompetitividad() {
 // TAB: PATRONES ABA (CAPA 1)
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
+  const { t } = useI18n()
+
   const [selected, setSelected] = useState<Paciente | null>(null)
   const [resultado, setResultado] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -571,8 +647,8 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
     try {
       const res = await fetch('/api/agente-patrones', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId: selected.id, childName: selected.name }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ childId: selected.id, childName: selected.name , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -598,8 +674,8 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         </div>
         <p className="text-xs text-violet-600">Analiza el historial de sesiones y detecta regresiones, estancamientos, aceleraciones e inconsistencias.</p>
       </div>
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Selecciona paciente</label>
+      <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('ui.select_patient')}</label>
         <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
           value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
           <option value="">— Seleccionar —</option>
@@ -619,27 +695,48 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
               { label: 'Patrones', val: resultado.patrones?.length || 0 },
               { label: 'Urgentes', val: resultado.patrones_urgentes || 0 },
             ].map(m => (
-              <div key={m.label} className="bg-white rounded-xl border border-slate-100 p-3 text-center">
-                <p className="text-2xl font-black text-slate-800">{m.val}</p>
+              <div key={m.label} className=" rounded-xl border border-slate-100 p-3 text-center" style={{ background: "var(--card)" }}>
+                <p className="text-2xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{m.val}</p>
                 <p className="text-xs text-slate-400">{m.label}</p>
               </div>
             ))}
           </div>
           {(resultado.patrones || []).map((p: any, i: number) => (
-            <div key={i} className={`bg-white rounded-xl border p-4 ${colorTipo[p.tipo] || 'border-slate-200'}`}>
+            <div key={i} className={`rounded-xl border p-4 ${colorTipo[p.tipo] || 'border-slate-200'}`} style={{ background: "var(--card)" }}>
               <div className="flex items-start justify-between gap-2 mb-2">
                 <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${colorTipo[p.tipo] || ''}`}>{p.tipo}</span>
                 <span className="text-xs text-slate-400">{p.confianza}% confianza</span>
               </div>
-              <p className="font-bold text-sm text-slate-800">{p.area}</p>
+              <p className="font-bold text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{p.area}</p>
               <p className="text-xs text-slate-600 mt-1">{p.descripcion}</p>
-              <p className="text-xs font-semibold text-slate-700 mt-2 bg-slate-50 rounded-lg px-3 py-2">💡 {p.accion_sugerida}</p>
+              <p className="text-xs font-semibold mt-2 rounded-lg px-3 py-2" style={{ background: "var(--muted-bg)", color: "var(--text-secondary)" }}>💡 {p.accion_sugerida}</p>
             </div>
           ))}
           {(resultado.analisis_ia || resultado.resumen) && (
             <div className="bg-violet-50 rounded-xl border border-violet-100 p-4">
               <p className="text-xs font-bold text-violet-700 mb-2">Resumen IA</p>
               <p className="text-sm text-violet-800">{resultado.analisis_ia || resultado.resumen}</p>
+            </div>
+          )}
+          {/* Gráficos de progreso por programa */}
+          {resultado.programas && resultado.programas.length > 0 && (
+            <div className="rounded-xl border p-4" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
+              <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+                📈 Progreso por programa
+              </p>
+              <div className="space-y-4">
+                {resultado.programas.slice(0, 4).map((prog: any) => (
+                  prog.sesiones?.length >= 2 && (
+                    <LineChartProgreso
+                      key={prog.id}
+                      sesiones={prog.sesiones}
+                      criterio={prog.criterio || 90}
+                      titulo={prog.titulo}
+                      color="#7c3aed"
+                    />
+                  )
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -652,6 +749,8 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
 // TAB: OBJETIVOS ADAPTATIVOS (CAPA 1)
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
+  const { t } = useI18n()
+
   const [selected, setSelected] = useState<Paciente | null>(null)
   const [resultado, setResultado] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -664,8 +763,8 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
     try {
       const res = await fetch('/api/agente-objetivos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId: selected.id, childName: selected.name, accion }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ childId: selected.id, childName: selected.name, accion , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -683,7 +782,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
         </div>
         <p className="text-xs text-amber-600">Genera o ajusta objetivos terapéuticos ABA automáticamente según el progreso real del paciente.</p>
       </div>
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
+      <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
         <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
           value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
           <option value="">— Seleccionar paciente —</option>
@@ -699,7 +798,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
         </div>
         <button onClick={ejecutar} disabled={!selected || loading}
           className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
-          {loading ? <><RefreshCw size={14} className="animate-spin" /> Procesando...</> : <><Target size={14} /> Ejecutar</>}
+          {loading ? <><RefreshCw size={14} className="animate-spin" /> {t('common.procesando')}</> : <><Target size={14} /> Ejecutar</>}
         </button>
         {error && <p className="text-red-500 text-xs">{error}</p>}
       </div>
@@ -707,9 +806,9 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
         <div className="space-y-3">
           {/* generar → resultado.resultado.objetivos_sugeridos */}
           {(resultado.resultado?.objetivos_sugeridos || []).map((obj: any, i: number) => (
-            <div key={i} className="bg-white rounded-xl border border-amber-100 p-4">
+            <div key={i} className=" rounded-xl border border-amber-100 p-4" style={{ background: "var(--card)" }}>
               <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="font-bold text-sm text-slate-800">{obj.titulo}</p>
+                <p className="font-bold text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{obj.titulo}</p>
                 <div className="flex gap-1">
                   <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">{obj.area}</span>
                   {obj.prioridad && <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${obj.prioridad === 'alta' ? 'bg-red-100 text-red-600' : obj.prioridad === 'media' ? 'bg-amber-100 text-amber-600' : 'bg-slate-100 text-slate-500'}`}>{obj.prioridad}</span>}
@@ -723,8 +822,8 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
           ))}
           {/* ajustar → resultado.resultado.ajustes */}
           {(resultado.resultado?.ajustes || []).map((obj: any, i: number) => (
-            <div key={i} className="bg-white rounded-xl border border-orange-100 p-4">
-              <p className="font-bold text-sm text-slate-800">{obj.area}</p>
+            <div key={i} className=" rounded-xl border border-orange-100 p-4" style={{ background: "var(--card)" }}>
+              <p className="font-bold text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{obj.area}</p>
               <p className="text-xs text-slate-600 mt-1"><strong>Qué ajustar:</strong> {obj.que_ajustar}</p>
               <p className="text-xs text-slate-600 mt-1"><strong>Cómo:</strong> {obj.como_ajustar}</p>
               <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-3 py-2 rounded-lg">Meta 4 semanas: {obj.meta_4_semanas}</p>
@@ -732,9 +831,9 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
           ))}
           {/* evaluar_dominio → resultado.resultado.evaluaciones */}
           {(resultado.resultado?.evaluaciones || []).map((obj: any, i: number) => (
-            <div key={i} className="bg-white rounded-xl border border-blue-100 p-4">
+            <div key={i} className=" rounded-xl border border-blue-100 p-4" style={{ background: "var(--card)" }}>
               <div className="flex items-start justify-between gap-2 mb-1">
-                <p className="font-bold text-sm text-slate-800">{obj.programa}</p>
+                <p className="font-bold text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{obj.programa}</p>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${obj.estado === 'listo_para_avanzar' ? 'bg-green-100 text-green-700' : obj.estado === 'necesita_ajuste' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'}`}>{obj.estado?.replace(/_/g,' ')}</span>
               </div>
               <p className="text-xs text-slate-600">Acción: {obj.accion}</p>
@@ -759,6 +858,8 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
 // TAB: ALERTAS PROACTIVAS (CAPA 4)
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabSugerencias() {
+  const { t } = useI18n()
+
   const [sugerencias, setSugerencias] = useState<any[]>([])
   const [insightGlobal, setInsightGlobal] = useState<string | null>(null)
   const [meta, setMeta] = useState<{ urgentes: number; pacientes_analizados: number } | null>(null)
@@ -809,7 +910,7 @@ function TabSugerencias() {
 
       {/* Insight global IA (solo aparece si hay ≥2 alertas urgentes) */}
       {insightGlobal && (
-        <div className="bg-white rounded-xl border border-orange-200 p-4">
+        <div className=" rounded-xl border border-orange-200 p-4" style={{ background: "var(--card)" }}>
           <p className="text-[10px] font-black text-orange-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
             <Sparkles size={10} /> RESUMEN EJECUTIVO IA
           </p>
@@ -820,14 +921,14 @@ function TabSugerencias() {
       {error && <p className="text-red-500 text-xs">{error}</p>}
       {loading && <div className="flex justify-center py-8"><RefreshCw size={24} className="animate-spin text-orange-400" /></div>}
       {!loading && sugerencias.length === 0 && (
-        <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
+        <div className=" rounded-2xl border border-slate-100 p-10 text-center" style={{ background: "var(--card)" }}>
           <CheckCircle size={32} className="text-emerald-400 mx-auto mb-3" />
-          <p className="font-bold text-slate-700">Sin alertas activas</p>
+          <p className="font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>Sin alertas activas</p>
           <p className="text-xs text-slate-400 mt-1">Todos los pacientes están en progreso normal</p>
         </div>
       )}
       {sugerencias.map((s: any, i: number) => (
-        <div key={i} className="bg-white rounded-xl border border-slate-100 p-4">
+        <div key={i} className=" rounded-xl border border-slate-100 p-4" style={{ background: "var(--card)" }}>
           <div className="flex items-start justify-between gap-2 mb-2">
             <div>
               <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${prioColor[s.prioridad]}`}>{s.prioridad}</span>
@@ -835,9 +936,9 @@ function TabSugerencias() {
             </div>
             <span className="text-[10px] text-slate-400">{s.semanas_detectado}w</span>
           </div>
-          <p className="font-bold text-sm text-slate-800">{s.titulo}</p>
+          <p className="font-bold text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{s.titulo}</p>
           <p className="text-xs text-slate-500 mt-1">{s.descripcion}</p>
-          <p className="text-xs font-semibold text-slate-700 mt-2 bg-slate-50 rounded-lg px-3 py-2">→ {s.accion_concreta}</p>
+          <p className="text-xs font-semibold mt-2 rounded-lg px-3 py-2" style={{ background: "var(--muted-bg)", color: "var(--text-secondary)" }}>→ {s.accion_concreta}</p>
           {s.dato_clave && <p className="text-[10px] text-slate-400 mt-1">Dato: {s.dato_clave}</p>}
         </div>
       ))}
@@ -849,6 +950,8 @@ function TabSugerencias() {
 // TAB: REPORTES IA (CAPA 2)
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
+  const { t } = useI18n()
+
   const [selected, setSelected] = useState<Paciente | null>(null)
   const [tipo, setTipo] = useState<'padres' | 'seguro' | 'comparativo'>('padres')
   const [loading, setLoading] = useState(false)
@@ -861,8 +964,8 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
     try {
       const res = await fetch('/api/reporte-word', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId: selected.id, tipo }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ childId: selected.id, tipo , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       if (!res.ok) {
         const err = await res.json()
@@ -898,8 +1001,8 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
         </div>
         <p className="text-xs text-teal-600">Genera documentos .docx profesionales listos para imprimir o enviar: para padres, aseguradoras o análisis comparativo.</p>
       </div>
-      <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Paciente</label>
+      <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{'Paciente'}</label>
         <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
           value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
           <option value="">— Seleccionar —</option>
@@ -936,9 +1039,9 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
           { emoji: '🏥', title: 'Seguros', desc: 'CIE-10, justificación médica, tabla de programas, firma profesional.' },
           { emoji: '📊', title: 'Comparativo', desc: 'Progreso entre períodos con gráficos de predicción a 30 y 90 días.' },
         ].map((c, i) => (
-          <div key={i} className="bg-white border border-slate-100 rounded-xl p-3">
+          <div key={i} className=" border border-slate-100 rounded-xl p-3" style={{ background: "var(--card)" }}>
             <p className="text-xl mb-1">{c.emoji}</p>
-            <p className="text-xs font-bold text-slate-700">{c.title}</p>
+            <p className="text-xs font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>{c.title}</p>
             <p className="text-[10px] text-slate-400 mt-1">{c.desc}</p>
           </div>
         ))}
@@ -951,6 +1054,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function InteligenciaHubView() {
+  const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('predicciones')
   const [pacientes, setPacientes] = useState<Paciente[]>([])
 
@@ -970,7 +1074,7 @@ export default function InteligenciaHubView() {
   }, [])
 
   const tabs = [
-    { id: 'predicciones' as Tab, icon: Brain, label: 'Predicciones IA', color: 'blue' },
+    { id: 'predicciones' as Tab, icon: Brain, label: t('hub.predicciones'), color: 'blue' },
     { id: 'patrones' as Tab, icon: Activity, label: 'Patrones ABA', color: 'violet' },
     { id: 'objetivos' as Tab, icon: Target, label: 'Objetivos IA', color: 'amber' },
     { id: 'sugerencias' as Tab, icon: Sparkles, label: 'Alertas Proactivas', color: 'orange' },
@@ -986,7 +1090,7 @@ export default function InteligenciaHubView() {
           <Zap size={20} className="text-white" />
         </div>
         <div>
-          <h1 className="text-xl font-black text-slate-800">Hub de Inteligencia</h1>
+          <h1 className="text-xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>Hub de Inteligencia</h1>
           <p className="text-xs text-slate-400">6 agentes IA · Predicciones · Patrones · Objetivos · Reportes · Seguridad</p>
         </div>
       </div>

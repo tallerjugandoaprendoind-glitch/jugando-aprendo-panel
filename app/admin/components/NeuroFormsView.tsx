@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useCallback } from 'react'
 import {
   Brain, Send, ChevronRight, ChevronLeft, CheckCircle2, X, Loader2,
@@ -89,7 +91,7 @@ function DynamicFormQuestion({ question, value, onChange }: any) {
         {question.helpText && <p className="text-xs text-slate-400 mb-2">{question.helpText}</p>}
         <select value={value || ''} onChange={e => onChange(e.target.value)}
           className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 transition-all">
-          <option value="">Seleccionar...</option>
+          <option value="">{t('ui.select_option')}</option>
           {(question.options || []).map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
         </select>
       </div>
@@ -125,6 +127,8 @@ function DynamicFormQuestion({ question, value, onChange }: any) {
 
 // ─── AI ANALYSIS RESULT PANEL ─────────────────────────────────────────────────
 function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: { analysis: any; onClose: () => void; editableMessage?: string; onEditMessage?: (v: string) => void }) {
+  const { t } = useI18n()
+
   if (!analysis) return null
   const alertColors: Record<string, string> = {
     bajo: 'bg-emerald-50 border-emerald-200 text-emerald-700',
@@ -229,13 +233,13 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
               value={msgValue}
               onChange={e => onEditMessage(e.target.value)}
               className="w-full p-3 bg-white/80 border-2 border-amber-200 rounded-xl text-amber-800 text-sm leading-relaxed resize-none outline-none focus:border-amber-400 transition-all font-medium"
-              placeholder="Edita el mensaje antes de guardar..."
+              {...{placeholder: t('ui.edit_message')}}
             />
           ) : (
             <p className="text-amber-700 text-sm leading-relaxed italic">&quot;{msgValue}&quot;</p>
           )}
           <p className="text-amber-600 text-xs font-semibold bg-amber-100 rounded-xl px-3 py-2 border border-amber-200 mt-2">
-            🔒 Edita el mensaje y guarda. Irá a <strong>Bandeja de Aprobación</strong> antes de enviarse.
+            {t('ui.approval_notice')}
           </p>
         </div>
       )}
@@ -245,6 +249,7 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
 
 // ─── SEND FORM TO PARENT MODAL ────────────────────────────────────────────────
 function SendFormModal({ form, children, onSend, onClose }: any) {
+  const { t } = useI18n()
   const [childId, setChildId] = useState('')
   const [message, setMessage] = useState('')
   const [deadline, setDeadline] = useState('')
@@ -276,7 +281,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
           <div>
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Paciente *</label>
             <select value={childId} onChange={e => setChildId(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all">
-              <option value="">Seleccionar paciente...</option>
+              <option value="">{t('ui.select_patient_option')}</option>
               {children.map((c: any) => <option key={c.id} value={c.id}>{c.name}{c.age ? ` - ${c.age}` : ''}</option>)}
             </select>
             <p className="text-xs text-slate-400 mt-1.5">El formulario se enviará al padre/madre vinculado al paciente.</p>
@@ -284,7 +289,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
           <div>
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Mensaje a los Padres</label>
             <textarea rows={3} value={message} onChange={e => setMessage(e.target.value)}
-              placeholder="Ej: Por favor complete este formulario antes de la próxima sesión..."
+              {...{placeholder: t('ui.send_form_msg')}}
               className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all resize-none"/>
           </div>
           <div>
@@ -292,7 +297,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
             <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all"/>
           </div>
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl border-2 border-slate-100 transition-all">Cancelar</button>
+            <button onClick={onClose} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl border-2 border-slate-100 transition-all">{t('common.cancelar')}</button>
             <button onClick={handleSend} disabled={sending || !childId} className="flex-[2] py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {sending ? <Loader2 size={18} className="animate-spin"/> : <Send size={18}/>}
               {sending ? 'Enviando...' : 'Enviar Formulario'}
@@ -306,6 +311,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
 
 // ─── MAIN COMPONENT ─────────────────────────────────────────────────────────
 export default function NeuroFormsView() {
+  const { t } = useI18n()
   const toast = useToast()
   const [activeTab, setActiveTab] = useState<'biblioteca' | 'respuestas'>('biblioteca')
   const [activeCategory, setActiveCategory] = useState<string>('all')
@@ -343,6 +349,8 @@ export default function NeuroFormsView() {
   })
 
   const handleStartForm = (form: FormDefinition) => {
+    const { t } = useI18n()
+
     setSelectedForm(form)
     setCurrentStep(0)
     setResponses({})
@@ -350,6 +358,8 @@ export default function NeuroFormsView() {
   }
 
   const handleAnswer = (questionId: string, value: any) => {
+    const { t } = useI18n()
+
     setResponses(prev => ({ ...prev, [questionId]: value }))
   }
 
@@ -360,7 +370,7 @@ export default function NeuroFormsView() {
       const child = children.find(c => c.id === selectedChild)
       const res = await fetch('/api/analyze-neurodivergent-form', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           formType: selectedForm.id,
           formData: responses,
@@ -400,7 +410,7 @@ export default function NeuroFormsView() {
         if ((child as any)?.parent_id) {
           await fetch('/api/admin/parent-messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
             body: JSON.stringify({
               child_id: selectedChild,
               parent_id: (child as any).parent_id,
@@ -438,7 +448,7 @@ export default function NeuroFormsView() {
 
       const res = await fetch('/api/admin/forms', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           parent_id: parentId,
           child_id: childId,
@@ -608,7 +618,7 @@ export default function NeuroFormsView() {
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
-              <input type="text" placeholder="Buscar formulario o etiqueta..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+              <input type="text" {...{placeholder: t('ui.search_label')}} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                 className="w-full pl-11 pr-4 py-3.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 transition-all"/>
             </div>
           </div>
@@ -713,7 +723,7 @@ export default function NeuroFormsView() {
           {sentForms.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="p-5 bg-slate-100 rounded-3xl mb-4"><Send size={40} className="text-slate-300"/></div>
-              <p className="font-bold text-slate-400">No has enviado formularios aún</p>
+              <p className="font-bold text-slate-400">{t('ui.no_forms_sent')}</p>
               <p className="text-xs text-slate-300 mt-1">Ve a Biblioteca y envía formularios a los padres</p>
             </div>
           ) : sentForms.map(sf => (

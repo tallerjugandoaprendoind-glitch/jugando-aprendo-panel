@@ -1,8 +1,10 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 /**
  * =====================================================================
- * EVALUACIONES UNIFICADAS - Centro Clínico Neurodivergente
+ * EVALUACIONES UNIFICADAS - Centro Clínico ABA
  * Fusiona Evaluaciones Clínicas (BRIEF2, ADOS2, WISC-V...) +
  * NeuroFormas (TDAH, TEA, Sensorial, Habilidades, Casa)
  * Con IA Gemini, envío a padres, análisis clínico profesional
@@ -29,83 +31,82 @@ import {
 } from '../data/formConstants'
 import { calcularEdadNumerica } from '../utils/helpers'
 
-// ─── CATEGORÍAS UNIFICADAS ──────────────────────────────────────────────────
+// ─── CATEGORÍAS ORDENADAS POR ÁREA CLÍNICA ──────────────────────────────────
 const UNIFIED_CATEGORIES = [
-  { id: 'all', label: 'Todos', icon: '🗂️', color: 'bg-slate-100 text-slate-700 border-slate-200' },
-  { id: 'tdah', label: 'TDAH', icon: '⚡', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  { id: 'tea', label: 'TEA', icon: '🧩', color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  { id: 'conductual', label: 'Conductual', icon: '🎯', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-  { id: 'sensorial', label: 'Sensorial', icon: '🌀', color: 'bg-teal-50 text-teal-700 border-teal-200' },
-  { id: 'habilidades', label: 'Habilidades', icon: '🤝', color: 'bg-green-50 text-green-700 border-green-200' },
-  { id: 'cognitivo', label: 'Cognitivo', icon: '🧠', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  { id: 'familia', label: 'Familia', icon: '🏠', color: 'bg-pink-50 text-pink-700 border-pink-200' },
-  { id: 'clinico', label: 'Clínico Pro', icon: '🏥', color: 'bg-red-50 text-red-700 border-red-200' },
+  { id: 'all',        label: 'Todas las plantillas', icon: '🗂️', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+  { id: 'conductual', label: 'ABA / Sesión',          icon: '🎯', color: 'bg-orange-50 text-orange-700 border-orange-200' },
+  { id: 'familia',    label: 'Familia / Hogar',       icon: '🏠', color: 'bg-pink-50 text-pink-700 border-pink-200' },
+  { id: 'clinico',    label: 'Historia Clínica',      icon: '📋', color: 'bg-slate-50 text-slate-700 border-slate-200' },
+  { id: 'tea',        label: 'TEA / Diagnóstico',     icon: '🧩', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { id: 'tdah',       label: 'TDAH',                  icon: '⚡', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { id: 'habilidades',label: 'Conducta Adaptativa',   icon: '🌟', color: 'bg-green-50 text-green-700 border-green-200' },
+  { id: 'cognitivo',  label: 'Cognitivo / CI',        icon: '🧠', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  { id: 'sensorial',  label: 'Sensorial',             icon: '🌀', color: 'bg-teal-50 text-teal-700 border-teal-200' },
 ]
 
-// Formularios clínicos profesionales (los que existían en Evaluaciones)
+// ─── PLANTILLAS CLÍNICAS (simplificadas según feedback clínico) ────────────────
+// Solo se mantienen las plantillas que SÍ se ejecutan en la plataforma.
+// Las pruebas estandarizadas (ADOS-2, WISC, etc.) corren en sus propias plataformas;
+// aquí solo se registran sus resultados.
 const CLINICAL_FORMS = [
-  {
-    id: 'anamnesis', title: 'Anamnesis Completa', subtitle: 'Historia clínica integral',
-    category: 'clinico', icon: '📋', tags: ['Historia', 'Inicial', 'Completo'],
-    color: 'from-slate-600 to-slate-800', estimatedMinutes: 30, targetRole: 'admin',
-    description: 'Historia clínica completa del paciente, antecedentes familiares y desarrollo temprano',
-    formKey: 'anamnesis'
-  },
+  // ── ÁREA ABA (Core del sistema) ──────────────────────────────────────────
   {
     id: 'aba', title: 'Sesión ABA', subtitle: 'Registro de sesión conductual',
     category: 'conductual', icon: '🎯', tags: ['ABA', 'Sesión', 'Conductual'],
     color: 'from-orange-500 to-red-600', estimatedMinutes: 15, targetRole: 'admin',
     description: 'Registro estructurado de sesión de Análisis Conductual Aplicado',
-    formKey: 'aba'
+    formKey: 'aba', area: 'ABA'
   },
   {
-    id: 'entorno_hogar', title: 'Entorno en el Hogar', subtitle: 'Evaluación del ambiente familiar',
+    id: 'entorno_hogar', title: 'Entorno en el Hogar', subtitle: 'Observación del ambiente familiar',
     category: 'familia', icon: '🏠', tags: ['Hogar', 'Familia', 'Ambiente'],
     color: 'from-pink-500 to-rose-600', estimatedMinutes: 20, targetRole: 'both',
     description: 'Análisis del entorno familiar y su impacto en el desarrollo del niño',
-    formKey: 'entorno_hogar'
+    formKey: 'entorno_hogar', area: 'ABA'
   },
+  // ── ÁREA CLÍNICA (Historia y datos del paciente) ──────────────────────────
   {
-    id: 'brief2', title: 'BRIEF-2', subtitle: 'Función ejecutiva (Padres/Maestros)',
-    category: 'cognitivo', icon: '🧠', tags: ['Ejecutivo', 'BRIEF-2', 'Cognitivo'],
-    color: 'from-indigo-500 to-purple-600', estimatedMinutes: 25, targetRole: 'admin',
-    description: 'Función ejecutiva — Registra resultados (requiere plataforma oficial BRIEF-2 Virtual)',
-    formKey: 'brief2'
+    id: 'anamnesis', title: 'Historia Clínica', subtitle: 'Datos relevantes del cliente y contexto familiar',
+    category: 'clinico', icon: '📋', tags: ['Historia', 'Inicial', 'Completo'],
+    color: 'from-slate-600 to-slate-800', estimatedMinutes: 30, targetRole: 'admin',
+    description: 'Historia clínica completa del paciente, antecedentes familiares y desarrollo temprano',
+    formKey: 'anamnesis', area: 'Clínico'
   },
+  // ── ÁREA RESULTADOS (Registro de pruebas externas) ────────────────────────
   {
-    id: 'ados2', title: 'ADOS-2', subtitle: 'Observación diagnóstica de autismo',
+    id: 'ados2', title: 'ADOS-2', subtitle: 'Registro de resultados diagnósticos',
     category: 'tea', icon: '🔬', tags: ['TEA', 'ADOS', 'Diagnóstico'],
-    color: 'from-purple-600 to-violet-700', estimatedMinutes: 45, targetRole: 'admin',
-    description: 'Escala de Observación para el Diagnóstico del Autismo, 2ª edición — Registra resultados (requiere plataforma externa ADOS-2)',
-    formKey: 'ados2'
+    color: 'from-purple-600 to-violet-700', estimatedMinutes: 10, targetRole: 'admin',
+    description: '⚠️ Corre en plataforma oficial ADOS-2. Aquí solo registrá los resultados y puntuaciones.',
+    formKey: 'ados2', area: 'Resultados', externalPlatform: true
   },
   {
-    id: 'vineland3', title: 'Vineland-3', subtitle: 'Conducta adaptativa',
+    id: 'vineland3', title: 'Vineland-3', subtitle: 'Registro de conducta adaptativa',
     category: 'habilidades', icon: '🌟', tags: ['Adaptativo', 'Vineland', 'Funcional'],
-    color: 'from-green-500 to-emerald-600', estimatedMinutes: 35, targetRole: 'admin',
-    description: 'Conducta adaptativa — Registra puntuaciones compuestas y perfil (requiere plataforma Vineland-3)',
-    formKey: 'vineland3'
+    color: 'from-green-500 to-emerald-600', estimatedMinutes: 10, targetRole: 'admin',
+    description: '⚠️ Corre en plataforma oficial Vineland-3. Aquí solo registrá puntuaciones compuestas y perfil.',
+    formKey: 'vineland3', area: 'Resultados', externalPlatform: true
   },
   {
-    id: 'wiscv', title: 'WISC-V', subtitle: 'Inteligencia (6-16 años)',
+    id: 'wiscv', title: 'WISC-V', subtitle: 'Registro de inteligencia (6-16 años)',
     category: 'cognitivo', icon: '📊', tags: ['CI', 'Inteligencia', 'WISC'],
-    color: 'from-blue-600 to-cyan-600', estimatedMinutes: 60, targetRole: 'admin',
-    description: 'Escala de Inteligencia de Wechsler para Niños — Registra resultados y percentiles (requiere plataforma externa WISC-V)',
-    formKey: 'wiscv'
+    color: 'from-blue-600 to-cyan-600', estimatedMinutes: 10, targetRole: 'admin',
+    description: '⚠️ Corre en plataforma oficial WISC-V. Aquí solo registrá IQ y percentiles.',
+    formKey: 'wiscv', area: 'Resultados', externalPlatform: true
   },
   {
-    id: 'basc3', title: 'BASC-3', subtitle: 'Sistema de evaluación conductual',
+    id: 'basc3', title: 'BASC-3', subtitle: 'Registro de evaluación conductual',
     category: 'conductual', icon: '📈', tags: ['Conductual', 'BASC', 'Emocional'],
-    color: 'from-amber-500 to-orange-600', estimatedMinutes: 30, targetRole: 'admin',
-    description: 'Evaluación conductual y emocional — Registra T-scores y escalas (requiere plataforma BASC-3)',
-    formKey: 'basc3'
+    color: 'from-amber-500 to-orange-600', estimatedMinutes: 10, targetRole: 'admin',
+    description: '⚠️ Corre en plataforma oficial BASC-3. Aquí solo registrá T-scores y escalas.',
+    formKey: 'basc3', area: 'Resultados', externalPlatform: true
   },
 ]
 
 // Merge NeuroForms from neurodivergentForms.ts + Clinical forms
 const ALL_UNIFIED_FORMS = [
   ...CLINICAL_FORMS,
-  ...ALL_FORMS.map((f: FormDefinition) => ({ ...f, formKey: null, isNeurodivergent: true })),
+  ...ALL_FORMS.map((f: FormDefinition) => ({ ...f, formKey: null, isClinicalForm: true })),
 ]
 
 // ─── QUESTION RENDERER ───────────────────────────────────────────────────────
@@ -325,6 +326,8 @@ function QuestionRenderer({ question, value, onChange }: any) {
 
 // ─── HELPER: convierte string con guiones/saltos o array → array limpio ───────
 function toArray(val: any): string[] {
+  const { t } = useI18n()
+
   if (!val) return []
   if (Array.isArray(val)) return val.filter(Boolean)
   if (typeof val === 'string') {
@@ -338,6 +341,8 @@ function toArray(val: any): string[] {
 
 // ─── AI ANALYSIS DISPLAY ─────────────────────────────────────────────────────
 function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableActividades, onEditActividades }: { analysis: any; editableMessage?: string; onEditMessage?: (v: string) => void; editableActividades?: string; onEditActividades?: (v: string) => void }) {
+  const { t } = useI18n()
+
   if (!analysis) return null
   const alertColors: Record<string, string> = {
     bajo: 'bg-emerald-50 border-emerald-200 text-emerald-800',
@@ -369,7 +374,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
         <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-purple-700 rounded-xl flex items-center justify-center">
           <Sparkles size={16} className="text-white" />
         </div>
-        <h3 className="font-black text-slate-800">Análisis de IA</h3>
+        <h3 className="font-black text-slate-800" style={{ color: "var(--text-primary)" }}>Análisis de IA</h3>
       </div>
 
       {/* Alert level */}
@@ -472,14 +477,14 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
                 rows={4}
                 value={editableMessage !== undefined ? editableMessage : (analysis.mensaje_padres || '')}
                 onChange={e => onEditMessage(e.target.value)}
-                className="w-full p-3 bg-white/80 border-2 border-amber-200 rounded-xl text-amber-800 text-sm leading-relaxed resize-none outline-none focus:border-amber-400 transition-all font-medium mb-2"
-                placeholder="Edita el mensaje antes de guardar..."
+                className="w-full p-3 /80 border-2 border-amber-200 rounded-xl text-amber-800 text-sm leading-relaxed resize-none outline-none focus:border-amber-400 transition-all font-medium mb-2" style={{ background: "var(--card)" }}
+                {...{placeholder: t('ui.edit_message')}}
               />
             ) : (
               <p className="text-amber-700 text-sm leading-relaxed mb-3 italic">&quot;{editableMessage || analysis.mensaje_padres}&quot;</p>
             )}
             <p className="text-amber-600 text-xs font-semibold bg-amber-100 rounded-xl px-3 py-2 border border-amber-200">
-              🔒 Edita el mensaje y guarda. Irá a <strong>Bandeja de Aprobación</strong> para revisarlo antes de enviarlo al padre/madre.
+              {t('ui.approval_notice_parent')}
             </p>
           </div>
 
@@ -490,7 +495,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
                 <div className="w-7 h-7 bg-blue-500 rounded-lg flex items-center justify-center">
                   <span className="text-white text-xs font-black">🏠</span>
                 </div>
-                <h4 className="font-black text-blue-800">Actividad para realizar en casa</h4>
+                <h4 className="font-black text-blue-800">{t('ui.home_activity')}</h4>
                 <span className="ml-auto px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-black rounded-full border border-blue-300 uppercase tracking-widest">✏️ Editable</span>
               </div>
               {onEditActividades ? (
@@ -498,8 +503,8 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
                   rows={5}
                   value={editableActividades !== undefined ? editableActividades : (analysis.actividades_casa || analysis.actividad_casa || '')}
                   onChange={e => onEditActividades(e.target.value)}
-                  className="w-full p-3 bg-white/80 border-2 border-blue-200 rounded-xl text-blue-800 text-sm leading-relaxed resize-none outline-none focus:border-blue-400 transition-all font-medium"
-                  placeholder="Actividad terapéutica para practicar en casa..."
+                  className="w-full p-3 /80 border-2 border-blue-200 rounded-xl text-blue-800 text-sm leading-relaxed resize-none outline-none focus:border-blue-400 transition-all font-medium" style={{ background: "var(--card)" }}
+                  {...{placeholder: t('ui.home_activity_desc')}}
                 />
               ) : (
                 <p className="text-blue-700 text-sm leading-relaxed italic whitespace-pre-wrap">{editableActividades || analysis.actividades_casa || analysis.actividad_casa}</p>
@@ -517,6 +522,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
 // COMPONENTE: TARJETA DE FORMULARIO EN HISTORIAL CON BOTÓN "GENERAR REPORTE"
 // ==============================================================================
 function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerated: () => void }) {
+  const { t } = useI18n()
   const [generating, setGenerating] = useState(false)
   const toast = useToast()
 
@@ -548,7 +554,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
       // Call generate-report from browser (no serverless timeout issue)
       const res = await fetch('/api/generate-report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           reportType,
           childName,
@@ -576,6 +582,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         source_id:        sf.id,
       }])
       if (insertError) {
+        const { t } = useI18n()
         console.error('❌ Error guardando reporte en BD:', insertError)
         toast.error('Reporte descargado pero no se pudo guardar en historial: ' + insertError.message)
       }
@@ -602,11 +609,11 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-all">
+    <div className=" rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-all" style={{ background: "var(--card)" }}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
-            <p className="font-bold text-slate-800 text-sm truncate">
+            <p className="font-bold text-slate-800 text-sm truncate" style={{ color: "var(--text-primary)" }}>
               {sf.form_title || sf.form_type || 'Formulario'}
             </p>
             {sf._source && (
@@ -633,9 +640,9 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
             className="flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-sm hover:shadow-md transition-all disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
           >
             {generating ? (
-              <><Loader2 size={12} className="animate-spin" /> Generando...</>
+              <><Loader2 size={12} className="animate-spin" /> {t('common.generando')}</>
             ) : (
-              <><Download size={12} /> Generar Reporte</>
+              <><Download size={12} /> {t('reportes.generar')}</>
             )}
           </button>
         </div>
@@ -645,6 +652,8 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
 }
 
 function SendFormModal({ form, children, onSend, onClose }: any) {
+  const { t } = useI18n()
+
   const [childId, setChildId] = useState('')
   const [message, setMessage] = useState('')
   const [deadline, setDeadline] = useState('')
@@ -660,9 +669,9 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl">
+      <div className=" rounded-3xl p-8 w-full max-w-md shadow-2xl" style={{ background: "var(--card)" }}>
         <div className="flex justify-between items-center mb-6">
-          <h3 className="font-black text-xl text-slate-800 flex items-center gap-2">
+          <h3 className="font-black text-xl text-slate-800 flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
             <Send size={20} className="text-violet-600" /> Enviar a Padres
           </h3>
           <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={20} /></button>
@@ -679,7 +688,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Paciente *</label>
             <select value={childId} onChange={e => setChildId(e.target.value)}
               className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all">
-              <option value="">Seleccionar paciente...</option>
+              <option value="">{t('ui.select_patient_option')}</option>
               {children.map((c: any) => <option key={c.id} value={c.id}>{c.name}{c.age ? ` (${c.age})` : ''}</option>)}
             </select>
             <p className="text-xs text-slate-400 mt-1.5">El formulario se enviará al padre/madre vinculado al paciente.</p>
@@ -687,7 +696,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
           <div>
             <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Mensaje</label>
             <textarea rows={3} value={message} onChange={e => setMessage(e.target.value)}
-              placeholder="Ej: Por favor complete este formulario antes de la próxima sesión..."
+              {...{placeholder: t('ui.send_form_msg')}}
               className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all resize-none" />
           </div>
           <div>
@@ -696,7 +705,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
               className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all" />
           </div>
           <div className="flex gap-3 pt-2">
-            <button onClick={onClose} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl border-2 border-slate-100 transition-all">Cancelar</button>
+            <button onClick={onClose} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl border-2 border-slate-100 transition-all">{t('common.cancelar')}</button>
             <button onClick={handleSend} disabled={sending || !childId}
               className="flex-[2] py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
@@ -711,6 +720,8 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
 
 // ─── FORM FILL VIEW ─────────────────────────────────────────────────────────
 function FormFillView({ form, children, onBack, toast }: any) {
+  const { t } = useI18n()
+
   const [currentStep, setCurrentStep] = useState(0)
   const [responses, setResponses] = useState<Record<string, any>>({})
   const [selectedChild, setSelectedChild] = useState('')
@@ -719,7 +730,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
   const [aiAnalysis, setAiAnalysis] = useState<any>(null)
   const [editedMessage, setEditedMessage] = useState('')
   const [editedActividades, setEditedActividades] = useState('')
-  const [isNeurodivergent] = useState(!!(form as any).isNeurodivergent)
+  const [isClinicalForm] = useState(!!(form as any).isClinicalForm)
   const [showSuccessScreen, setShowSuccessScreen] = useState(false)
   const [savedRecordId, setSavedRecordId] = useState<string | null>(null)
   const [savedChildId, setSavedChildId] = useState<string>('')
@@ -727,7 +738,8 @@ function FormFillView({ form, children, onBack, toast }: any) {
 
   // Get sections based on form type
   const getSections = () => {
-    if (isNeurodivergent) return form.sections
+
+    if (isClinicalForm) return form.sections
     const formDataMap: Record<string, any> = {
       anamnesis: ANAMNESIS_DATA, aba: ABA_DATA, entorno_hogar: ENTORNO_HOGAR_DATA,
       brief2: BRIEF2_DATA, ados2: ADOS2_DATA, vineland3: VINELAND3_DATA,
@@ -743,6 +755,8 @@ function FormFillView({ form, children, onBack, toast }: any) {
   const answeredCount = Object.keys(responses).length
 
   const handleResponse = (id: string, value: any) => {
+    const { t } = useI18n()
+
     setResponses(prev => ({ ...prev, [id]: value }))
   }
 
@@ -752,11 +766,11 @@ function FormFillView({ form, children, onBack, toast }: any) {
     try {
       const child = children.find((c: any) => c.id === selectedChild)
 
-      if (isNeurodivergent) {
+      if (isClinicalForm) {
         // NeuroForma - usa API específica
         const res = await fetch('/api/analyze-neurodivergent-form', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
           body: JSON.stringify({
             formType: form.id,
             formData: responses,
@@ -803,7 +817,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
 
         const res = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
           body: JSON.stringify(payload),
         })
         const json = await res.json()
@@ -864,7 +878,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
     if (answeredCount < 2) { toast.error('Responde al menos 2 preguntas'); return }
     setIsSaving(true)
     try {
-      const table = isNeurodivergent ? 'form_responses' : (
+      const table = isClinicalForm ? 'form_responses' : (
         form.formKey === 'anamnesis' ? 'anamnesis_completa' :
         form.formKey === 'aba' ? 'registro_aba' :
         form.formKey === 'entorno_hogar' ? 'registro_entorno_hogar' : 'form_responses'
@@ -875,7 +889,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
       const now = new Date().toISOString()
       const insertPayload: any = { child_id: selectedChild }
 
-      if (isNeurodivergent) {
+      if (isClinicalForm) {
         // form_responses: tiene form_type, form_title, responses, ai_analysis, created_at
         insertPayload.form_type  = form.formKey || form.id
         insertPayload.form_title = form.title
@@ -889,6 +903,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         insertPayload.form_title     = form.title
       } else if (table === 'registro_aba') {
         // registro_aba: child_id, fecha_sesion, datos, form_title
+        const { t } = useI18n()
         insertPayload.datos        = responses
         insertPayload.fecha_sesion = responses['fecha_sesion'] || now.split('T')[0]
         insertPayload.form_title   = form.title
@@ -917,15 +932,16 @@ function FormFillView({ form, children, onBack, toast }: any) {
 
       // Queue AI-generated parent message for admin approval (if it exists)
       if (aiAnalysis?.mensaje_padres) {
+        const { t } = useI18n()
         const { data: child } = await supabase.from('children').select('parent_id').eq('id', selectedChild).single()
         if ((child as any)?.parent_id) {
           await fetch('/api/admin/parent-messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
             body: JSON.stringify({
               child_id: selectedChild,
               parent_id: (child as any).parent_id,
-              source: isNeurodivergent ? 'neuroforma' : 'evaluacion',
+              source: isClinicalForm ? 'neuroforma' : 'evaluacion',
               source_title: form.title,
               ai_message: editedMessage || aiAnalysis.mensaje_padres,
               actividades_casa: editedActividades || aiAnalysis.actividades_casa || aiAnalysis.actividad_casa,
@@ -946,16 +962,17 @@ function FormFillView({ form, children, onBack, toast }: any) {
   // ── PANTALLA DE ÉXITO CON BOTÓN DE REPORTE ──────────────────────────────
   if (showSuccessScreen) {
     const handleGenerateAndDownload = async () => {
+      const { t } = useI18n()
       setIsGeneratingReport(true)
       try {
         const child = children.find((c: any) => c.id === savedChildId) as any
         const childName = child?.name || 'Paciente'
         const childAge  = child?.age  || calcularEdadNumerica(child?.birth_date)
-        const reportType = isNeurodivergent ? (form.id || 'neuroforma') : (form.formKey || form.id)
+        const reportType = isClinicalForm ? (form.id || 'neuroforma') : (form.formKey || form.id)
 
         const res = await fetch('/api/generate-report', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
           body: JSON.stringify({
             reportType,
             childName,
@@ -1007,7 +1024,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
           <CheckCircle2 size={40} className="text-emerald-500" />
         </div>
         <div className="text-center">
-          <h2 className="text-2xl font-black text-slate-800 mb-2">¡Formulario guardado!</h2>
+          <h2 className="text-2xl font-black text-slate-800 mb-2" style={{ color: "var(--text-primary)" }}>¡Formulario guardado!</h2>
           <p className="text-slate-500 font-medium">{form.title}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
@@ -1043,21 +1060,21 @@ function FormFillView({ form, children, onBack, toast }: any) {
   const questions = currentSection.questions || currentSection.items || []
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50/50 via-white to-indigo-50/30">
+    <div className="flex flex-col h-full" style={{ background: "var(--background)" }}>
       {/* Header barra */}
-      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-xl border-b border-slate-100 shadow-sm">
+      <div className="flex-shrink-0 border-b shadow-sm z-20" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-4">
-          <button onClick={onBack} className="flex items-center gap-1.5 text-slate-400 hover:text-violet-600 font-bold transition-all text-sm group">
+          <button onClick={onBack} className="flex items-center gap-1.5 hover:text-violet-500 font-bold transition-all text-sm group" style={{ color: "var(--text-muted)" }}>
             <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Volver
           </button>
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
+              <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
                 Sección {currentStep + 1} de {totalSteps}
               </p>
               <p className="text-xs font-bold text-violet-600">{Math.round(progress)}% completado</p>
             </div>
-            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--muted-bg)" }}>
               <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500"
                 style={{ width: `${progress}%` }} />
             </div>
@@ -1065,7 +1082,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         </div>
       </div>
 
-      <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+      <div className="flex-1 overflow-y-auto"><div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
         {/* Form info card */}
         <div className={`bg-gradient-to-r ${form.color || 'from-violet-600 to-indigo-600'} rounded-2xl p-5 text-white shadow-lg`}>
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -1076,16 +1093,16 @@ function FormFillView({ form, children, onBack, toast }: any) {
             </div>
             <select value={selectedChild} onChange={e => setSelectedChild(e.target.value)}
               className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:bg-white/30 transition-all min-w-[180px]">
-              <option value="" className="text-slate-800">Seleccionar paciente...</option>
-              {children.map((c: any) => <option key={c.id} value={c.id} className="text-slate-800">{c.name}</option>)}
+              <option value="" className="text-slate-800" style={{ color: "var(--text-primary)" }}>Seleccionar paciente...</option>
+              {children.map((c: any) => <option key={c.id} value={c.id} className="text-slate-800" style={{ color: "var(--text-primary)" }}>{c.name}</option>)}
             </select>
           </div>
         </div>
 
         {/* Section */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-slate-50 to-violet-50/30 px-6 py-4 border-b border-slate-100">
-            <h3 className="font-black text-slate-800 text-lg">{currentSection.title || currentSection.section}</h3>
+        <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+          <div className="px-6 py-4 border-b" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
+            <h3 className="font-black text-lg" style={{ color: "var(--text-primary)" }}>{currentSection.title || currentSection.section}</h3>
             {(currentSection.description || currentSection.subtitle) && (
               <p className="text-sm text-slate-500 mt-1">{currentSection.description || currentSection.subtitle}</p>
             )}
@@ -1105,7 +1122,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         {/* Navigation */}
         <div className="flex items-center justify-between gap-4">
           <button onClick={() => setCurrentStep(s => s - 1)} disabled={currentStep === 0}
-            className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-slate-200 text-slate-600 rounded-xl font-bold hover:border-violet-300 disabled:opacity-40 transition-all">
+            className="flex items-center gap-2 px-6 py-3  border-2 border-slate-200 text-slate-600 rounded-xl font-bold hover:border-violet-300 disabled:opacity-40 transition-all" style={{ background: "var(--card)" }}>
             <ChevronLeft size={18} /> Anterior
           </button>
 
@@ -1147,23 +1164,25 @@ function FormFillView({ form, children, onBack, toast }: any) {
 
         {/* AI Analysis */}
         {aiAnalysis && (
-          <div className="bg-white rounded-2xl shadow-sm border border-violet-100 p-6">
+          <div className=" rounded-2xl shadow-sm border border-violet-100 p-6" style={{ background: "var(--card)" }}>
             <AIAnalysisPanel analysis={aiAnalysis} editableMessage={editedMessage} onEditMessage={setEditedMessage} editableActividades={editedActividades} onEditActividades={setEditedActividades} />
           </div>
         )}
       </div>
-    </div>
+    </div></div>
   )
 }
 
 // ─── FORM CARD ───────────────────────────────────────────────────────────────
 function FormCard({ form, onStart, onSend, catInfo }: any) {
+  const { t } = useI18n()
+
   return (
-    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-violet-200 transition-all group overflow-hidden">
+    <div className=" rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-violet-200 transition-all group overflow-hidden" style={{ background: "var(--card)" }}>
       <div className={`h-1.5 bg-gradient-to-r ${form.color || 'from-violet-500 to-indigo-500'}`} />
       <div className="p-5">
         <div className="flex items-start justify-between mb-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center text-2xl shadow-sm border border-slate-100">
+          <div className="" style={{ background: "var(--background)" }}>
             {form.icon}
           </div>
           <div className="flex items-center gap-1.5">
@@ -1172,15 +1191,19 @@ function FormCard({ form, onStart, onSend, catInfo }: any) {
                 <Send size={8} /> Padres
               </span>
             ) : null}
-            {form.formKey && (
+            {(form as any).externalPlatform ? (
+              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[9px] font-black uppercase tracking-wider border border-amber-200 flex items-center gap-1">
+                ↗ Ext.
+              </span>
+            ) : form.formKey ? (
               <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[9px] font-black uppercase tracking-wider border border-red-100 flex items-center gap-1">
                 <Stethoscope size={8} /> PRO
               </span>
-            )}
+            ) : null}
           </div>
         </div>
 
-        <h3 className="font-black text-slate-800 text-sm mb-0.5 leading-tight">{form.title}</h3>
+        <h3 className="font-black text-slate-800 text-sm mb-0.5 leading-tight" style={{ color: "var(--text-primary)" }}>{form.title}</h3>
         <p className="text-xs text-slate-500 font-medium mb-2">{form.subtitle}</p>
         <p className="text-xs text-slate-400 leading-relaxed mb-3 line-clamp-2">{form.description}</p>
 
@@ -1213,6 +1236,7 @@ function FormCard({ form, onStart, onSend, catInfo }: any) {
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export default function EvaluacionesUnificadas() {
   const toast = useToast()
+  const { t } = useI18n()
   const [activeTab, setActiveTab] = useState<'biblioteca' | 'enviados' | 'historial'>('biblioteca')
   const [activeCategory, setActiveCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')
@@ -1257,6 +1281,7 @@ export default function EvaluacionesUnificadas() {
   }
 
   const handleSendForm = async (form: any, { childId, message, deadline }: any) => {
+    const { t } = useI18n()
     try {
       // Derive parent_id from child record
       const { data: child } = await supabase.from('children').select('parent_id').eq('id', childId).single()
@@ -1264,7 +1289,7 @@ export default function EvaluacionesUnificadas() {
 
       const res = await fetch('/api/admin/forms', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           parent_id: parentId,
           child_id: childId,
@@ -1354,9 +1379,9 @@ export default function EvaluacionesUnificadas() {
             <div className="relative flex-1">
               <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
-                type="text" placeholder="Buscar formularios..." value={searchTerm}
+                type="text" placeholder={t('ui.search_form')} value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white border-2 border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-violet-400 transition-all shadow-sm" />
+                className="w-full pl-10 pr-4 py-3  border-2 border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-violet-400 transition-all shadow-sm" style={{ background: "var(--card)" }} />
             </div>
           </div>
 
@@ -1398,19 +1423,19 @@ export default function EvaluacionesUnificadas() {
       {activeTab === 'enviados' && (
         <div className="space-y-3">
           {sentForms.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-slate-100">
+            <div className="flex flex-col items-center justify-center py-20 text-center  rounded-3xl border border-slate-100" style={{ background: "var(--card)" }}>
               <div className="p-5 bg-slate-100 rounded-3xl mb-4"><Send size={40} className="text-slate-300" /></div>
-              <p className="font-bold text-slate-400">No has enviado formularios aún</p>
+              <p className="font-bold text-slate-400">{t('ui.no_forms_sent')}</p>
               <p className="text-xs text-slate-300 mt-1">Ve a Biblioteca y envía formularios a los padres</p>
             </div>
           ) : sentForms.map(sf => (
-            <div key={sf.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div key={sf.id} className=" rounded-2xl border border-slate-100 shadow-sm overflow-hidden" style={{ background: "var(--card)" }}>
               <div className="flex items-center gap-4 p-5 cursor-pointer hover:bg-slate-50 transition-all"
                 onClick={() => setExpandedResponse(expandedResponse === sf.id ? null : sf.id)}>
                 <div className={`w-3 h-3 rounded-full shrink-0 ${sf.status === 'completed' ? 'bg-emerald-500' : sf.status === 'pending' ? 'bg-amber-400 animate-pulse' : 'bg-slate-300'}`} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
-                    <p className="font-bold text-slate-800 text-sm truncate">{sf.form_title}</p>
+                    <p className="font-bold text-slate-800 text-sm truncate" style={{ color: "var(--text-primary)" }}>{sf.form_title}</p>
                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase ${sf.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                       {sf.status === 'completed' ? '✅ Completado' : '⏳ Pendiente'}
                     </span>
@@ -1425,7 +1450,7 @@ export default function EvaluacionesUnificadas() {
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Respuestas</h4>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {Object.entries(sf.responses).map(([k, v]) => (
-                      <div key={k} className="bg-white rounded-xl p-3 border border-slate-100">
+                      <div key={k} className=" rounded-xl p-3 border border-slate-100" style={{ background: "var(--card)" }}>
                         <p className="text-xs font-bold text-slate-400">{k}</p>
                         <p className="text-sm font-medium text-slate-700 mt-0.5">{Array.isArray(v) ? (v as string[]).join(', ') : String(v)}</p>
                       </div>
@@ -1442,7 +1467,7 @@ export default function EvaluacionesUnificadas() {
       {activeTab === 'historial' && (
         <div className="space-y-3">
           {savedForms.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-3xl border border-slate-100">
+            <div className="flex flex-col items-center justify-center py-20 text-center  rounded-3xl border border-slate-100" style={{ background: "var(--card)" }}>
               <div className="p-5 bg-slate-100 rounded-3xl mb-4"><ClipboardList size={40} className="text-slate-300" /></div>
               <p className="font-bold text-slate-400">Sin formularios guardados</p>
             </div>

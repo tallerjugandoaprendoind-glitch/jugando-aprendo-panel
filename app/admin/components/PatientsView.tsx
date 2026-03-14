@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect } from 'react'
 import {
   Activity, Baby, Calendar, ChevronRight, ClipboardList, Clock, Edit, Eye, FileText, Heart, Key, Loader2, Mail, Phone, Plus, Save, Search, Stethoscope, Ticket, Trash2, User, UserPlus, Users, X, Brain, Sparkles, BarChart3
@@ -14,6 +16,7 @@ import ARIAAgentChat from './ARIAAgentChat'
 
 // ── Historial de evaluaciones del paciente (mini view dentro de ficha) ────────
 function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string; childName: string }) {
+  const { t } = useI18n()
   const [evaluaciones, setEvaluaciones] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -46,18 +49,18 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
     cargar()
   }, [childId])
 
-  if (loading) return <div className="flex items-center gap-2 py-8 justify-center text-slate-400"><Loader2 className="animate-spin" size={20}/> Cargando historial...</div>
+  if (loading) return <div className="flex items-center gap-2 py-8 justify-center text-slate-400" style={{ color: "var(--text-muted)" }}><Loader2 className="animate-spin" size={20}/> Cargando historial...</div>
 
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Historial de evaluaciones · {childName}</p>
-        <span className="text-[10px] bg-slate-100 px-2 py-1 rounded-full font-bold text-slate-500">{evaluaciones.length} registros</span>
+        <span className="text-[10px] bg-slate-100 px-2 py-1 rounded-full font-bold text-slate-500" style={{ color: "var(--text-muted)" }}>{evaluaciones.length} registros</span>
       </div>
       {evaluaciones.length === 0 ? (
         <div className="py-8 text-center">
           <ClipboardList className="mx-auto text-slate-200 mb-2" size={36}/>
-          <p className="text-slate-400 text-sm font-bold">Sin evaluaciones registradas</p>
+          <p className="text-slate-400 text-sm font-bold">{t('ui.no_evaluations')}</p>
           <p className="text-slate-300 text-xs mt-1">Las evaluaciones aparecerán aquí al crearlas desde el módulo de Evaluaciones</p>
         </div>
       ) : evaluaciones.map((ev, i) => (
@@ -75,6 +78,7 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
 }
 
 function PatientsView() {
+    const { t } = useI18n()
     const [listaNinos, setListaNinos] = useState<any[]>([])
     const [listaNinosFiltrada, setListaNinosFiltrada] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -243,8 +247,8 @@ function PatientsView() {
     }
 
     return (
-        <div className="bg-white rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 overflow-hidden h-full flex flex-col animate-fade-in-up">
-            <div className="p-4 md:p-6 lg:p-8 border-b border-slate-100 bg-white sticky top-0 z-10 space-y-4">
+        <div className="rounded-3xl md:rounded-[2.5rem] shadow-sm overflow-hidden h-full flex flex-col animate-fade-in-up" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+            <div className="p-4 md:p-6 lg:p-8 border-b sticky top-0 z-10 space-y-4" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h3 className="font-bold text-xl md:text-2xl text-slate-800 flex items-center gap-3">
@@ -260,19 +264,19 @@ function PatientsView() {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
                     <div className="md:col-span-5 relative">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
-                        <input type="text" placeholder="Buscar por nombre..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white transition-all"/>
+                        <input type="text" {...{placeholder: t('ui.search_patient')}} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white transition-all"/>
                         {searchTerm && <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-full"><X size={16} className="text-slate-400"/></button>}
                     </div>
                     <div className="md:col-span-4">
-                        <select value={filterDiagnosis} onChange={(e) => setFilterDiagnosis(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-purple-500 focus:bg-white transition-all font-bold text-slate-700">
+                        <select value={filterDiagnosis} onChange={(e) => setFilterDiagnosis(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-purple-500 focus:bg-white transition-all font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>
                             {diagnosticosUnicos.map(diag => <option key={diag} value={diag}>{diag === 'todos' ? '🔍 Todos' : `📋 ${diag}`}</option>)}
                         </select>
                     </div>
                     <div className="md:col-span-3">
-                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-green-500 focus:bg-white transition-all font-bold text-slate-700">
+                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-green-500 focus:bg-white transition-all font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>
                             <option value="nombre">📊 Por Nombre</option>
                             <option value="edad">🎂 Por Edad</option>
-                            <option value="reciente">📅 Más Recientes</option>
+                            <option value="reciente">{t('ui.most_recent')}</option>
                         </select>
                     </div>
                 </div>
@@ -280,9 +284,9 @@ function PatientsView() {
             
             <div className="flex-1 overflow-y-auto">
                 {isLoading ? (
-                    <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-500 mb-4" size={48} /><p className="text-slate-400 font-bold">Cargando...</p></div>
+                    <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-500 mb-4" size={48} /><p className="text-slate-400 font-bold">{t('common.cargando')}</p></div>
                 ) : listaNinosFiltrada.length === 0 ? (
-                    <div className="p-20 text-center"><Users className="mx-auto text-slate-200 mb-4" size={64}/><p className="text-slate-400 font-bold text-lg">No se encontraron pacientes</p></div>
+                    <div className="p-20 text-center"><Users className="mx-auto text-slate-200 mb-4" size={64}/><p className="text-slate-400 font-bold text-lg">{t('ui.no_patients')}</p></div>
                 ) : (
                     <>
                         <div className="md:hidden p-4 space-y-3">
@@ -306,11 +310,11 @@ function PatientsView() {
                         <table className="hidden md:table w-full text-left border-collapse">
                             <thead className="bg-slate-50 sticky top-0 z-10">
                                 <tr className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                                    <th className="p-4 lg:p-6 lg:pl-10">Paciente</th>
-                                    <th className="p-4 lg:p-6">Edad</th>
-                                    <th className="p-4 lg:p-6">Diagnóstico</th>
-                                    <th className="p-4 lg:p-6">Última sesión</th>
-                                    <th className="p-4 lg:p-6 text-right lg:pr-10">Acciones</th>
+                                    <th className="p-4 lg:p-6 lg:pl-10">{t('agenda.paciente')}</th>
+                                    <th className="p-4 lg:p-6">{t('common.anos')}</th>
+                                    <th className="p-4 lg:p-6">{t('pacientes.diagnostico')}</th>
+                                    <th className="p-4 lg:p-6">{t('pacientes.ultimaSesion')}</th>
+                                    <th className="p-4 lg:p-6 text-right lg:pr-10">{t('common.acciones')}</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-50">
@@ -323,7 +327,7 @@ function PatientsView() {
                                             </div>
                                         </td>
                                         <td className="p-4 lg:p-6">
-                                            <span className="font-black text-slate-700">
+                                            <span className="font-black text-slate-700" style={{ color: "var(--text-secondary)" }}>
                                                 {nino.age ? `${nino.age} años` : "N/A"}
                                             </span>
                                         </td>
@@ -355,7 +359,7 @@ function PatientsView() {
 
             {showPatientModal && selectedPatient && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] overflow-y-auto shadow-2xl animate-scale-in">
+                    <div className="rounded-3xl max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl animate-scale-in" style={{ background: "var(--card)" }}>
                         <div className={`p-6 text-white transition-colors ${isEditing ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-blue-600 to-blue-700'}`}>
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-4">
@@ -461,34 +465,34 @@ function PatientsView() {
                                     </div>
 
                                     <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Diagnóstico</label>
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('pacientes.diagnostico')}</label>
                                         <select 
                                             value={editForm.diagnosis} 
                                             onChange={e => setEditForm({...editForm, diagnosis: e.target.value})} 
                                             className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-blue-500"
                                         >
-                                            <option value="">Seleccionar...</option>
+                                            <option value="">{t('ui.select_option')}</option>
                                             {diagnosticosUnicos.filter(d => d !== 'todos').map(d => <option key={d} value={d}>{d}</option>)}
                                             <option value="TEA">TEA</option>
                                             <option value="TDAH">TDAH</option>
-                                            <option value="Retraso del lenguaje">Retraso del lenguaje</option>
+                                            <option value="Retraso del lenguaje">{t('ui.language_delay')}</option>
                                         </select>
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        <div className="p-6 bg-slate-50 border-t border-slate-100 flex gap-3">
+                        <div className="p-6 border-t flex gap-3" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
                             {!isEditing ? (
                                 <>
-                                    <button onClick={() => setShowPatientModal(false)} className="flex-1 px-6 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-all">Cerrar</button>
+                                    <button onClick={() => setShowPatientModal(false)} className="flex-1 px-6 py-3 rounded-xl font-bold transition-all hover:opacity-80" style={{ background: "var(--muted-bg)", border: "2px solid var(--card-border)", color: "var(--text-primary)" }}>{t('common.cerrar')}</button>
                                     <button onClick={activarEdicion} className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
                                         <Edit size={18}/> Editar
                                     </button>
                                 </>
                             ) : (
                                 <>
-                                    <button onClick={() => setIsEditing(false)} disabled={isSaving} className="flex-1 px-6 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-all disabled:opacity-50">Cancelar</button>
+                                    <button onClick={() => setIsEditing(false)} disabled={isSaving} className="flex-1 px-6 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-all disabled:opacity-50">{t('common.cancelar')}</button>
                                     <button onClick={guardarCambios} disabled={isSaving} className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                                         {isSaving ? <Loader2 className="animate-spin" size={18}/> : <Save size={18}/>}
                                         {isSaving ? 'Guardando...' : 'Guardar'}

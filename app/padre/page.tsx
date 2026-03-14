@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
@@ -10,10 +12,11 @@ import {
   Award, Target, Smile, Book, Star, Zap, Bell, Download, Share2, Eye, Mail, Phone,
   Settings, HelpCircle, FileText, Video, Headphones, Image as ImageIcon, ExternalLink,
   Camera, Upload, Gift, PartyPopper, Flame, TrendingDown, Baby, Stethoscope, PlayCircle,
-  CalendarDays, ShoppingBag
+  CalendarDays, ShoppingBag, BookOpen
 } from 'lucide-react'
 
 import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './components/shared'
+import LocaleSelector from '@/app/components/LocaleSelector'
 import VideoCallModal from '@/components/VideoCallModal'
 import { ThemeToggleButton } from '@/components/ThemeContext'
 import AgendaView from './components/AgendaView'
@@ -22,6 +25,7 @@ import ResourcesView from './components/ResourcesView'
 import ParentFormsView from './components/ParentFormsView'
 import MisCitasView from './components/MisCitasView'
 import ProfileView from './components/ProfileView'
+import NotifWhatsAppPanel from './components/NotifWhatsAppPanel'
 import StoreView from './components/StoreView'
 import ChatInterface from './components/ChatInterface'
 import MensajesView from './components/MensajesView'
@@ -30,6 +34,7 @@ import PushNotificationBanner from '../../components/PushNotificationBanner'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
 
 export default function ParentDashboard() {
+  const { t } = useI18n()
   const router = useRouter()
    
   const [loading, setLoading] = useState(true)
@@ -44,6 +49,16 @@ export default function ParentDashboard() {
   const [myChildren, setMyChildren] = useState<any[]>([])
   const [selectedChild, setSelectedChild] = useState<any>(null)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const NAV_ITEMS = [
+    { id: 'home',        icon: Home,      label: t('nav.inicio') },
+    { id: 'citas',       icon: Calendar,  label: t('nav.miscitas') },
+    { id: 'actividades', icon: Zap,       label: t('nav.actividades') },
+    { id: 'mensajes',    icon: MessageCircle, label: t('nav.mensajes') },
+    { id: 'recursos',    icon: BookOpen,  label: t('nav.recursos') },
+    { id: 'tienda',      icon: ShoppingBag, label: t('nav.tienda') },
+    { id: 'perfil',      icon: User,      label: t('nav.miperfil') },
+  ]
   const [activeView, setActiveView] = useState('home') 
    
   const [selectedDate, setSelectedDate] = useState('')
@@ -171,62 +186,17 @@ export default function ParentDashboard() {
   }
   // ------------------------------------------
 
-  const handleBookAppointment = async (time: string) => {
-    if(!profile || !selectedChild) return
-    if((profile.tokens || 0) <= 0) return alert("No tienes suficientes tokens para agendar.")
-    
-    if(!confirm(`¿Confirmar cita para ${selectedChild.name} el ${selectedDate} a las ${time}?`)) return
-
-    setBookingLoading(true)
-    try {
-        const { error: aptError } = await supabase.from('appointments').insert([{
-            child_id: selectedChild.id,
-            parent_id: profile.id,
-            appointment_date: selectedDate,
-            appointment_time: time,
-            service_type: 'Terapia ABA',
-            status: 'confirmed'
-        }])
-        if(aptError) throw aptError
-
-        const newTokens = (profile.tokens || 0) - 1
-        await supabase.from('profiles').update({ tokens: newTokens }).eq('id', profile.id)
-        
-        setProfile({...profile, tokens: newTokens})
-        triggerCelebration('🎉 ¡Cita agendada exitosamente!')
-        setRefreshTrigger(prev => prev + 1)
-        setActiveView('home')
-    } catch (error: any) {
-        alert("Error: " + error.message)
-    } finally {
-        setBookingLoading(false)
-    }
-  }
+  // La clínica agenda las citas directamente desde el panel administrativo
 
   const handleCancelAppointment = async (appointmentId: string, isReschedule: boolean = false) => {
-    if(!confirm(isReschedule 
-        ? "¿Quieres cambiar la fecha? Se cancelará la cita actual, se te devolverá el token y podrás elegir un nuevo horario." 
-        : "¿Seguro que deseas cancelar? Se te reembolsará el token inmediatamente."
-    )) return
+    if(!confirm("¿Seguro que deseas cancelar esta cita? Si necesitás cambiar el horario, contactá al centro.")) return
 
     setBookingLoading(true)
     try {
         const { error: delError } = await supabase.from('appointments').delete().eq('id', appointmentId)
         if(delError) throw delError
-
-        const newTokens = (profile.tokens || 0) + 1
-        await supabase.from('profiles').update({ tokens: newTokens }).eq('id', profile.id)
-        
-        setProfile({...profile, tokens: newTokens})
         setRefreshTrigger(prev => prev + 1) 
-
-        if(isReschedule) {
-            alert("Cita cancelada. Ahora elige tu nuevo horario.")
-            setActiveView('agenda') 
-        } else {
-            triggerCelebration('✅ Token reembolsado correctamente')
-        }
-
+        triggerCelebration('✅ Solicitud enviada al centro')
     } catch (error: any) {
         alert("Error al cancelar: " + error.message)
     } finally {
@@ -431,7 +401,7 @@ export default function ParentDashboard() {
                     </div>
                     <div>
                       <h3 className="font-bold text-2xl text-slate-800">Paso 2: Tu hijo/a</h3>
-                      <p className="text-sm text-slate-400 font-medium">Ingresa sus datos básicos</p>
+                      <p className="text-sm text-slate-400 font-medium">{t('ui.enter_basic_data')}</p>
                     </div>
                   </div>
                   <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
@@ -457,7 +427,7 @@ export default function ParentDashboard() {
                     </p>
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button type="button" onClick={()=>setShowAddChild(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all">Cancelar</button>
+                    <button type="button" onClick={()=>setShowAddChild(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all">{t('common.cancelar')}</button>
                     <button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
                       <CheckCircle2 size={18}/> Guardar y continuar
                     </button>
@@ -516,7 +486,7 @@ export default function ParentDashboard() {
                         <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
                     </div>
                     <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bienvenida</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('ui.welcome')}</p>
                         <h2 className="font-bold text-slate-800 text-lg leading-tight">Fam. {profile?.full_name?.split(' ')[0]}</h2>
                         <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
                             <Sparkles size={10}/> Portal de padres
@@ -527,7 +497,7 @@ export default function ParentDashboard() {
                 <nav className="space-y-2">
                     <NavBtnDesktop icon={<Home size={20}/>} label="Inicio & Progreso" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                     <NavBtnDesktop icon={<Calendar size={20}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
-                    <NavBtnDesktop icon={<Heart size={20}/>} label="Plan Semanal" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
+                    <NavBtnDesktop icon={<Heart size={20}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                     <NavBtnDesktop icon={<MessageCircle size={20}/>} label="Asistente IA" active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                     <NavBtnDesktop icon={<Bell size={20}/>} label="Mensajes del terapeuta" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
@@ -538,47 +508,12 @@ export default function ParentDashboard() {
             </div>
             
             <div className="space-y-4">
-                {/* 🎯 TARJETA DE TOKENS MEJORADA */}
-                <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-7 rounded-3xl relative overflow-hidden group cursor-pointer transition-all hover:scale-[1.02] hover:shadow-2xl shadow-xl">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Ticket size={80}/>
-                    </div>
-                    <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    
-                    <div className="flex justify-between items-start mb-4 relative z-10">
-                        <span className="text-xs font-bold uppercase text-slate-400 tracking-wider">Mis Tokens</span>
-                        <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-xl shadow-lg animate-pulse">
-                            <Ticket size={18} className="text-yellow-400"/>
-                        </div>
-                    </div>
-                    <div className="text-5xl font-black relative z-10 mb-2 bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                        {profile?.tokens || 0}
-                    </div>
-                    <p className="text-xs text-slate-400 relative z-10 font-medium">Sesiones disponibles para agendar</p>
-                    
-                    {(profile?.tokens || 0) <= 2 && (profile?.tokens || 0) > 0 && (
-                        <div className="mt-4 bg-yellow-500/20 border border-yellow-500/30 rounded-xl p-3 relative z-10 animate-pulse">
-                            <p className="text-xs text-yellow-200 font-bold flex items-center gap-2">
-                                <AlertCircle size={14}/> Tus tokens están por agotarse
-                            </p>
-                        </div>
-                    )}
-
-                    {(profile?.tokens || 0) === 0 && (
-                        <div className="mt-4 bg-red-500/20 border border-red-500/30 rounded-xl p-3 relative z-10">
-                            <p className="text-xs text-red-200 font-bold flex items-center gap-2">
-                                <AlertCircle size={14}/> Sin tokens disponibles
-                            </p>
-                        </div>
-                    )}
-
-                    {(profile?.tokens || 0) > 5 && (
-                        <div className="mt-4 bg-green-500/20 border border-green-500/30 rounded-xl p-3 relative z-10">
-                            <p className="text-xs text-green-200 font-bold flex items-center gap-2">
-                                <CheckCircle2 size={14}/> ¡Excelente! Tienes suficientes sesiones
-                            </p>
-                        </div>
-                    )}
+                {/* Citas gestionadas por la clínica */}
+                <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
+                    <p className="text-xs font-bold text-blue-700 mb-1 flex items-center gap-1.5">
+                        <Calendar size={12}/> Tus citas
+                    </p>
+                    <p className="text-xs text-blue-500 leading-relaxed">Las citas son programadas por el equipo del centro. Para cambios, contactá a recepción.</p>
                 </div>
                 
                 {/* BOTÓN NOTIFICACIONES SIDEBAR MEJORADO */}
@@ -622,10 +557,8 @@ export default function ParentDashboard() {
                             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
                         )}
                     </button>
-                    <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-bold shadow-lg relative group">
-                        <Ticket size={14} className="text-yellow-400 group-hover:animate-spin"/> 
-                        <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">{profile?.tokens || 0}</span>
-                    </div>
+                    <LocaleSelector compact={true} />
+
                 </div>
             </header>
 
@@ -651,7 +584,7 @@ export default function ParentDashboard() {
                             </span>
                         </div>
                     </button>
-                )) : <span className="text-xs text-slate-400 italic">Sin pacientes registrados</span>}
+                )) : <span className="text-xs text-slate-400 italic">{t('ui.no_patients')}</span>}
                 <button 
                     onClick={()=>setShowAddChild(true)} 
                     className="w-10 h-10 rounded-2xl bg-blue-50 border-2 border-dashed border-blue-200 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shrink-0 hover:scale-110 active:scale-95 hover:rotate-90"
@@ -689,14 +622,7 @@ export default function ParentDashboard() {
                             </button>
                           </div>
                           {activeView === 'agenda' && (
-                            <AgendaView 
-                              profile={profile}
-                              selectedDate={selectedDate}
-                              setSelectedDate={setSelectedDate}
-                              takenSlots={takenSlots}
-                              bookingLoading={bookingLoading}
-                              handleBookAppointment={handleBookAppointment}
-                            />
+                            <AgendaView selectedChild={selectedChild} />
                           )}
                           {activeView === 'miscitas' && (
                             <MisCitasView
@@ -738,14 +664,22 @@ export default function ParentDashboard() {
                     {activeView === 'engagement' && <EngagementView childId={selectedChild?.id || ''} />}
 
                     {activeView === 'profile' && (
-                        <ProfileView 
-                            profile={profile} 
-                            onLogout={()=>{localStorage.removeItem('padre_email'); router.push('/login')}} 
-                            onChangePass={()=>setShowChangePass(true)}
-                            onEditProfile={()=>setShowEditProfile(true)}
-                            onPrivacy={()=>setShowPrivacy(true)}
-                            onHelp={()=>setShowHelp(true)}
-                        />
+                        <div className="space-y-4 pb-6">
+                          <ProfileView 
+                              profile={profile} 
+                              onLogout={()=>{localStorage.removeItem('padre_email'); router.push('/login')}} 
+                              onChangePass={()=>setShowChangePass(true)}
+                              onEditProfile={()=>setShowEditProfile(true)}
+                              onPrivacy={()=>setShowPrivacy(true)}
+                              onHelp={()=>setShowHelp(true)}
+                          />
+                          <div className="max-w-2xl mx-auto px-4">
+                            <NotifWhatsAppPanel
+                              profile={profile}
+                              onUpdated={(phone) => setProfile((p: any) => ({ ...p, phone }))}
+                            />
+                          </div>
+                        </div>
                     )}
                 </div>
             </main>
@@ -753,7 +687,7 @@ export default function ParentDashboard() {
             {/* 📱 NAVEGACIÓN INFERIOR MÓVIL MEJORADA */}
             <nav className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 p-3 flex justify-around items-center fixed bottom-0 w-full z-30 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
                 <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
-                <NavBtnMobile icon={<Calendar size={22}/>} label="Agenda" active={activeView==='agenda' || activeView==='miscitas'} onClick={()=>setActiveView('agenda')} badge={(profile?.tokens || 0)} />
+                <NavBtnMobile icon={<Calendar size={22}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} badge={null} />
                 <div className="relative -top-8">
                     <button 
                         onClick={()=>setActiveView('chat')} 
@@ -792,7 +726,7 @@ export default function ParentDashboard() {
                                     <Baby size={24} className="text-white"/>
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-2xl text-slate-800">Nuevo Paciente</h3>
+                                    <h3 className="font-bold text-2xl text-slate-800">{t('pacientes.nuevo')}</h3>
                                     <p className="text-sm text-slate-400 font-medium">Agrega la información del niño/a</p>
                                 </div>
                             </div>
@@ -875,7 +809,7 @@ export default function ParentDashboard() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-2xl text-slate-800">Cambiar Contraseña</h3>
-                                <p className="text-sm text-slate-400">Ingresa tu nueva clave de acceso</p>
+                                <p className="text-sm text-slate-400">{t('ui.new_access_key')}</p>
                             </div>
                         </div>
                         <button onClick={()=>setShowChangePass(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
@@ -960,15 +894,20 @@ export default function ParentDashboard() {
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
-                                <Phone size={14}/> Teléfono
+                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">
+                                <span className="flex items-center gap-2">
+                                  <span>📱</span> Número WhatsApp
+                                </span>
+                                <span className="text-[10px] font-normal text-green-600 mt-0.5 block">
+                                  Recibirás alertas de citas, informes y mensajes del terapeuta
+                                </span>
                             </label>
                             <input 
                                 name="phone" 
                                 type="tel"
                                 defaultValue={profile?.phone}
                                 className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-green-400 transition-all hover:bg-white" 
-                                placeholder="+51 924 807 183"
+                                placeholder="+51 999 888 777"
                             />
                         </div>
                         <div>
@@ -1228,13 +1167,8 @@ export default function ParentDashboard() {
                     <div className="p-6 space-y-3 overflow-y-auto">
                         <HelpItem 
                             icon={<Calendar className="text-blue-600"/>}
-                            title="¿Cómo agendar una cita?"
-                            description="Ve a 'Agendar Cita', selecciona fecha y horario disponible. Se descontará 1 token automáticamente."
-                        />
-                        <HelpItem 
-                            icon={<Ticket className="text-yellow-600"/>}
-                            title="¿Qué son los tokens?"
-                            description="Los tokens son créditos que te permiten agendar sesiones. Cada sesión requiere 1 token. Contacta al centro para recargar."
+                            title="¿Cómo ver mis citas?"
+                            description="En la sección 'Mis Citas' podés ver todas las citas programadas por el centro. Para cambios o cancelaciones, contactá a recepción directamente."
                         />
                         <HelpItem 
                             icon={<MessageCircle className="text-purple-600"/>}

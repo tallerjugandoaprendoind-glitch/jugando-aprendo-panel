@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useCallback } from 'react'
 import {
   Search, ChevronRight, Baby, Loader2, Eye, FileText, Activity,
@@ -12,6 +14,8 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
 function calcularEdad(fecha: string) {
+  const { t } = useI18n()
+
   if (!fecha) return 'N/D'
   const hoy = new Date(), nac = new Date(fecha)
   const anos = hoy.getFullYear() - nac.getFullYear()
@@ -19,6 +23,8 @@ function calcularEdad(fecha: string) {
 }
 
 function formatDate(d: string) {
+  const { t } = useI18n()
+
   if (!d) return '—'
   try { return new Date(d).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' }) }
   catch { return d }
@@ -43,8 +49,12 @@ const TYPE_CONFIG: Record<string, { bg: string; text: string; border: string; ic
   'default':             { bg: 'bg-slate-50',   text: 'text-slate-600',   border: 'border-slate-200',   icon: FileText },
 }
 function getTypeCfg(type: string) { return TYPE_CONFIG[type] || TYPE_CONFIG['default'] }
+const { t } = useI18n()
+
 
 function Field({ label, value }: { label: string; value: any }) {
+  const { t } = useI18n()
+
   if (value === null || value === undefined || value === '') return null
   const display = Array.isArray(value) ? value.join(', ') : String(value)
   if (!display || display === 'undefined' || display === 'null') return null
@@ -57,6 +67,8 @@ function Field({ label, value }: { label: string; value: any }) {
 }
 
 function Bloque({ title, icon: Icon, color, children }: any) {
+  const { t } = useI18n()
+
   const hasChildren = Array.isArray(children) ? children.some(Boolean) : !!children
   if (!hasChildren) return null
   return (
@@ -71,6 +83,8 @@ function Bloque({ title, icon: Icon, color, children }: any) {
 }
 
 function AIBlock({ analysis }: { analysis: any }) {
+  const { t } = useI18n()
+
   if (!analysis) return null
   const fields = [
     { k: 'analisis_clinico', l: 'Análisis Clínico' },
@@ -120,7 +134,11 @@ function AIBlock({ analysis }: { analysis: any }) {
 }
 
 function WordBtn({ report }: { report: any }) {
+  const { t } = useI18n()
+
   const dl = () => {
+    const { t } = useI18n()
+
     const blob = new Blob([Uint8Array.from(atob(report.file_data), c => c.charCodeAt(0))],
       { type: report.mime_type || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: report.nombre_archivo || 'reporte.docx' })
@@ -134,28 +152,30 @@ function WordBtn({ report }: { report: any }) {
 }
 
 function ABADetail({ r }: { r: any }) {
+  const { t } = useI18n()
+
   const d = r.datos || r
   return (
     <div className="space-y-3">
-      <Bloque title="Sesión" icon={Calendar} color="bg-blue-50">
+      <Bloque title={t('ui.session')} icon={Calendar} color="bg-blue-50">
         <Field label="Objetivo principal" value={d.objetivo_principal} />
         <Field label="Tipo de sesión" value={d.tipo_sesion} />
         <Field label="Duración" value={d.duracion_minutos ? `${d.duracion_minutos} min` : null} />
       </Bloque>
-      <Bloque title="Registro ABC" icon={Activity} color="bg-blue-50">
+      <Bloque title={t('ui.abc_record')} icon={Activity} color="bg-blue-50">
         <Field label="Antecedente (A)" value={d.antecedente} />
         <Field label="Conducta (B)" value={d.conducta} />
         <Field label="Consecuencia (C)" value={d.consecuencia} />
         <Field label="Función estimada" value={d.funcion_estimada} />
       </Bloque>
-      <Bloque title="Desempeño" icon={BarChart3} color="bg-blue-50">
+      <Bloque title={t('ui.performance')} icon={BarChart3} color="bg-blue-50">
         <Field label="Atención" value={d.nivel_atencion} />
         <Field label="Respuesta a instrucciones" value={d.respuesta_instrucciones} />
         <Field label="Tolerancia frustración" value={d.tolerancia_frustracion} />
         <Field label="Interacción social" value={d.interaccion_social} />
         <Field label="Nivel de logro" value={d.nivel_logro_objetivos} />
       </Bloque>
-      <Bloque title="Observaciones" icon={ClipboardList} color="bg-blue-50">
+      <Bloque title={t('ui.observations')} icon={ClipboardList} color="bg-blue-50">
         <div className="col-span-2"><Field label="Clínicas" value={d.observaciones_clinicas} /></div>
         <Field label="Tarea para casa" value={d.tarea_casa} />
         <div className="col-span-2"><Field label="Mensaje familia" value={d.mensaje_familia} /></div>
@@ -166,27 +186,29 @@ function ABADetail({ r }: { r: any }) {
 }
 
 function AnamnesisDetail({ r }: { r: any }) {
+  const { t } = useI18n()
+
   const d = r.datos || r
   return (
     <div className="space-y-3">
-      <Bloque title="Datos generales" icon={User} color="bg-violet-50">
+      <Bloque title={t('ui.general_data')} icon={User} color="bg-violet-50">
         <Field label="Informante" value={d.informante} />
         <Field label="Parentesco" value={d.parentesco} />
         <Field label="Vive con" value={d.vive_con} />
         <Field label="Escolaridad" value={d.escolaridad} />
       </Bloque>
-      <Bloque title="Motivo de consulta" icon={AlertCircle} color="bg-violet-50">
+      <Bloque title={t('ui.reason_consult')} icon={AlertCircle} color="bg-violet-50">
         <div className="col-span-2"><Field label="Motivo principal" value={d.motivo_principal} /></div>
         <Field label="Derivado por" value={d.derivado_por} />
         <div className="col-span-2"><Field label="Expectativas" value={d.expectativas} /></div>
       </Bloque>
-      <Bloque title="Historia prenatal/perinatal" icon={Heart} color="bg-violet-50">
+      <Bloque title={t('ui.prenatal_history')} icon={Heart} color="bg-violet-50">
         <Field label="Tipo de embarazo" value={d.tipo_embarazo} />
         <Field label="Tipo de parto" value={d.tipo_parto} />
         <Field label="Complicaciones" value={d.complicaciones_emb} />
         <Field label="Incubadora" value={d.incubadora} />
       </Bloque>
-      <Bloque title="Desarrollo del lenguaje" icon={MessageSquare} color="bg-violet-50">
+      <Bloque title={t('ui.language_dev')} icon={MessageSquare} color="bg-violet-50">
         <Field label="Primeras palabras" value={d.primeras_palabras} />
         <Field label="Frases" value={d.frases} />
         <Field label="Comprensión" value={d.comprension} />
@@ -294,6 +316,7 @@ function GenericDetail({ r }: { r: any }) {
 }
 
 function RecordCard({ item }: { item: any }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const cfg = getTypeCfg(item._type || 'default')
   const Icon = cfg.icon
@@ -350,7 +373,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
     try {
       const resp = await fetch('/api/patient-summary', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           childName: paciente.name,
           childAge: calcularEdad(paciente.birth_date),
@@ -592,6 +615,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function MisPacientes() {
   const toast = useToast()
+  const { t } = useI18n()
   const [ninos, setNinos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
@@ -724,8 +748,8 @@ export default function MisPacientes() {
     const tabs = [
       { id: 'resumen', label: 'Resumen IA', icon: Sparkles, count: null },
       { id: 'historial', label: 'Historial', icon: Activity, count: registros.length },
-      { id: 'evaluaciones', label: 'Evaluaciones', icon: Brain, count: evalItems.length },
-      { id: 'reportes', label: 'Reportes', icon: Download, count: wordReports.length },
+      { id: 'evaluaciones', label: t('nav.evaluaciones'), icon: Brain, count: evalItems.length },
+      { id: 'reportes', label: t('nav.reportes'), icon: Download, count: wordReports.length },
     ]
 
     return (
@@ -844,7 +868,7 @@ export default function MisPacientes() {
                         </div>
                         {item
                           ? <CheckCircle2 size={18} className="text-emerald-500" />
-                          : <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full font-bold">Pendiente</span>}
+                          : <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full font-bold">{t('common.pendiente')}</span>}
                       </div>
                       {item && (
                         <div className="px-5 py-4 space-y-3">
@@ -899,7 +923,7 @@ export default function MisPacientes() {
     <div className="space-y-5 pb-20 md:pb-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Mis Pacientes</h2>
+          <h2 className="text-2xl font-black text-slate-800">{t('nav.mispacientes')}</h2>
           <p className="text-sm text-slate-500 mt-1">Expedientes clínicos completos · Solo lectura</p>
         </div>
         <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full flex-shrink-0">
@@ -950,7 +974,7 @@ export default function MisPacientes() {
           {filtrados.length === 0 && (
             <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
               <Baby size={22} className="text-slate-300 mx-auto mb-2" />
-              <p className="text-slate-400 text-sm font-semibold">Sin resultados</p>
+              <p className="text-slate-400 text-sm font-semibold">{t('common.sinResultados')}</p>
             </div>
           )}
         </div>

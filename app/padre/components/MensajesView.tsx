@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
@@ -128,6 +130,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
 }
 
 export default function MensajesView({ profile }: { profile: any }) {
+  const { t } = useI18n()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -208,7 +211,7 @@ export default function MensajesView({ profile }: { profile: any }) {
           <div className="w-16 h-16 bg-violet-50 rounded-3xl flex items-center justify-center mx-auto mb-5">
             <MessageCircle size={28} className="text-violet-300" />
           </div>
-          <p className="font-black text-slate-500 text-lg mb-2">Aún no hay mensajes</p>
+          <p className="font-black text-slate-500 text-lg mb-2">{t('ui.no_messages')}</p>
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto">
             Cuando el terapeuta te envíe un mensaje o análisis sobre tu hijo/a, aparecerá aquí con toda la información detallada.
           </p>
@@ -304,7 +307,7 @@ export default function MensajesView({ profile }: { profile: any }) {
                     <div className="mt-5 flex items-start gap-3 text-sm text-slate-500 bg-white rounded-2xl p-4 border border-slate-100 leading-relaxed">
                       <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
                       <span>
-                        Este mensaje fue revisado y aprobado por tu terapeuta antes de enviártelo. Si tienes preguntas, puedes contactar al equipo de <strong>Jugando Aprendo</strong> directamente.
+                        {t('ui.message_reviewed')}
                       </span>
                     </div>
                   </div>

@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import React from 'react'
 
 export function StatCardPremium({ title, value, icon, color, trend, trendUp }: any) {

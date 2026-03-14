@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   ShoppingBag, Plus, Edit2, Trash2, Package, X, Save, Loader2,
@@ -73,6 +75,7 @@ function ProductModal({
 }: { product: Product | null; onClose: () => void; onSaved: () => void }) {
   const toast = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
+  const { t } = useI18n()
   const [form, setForm] = useState<any>(product ? {
     nombre: product.nombre, descripcion: product.descripcion || '',
     precio_soles: String(product.precio_soles), stock: String(product.stock),
@@ -140,11 +143,11 @@ function ProductModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl" style={{ background: "var(--card)" }} onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="sticky top-0 bg-white dark:bg-slate-900 px-7 py-5 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between z-10">
+        <div className="sticky top-0 px-7 py-5 border-b flex items-center justify-between z-10" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
           <div>
-            <h2 className="text-xl font-black text-slate-800 dark:text-slate-100">{product ? 'Editar producto' : 'Nuevo producto'}</h2>
+            <h2 className="text-xl font-black" style={{ color: "var(--text-primary)" }}>{product ? 'Editar producto' : 'Nuevo producto'}</h2>
             <p className="text-xs text-slate-400 mt-0.5">{product ? `ID: ${product.id.slice(0, 8)}...` : 'Completa la información del artículo'}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
@@ -155,7 +158,7 @@ function ProductModal({
         <div className="p-7 space-y-6">
           {/* Imagen */}
           <div>
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Imagen del producto</label>
+            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-3">{t('ui.product_image')}</label>
             <div
               className={`relative border-2 border-dashed rounded-2xl transition-all cursor-pointer overflow-hidden ${dragOver ? 'border-blue-400 bg-blue-50' : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50'}`}
               style={{ minHeight: 180 }}
@@ -179,7 +182,7 @@ function ProductModal({
                     <ImageIcon size={26} className="text-slate-400" />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-bold text-slate-600">Arrastra una imagen o haz click</p>
+                    <p className="text-sm font-bold text-slate-600">{t('ui.drag_image')}</p>
                     <p className="text-xs text-slate-400 mt-1">JPG, PNG, WEBP — máximo 5MB</p>
                   </div>
                 </div>
@@ -193,18 +196,18 @@ function ProductModal({
             <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Nombre *</label>
             <input
               value={form.nombre} onChange={e => setForm((f: any) => ({ ...f, nombre: e.target.value }))}
-              placeholder="Ej: Kit de fichas ABA"
-              className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl font-semibold text-slate-800 outline-none focus:border-blue-400 focus:bg-white transition-all"
+              {...{placeholder: t('ui.product_name')}}
+              className="w-full px-4 py-3 rounded-xl font-semibold outline-none focus:border-blue-400 transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }}
             />
           </div>
 
           {/* Descripción */}
           <div>
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Descripción</label>
+            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('common.descripcion')}</label>
             <textarea
               value={form.descripcion} onChange={e => setForm((f: any) => ({ ...f, descripcion: e.target.value }))}
-              rows={3} placeholder="Describe el producto, qué incluye, para qué sirve..."
-              className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl font-medium text-slate-700 outline-none focus:border-blue-400 focus:bg-white transition-all resize-none"
+              rows={3} placeholder={t('ui.describe_product')}
+              className="w-full px-4 py-3 rounded-xl font-semibold outline-none focus:border-blue-400 transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }}
             />
           </div>
 
@@ -245,7 +248,7 @@ function ProductModal({
                 type="number" min="0" value={form.tipo === 'digital' ? '∞' : form.stock}
                 onChange={e => setForm((f: any) => ({ ...f, stock: e.target.value }))}
                 disabled={form.tipo === 'digital'}
-                className="w-full px-4 py-3 bg-slate-50 border-2 border-transparent rounded-xl font-black text-slate-800 outline-none focus:border-blue-400 focus:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 rounded-xl font-semibold outline-none focus:border-blue-400 transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }}
                 placeholder="0"
               />
             </div>
@@ -300,6 +303,7 @@ function ProductModal({
 // ── Vista principal ───────────────────────────────────────────────────────────
 export default function StoreManagementView() {
   const toast = useToast()
+  const { t } = useI18n()
   const [tab, setTab] = useState<'productos' | 'pedidos'>('productos')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
@@ -443,7 +447,7 @@ export default function StoreManagementView() {
             <div className="relative flex-1 min-w-48">
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
               <input value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Buscar producto..."
+                placeholder={t('ui.search_product')}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-blue-400 focus:bg-white transition-all"
               />
             </div>
@@ -459,7 +463,7 @@ export default function StoreManagementView() {
           {filteredProducts.length === 0 ? (
             <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl py-20 text-center">
               <Package size={40} className="text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-400 font-bold">No hay productos</p>
+              <p className="text-slate-400 font-bold">{t('ui.no_products')}</p>
               <button onClick={() => { setEditProduct(null); setShowModal(true) }}
                 className="mt-4 text-sm font-bold text-blue-600 hover:underline">
                 + Crear el primero
@@ -506,7 +510,7 @@ export default function StoreManagementView() {
                     <div className="flex gap-2">
                       <button onClick={() => toggleActivo(p)}
                         className={`flex-1 py-2.5 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1.5 ${p.activo ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100'}`}>
-                        {p.activo ? <><ToggleRight size={14} /> Activo</> : <><ToggleLeft size={14} /> Inactivo</>}
+                        {p.activo ? <><ToggleRight size={14} /> {t('common.activo')}</> : <><ToggleLeft size={14} /> {t('common.inactivo')}</>}
                       </button>
                       <button onClick={() => { setEditProduct(p); setShowModal(true) }}
                         className="px-3 py-2.5 bg-blue-50 text-blue-600 border border-blue-200 rounded-xl hover:bg-blue-100 transition-all">
@@ -586,7 +590,7 @@ export default function StoreManagementView() {
                       {/* Total */}
                       <div className="text-right shrink-0">
                         <p className="text-xl font-black text-blue-600">S/ {Number(order.total_soles).toFixed(2)}</p>
-                        <p className="text-xs text-slate-400">Total del pedido</p>
+                        <p className="text-xs text-slate-400">{t('ui.order_total')}</p>
                       </div>
 
                       {/* Expand */}
@@ -632,7 +636,7 @@ export default function StoreManagementView() {
                             <textarea
                               defaultValue={order.admin_notas || ''}
                               rows={2}
-                              placeholder="Ej: Pagó en efectivo, retirar el jueves..."
+                              placeholder={t('ui.paid_in_cash')}
                               onBlur={e => updateAdminNota(order.id, e.target.value)}
                               className="w-full px-4 py-3 bg-white dark:bg-slate-700 dark:text-slate-100 dark:border-slate-600 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-blue-400 transition-all resize-none"
                             />

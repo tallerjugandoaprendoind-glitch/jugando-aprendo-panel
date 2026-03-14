@@ -1,4 +1,6 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect, useCallback } from 'react'
 import GraficoProgramaABA from '@/components/graficos/GraficoProgramaABA'
 import {
@@ -47,6 +49,7 @@ const FASE_COLORS: Record<string, string> = {
 
 export default function ProgramasABAView({ childId, childName }: { childId: string; childName: string }) {
   const toast = useToast()
+  const { t } = useI18n()
   const [programas, setProgramas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showCrear, setShowCrear] = useState(false)
@@ -257,8 +260,12 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
     try {
       const res = await fetch(`/api/programas-aba?id=${programa.id}`)
       const json = await res.json()
-      setDetalle(json.data)
-    } catch { toast.error('Error cargando detalle') }
+      // Usar el programa actual como fallback si la API no retorna detalle
+      setDetalle(json.data || programa)
+    } catch {
+      // En caso de error, usar el programa ya cargado como detalle
+      setDetalle(programa)
+    }
     finally { setLoadingDetalle(false) }
   }
 
@@ -403,10 +410,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       type Band = { set: string; start: number; end: number; label: string }
                       const bands: Band[] = []
                       let bandStart = 0
-                      let currentSet = chartData[0]?.set || 'SET 1'
+                      let currentSet = chartData[0]?.set || 'Nivel 1'
                       chartData.forEach((d: any, i: number) => {
                         if (d.set !== currentSet || i === chartData.length - 1) {
-                          bands.push({ set: currentSet, start: bandStart, end: i === chartData.length - 1 ? i : i - 1, label: currentSet || `SET ${bands.length + 1}` })
+                          bands.push({ set: currentSet, start: bandStart, end: i === chartData.length - 1 ? i : i - 1, label: currentSet || `Nivel ${bands.length + 1}` })
                           currentSet = d.set
                           bandStart = i
                         }
@@ -452,7 +459,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     {tipoGrafico === 'barras' && chartData.length > 0 && (() => {
                       type Band = { set: string; start: number; end: number }
                       const bands: Band[] = []
-                      let bStart = 0; let cSet = chartData[0]?.set || 'SET 1'
+                      let bStart = 0; let cSet = chartData[0]?.set || 'Nivel 1'
                       chartData.forEach((d: any, i: number) => {
                         if (d.set !== cSet || i === chartData.length - 1) {
                           bands.push({ set: cSet, start: bStart, end: i === chartData.length - 1 ? i : i - 1 })
@@ -617,7 +624,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📌 Procedimiento</p>
                   <div className="bg-white dark:bg-slate-700 rounded-xl p-4 border border-slate-100 dark:border-slate-600 space-y-2 text-xs text-slate-600 dark:text-slate-300">
-                    {detalle.sd_estimulo && <p><span className="font-bold">Sd:</span> {detalle.sd_estimulo}</p>}
+                    {detalle.sd_estimulo && <p><span className="font-bold">📍 Sd:</span> {detalle.sd_estimulo}</p>}
+                    {detalle.unidad_positiva && <p><span className="font-bold">✅ Unidad +:</span> {detalle.unidad_positiva}</p>}
+                    {detalle.unidad_negativa && <p><span className="font-bold">❎ Unidad -:</span> {detalle.unidad_negativa}</p>}
+                    {(detalle.reforzadores || detalle.ayudas) && <p><span className="font-bold">🤝🏼 Ayudas:</span> {detalle.reforzadores || detalle.ayudas}</p>}
                     {detalle.correccion_error && <p><span className="font-bold">Corrección:</span> {detalle.correccion_error}</p>}
                     {detalle.reforzadores && <p><span className="font-bold">Reforzadores:</span> {detalle.reforzadores}</p>}
                     {detalle.materiales && <p><span className="font-bold">Materiales:</span> {detalle.materiales}</p>}
@@ -650,15 +660,15 @@ function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
 
 // ── Modal: Registrar Sesión ──────────────────────────────────────────────────
 function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
+  const { t } = useI18n()
   const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     fase: programa.fase_actual || 'intervencion',
     oportunidades_totales: '',
     respuestas_correctas: '',
-    frecuencia_valor: '',
-    duracion_segundos: '',
-    nivel_ayuda: 'independiente',
+    nivel_ayuda: '',
+    nivel_ayuda_custom: '',
     notas: '',
     fecha: new Date().toISOString().split('T')[0],
   })
@@ -668,15 +678,15 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
     : null
 
   const handleSave = async () => {
-    if (!form.oportunidades_totales && !form.frecuencia_valor && !form.duracion_segundos) {
-      toast.error('Ingresa al menos un tipo de medición')
+    if (!form.oportunidades_totales) {
+      toast.error('Ingresa oportunidades totales')
       return
     }
     setSaving(true)
     try {
       const res = await fetch('/api/programas-aba', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           action: 'registrar_sesion',
           sesion: {
@@ -687,9 +697,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
             oportunidades_totales: Number(form.oportunidades_totales) || 0,
             respuestas_correctas: Number(form.respuestas_correctas) || 0,
             respuestas_incorrectas: Math.max(0, Number(form.oportunidades_totales) - Number(form.respuestas_correctas)),
-            frecuencia_valor: form.frecuencia_valor ? Number(form.frecuencia_valor) : null,
-            duracion_segundos: form.duracion_segundos ? Number(form.duracion_segundos) : null,
-            nivel_ayuda: form.nivel_ayuda,
+            nivel_ayuda: form.nivel_ayuda_custom || form.nivel_ayuda,
             notas: form.notas,
           },
         }),
@@ -709,7 +717,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
         <div className="p-6">
           <div className="flex justify-between items-center mb-5">
             <div>
-              <h3 className="font-black text-lg text-slate-800">Registrar Sesión</h3>
+              <h3 className="font-black text-lg text-slate-800">{t('programas.registrarSesion')}</h3>
               <p className="text-sm text-slate-400 mt-0.5">{programa.titulo}</p>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
@@ -718,19 +726,19 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">Fecha</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('common.fecha')}</label>
                 <input type="date" value={form.fecha}
                   onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
                   className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
               </div>
               <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">Fase</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('ui.phase')}</label>
                 <select value={form.fase} onChange={e => setForm(f => ({ ...f, fase: e.target.value }))}
                   className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400">
-                  <option value="linea_base">Línea Base</option>
-                  <option value="intervencion">Intervención</option>
-                  <option value="mantenimiento">Mantenimiento</option>
-                  <option value="seguimiento">Seguimiento</option>
+                  <option value="linea_base">{t('ui.baseline')}</option>
+                  <option value="intervencion">{t('ui.intervention')}</option>
+                  <option value="mantenimiento">{t('programas.mantenimiento')}</option>
+                  <option value="seguimiento">{t('ui.follow_up')}</option>
                 </select>
               </div>
             </div>
@@ -740,13 +748,13 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
               <p className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-3">📊 Porcentaje de éxito</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-500 font-bold block mb-1">Oportunidades totales</label>
+                  <label className="text-xs text-slate-500 font-bold block mb-1">{t('ui.total_opportunities')}</label>
                   <input type="number" min="0" value={form.oportunidades_totales}
                     onChange={e => setForm(f => ({ ...f, oportunidades_totales: e.target.value }))}
                     placeholder="10" className="w-full p-3 bg-white border-2 border-indigo-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 text-center text-lg" />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500 font-bold block mb-1">Respuestas correctas</label>
+                  <label className="text-xs text-slate-500 font-bold block mb-1">{t('ui.correct_responses')}</label>
                   <input type="number" min="0" value={form.respuestas_correctas}
                     onChange={e => setForm(f => ({ ...f, respuestas_correctas: e.target.value }))}
                     placeholder="8" className="w-full p-3 bg-white border-2 border-indigo-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 text-center text-lg" />
@@ -763,42 +771,36 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
               )}
             </div>
 
-            {/* Frecuencia y duración */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">⚡ Frecuencia</label>
-                <input type="number" min="0" value={form.frecuencia_valor}
-                  onChange={e => setForm(f => ({ ...f, frecuencia_valor: e.target.value }))}
-                  placeholder="Nº veces" className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
-              </div>
-              <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">⏱ Duración (seg)</label>
-                <input type="number" min="0" value={form.duracion_segundos}
-                  onChange={e => setForm(f => ({ ...f, duracion_segundos: e.target.value }))}
-                  placeholder="Segundos" className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
-              </div>
-            </div>
 
-            {/* Nivel de ayuda */}
+
+            {/* Nivel de ayuda — texto libre con sugerencias */}
             <div>
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">🤝 Nivel de ayuda</label>
-              <div className="flex flex-wrap gap-2">
-                {['independiente', 'gesto', 'verbal', 'modelado', 'fisico_parcial', 'fisico_total'].map(nivel => (
-                  <button key={nivel} onClick={() => setForm(f => ({ ...f, nivel_ayuda: nivel }))}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                      form.nivel_ayuda === nivel ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200'
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">🤝🏼 Nivel de ayuda</label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {['Independiente', 'Gesto', 'Verbal', 'Modelado', 'Físico parcial', 'Físico total'].map(nivel => (
+                  <button key={nivel}
+                    onClick={() => setForm(f => ({ ...f, nivel_ayuda: nivel, nivel_ayuda_custom: nivel }))}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                      form.nivel_ayuda_custom === nivel
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-indigo-300'
                     }`}>
-                    {nivel.replace('_', ' ')}
+                    {nivel}
                   </button>
                 ))}
               </div>
+              <input
+                value={form.nivel_ayuda_custom}
+                onChange={e => setForm(f => ({ ...f, nivel_ayuda: e.target.value, nivel_ayuda_custom: e.target.value }))}
+                {...{placeholder: t('ui.observations_session')}}
+                className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
             </div>
 
             {/* Notas */}
             <div>
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">📝 Notas</label>
               <textarea value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
-                rows={2} placeholder="Observaciones de la sesión..."
+                rows={2} {...{placeholder: t('ui.session_observations')}}
                 className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
             </div>
           </div>
@@ -827,6 +829,8 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
   const [form, setForm] = useState({
     titulo: '', area: 'comunicacion', objetivo_lp: '',
     sd_estimulo: '', correccion_error: '', reforzadores: '', materiales: '',
+    unidad_positiva: '', unidad_negativa: '', generalizacion: 'Promover con la familia que realicen este ejercicio en casa.',
+    total_unidades: '10u.', notas_programa: '', drive_url: '',
     tipo_medicion: 'porcentaje', criterio_dominio_pct: 90, criterio_sesiones_consecutivas: 2,
   })
   const [objetivos, setObjetivos] = useState([{ descripcion: '' }])
@@ -839,10 +843,12 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
     try {
       const res = await fetch('/api/programas-aba', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           action: 'crear_programa',
-          programa: { ...form, child_id: childId },
+          programa: { ...form, child_id: childId,
+            ayudas: form.reforzadores, // backward compat
+          },
           objetivos: objetivos.filter(o => o.descripcion.trim()),
         }),
       })
@@ -895,7 +901,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
               <div>
                 <label className="text-xs font-bold text-slate-500 block mb-1.5">Objetivo a largo plazo *</label>
                 <textarea value={form.objetivo_lp} onChange={e => set('objetivo_lp', e.target.value)}
-                  rows={3} placeholder="Con un criterio de éxito de 90% en 2 sesiones consecutivas, el estudiante..."
+                  rows={3} placeholder={t('ui.mastery_criterion_placeholder')}
                   className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
               </div>
             </div>
@@ -926,6 +932,15 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 className="w-full py-2.5 border-2 border-dashed border-slate-200 rounded-xl text-sm font-bold text-slate-400 hover:border-indigo-300 hover:text-indigo-500">
                 + Agregar set
               </button>
+              {/* Enlace Google Drive / Sheets opcional */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 block mb-1">
+                  📄 Google Sheet / Drive <span className="text-slate-300 font-normal">(opcional)</span>
+                </label>
+                <input value={(form as any).drive_url ?? ''} onChange={e => set('drive_url', e.target.value)}
+                  placeholder="https://docs.google.com/spreadsheets/..."
+                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-400" />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-500 block mb-1.5">Criterio de dominio %</label>
@@ -944,21 +959,32 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
           )}
 
           {step === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 3 · Procedimiento</p>
               {[
-                { key: 'sd_estimulo', label: '📌 Sd / Estímulo discriminativo', placeholder: 'Instrucción verbal o gesto que inicia la conducta' },
-                { key: 'correccion_error', label: '❌ Corrección del error', placeholder: 'Cómo se corrige si la respuesta es incorrecta' },
-                { key: 'reforzadores', label: '✅ Reforzadores', placeholder: 'Qué reforzadores se usarán (fichas, elogios, tangibles...)' },
-                { key: 'materiales', label: '📚 Materiales', placeholder: 'Materiales necesarios para la sesión' },
+                { key: 'materiales',       label: '📚 Materiales',                    placeholder: 'Materiales necesarios para la sesión' },
+                { key: 'sd_estimulo',      label: '📍 Sd / Estímulo discriminativo',  placeholder: 'Instrucción verbal o gesto que inicia la conducta' },
+                { key: 'unidad_positiva',  label: '✅ Unidad positiva',               placeholder: 'Respuesta correcta esperada' },
+                { key: 'unidad_negativa',  label: '❎ Unidad negativa',              placeholder: 'Respuesta incorrecta / error' },
+                { key: 'reforzadores',     label: '🤝🏼 Ayudas',                       placeholder: 'Las indicadas en el set. Ej: Gesto + verbal' },
+                { key: 'correccion_error', label: '📍 Corrección del error',          placeholder: 'Cómo se corrige si la respuesta es incorrecta' },
+                { key: 'generalizacion',   label: '➡️ Generalización',               placeholder: 'Promover con la familia que realicen este ejercicio en casa.' },
+                { key: 'notas_programa',   label: '🙈 Notas',                         placeholder: 'Observaciones generales del programa...' },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
-                  <label className="text-xs font-bold text-slate-500 block mb-1.5">{label}</label>
-                  <textarea value={(form as any)[key]} onChange={e => set(key, e.target.value)}
-                    rows={2} placeholder={placeholder}
+                  <label className="text-xs font-bold text-slate-500 block mb-1">{label}</label>
+                  <textarea value={(form as any)[key] ?? ''} onChange={e => set(key, e.target.value)}
+                    rows={key === 'generalizacion' || key === 'notas_programa' ? 2 : 1} placeholder={placeholder}
                     className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
                 </div>
               ))}
+              {/* Total unidades — fijo en 10 pero editable */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 block mb-1">📍 Total</label>
+                <input value={(form as any).total_unidades ?? '10u.'} onChange={e => set('total_unidades', e.target.value)}
+                  placeholder="10u."
+                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
+              </div>
             </div>
           )}
 

@@ -1,4 +1,6 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -147,6 +149,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
 }
 
 export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPacientes: () => void }) {
+  const { t } = useI18n()
   const [pacientes, setPacientes] = useState<any[]>([])
   const [programasPorPaciente, setProgramasPorPaciente] = useState<Record<string, any[]>>({})
   const [loading, setLoading] = useState(true)
@@ -208,7 +211,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
       {/* Resumen global */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Pacientes', value: pacientes.length, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+          { label: t('nav.pacientes'), value: pacientes.length, icon: Users, color: 'text-indigo-600', bg: 'bg-indigo-50' },
           { label: 'Programas', value: totalProgramas, icon: Activity, color: 'text-violet-600', bg: 'bg-violet-50' },
           { label: 'Sesiones', value: totalSesiones, icon: BarChart3, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'Dominados', value: totalDominados, icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
@@ -232,7 +235,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
           <input
             value={busqueda}
             onChange={e => setBusqueda(e.target.value)}
-            placeholder="Buscar paciente..."
+            {...{placeholder: t('ui.search_patient')}}
             className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-300"
           />
         </div>
@@ -307,7 +310,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {!hasDatos && (
-                      <span className="text-[10px] text-slate-300 font-medium hidden sm:block">Sin datos</span>
+                      <span className="text-[10px] text-slate-300 font-medium hidden sm:block">{t('common.sinDatos')}</span>
                     )}
                     {isExpandido ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
                   </div>

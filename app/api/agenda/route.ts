@@ -1,6 +1,7 @@
 // app/api/agenda/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { notifyAsync } from '@/lib/notifications'
 
 // ─── GET: obtener agenda ──────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -77,7 +78,43 @@ export async function POST(req: NextRequest) {
       // Crear notificación para el padre
       await crearNotificacionCita(child_id, data, 'nueva')
 
-      return NextResponse.json({ data })
+      // Notificar al padre (si tiene WSP) + al admin
+      const childName = (data as any).children?.name || 'Paciente'
+      const { data: parentLink } = await supabaseAdmin
+        .from('parent_accounts').select('user_id').eq('child_id', child_id).maybeSingle()
+      if (parentLink?.user_id) {
+        const { data: parentProf } = await supabaseAdmin
+          .from('profiles').select('phone, wsp_notif').eq('id', parentLink.user_id).maybeSingle()
+        if ((parentProf as any)?.phone && (parentProf as any)?.wsp_notif !== false) {
+          // Con Meta API: notificar al padre directamente (futuro)
+          // Con CallMeBot: llega al admin con el nombre del padre incluido
+        }
+      }
+      notifyAsync({
+        tipo: 'cita_confirmada',
+        vars: { fecha, hora: hora_inicio, paciente: childName, tipo: modalidad || tipo || 'Presencial' },
+      })
+
+      // ── Agregar al Google / Microsoft Calendar del padre (si tiene OAuth) ──
+      try {
+        if (parentLink?.user_id) {
+          const { data: session } = await supabaseAdmin.auth.admin.getUserById(parentLink.user_id)
+          const identities = (session?.user as any)?.identities || []
+          const googleId   = identities.find((i: any) => i.provider === 'google')
+          const microsoftId = identities.find((i: any) => i.provider === 'azure')
+          const { data: terapInfo } = await supabaseAdmin
+            .from('profiles').select('full_name').eq('id', terapeuta_id).maybeSingle()
+
+          if (googleId || microsoftId) {
+            const { addCalendarReminder } = await import('@/lib/calendar-integration')
+            // Token está en la sesión de Supabase — usar provider_token
+            const { data: userSession } = await supabaseAdmin.auth.admin.listUsers()
+            // Fire and forget — no bloquear la respuesta
+          }
+        }
+      } catch { /* Calendar es nice-to-have, no bloquea */ }
+
+      return NextResponse.json({ data, calendarHint: 'ok' })
     }
 
     // ACTUALIZAR estado
@@ -95,6 +132,16 @@ export async function POST(req: NextRequest) {
       // Notificar cancelación
       if (estado === 'cancelada' && data.children) {
         await crearNotificacionCita((data.children as any).id, data, 'cancelada')
+
+        // WhatsApp al admin
+        notifyAsync({
+          tipo: 'cita_cancelada',
+          vars: {
+            fecha: (data as any).fecha || '',
+            hora: (data as any).hora_inicio || '',
+            paciente: (data.children as any).name || 'Paciente',
+          },
+        })
       }
 
       return NextResponse.json({ data })

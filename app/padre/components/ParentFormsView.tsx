@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect } from 'react'
 import {
   FileText, CheckCircle2, Clock, ChevronRight, ChevronLeft, X, Loader2,
@@ -10,6 +12,7 @@ import { supabase } from '@/lib/supabase'
 
 // ─── DYNAMIC FORM RENDERER (simplified for parents) ─────────────────────────
 function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: (r: any) => void; onClose: () => void }) {
+  const { t } = useI18n()
   const [responses, setResponses] = useState<Record<string, any>>({})
   const [currentStep, setCurrentStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -109,6 +112,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
 
   const answer = (qId: string, val: any) => setResponses(p => ({ ...p, [qId]: val }))
 
+
   const handleSubmit = async () => {
     setSubmitting(true)
     await onSubmit(responses)
@@ -119,10 +123,10 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-3xl p-8 text-center max-w-sm w-full shadow-2xl">
         <div className="text-5xl mb-4">⚠️</div>
-        <h3 className="font-black text-slate-800 text-lg mb-2">Formulario no disponible</h3>
+        <h3 className="font-black text-slate-800 text-lg mb-2">{t('ui.form_not_available')}</h3>
         <p className="text-slate-500 text-sm mb-2">El tipo <strong className="text-red-500">"{form.form_type}"</strong> no se encontró en el sistema.</p>
         <p className="text-slate-400 text-xs mb-6">Pide al administrador que vuelva a asignar el formulario.</p>
-        <button onClick={onClose} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">Cerrar</button>
+        <button onClick={onClose} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">{t('common.cerrar')}</button>
       </div>
     </div>
   )
@@ -249,6 +253,8 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
 
 // ─── RESOURCE CARD ────────────────────────────────────────────────────────────
 function ResourceCard({ resource }: { resource: any }) {
+  const { t } = useI18n()
+
   const [showPreview, setShowPreview] = useState(false)
 
   const icons: Record<string, any> = {
@@ -272,7 +278,7 @@ function ResourceCard({ resource }: { resource: any }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${typeInfo.bg} ${typeInfo.color}`}>{typeInfo.label}</span>
-              {resource.is_global && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 uppercase tracking-wider">Para todos</span>}
+              {resource.is_global && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 uppercase tracking-wider">{t('ui.for_everyone')}</span>}
             </div>
             <h4 className="font-bold text-slate-800 text-sm leading-tight">{resource.title}</h4>
             {resource.description && <p className="text-xs text-slate-400 font-medium mt-0.5 line-clamp-2">{resource.description}</p>}
@@ -310,6 +316,8 @@ function ResourceCard({ resource }: { resource: any }) {
 
 // ─── MAIN PARENT FORMS + RESOURCES VIEW ─────────────────────────────────────
 function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { profile: any; selectedChild: any; onFormsLoaded?: (count: number) => void }) {
+  const { t } = useI18n()
+
   const [activeTab, setActiveTab] = useState<'forms' | 'resources'>('forms')
   const [pendingForms, setPendingForms] = useState<any[]>([])
   const [completedForms, setCompletedForms] = useState<any[]>([])
@@ -363,7 +371,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
       // 2. Mark as completed in parent_forms
       await fetch('/api/admin/forms', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           id: formId,
           status: 'completed',
@@ -376,7 +384,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
       if (form) {
         fetch('/api/analyze-parent-form-submission', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
           body: JSON.stringify({
             formId,
             formType: form.form_type,
@@ -519,7 +527,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
               <div className="p-6 bg-indigo-50 rounded-3xl mb-4">
                 <FileText size={40} className="text-indigo-300"/>
               </div>
-              <h3 className="font-bold text-slate-600 text-lg mb-1">Sin formularios por ahora</h3>
+              <h3 className="font-bold text-slate-600 text-lg mb-1">{t('ui.no_forms_yet')}</h3>
               <p className="text-slate-400 text-sm max-w-xs">El equipo terapéutico enviará formularios cuando sea necesario</p>
             </div>
           )}
@@ -532,7 +540,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
               <div className="p-6 bg-violet-50 rounded-3xl mb-4">
                 <BookOpen size={40} className="text-violet-300"/>
               </div>
-              <h3 className="font-bold text-slate-600 text-lg mb-1">Sin materiales por ahora</h3>
+              <h3 className="font-bold text-slate-600 text-lg mb-1">{t('ui.no_materials')}</h3>
               <p className="text-slate-400 text-sm max-w-xs">Aquí aparecerán videos, guías y recursos que comparta el equipo terapéutico</p>
             </div>
           ) : (

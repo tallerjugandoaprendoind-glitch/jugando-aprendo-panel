@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { getLangInstruction, getDocLabels } from '@/lib/lang'
 import { buildAIContext } from '@/lib/ai-context-builder'
 
 // ── Helper: parseo robusto de nivel_logro → número 0-100 ─────────────────────
@@ -269,7 +270,7 @@ async function generarContenidoReporte(
   childAge: number | undefined,
   reportData: any,
   contextoClinico: string
-): Promise<string> {
+, userLocale = 'es'): Promise<string> {
   const config = REPORTE_CONFIG[tipo] || REPORTE_CONFIG.aba
   const datosTexto = construirDatosTexto(reportData, tipo)
   const edadTexto = childAge ? `${childAge} años` : 'edad no especificada'
@@ -289,7 +290,8 @@ REGLAS DE FORMATO DEL INFORME:
 - Formato de las secciones: usar el formato "SECCIÓN: [número]. [NOMBRE EN MAYÚSCULAS]"
 
 SECCIONES A DESARROLLAR:
-${config.secciones.map((s, i) => `${i + 1}. ${s}`).join('\n')}`
+${config.secciones.map((s, i) => `${i + 1}. ${s}`).join('\n')}
+`
 
   const userPrompt = `Genera el informe completo para:
 
@@ -308,7 +310,7 @@ Redacta el informe completo con todas las secciones. Sé específico con los dat
 Si algún dato no está disponible, indica "Pendiente de evaluación" o "A determinar en sesión".
 El informe debe poder entregarse directamente a padres, médicos o colegios.`
 
-  const contenido = await callGroqSimple(systemPrompt, userPrompt, {
+  const contenido = await callGroqSimple(systemPrompt + getLangInstruction(userLocale),userPrompt, {
     model: GROQ_MODELS.SMART,
     temperature: 0.25, // Baja temperatura para mayor precisión clínica
     maxTokens: 3000,
@@ -322,10 +324,12 @@ async function generarDocx(
   tipo: string,
   childName: string,
   childAge: number | undefined,
-  contenidoReporte: string
+  contenidoReporte: string,
+  locale = 'es'
 ): Promise<string> {
   const config = REPORTE_CONFIG[tipo] || REPORTE_CONFIG.aba
   const fechaHoy = formatearFechaHoy()
+  const labels = getDocLabels(locale as 'es' | 'en')
 
   // Importar docx dinámicamente
   const docx = await import('docx')
@@ -413,7 +417,7 @@ async function generarDocx(
             new TableCell({
               shading: { type: ShadingType.SOLID, color: COLOR_FONDO },
               children: [new Paragraph({
-                children: [new TextRun({ text: 'PACIENTE', bold: true, size: 18, color: COLOR_PRIMARIO, font: 'Calibri' })],
+                children: [new TextRun({ text: labels.patient, bold: true, size: 18, color: COLOR_PRIMARIO, font: 'Calibri' })],
               })],
               width: { size: 30, type: WidthType.PERCENTAGE },
             }),
@@ -429,12 +433,12 @@ async function generarDocx(
             new TableCell({
               shading: { type: ShadingType.SOLID, color: COLOR_FONDO },
               children: [new Paragraph({
-                children: [new TextRun({ text: 'EDAD', bold: true, size: 18, color: COLOR_PRIMARIO, font: 'Calibri' })],
+                children: [new TextRun({ text: labels.age, bold: true, size: 18, color: COLOR_PRIMARIO, font: 'Calibri' })],
               })],
             }),
             new TableCell({
               children: [new Paragraph({
-                children: [new TextRun({ text: childAge ? `${childAge} años` : 'No especificada', size: 18, font: 'Calibri' })],
+                children: [new TextRun({ text: childAge ? `${childAge} ${labels.ageUnit}` : labels.notSpecified, size: 18, font: 'Calibri' })],
               })],
             }),
           ],
@@ -444,7 +448,7 @@ async function generarDocx(
             new TableCell({
               shading: { type: ShadingType.SOLID, color: COLOR_FONDO },
               children: [new Paragraph({
-                children: [new TextRun({ text: 'FECHA DEL INFORME', bold: true, size: 18, color: COLOR_PRIMARIO, font: 'Calibri' })],
+                children: [new TextRun({ text: labels.reportDate, bold: true, size: 18, color: COLOR_PRIMARIO, font: 'Calibri' })],
               })],
             }),
             new TableCell({
@@ -459,7 +463,7 @@ async function generarDocx(
             new TableCell({
               shading: { type: ShadingType.SOLID, color: COLOR_FONDO },
               children: [new Paragraph({
-                children: [new TextRun({ text: 'TIPO DE EVALUACIÓN', bold: true, size: 18, color: COLOR_PRIMARIO, font: 'Calibri' })],
+                children: [new TextRun({ text: labels.evaluationType, bold: true, size: 18, color: COLOR_PRIMARIO, font: 'Calibri' })],
               })],
             }),
             new TableCell({
@@ -586,17 +590,9 @@ async function generarDocx(
     new Paragraph({
       children: [
         new TextRun({
-          text: 'Este informe fue generado con el apoyo de inteligencia artificial clínica (ARIA - Vanty). ',
+          text: labels.footer,
           size: 16,
           italics: true,
-          color: COLOR_GRIS,
-          font: 'Calibri',
-        }),
-        new TextRun({
-          text: 'Debe ser revisado y firmado por el profesional responsable antes de su entrega.',
-          size: 16,
-          italics: true,
-          bold: true,
           color: COLOR_GRIS,
           font: 'Calibri',
         }),
@@ -677,9 +673,9 @@ async function generarDocx(
               children: [
                 new TextRun({
                   children: [
-                    'Generado por Vanty — Sistema de Gestión Clínica Neuropsicológica  |  Página ',
+                    labels.generated,
                     PageNumber.CURRENT,
-                    ' de ',
+                    labels.of,
                     PageNumber.TOTAL_PAGES,
                   ],
                   size: 16,
@@ -704,9 +700,11 @@ async function generarDocx(
 // ============================================================================
 // HANDLER PRINCIPAL
 // ============================================================================
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const userLocale = body.locale || request.headers.get('x-locale') || 'es'
     const {
       reportType,
       childName,
@@ -808,6 +806,8 @@ export async function POST(request: NextRequest) {
       childAge,
       datosEnriquecidos,
       contextoClinico
+    ,
+      userLocale
     )
 
     if (!contenido || contenido.length < 100) {
@@ -818,7 +818,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Convertir a DOCX profesional
-    const fileData = await generarDocx(reportType, childName, childAge, contenido)
+    const fileData = await generarDocx(reportType, childName, childAge, contenido, userLocale)
     const fileName = getTituloArchivo(reportType, childName)
 
     return NextResponse.json({

@@ -152,6 +152,13 @@ function detectarPatrones(sesiones: any[]): PatronDetectado[] {
   return patrones.sort((a, b) => b.confianza - a.confianza)
 }
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale?: string | null): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
+  return ''
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { childId, childName, semanas = 16 } = await req.json()

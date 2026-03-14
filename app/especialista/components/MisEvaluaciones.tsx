@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useCallback } from 'react'
 import {
   FileText, Plus, Clock, CheckCircle2, XCircle, ChevronDown,
@@ -50,6 +52,7 @@ const TEMPLATES: Record<string, any> = {
 
 export default function MisEvaluaciones({ userId }: { userId: string }) {
   const toast = useToast()
+  const { t } = useI18n()
   const [evaluaciones, setEvaluaciones] = useState<any[]>([])
   const [ninos, setNinos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -101,8 +104,8 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Mis Evaluaciones</h2>
-          <p className="text-sm text-slate-500 mt-1">Requieren aprobación antes de llegar a los padres</p>
+          <h2 className="text-2xl font-black text-slate-800">{t('nav.misevaluaciones')}</h2>
+          <p className="text-sm text-slate-500 mt-1">{t('ui.require_approval')}</p>
         </div>
         <button onClick={() => setMostrarForm(true)}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-5 py-3 rounded-xl shadow-sm shadow-blue-200 transition-all flex-shrink-0">
@@ -142,7 +145,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
           <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <FileText size={24} className="text-slate-400" />
           </div>
-          <p className="text-slate-400 text-sm font-semibold">Sin evaluaciones</p>
+          <p className="text-slate-400 text-sm font-semibold">{t('ui.no_evals')}</p>
           <button onClick={() => setMostrarForm(true)} className="mt-3 text-xs font-bold text-blue-600 hover:underline">
             Crear nueva →
           </button>
@@ -207,9 +210,9 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                 </div>
                 {abierto && (
                   <div className="border-t border-slate-100 bg-slate-50/50 px-5 py-5 space-y-4">
-                    <ExpandedSection title="Contenido" content={ev.contenido} />
-                    {ev.observaciones && <ExpandedSection title="Observaciones" content={ev.observaciones} />}
-                    {ev.recomendaciones && <ExpandedSection title="Recomendaciones" content={ev.recomendaciones} />}
+                    <ExpandedSection title={t('ui.content')} content={ev.contenido} />
+                    {ev.observaciones && <ExpandedSection title={t('ui.observations')} content={ev.observaciones} />}
+                    {ev.recomendaciones && <ExpandedSection title={t('ui.recommendations')} content={ev.recomendaciones} />}
                   </div>
                 )}
               </div>
@@ -224,7 +227,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
           <div className="bg-white w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200">
             <div className="sticky top-0 bg-white px-6 py-5 flex items-center justify-between border-b border-slate-100">
               <div>
-                <h3 className="font-black text-slate-800 text-lg">Nueva Evaluación</h3>
+                <h3 className="font-black text-slate-800 text-lg">{t('evaluaciones.nuevo')}</h3>
                 <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full mt-1.5">
                   <Clock size={10} /> Pendiente de aprobación al enviar
                 </span>
@@ -267,7 +270,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                 <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Paciente *</label>
                 <select value={form.child_id} onChange={e => setForm(f => ({ ...f, child_id: e.target.value }))}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option value="">Seleccionar...</option>
+                  <option value="">{t('ui.select_option')}</option>
                   {ninos.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
                 </select>
               </div>
@@ -291,7 +294,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
               <div>
                 <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Título *</label>
                 <input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
-                  placeholder="Ej: Evaluación de conducta — Sesión 12"
+                  {...{placeholder: t('ui.eval_title')}}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />
               </div>
 
@@ -299,7 +302,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
               <div>
                 <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Contenido *</label>
                 <textarea value={form.contenido} onChange={e => setForm(f => ({ ...f, contenido: e.target.value }))}
-                  rows={5} placeholder="Hallazgos clínicos, conductas observadas, desempeño..."
+                  rows={5} placeholder={t('ui.clinical_findings_placeholder')}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
               </div>
 
@@ -309,7 +312,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                   Observaciones <span className="text-slate-300 normal-case font-normal">(opcional)</span>
                 </label>
                 <textarea value={form.observaciones} onChange={e => setForm(f => ({ ...f, observaciones: e.target.value }))}
-                  rows={3} placeholder="Notas adicionales, patrones observados, alertas..."
+                  rows={3} placeholder={t('ui.additional_notes_placeholder')}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
               </div>
 
@@ -319,7 +322,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                   Recomendaciones <span className="text-slate-300 normal-case font-normal">(opcional)</span>
                 </label>
                 <textarea value={form.recomendaciones} onChange={e => setForm(f => ({ ...f, recomendaciones: e.target.value }))}
-                  rows={3} placeholder="Estrategias, ajustes al plan, actividades para casa..."
+                  rows={3} placeholder={t('ui.strategies_placeholder')}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
               </div>
 

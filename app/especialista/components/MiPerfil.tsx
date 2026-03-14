@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState } from 'react'
 import { User, Mail, Phone, Stethoscope, Key, Eye, EyeOff, Save, Loader2, Shield, CheckCircle2, Edit3 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -7,6 +9,7 @@ import { useToast } from '@/components/Toast'
 
 export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate: () => void }) {
   const toast = useToast()
+  const { t } = useI18n()
   const [editando, setEditando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [cambioPass, setCambioPass] = useState(false)
@@ -44,7 +47,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
 
   return (
     <div className="space-y-5 pb-20 md:pb-6 max-w-2xl">
-      <h2 className="text-2xl font-black text-slate-800">Mi Perfil</h2>
+      <h2 className="text-2xl font-black text-slate-800">{t('nav.miperfil')}</h2>
 
       {/* Hero card */}
       <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-8 text-center relative overflow-hidden shadow-lg shadow-blue-200">
@@ -74,9 +77,9 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
           {editando ? (
             <>
               {[
-                { label: 'Nombre completo', icon: User, key: 'full_name', placeholder: 'Tu nombre' },
+                { label: t('perfil.nombreCompleto'), icon: User, key: 'full_name', placeholder: 'Tu nombre' },
                 { label: 'Teléfono', icon: Phone, key: 'phone', placeholder: '+52 55 1234 5678' },
-                { label: 'Especialidad', icon: Stethoscope, key: 'specialty', placeholder: 'Ej: Terapeuta ABA' },
+                { label: t('perfil.especialidad'), icon: Stethoscope, key: 'specialty', placeholder: 'Ej: Terapeuta ABA' },
               ].map(f => (
                 <div key={f.key}>
                   <label className="flex items-center gap-1.5 text-xs font-black text-slate-400 uppercase tracking-widest mb-2">
@@ -102,9 +105,9 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
             <>
               {[
                 { label: 'Email', icon: Mail, value: profile?.email },
-                { label: 'Nombre', icon: User, value: profile?.full_name },
+                { label: t('common.nombre'), icon: User, value: profile?.full_name },
                 { label: 'Teléfono', icon: Phone, value: profile?.phone || 'No registrado' },
-                { label: 'Especialidad', icon: Stethoscope, value: profile?.specialty || 'No registrado' },
+                { label: t('perfil.especialidad'), icon: Stethoscope, value: profile?.specialty || 'No registrado' },
               ].map((item, idx) => (
                 <div key={item.label} className={`flex items-center gap-4 ${idx < 3 ? 'pb-4 border-b border-slate-50' : ''}`}>
                   <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0 text-slate-500">
@@ -128,7 +131,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
           <div className="w-9 h-9 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0 text-slate-500">
             <Key size={15} />
           </div>
-          <span className="font-bold text-sm text-slate-700 flex-1 text-left">Cambiar contraseña</span>
+          <span className="font-bold text-sm text-slate-700 flex-1 text-left">{t('ui.change_password')}</span>
           <span className="text-xs text-slate-400 font-medium">{cambioPass ? '↑ Cerrar' : '↓ Abrir'}</span>
         </button>
         {cambioPass && (
@@ -136,7 +139,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
             <div className="relative">
               <input type={showPass ? 'text' : 'password'} value={pass.nueva}
                 onChange={e => setPass(p => ({ ...p, nueva: e.target.value }))}
-                placeholder="Nueva contraseña (mín. 6 caracteres)"
+                {...{placeholder: t('ui.new_password')}}
                 className={`${inputCls} pr-12`} />
               <button onClick={() => setShowPass(!showPass)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">
@@ -145,7 +148,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
             </div>
             <input type="password" value={pass.confirmar}
               onChange={e => setPass(p => ({ ...p, confirmar: e.target.value }))}
-              placeholder="Confirmar contraseña"
+              {...{placeholder: t('ui.confirm_password')}}
               className={inputCls} />
             <button onClick={cambiarPassword} disabled={guardando}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm disabled:opacity-50 shadow-sm transition-colors">

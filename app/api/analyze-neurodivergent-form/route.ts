@@ -39,9 +39,17 @@ function getSpecializedInstructions(formType: string): string {
   return map[formType] || 'Analiza clínicamente los datos basándote en evidencia ABA y el contexto del paciente.'
 }
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale: string): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
+  return ''
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
+    const userLocale = body.locale || request.headers.get('x-locale') || 'es'
     const { formType, formData, childName, childAge, diagnosis, sessionContext, childId } = body
 
 
@@ -58,7 +66,7 @@ ${ctx.fullContext}
 PACIENTE: ${ctx.childName}, ${ctx.childAge}
 DIAGNÓSTICO: ${ctx.diagnosis || diagnosis || 'En evaluación'}
 FORMULARIO: ${FORM_LABELS[formType] || formType}
-${sessionContext ? `CONTEXTO EXTRA: ${sessionContext}` : ''}
+${sessionContext ? `CONTEXTO EXTRA: ${sessionContext}` : ''}${getLangInstruction(userLocale)}
 
 DATOS DEL FORMULARIO:
 ${JSON.stringify(formData, null, 2)}

@@ -1,4 +1,6 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Send, Loader2, User, Brain, BookOpen
@@ -22,6 +24,7 @@ interface ARIAAgentChatProps {
 export default function ARIAAgentChat({
   userId, childId, childName, contexto = 'general', compact = false
 }: ARIAAgentChatProps) {
+  const { t, locale } = useI18n()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -65,8 +68,8 @@ export default function ARIAAgentChat({
     try {
       const res = await fetch('/api/agente/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mensaje: msg, childId, userId, conversacionId, contexto }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': locale || 'es' },
+        body: JSON.stringify({ mensaje: msg, childId, userId, conversacionId, contexto , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
@@ -119,7 +122,7 @@ export default function ARIAAgentChat({
         </div>
         <div className="ml-auto flex items-center gap-1.5">
           <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-          <span className="text-white/70 text-[10px] font-bold">Activo</span>
+          <span className="text-white/70 text-[10px] font-bold">{t('common.activo')}</span>
         </div>
       </div>
 
@@ -191,7 +194,7 @@ export default function ARIAAgentChat({
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={1}
-            placeholder="Pregúntale a ARIA sobre el caso, protocolos ABA, DSM-5..."
+            {...{placeholder: t('ui.ask_aria')}}
             className="flex-1 p-3 rounded-2xl text-sm resize-none outline-none transition-all leading-relaxed max-h-28 focus:ring-2 focus:ring-violet-400"
             style={{
               background: 'var(--input-bg)',

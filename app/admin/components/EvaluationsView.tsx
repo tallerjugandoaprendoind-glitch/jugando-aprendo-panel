@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect } from 'react'
 import {
   Activity, AlertTriangle, BookOpen, Brain, CheckCircle2, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, ClipboardList, Eye, FileText, FileWarning, Home, Loader2, MoreHorizontal, Save, Send, ShieldAlert, Sparkles, User, X
@@ -15,6 +17,7 @@ import {
 } from '../data/formConstants'
 
 function DynamicEvaluationsView() {
+  const { t } = useI18n()
   const [activeForm, setActiveForm] = useState<'aba' | 'anamnesis' | 'entorno_hogar' | 'brief2' | 'ados2' | 'vineland3' | 'wiscv' | 'basc3' | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedChild, setSelectedChild] = useState('');
@@ -377,8 +380,8 @@ function DynamicEvaluationsView() {
                 <div className="w-20 h-20 md:w-28 md:h-28 bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-3xl md:rounded-[2.5rem] flex items-center justify-center mb-6 md:mb-8 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl shadow-blue-200">
                    <FileText size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
                 </div>
-                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">Anamnesis</h3>
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">Expediente completo de admisión</p>
+                <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">{t('ui.anamnesis')}</h3>
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">{t('ui.anamnesis')}</p>
               </div>
             </button>
 
@@ -393,7 +396,7 @@ function DynamicEvaluationsView() {
                    <Home size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">Entorno Hogar</h3>
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">Análisis domiciliario</p>
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">{t('ui.home_analysis')}</p>
                 <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
                   <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">IA Avanzada</span>
                 </div>
@@ -575,7 +578,7 @@ function DynamicEvaluationsView() {
                              value={respuestas[q.id] || ''}
                              onChange={(e) => handleInputChange(q.id, e.target.value)}
                            >
-                               <option value="">Seleccionar...</option>
+                               <option value="">{t('ui.select_option')}</option>
                                {q.options.map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
                            </select>
                            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={20}/>
@@ -695,7 +698,7 @@ function DynamicEvaluationsView() {
                    onClick={() => setCurrentStep(currentStep+1)} 
                    className="px-8 md:px-12 py-3 md:py-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-xl md:rounded-2xl font-black text-sm md:text-base hover:from-black hover:to-slate-900 transition-all flex items-center gap-2 shadow-xl"
                  >
-                   <span>Siguiente</span>
+                   <span>{t('common.siguiente')}</span>
                    <ChevronRight size={18}/>
                  </button>
              ) : (
@@ -707,12 +710,12 @@ function DynamicEvaluationsView() {
                    {isSaving ? (
                      <>
                        <Loader2 className="animate-spin" size={18}/>
-                       <span>Guardando...</span>
+                       <span>{t('common.procesando')}</span>
                      </>
                    ) : (
                      <>
                        <Save size={18}/>
-                       <span>Guardar</span>
+                       <span>{t('common.guardar')}</span>
                      </>
                    )}
                  </button>

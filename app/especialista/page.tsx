@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -17,14 +19,7 @@ import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
 import MisFormularios from './components/MisFormularios'
 
-const NAV_ITEMS = [
-  { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
-  { id: 'pacientes',    icon: Users,           label: 'Pacientes' },
-  { id: 'formularios',  icon: FileText,        label: 'Formularios' },
-  { id: 'evaluaciones', icon: Activity,        label: 'Evaluaciones' },
-  { id: 'agenda',       icon: Calendar,        label: 'Mi Agenda' },
-  { id: 'perfil',       icon: User,            label: 'Mi Perfil' },
-]
+
 
 function SidebarLink({ icon: Icon, label, active, onClick }: any) {
   return (
@@ -45,6 +40,15 @@ function SidebarLink({ icon: Icon, label, active, onClick }: any) {
 export default function EspecialistaDashboard() {
   const router = useRouter()
   const toast = useToast()
+  const { t } = useI18n()
+  const NAV_ITEMS = [
+    { id: 'inicio',        icon: LayoutDashboard, label: t('nav.inicio') },
+    { id: 'pacientes',     icon: Users,           label: t('nav.mispacientes') },
+    { id: 'formularios',   icon: FileText,        label: t('nav.misformularios') },
+    { id: 'evaluaciones',  icon: Activity,        label: t('nav.misevaluaciones') },
+    { id: 'agenda',        icon: Calendar,        label: t('nav.miagenda') },
+    { id: 'perfil',        icon: User,            label: t('nav.miperfil') },
+  ]
   const [activeView, setActiveView] = useState('inicio')
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -190,7 +194,7 @@ export default function EspecialistaDashboard() {
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
               >
-                <LogOut size={14} /> Cerrar sesión
+                <LogOut size={14} /> { t('common.cerrarSesion') }
               </button>
             </div>
           )}
@@ -278,14 +282,14 @@ export default function EspecialistaDashboard() {
             <div className="space-y-3">
               <input
                 type="password"
-                placeholder="Nueva contraseña"
+                {...{placeholder: t('ui.new_password')}}
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="password"
-                placeholder="Confirmar contraseña"
+                {...{placeholder: t('ui.confirm_password')}}
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"

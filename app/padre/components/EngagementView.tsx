@@ -1,6 +1,8 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 // app/padre/components/EngagementView.tsx
-// 👨‍👩‍👧 Plan semanal de actividades para padres — generado por IA
+// 👨‍👩‍👧 Actividades en casa — basadas en el programa terapéutico — generado por IA
 
 import { useState, useEffect } from 'react'
 import { Brain, CheckCircle, Circle, Clock, Star, ChevronRight,
@@ -40,6 +42,7 @@ const DIFICULTAD_COLORS: Record<string, string> = {
 }
 
 export default function EngagementView({ childId }: { childId: string }) {
+  const { t, locale } = useI18n()
   const [plan, setPlan] = useState<Plan | null>(null)
   const [planId, setPlanId] = useState<string | null>(null)
   const [historial, setHistorial] = useState<any[]>([])
@@ -51,7 +54,7 @@ export default function EngagementView({ childId }: { childId: string }) {
   const cargarPlan = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/engagement-padres?child_id=${childId}`)
+      const res = await fetch(`/api/engagement-padres?child_id=${childId}&locale=${locale || 'es'}`)
       const json = await res.json()
       if (json.plan) {
         setPlan(json.plan)
@@ -66,13 +69,15 @@ export default function EngagementView({ childId }: { childId: string }) {
     finally { setLoading(false) }
   }
 
-  const generarPlan = async () => {
+  const DISCLAIMER_IA = '📋 Estas actividades complementan el programa terapéutico diseñado por tu especialista. Siempre consultá con el terapeuta ante cualquier duda.'
+
+const generarPlan = async () => {
     setGenerando(true)
     try {
       const res = await fetch('/api/engagement-padres', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId, accion: 'generar_plan' }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ childId, accion: 'generar_plan', locale: locale || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -104,7 +109,7 @@ export default function EngagementView({ childId }: { childId: string }) {
     try {
       await fetch('/api/engagement-padres', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           childId,
           accion: 'actualizar_completadas',
@@ -137,7 +142,7 @@ export default function EngagementView({ childId }: { childId: string }) {
             <Heart size={20} className="text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-black text-slate-800">Plan de la semana</h2>
+            <h2 className="text-xl font-black text-slate-800">{t('ui.plan_week')}</h2>
             <p className="text-xs text-slate-400">Actividades diseñadas para ti y {plan?.child_name || 'tu hijo/a'}</p>
           </div>
         </div>
@@ -151,16 +156,22 @@ export default function EngagementView({ childId }: { childId: string }) {
       {!plan ? (
         <div className="bg-white rounded-2xl border border-slate-100 p-10 text-center">
           <Brain size={40} className="text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500 font-medium mb-2">No hay plan esta semana</p>
+          <p className="text-slate-500 font-medium mb-2">{t('ui.no_plan')}</p>
           <p className="text-slate-400 text-sm mb-5">La IA generará actividades personalizadas basadas en el progreso de tu hijo/a</p>
           <button onClick={generarPlan} disabled={generando}
             className="px-6 py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold flex items-center gap-2 mx-auto transition">
             <Sparkles size={16} />
-            {generando ? 'Generando plan...' : 'Generar mi plan semanal'}
+            {generando ? 'Generando...' : 'Generar actividades'}
           </button>
         </div>
       ) : (
         <>
+          {/* Disclaimer complemento terapeuta */}
+          <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex items-start gap-2">
+            <span className="text-blue-400 shrink-0 mt-0.5">📋</span>
+            <p className="text-xs text-blue-600 leading-relaxed">Estas actividades complementan el programa terapéutico diseñado por tu especialista. Consultá con el terapeuta ante cualquier duda.</p>
+          </div>
+
           {/* Mensaje motivacional */}
           <div className="bg-gradient-to-r from-violet-50 to-pink-50 border border-violet-100 rounded-2xl p-4">
             <div className="flex items-start gap-3">
@@ -172,7 +183,7 @@ export default function EngagementView({ childId }: { childId: string }) {
           {/* Progreso */}
           <div className="bg-white rounded-2xl border border-slate-100 p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-bold text-slate-700">Tu progreso esta semana</span>
+              <span className="text-sm font-bold text-slate-700">{t('ui.week_progress')}</span>
               <span className="text-lg font-black text-violet-600">{completadas.size}/{plan.actividades?.length || 0}</span>
             </div>
             <div className="w-full bg-slate-100 rounded-full h-3">

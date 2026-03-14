@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import {
   ChevronRight, HelpCircle, Lock, LogOut, Mail, Phone, Settings, User
 } from 'lucide-react'
@@ -23,7 +25,11 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
                     <Mail size={14}/> {email}
                 </p>
                 <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
-                    <Phone size={14}/> {phone}
+                    <span>📱</span>
+                    {phone !== 'No registrado'
+                      ? <span className="text-green-600 font-semibold">{phone} <span className="text-[10px] text-green-400">(WhatsApp activo)</span></span>
+                      : <span className="text-amber-500 font-medium">Agregá tu WhatsApp para recibir alertas</span>
+                    }
                 </p>
              </div>
              

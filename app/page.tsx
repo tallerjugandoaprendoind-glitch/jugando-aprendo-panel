@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect, useRef } from 'react'
@@ -167,6 +169,7 @@ function ARIAChatIllustration() {
 }
 
 export default function LandingPage() {
+  const { t } = useI18n()
   const [isScrolled, setIsScrolled] = useState(false)
   const [activeAccordion, setActiveAccordion] = useState<number | null>(null)
   const [count50, setCount50] = useState(0)
@@ -424,7 +427,7 @@ export default function LandingPage() {
             <a href="#para-padres">Para Padres</a>
             <a href="#aria">Asistente ARIA</a>
             <a href="#servicios">Servicios</a>
-            <a href="#galeria">Galería</a>
+            <a href="#galeria">{t('landing.gallery')}</a>
             <a href="#faq">Preguntas</a>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -460,7 +463,7 @@ export default function LandingPage() {
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 36 }}>
               <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn-wa">
-                <Phone size={16} /> Contáctanos
+                <Phone size={16} /> {t('landing.contact_us')}
               </a>
               <button className="btn-outline" onClick={() => document.getElementById('para-padres')?.scrollIntoView({ behavior: 'smooth' })}>
                 <Sparkles size={16} color="#f97316" /> ¿Qué ofrecemos?
@@ -712,8 +715,8 @@ export default function LandingPage() {
 
           <div style={{ marginTop: 24, background: '#fff', borderRadius: 18, padding: '24px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, border: '2px solid #fef3c7' }}>
             <div>
-              <h4 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 16, color: '#1c1917', marginBottom: 3 }}>¿Quieres ver más contenido?</h4>
-              <p style={{ color: '#78716c', fontSize: 13 }}>Síguenos en redes para actividades, consejos y novedades.</p>
+              <h4 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 16, color: '#1c1917', marginBottom: 3 }}>{t('landing.want_more_content')}</h4>
+              <p style={{ color: '#78716c', fontSize: 13 }}>{t('landing.follow_us')}</p>
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="btn-orange" style={{ padding: '9px 18px', fontSize: 13 }}><Facebook size={15} /> Facebook</a>
@@ -735,20 +738,20 @@ export default function LandingPage() {
               <div style={{ width: 56, height: 56, background: '#dbeafe', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Brain size={26} color="#2563eb" /></div>
               <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#1c1917', marginBottom: 10 }}>Terapia ABA</h3>
               <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>Intervención basada en evidencia para mejorar habilidades sociales, comunicación y aprendizaje.</p>
-              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#f97316', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contáctanos <ArrowRight size={15} /></a>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#f97316', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>{t('landing.contact_us')} <ArrowRight size={15} /></a>
             </div>
             <div className="lp-svc-card featured">
               <div style={{ position: 'absolute', top: 16, right: 16, background: '#fbbf24', color: '#1c1917', fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 99, fontFamily: "'Baloo 2',cursive" }}>Popular</div>
               <div style={{ width: 56, height: 56, background: 'rgba(255,255,255,.2)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Users size={26} color="#fff" /></div>
               <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Habilidades Sociales</h3>
-              <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>Talleres grupales donde los niños aprenden a interactuar en un entorno seguro y lúdico.</p>
+              <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>{t('landing.group_workshops')}</p>
               <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#fff', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contáctanos <ArrowRight size={15} /></a>
             </div>
             <div className="lp-svc-card">
               <div style={{ width: 56, height: 56, background: '#dcfce7', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Calendar size={26} color="#16a34a" /></div>
               <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#1c1917', marginBottom: 10 }}>Escuela para Padres</h3>
-              <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>Capacitación constante para que las familias sean parte activa del proceso de desarrollo.</p>
-              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#10b981', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Más información <ArrowRight size={15} /></a>
+              <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>{t('landing.family_training')}</p>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#10b981', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>{t('landing.more_info')} <ArrowRight size={15} /></a>
             </div>
           </div>
         </div>
@@ -806,8 +809,8 @@ export default function LandingPage() {
 
           <div style={{ marginTop: 44, background: 'linear-gradient(135deg,#f97316,#ea580c)', borderRadius: 22, padding: '38px 32px', textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 10 }}>🌟</div>
-            <h3 style={{ fontFamily: "'Baloo 2',cursive", color: '#fff', fontWeight: 800, fontSize: 22, marginBottom: 8 }}>¿Listo para dar el primer paso?</h3>
-            <p style={{ color: 'rgba(255,255,255,.8)', fontSize: 14, marginBottom: 24 }}>Escríbenos hoy y da el primer paso hacia el desarrollo de tu hijo/a.</p>
+            <h3 style={{ fontFamily: "'Baloo 2',cursive", color: '#fff', fontWeight: 800, fontSize: 22, marginBottom: 8 }}>{t('landing.ready_first_step')}</h3>
+            <p style={{ color: 'rgba(255,255,255,.8)', fontSize: 14, marginBottom: 24 }}>{t('landing.write_us')}</p>
             <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '13px 28px', background: '#fff', color: '#f97316', borderRadius: 99, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>
               <Phone size={17} /> Hablar con un especialista
             </a>
@@ -853,7 +856,7 @@ export default function LandingPage() {
               </div>
               <span style={{ fontFamily: "'Baloo 2',cursive", color: '#fff', fontWeight: 800, fontSize: 17 }}>Jugando Aprendo</span>
             </div>
-            <p style={{ fontSize: 13, lineHeight: 1.75, marginBottom: 18 }}>Centro especializado en terapia ABA y desarrollo infantil potenciado por IA. Pisco, Ica, Perú.</p>
+            <p style={{ fontSize: 13, lineHeight: 1.75, marginBottom: 18 }}>{t('landing.aba_center')} Pisco, Ica, Perú.</p>
             <div>
               <a href="https://www.facebook.com" className="lp-social" aria-label="Facebook"><Facebook size={15} /></a>
               <a href="https://www.instagram.com" className="lp-social" aria-label="Instagram"><Instagram size={15} /></a>
@@ -877,13 +880,17 @@ export default function LandingPage() {
           <div>
             <h4>Horarios</h4>
             <p style={{ fontSize: 13, marginBottom: 6 }}>Lun - Vie: 8AM - 6PM</p>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,.22)', marginBottom: 3 }}>Sábado: Cerrado</p>
+            <p style={{ fontSize: 13, color: 'rgba(255,255,255,.22)', marginBottom: 3 }}>{t('landing.saturday_closed')}</p>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,.22)', marginBottom: 14 }}>Domingo: Cerrado</p>
             <p style={{ fontSize: 12 }}>Independencia, Pisco, Ica</p>
           </div>
         </div>
         <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', paddingTop: 22, textAlign: 'center', fontSize: 12 }}>
           © 2025 Jugando Aprendo — Centro de Desarrollo Infantil · Pisco, Ica, Perú. Todos los derechos reservados.
+          <div style={{ marginTop: 10, display: 'flex', justifyContent: 'center', gap: 20 }}>
+            <a href="/privacidad" style={{ color: 'rgba(255,255,255,.45)', textDecoration: 'none' }}>{t('landing.privacy_policy')}</a>
+            <a href="/terminos" style={{ color: 'rgba(255,255,255,.45)', textDecoration: 'none' }}>{t('landing.terms_of_service')}</a>
+          </div>
         </div>
       </footer>
     </>

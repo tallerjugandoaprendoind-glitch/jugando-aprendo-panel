@@ -1,12 +1,14 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
 import {
-  LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen,
+  LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen, MessageCircle,
   X, User, FileText, Loader2, Key, BarChart3, ShieldCheck, Upload,
   ChevronRight, Settings, Crown, Stethoscope, ShoppingBag, Activity,
   Database, Sparkles, Zap
@@ -24,90 +26,21 @@ import EvaluacionesUnificadas from './components/EvaluacionesUnificadas'
 import ResourcesManagementView from './components/ResourcesManagementView'
 import MensajesPendientesPanel from './components/MensajesPendientesPanel'
 import AIReportView from './components/AIReportView'
-import AprobacionesEspecialista from './components/AprobacionesEspecialista'
 import StoreManagementView from './components/StoreManagementView'
 import KnowledgeBaseView from './components/KnowledgeBaseView'
 import ARIAAgentChat from './components/ARIAAgentChat'
 import ProgramasABAView from './components/ProgramasABAView'
 import DashboardGraficasABA from './components/DashboardGraficasABA'
 import InteligenciaHubView from './components/InteligenciaHubView'
-
-// Vista general de programas (sin paciente específico)
-function ProgramasABAViewGeneral({ navigateTo, userId }: { navigateTo: (v: string) => void; userId: string }) {
-  const [mode, setMode] = useState<'menu' | 'dashboard'>('menu')
-
-  if (mode === 'dashboard') {
-    return (
-      <div>
-        <button onClick={() => setMode('menu')}
-          className="mb-4 text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1">
-          ← Volver al menú
-        </button>
-        <DashboardGraficasABA onIrAPacientes={() => navigateTo('ninos')} />
-      </div>
-    )
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-3 gap-4">
-        <button onClick={() => navigateTo('ninos')}
-          className="bg-white border-2 border-indigo-100 rounded-2xl p-6 text-left hover:border-indigo-300 transition-all group">
-          <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Users size={20} className="text-indigo-600" />
-          </div>
-          <h3 className="font-black text-slate-800">Ver por paciente</h3>
-          <p className="text-xs text-slate-400 mt-1">Selecciona un niño para ver y registrar sus programas</p>
-        </button>
-        <button onClick={() => setMode('dashboard')}
-          className="bg-white border-2 border-emerald-100 rounded-2xl p-6 text-left hover:border-emerald-300 transition-all group">
-          <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Activity size={20} className="text-emerald-600" />
-          </div>
-          <h3 className="font-black text-slate-800">Dashboard de gráficas</h3>
-          <p className="text-xs text-slate-400 mt-1">Ve el progreso y gráficas de todos los pacientes</p>
-        </button>
-        <button onClick={() => navigateTo('vadi')}
-          className="bg-white border-2 border-violet-100 rounded-2xl p-6 text-left hover:border-violet-300 transition-all group">
-          <div className="w-10 h-10 bg-violet-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-            <Sparkles size={20} className="text-violet-600" />
-          </div>
-          <h3 className="font-black text-slate-800">Consultar a ARIA</h3>
-          <p className="text-xs text-slate-400 mt-1">Pide análisis de tendencias o sugerencias de programas</p>
-        </button>
-      </div>
-    </div>
-  )
-}
+import LocaleSelector from '@/app/components/LocaleSelector'
+import WhatsAppQRPanel from './components/WhatsAppQRPanel'
 
 // Roles: 'jefe'|'admin' ven todo. 'especialista'/'terapeuta' NO ven agenda ni tienda.
-const NAV_ITEMS = [
-  { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio',        roles: ['jefe','admin','especialista','terapeuta'] },
-  { id: 'agenda',       icon: Calendar,        label: 'Agenda',        roles: ['jefe','admin'] },
-  { id: 'ninos',        icon: Users,           label: 'Pacientes',     roles: ['jefe','admin','especialista','terapeuta'] },
-  { id: 'programas',    icon: Activity,        label: 'Programas ABA', roles: ['jefe','admin','especialista','terapeuta'] },
-  { id: 'evaluaciones', icon: FileText,        label: 'Evaluaciones',  roles: ['jefe','admin','especialista','terapeuta'] },
-  { id: 'reportes',     icon: Brain,           label: 'Historial & IA',roles: ['jefe','admin','especialista','terapeuta'] },
-  { id: 'vadi',         icon: Sparkles,        label: 'ARIA Agente',   roles: ['jefe','admin','especialista','terapeuta'] },
-  { id: 'inteligencia', icon: Zap,             label: 'Hub IA',        roles: ['jefe','admin','especialista'] },
-  { id: 'cerebro',      icon: Database,        label: 'Cerebro IA',    roles: ['jefe','admin'] },
-  { id: 'recursos',     icon: BookOpen,        label: 'Recursos',      roles: ['jefe','admin','especialista','terapeuta'] },
-  { id: 'tienda',       icon: ShoppingBag,     label: 'Tienda',        roles: ['jefe','admin'] },
-]
 
-const MOBILE_NAV_ITEMS = [
-  { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
-  { id: 'ninos',        icon: Users,           label: 'Pacientes' },
-  { id: 'programas',    icon: Activity,        label: 'ABA' },
-  { id: 'vadi',         icon: Sparkles,        label: 'ARIA' },
-  { id: 'evaluaciones', icon: FileText,        label: 'Evaluac.' },
-]
 
-const SECONDARY_NAV = [
-  { id: 'aprobaciones', icon: ShieldCheck, label: 'Aprobaciones' },
-  { id: 'usuarios',     icon: Key,         label: 'Usuarios' },
-  { id: 'importar',     icon: Upload,      label: 'Importar CSV', hidden: true },
-]
+// MOBILE_NAV movido dentro del componente
+
+// SECONDARY_NAV movido dentro del componente
 
 const ROLE_ICON: Record<string, any> = {
   jefe: Crown,
@@ -141,6 +74,41 @@ export default function AdminDashboard() {
   const router = useRouter()
   const toast = useToast()
   const { isDark } = useTheme()
+  const { t } = useI18n()
+
+  const NAV_ITEMS = [
+    { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio'),          roles: ['jefe','admin','especialista','terapeuta'] },
+    { id: 'agenda',       icon: Calendar,        label: t('nav.agenda'),          roles: ['jefe','admin'] },
+    { id: 'ninos',        icon: Users,           label: t('nav.pacientes'),       roles: ['jefe','admin','especialista','terapeuta'] },
+    { id: 'evaluaciones', icon: FileText,        label: t('nav.evaluaciones'),    roles: ['jefe','admin','especialista','terapeuta'] },
+    { id: 'reportes',     icon: Brain,           label: t('nav.historial'),       roles: ['jefe','admin','especialista','terapeuta'] },
+    { id: 'vadi',         icon: Sparkles,        label: t('nav.aria'),            roles: ['jefe','admin','especialista','terapeuta'] },
+    { id: 'inteligencia', icon: Zap,             label: t('nav.hub'),             roles: ['jefe','admin','especialista'] },
+    { id: 'cerebro',      icon: Database,        label: t('nav.cerebro'),         roles: ['jefe','admin'] },
+    { id: 'recursos',     icon: BookOpen,        label: t('nav.recursos'),        roles: ['jefe','admin','especialista','terapeuta'] },
+    { id: 'tienda',       icon: ShoppingBag,     label: t('nav.tienda'),          roles: ['jefe','admin'] },
+    { id: 'config',       icon: Settings,        label: t('common.configuracion'),roles: ['jefe'] },
+  ]
+  const MOBILE_NAV = [
+    { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio') },
+    { id: 'ninos',        icon: Users,           label: t('nav.pacientes') },
+    { id: 'vadi',         icon: Sparkles,        label: 'ARIA' },
+    { id: 'evaluaciones', icon: FileText,        label: t('nav.evaluaciones') },
+  ]
+  const SECONDARY_NAV = [
+    { id: 'usuarios', icon: Key, label: t('nav.usuarios') },
+    { id: 'importar', icon: Upload, label: 'Importar CSV', hidden: true },
+  ]
+  const PAGE_TITLES: Record<string, string> = {
+    inicio: t('dashboard.titulo'), agenda: t('nav.agenda'), ninos: t('nav.pacientes'),
+    evaluaciones: t('nav.evaluaciones'), reportes: t('nav.historial'),
+    recursos: t('nav.recursos'), mensajes: t('mensajes.titulo'),
+    usuarios: t('nav.usuarios'), importar: 'Importar CSV',
+    programas: t('nav.programas'), vadi: t('nav.aria'), cerebro: t('nav.cerebro'),
+    inteligencia: t('nav.hub'),
+  }
+
+
   const [currentView, setCurrentView] = useState('inicio')
   const [showAnalytics, setShowAnalytics] = useState(false)
   const [selectedChildReport, setSelectedChildReport] = useState<{id: string, name: string} | null>(null)
@@ -226,13 +194,7 @@ export default function AdminDashboard() {
 
   const navigateTo = (view: string) => { setCurrentView(view); setSidebarOpen(false) }
 
-  const PAGE_TITLES: Record<string, string> = {
-    inicio: 'Panel Principal', agenda: 'Agenda', ninos: 'Pacientes',
-    evaluaciones: 'Evaluaciones', reportes: 'Historial & IA',
-    recursos: 'Recursos', aprobaciones: 'Aprobaciones',
-    mensajes: 'Mensajes a Padres', usuarios: 'Usuarios', importar: 'Importar CSV',
-    programas: 'Programas ABA', vadi: 'ARIA — Agente IA', cerebro: 'Cerebro de la IA',
-  }
+  // PAGE_TITLES ya definido arriba con t()
 
   const role = userProfile?.role || 'admin'
   const RoleIcon = ROLE_ICON[role] || User
@@ -298,7 +260,7 @@ export default function AdminDashboard() {
                 active={currentView === item.id}
                 onClick={() => navigateTo(item.id)}
                 small
-                badge={item.id === 'aprobaciones' ? pendingMessages : 0}
+                badge={0}
               />
             ))}
           </div>
@@ -383,6 +345,9 @@ export default function AdminDashboard() {
               </button>
             )}
 
+            {/* Language selector */}
+            <LocaleSelector compact={true} />
+
             {/* Dark mode toggle */}
             <ThemeToggleButton />
 
@@ -409,15 +374,7 @@ export default function AdminDashboard() {
                       <X size={16} className="text-slate-400" />
                     </button>
                   </div>
-                  {pendingMessages > 0 && (
-                    <button
-                      onClick={() => { navigateTo('aprobaciones'); setShowNotifications(false) }}
-                      className="w-full flex items-center gap-2 p-2.5 mb-2 bg-amber-50 dark:bg-amber-900/20 rounded-xl text-xs text-amber-700 dark:text-amber-400 font-semibold hover:bg-amber-100 transition-colors"
-                    >
-                      <ShieldCheck size={12} />
-                      {pendingMessages} mensaje(s) pendiente(s) de aprobación
-                    </button>
-                  )}
+
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {notifications.length > 0 ? notifications.map(n => (
                       <div key={n.id} className={`flex items-start gap-3 p-3 rounded-xl
@@ -428,7 +385,7 @@ export default function AdminDashboard() {
                         </p>
                       </div>
                     )) : (
-                      <p className="text-xs text-slate-400 text-center py-4">Sin citas para hoy</p>
+                      <p className="text-xs text-slate-400 text-center py-4">{t('ui.no_appts_today')}</p>
                     )}
                   </div>
                 </div>
@@ -450,12 +407,17 @@ export default function AdminDashboard() {
               {currentView === 'reportes'     && <AIReportView onChildSelect={setSelectedChildReport} />}
               {currentView === 'recursos'     && <ResourcesManagementView />}
               {currentView === 'tienda'       && <StoreManagementView />}
+              {currentView === 'config'       && (
+                <div className="p-4 md:p-6">
+                  <WhatsAppQRPanel />
+                </div>
+              )}
               {currentView === 'programas'    && (
                 <div className="max-w-4xl mx-auto">
                   <div className="mb-4 p-4 bg-indigo-50 border border-indigo-200 rounded-2xl text-sm text-indigo-700">
-                    💡 Selecciona un paciente desde <button onClick={() => navigateTo('ninos')} className="font-black underline">Pacientes</button> para ver sus programas ABA. O usa esta vista general.
+                    💡 Selecciona un paciente desde <button onClick={() => navigateTo('ninos')} className="font-black underline">{t('nav.pacientes')}</button> para ver sus programas ABA. O usa esta vista general.
                   </div>
-                  <ProgramasABAViewGeneral navigateTo={navigateTo} userId={userId} />
+
                 </div>
               )}
               {currentView === 'vadi'         && (
@@ -465,14 +427,7 @@ export default function AdminDashboard() {
               )}
               {currentView === 'cerebro'      && <KnowledgeBaseView />}
               {currentView === 'inteligencia' && <InteligenciaHubView />}
-              {currentView === 'aprobaciones' && (
-                <div className="space-y-10">
-                  <MensajesPendientesPanel />
-                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }} className="pt-8">
-                    <AprobacionesEspecialista />
-                  </div>
-                </div>
-              )}
+
               {currentView === 'mensajes' && <MensajesPendientesPanel />}
               {currentView === 'importar'     && <ExcelImportView />}
             </div>
@@ -490,7 +445,7 @@ export default function AdminDashboard() {
       <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-2 border-t shadow-[0_-4px_20px_rgba(0,0,0,0.08)]
         ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}
         style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
-        {MOBILE_NAV_ITEMS.map(item => {
+        {MOBILE_NAV.map(item => {
           const Icon = item.icon
           const active = currentView === item.id
           return (
@@ -522,7 +477,7 @@ export default function AdminDashboard() {
               </span>
             )}
           </div>
-          <span className="text-[10px] font-bold">Más</span>
+          <span className="text-[10px] font-bold">{t('ui.more')}</span>
         </button>
       </nav>
 
@@ -542,12 +497,12 @@ export default function AdminDashboard() {
             </div>
             <div className="space-y-3">
               <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                placeholder="Nueva contraseña (mín. 6 caracteres)"
+                {...{placeholder: t('ui.new_password')}}
                 className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500
                   ${isDark ? 'bg-[#21262d] border-[#30363d] text-slate-200 placeholder-slate-600'
                     : 'bg-slate-50 border-slate-200 text-slate-800'}`} />
               <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                placeholder="Confirmar contraseña"
+                {...{placeholder: t('ui.confirm_password')}}
                 className={`w-full px-4 py-3 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-blue-500
                   ${isDark ? 'bg-[#21262d] border-[#30363d] text-slate-200 placeholder-slate-600'
                     : 'bg-slate-50 border-slate-200 text-slate-800'}`} />

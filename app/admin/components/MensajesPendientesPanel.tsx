@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useCallback } from 'react'
 import {
   ShieldCheck, MessageCircle, CheckCircle, XCircle, Edit3, Send,
@@ -28,6 +30,7 @@ interface PendingMessage {
 
 export default function MensajesPendientesPanel() {
   const toast = useToast()
+  const { t } = useI18n()
   const [messages, setMessages] = useState<PendingMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<'pending_approval' | 'approved' | 'rejected'>('pending_approval')
@@ -64,8 +67,8 @@ export default function MensajesPendientesPanel() {
     try {
       const res = await fetch('/api/admin/parent-messages', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, edited_message: editText, action: 'save_edit' }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ id, edited_message: editText, action: 'save_edit' , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -86,8 +89,8 @@ export default function MensajesPendientesPanel() {
     try {
       const res = await fetch('/api/admin/parent-messages', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, edited_message: textToSend, action: 'approve' }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ id, edited_message: textToSend, action: 'approve' , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -107,8 +110,8 @@ export default function MensajesPendientesPanel() {
     try {
       const res = await fetch('/api/admin/parent-messages', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, action: 'reject' }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ id, action: 'reject' , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -152,9 +155,9 @@ export default function MensajesPendientesPanel() {
       <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl p-4 flex gap-3">
         <AlertTriangle className="text-amber-500 shrink-0 mt-0.5" size={18}/>
         <div>
-          <p className="font-black text-amber-800 text-sm">Flujo de aprobación activo</p>
+          <p className="font-black text-amber-800 text-sm">{t('ui.approval_flow')}</p>
           <p className="text-amber-700 text-xs mt-0.5 leading-relaxed">
-            <strong>Ningún mensaje llega a los padres sin tu autorización.</strong> Los mensajes generados por IA — de formularios, sesiones y evaluaciones — quedan aquí primero para que los revises y apruebes.
+            {t('ui.no_messages_reach_parents')}
           </p>
         </div>
       </div>
@@ -182,7 +185,7 @@ export default function MensajesPendientesPanel() {
       {loading ? (
         <div className="flex flex-col items-center py-16 gap-3">
           <div className="w-10 h-10 rounded-full border-4 border-amber-200 border-t-amber-500 animate-spin"/>
-          <p className="text-slate-400 text-sm font-medium">Cargando...</p>
+          <p className="text-slate-400 text-sm font-medium">{t('common.cargando')}</p>
         </div>
       ) : messages.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-14 text-center">
@@ -337,7 +340,7 @@ export default function MensajesPendientesPanel() {
                               onChange={e => setEditText(e.target.value)}
                               rows={4}
                               className="w-full p-4 bg-white border-2 border-blue-300 rounded-2xl text-sm font-medium outline-none focus:border-blue-500 transition-all resize-none shadow-sm"
-                              placeholder="Edita el mensaje para los padres..."
+                              {...{placeholder: t('ui.edit_message')}}
                             />
                             <div className="flex gap-2">
                               <button onClick={() => setEditingId(null)}

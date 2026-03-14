@@ -19,6 +19,13 @@ interface EvaluationRequest {
 
 // Helper: reintentar con backoff exponencial ante rate limit
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale: string): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
+  return ''
+}
+
 export async function POST(req: Request) {
   try {
     const body: EvaluationRequest = await req.json();

@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Calendar, ChevronLeft, ChevronRight, Clock, User, Plus, X, Loader2,
@@ -7,9 +9,11 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import VideoCallModal from '@/components/VideoCallModal'
+import { supabase } from '@/lib/supabase'
 
 // ── Cronómetro de 45 min por cita ──────────────────────────────────────────
 function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) => void }) {
+  const { t } = useI18n()
   const [remaining, setRemaining] = useState<number | null>(null)
   const [phase, setPhase] = useState<'waiting' | 'active' | 'done'>('waiting')
   const calledRef = useRef(false)
@@ -98,6 +102,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 
 function MonthlyCalendarView() {
   const toast = useToast()
+  const { t } = useI18n()
   const [apts, setApts] = useState<any[]>([])
   const [ninos, setNinos] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -109,6 +114,8 @@ function MonthlyCalendarView() {
   const [tipoSesion, setTipoSesion] = useState<'individual'|'grupal'>('individual')
   const [modalidadCita, setModalidadCita] = useState<'presencial'|'virtual'>('presencial')
   const [newApt, setNewApt] = useState({ child_id:'', date:'', time:'09:00', service:'Terapia ABA', notes:'', group_name:'', status:'confirmed' })
+  const [recurrencia, setRecurrencia] = useState<'none'|'weekly'|'biweekly'>('none')
+  const [recurrenciaSemanas, setRecurrenciaSemanas] = useState(4)
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([])
 
   // Video call
@@ -130,8 +137,8 @@ function MonthlyCalendarView() {
       try {
         await fetch('/api/admin/appointments', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: cita.id, status: 'completed' }),
+          headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+          body: JSON.stringify({ id: cita.id, status: 'completed' , locale: localStorage.getItem('vanty_locale') || 'es' }),
         })
       } catch {}
     }
@@ -165,8 +172,8 @@ function MonthlyCalendarView() {
     try {
       await fetch('/api/admin/appointments', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, status: 'completed' }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ id, status: 'completed' , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       setApts(prev => prev.map(a => a.id === id ? { ...a, status: 'completed' } : a))
       toast.success('✅ Sesión finalizada · Cita movida al historial')
@@ -189,7 +196,7 @@ function MonthlyCalendarView() {
     e.stopPropagation()
     if (!confirm('¿Eliminar esta cita?')) return
     try {
-      const res = await fetch('/api/admin/appointments', { method:'DELETE', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ id }) })
+      const res = await fetch('/api/admin/appointments', { method:'DELETE', headers:{'Content-Type':'application/json', 'x-locale': localStorage.getItem('vanty_locale') || 'es'}, body: JSON.stringify({ id }) })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
       toast.success('Cita eliminada'); cargarCitas()
@@ -211,7 +218,34 @@ function MonthlyCalendarView() {
       const res = await fetch('/api/admin/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(`✅ Cita ${modalidadCita} agendada`)
+      // Crear citas recurrentes si aplica
+      if (recurrencia !== 'none' && newApt.date) {
+        const diasSalto = recurrencia === 'weekly' ? 7 : 14
+        const fechaBase = new Date(newApt.date + 'T12:00:00')
+        const citasRecurrentes = []
+        for (let i = 1; i < recurrenciaSemanas; i++) {
+          const nextDate = new Date(fechaBase)
+          nextDate.setDate(nextDate.getDate() + diasSalto * i)
+          citasRecurrentes.push({
+            child_id: newApt.child_id || null,
+            date: nextDate.toISOString().split('T')[0],
+            time: newApt.time,
+            service: newApt.service,
+            notes: newApt.notes || '',
+            status: newApt.status,
+            modalidad: modalidadCita,
+            is_group: tipoSesion === 'grupal',
+            group_name: newApt.group_name || null,
+            participants: tipoSesion === 'grupal' ? selectedParticipants : null,
+          })
+        }
+        if (citasRecurrentes.length > 0) {
+          await supabase.from('appointments').insert(citasRecurrentes)
+        }
+        toast.success(`✅ ${recurrenciaSemanas} citas ${recurrencia === 'weekly' ? 'semanales' : 'quincenales'} agendadas`)
+      } else {
+        toast.success(`✅ Cita ${modalidadCita} agendada`)
+      }
       resetForm(); cargarCitas()
     } catch (err:any) { toast.error('Error: ' + err.message) }
     finally { setIsSaving(false) }
@@ -223,7 +257,7 @@ function MonthlyCalendarView() {
       const res = await fetch('/api/video-call', {
         method: 'POST',
         headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ appointment_id: apt.id, child_id: apt.child_id, initiated_by: 'admin' }),
+        body: JSON.stringify({ appointment_id: apt.id, child_id: apt.child_id, initiated_by: 'admin' , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const data = await res.json()
       if (data.limitReached) { toast.error('⚠️ Límite mensual de 10,000 min alcanzado. Se reinicia el próximo mes.'); return }
@@ -235,7 +269,7 @@ function MonthlyCalendarView() {
   }
 
   const resetForm = () => {
-    setShow(false); setTipoSesion('individual'); setModalidadCita('presencial')
+    setShow(false); setTipoSesion('individual'); setModalidadCita('presencial'); setRecurrencia('none'); setRecurrenciaSemanas(4)
     setNewApt({ child_id:'', date:new Date().toISOString().split('T')[0], time:'09:00', service:'Terapia ABA', notes:'', group_name:'', status:'confirmed' })
     setSelectedParticipants([])
   }
@@ -278,13 +312,13 @@ function MonthlyCalendarView() {
         />
       )}
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 p-4 md:p-6 lg:p-8 animate-fade-in-up">
+      <div className="min-h-screen p-4 md:p-6 lg:p-8 animate-fade-in-up" style={{ background: "var(--background)" }}>
 
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h2 className="font-black text-2xl md:text-3xl text-slate-800 tracking-tight flex items-center gap-3">
-              <div className="p-2.5 bg-blue-100 rounded-2xl"><Calendar className="text-blue-600" size={28}/></div>
+            <h2 className="font-black text-2xl md:text-3xl tracking-tight flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
+              <div className="p-2.5 rounded-2xl" style={{ background: "rgba(37,99,235,0.15)" }}><Calendar className="text-blue-500" size={28}/></div>
               Calendario de Citas
             </h2>
             <p className="text-slate-400 text-sm font-medium mt-1 ml-1">{apts.length} citas · {todayApts.length} hoy · {virtualApts.length} virtuales</p>
@@ -305,8 +339,8 @@ function MonthlyCalendarView() {
             {label:'Esta semana',value:weekApts.length,    color:'violet'},
             {label:'Virtuales',  value:virtualApts.length, color:'indigo'},
           ].map(({label,value,color}) => (
-            <div key={label} className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{label}</p>
+            <div key={label} className="rounded-2xl p-5 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+              <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</p>
               <p className={`text-3xl font-black text-${color}-600 mt-1`}>{value}</p>
             </div>
           ))}
@@ -315,13 +349,13 @@ function MonthlyCalendarView() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
           {/* Calendario */}
-          <div className="xl:col-span-8 bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <div className="xl:col-span-8 rounded-3xl shadow-sm overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+            <div className="flex items-center justify-between p-6 border-b" style={{ borderColor: "var(--card-border)" }}>
               <button onClick={() => currentMonth && setCurrentMonth(new Date(currentMonth.getFullYear(),currentMonth.getMonth()-1))} className="p-2 rounded-xl hover:bg-slate-100"><ChevronLeft size={20}/></button>
-              <h3 className="font-black text-slate-800 text-lg capitalize">{monthYear}</h3>
+              <h3 className="font-black text-lg capitalize" style={{ color: "var(--text-primary)" }}>{monthYear}</h3>
               <button onClick={() => currentMonth && setCurrentMonth(new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1))} className="p-2 rounded-xl hover:bg-slate-100"><ChevronRight size={20}/></button>
             </div>
-            <div className="grid grid-cols-7 border-b border-slate-100">
+            <div className="grid grid-cols-7 border-b" style={{ borderColor: "var(--card-border)" }}>
               {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map(d => <div key={d} className="py-3 text-center text-xs font-black text-slate-400 uppercase tracking-widest">{d}</div>)}
             </div>
             <div className="grid grid-cols-7">
@@ -332,7 +366,7 @@ function MonthlyCalendarView() {
                 const ds = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth()+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
                 const isToday=ds===todayStr; const isPast=ds<todayStr
                 return (
-                  <div key={day} onClick={()=>{setNewApt(p=>({...p,date:ds}));setShow(true)}} className={`min-h-[80px] border-b border-r border-slate-100 p-2 cursor-pointer transition-all hover:bg-blue-50/50 group ${isToday?'bg-blue-50':isPast?'bg-slate-50/50':''}`}>
+                  <div key={day} onClick={()=>{setNewApt(p=>({...p,date:ds}));setShow(true)}} className={`min-h-[80px] border-b border-r p-2 cursor-pointer transition-all group ${isToday?'ring-2 ring-inset ring-blue-500':''}`} style={{ borderColor: 'var(--card-border)', background: isToday ? 'rgba(37,99,235,0.08)' : isPast ? 'var(--muted-bg)' : 'var(--card)' }}>
                     <div className={`text-sm font-bold w-7 h-7 flex items-center justify-center rounded-full mb-1 ${isToday?'bg-blue-600 text-white':isPast?'text-slate-300':'text-slate-700 group-hover:bg-blue-100 group-hover:text-blue-700'}`}>{day}</div>
                     <div className="space-y-0.5">
                       {dayApts.slice(0,2).map(apt => (
@@ -353,23 +387,23 @@ function MonthlyCalendarView() {
           <div className="xl:col-span-4 space-y-4">
 
             {/* Filtros */}
-            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm space-y-3">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Filtros</p>
-              <input type="date" value={filterDate} onChange={e=>setFilterDate(e.target.value)} className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all"/>
-              <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all">
-                <option value="todos">Todos los estados</option>
-                <option value="confirmed">Confirmadas</option>
-                <option value="pending">Pendientes</option>
-                <option value="completed">Completadas</option>
-                <option value="cancelled">Canceladas</option>
+            <div className="rounded-2xl p-5 shadow-sm space-y-3" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+              <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('ui.filters')}</p>
+              <input type="date" value={filterDate} onChange={e=>setFilterDate(e.target.value)} className="w-full p-3 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }}/>
+              <select value={filterStatus} onChange={e=>setFilterStatus(e.target.value)} className="w-full p-3 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }}>
+                <option value="todos">{t('ui.all_statuses')}</option>
+                <option value="confirmed">{t('ui.confirmed_pl')}</option>
+                <option value="pending">{t('ui.pending_pl')}</option>
+                <option value="completed">{t('ui.completed_pl')}</option>
+                <option value="cancelled">{t('ui.cancelled_pl')}</option>
               </select>
-              {(filterDate||filterStatus!=='todos') && <button onClick={()=>{setFilterDate('');setFilterStatus('todos')}} className="text-xs text-blue-600 font-bold hover:underline">Limpiar filtros</button>}
+              {(filterDate||filterStatus!=='todos') && <button onClick={()=>{setFilterDate('');setFilterStatus('todos')}} className="text-xs text-blue-600 font-bold hover:underline">{t('ui.clear_filters')}</button>}
             </div>
 
             {/* Lista citas */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-slate-100">
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Citas ({filteredApts.length})</p>
+            <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+              <div className="p-4 border-b" style={{ borderColor: "var(--card-border)" }}>
+                <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Citas ({filteredApts.length})</p>
               </div>
               <div className="max-h-[520px] overflow-y-auto divide-y divide-slate-50">
                 {isLoading ? (
@@ -377,27 +411,27 @@ function MonthlyCalendarView() {
                 ) : filteredApts.length===0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-center px-4">
                     <div className="p-4 bg-slate-100 rounded-2xl mb-3"><Calendar size={32} className="text-slate-300"/></div>
-                    <p className="font-bold text-slate-400 text-sm">No hay citas</p>
+                    <p className="font-bold text-slate-400 text-sm">{t('ui.no_appointments')}</p>
                   </div>
                 ) : filteredApts.map(a => {
                   const sc = STATUS_CONFIG[a.status||'confirmed']||STATUS_CONFIG.confirmed
                   const isVirtual = a.modalidad==='virtual'
                   const isUpcoming = a.appointment_date>=todayStr && a.status!=='cancelled' && a.status!=='completed'
                   return (
-                    <div key={a.id} className="p-4 hover:bg-slate-50 transition-all group">
+                    <div key={a.id} className="p-4 transition-all group" style={{ borderBottom: "1px solid var(--card-border)" }}>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
                             <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase tracking-wider ${sc.bg} ${sc.color}`}>{sc.label}</span>
                             {isVirtual
-                              ? <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 uppercase flex items-center gap-0.5"><Video size={9}/> Virtual</span>
-                              : <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-50 text-slate-500 border border-slate-200 uppercase flex items-center gap-0.5"><MapPin size={9}/> Presencial</span>
+                              ? <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-200 uppercase flex items-center gap-0.5"><Video size={9}/> {t('agenda.virtual')}</span>
+                              : <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-50 text-slate-500 border border-slate-200 uppercase flex items-center gap-0.5"><MapPin size={9}/> {t('agenda.presencial')}</span>
                             }
                             {a.is_group && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100 uppercase">Grupal</span>}
                           </div>
-                          <p className="font-bold text-slate-800 text-sm truncate">{a.children?.name||'Paciente'}</p>
-                          <p className="text-xs text-slate-400 font-medium mt-0.5 truncate">{a.service_type}</p>
-                          <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-400 font-bold">
+                          <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{a.children?.name||'Paciente'}</p>
+                          <p className="text-xs font-medium mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{a.service_type}</p>
+                          <div className="flex items-center gap-3 mt-1.5 text-xs font-bold" style={{ color: "var(--text-muted)" }}>
                             <span className="flex items-center gap-1"><Calendar size={11}/>{a.appointment_date}</span>
                             <span className="flex items-center gap-1"><Clock size={11}/>{a.appointment_time?.slice(0,5)}</span>
                           </div>
@@ -436,16 +470,16 @@ function MonthlyCalendarView() {
         {/* ── Modal Nueva Cita ── */}
         {show && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white p-6 md:p-8 rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 md:p-8 rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto" style={{ background: "var(--card)" }}>
               <div className="flex justify-between items-center mb-6">
-                <h3 className="font-black text-xl text-slate-800 flex items-center gap-2"><Plus size={20} className="text-blue-600"/> Nueva Cita</h3>
+                <h3 className="font-black text-xl flex items-center gap-2" style={{ color: "var(--text-primary)" }}><Plus size={20} className="text-blue-600"/> {t('agenda.nuevaCita')}</h3>
                 <button onClick={resetForm} className="p-2 rounded-full hover:bg-slate-100"><X size={20}/></button>
               </div>
 
               <div className="space-y-5">
                 {/* Tipo sesión */}
                 <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Tipo de sesión</label>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Tipo de sesión</label>
                   <div className="grid grid-cols-2 gap-3">
                     {(['individual','grupal'] as const).map(tipo => (
                       <button key={tipo} onClick={()=>{setTipoSesion(tipo);setSelectedParticipants([]);setNewApt(p=>({...p,child_id:''}))}}
@@ -458,7 +492,7 @@ function MonthlyCalendarView() {
 
                 {/* Modalidad */}
                 <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Modalidad</label>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{t('agenda.modalidad')}</label>
                   <div className="grid grid-cols-2 gap-3">
                     {([
                       {value:'presencial',icon:<MapPin size={16}/>,label:'Presencial',active:'bg-slate-800 text-white border-slate-800 shadow-lg shadow-slate-200'},
@@ -481,9 +515,9 @@ function MonthlyCalendarView() {
                 {/* Paciente / Grupo */}
                 {tipoSesion==='individual' && (
                   <div>
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Paciente *</label>
-                    <select className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-500 transition-all" onChange={e=>setNewApt(p=>({...p,child_id:e.target.value}))} value={newApt.child_id}>
-                      <option value="">Seleccionar paciente...</option>
+                    <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Paciente *</label>
+                    <select className="w-full p-4 rounded-xl text-sm font-bold outline-none focus:border-blue-500 transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} onChange={e=>setNewApt(p=>({...p,child_id:e.target.value}))} value={newApt.child_id}>
+                      <option value="">{t('ui.select_patient_option')}</option>
                       {ninos.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
                     </select>
                   </div>
@@ -491,11 +525,11 @@ function MonthlyCalendarView() {
                 {tipoSesion==='grupal' && (
                   <>
                     <div>
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Nombre del grupo</label>
-                      <input type="text" placeholder="Ej: Grupo Habilidades Sociales A" className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-purple-400 transition-all" value={newApt.group_name} onChange={e=>setNewApt(p=>({...p,group_name:e.target.value}))}/>
+                      <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Nombre del grupo</label>
+                      <input type="text" placeholder="Ej: Grupo Habilidades Sociales A" className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.group_name} onChange={e=>setNewApt(p=>({...p,group_name:e.target.value}))}/>
                     </div>
                     <div>
-                      <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Participantes ({selectedParticipants.length})</label>
+                      <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Participantes ({selectedParticipants.length})</label>
                       <div className="max-h-48 overflow-y-auto bg-slate-50 rounded-xl border-2 border-slate-200 p-3 space-y-2">
                         {ninos.map(n => (
                           <label key={n.id} className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all ${selectedParticipants.includes(n.id)?'bg-purple-600 text-white shadow-md':'bg-white hover:bg-purple-50 border border-slate-100'}`}>
@@ -511,37 +545,69 @@ function MonthlyCalendarView() {
 
                 {/* Servicio, fecha, hora, estado */}
                 <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Servicio</label>
-                  <select className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all" value={newApt.service} onChange={e=>setNewApt(p=>({...p,service:e.target.value}))}>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Servicio</label>
+                  <select className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.service} onChange={e=>setNewApt(p=>({...p,service:e.target.value}))}>
                     {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Fecha *</label>
-                    <input type="date" className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all" value={newApt.date} onChange={e=>setNewApt(p=>({...p,date:e.target.value}))}/>
+                    <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Fecha *</label>
+                    <input type="date" className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.date} onChange={e=>setNewApt(p=>({...p,date:e.target.value}))}/>
                   </div>
                   <div>
-                    <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Hora *</label>
-                    <input type="time" className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all" value={newApt.time} onChange={e=>setNewApt(p=>({...p,time:e.target.value}))}/>
+                    <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Hora *</label>
+                    <input type="time" className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.time} onChange={e=>setNewApt(p=>({...p,time:e.target.value}))}/>
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Estado</label>
-                  <select className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all" value={newApt.status} onChange={e=>setNewApt(p=>({...p,status:e.target.value}))}>
-                    <option value="confirmed">Confirmada</option>
-                    <option value="pending">Pendiente</option>
-                    <option value="completed">Completada</option>
-                    <option value="cancelled">Cancelada</option>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{t('common.estado')}</label>
+                  <select className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.status} onChange={e=>setNewApt(p=>({...p,status:e.target.value}))}>
+                    <option value="confirmed">{t('agenda.confirmada')}</option>
+                    <option value="pending">{t('common.pendiente')}</option>
+                    <option value="completed">{t('ui.completed_status')}</option>
+                    <option value="cancelled">{t('agenda.cancelada')}</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Notas (opcional)</label>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Notas (opcional)</label>
                   <textarea rows={2} placeholder="Observaciones..." className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all resize-none" value={newApt.notes} onChange={e=>setNewApt(p=>({...p,notes:e.target.value}))}/>
                 </div>
 
+                {/* Recurrencia */}
+                <div className="rounded-xl border-2 p-4" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-3" style={{ color: "var(--text-muted)" }}>
+                    🔄 Repetir cita
+                  </label>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    {([
+                      { value: 'none',      label: 'No repetir' },
+                      { value: 'weekly',    label: t('agenda.semanal') },
+                      { value: 'biweekly',  label: 'Quincenal' },
+                    ] as const).map(opt => (
+                      <button key={opt.value} onClick={() => setRecurrencia(opt.value)}
+                        className={`py-2.5 rounded-xl text-xs font-black border-2 transition-all ${recurrencia === opt.value ? 'border-blue-500 text-blue-600' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
+                        style={{ background: recurrencia === opt.value ? 'rgba(37,99,235,0.08)' : 'var(--card)' }}>
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  {recurrencia !== 'none' && (
+                    <div>
+                      <label className="text-[11px] font-bold mb-1 block" style={{ color: "var(--text-muted)" }}>Cantidad de repeticiones</label>
+                      <select value={recurrenciaSemanas} onChange={e => setRecurrenciaSemanas(Number(e.target.value))}
+                        className="w-full p-3 rounded-xl text-sm font-bold outline-none border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}>
+                        {[2,3,4,6,8,12].map(n => <option key={n} value={n}>{n} citas ({recurrencia === 'weekly' ? `${n} semanas` : `${n*2} semanas`})</option>)}
+                      </select>
+                      <p className="text-[10px] mt-1.5 font-medium text-blue-500">
+                        Se crearán {recurrenciaSemanas} citas {recurrencia === 'weekly' ? 'cada semana' : 'cada 2 semanas'} a partir de la fecha seleccionada.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-3 pt-2">
-                  <button onClick={resetForm} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl transition-all border-2 border-slate-100">Cancelar</button>
+                  <button onClick={resetForm} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl transition-all border-2 border-slate-100">{t('common.cancelar')}</button>
                   <button onClick={handleSave} disabled={isSaving}
                     className={`flex-[2] py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-white ${modalidadCita==='virtual'?'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-indigo-200':tipoSesion==='grupal'?'bg-gradient-to-r from-purple-600 to-violet-600 shadow-purple-200':'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-blue-200'}`}>
                     {isSaving?<Loader2 size={18} className="animate-spin"/>:modalidadCita==='virtual'?<Video size={18}/>:<Plus size={18}/>}

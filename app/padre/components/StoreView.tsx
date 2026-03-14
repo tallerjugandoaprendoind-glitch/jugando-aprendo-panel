@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useCallback } from 'react'
 import {
   ShoppingBag, ShoppingCart, Plus, Minus, X, Package, Star,
@@ -42,6 +44,7 @@ const ESTADO_CFG: Record<string, any> = {
 // ── Carrito flotante ──────────────────────────────────────────────────────────
 function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
   const total = cart.reduce((s: number, i: CartItem) => s + i.product.precio_soles * i.cantidad, 0)
+  const { t } = useI18n()
   const [nota, setNota] = useState('')
   const [placing, setPlacing] = useState(false)
   const [done, setDone] = useState(false)
@@ -87,8 +90,8 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
             <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
               <ShoppingCart size={36} className="text-slate-300" />
             </div>
-            <p className="font-bold text-slate-500 mb-1">Tu carrito está vacío</p>
-            <p className="text-sm text-slate-400">Agrega artículos desde la tienda</p>
+            <p className="font-bold text-slate-500 mb-1">{t('ui.cart_empty')}</p>
+            <p className="text-sm text-slate-400">{t('ui.add_items')}</p>
           </div>
         ) : (
           <>
@@ -143,7 +146,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
             {/* Footer con total y botón */}
             <div className="border-t border-slate-100 p-5 space-y-3">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-600">Total a pagar</span>
+                <span className="font-bold text-slate-600">{t('ui.total_to_pay')}</span>
                 <span className="text-2xl font-black text-blue-600">S/ {total.toFixed(2)}</span>
               </div>
               <button onClick={handleCheckout} disabled={placing}
@@ -164,6 +167,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
 
 // ── Vista principal de la tienda ──────────────────────────────────────────────
 export default function StoreView({ profile }: { profile: any }) {
+  const { t } = useI18n()
   const [view, setView] = useState<'catalogo' | 'mis-pedidos'>('catalogo')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
@@ -313,7 +317,7 @@ export default function StoreView({ profile }: { profile: any }) {
           <div className="space-y-3">
             <div className="relative">
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar materiales..."
+              <input value={search} onChange={e => setSearch(e.target.value)} {...{placeholder: t('ui.search_material')}}
                 className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-blue-400 transition-all shadow-sm"
               />
             </div>
@@ -352,7 +356,7 @@ export default function StoreView({ profile }: { profile: any }) {
           {resto.length > 0 || (filtered.length > 0 && destacados.length === 0) ? (
             <div>
               {destacados.length > 0 && search === '' && filterTipo === 'todos' && filterCat === 'todos' && (
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Todos los artículos</p>
+                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('ui.all_items')}</p>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(destacados.length > 0 && search === '' && filterTipo === 'todos' && filterCat === 'todos' ? resto : filtered).map(p => (
@@ -363,7 +367,7 @@ export default function StoreView({ profile }: { profile: any }) {
           ) : filtered.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 py-20 text-center">
               <ShoppingBag size={36} className="text-slate-200 mx-auto mb-3" />
-              <p className="font-bold text-slate-400">No se encontraron artículos</p>
+              <p className="font-bold text-slate-400">{t('ui.no_items_found')}</p>
               <button onClick={() => { setSearch(''); setFilterTipo('todos'); setFilterCat('todos') }}
                 className="mt-3 text-xs font-bold text-blue-600 hover:underline">
                 Limpiar filtros
@@ -379,7 +383,7 @@ export default function StoreView({ profile }: { profile: any }) {
             <div>
               <p className="font-bold text-blue-800 text-sm mb-1">¿Cómo funciona la tienda?</p>
               <p className="text-xs text-blue-600 leading-relaxed">
-                Los artículos <strong>físicos</strong> se recogen en el centro (pago en efectivo o Yape al entregar).
+                {t('ui.physical_items_note')}
                 Los <strong>digitales</strong> te los enviamos por WhatsApp tras confirmar el pago.
                 ¿Dudas? Escríbenos al <a href="https://wa.me/51924807183" className="underline font-bold">+51 924 807 183</a>.
               </p>
@@ -492,7 +496,7 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
           <span className="text-lg font-black text-blue-600">S/ {Number(p.precio_soles).toFixed(2)}</span>
           <button onClick={() => !sinStock && onAdd(p)} disabled={sinStock}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${justAdded ? 'bg-emerald-600 text-white scale-95' : sinStock ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200'}`}>
-            {justAdded ? <><CheckCircle size={13} /> ¡Añadido!</> : <><ShoppingCart size={13} /> {inCart > 0 ? `En carrito (${inCart})` : 'Agregar'}</>}
+            {justAdded ? <><CheckCircle size={13} /> {t('ui.added_short')}</> : <><ShoppingCart size={13} /> {inCart > 0 ? `${t('ui.in_cart')} (${inCart})` : t('common.agregar')}</>}
           </button>
         </div>
       </div>
@@ -548,7 +552,7 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
 
           <button onClick={() => !sinStock && onAdd(p)} disabled={sinStock}
             className={`w-full py-4 rounded-2xl font-black text-base transition-all flex items-center justify-center gap-2 ${justAdded ? 'bg-emerald-600 text-white' : sinStock ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200'}`}>
-            {justAdded ? <><CheckCircle size={18} /> ¡Añadido al carrito!</> : sinStock ? 'Sin stock disponible' : <><ShoppingCart size={18} /> {inCart > 0 ? `Agregar otro (${inCart} en carrito)` : 'Agregar al carrito'}</>}
+            {justAdded ? <><CheckCircle size={18} /> {t('ui.added_to_cart')}</> : sinStock ? t('ui.out_of_stock') : <><ShoppingCart size={18} /> {inCart > 0 ? `${t('ui.add_another')} (${inCart} ${t('ui.in_cart_count')})` : t('ui.add_to_cart')}</>}
           </button>
         </div>
       </div>

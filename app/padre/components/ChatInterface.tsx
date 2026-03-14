@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Send, Sparkles, Heart, ShoppingBag, Mic, MicOff, Volume2, VolumeX, RefreshCw, StopCircle } from 'lucide-react'
@@ -14,6 +16,7 @@ declare global {
 
 // ── Hook de Text-to-Speech con ElevenLabs (Ivanna) ───────────────────────────
 function useTextToSpeech() {
+  const { t, locale } = useI18n()
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -35,8 +38,8 @@ function useTextToSpeech() {
     try {
       const res = await fetch('/api/elevenlabs-tts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': locale || 'es' },
+        body: JSON.stringify({ text, locale: localStorage.getItem('vanty_locale') || 'es' }),
         signal: abortRef.current.signal,
       })
 
@@ -101,6 +104,8 @@ function useTextToSpeech() {
 
 // ── Hook de Speech-to-Text ────────────────────────────────────────────────────
 function useSpeechToText(onResult: (text: string) => void) {
+  const { t } = useI18n()
+
   const [listening, setListening] = useState(false)
   const [supported, setSupported] = useState(false)
   const recognitionRef = useRef<any>(null)
@@ -150,11 +155,14 @@ const EMOTIONAL_KEYWORDS = [
 ]
 
 function detectsEmotion(t: string) {
+
   const l = t.toLowerCase()
   return EMOTIONAL_KEYWORDS.some(kw => l.includes(kw))
 }
 
 function getEmotionalPrefix(text: string): string {
+  const { t } = useI18n()
+
   const l = text.toLowerCase()
   if (l.includes('cansad') || l.includes('agotad'))
     return '💙 Entiendo que estás cansado/a, y eso es completamente válido. Acompañar a un hijo en este proceso requiere muchísima energía.\n\n'
@@ -169,6 +177,8 @@ function getEmotionalPrefix(text: string): string {
 
 // ── Robot SVG mascota ─────────────────────────────────────────────────────────
 function RobotAvatar({ size = 36, animated = false }: { size?: number; animated?: boolean }) {
+  const { t } = useI18n()
+
   return (
     <svg width={size} height={size} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"
       style={animated ? { animation: 'robotBob 2s ease-in-out infinite' } : {}}>
@@ -215,6 +225,8 @@ function RobotAvatar({ size = 36, animated = false }: { size?: number; animated?
 
 // ── Burbuja de mensaje ────────────────────────────────────────────────────────
 function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; onNavigateToStore?: () => void; onWellbeingAnswer?: (opt: string) => void }) {
+  const { t } = useI18n()
+
   const isUser = m.role === 'user'
 
   if (isUser) {
@@ -276,7 +288,7 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
           {m.type === 'emotional' && (
             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-100">
               <Heart size={13} className="text-blue-500 fill-blue-500" />
-              <span className="text-xs font-black text-blue-500 uppercase tracking-widest">Con todo mi apoyo</span>
+              <span className="text-xs font-black text-blue-500 uppercase tracking-widest">{t('ui.from_therapist')}</span>
             </div>
           )}
           <p className="whitespace-pre-wrap">{m.text}</p>
@@ -324,6 +336,7 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
 
 // ── Indicador de escritura ────────────────────────────────────────────────────
 function TypingIndicator() {
+  const { t, locale } = useI18n()
   return (
     <div className="flex gap-3 mb-4 items-center">
       <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center shadow-md"
@@ -335,7 +348,7 @@ function TypingIndicator() {
           <div key={d} className="w-2 h-2 rounded-full bg-indigo-400"
             style={{ animation: `typingDot 1.2s ease-in-out infinite`, animationDelay: `${d}s` }} />
         ))}
-        <span className="text-xs text-slate-400 font-medium ml-2">Analizando...</span>
+        <span className="text-xs text-slate-400 font-medium ml-2">{t('common.analizando')}</span>
       </div>
     </div>
   )
@@ -343,6 +356,8 @@ function TypingIndicator() {
 
 // ── Pantalla de bienvenida ────────────────────────────────────────────────────
 function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickSend: (q: string) => void }) {
+  const { t } = useI18n()
+
   const quick = [
     { icon: '📋', text: '¿Cómo le fue en la última sesión?', color: '#eef2ff', border: '#c7d2fe' },
     { icon: '🏠', text: 'Dame consejos para casa', color: '#f0fdf4', border: '#bbf7d0' },
@@ -408,6 +423,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
 
 // ── Componente principal ──────────────────────────────────────────────────────
 function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any) {
+  const { t, locale } = useI18n()
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
@@ -490,7 +506,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
     try {
       const res = await fetch('/api/parent-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': locale || 'es' },
         body: JSON.stringify({
           question: isEmotional
             ? `${txt}\n\n[INSTRUCCIÓN: El padre/madre experimenta carga emocional. Valida primero con calidez genuina antes de información clínica.]`

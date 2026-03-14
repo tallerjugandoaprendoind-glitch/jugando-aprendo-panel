@@ -1,4 +1,6 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 import { useEffect, useState, useCallback } from 'react'
 import type { JSX } from 'react'
 import { supabase as supabaseClient } from '@/lib/supabase'
@@ -34,7 +36,7 @@ interface Props {
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: JSX.Element; dot: string }> = {
   confirmed: { 
-    label: 'Confirmada', 
+    label: 'Confirmed', 
     color: 'text-emerald-700', 
     bg: 'bg-emerald-50 border-emerald-200', 
     icon: <CheckCircle size={14}/>,
@@ -48,7 +50,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
     dot: 'bg-amber-500'
   },
   cancelled: { 
-    label: 'Cancelada', 
+    label: 'Cancelled', 
     color: 'text-red-600', 
     bg: 'bg-red-50 border-red-200', 
     icon: <XCircle size={14}/>,
@@ -67,6 +69,7 @@ const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','
 const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
 function formatDate(dateStr: string) {
+  const { t } = useI18n()
   const [y, m, d] = dateStr.split('-').map(Number)
   const date = new Date(y, m - 1, d)
   return {
@@ -95,6 +98,7 @@ function isUpcoming(dateStr: string) {
 }
 
 export default function MisCitasView({ profile, selectedChild, onCancelAppointment, onChangeView }: Props) {
+  const { t } = useI18n()
   const supabase = supabaseClient
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
@@ -227,7 +231,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <CalendarDays size={18} className="opacity-80"/>
-            <span className="text-purple-200 text-sm font-semibold tracking-wide uppercase">Mis Citas</span>
+            <span className="text-purple-200 text-sm font-semibold tracking-wide uppercase">{t('nav.miscitas')}</span>
           </div>
           <h1 className="text-2xl font-black mb-4">
             {selectedChild?.name?.split(' ')[0] || 'Todas las citas'}
@@ -237,15 +241,15 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-3 text-center">
               <div className="text-2xl font-black">{upcomingCount}</div>
-              <div className="text-[10px] text-purple-200 font-semibold uppercase tracking-wider mt-0.5">Próximas</div>
+              <div className="text-[10px] text-purple-200 font-semibold uppercase tracking-wider mt-0.5">{t('ui.upcoming')}</div>
             </div>
             <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-3 text-center">
               <div className="text-2xl font-black">{completedCount}</div>
-              <div className="text-[10px] text-purple-200 font-semibold uppercase tracking-wider mt-0.5">Realizadas</div>
+              <div className="text-[10px] text-purple-200 font-semibold uppercase tracking-wider mt-0.5">{t('ui.completed_appts')}</div>
             </div>
             <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-3 text-center">
               <div className="text-2xl font-black">{appointments.length}</div>
-              <div className="text-[10px] text-purple-200 font-semibold uppercase tracking-wider mt-0.5">Total</div>
+              <div className="text-[10px] text-purple-200 font-semibold uppercase tracking-wider mt-0.5">{t('common.total')}</div>
             </div>
           </div>
         </div>
@@ -309,7 +313,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           <div className="w-20 h-20 bg-gradient-to-br from-violet-100 to-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
             <CalendarDays size={36} className="text-violet-400"/>
           </div>
-          <h3 className="font-bold text-slate-800 text-lg mb-2">Sin citas aquí</h3>
+          <h3 className="font-bold text-slate-800 text-lg mb-2">{t('ui.no_appointments_here')}</h3>
           <p className="text-slate-400 text-sm mb-6">
             {filter === 'upcoming' 
               ? 'No tienes citas próximas agendadas.'

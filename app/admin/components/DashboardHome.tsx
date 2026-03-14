@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect } from 'react'
 import {
   Activity, Brain, Calendar, ChevronRight, Clock,
@@ -59,10 +61,11 @@ function CitaRow({ cita }: { cita: any }) {
 
 // ── Alerta clínica ──────────────────────────────────────────────────────────
 function AlertaClinica({ tipo, paciente, mensaje, onClick }: any) {
+  const { t } = useI18n()
   const cfg: Record<string, any> = {
-    sin_sesion: { icon: '😴', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', label: 'Sin sesión' },
-    bienestar_bajo: { icon: '💙', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', label: 'Padre necesita apoyo' },
-    sin_cita: { icon: '📅', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', label: 'Sin citas' },
+    sin_sesion: { icon: '😴', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', label: t('dashboard.sinSesion') },
+    bienestar_bajo: { icon: '💙', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', label: t('dashboard.bienestar') },
+    sin_cita: { icon: '📅', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', label: t('agenda.sinCitas') },
   }
   const c = cfg[tipo] || cfg.sin_sesion
   return (
@@ -82,6 +85,7 @@ function AlertaClinica({ tipo, paciente, mensaje, onClick }: any) {
 // ── Panel de respuestas de bienestar de padres ──────────────────────────────
 function BienestarPanel({ data }: { data: any[] }) {
   if (data.length === 0) return null
+  const { t } = useI18n()
   const counts = {
     bien:    data.filter(d => (d.responses?.answer || d.form_title || '').includes('Bien')).length,
     regular: data.filter(d => (d.responses?.answer || d.form_title || '').includes('Regular')).length,
@@ -93,7 +97,7 @@ function BienestarPanel({ data }: { data: any[] }) {
         <div className="w-7 h-7 bg-pink-50 rounded-lg flex items-center justify-center">
           <Heart size={14} className="text-pink-600" />
         </div>
-        <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Bienestar de padres este mes</p>
+        <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('dashboard.bienestarPadres')}</p>
         <span className="ml-auto text-xs bg-pink-50 text-pink-600 font-bold px-2 py-0.5 rounded-full">{data.length} respuestas</span>
       </div>
       <div className="grid grid-cols-3 gap-3 mb-3">
@@ -124,6 +128,7 @@ function BienestarPanel({ data }: { data: any[] }) {
 // ── Dashboard principal ─────────────────────────────────────────────────────
 function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   const toast = useToast()
+  const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [emailCredito, setEmailCredito] = useState('')
   const [stats, setStats] = useState({ pacientes: 0, sesionesHoy: 0, creditosActivos: 0, analisisIA: 0, sinSesion30d: 0, mensajesPendientes: 0 })
@@ -184,7 +189,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
 
     const alertas: any[] = []
     sinSesion.slice(0, 3).forEach((n: any) => {
-      alertas.push({ tipo: 'sin_sesion', paciente: n.name, mensaje: 'Sin sesión en los últimos 30 días. Revisa si hubo cancelaciones.' })
+      alertas.push({ tipo: 'sin_sesion', paciente: n.name, mensaje: t('dashboard.sinSesionMensaje') })
     })
 
     // Alertas de bienestar bajo
@@ -218,10 +223,10 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
 
 
   const STAT_CARDS = [
-    { title: 'Pacientes activos', value: stats.pacientes, sub: 'Total', icon: Users, accent: { bg: 'bg-blue-50', icon: 'text-blue-600', badge: 'bg-blue-50 text-blue-600' }, onClick: () => navigateTo('ninos') },
-    { title: 'Sesiones pendientes hoy', value: stats.sesionesHoy, sub: 'Por realizar', icon: Calendar, accent: { bg: 'bg-indigo-50', icon: 'text-indigo-600', badge: 'bg-indigo-50 text-indigo-600' }, onClick: () => navigateTo('agenda') },
-    { title: 'Sin sesión 30 días', value: stats.sinSesion30d, sub: 'Revisar', icon: AlertTriangle, accent: { bg: 'bg-amber-50', icon: 'text-amber-600', badge: 'bg-amber-50 text-amber-600' }, alert: stats.sinSesion30d > 0, onClick: () => navigateTo('ninos') },
-    { title: 'Mensajes sin leer', value: stats.mensajesPendientes, sub: 'Padres', icon: MessageCircle, accent: { bg: 'bg-violet-50', icon: 'text-violet-600', badge: 'bg-violet-50 text-violet-600' }, alert: stats.mensajesPendientes > 3, onClick: () => navigateTo('mensajes') },
+    { title: t('dashboard.pacientesActivos'), value: stats.pacientes, sub: t('common.total'), icon: Users, accent: { bg: 'bg-blue-50', icon: 'text-blue-600', badge: 'bg-blue-50 text-blue-600' }, onClick: () => navigateTo('ninos') },
+    { title: t('dashboard.sesionesHoy'), value: stats.sesionesHoy, sub: t('dashboard.porRealizar'), icon: Calendar, accent: { bg: 'bg-indigo-50', icon: 'text-indigo-600', badge: 'bg-indigo-50 text-indigo-600' }, onClick: () => navigateTo('agenda') },
+    { title: t('dashboard.sinSesion30d'), value: stats.sinSesion30d, sub: t('dashboard.revisar'), icon: AlertTriangle, accent: { bg: 'bg-amber-50', icon: 'text-amber-600', badge: 'bg-amber-50 text-amber-600' }, alert: stats.sinSesion30d > 0, onClick: () => navigateTo('ninos') },
+    { title: t('dashboard.mensajesSinLeer'), value: stats.mensajesPendientes, sub: t('nav.pacientes'), icon: MessageCircle, accent: { bg: 'bg-violet-50', icon: 'text-violet-600', badge: 'bg-violet-50 text-violet-600' }, alert: stats.mensajesPendientes > 3, onClick: () => navigateTo('mensajes') },
   ]
 
   return (
@@ -242,7 +247,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
           </p>
         </div>
         <div className="text-right hidden sm:block relative">
-          <p className="text-blue-300 text-xs font-medium">Hora actual</p>
+          <p className="text-blue-300 text-xs font-medium">{t('dashboard.horaActual')}</p>
           <p className="text-3xl font-black tabular-nums">
             {horaActual ? horaActual.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
           </p>
@@ -262,7 +267,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
             <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center">
               <Bell size={14} className="text-amber-600" />
             </div>
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Alertas clínicas</p>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('dashboard.alertasClinicas')}</p>
             <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-black px-2 py-0.5 rounded-full animate-pulse">
               {alertasClinicas.length} nueva{alertasClinicas.length > 1 ? 's' : ''}
             </span>
@@ -285,14 +290,14 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         <div className="space-y-4">
           {/* Acciones */}
           <div className="rounded-2xl border shadow-sm p-5" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
-            <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Acciones rápidas</p>
+            <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>{t('dashboard.quickActions')}</p>
             <div className="space-y-2">
               {[
-                { label: 'Nueva Evaluación',  icon: FileText,      view: 'evaluaciones', bg: '#2563eb', fg: '#ffffff' },
-                { label: 'Agendar Cita',      icon: Calendar,      view: 'agenda',       bg: '#1e293b', fg: '#ffffff' },
-                { label: 'Historial & IA',    icon: Brain,         view: 'reportes',     bg: '#7c3aed', fg: '#ffffff' },
+                { label: t('evaluaciones.nuevo'),  icon: FileText,      view: 'evaluaciones', bg: '#2563eb', fg: '#ffffff' },
+                { label: t('agenda.nuevaCita'),      icon: Calendar,      view: 'agenda',       bg: '#1e293b', fg: '#ffffff' },
+                { label: t('nav.historial'),    icon: Brain,         view: 'reportes',     bg: '#7c3aed', fg: '#ffffff' },
                 { label: 'Ver Pacientes',     icon: Users,         view: 'ninos',        bg: '#334155', fg: '#ffffff' },
-                { label: 'Mensajes padres',   icon: MessageCircle, view: 'mensajes',     bg: '#d1fae5', fg: '#065f46', badge: stats.mensajesPendientes },
+                { label: t('mensajes.titulo'),   icon: MessageCircle, view: 'mensajes',     bg: '#d1fae5', fg: '#065f46', badge: stats.mensajesPendientes },
               ].map(({ label, icon: Icon, view, bg, fg, badge }: any) => (
                 <button key={view} onClick={() => navigateTo(view)}
                   className="w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98]"
@@ -315,7 +320,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
           {/* Créditos - Administrar desde el módulo de Usuarios */}
           {false && (
           <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Cargar créditos</p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{t('dashboard.cargarCreditos')}</p>
             <p className="text-xs text-slate-400 mb-3">Total en circulación: <strong className="text-slate-700">{stats.creditosActivos}</strong></p>
             <input
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 mb-3 font-medium"
@@ -340,7 +345,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         {/* Próximas citas */}
         <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Próximas citas</p>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('dashboard.proximasCitas')}</p>
             <span className="text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-full">
               {proximasCitas.length} agendadas
             </span>
@@ -353,7 +358,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                   <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-3">
                     <Calendar size={28} className="text-slate-300" />
                   </div>
-                  <p className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>Sin citas próximas</p>
+                  <p className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>{t('dashboard.sinCitas')}</p>
                   <button onClick={() => navigateTo('agenda')}
                     className="mt-3 text-xs font-bold text-blue-600 hover:underline">
                     Agendar ahora →
@@ -373,7 +378,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         {/* Actividad reciente */}
         <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Actividad reciente</p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('dashboard.actividadReciente')}</p>
             <Activity size={14} className="text-slate-300" />
           </div>
           <div className="space-y-1">
@@ -397,7 +402,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                   <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-3">
                     <Activity size={28} className="text-slate-300" />
                   </div>
-                  <p className="text-sm font-bold text-slate-400">Sin actividad reciente</p>
+                  <p className="text-sm font-bold text-slate-400">{t('dashboard.sinActividad')}</p>
                   <button onClick={() => navigateTo('evaluaciones')}
                     className="mt-3 text-xs font-bold text-orange-500 hover:underline">
                     Registrar sesión →
@@ -422,7 +427,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
             <Sparkles size={22} className="text-white" />
           </div>
           <div>
-            <p className="font-black text-base">Análisis IA esta semana</p>
+            <p className="font-black text-base">{t('dashboard.analisisIA')}</p>
             <p className="text-violet-200 text-sm">{stats.analisisIA} registros procesados por IA</p>
           </div>
         </div>

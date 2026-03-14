@@ -38,6 +38,13 @@ function escala5(v: any, fallback: number): number {
   return Math.round(((n - 1) / 4) * 100)
 }
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale: string): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
+  return ''
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const childId = searchParams.get('child_id')

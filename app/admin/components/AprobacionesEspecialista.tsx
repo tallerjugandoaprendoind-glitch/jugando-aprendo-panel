@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useCallback } from 'react'
 import {
   ShieldCheck, CheckCircle, XCircle, Clock, ChevronDown, ChevronUp,
@@ -39,12 +41,14 @@ interface Submission {
 
 export default function AprobacionesEspecialista() {
   const toast = useToast()
+  const { t } = useI18n()
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState<'pending_approval' | 'approved' | 'rejected' | 'all'>('pending_approval')
   const [expandido, setExpandido] = useState<string | null>(null)
   const [comentarios, setComentarios] = useState<Record<string, string>>({})
   const [accionando, setAccionando] = useState<string | null>(null)
+  const [autoAprobacion, setAutoAprobacion] = useState(false)
 
   const cargar = useCallback(async () => {
     setLoading(true)
@@ -56,6 +60,21 @@ export default function AprobacionesEspecialista() {
       if (filtro !== 'all') q = q.eq('status', filtro)
       const { data, error } = await q
       if (error) throw error
+      // Auto-aprobar si está activado
+      if (autoAprobacion && data) {
+        const pendientes = data.filter(s => s.status === 'pending_approval')
+        for (const s of pendientes) {
+          await supabase.from('specialist_submissions').update({ status: 'approved', admin_comment: 'Auto-aprobado' }).eq('id', s.id)
+        }
+        if (pendientes.length > 0) {
+          // Recargar
+          const { data: data2 } = await supabase.from('specialist_submissions')
+            .select('*, children(name), profiles!specialist_submissions_specialist_id_fkey(full_name, specialty)')
+            .order('created_at', { ascending: false })
+          setSubmissions(data2 || [])
+          return
+        }
+      }
       setSubmissions(data || [])
     } catch (e: any) {
       toast.error('Error: ' + e.message)
@@ -102,14 +121,28 @@ export default function AprobacionesEspecialista() {
                   className="text-xs font-black px-2 py-0.5 rounded-full">{pendientesCount}</span>
               )}
             </h3>
-            <p style={{ color: '#475569' }} className="text-sm">Revisa y aprueba evaluaciones clínicas</p>
+            <p style={{ color: '#475569' }} className="text-sm">{t('ui.require_approval')}</p>
           </div>
         </div>
-        <button onClick={cargar}
-          style={{ color: '#475569', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-          className="p-2 rounded-xl hover:bg-white/10 transition-colors">
-          <RefreshCw size={15} />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Toggle Auto-aprobación */}
+          <button onClick={() => setAutoAprobacion(v => !v)}
+            style={{ 
+              background: autoAprobacion ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${autoAprobacion ? 'rgba(16,185,129,0.4)' : 'rgba(255,255,255,0.08)'}`,
+              color: autoAprobacion ? '#10b981' : '#475569'
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-black transition-all hover:opacity-80"
+            title={t('ui.auto_approval_tooltip')}>
+            <span className={`w-2 h-2 rounded-full ${autoAprobacion ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`}/>
+            Auto-aprobar {autoAprobacion ? 'ON' : 'OFF'}
+          </button>
+          <button onClick={cargar}
+            style={{ color: '#475569', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+            className="p-2 rounded-xl hover:bg-white/10 transition-colors">
+            <RefreshCw size={15} />
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 flex-wrap">
@@ -198,9 +231,9 @@ export default function AprobacionesEspecialista() {
                 {abierto && (
                   <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }}
                     className="px-5 py-5 space-y-4">
-                    <Section title="Contenido" content={sub.contenido} />
-                    {sub.observaciones && <Section title="Observaciones" content={sub.observaciones} />}
-                    {sub.recomendaciones && <Section title="Recomendaciones" content={sub.recomendaciones} />}
+                    <Section title={t('ui.content')} content={sub.contenido} />
+                    {sub.observaciones && <Section title={t('ui.observations')} content={sub.observaciones} />}
+                    {sub.recomendaciones && <Section title={t('ui.recommendations')} content={sub.recomendaciones} />}
 
                     {esPendiente && (
                       <div className="space-y-3 pt-2">
@@ -213,7 +246,7 @@ export default function AprobacionesEspecialista() {
                             value={comentarios[sub.id] || ''}
                             onChange={e => setComentarios(c => ({ ...c, [sub.id]: e.target.value }))}
                             rows={3}
-                            placeholder="Ej: Excelente trabajo, queda aprobado. / Favor revisar la sección de recomendaciones..."
+                            placeholder={t('ui.approval_comment_placeholder')}
                             style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: '#e2e8f0' }}
                             className="w-full px-4 py-3 rounded-xl text-sm focus:outline-none transition-all resize-none"
                           />

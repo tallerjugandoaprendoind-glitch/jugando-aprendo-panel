@@ -1,4 +1,6 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 import { useEffect, useState } from 'react'
 import { supabase as supabaseClient } from '@/lib/supabase'
 import {
@@ -19,12 +21,15 @@ const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
 function formatTime(t: string) {
+
   if (!t) return ''
   const [h, m] = t.split(':').map(Number)
   return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`
 }
 
 function calcAge(birthDate: string) {
+  const { t } = useI18n()
+
   if (!birthDate) return 0
   const today = new Date(), birth = new Date(birthDate)
   let age = today.getFullYear() - birth.getFullYear()
@@ -33,12 +38,16 @@ function calcAge(birthDate: string) {
 }
 
 function formatDate(dateStr: string) {
+  const { t } = useI18n()
+
   const [y, m, d] = dateStr.split('-').map(Number)
   return { day: d, month: MONTHS_ES[m-1], monthFull: MONTHS_FULL[m-1], year: y }
 }
 
 // ── Componente de Celebración de Objetivos ─────────────────────────────────
 function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: string; goalsAchieved: number; onClose: () => void }) {
+  const { t } = useI18n()
+
   useEffect(() => {
     const t = setTimeout(onClose, 6000)
     return () => clearTimeout(t)
@@ -87,6 +96,8 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
 
 // ── Wellbeing Mini-Survey ──────────────────────────────────────────────────
 function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: () => void }) {
+  const { t } = useI18n()
+
   const [answered, setAnswered] = useState(false)
   const [answer, setAnswer] = useState('')
 
@@ -97,6 +108,8 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
   ]
 
   const handleAnswer = (opt: string) => {
+    const { t } = useI18n()
+
     setAnswer(opt)
     setAnswered(true)
     // En producción: guardar en BD para el especialista
@@ -121,7 +134,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
                 </div>
                 <div>
                   <p style={{ fontWeight: 800, fontSize: 15, color: '#111827' }}>¿Cómo estás tú?</p>
-                  <p style={{ fontSize: 11, color: '#9ca3af' }}>Check mensual de bienestar familiar</p>
+                  <p style={{ fontSize: 11, color: '#9ca3af' }}>{t('ui.wellbeing_check')}</p>
                 </div>
               </div>
               <button onClick={onClose} style={{ background: '#f3f4f6', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#6b7280' }}>
@@ -157,7 +170,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
         ) : (
           <div style={{ textAlign: 'center', padding: '16px 0' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>💙</div>
-            <h3 style={{ fontWeight: 800, fontSize: 18, color: '#111827', marginBottom: 8 }}>Gracias por compartirlo</h3>
+            <h3 style={{ fontWeight: 800, fontSize: 18, color: '#111827', marginBottom: 8 }}>{t('ui.thanks_sharing')}</h3>
             <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.6 }}>
               Tu terapeuta tomará esto en cuenta. Recuerda que cuidarte a ti también es parte del proceso.
             </p>
@@ -173,6 +186,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
 }
 
 export default function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppointment }: Props) {
+  const { t } = useI18n()
   const supabase = supabaseClient
   const [nextAppt, setNextAppt] = useState<any>(null)
   const [stats, setStats] = useState({ sessions: 0, goalsAchieved: 0, hoursTotal: 0, level: 'Inicial', monthSessions: 0, masteryRate: 0 })
@@ -450,32 +464,32 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         <button onClick={() => onChangeView('miscitas')}
           className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-violet-200 hover:shadow-md transition-all text-left group">
           <CalendarCheck size={22} className="text-violet-500 mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-black text-slate-800 text-sm">Mis Citas</p>
-          <p className="text-xs text-slate-400 mt-0.5">Ver historial completo</p>
+          <p className="font-black text-slate-800 text-sm">{t('nav.miscitas')}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{t('ui.full_history')}</p>
         </button>
         <button onClick={() => onChangeView('resources')}
           className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-blue-200 hover:shadow-md transition-all text-left group">
           <BookOpen size={22} className="text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-black text-slate-800 text-sm">Materiales</p>
-          <p className="text-xs text-slate-400 mt-0.5">Recursos del centro</p>
+          <p className="font-black text-slate-800 text-sm">{t('programas.materiales')}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{t('ui.center_resources')}</p>
         </button>
         <button onClick={() => onChangeView('misformularios')}
           className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-emerald-200 hover:shadow-md transition-all text-left group">
           <Sparkles size={22} className="text-emerald-500 mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-black text-slate-800 text-sm">Mis Formularios</p>
-          <p className="text-xs text-slate-400 mt-0.5">Evaluaciones enviadas</p>
+          <p className="font-black text-slate-800 text-sm">{t('nav.misformularios')}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{t('ui.sent_evals')}</p>
         </button>
         <button onClick={() => onChangeView('chat')}
           className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-4 hover:border-indigo-300 hover:shadow-md transition-all text-left group">
           <Zap size={22} className="text-indigo-500 mb-2 group-hover:scale-110 transition-transform" />
           <p className="font-black text-slate-800 text-sm">Asistente IA</p>
-          <p className="text-xs text-indigo-400 mt-0.5">Consulta al instante</p>
+          <p className="text-xs text-indigo-400 mt-0.5">{t('ui.instant_chat')}</p>
         </button>
         <button onClick={() => onChangeView('mensajes')}
           className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 rounded-2xl p-4 hover:border-violet-300 hover:shadow-md transition-all text-left group">
           <MessageCircle size={22} className="text-violet-500 mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-black text-slate-800 text-sm">Mensajes</p>
-          <p className="text-xs text-violet-400 mt-0.5">Del terapeuta</p>
+          <p className="font-black text-slate-800 text-sm">{t('nav.mensajes')}</p>
+          <p className="text-xs text-violet-400 mt-0.5">{t('ui.from_therapist')}</p>
         </button>
       </div>
 
@@ -531,7 +545,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             <div className="w-20 h-20 bg-gradient-to-br from-slate-50 to-violet-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <BarChart3 size={32} className="text-violet-300" />
             </div>
-            <p className="text-base font-bold text-slate-600 mb-2">Tu progreso aparecerá aquí</p>
+            <p className="text-base font-bold text-slate-600 mb-2">{t('ui.progress_here')}</p>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto mb-5">
               Después de las primeras sesiones de terapia, verás gráficos de avance, objetivos logrados y mucho más.
             </p>

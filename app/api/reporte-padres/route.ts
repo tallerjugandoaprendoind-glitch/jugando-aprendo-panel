@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { notifyAsync } from '@/lib/notifications'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { buildAIContext } from '@/lib/ai-context-builder'
 
@@ -24,6 +25,13 @@ function parseLogro(val: any): number | null {
   if (lower.includes("mínimo") || lower.includes("bajo") || lower.includes("emergente")) return 20
   if (lower.includes("no logrado") || lower.includes("sin respuesta")) return 5
   return null
+}
+
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale?: string | null): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
+  return ''
 }
 
 export async function POST(req: NextRequest) {
@@ -239,6 +247,16 @@ Dirígete a los padres como "ustedes" o por "familia".`
         created_at: new Date().toISOString()
       })
     } catch { /* no bloquear */ }
+
+    // WhatsApp al admin — nuevo informe disponible
+    const pName = (reporte as any)?.paciente_nombre || childId
+    notifyAsync({
+      tipo: 'informe_nuevo',
+      vars: {
+        paciente: pName,
+        periodo: `${fechaInicioStr} → ${hoy}`,
+      },
+    })
 
     return NextResponse.json(reporte)
 

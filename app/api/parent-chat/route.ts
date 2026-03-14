@@ -19,6 +19,13 @@ function calcularEdad(birthDate: string | null | undefined, ageFallback: number 
   return 'edad no registrada'
 }
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale: string): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
+  return ''
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -77,7 +84,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generar respuesta IA
-    const respuesta = await generarRespuestaPadre(mensaje, contexto, historialOrdenado, nombrePadre)
+    const respuesta = await generarRespuestaPadre(mensaje, contexto, historialOrdenado, nombrePadre, req.headers.get('x-locale') || 'es')
 
     // Guardar respuesta
     if (parentUserId) {
@@ -210,11 +217,15 @@ async function generarRespuestaPadre(
   mensaje: string,
   contexto: any,
   historial: any[],
-  nombrePadre: string
+  nombrePadre: string,
+  locale = 'es'
 ): Promise<string> {
   // 🧠 Buscar en Cerebro IA (libros clínicos) contexto relevante para la pregunta
   const knowledgeCtx = await buildParentChatContext(mensaje, '')
 
+  const userLocale = locale
+  const localeNamesPC: Record<string,string> = { es:'español', en:'English', pt:'português', fr:'français', de:'Deutsch', it:'italiano' }
+  const langNote = userLocale !== 'es' ? `\n\n[RESPONDE SIEMPRE EN: ${localeNamesPC[userLocale] || 'español'}. No uses español si el idioma es diferente.]` : ''
   const systemPrompt = `Eres ARIA, el asistente virtual del Centro Jugando Aprendo para familias.
 Eres cálida, positiva y accesible. Conoces bien el caso de ${contexto.nombre}.
 
@@ -240,11 +251,14 @@ REGLAS CRITICAS:
 6. Si preguntan por el progreso o última sesión, RESPONDE con los datos reales del contexto.
 7. Si preguntan qué está trabajando, menciona los programas ABA en lenguaje simple para padres.
 8. Para preguntas clínicas muy especializadas, recomienda hablar con la terapeuta.
+12. ARIA es un COMPLEMENTO del terapeuta, NUNCA lo reemplaza. Las decisiones clínicas (cambiar objetivos, estrategias, programas) las toma SIEMPRE el especialista. Si el padre pide cambiar algo del programa, derivalo siempre al terapeuta.
+13. NUNCA sugieras modificar el programa terapéutico ni las estrategias definidas por el especialista.
 9. Trata al padre/madre por su nombre: ${nombrePadre}.
 10. Si hay tareas pendientes, recuérdalas con entusiasmo y explica cómo ayudan.
 11. Cuando pregunten "como le fue" usa el resumen de sesiones para dar datos reales.
 CONFIDENCIALIDAD: Comparte avances, logros, actividades y citas. NO compartas notas clínicas detalladas ni comparaciones con otros pacientes.
 
+${getLangInstruction(userLocale)}
 ${knowledgeCtx ? `
 ━━━ CONOCIMIENTO CLÍNICO DE RESPALDO (Cerebro IA) ━━━
 ${knowledgeCtx}
@@ -253,7 +267,7 @@ Cuando sea útil, usa este conocimiento para dar consejos basados en evidencia, 
 
   // Build chat messages for Groq
   const groqMessages = [
-    { role: 'system' as const, content: systemPrompt },
+    { role: 'system' as const, content: systemPrompt + langNote },
     ...historial.map(h => ({
       role: h.rol as 'user' | 'assistant',
       content: h.mensaje,
@@ -271,7 +285,7 @@ Cuando sea útil, usa este conocimiento para dar consejos basados en evidencia, 
     if (respuesta && respuesta.trim().length > 10) return respuesta
 
     // FIX: Fallback a callGroqSimple si callGroq falla o retorna vacío
-    const fallback = await callGroqSimple(systemPrompt, mensaje, {
+    const fallback = await callGroqSimple(systemPrompt + langNote, mensaje, {
       model: GROQ_MODELS.SMART,
       temperature: 0.5,
       maxTokens: 600,

@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, use } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
@@ -13,11 +15,29 @@ interface PageProps {
 export default function LoginPage(props: PageProps) {
   const searchParams = use(props.searchParams)
   const router = useRouter()
+  const { t } = useI18n()
   const [isSignUp, setIsSignUp] = useState(searchParams.mode === 'signup')
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showForgotInfo, setShowForgotInfo] = useState(false)
+
+  async function handleGoogleLogin() {
+    setIsLoading(true)
+    setErrorMessage('')
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+      if (error) throw error
+    } catch (err: any) {
+      setErrorMessage('Error al conectar con Google. Intenta de nuevo.')
+      setIsLoading(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -200,7 +220,7 @@ export default function LoginPage(props: PageProps) {
               </div>
 
               <div className="lp-field">
-                <label>Contraseña</label>
+                <label>{t('auth.password')}</label>
                 <Lock size={15} className="lp-icon" />
                 <input name="password" type={showPassword ? 'text' : 'password'} placeholder={isSignUp ? 'Mínimo 6 caracteres' : '••••••••'} required minLength={6} style={{ paddingRight: 44 }} />
                 <button type="button" className="lp-eye" onClick={() => setShowPassword(!showPassword)}>
@@ -232,13 +252,36 @@ export default function LoginPage(props: PageProps) {
 
               <button type="submit" className="lp-btn" disabled={isLoading}>
                 {isLoading
-                  ? <><Loader2 size={17} className="spin" /> Procesando...</>
+                  ? <><Loader2 size={17} className="spin" /> {t('common.procesando')}</>
                   : <>{isSignUp ? 'Crear Cuenta' : 'Ingresar'} <ArrowRight size={15} /></>
                 }
               </button>
             </form>
 
-            <div className="lp-sep"><span>o</span></div>
+            <div className="lp-sep"><span>o continúa con</span></div>
+
+            {/* Google OAuth */}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: 10, padding: '12px 20px', borderRadius: 12, border: '2px solid #e5e7eb',
+                background: '#fff', color: '#374151', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12, transition: 'all .2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#4f46e5')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18">
+                <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 01-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+                <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 009 18z"/>
+                <path fill="#FBBC05" d="M3.964 10.706A5.41 5.41 0 013.682 9c0-.593.102-1.17.282-1.706V4.962H.957A8.996 8.996 0 000 9c0 1.452.348 2.827.957 4.038l3.007-2.332z"/>
+                <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 6.294C4.672 4.167 6.656 3.58 9 3.58z"/>
+              </svg>
+              Continuar con Google
+            </button>
 
             <div style={{ textAlign: 'center' }}>
               <span style={{ fontSize: 14, color: '#6b7280' }}>{isSignUp ? '¿Ya tienes cuenta? ' : '¿Primera vez? '}</span>
@@ -250,6 +293,11 @@ export default function LoginPage(props: PageProps) {
 
             <p style={{ textAlign: 'center', fontSize: 11, color: '#d1d5db', marginTop: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
               <Lock size={10} /> Acceso cifrado y protegido
+            </p>
+            <p style={{ textAlign: 'center', fontSize: 11, color: '#d1d5db', marginTop: 8 }}>
+              <a href="/privacidad" style={{ color: '#9ca3af', textDecoration: 'none' }}>Política de Privacidad</a>
+              {' · '}
+              <a href="/terminos" style={{ color: '#9ca3af', textDecoration: 'none' }}>Términos de Servicio</a>
             </p>
           </div>
         </div>

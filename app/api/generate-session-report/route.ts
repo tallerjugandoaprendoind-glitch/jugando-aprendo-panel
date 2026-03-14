@@ -6,9 +6,17 @@ import { buildAIContext } from '@/lib/ai-context-builder';
 
 // Helper: reintentar con backoff exponencial ante rate limit
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale: string): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
+  return ''
+}
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json()
+    const userLocale = body.locale || req.headers.get('x-locale') || 'es';
 
     // Compatibilidad con llamadas antiguas (solo ABC) y nuevas (formulario completo)
     const {

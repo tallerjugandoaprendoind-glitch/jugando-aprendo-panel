@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect, useCallback } from 'react'
 import { Calendar, ChevronLeft, ChevronRight, Clock, Loader2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -9,14 +11,15 @@ const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto'
 const DIAS_ABREV = ['D','L','M','X','J','V','S']
 
 const STATUS_CFG: Record<string, { label: string; text: string; dot: string; badge: string }> = {
-  confirmed: { label: 'Confirmada', text: 'text-emerald-700', dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  confirmed: { label: 'Confirmed', text: 'text-emerald-700', dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   pending:   { label: 'Pendiente',  text: 'text-amber-700',   dot: 'bg-amber-400',   badge: 'bg-amber-50 text-amber-700 border-amber-200' },
-  cancelled: { label: 'Cancelada',  text: 'text-red-700',     dot: 'bg-red-400',     badge: 'bg-red-50 text-red-700 border-red-200' },
+  cancelled: { label: 'Cancelled',  text: 'text-red-700',     dot: 'bg-red-400',     badge: 'bg-red-50 text-red-700 border-red-200' },
   completed: { label: 'Completada', text: 'text-blue-700',    dot: 'bg-blue-500',    badge: 'bg-blue-50 text-blue-700 border-blue-200' },
 }
 
 export default function MiAgenda() {
   const toast = useToast()
+  const { t } = useI18n()
   const [citas, setCitas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [mes, setMes] = useState<Date | null>(null)
@@ -56,8 +59,8 @@ export default function MiAgenda() {
   return (
     <div className="space-y-5 pb-20 md:pb-6">
       <div>
-        <h2 className="text-2xl font-black text-slate-800">Mi Agenda</h2>
-        <p className="text-sm text-slate-500 mt-1">Calendario de citas y sesiones</p>
+        <h2 className="text-2xl font-black text-slate-800">{t('nav.miagenda')}</h2>
+        <p className="text-sm text-slate-500 mt-1">{t('ui.session_calendar')}</p>
       </div>
 
       {/* Calendar */}
@@ -130,7 +133,7 @@ export default function MiAgenda() {
             </span>
           </div>
           {citasDelDia.length === 0 ? (
-            <p className="text-center py-8 text-sm text-slate-400 font-semibold">Sin citas este día</p>
+            <p className="text-center py-8 text-sm text-slate-400 font-semibold">{t('ui.no_appointments_this_day')}</p>
           ) : (
             <div>
               {citasDelDia.sort((a, b) => (a.appointment_time || '').localeCompare(b.appointment_time || '')).map((c, idx) => {
@@ -166,7 +169,7 @@ export default function MiAgenda() {
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-blue-600" /></div>
           ) : proximasCitas.length === 0 ? (
-            <p className="text-center py-10 text-sm text-slate-400 font-semibold">Sin citas próximas</p>
+            <p className="text-center py-10 text-sm text-slate-400 font-semibold">{t('ui.no_upcoming_appts')}</p>
           ) : (
             <div>
               {proximasCitas.map((c, idx) => {

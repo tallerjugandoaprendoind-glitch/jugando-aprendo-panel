@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect } from 'react'
 import {
   Book, Video, FileText, Link as LinkIcon, Image as ImageIcon, Music,
@@ -33,6 +35,7 @@ interface Props {
 }
 
 export default function ResourcesView({ profile }: Props) {
+  const { t } = useI18n()
   const [resources, setResources] = useState<Resource[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Resource | null>(null)
@@ -101,18 +104,18 @@ export default function ResourcesView({ profile }: Props) {
         <div className="relative z-10">
           <div className="flex items-center gap-2 mb-1">
             <Book size={16} className="opacity-80"/>
-            <span className="text-violet-200 text-xs font-black uppercase tracking-wider">Materiales</span>
+            <span className="text-violet-200 text-xs font-black uppercase tracking-wider">{t('programas.materiales')}</span>
           </div>
           <h1 className="text-2xl font-black mb-1">Biblioteca de Recursos</h1>
           <p className="text-violet-200 text-sm">Material educativo compartido por el equipo terapéutico</p>
           <div className="flex items-center gap-4 mt-4">
             <div className="bg-white/15 rounded-2xl px-4 py-2 text-center">
               <p className="text-xl font-black">{resources.length}</p>
-              <p className="text-[10px] text-violet-200 font-bold uppercase">Disponibles</p>
+              <p className="text-[10px] text-violet-200 font-bold uppercase">{t('ui.available')}</p>
             </div>
             <div className="bg-white/15 rounded-2xl px-4 py-2 text-center">
               <p className="text-xl font-black">{resources.filter(r => !r.is_global).length}</p>
-              <p className="text-[10px] text-violet-200 font-bold uppercase">Para ti</p>
+              <p className="text-[10px] text-violet-200 font-bold uppercase">{t('ui.for_you')}</p>
             </div>
           </div>
         </div>
@@ -122,7 +125,7 @@ export default function ResourcesView({ profile }: Props) {
       <div className="flex flex-col gap-3">
         <input
           type="text"
-          placeholder="Buscar materiales..."
+          {...{placeholder: t('ui.search_material')}}
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
           className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-2xl text-sm font-medium outline-none focus:border-violet-400 transition-all shadow-sm"

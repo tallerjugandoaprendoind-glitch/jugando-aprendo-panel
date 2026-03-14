@@ -116,12 +116,28 @@ export async function POST(request: NextRequest) {
       if (!email || !newPassword || !role) {
         return NextResponse.json({ error: 'Email, contraseña y rol son requeridos' }, { status: 400 })
       }
+      if (newPassword.length < 6) {
+        return NextResponse.json({ error: 'La contraseña debe tener al menos 6 caracteres' }, { status: 400 })
+      }
+      // Validar formato email básico
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return NextResponse.json({ error: 'El formato del email no es válido' }, { status: 400 })
+      }
       const { data: newUser, error: createErr } = await supabaseAdmin.auth.admin.createUser({
         email,
         password: newPassword,
         email_confirm: true,
       })
-      if (createErr) throw createErr
+      if (createErr) {
+        // Mensajes de error claros en español
+        if (createErr.message?.includes('already been registered') || createErr.message?.includes('already exists') || createErr.message?.includes('duplicate')) {
+          return NextResponse.json({ error: `Ya existe un usuario con el email ${email}. Usá un email diferente.` }, { status: 400 })
+        }
+        if (createErr.message?.includes('invalid') && createErr.message?.includes('email')) {
+          return NextResponse.json({ error: 'El email ingresado no es válido.' }, { status: 400 })
+        }
+        throw createErr
+      }
       // Create profile
       const { error: profileErr } = await supabaseAdmin
         .from('profiles')

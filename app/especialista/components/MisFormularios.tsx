@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect } from 'react'
 import {
   Search, ChevronLeft, ChevronRight, X, Loader2,
@@ -30,7 +32,7 @@ const defaultS = { pill: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'bg-b
 
 // ─── FORMULARIOS CLÍNICOS PROFESIONALES ─────────────────────────────────────
 const CLINICAL_FORMS: any[] = [
-  { id: 'anamnesis',    formKey: 'anamnesis',    title: 'Anamnesis Completa',              subtitle: 'Historia clínica integral del paciente',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: ANAMNESIS_DATA },
+  { id: 'anamnesis',    formKey: 'anamnesis',    title: 'Historia Clínica',              subtitle: 'Historia clínica integral del paciente',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: ANAMNESIS_DATA },
   { id: 'aba',          formKey: 'aba',          title: 'Registro ABA',                    subtitle: 'Análisis Aplicado de la Conducta',               category: 'conductual',icon: '🎯', estimatedMinutes: 20, sections: ABA_DATA },
   { id: 'entorno_hogar',formKey: 'entorno_hogar',title: 'Evaluación del Entorno del Hogar',subtitle: 'Visita domiciliaria y entorno familiar',          category: 'familia',   icon: '🏠', estimatedMinutes: 25, sections: ENTORNO_HOGAR_DATA },
   { id: 'brief2',       formKey: 'brief2',       title: 'BRIEF-2',                         subtitle: 'Evaluación de Funciones Ejecutivas',             category: 'cognitivo', icon: '🧠', estimatedMinutes: 25, sections: BRIEF2_DATA, evalType: 'BRIEF2' },
@@ -174,6 +176,7 @@ function QuestionField({ q, value, onChange }: any) {
 
 // ─── FORM FILL VIEW ──────────────────────────────────────────────────────────
 function FormFillView({ form, children, onBack, userId, toast }: any) {
+  const { t } = useI18n()
   const [step, setStep] = useState(0)
   const [responses, setResponses] = useState<Record<string, any>>({})
   const [childId, setChildId] = useState('')
@@ -203,23 +206,23 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
 
       if (form.isSoft) {
         res = await fetch('/api/analyze-neurodivergent-form', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ formType: form.id, formData: responses, childName, childAge, childId, diagnosis: child?.diagnosis || '' }),
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+          body: JSON.stringify({ formType: form.id, formData: responses, childName, childAge, childId, diagnosis: child?.diagnosis || '' , locale: localStorage.getItem('vanty_locale') || 'es' }),
         })
       } else if (form.evalType) {
         res = await fetch('/api/analyze-professional-evaluation', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ evaluationType: form.evalType.toLowerCase(), childName, childAge, childId, responses }),
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+          body: JSON.stringify({ evaluationType: form.evalType.toLowerCase(), childName, childAge, childId, responses , locale: localStorage.getItem('vanty_locale') || 'es' }),
         })
       } else if (form.formKey === 'entorno_hogar') {
         res = await fetch('/api/generate-home-environment-report', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...responses, childName, childAge, childId }),
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+          body: JSON.stringify({ ...responses, childName, childAge, childId , locale: localStorage.getItem('vanty_locale') || 'es' }),
         })
       } else {
         res = await fetch('/api/generate-session-report', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...responses, childName, childAge, childId, formType: form.formKey }),
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+          body: JSON.stringify({ ...responses, childName, childAge, childId, formType: form.formKey , locale: localStorage.getItem('vanty_locale') || 'es' }),
         })
       }
       const json = await res!.json()
@@ -293,8 +296,8 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         const { data: childData } = await supabase.from('children').select('parent_id').eq('id', childId).single()
         if ((childData as any)?.parent_id) {
           await fetch('/api/admin/parent-messages', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ child_id: childId, parent_id: (childData as any).parent_id, source: form.isSoft ? 'neuroforma' : 'evaluacion', source_title: `Especialista: ${form.title}`, ai_message: msgToSend, actividades_casa: actividadToSend, ai_analysis: aiAnalysis, session_data: { form_type: form.formKey || form.id, responses, specialist_id: userId } }),
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+            body: JSON.stringify({ child_id: childId, parent_id: (childData as any).parent_id, source: form.isSoft ? 'neuroforma' : 'evaluacion', source_title: `Especialista: ${form.title}`, ai_message: msgToSend, actividades_casa: actividadToSend, ai_analysis: aiAnalysis, session_data: { form_type: form.formKey || form.id, responses, specialist_id: userId } , locale: localStorage.getItem('vanty_locale') || 'es' }),
           }).catch(() => {})
         }
       }
@@ -318,7 +321,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-xs flex gap-3 text-left">
         <AlertTriangle size={15} className="text-amber-600 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-amber-700 leading-relaxed">
-          El mensaje a los padres está en <strong>Bandeja de Aprobación</strong> del jefe y no llegará hasta que lo autorice.
+          {t('ui.approval_notice')}
         </p>
       </div>
       <button onClick={onBack}
@@ -354,7 +357,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         </label>
         <select value={childId} onChange={e => setChildId(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">Seleccionar paciente...</option>
+          <option value="">{t('ui.select_patient_option')}</option>
           {children.map((c: any) => (
             <option key={c.id} value={c.id}>{c.name}{c.age ? ` · ${c.age} años` : ''}</option>
           ))}
@@ -469,7 +472,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 flex gap-2">
                   <AlertTriangle size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
                   <p className="text-xs text-amber-700 leading-relaxed">
-                    Pasará por <strong>aprobación del jefe</strong> antes de enviarse al padre/madre.
+                    {t('ui.pending_approval')}
                   </p>
                 </div>
                 <textarea value={editedMsg} onChange={e => setEditedMsg(e.target.value)} rows={5}
@@ -519,7 +522,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
               </div>
               <div className="px-4 pb-3">
                 <p className="text-xs text-amber-700 bg-amber-100 border border-amber-200 rounded-lg px-3 py-2">
-                  💬 <strong>Nota para el especialista:</strong> Puedes mencionar este material a la familia como apoyo para la tarea en casa.
+                  💬 <strong>{t('common.atencion')}:</strong> {t('ui.specialist_note')}
                 </p>
               </div>
             </div>
@@ -539,7 +542,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 const TABS = [
-  { id: 'all',        label: 'Todos' },
+  { id: 'all',        label: 'All' },
   { id: 'clinico',    label: '🏥 Clínico Pro' },
   { id: 'tea',        label: '🧩 TEA' },
   { id: 'tdah',       label: '⚡ TDAH' },
@@ -551,6 +554,7 @@ const TABS = [
 ]
 
 export default function MisFormularios({ userId }: { userId: string }) {
+  const { t } = useI18n()
   const toast = useToast()
   const [children, setChildren] = useState<any[]>([])
   const [search, setSearch] = useState('')
@@ -588,7 +592,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 items-start">
         <AlertTriangle size={15} className="text-amber-600 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-amber-700 leading-relaxed">
-          <strong>Flujo de aprobación activo:</strong> Todo análisis generado con IA pasa primero por revisión del jefe antes de llegar a los padres.
+          {t('ui.approval_flow_notice')}
         </p>
       </div>
 
@@ -596,7 +600,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
       <div className="bg-white rounded-2xl border border-slate-200 flex items-center gap-3 px-4 py-3 shadow-sm">
         <Search size={15} className="text-slate-400" />
         <input value={search} onChange={e => setSearch(e.target.value)}
-          placeholder="Buscar formulario..."
+          {...{placeholder: t('ui.search_form')}}
           className="flex-1 text-sm text-slate-800 bg-transparent outline-none placeholder-slate-400" />
         {search && (
           <button onClick={() => setSearch('')} className="text-slate-400 hover:text-slate-600">
@@ -625,7 +629,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
           <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <FileText size={22} className="text-slate-400" />
           </div>
-          <p className="text-slate-400 text-sm font-semibold">Sin formularios encontrados</p>
+          <p className="text-slate-400 text-sm font-semibold">{t('ui.no_forms')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

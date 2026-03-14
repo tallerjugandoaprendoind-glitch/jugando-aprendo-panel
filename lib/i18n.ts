@@ -1,0 +1,14 @@
+export type Locale = 'es' | 'en'
+export const LOCALES: Locale[] = ['es', 'en']
+export const DEFAULT_LOCALE: Locale = 'es'
+
+export function createTranslator(messages: Record<string, any>) {
+  return function t(key: string, vars?: Record<string, string>): string {
+    const parts = key.split('.')
+    let val: any = messages
+    for (const p of parts) { val = val?.[p]; if (val === undefined) break }
+    if (typeof val !== 'string') return key
+    if (!vars) return val
+    return val.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`)
+  }
+}

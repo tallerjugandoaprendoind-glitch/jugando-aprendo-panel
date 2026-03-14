@@ -3,10 +3,18 @@ import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { buildAIContext } from '@/lib/ai-context-builder'
 import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale: string): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
+  return ''
+}
+
 export async function POST(req: Request) {
   try {
     // 1. Validación de entrada
-    const body = await req.json();
+    const body = await req.json()
+    const userLocale = body.locale || req.headers.get('x-locale') || 'es';
     const { childId } = body;
 
     if (!childId) {
@@ -36,7 +44,8 @@ export async function POST(req: Request) {
       TAREA: Calcula progreso (0-100) en: verbal, emocional, social.
       Responde SOLAMENTE este JSON exacto:
       { "verbal": number, "emocional": number, "social": number }
-    `;
+
+${getLangInstruction(userLocale)}`;
 
     // 5. Generar Análisis - Se asegura que el modelo sea un string fijo
 
