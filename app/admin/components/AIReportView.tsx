@@ -692,6 +692,7 @@ const BADGE_REPORTE: Record<string, string> = {
 }
 
 function ReporteHistorialCard({ reporte }: { reporte: any }) {
+  const { locale } = useI18n()
   const handleDownload = async () => {
     try {
       const { data, error } = await supabase
