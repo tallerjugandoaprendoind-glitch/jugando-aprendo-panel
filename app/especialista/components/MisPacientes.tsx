@@ -220,6 +220,7 @@ function AnamnesisDetail({ r }: { r: any }) {
 }
 
 function EntornoDetail({ r }: { r: any }) {
+  const { t } = useI18n()
   const d = r.datos || r
   return (
     <div className="space-y-3">
