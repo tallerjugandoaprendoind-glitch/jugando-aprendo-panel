@@ -368,7 +368,7 @@ function PatientsView() {
                                         {isEditing ? <Edit size={32}/> : selectedPatient.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 className="text-2xl font-black">{isEditing ? t('pacientes.fichaClinica') : selectedPatient.name}</h3>
+                                        <h3 className="text-2xl font-black">{isEditing ? 'Editar Paciente' : selectedPatient.name}</h3>
                                         <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || "Diagnóstico pendiente"}</p>
                                         {!isEditing && selectedPatient.age && (
                                           <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} años</p>

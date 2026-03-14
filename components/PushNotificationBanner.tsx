@@ -49,7 +49,7 @@ export default function PushNotificationBanner({ userId }: Props) {
           </div>
           <div className="flex-1">
             <p className="font-black text-sm">¡Notificaciones activadas! 🎉</p>
-            <p className="text-xs text-emerald-100 mt-0.5">{t('notificaciones.pushMsg')} te envíe un mensaje.</p>
+            <p className="text-xs text-emerald-100 mt-0.5">Te avisaremos cuando el terapeuta te envíe un mensaje.</p>
           </div>
         </div>
       </div>

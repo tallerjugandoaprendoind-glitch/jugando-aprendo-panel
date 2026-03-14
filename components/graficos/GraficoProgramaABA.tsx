@@ -1,5 +1,4 @@
 'use client'
-import { useI18n } from '@/lib/i18n-context'
 // components/graficos/GraficoProgramaABA.tsx
 // Gráfico Thread Learning: una línea por programa con cortes verticales de sets
 

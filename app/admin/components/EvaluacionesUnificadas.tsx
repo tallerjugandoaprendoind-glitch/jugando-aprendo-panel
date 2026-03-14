@@ -265,7 +265,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
           ) : (
             <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center gap-2 text-slate-400 text-sm">
               <Sparkles size={15} className="text-violet-300 flex-shrink-0" />
-              <span>{t('evaluaciones.seCompletara')} <strong className="text-violet-500">{t('evaluaciones.analizarConIA2')}</strong><br/>zar con IA</strong></span>
+              <span>{t('evaluaciones.seCompletara')} <strong className="text-violet-500">{t('evaluaciones.analizarConIA2')}</strong></span>
             </div>
           )}
         </div>
@@ -1036,7 +1036,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
             className="flex-1 flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-black text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
           >
             {isGeneratingReport ? (
-              <><Loader2 size={18} className="animate-spin" /> {t("common.generando")}</>
+              <><Loader2 size={18} className="animate-spin" /> Generando reporte...</>
             ) : (
               <><Download size={18} /> Generar y Descargar Reporte Word</>
             )}

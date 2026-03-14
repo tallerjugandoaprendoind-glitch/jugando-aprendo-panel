@@ -615,7 +615,7 @@ export default function UserManagementView() {
                         <button onClick={() => { setEditingTokensFor(user.id); setNewTokens(user.profile?.tokens || 0) }}
                           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                           style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
-                          <Ticket size={12} /> {t('common.editar')} tokens
+                          <Ticket size={12} /> Editar tokens
                         </button>
                       )}
 
@@ -695,7 +695,7 @@ export default function UserManagementView() {
           <div className="rounded-2xl shadow-2xl p-6 w-full max-w-md animate-scale-in" style={{ background: 'var(--card)' }}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                <Plus size={18} className="text-blue-500" /> {t('usuarios.nuevo')}
+                <Plus size={18} className="text-blue-500" /> Crear nuevo usuario
               </h3>
               <button onClick={() => setShowCreateModal(false)} className="p-1.5 rounded-lg hover:opacity-80" style={{ color: 'var(--text-muted)' }}><X size={16} /></button>
             </div>

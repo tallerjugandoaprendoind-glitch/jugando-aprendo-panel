@@ -44,9 +44,7 @@ function getLangInstruction(locale?: string | null): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-  const { childId } = body
-  const userLocale = body.locale || req.headers.get('x-locale') || 'es'
+    const { childId } = await req.json()
     if (!childId) return NextResponse.json({ error: 'childId requerido' }, { status: 400 })
 
     const hoy = new Date()

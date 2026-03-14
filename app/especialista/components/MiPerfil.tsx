@@ -69,7 +69,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
           {!editando && (
             <button onClick={() => setEditando(true)}
               className="flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors">
-              <Edit3 size={11} /> {t('common.editar')}
+              <Edit3 size={11} /> Editar
             </button>
           )}
         </div>

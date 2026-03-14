@@ -496,11 +496,11 @@ export default function ParentDashboard() {
                 </div>
                 
                 <nav className="space-y-2">
-                    <NavBtnDesktop icon={<Home size={20}/>} label=t('familias.inicioProgreso') active={activeView==='home'} onClick={()=>setActiveView('home')} />
+                    <NavBtnDesktop icon={<Home size={20}/>} label={t('familias.inicioProgreso')} active={activeView==='home'} onClick={()=>setActiveView('home')} />
                     <NavBtnDesktop icon={<Calendar size={20}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                     <NavBtnDesktop icon={<Heart size={20}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
-                    <NavBtnDesktop icon={<MessageCircle size={20}/>} label=t('familias.asistente') active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
-                    <NavBtnDesktop icon={<Bell size={20}/>} label=t('familias.mensajesTerapeuta') active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
+                    <NavBtnDesktop icon={<MessageCircle size={20}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
+                    <NavBtnDesktop icon={<Bell size={20}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
                     <NavBtnDesktop icon={<ShoppingBag size={20}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
                     <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />

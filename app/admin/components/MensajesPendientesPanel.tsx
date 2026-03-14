@@ -285,7 +285,7 @@ export default function MensajesPendientesPanel() {
 
                         {analysis.actividades_en_casa?.length > 0 && (
                           <div>
-                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">🏠 {t('mensajes.actividades').replace('🏠 ','')}<idades en Casa</p>
+                            <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">{t('mensajes.actividades')}</p>
                             <ul className="space-y-1">
                               {analysis.actividades_en_casa.map((a: string, i: number) => (
                                 <li key={i} className="text-xs text-slate-600 bg-blue-50 rounded-lg p-2 border border-blue-100 flex items-start gap-2">

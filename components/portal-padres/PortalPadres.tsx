@@ -107,7 +107,7 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
         <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">📅</span>
-            <p className="font-semibold text-gray-700 text-sm">{t('common.proximaCita')}</p>
+            <p className="font-semibold text-gray-700 text-sm">Próxima cita</p>
           </div>
           <div className="flex items-center justify-between">
             <div>
@@ -149,9 +149,9 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
             <p className="font-semibold text-gray-700 text-sm">Resumen de las últimas 4 semanas</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <MiniStat icono="✅" valor={datos.progreso.asistencia.asistidas} label={t("common.sesionesLabel")} color="blue" />
-            <MiniStat icono="📋" valor={`${datos.progreso.tareas.adherencia}%`} label={t("common.tareasLabel")} color="orange" />
-            <MiniStat icono="📈" valor={`${datos.progreso.asistencia.tasa}%`} label=t("common.asistenciaLabel") color="green" />
+            <MiniStat icono="✅" valor={datos.progreso.asistencia.asistidas} label="Sesiones" color="blue" />
+            <MiniStat icono="📋" valor={`${datos.progreso.tareas.adherencia}%`} label="Tareas" color="orange" />
+            <MiniStat icono="📈" valor={`${datos.progreso.asistencia.tasa}%`} label="Asistencia" color="green" />
           </div>
         </div>
       )}

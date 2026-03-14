@@ -211,14 +211,14 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
             <div className="space-y-3">
               {!childId && (
                 <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.childIdLabel')}</label>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">Child ID del paciente</label>
                   <input value={formNueva.child_id} onChange={e => setFormNueva(f => ({ ...f, child_id: e.target.value }))}
                     placeholder="UUID del paciente"
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
                 </div>
               )}
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.terapeutaId')}</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">Terapeuta ID</label>
                 <input value={formNueva.terapeuta_id} onChange={e => setFormNueva(f => ({ ...f, terapeuta_id: e.target.value }))}
                   placeholder="UUID del terapeuta"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
@@ -243,7 +243,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
                     <option value="individual">Individual</option>
                     <option value="grupal">Grupal</option>
                     <option value="domiciliaria">Domiciliaria</option>
-                    <option value="evaluacion">{t('agenda.tipoEvaluacion')}</option>
+                    <option value="evaluacion">Evaluación</option>
                   </select>
                 </div>
                 <div>

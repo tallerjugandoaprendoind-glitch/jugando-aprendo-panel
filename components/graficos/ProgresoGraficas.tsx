@@ -83,7 +83,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
   if (cargando) return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <div className="animate-spin rounded-full h-10 w-10 border-4 border-violet-200 border-t-violet-600" />
-      <p className="text-sm" style={{ color: "var(--text-muted)" }}>{t('common.cargandoClinico')}nicos...</p>
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Cargando datos clínicos...</p>
     </div>
   )
   if (!datos) return <p className="text-center py-8" style={{ color: "var(--text-muted)" }}>Sin datos</p>
@@ -354,7 +354,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* RADAR */}
           {tipo === 'radar' && (
             radarData.length === 0
-              ? <p className="text-center text-slate-400 py-8 text-sm">{t('common.necesitasSesiones')}sión</p>
+              ? <p className="text-center text-slate-400 py-8 text-sm">Necesitas al menos 1 sesión</p>
               : <div>
                   <p className="text-xs text-slate-400 mb-1 text-center">Promedio últimas {ult3.length} sesiones</p>
                   <ResponsiveContainer width="100%" height={220}>
@@ -415,7 +415,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
         <div className="text-center py-16 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <p className="text-5xl mb-3">📊</p>
           <p className="text-sm font-bold" style={{ color: "var(--text-secondary)" }}>Sin sesiones en este período</p>
-          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{t('common.registraSesiones')}ones ABA para ver el progreso</p>
+          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Registrá sesiones ABA para ver el progreso</p>
         </div>
       )}
 

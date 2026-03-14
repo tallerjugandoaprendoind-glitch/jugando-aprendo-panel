@@ -139,7 +139,7 @@ function QuestionField({ q, value, onChange }: any) {
       ) : (
         <div className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400 flex items-center gap-2">
           <Sparkles size={14} className="text-purple-400 flex-shrink-0" />
-          <span>{t('evaluaciones.seCompletara')} <strong className="text-purple-600">{t('evaluaciones.analizarConIA2')}</strong>lizar con IA</strong></span>
+          <span>{t('evaluaciones.seCompletara')} <strong className="text-purple-600">{t('evaluaciones.analizarConIA2')}</strong></span>
         </div>
       )
     }
@@ -353,7 +353,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       {/* Patient selector */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
         <label className="flex items-center gap-1.5 text-xs font-black text-slate-500 uppercase tracking-widest mb-3">
-          <Baby size={12} /> {t('evaluaciones.pacienteStar')}
+          <Baby size={12} /> Paciente *
         </label>
         <select value={childId} onChange={e => setChildId(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">

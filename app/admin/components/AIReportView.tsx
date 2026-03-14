@@ -384,7 +384,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
           onChange={(e) => handleSelectChild(e.target.value)}
           value={selectedChild}
         >
-          <option value="">{t("ui.seleccionarPacienteOpc")}</option>
+          <option value="">🔍 Seleccionar Paciente...</option>
           {listaNinos.map(n => <option key={n.id} value={n.id}>👤 {n.name}</option>)}
         </select>
       </div>

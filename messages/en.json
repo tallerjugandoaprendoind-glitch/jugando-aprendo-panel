@@ -153,19 +153,7 @@
     "cancelar2": "Cancel",
     "guardar2": "Save",
     "enviarPadres": "Send to Parents",
-    "nuevaInstruccion": "+ New instruction",
-    "cargandoReportes": "Loading reports...",
-    "cargandoBase": "Loading knowledge base...",
-    "errorDashboard": "Error loading dashboard",
-    "cargandoClinico": "Loading clinical data...",
-    "proximaCita": "Next appointment",
-    "sesionesLabel": "Sessions",
-    "tareasLabel": "Tasks",
-    "asistenciaLabel": "Attendance",
-    "indexadoTarda": "Indexing may take 2-5 minutes for large documents",
-    "necesitasSesiones": "You need at least 1 recorded session to view the chart",
-    "registraSesiones": "Record sessions to see progress here",
-    "seleccionarPaciente3": "Select a patient to view their history"
+    "nuevaInstruccion": "+ New instruction"
   },
   "auth": {
     "iniciarSesion": "Sign in",
@@ -341,10 +329,7 @@
     "necesitasCambiar": "Need to change or cancel?",
     "centroteNotificara": "The center will notify you when your next session is scheduled.",
     "sesiones": "Session Schedule",
-    "nuevaSesion": "New session",
-    "childIdLabel": "Patient Child ID",
-    "terapeutaId": "Therapist ID",
-    "tipoEvaluacion": "Assessment"
+    "nuevaSesion": "New session"
   },
   "programas": {
     "titulo": "ABA Programs",
@@ -555,8 +540,7 @@
     "todas": "All areas",
     "cerebro": "AI Brain",
     "ultimaSesion": "Last session",
-    "creaProgramas": "Create programs in the patient file",
-    "historicoSesiones": "Analyzes session history and detects behavioral patterns"
+    "creaProgramas": "Create programs in the patient file"
   },
   "reportes": {
     "titulo": "Clinical Reports",
@@ -614,8 +598,7 @@
     "analisisEstrategico": "STRATEGIC AI ANALYSIS",
     "analisisPrograma": "Analysis by Program / Level",
     "generarReporte": "Generate New Word Report",
-    "errorGenerar": "Error generating",
-    "cargandoReportes": "Loading reports..."
+    "errorGenerar": "Error generating"
   },
   "familias": {
     "titulo": "Family Portal",
@@ -1019,7 +1002,7 @@
     "how_we_work": "Learn how we work",
     "all_we_offer": "Everything we offer to parents",
     "enter_basic_data": "Enter basic information",
-    "child_name_placeholder": "Eg: Emily Johnson",
+    "child_name_placeholder": "Eg: María Fernanda López",
     "diagnosis_placeholder": "Eg: ASD Level 2",
     "welcome": "Welcome",
     "no_patients_registered": "No patients registered",

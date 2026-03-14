@@ -26,7 +26,7 @@ function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any
           <Icon size={18} className={accent.icon} />
         </div>
         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${alert ? 'bg-red-100 text-red-600' : accent.badge}`}>
-          {alert ? '{t('dashboard.atencion')}' : sub}
+          {alert ? t('dashboard.atencion') : sub}
         </span>
       </div>
       <p className="text-3xl font-black mb-1" style={{ color: alert ? '#dc2626' : 'var(--text-primary)' }}>{value}</p>
