@@ -63,8 +63,8 @@ function TickY({ x, y, payload }: any) {
   return <text x={x} y={y} dy={4} textAnchor="end" fill={payload.value === 90 ? '#EF4444' : 'var(--text-muted)'} fontSize={10} fontWeight={payload.value === 90 ? 700 : 400}>{payload.value}%</text>
 }
 
-export default function ProgresoGraficas({
-  const { t } = useI18n() childId, modoParent = false }: ProgresoGraficasProps) {
+export default function ProgresoGraficas({ childId, modoParent = false }: ProgresoGraficasProps) {
+  const { t } = useI18n()
   const [datos, setDatos]     = useState<any>(null)
   const [cargando, setCargando] = useState(true)
   const [semanas, setSemanas] = useState(12)
