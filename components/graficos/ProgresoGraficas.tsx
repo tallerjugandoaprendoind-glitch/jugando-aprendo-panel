@@ -122,6 +122,14 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
   const tipoActual = TIPOS.find(t => t.id === tipo)
   const TICKS = [0, 25, 50, 75, 90, 100]
   const MARGINS = { top: 5, right: 12, left: 0, bottom: 5 }
+  const TIPO_LABELS: Record<string, string> = {
+    lineas:     t('reportes.lineas'),
+    barras:     t('reportes.barras'),
+    combinado:  t('reportes.combinado'),
+    histograma: t('reportes.histograma'),
+    pie:        t('reportes.pie'),
+    radar:      t('reportes.radar'),
+  }
 
   return (
     <div className="space-y-4">
