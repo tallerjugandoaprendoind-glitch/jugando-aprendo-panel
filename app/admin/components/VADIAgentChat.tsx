@@ -190,6 +190,7 @@ export default function VADIAgentChat({
 }
 
 function MessageBubble({ message }: { message: Message }) {
+  const { t } = useI18n()
   const isUser = message.role === 'user'
 
   // Convertir **negrita** y saltos de línea

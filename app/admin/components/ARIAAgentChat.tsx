@@ -220,6 +220,7 @@ export default function ARIAAgentChat({
 }
 
 function MessageBubble({ message }: { message: Message }) {
+  const { t } = useI18n()
   const isUser = message.role === 'user'
 
   const formatContent = (text: string) => {

@@ -704,7 +704,7 @@ export default function KnowledgeBaseView() {
                 </p>
               )}
               {docsManual.map(doc => (
-                <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} />
+                <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} t={t} />
               ))}
               {docsAuto.length > 0 && (
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1 pt-2">
@@ -712,7 +712,7 @@ export default function KnowledgeBaseView() {
                 </p>
               )}
               {docsAuto.map(doc => (
-                <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} />
+                <DocCard key={doc.id} doc={doc} onDelete={handleDelete} onRetry={handleRetry} t={t} />
               ))}
             </div>
           )}
@@ -722,10 +722,11 @@ export default function KnowledgeBaseView() {
   )
 }
 
-function DocCard({ doc, onDelete, onRetry }: {
+function DocCard({ doc, onDelete, onRetry, t }: {
   doc: any
   onDelete: (id: string) => void
   onRetry?: (id: string) => void
+  t: (key: string) => string
 }) {
   const isAuto = doc.source_url?.startsWith('auto:')
   return (
