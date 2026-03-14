@@ -283,7 +283,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
         ) : (
           <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl flex items-center gap-2 text-slate-400 text-sm">
             <Sparkles size={15} className="text-violet-300 flex-shrink-0" />
-            <span>{t('evaluaciones.seCompletara2')} <strong className="text-violet-500">{t('evaluaciones.analizarConIA2')}</strong>ng></span>
+            <span>{t('evaluaciones.seCompletara2')} <strong className="text-violet-500">{t('evaluaciones.analizarConIA2')}</strong></span>
           </div>
         )}
       </div>

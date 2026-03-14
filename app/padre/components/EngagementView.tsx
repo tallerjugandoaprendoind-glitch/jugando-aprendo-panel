@@ -69,7 +69,7 @@ export default function EngagementView({ childId }: { childId: string }) {
     finally { setLoading(false) }
   }
 
-  const DISCLAIMER_IA = '📋 {t('familias.actividadesCasa')} diseñado por tu especialista. Siempre consultá con el terapeuta ante cualquier duda.'
+  const DISCLAIMER_IA = `📋 ${t('familias.actividadesCasa')} diseñado por tu especialista. Siempre consultá con el terapeuta ante cualquier duda.`
 
 const generarPlan = async () => {
     setGenerando(true)

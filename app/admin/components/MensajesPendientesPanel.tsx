@@ -324,7 +324,7 @@ export default function MensajesPendientesPanel() {
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <p className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                            <Edit3 size={12}/> {isEditing ? 't('evaluaciones.editandoMsg') : t('evaluaciones.mensajeEnviar')}
+                            <Edit3 size={12}/> {isEditing ? t('evaluaciones.editandoMsg') : t('evaluaciones.mensajeEnviar')}
                           </p>
                           {!isEditing && (
                             <button onClick={() => startEdit(msg)}

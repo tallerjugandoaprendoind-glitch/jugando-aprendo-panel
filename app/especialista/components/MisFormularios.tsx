@@ -148,7 +148,7 @@ function QuestionField({ q, value, onChange }: any) {
     ) : (
       <div className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400 flex items-center gap-2">
         <Sparkles size={14} className="text-purple-400 flex-shrink-0" />
-        <span>{t('evaluaciones.seCompletara2')} <strong className="text-purple-600">{t('evaluaciones.analizarConIA2')}</strong>rong></span>
+        <span>{t('evaluaciones.seCompletara2')} <strong className="text-purple-600">{t('evaluaciones.analizarConIA2')}</strong></span>
       </div>
     )
   }

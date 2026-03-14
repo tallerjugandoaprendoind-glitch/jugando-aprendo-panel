@@ -1,6 +1,6 @@
 'use client'
 import { useI18n } from '@/lib/i18n-context'
-mport { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Bell, BellOff, X, Smartphone } from 'lucide-react'
 import { usePushNotifications } from '../lib/usePushNotifications'
 
