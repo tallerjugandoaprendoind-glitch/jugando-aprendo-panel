@@ -42,7 +42,7 @@ export default function DashboardDirectora() {
     </div>
   )
 
-  if (!metricas) return <p className="text-red-500 p-4">Error cargando el dashboard</p>
+  if (!metricas) return <p className="text-red-500 p-4">{t('common.errorDashboard')}d</p>
 
   const { hoy, pacientes, alertas, tareas, financiero, graficas, proximasSesiones } = metricas
 

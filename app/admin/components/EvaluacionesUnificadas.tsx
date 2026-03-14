@@ -1036,7 +1036,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
             className="flex-1 flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-black text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
           >
             {isGeneratingReport ? (
-              <><Loader2 size={18} className="animate-spin" /> Generando reporte...</>
+              <><Loader2 size={18} className="animate-spin" /> {t("common.generando")}</>
             ) : (
               <><Download size={18} /> Generar y Descargar Reporte Word</>
             )}

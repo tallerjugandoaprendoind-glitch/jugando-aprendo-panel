@@ -215,7 +215,7 @@ export default function KnowledgeBaseView() {
       {loading ? (
         <div className="flex flex-col items-center py-16 gap-3">
           <Loader2 className="animate-spin text-violet-400" size={28} />
-          <p className="text-slate-400 text-sm">Cargando base de conocimiento...</p>
+          <p className="text-slate-400 text-sm">{t('common.cargandoBase')}</p>
         </div>
       ) : documentos.length === 0 ? (
         <div className="bg-white border-2 border-dashed border-slate-200 rounded-3xl p-14 text-center">
@@ -385,7 +385,7 @@ export default function KnowledgeBaseView() {
 
                 <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex gap-2">
                   <AlertTriangle size={14} className="text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700">El indexado puede tardar 2-5 minutos para libros largos. Puedes cerrar esta ventana — el proceso continúa en background.</p>
+                  <p className="text-xs text-amber-700">{t('common.indexadoTarda')} libros largos. Puedes cerrar esta ventana — el proceso continúa en background.</p>
                 </div>
               </div>
               <div className="flex gap-3 mt-5">

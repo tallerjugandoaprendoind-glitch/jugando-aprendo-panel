@@ -672,7 +672,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
           <Activity size={16} className="text-violet-600" />
           <span className="font-bold text-violet-800 text-sm">Detector de Patrones ABA — CAPA 1</span>
         </div>
-        <p className="text-xs text-violet-600">Analiza el historial de sesiones y detecta regresiones, estancamientos, aceleraciones e inconsistencias.</p>
+        <p className="text-xs text-violet-600">{t("hub.patrones")}resiones, estancamientos, aceleraciones e inconsistencias.</p>
       </div>
       <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('ui.select_patient')}</label>

@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
 
     // 2. Parseo del Body (aceptamos todos los campos)
     const body: HomeEnvironmentRequest = await request.json();
+    const userLocale = (body as any).locale || request.headers.get('x-locale') || 'es';
     
     console.log('📝 Datos recibidos en API de entorno:', body);
 
@@ -239,7 +240,7 @@ export async function POST(request: NextRequest) {
     // 4. Inicialización de Gemini
     // 5. Ejecución del Modelo
     const response = await callGroqSimple(
-        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
+        'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.' + getLangInstruction(userLocale),
         fullContext,
         { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 2000 }
       );

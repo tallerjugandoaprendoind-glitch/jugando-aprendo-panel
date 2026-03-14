@@ -746,7 +746,7 @@ export default function NeuroFormsView() {
 
               {expandedResponse === sf.id && sf.status === 'completed' && sf.responses && (
                 <div className="border-t border-slate-100 bg-slate-50/50 p-5">
-                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Respuestas del Formulario</h4>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('evaluaciones.verRespuestas')} del Formulario</h4>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {Object.entries(sf.responses).map(([k, v]) => (
                       <div key={k} className="bg-white rounded-xl p-3 border border-slate-100">

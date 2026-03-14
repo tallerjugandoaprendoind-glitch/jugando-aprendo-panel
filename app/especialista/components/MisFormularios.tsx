@@ -353,7 +353,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       {/* Patient selector */}
       <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
         <label className="flex items-center gap-1.5 text-xs font-black text-slate-500 uppercase tracking-widest mb-3">
-          <Baby size={12} /> Paciente *
+          <Baby size={12} /> {t('evaluaciones.pacienteStar')}
         </label>
         <select value={childId} onChange={e => setChildId(e.target.value)}
           className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">

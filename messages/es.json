@@ -153,7 +153,19 @@
     "cancelar2": "Cancelar",
     "guardar2": "Guardar",
     "enviarPadres": "Enviar a Padres",
-    "nuevaInstruccion": "+ Nueva instrucción"
+    "nuevaInstruccion": "+ Nueva instrucción",
+    "cargandoReportes": "Cargando reportes...",
+    "cargandoBase": "Cargando base de conocimiento...",
+    "errorDashboard": "Error cargando el dashboard",
+    "cargandoClinico": "Cargando datos clínicos...",
+    "proximaCita": "Próxima cita",
+    "sesionesLabel": "Sesiones",
+    "tareasLabel": "Tareas",
+    "asistenciaLabel": "Asistencia",
+    "indexadoTarda": "El indexado puede tardar 2-5 minutos para documentos grandes",
+    "necesitasSesiones": "Necesitas al menos 1 sesión registrada para ver el gráfico",
+    "registraSesiones": "Registrá sesiones para ver el progreso aquí",
+    "seleccionarPaciente3": "Selecciona un paciente para ver su historial"
   },
   "auth": {
     "iniciarSesion": "Iniciar sesión",
@@ -329,7 +341,10 @@
     "necesitasCambiar": "¿Necesitás cambiar o cancelar?",
     "centroteNotificara": "El centro te notificará cuando programe tu próxima sesión.",
     "sesiones": "Agenda de Sesiones",
-    "nuevaSesion": "Nueva sesión"
+    "nuevaSesion": "Nueva sesión",
+    "childIdLabel": "Child ID del paciente",
+    "terapeutaId": "Terapeuta ID",
+    "tipoEvaluacion": "Evaluación"
   },
   "programas": {
     "titulo": "Programas ABA",
@@ -540,7 +555,8 @@
     "todas": "Todas las áreas",
     "cerebro": "Cerebro IA",
     "ultimaSesion": "Última sesión",
-    "creaProgramas": "Crea programas en la ficha del paciente"
+    "creaProgramas": "Crea programas en la ficha del paciente",
+    "historicoSesiones": "Analiza el historial de sesiones y detecta regularidades conductuales"
   },
   "reportes": {
     "titulo": "Reportes Clínicos",
@@ -598,7 +614,8 @@
     "analisisEstrategico": "ANÁLISIS ESTRATÉGICO IA",
     "analisisPrograma": "Análisis por Programa / Nivel",
     "generarReporte": "Generar Nuevo Reporte Word",
-    "errorGenerar": "Error al generar"
+    "errorGenerar": "Error al generar",
+    "cargandoReportes": "Cargando reportes..."
   },
   "familias": {
     "titulo": "Portal de Familias",

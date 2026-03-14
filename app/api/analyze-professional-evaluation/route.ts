@@ -29,6 +29,7 @@ function getLangInstruction(locale: string): string {
 export async function POST(req: Request) {
   try {
     const body: EvaluationRequest = await req.json();
+  const userLocale = (body as any).locale || req.headers.get('x-locale') || 'es'
     const { evaluationType, responses, childName, childAge, childId } = body;
 
 

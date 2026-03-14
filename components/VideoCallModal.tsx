@@ -1,4 +1,5 @@
 'use client'
+import { useI18n } from '@/lib/i18n-context'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { X, Video, PhoneOff, Loader2, Wifi, AlertTriangle, Clock } from 'lucide-react'
@@ -22,6 +23,7 @@ export default function VideoCallModal({
   const autoEndRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const endingRef  = useRef(false)
 
+  const { t } = useI18n()
   const [connStatus, setConnStatus] = useState<'connecting' | 'connected'>('connecting')
   const [elapsed,    setElapsed]    = useState(0)
   const [saving,     setSaving]     = useState(false)
