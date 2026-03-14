@@ -10,7 +10,7 @@ interface TareasHogarProps {
 }
 
 export default function TareasHogar({ childId, modoParent = false, parentUserId }: TareasHogarProps) {
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
   const [tareas, setTareas]       = useState<any[]>([])
   const [cargando, setCargando]   = useState(true)
   const [completando, setCompletando] = useState<string | null>(null)

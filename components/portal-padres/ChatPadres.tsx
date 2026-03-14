@@ -25,7 +25,7 @@ const SUGERENCIAS = [
 ]
 
 export default function ChatPadres({ childId, parentUserId, childName }: ChatPadresProps) {
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
   const [mensajes, setMensajes]   = useState<Mensaje[]>([])
   const [input, setInput]         = useState('')
   const [enviando, setEnviando]   = useState(false)

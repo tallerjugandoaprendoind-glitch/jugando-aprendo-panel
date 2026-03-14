@@ -88,7 +88,7 @@ function useTextToSpeech() {
 
 // ── Hook Speech-to-Text ───────────────────────────────────────────────────────
 function useSpeechToText(onResult: (text: string) => void) {
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
   const [listening, setListening] = useState(false)
   const [supported, setSupported] = useState(false)
   const recognitionRef = useRef<any>(null)
@@ -692,7 +692,7 @@ const BADGE_REPORTE: Record<string, string> = {
 }
 
 function ReporteHistorialCard({ reporte }: { reporte: any }) {
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
   const handleDownload = async () => {
     try {
       const { data, error } = await supabase

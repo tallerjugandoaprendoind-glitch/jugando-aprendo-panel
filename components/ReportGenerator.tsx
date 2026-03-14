@@ -81,7 +81,7 @@ export default function ReportGenerator({
   compact = false,
 }: ReportGeneratorProps) {
 
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
   const [isGenerating, setIsGenerating]     = useState(false)
   const [reportes, setReportes]             = useState<Reporte[]>([])
   const [isLoadingReportes, setIsLoadingReportes] = useState(true)

@@ -46,7 +46,7 @@ interface Trend {
 // COMPONENTE PRINCIPAL
 // ==============================================================================
 export default function AnalyticsDashboard({ childId, childName, onClose }: AnalyticsDashboardProps) {
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
