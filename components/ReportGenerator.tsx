@@ -125,7 +125,7 @@ export default function ReportGenerator({
       const response = await fetch('/api/generate-report', {
         method: 'POST',
         headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: locale || 'es',
+        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es',
           reportType:   evaluationType,
           childName,
           childAge,

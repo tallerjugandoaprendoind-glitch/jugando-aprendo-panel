@@ -77,7 +77,7 @@ const generarPlan = async () => {
       const res = await fetch('/api/engagement-padres', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ childId, accion: 'generar_plan', locale: locale || 'es' }),
+        body: JSON.stringify({ childId, accion: 'generar_plan', locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)

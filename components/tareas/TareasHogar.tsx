@@ -35,7 +35,7 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
       await fetch('/api/tareas-hogar', {
         method: 'POST',
         headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: locale || 'es', action: 'completar', id, nota_padre: notaPadre, dificultad_reportada: dificultad })
+        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es', action: 'completar', id, nota_padre: notaPadre, dificultad_reportada: dificultad })
       })
       setTareas(prev => prev.map(t => t.id === id ? { ...t, completada: true } : t))
       setModalAbierto(false)

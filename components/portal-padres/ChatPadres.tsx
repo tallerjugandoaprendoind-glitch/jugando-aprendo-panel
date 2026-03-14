@@ -63,7 +63,7 @@ export default function ChatPadres({ childId, parentUserId, childName }: ChatPad
       const res = await fetch('/api/parent-chat', {
         method: 'POST',
         headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: locale || 'es', mensaje: msg, childId, parentUserId })
+        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es', mensaje: msg, childId, parentUserId })
       })
       const data = await res.json()
 

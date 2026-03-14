@@ -184,7 +184,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
       const res = await fetch('/api/agente-prediccion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ locale: locale || 'es', childId: p.id, childName: p.name, semanas: 12 , locale: localStorage.getItem('vanty_locale') || 'es' })
+        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es', childId: p.id, childName: p.name, semanas: 12 })
       })
       const data = await res.json()
       setPrediccion(data)
@@ -648,7 +648,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
       const res = await fetch('/api/agente-patrones', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ locale: locale || 'es', childId: selected.id, childName: selected.name , locale: localStorage.getItem('vanty_locale') || 'es' }),
+        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es', childId: selected.id, childName: selected.name }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -764,7 +764,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
       const res = await fetch('/api/agente-objetivos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ locale: locale || 'es', childId: selected.id, childName: selected.name, accion , locale: localStorage.getItem('vanty_locale') || 'es' }),
+        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es', childId: selected.id, childName: selected.name, accion }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -965,7 +965,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       const res = await fetch('/api/reporte-word', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ locale: locale || 'es', childId: selected.id, tipo , locale: localStorage.getItem('vanty_locale') || 'es' }),
+        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es', childId: selected.id, tipo }),
       })
       if (!res.ok) {
         const err = await res.json()
