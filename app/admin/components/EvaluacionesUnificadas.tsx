@@ -1238,7 +1238,7 @@ function FormCard({ form, onStart, onSend, catInfo }: any) {
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export default function EvaluacionesUnificadas() {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [activeTab, setActiveTab] = useState<'biblioteca' | 'enviados' | 'historial'>('biblioteca')
   const [activeCategory, setActiveCategory] = useState('all')
   const [searchTerm, setSearchTerm] = useState('')

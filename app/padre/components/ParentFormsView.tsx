@@ -317,7 +317,7 @@ function ResourceCard({ resource }: { resource: any }) {
 
 // ─── MAIN PARENT FORMS + RESOURCES VIEW ─────────────────────────────────────
 function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { profile: any; selectedChild: any; onFormsLoaded?: (count: number) => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   const [activeTab, setActiveTab] = useState<'forms' | 'resources'>('forms')
   const [pendingForms, setPendingForms] = useState<any[]>([])
