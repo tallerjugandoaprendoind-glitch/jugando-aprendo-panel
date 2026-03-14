@@ -292,6 +292,7 @@ function EvalDetail({ r, tipo }: { r: any; tipo: string }) {
 }
 
 function GenericDetail({ r }: { r: any }) {
+  const { t } = useI18n()
   const d = r.responses || r.datos || r
   const skip = new Set(['id','child_id','created_at','updated_at','ai_analysis','responses','datos','form_type','form_title'])
   const entries = Object.entries(d || {}).filter(([k, v]) => !skip.has(k) && v !== null && v !== undefined && v !== '')
