@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Send, Sparkles, Heart, ShoppingBag, Mic, MicOff, Volume2, VolumeX, RefreshCw, StopCircle } from 'lucide-react'
@@ -33,14 +34,15 @@ function useTextToSpeech() {
       .replace(/\n{2,}/g, '. ')
       .trim()
     const utter = new SpeechSynthesisUtterance(clean)
-    utter.lang = 'es-PE'
+    utter.lang = toBCP47(locale)
     utter.rate = 1.05
     utter.pitch = 1.1
     utter.volume = 0.95
     // Preferir voz en español si está disponible
     const voices = window.speechSynthesis.getVoices()
-    const esVoice = voices.find(v => v.lang.startsWith('es') && v.localService) ||
-                    voices.find(v => v.lang.startsWith('es'))
+    const langPrefix = locale === 'en' ? 'en' : 'es'
+    const esVoice = voices.find(v => v.lang.startsWith(langPrefix) && v.localService) ||
+                    voices.find(v => v.lang.startsWith(langPrefix))
     if (esVoice) utter.voice = esVoice
     utter.onstart = () => setSpeaking(true)
     utter.onend = () => setSpeaking(false)
@@ -75,7 +77,7 @@ function useSpeechToText(onResult: (text: string) => void) {
     if (SpeechRecognition) {
       setSupported(true)
       const rec = new SpeechRecognition()
-      rec.lang = 'es-PE'
+      rec.lang = toBCP47(locale)
       rec.continuous = false
       rec.interimResults = false
       rec.maxAlternatives = 1

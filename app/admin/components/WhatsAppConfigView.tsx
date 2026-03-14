@@ -1,12 +1,13 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 // Panel de configuración de notificaciones — Telegram (recomendado) + WhatsApp
 import { useState, useEffect } from 'react'
 import { Bell, CheckCircle, XCircle, ExternalLink, Copy, Send, MessageCircle } from 'lucide-react'
 
 export default function WhatsAppConfigView() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [status, setStatus] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
@@ -26,7 +27,7 @@ export default function WhatsAppConfigView() {
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           tipo: 'custom',
-          vars: { mensaje: `🧪 *Test Vanty* — ${new Date().toLocaleTimeString('es-PE')} ✅\nNotificaciones funcionando correctamente.` },
+          vars: { mensaje: `🧪 *Test Vanty* — ${new Date().toLocaleTimeString(toBCP47(locale))} ✅\n${t('whatsapp.notifOk')}` },
           guardar: false,
         }),
       })

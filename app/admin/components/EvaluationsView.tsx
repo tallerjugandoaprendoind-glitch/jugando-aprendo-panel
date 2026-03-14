@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import {
@@ -17,7 +18,7 @@ import {
 } from '../data/formConstants'
 
 function DynamicEvaluationsView() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [activeForm, setActiveForm] = useState<'aba' | 'anamnesis' | 'entorno_hogar' | 'brief2' | 'ados2' | 'vineland3' | 'wiscv' | 'basc3' | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedChild, setSelectedChild] = useState('');
@@ -206,7 +207,7 @@ function DynamicEvaluationsView() {
 
       // 3. Construir título y mensaje según tipo de formulario
       const childName = child.name;
-      const fecha = new Date().toLocaleDateString('es-PE', { day: 'numeric', month: 'long' });
+      const fecha = new Date().toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'long' });
       let title = '';
       let message = '';
 

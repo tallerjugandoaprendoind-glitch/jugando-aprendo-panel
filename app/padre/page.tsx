@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect, useRef } from 'react'
@@ -34,7 +35,7 @@ import PushNotificationBanner from '../../components/PushNotificationBanner'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
 
 export default function ParentDashboard() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const router = useRouter()
    
   const [loading, setLoading] = useState(true)
@@ -1015,7 +1016,7 @@ export default function ParentDashboard() {
                                             </div>
                                         )}
                                         <p className="text-xs text-slate-400 flex items-center gap-1">
-                                            <Clock size={11}/> {new Date(selectedNoti.created_at).toLocaleDateString('es-PE',{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+                                            <Clock size={11}/> {new Date(selectedNoti.created_at).toLocaleDateString(toBCP47(locale),{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}
                                         </p>
                                     </div>
                                 )
@@ -1076,7 +1077,7 @@ export default function ParentDashboard() {
                                                 <p className="text-xs font-medium text-slate-400 mb-1">{iconConfig.label}</p>
                                                 <p className="text-slate-500 text-xs leading-relaxed line-clamp-2">{noti.message}</p>
                                                 <p className="text-slate-300 text-[10px] font-bold mt-2 flex items-center gap-1">
-                                                    <Clock size={10}/> {new Date(noti.created_at).toLocaleDateString('es-PE',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
+                                                    <Clock size={10}/> {new Date(noti.created_at).toLocaleDateString(toBCP47(locale),{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
                                                     <span className="ml-1 text-blue-400">· Toca para leer</span>
                                                 </p>
                                             </div>

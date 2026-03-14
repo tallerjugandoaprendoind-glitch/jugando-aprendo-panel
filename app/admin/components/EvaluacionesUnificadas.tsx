@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 /**
  * =====================================================================
@@ -33,7 +34,7 @@ import { calcularEdadNumerica } from '../utils/helpers'
 
 // ─── CATEGORÍAS ORDENADAS POR ÁREA CLÍNICA ──────────────────────────────────
 const UNIFIED_CATEGORIES = [
-  { id: 'all',        label: 'Todas las plantillas', icon: '🗂️', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+  { id: 'all',        label: t('evaluaciones.todasPlantillas'), icon: '🗂️', color: 'bg-slate-100 text-slate-700 border-slate-200' },
   { id: 'conductual', label: 'ABA / Sesión',          icon: '🎯', color: 'bg-orange-50 text-orange-700 border-orange-200' },
   { id: 'familia',    label: 'Familia / Hogar',       icon: '🏠', color: 'bg-pink-50 text-pink-700 border-pink-200' },
   { id: 'clinico',    label: 'Historia Clínica',      icon: '📋', color: 'bg-slate-50 text-slate-700 border-slate-200' },
@@ -204,7 +205,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
         <label className="text-sm font-bold text-slate-700 block mb-2">{question.label}</label>
         <select value={value || ''} onChange={e => onChange(e.target.value)}
           className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all">
-          <option value="">Seleccionar...</option>
+          <option value="">{t('common.seleccionar')}</option>
           {(question.options || []).map((opt: string) => <option key={opt} value={opt}>{opt}</option>)}
         </select>
       </div>
@@ -326,7 +327,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
 
 // ─── HELPER: convierte string con guiones/saltos o array → array limpio ───────
 function toArray(val: any): string[] {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   if (!val) return []
   if (Array.isArray(val)) return val.filter(Boolean)
@@ -625,7 +626,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
             )}
           </div>
           <p className="text-xs text-slate-400 flex items-center gap-1">
-            <Baby size={10} /> {(sf as any).children?.name || 'Paciente'} · {new Date(sf.created_at).toLocaleDateString('es-PE')}
+            <Baby size={10} /> {(sf as any).children?.name || 'Paciente'} · {new Date(sf.created_at).toLocaleDateString(toBCP47(locale))}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
@@ -1219,7 +1220,7 @@ function FormCard({ form, onStart, onSend, catInfo }: any) {
         <div className="flex gap-2">
           <button onClick={() => onStart(form)}
             className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-all bg-gradient-to-r ${form.color || 'from-violet-600 to-indigo-600'} text-white shadow-sm hover:shadow-md hover:opacity-90 flex items-center justify-center gap-1.5`}>
-            <FileText size={13} /> Completar
+            <FileText size={13} /> {t('evaluaciones.completar')}
           </button>
           {(form.targetRole === 'parent' || form.targetRole === 'both') && (
             <button onClick={() => onSend(form)}
@@ -1342,7 +1343,7 @@ export default function EvaluacionesUnificadas() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: 'Formularios', value: stats.total, icon: '📋', color: 'from-violet-600 to-indigo-600', bg: 'bg-violet-50' },
-          { label: 'Enviados', value: stats.sent, icon: '📤', color: 'from-blue-600 to-cyan-600', bg: 'bg-blue-50' },
+          { label: t('evaluaciones.enviados_stat'), value: stats.sent, icon: '📤', color: 'from-blue-600 to-cyan-600', bg: 'bg-blue-50' },
           { label: 'Pendientes', value: stats.pending, icon: '⏳', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
           { label: 'Completados', value: stats.completed, icon: '✅', color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-50' },
         ].map(({ label, value, icon, color, bg }) => (
@@ -1359,9 +1360,9 @@ export default function EvaluacionesUnificadas() {
       {/* ── TABS ── */}
       <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
         {[
-          { key: 'biblioteca', label: '📚 Biblioteca', count: stats.total },
-          { key: 'enviados', label: '📤 Enviados', count: stats.sent },
-          { key: 'historial', label: '🗂️ Historial', count: savedForms.length },
+          { key: 'biblioteca', label: `📚 ${t('evaluaciones.biblioteca')}`, count: stats.total },
+          { key: 'enviados', label: `📤 ${t('evaluaciones.enviados')}`, count: stats.sent },
+          { key: 'historial', label: `🗂️ ${t('evaluaciones.historial')}`, count: savedForms.length },
         ].map(({ key, label, count }) => (
           <button key={key} onClick={() => setActiveTab(key as any)}
             className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 ${activeTab === key ? 'bg-white text-slate-800 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
@@ -1390,7 +1391,7 @@ export default function EvaluacionesUnificadas() {
             {UNIFIED_CATEGORIES.map(cat => (
               <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 ${activeCategory === cat.id ? 'bg-violet-600 text-white border-violet-600 shadow-lg shadow-violet-200' : `${cat.color} hover:opacity-80`}`}>
-                {cat.icon} {cat.label}
+                {cat.icon} {({all: t('evaluaciones.catTodas'), conductual: t('evaluaciones.catABA'), familia: t('evaluaciones.catFamilia'), clinico: t('evaluaciones.catClinico'), tea: t('evaluaciones.catTEA'), tdah: t('evaluaciones.catTDAH'), habilidades: t('evaluaciones.catAdaptativa'), cognitivo: t('evaluaciones.catCognitivo'), sensorial: t('evaluaciones.catSensorial')} as Record<string,string>)[cat.id] || cat.label}
               </button>
             ))}
           </div>
@@ -1437,11 +1438,11 @@ export default function EvaluacionesUnificadas() {
                   <div className="flex items-center gap-2 mb-0.5 flex-wrap">
                     <p className="font-bold text-slate-800 text-sm truncate" style={{ color: "var(--text-primary)" }}>{sf.form_title}</p>
                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase ${sf.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                      {sf.status === 'completed' ? '✅ Completado' : '⏳ Pendiente'}
+                      {sf.status === 'completed' ? `✅ ${t('evaluaciones.completado')}` : `⏳ ${t('evaluaciones.pendiente')}`}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium">Para: {sf.profiles?.full_name || sf.profiles?.email}</p>
-                  <p className="text-xs text-slate-300 mt-0.5">{new Date(sf.created_at).toLocaleDateString('es-PE')}</p>
+                  <p className="text-xs text-slate-300 mt-0.5">{new Date(sf.created_at).toLocaleDateString(toBCP47(locale))}</p>
                 </div>
                 {expandedResponse === sf.id ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
               </div>

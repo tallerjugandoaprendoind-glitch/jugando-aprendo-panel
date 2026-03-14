@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import {
@@ -16,7 +17,7 @@ import ARIAAgentChat from './ARIAAgentChat'
 
 // ── Historial de evaluaciones del paciente (mini view dentro de ficha) ────────
 function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string; childName: string }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [evaluaciones, setEvaluaciones] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -68,7 +69,7 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
           <span className="text-lg">{ev.fuente}</span>
           <div className="flex-1 min-w-0">
             <p className="font-bold text-slate-700 text-sm truncate">{ev.form_title}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{ev.tipo} · {new Date(ev.created_at).toLocaleDateString('es-PE', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+            <p className="text-xs text-slate-400 mt-0.5">{ev.tipo} · {new Date(ev.created_at).toLocaleDateString(toBCP47(locale), { year: 'numeric', month: 'short', day: 'numeric' })}</p>
             {ev.ai_analysis && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{typeof ev.ai_analysis === 'string' ? ev.ai_analysis.slice(0, 120) + '...' : ''}</p>}
           </div>
         </div>
@@ -139,7 +140,7 @@ function PatientsView() {
     }
 
     const alertaColor = (dias: number | null) => {
-        if (dias === null) return { bg: 'bg-slate-100', text: 'text-slate-500', label: 'Sin sesiones' }
+        if (dias === null) return { bg: 'bg-slate-100', text: 'text-slate-500', label: t('pacientes.sinSesiones') }
         if (dias <= 14) return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: `Hace ${dias}d` }
         if (dias <= 30) return { bg: 'bg-amber-100', text: 'text-amber-700', label: `Hace ${dias}d ⚠️` }
         return { bg: 'bg-red-100', text: 'text-red-700', label: `Hace ${dias}d 🚨` }
@@ -298,7 +299,7 @@ function PatientsView() {
                                         <ChevronRight size={20} className="text-slate-300"/>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-600 font-bold text-xs border border-purple-100">{nino.diagnosis || "En evaluación"}</span>
+                                        <span className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-600 font-bold text-xs border border-purple-100">{nino.diagnosis || t('pacientes.enEvaluacion')}</span>
                                         <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-black text-xs">
                                             {nino.age ? `${nino.age}a` : "N/A"}
                                         </span>
@@ -331,7 +332,7 @@ function PatientsView() {
                                                 {nino.age ? `${nino.age} años` : "N/A"}
                                             </span>
                                         </td>
-                                        <td className="p-4 lg:p-6"><span className="px-4 py-2 rounded-xl text-xs font-black bg-purple-50 text-purple-600 border border-purple-100 inline-block">{nino.diagnosis || "En evaluación"}</span></td>
+                                        <td className="p-4 lg:p-6"><span className="px-4 py-2 rounded-xl text-xs font-black bg-purple-50 text-purple-600 border border-purple-100 inline-block">{nino.diagnosis || t('pacientes.enEvaluacion')}</span></td>
                                         <td className="p-4 lg:p-6">
                                             {(() => {
                                                 const dias = diasSinSesion(nino.id)
@@ -411,9 +412,9 @@ function PatientsView() {
                             )}
                             {!isEditing && patientTab === 'info' && (
                                 <>
-                                    <InfoRow label="Fecha de Nacimiento" value={selectedPatient.birth_date ? new Date(selectedPatient.birth_date).toLocaleDateString('es-PE') : "No registrada"} icon={<Calendar size={16}/>}/>
+                                    <InfoRow label=t('pacientes.fechaNacimiento') value={selectedPatient.birth_date ? new Date(selectedPatient.birth_date).toLocaleDateString(toBCP47(locale)) : t('pacientes.noRegistrada')} icon={<Calendar size={16}/>}/>
                                     <InfoRow label="Edad" value={selectedPatient.age ? `${selectedPatient.age} años` : "No disponible"} icon={<Baby size={16}/>}/>
-                                    <InfoRow label="Diagnóstico" value={selectedPatient.diagnosis || "En evaluación"} icon={<Stethoscope size={16}/>}/>
+                                    <InfoRow label=t('pacientes.diagnostico') value={selectedPatient.diagnosis || t('pacientes.enEvaluacion')} icon={<Stethoscope size={16}/>}/>
                                 </>
                             )}
                             {!isEditing && patientTab === 'programas' && (
@@ -487,7 +488,7 @@ function PatientsView() {
                                 <>
                                     <button onClick={() => setShowPatientModal(false)} className="flex-1 px-6 py-3 rounded-xl font-bold transition-all hover:opacity-80" style={{ background: "var(--muted-bg)", border: "2px solid var(--card-border)", color: "var(--text-primary)" }}>{t('common.cerrar')}</button>
                                     <button onClick={activarEdicion} className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-                                        <Edit size={18}/> Editar
+                                        <Edit size={18}/> {t('common.editar')}
                                     </button>
                                 </>
                             ) : (

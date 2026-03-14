@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
@@ -75,7 +76,7 @@ function ProductModal({
 }: { product: Product | null; onClose: () => void; onSaved: () => void }) {
   const toast = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [form, setForm] = useState<any>(product ? {
     nombre: product.nombre, descripcion: product.descripcion || '',
     precio_soles: String(product.precio_soles), stock: String(product.stock),
@@ -582,7 +583,7 @@ export default function StoreManagementView() {
                         </div>
                         <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
                           {order.parent_phone && <span className="flex items-center gap-1"><Phone size={10} />{order.parent_phone}</span>}
-                          <span>{new Date(order.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                          <span>{new Date(order.created_at).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                           <span>{order.store_order_items?.length || 0} artículo(s)</span>
                         </div>
                       </div>

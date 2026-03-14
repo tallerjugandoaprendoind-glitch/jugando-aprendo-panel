@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Send, Loader2, Bot, User, Sparkles, BookOpen, Brain,
@@ -190,7 +191,7 @@ export default function VADIAgentChat({
 }
 
 function MessageBubble({ message }: { message: Message }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const isUser = message.role === 'user'
 
   // Convertir **negrita** y saltos de línea
@@ -223,7 +224,7 @@ function MessageBubble({ message }: { message: Message }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-slate-300">
-            {new Date(message.timestamp).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
+            {new Date(message.timestamp).toLocaleTimeString(toBCP47(locale), { hour: '2-digit', minute: '2-digit' })}
           </span>
           {message.fuentes && message.fuentes.length > 0 && (
             <div className="flex gap-1">

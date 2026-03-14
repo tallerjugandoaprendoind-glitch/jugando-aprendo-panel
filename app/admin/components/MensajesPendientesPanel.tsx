@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useCallback } from 'react'
 import {
@@ -30,7 +31,7 @@ interface PendingMessage {
 
 export default function MensajesPendientesPanel() {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [messages, setMessages] = useState<PendingMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [statusFilter, setStatusFilter] = useState<'pending_approval' | 'approved' | 'rejected'>('pending_approval')
@@ -239,7 +240,7 @@ export default function MensajesPendientesPanel() {
                       <div className="flex items-center gap-3 flex-wrap text-xs text-slate-400">
                         <span className="flex items-center gap-1"><Baby size={10}/> {msg.children?.name || 'Paciente'}</span>
                         <span className="flex items-center gap-1"><User size={10}/> {msg.profiles?.full_name || 'Padre/Madre'}</span>
-                        <span className="flex items-center gap-1"><Clock size={10}/> {new Date(msg.created_at).toLocaleDateString('es-PE', { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</span>
+                        <span className="flex items-center gap-1"><Clock size={10}/> {new Date(msg.created_at).toLocaleDateString(toBCP47(locale), { day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit' })}</span>
                       </div>
                       <p className="text-xs text-slate-500 mt-2 italic line-clamp-2">"{msg.edited_message || msg.ai_message}"</p>
                     </div>
@@ -381,7 +382,7 @@ export default function MensajesPendientesPanel() {
                         <p className="text-sm font-bold text-emerald-700 flex items-center gap-2">
                           <CheckCircle size={16}/> Enviado al padre/madre
                         </p>
-                        {msg.approved_at && <p className="text-xs text-emerald-600 mt-1">{new Date(msg.approved_at).toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}</p>}
+                        {msg.approved_at && <p className="text-xs text-emerald-600 mt-1">{new Date(msg.approved_at).toLocaleDateString(toBCP47(locale), { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}</p>}
                         <div className="mt-3 bg-gradient-to-br from-emerald-600 to-green-600 rounded-xl p-3 text-white">
                           <p className="text-xs text-emerald-100 leading-relaxed whitespace-pre-wrap">{msg.edited_message || msg.ai_message}</p>
                         </div>

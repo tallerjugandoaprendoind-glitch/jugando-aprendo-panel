@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import {
@@ -12,7 +13,7 @@ import { supabase } from '@/lib/supabase'
 
 // ─── DYNAMIC FORM RENDERER (simplified for parents) ─────────────────────────
 function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: (r: any) => void; onClose: () => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [responses, setResponses] = useState<Record<string, any>>({})
   const [currentStep, setCurrentStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
@@ -468,7 +469,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
                             </span>
                             {form.deadline && (
                               <span className="text-[9px] font-black px-2 py-1 bg-red-50 text-red-600 border border-red-100 rounded-full flex items-center gap-1">
-                                <Clock size={9}/> Hasta {new Date(form.deadline).toLocaleDateString('es-PE')}
+                                <Clock size={9}/> {t('common.hasta')} {new Date(form.deadline).toLocaleDateString(toBCP47(locale))}
                               </span>
                             )}
                           </div>
@@ -510,7 +511,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-slate-700 text-sm">{form.form_title}</p>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Completado el {form.completed_at ? new Date(form.completed_at).toLocaleDateString('es-PE') : 'N/A'}
+                        {t('common.completadoEl')} {form.completed_at ? new Date(form.completed_at).toLocaleDateString(toBCP47(locale)) : 'N/A'}
                       </p>
                     </div>
                     <span className="text-[9px] font-black px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full uppercase">

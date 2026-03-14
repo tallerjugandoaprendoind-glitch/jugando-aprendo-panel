@@ -92,12 +92,12 @@ export default function AdminDashboard() {
   const MOBILE_NAV = [
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio') },
     { id: 'ninos',        icon: Users,           label: t('nav.pacientes') },
-    { id: 'vadi',         icon: Sparkles,        label: 'ARIA' },
+    { id: 'vadi',         icon: Sparkles,        label: t('nav.aria') },
     { id: 'evaluaciones', icon: FileText,        label: t('nav.evaluaciones') },
   ]
   const SECONDARY_NAV = [
     { id: 'usuarios', icon: Key, label: t('nav.usuarios') },
-    { id: 'importar', icon: Upload, label: 'Importar CSV', hidden: true },
+    { id: 'importar', icon: Upload, label: t('nav.importarCSV'), hidden: true },
   ]
   const PAGE_TITLES: Record<string, string> = {
     inicio: t('dashboard.titulo'), agenda: t('nav.agenda'), ninos: t('nav.pacientes'),

@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useCallback } from 'react'
 import {
@@ -44,7 +45,7 @@ const ESTADO_CFG: Record<string, any> = {
 // ── Carrito flotante ──────────────────────────────────────────────────────────
 function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
   const total = cart.reduce((s: number, i: CartItem) => s + i.product.precio_soles * i.cantidad, 0)
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [nota, setNota] = useState('')
   const [placing, setPlacing] = useState(false)
   const [done, setDone] = useState(false)
@@ -416,7 +417,7 @@ export default function StoreView({ profile }: { profile: any }) {
                     <span className={`text-xs font-black ${cfg.color}`}>{cfg.label}</span>
                   </div>
                   <span className="text-xs text-slate-400">
-                    {new Date(order.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {new Date(order.created_at).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
                 </div>
                 <div className="p-5 space-y-3">

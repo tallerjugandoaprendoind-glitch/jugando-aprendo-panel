@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import {
@@ -19,7 +20,7 @@ interface Props {
 
 // ── Tarjeta de estadística clicable ────────────────────────────────────────
 function StatCard({ label, value, sub, color, bg, border, icon: Icon, onClick, loading, pulse }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   return (
     <button onClick={onClick}
@@ -97,7 +98,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
     const now = new Date()
     const h = now.getHours()
     setSaludo(h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches')
-    setFechaStr(now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }))
+    setFechaStr(now.toLocaleDateString(toBCP47(locale), { weekday: 'long', day: 'numeric', month: 'long' }))
   }, [])
 
   useEffect(() => {
@@ -282,7 +283,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
                       <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                         <Baby size={10} /> {r.children?.name}
                         <span className="mx-1">·</span>
-                        {new Date(r.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })}
+                        {new Date(r.created_at).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'short' })}
                       </p>
                     </div>
                     <span className={`flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.color}`}>

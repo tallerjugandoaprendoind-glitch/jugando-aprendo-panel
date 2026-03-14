@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useCallback } from 'react'
 import {
@@ -18,7 +19,7 @@ import {
 
 // ─── DYNAMIC FORM RENDERER ───────────────────────────────────────────────────
 function DynamicFormQuestion({ question, value, onChange }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const freq = ['Nunca', 'Raramente', 'A veces', 'Frecuentemente', 'Casi siempre', 'Siempre']
 
   if (question.type === 'frequency') {
@@ -487,7 +488,7 @@ export default function NeuroFormsView() {
             {/* Patient selector */}
             <select value={selectedChild} onChange={e => setSelectedChild(e.target.value)}
               className="p-3 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 transition-all">
-              <option value="">Seleccionar paciente...</option>
+              <option value="">{t('common.seleccionarPaciente')}</option>
               {children.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
             <button onClick={handleSaveForm} disabled={isSaving || !selectedChild || answeredCount < 3}
@@ -520,7 +521,7 @@ export default function NeuroFormsView() {
             {/* Progress bar */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-bold text-slate-400">
-                <span>Sección {currentStep + 1} de {totalSteps}</span>
+                <span>{t('common.seccion')} {currentStep + 1} {t('common.de')} {totalSteps}</span>
                 <span>{Math.round(progress)}% completado</span>
               </div>
               <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
@@ -739,7 +740,7 @@ export default function NeuroFormsView() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium">Para: {sf.profiles?.full_name || sf.profiles?.email}</p>
-                  <p className="text-xs text-slate-300 mt-0.5">{new Date(sf.created_at).toLocaleDateString('es-PE')}</p>
+                  <p className="text-xs text-slate-300 mt-0.5">{new Date(sf.created_at).toLocaleDateString(toBCP47(locale))}</p>
                 </div>
                 {expandedResponse === sf.id ? <ChevronUp size={16} className="text-slate-400"/> : <ChevronDown size={16} className="text-slate-400"/>}
               </div>

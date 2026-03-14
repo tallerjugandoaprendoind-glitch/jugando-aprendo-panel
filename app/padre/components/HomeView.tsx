@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 import { useEffect, useState } from 'react'
 import { supabase as supabaseClient } from '@/lib/supabase'
 import {
@@ -28,7 +29,7 @@ function formatTime(t: string) {
 }
 
 function calcAge(birthDate: string) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   if (!birthDate) return 0
   const today = new Date(), birth = new Date(birthDate)
@@ -507,7 +508,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             {parentMessages.map((msg: any, idx: number) => (
               <div key={idx} className="px-5 py-4">
                 <p className="text-xs font-bold text-slate-400 mb-1">
-                  {msg.created_at ? new Date(msg.created_at).toLocaleDateString('es-PE', { dateStyle: 'medium' }) : ''}
+                  {msg.created_at ? new Date(msg.created_at).toLocaleDateString(toBCP47(locale), { dateStyle: 'medium' }) : ''}
                 </p>
                 <p className="text-sm font-bold text-slate-800 mb-1">{msg.title || msg.subject || 'Mensaje del terapeuta'}</p>
                 <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">{msg.body || msg.message || msg.content || ''}</p>

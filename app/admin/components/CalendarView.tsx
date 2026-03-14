@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import {
@@ -102,8 +103,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 
 function MonthlyCalendarView() {
   const toast = useToast()
-  const { t } = useI18n()
-  const [apts, setApts] = useState<any[]>([])
+  const { t, locale } = useI18n()
   const [ninos, setNinos] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -242,7 +242,7 @@ function MonthlyCalendarView() {
         if (citasRecurrentes.length > 0) {
           await supabase.from('appointments').insert(citasRecurrentes)
         }
-        toast.success(`✅ ${recurrenciaSemanas} citas ${recurrencia === 'weekly' ? 'semanales' : 'quincenales'} agendadas`)
+        toast.success(`✅ ${recurrenciaSemanas} ${t('agenda.citasRecurrenciaMensaje').replace('{tipo}', recurrencia === 'weekly' ? t('agenda.semanales') : t('agenda.quincenales'))}`)
       } else {
         toast.success(`✅ Cita ${modalidadCita} agendada`)
       }
@@ -283,7 +283,7 @@ function MonthlyCalendarView() {
 
   const getDaysInMonth = (d:Date) => ({ firstDay: new Date(d.getFullYear(),d.getMonth(),1).getDay(), daysInMonth: new Date(d.getFullYear(),d.getMonth()+1,0).getDate() })
   const { firstDay, daysInMonth } = currentMonth ? getDaysInMonth(currentMonth) : { firstDay: 0, daysInMonth: 31 }
-  const monthYear = currentMonth ? currentMonth.toLocaleString('es-PE',{month:'long',year:'numeric'}) : ''
+  const monthYear = currentMonth ? currentMonth.toLocaleString(toBCP47(locale),{month:'long',year:'numeric'}) : ''
   const todayStr = new Date().toISOString().split('T')[0]
   const getAptsForDay = (day:number): any[] => {
     if (!currentMonth) return []

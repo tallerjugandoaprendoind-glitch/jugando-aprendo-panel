@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useCallback } from 'react'
 import {
@@ -22,7 +23,7 @@ function calcularEdad(fecha: string) {
 
 function formatDate(d: string) {
   if (!d) return '—'
-  try { return new Date(d).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' }) }
+  try { return new Date(d).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'short', year: 'numeric' }) }
   catch { return d }
 }
 
@@ -48,7 +49,7 @@ function getTypeCfg(type: string) { return TYPE_CONFIG[type] || TYPE_CONFIG['def
 
 
 function Field({ label, value }: { label: string; value: any }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   if (value === null || value === undefined || value === '') return null
   const display = Array.isArray(value) ? value.join(', ') : String(value)

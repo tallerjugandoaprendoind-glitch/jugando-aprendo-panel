@@ -18,10 +18,10 @@ import { useToast } from '@/components/Toast'
 type TipoGrafico = 'lineas' | 'barras' | 'histograma' | 'pie'
 
 const TIPOS_GRAFICO_PROGRAMA = [
-  { id: 'lineas'    as TipoGrafico, emoji: '📈', label: 'Líneas' },
-  { id: 'barras'    as TipoGrafico, emoji: '📊', label: 'Barras' },
-  { id: 'histograma'as TipoGrafico, emoji: '🗂️', label: 'Histograma' },
-  { id: 'pie'       as TipoGrafico, emoji: '🥧', label: 'Pie' },
+  { id: 'lineas'    as TipoGrafico, emoji: '📈', label: t('reportes.lineas') },
+  { id: 'barras'    as TipoGrafico, emoji: '📊', label: t('reportes.barras') },
+  { id: 'histograma'as TipoGrafico, emoji: '🗂️', label: t('reportes.histograma') },
+  { id: 'pie'       as TipoGrafico, emoji: '🥧', label: t('reportes.pie') },
 ]
 
 function colorPorPct(pct: number) {
@@ -50,6 +50,31 @@ const FASE_COLORS: Record<string, string> = {
 export default function ProgramasABAView({ childId, childName }: { childId: string; childName: string }) {
   const toast = useToast()
   const { t } = useI18n()
+
+
+  const FASE_LABELS: Record<string, string> = {
+    linea_base:    t('programas.lineaBase'),
+    intervencion:  t('programas.intervencion'),
+    mantenimiento: t('programas.mantenimiento'),
+    seguimiento:   t('programas.seguimiento'),
+  }
+  const CHART_TIPO_LABELS: Record<string, string> = {
+    lineas:     t('reportes.lineas'),
+    barras:     t('reportes.barras'),
+    histograma: t('reportes.histograma'),
+    pie:        t('reportes.pie'),
+  }
+
+  const AREA_LABELS: Record<string, string> = {
+    comunicacion: t('programas.areaComunicacion') || 'Communication',
+    conducta:     t('programas.areaConducca') || 'Behavior',
+    cognitivo:    t('programas.areaCognitivo') || 'Cognitive',
+    social:       t('programas.areaSocial') || 'Social',
+    autonomia:    t('programas.areaAutonomia') || 'Autonomy',
+    academico:    t('programas.areaAcademico') || 'Academic',
+    sensorial:    t('programas.areaSensorial') || 'Sensory',
+  }
+
   const [programas, setProgramas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showCrear, setShowCrear] = useState(false)
@@ -109,23 +134,23 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
             <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">
               <Activity size={16} className="text-indigo-600" />
             </div>
-            Programas ABA
+            {t('programas.titulo')}
           </h2>
           <p className="text-slate-400 text-xs mt-0.5 ml-1">Registro de datos conductuales · {childName}</p>
         </div>
         <button onClick={() => setShowCrear(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
-          <Plus size={16} /> Nuevo Programa
+          <Plus size={16} /> {t('programas.nuevo')}
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Activos', value: stats.activos, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-          { label: 'Dominados', value: stats.dominados, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'En intervención', value: stats.enIntervencion, color: 'text-violet-600', bg: 'bg-violet-50' },
-          { label: 'Alertas IA', value: stats.alertas, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: t('programas.activos'), value: stats.activos, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+          { label: t('programas.dominados'), value: stats.dominados, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: t('programas.enIntervencion'), value: stats.enIntervencion, color: 'text-violet-600', bg: 'bg-violet-50' },
+          { label: t('programas.alertasIA'), value: stats.alertas, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} rounded-2xl p-3 text-center`}>
             <p className={`font-black text-2xl ${s.color}`}>{s.value}</p>
@@ -166,7 +191,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
                 ? 'bg-indigo-600 text-white border-indigo-600'
                 : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
             }`}>
-            {area === 'todos' ? '📋 Todos' : `${AREA_CONFIG[area]?.emoji} ${AREA_CONFIG[area]?.label}`}
+            {area === 'todos' ? `📋 ${t('programas.todos')}` : `${AREA_CONFIG[area]?.emoji} ${AREA_LABELS[area] || AREA_CONFIG[area]?.label}`}
           </button>
         ))}
       </div>
@@ -182,8 +207,8 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
           <div className="w-14 h-14 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
             <BarChart3 size={26} className="text-indigo-300" />
           </div>
-          <p className="font-bold text-slate-500 mb-1">Sin programas {filtroArea !== 'todos' ? `en ${AREA_CONFIG[filtroArea]?.label}` : ''}</p>
-          <p className="text-xs text-slate-300">Crea el primer programa ABA para {childName}</p>
+          <p className="font-bold text-slate-500 mb-1">{t('programas.sinProgramas')}{filtroArea !== 'todos' ? ` ${t('programas.enArea').replace('{area}', AREA_CONFIG[filtroArea]?.label || '')}` : ''}</p>
+          <p className="text-xs text-slate-300">{t('programas.creaElPrimero').replace('{nombre}', childName)}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -284,8 +309,8 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
   }
 
   const faseLabel: Record<string, string> = {
-    linea_base: 'Línea Base', intervencion: 'Intervención',
-    mantenimiento: 'Mantenimiento', seguimiento: 'Seguimiento',
+    linea_base: t('programas.lineaBase'), intervencion: t('programas.intervencion'),
+    mantenimiento: t('programas.mantenimiento'), seguimiento: t('programas.seguimiento'),
   }
 
   return (
@@ -307,7 +332,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
             <p className="text-xs text-slate-400 mt-1 line-clamp-1">{programa.objetivo_lp}</p>
             <div className="flex items-center gap-4 mt-2">
               <span className="text-xs text-slate-500 flex items-center gap-1">
-                <BarChart3 size={10} /> {sesiones.length} sesiones
+                <BarChart3 size={10} /> {sesiones.length} {t('programas.sesiones') || 'sesiones'}
               </span>
               {ultimoPct !== null && (
                 <span className="text-xs font-bold flex items-center gap-1">
@@ -320,14 +345,14 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                 </span>
               )}
               <span className="text-xs text-slate-400">
-                Criterio: {programa.criterio_dominio_pct}%
+                {t('programas.criterio')}: {programa.criterio_dominio_pct}%
               </span>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={e => { e.stopPropagation(); onRegistrarSesion() }}
               className="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all">
-              + Sesión
+              {t('programas.agregarSesion')}
             </button>
             {expanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
           </div>
@@ -366,10 +391,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     {/* Selector de tipo — solo analista */}
                     <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
                       {([
-                        { id: 'lineas'     as const, label: 'Líneas',     emoji: '📈' },
-                        { id: 'barras'     as const, label: 'Barras',     emoji: '📊' },
-                        { id: 'histograma' as const, label: 'Histograma', emoji: '🗂️' },
-                        { id: 'pie'        as const, label: 'Pie',        emoji: '🥧' },
+                        { id: 'lineas'     as const, label: t('reportes.lineas'),     emoji: '📈' },
+                        { id: 'barras'     as const, label: t('reportes.barras'),     emoji: '📊' },
+                        { id: 'histograma' as const, label: t('reportes.histograma'), emoji: '🗂️' },
+                        { id: 'pie'        as const, label: t('reportes.pie'),        emoji: '🥧' },
                       ] as const).map(t => (
                         <button key={t.id} onClick={() => onChangeTipoGrafico(t.id)}
                           title={t.label}
@@ -518,7 +543,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                             <XAxis dataKey="rango" tick={{ fontSize: 10 }} />
                             <YAxis tick={{ fontSize: 10 }} label={{ value: 'Sesiones', angle: -90, position: 'insideLeft', fontSize: 10 }} />
-                            <Tooltip formatter={(v: any) => [`${v} sesiones`, 'Cantidad']} />
+                            <Tooltip formatter={(v: any) => [`${v} ${t('programas.sesiones') || 'sesiones'}`, t('programas.cantidad')]} />
                             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                               {histData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
                             </Bar>
@@ -543,7 +568,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                               <Pie data={pieRaw} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} paddingAngle={3}>
                                 {pieRaw.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                               </Pie>
-                              <Tooltip formatter={(v: any) => [`${v} sesiones`, '']} />
+                              <Tooltip formatter={(v: any) => [`${v} ${t('programas.sesiones') || 'sesiones'}`, '']} />
                             </PieChart>
                           </ResponsiveContainer>
                           <div className="flex-1 space-y-2">
@@ -555,7 +580,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                               </div>
                             ))}
                             <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
-                              Total: {chartData.length} sesiones
+                              {t('programas.totalSesiones')}: {chartData.length} {t('programas.sesiones') || 'sesiones'}
                             </p>
                           </div>
                         </div>
@@ -585,7 +610,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           obj.estado === 'en_progreso' ? 'bg-indigo-100 text-indigo-700' :
                           'bg-slate-100 text-slate-500'
                         }`}>
-                          {obj.estado === 'dominado' ? '✅ Dominado' : obj.estado === 'en_progreso' ? '▶ En progreso' : '⏳ Pendiente'}
+                          {obj.estado === 'dominado' ? t('programas.dominado') : obj.estado === 'en_progreso' ? t('programas.enProgreso') : t('programas.pendiente')}
                         </span>
                       </div>
                     ))}
@@ -596,7 +621,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
               {/* Últimas sesiones */}
               {detalle.sesiones_datos_aba?.length > 0 && (
                 <div>
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📋 Últimas sesiones</p>
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📋 {t('programas.ultimasSesiones')}</p>
                   <div className="space-y-1.5">
                     {detalle.sesiones_datos_aba.slice(-6).reverse().map((s: any) => (
                       <div key={s.id} className="flex items-center gap-3 bg-white rounded-xl p-3 border border-slate-100 text-xs">
@@ -644,11 +669,11 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 
 function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
   const labels: Record<string, { label: string; color: string }> = {
-    linea_base:    { label: 'Línea Base',    color: 'bg-slate-100 text-slate-600' },
+    linea_base:    { label: t('programas.lineaBase'),    color: 'bg-slate-100 text-slate-600' },
     intervencion:  { label: 'Intervención',  color: 'bg-indigo-100 text-indigo-700' },
-    mantenimiento: { label: 'Mantenimiento', color: 'bg-emerald-100 text-emerald-700' },
+    mantenimiento: { label: t('programas.mantenimiento'), color: 'bg-emerald-100 text-emerald-700' },
     seguimiento:   { label: 'Seguimiento',   color: 'bg-amber-100 text-amber-700' },
-    dominado:      { label: '✅ Dominado',   color: 'bg-emerald-100 text-emerald-700' },
+    dominado:      { label: t('programas.dominado'),   color: 'bg-emerald-100 text-emerald-700' },
   }
   const cfg = labels[fase] || { label: fase, color: 'bg-slate-100 text-slate-500' }
   return (
@@ -775,7 +800,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
 
             {/* Nivel de ayuda — texto libre con sugerencias */}
             <div>
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">🤝🏼 Nivel de ayuda</label>
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">🤝🏼 {t('programas.nivelAyuda')}</label>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {['Independiente', 'Gesto', 'Verbal', 'Modelado', 'Físico parcial', 'Físico total'].map(nivel => (
                   <button key={nivel}
@@ -881,13 +906,13 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
             <div className="space-y-4">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 1 · Información básica</p>
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1.5">Nombre del programa *</label>
+                <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.nombrePrograma')} *</label>
                 <input value={form.titulo} onChange={e => set('titulo', e.target.value)}
-                  placeholder="ej: Imitación motora con objetos"
+                  placeholder={t('programas.placeholderNombre')}
                   className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-2">Área *</label>
+                <label className="text-xs font-bold text-slate-500 block mb-2">{t('programas.area')} *</label>
                 <div className="grid grid-cols-3 gap-2">
                   {Object.entries(AREA_CONFIG).map(([k, v]) => (
                     <button key={k} onClick={() => set('area', k)}
@@ -900,7 +925,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1.5">Objetivo a largo plazo *</label>
+                <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.objetivoLargoPlazo')} *</label>
                 <textarea value={form.objetivo_lp} onChange={e => set('objetivo_lp', e.target.value)}
                   rows={3} placeholder={t('ui.mastery_criterion_placeholder')}
                   className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
@@ -999,7 +1024,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
             {step < 3 ? (
               <button onClick={() => setStep(s => s + 1)} disabled={!form.titulo || !form.objetivo_lp}
                 className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-black text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
-                Siguiente <ArrowRight size={16} />
+                {t('programas.siguiente')} <ArrowRight size={16} />
               </button>
             ) : (
               <button onClick={handleSave} disabled={saving}

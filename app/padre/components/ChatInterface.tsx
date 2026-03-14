@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -66,7 +67,7 @@ function useTextToSpeech() {
         if ('speechSynthesis' in window) {
           const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n{2,}/g, '. ').trim().slice(0, 4000)
           const utter = new SpeechSynthesisUtterance(clean)
-          utter.lang = 'es-PE'
+          utter.lang = toBCP47(locale)
           utter.rate = 1.05
           utter.onend = () => setSpeaking(false)
           utter.onerror = () => setSpeaking(false)
@@ -104,7 +105,7 @@ function useTextToSpeech() {
 
 // ── Hook de Speech-to-Text ────────────────────────────────────────────────────
 function useSpeechToText(onResult: (text: string) => void) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   const [listening, setListening] = useState(false)
   const [supported, setSupported] = useState(false)
@@ -115,7 +116,7 @@ function useSpeechToText(onResult: (text: string) => void) {
     if (SpeechRecognition) {
       setSupported(true)
       const rec = new SpeechRecognition()
-      rec.lang = 'es-PE'
+      rec.lang = toBCP47(locale)
       rec.continuous = false
       rec.interimResults = false
       rec.maxAlternatives = 1

@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
@@ -37,7 +38,7 @@ const SOURCE_LABELS: Record<string, { label: string; icon: string; color: string
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
-  return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleDateString(toBCP47(locale), { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 function AnalysisCard({ analysis }: { analysis: any }) {
@@ -130,7 +131,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
 }
 
 export default function MensajesView({ profile }: { profile: any }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)

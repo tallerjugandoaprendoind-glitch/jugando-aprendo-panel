@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect } from 'react'
 import {
@@ -128,10 +129,7 @@ function BienestarPanel({ data }: { data: any[] }) {
 // ── Dashboard principal ─────────────────────────────────────────────────────
 function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   const toast = useToast()
-  const { t } = useI18n()
-  const [loading, setLoading] = useState(false)
-  const [emailCredito, setEmailCredito] = useState('')
-  const [stats, setStats] = useState({ pacientes: 0, sesionesHoy: 0, creditosActivos: 0, analisisIA: 0, sinSesion30d: 0, mensajesPendientes: 0 })
+  const { t, locale } = useI18n()
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
   const [actividadReciente, setActividadReciente] = useState<any[]>([])
   const [alertasClinicas, setAlertasClinicas] = useState<any[]>([])
@@ -144,8 +142,8 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
     const update = () => {
       const now = new Date()
       setHoraActual(now)
-      setSaludo(now.getHours() < 12 ? 'Buenos días' : now.getHours() < 19 ? 'Buenas tardes' : 'Buenas noches')
-      setDiaStr(now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
+      setSaludo(now.getHours() < 12 ? t('dashboard.saludoManana') : now.getHours() < 19 ? t('dashboard.saludoTarde') : t('dashboard.saludoNoche'))
+      setDiaStr(now.toLocaleDateString(toBCP47(locale), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
     }
     update()
     const iv = setInterval(update, 1000)
@@ -195,7 +193,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
     // Alertas de bienestar bajo
     const bienestarBajo = (bienestar || []).filter((b: any) => (b.responses?.answer || b.form_title || '').includes('Difícil'))
     bienestarBajo.slice(0, 2).forEach((b: any) => {
-      alertas.push({ tipo: 'bienestar_bajo', paciente: `Padre/Madre (${b.created_at?.slice(0, 10)})`, mensaje: 'Reportó dificultad esta semana. Considera contactarlos.' })
+      alertas.push({ tipo: 'bienestar_bajo', paciente: `${t('dashboard.padresMadre')} (${b.created_at?.slice(0, 10)})`, mensaje: t('dashboard.bienestarBajoMsg') })
     })
 
     const creditos = profiles?.reduce((s: number, p: any) => s + (p.tokens || 0), 0) || 0
@@ -207,16 +205,16 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   }
 
   const handleCargarCredito = async (cantidad: number) => {
-    if (!emailCredito.trim()) { toast.warning('Ingresa un email'); return }
+    if (!emailCredito.trim()) { toast.warning(t('dashboard.emailRequerido')); return }
     setLoading(true)
     try {
       const { data: profile } = await supabase.from('profiles').select('id, tokens').eq('email', emailCredito.trim()).single()
-      if (!profile) { toast.error('Email no encontrado'); return }
+      if (!profile) { toast.error(t('dashboard.emailNoEncontrado')); return }
       await supabase.from('profiles').update({ tokens: (profile.tokens || 0) + cantidad }).eq('id', profile.id)
-      toast.success(`✅ ${cantidad} crédito${cantidad > 1 ? 's' : ''} añadido${cantidad > 1 ? 's' : ''}`)
+      toast.success(`✅ ${cantidad} ${t('dashboard.creditosCargados')}`)
       setEmailCredito('')
       cargarDatos()
-    } catch { toast.error('Error al cargar crédito') }
+    } catch { toast.error(t('dashboard.errorCargarCredito')) }
     finally { setLoading(false) }
   }
 
@@ -238,18 +236,18 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-12 -translate-x-8" />
         <div className="relative">
           <p className="text-blue-200 text-sm font-medium capitalize">{diaStr}</p>
-          <h2 className="text-2xl font-black mt-1">{saludo}, Directora 👋</h2>
+          <h2 className="text-2xl font-black mt-1">{saludo}, {t('dashboard.directora')} 👋</h2>
           <p className="text-blue-200 text-sm mt-1">
-            Tienes <span className="text-white font-bold">{stats.sesionesHoy} citas</span> hoy
+            {t('dashboard.citasHoyBanner').replace('{n}', String(stats.sesionesHoy))}
             {stats.sinSesion30d > 0 && (
-              <span className="ml-2 text-yellow-300 font-bold">· {stats.sinSesion30d} paciente{stats.sinSesion30d > 1 ? 's' : ''} sin sesión reciente</span>
+              <span className="ml-2 text-yellow-300 font-bold">· {t('dashboard.sinSesionRecienteBanner').replace('{n}', String(stats.sinSesion30d))}</span>
             )}
           </p>
         </div>
         <div className="text-right hidden sm:block relative">
           <p className="text-blue-300 text-xs font-medium">{t('dashboard.horaActual')}</p>
           <p className="text-3xl font-black tabular-nums">
-            {horaActual ? horaActual.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+            {horaActual ? horaActual.toLocaleTimeString(toBCP47(locale), { hour: '2-digit', minute: '2-digit' }) : '--:--'}
           </p>
           <p className="text-blue-300 text-xs">{horaActual ? horaActual.getSeconds() + 's' : ''}</p>
         </div>
@@ -269,7 +267,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
             </div>
             <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('dashboard.alertasClinicas')}</p>
             <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-black px-2 py-0.5 rounded-full animate-pulse">
-              {alertasClinicas.length} nueva{alertasClinicas.length > 1 ? 's' : ''}
+              {t('dashboard.nuevasAlertas').replace('{n}', String(alertasClinicas.length))}
             </span>
           </div>
           <div className="space-y-2">
@@ -347,7 +345,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
           <div className="flex items-center justify-between mb-4">
             <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('dashboard.proximasCitas')}</p>
             <span className="text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-full">
-              {proximasCitas.length} agendadas
+              {t('dashboard.citasAgendadas').replace('{n}', String(proximasCitas.length))}
             </span>
           </div>
           <div className="space-y-1">
@@ -393,7 +391,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                     <p className="text-xs text-slate-400 truncate">{a.datos?.objetivo || 'Sesión registrada'}</p>
                   </div>
                   <p className="text-[10px] text-slate-400 font-medium flex-shrink-0">
-                    {new Date(a.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}
+                    {new Date(a.created_at).toLocaleDateString(toBCP47(locale), { day: '2-digit', month: 'short' })}
                   </p>
                 </div>
               ))

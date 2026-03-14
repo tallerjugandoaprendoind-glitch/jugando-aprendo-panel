@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import ProgresoGraficas from '@/components/graficos/ProgresoGraficas'
@@ -18,7 +19,7 @@ declare global {
 
 // ── Hook Text-to-Speech con ElevenLabs (Ivanna) ──────────────────────────────
 function useTextToSpeech() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(false)  // Desactivado por defecto para evitar audio inesperado
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -57,7 +58,7 @@ function useTextToSpeech() {
         if ('speechSynthesis' in window) {
           const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n{2,}/g, '. ').trim().slice(0, 4000)
           const utter = new SpeechSynthesisUtterance(clean)
-          utter.lang = 'es-PE'; utter.rate = 1.05
+          utter.lang = toBCP47(locale); utter.rate = 1.05
           utter.onend = () => setSpeaking(false)
           utter.onerror = () => setSpeaking(false)
           window.speechSynthesis.speak(utter)
@@ -96,7 +97,7 @@ function useSpeechToText(onResult: (text: string) => void) {
     if (SR) {
       setSupported(true)
       const rec = new SR()
-      rec.lang = 'es-PE'
+      rec.lang = toBCP47(locale)
       rec.continuous = false
       rec.interimResults = false
       rec.onresult = (e: any) => onResult(e.results[0][0].transcript)
@@ -309,7 +310,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
   const totalEvaluaciones = [resolvedBrief2, resolvedAdos2, resolvedVineland, resolvedWiscv, resolvedBasc3].filter(Boolean).length;
   const totalFormularios = (filteredFormResponses.length || 0) + (parentFormsCompleted?.length || 0)
   const parentFormsText = (parentFormsCompleted || []).length > 0
-    ? `\n📨 **Formularios de Padres (${parentFormsCompleted!.length}):**\n${parentFormsCompleted!.slice(0,5).map((f: any) => `  • ${f.form_title || f.form_type} (${f.completed_at ? new Date(f.completed_at).toLocaleDateString('es-PE') : 'Sin fecha'})`).join('\n')}`
+    ? `\n📨 **Formularios de Padres (${parentFormsCompleted!.length}):**\n${parentFormsCompleted!.slice(0,5).map((f: any) => `  • ${f.form_title || f.form_type} (${f.completed_at ? new Date(f.completed_at).toLocaleDateString(toBCP47(locale)) : 'Sin fecha'})`).join('\n')}`
     : '';
   
   // Añadir alertas si faltan datos críticos
@@ -322,7 +323,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || 'el paciente';
       
      setMessages([{ 
     role: 'ai', 
-    text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${resolvedBrief2 ? "✅" : "❌"} BRIEF-2\n• ${resolvedAdos2 ? "✅" : "❌"} ADOS-2\n• ${resolvedVineland ? "✅" : "❌"} Vineland-3\n• ${resolvedWiscv ? "✅" : "❌"} WISC-V\n• ${resolvedBasc3 ? "✅" : "❌"} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}\n📝 **NeuroFormas / Formularios:** ${totalFormularios}${totalFormularios > 0 ? `\n${[...(filteredFormResponses), ...(parentFormsCompleted||[])].slice(0,8).map((f: any) => `  • ${f.form_title || f.form_type} (${new Date(f.completed_at || f.created_at).toLocaleDateString('es-PE')})`).join('\n')}` : ''}${!anamnesis ? '\n\n⚠️ Falta Anamnesis Inicial' : ''}${(!entorno || entorno.length === 0) ? '\n⚠️ Falta Visita Domiciliaria' : ''}\n\n¿Qué deseas analizar?`
+    text: `✅ Historial completo de **${nombre}** cargado.\n\n📊 **Evaluaciones Profesionales:** ${totalEvaluaciones}/5\n• ${resolvedBrief2 ? "✅" : "❌"} BRIEF-2\n• ${resolvedAdos2 ? "✅" : "❌"} ADOS-2\n• ${resolvedVineland ? "✅" : "❌"} Vineland-3\n• ${resolvedWiscv ? "✅" : "❌"} WISC-V\n• ${resolvedBasc3 ? "✅" : "❌"} BASC-3\n\n📋 **Sesiones ABA:** ${aba?.length || 0}\n🏠 **Visitas Hogar:** ${entorno?.length || 0}\n📝 **NeuroFormas / Formularios:** ${totalFormularios}${totalFormularios > 0 ? `\n${[...(filteredFormResponses), ...(parentFormsCompleted||[])].slice(0,8).map((f: any) => `  • ${f.form_title || f.form_type} (${new Date(f.completed_at || f.created_at).toLocaleDateString(toBCP47(locale))})`).join('\n')}` : ''}${!anamnesis ? '\n\n⚠️ Falta Anamnesis Inicial' : ''}${(!entorno || entorno.length === 0) ? '\n⚠️ Falta Visita Domiciliaria' : ''}\n\n¿Qué deseas analizar?`
   }])
 
     // Cargar todos los reportes Word del paciente
@@ -741,7 +742,7 @@ function ReporteHistorialCard({ reporte }: { reporte: any }) {
         <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
           <Clock size={10} />
           <span>
-            {new Date(reporte.fecha_generacion).toLocaleDateString('es-PE', {
+            {new Date(reporte.fecha_generacion).toLocaleDateString(toBCP47(locale), {
               day: '2-digit', month: 'short', year: 'numeric',
               hour: '2-digit', minute: '2-digit'
             })}

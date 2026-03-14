@@ -1,6 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 
 import { useState, useEffect, useCallback } from 'react'
 import {
@@ -27,7 +28,7 @@ const RESOURCE_TAGS = [
 
 export default function ResourcesManagementView() {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [resources, setResources] = useState<any[]>([])
   const [patients, setPatients] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -282,7 +283,7 @@ export default function ResourcesManagementView() {
                     </a>
                   )}
                   
-                  <p className="text-[10px] mt-3" style={{ color: "var(--text-muted)" }}>{new Date(resource.created_at).toLocaleDateString('es-PE')}</p>
+                  <p className="text-[10px] mt-3" style={{ color: "var(--text-muted)" }}>{new Date(resource.created_at).toLocaleDateString(toBCP47(locale))}</p>
                 </div>
               </div>
             )
@@ -375,7 +376,7 @@ export default function ResourcesManagementView() {
                 {!newResource.is_global && (
                   <select value={newResource.child_id} onChange={e => setNewResource(p => ({ ...p, child_id: e.target.value }))}
                     className="w-full p-4 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 transition-all border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}>
-                    <option value="">Seleccionar paciente...</option>
+                    <option value="">{t('common.seleccionarPaciente')}</option>
                     {patients.map(p => <option key={p.id} value={p.id}>{p.name}{p.age ? ` (${p.age})` : ''}</option>)}
                   </select>
                 )}

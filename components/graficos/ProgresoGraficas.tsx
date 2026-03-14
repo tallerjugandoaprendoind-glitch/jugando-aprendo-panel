@@ -1,4 +1,6 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 // components/graficos/ProgresoGraficas.tsx — Gráficos ABA profesionales
 
 import { useState, useEffect } from 'react'
@@ -61,7 +63,8 @@ function TickY({ x, y, payload }: any) {
   return <text x={x} y={y} dy={4} textAnchor="end" fill={payload.value === 90 ? '#EF4444' : 'var(--text-muted)'} fontSize={10} fontWeight={payload.value === 90 ? 700 : 400}>{payload.value}%</text>
 }
 
-export default function ProgresoGraficas({ childId, modoParent = false }: ProgresoGraficasProps) {
+export default function ProgresoGraficas({
+  const { t } = useI18n() childId, modoParent = false }: ProgresoGraficasProps) {
   const [datos, setDatos]     = useState<any>(null)
   const [cargando, setCargando] = useState(true)
   const [semanas, setSemanas] = useState(12)
@@ -129,7 +132,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {[4, 8, 12, 24].map(s => (
             <button key={s} onClick={() => setSemanas(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${semanas === s ? "text-violet-600 shadow-sm" : ""}`} style={{ background: semanas === s ? "var(--card)" : "transparent", color: semanas === s ? undefined : "var(--text-secondary)" }}>
-              {s} sem
+              {s} {t('reportes.semanas').substring(0,3)}
             </button>
           ))}
         </div>
@@ -138,7 +141,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
             <button onClick={() => setSelector(!selector)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold hover:border-violet-400 shadow-sm transition-all"
               style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
-              {tipoActual?.emoji} {tipoActual?.label}
+              {tipoActual?.emoji} {TIPO_LABELS[tipoActual?.id ?? 'lineas'] || tipoActual?.label}
               <svg className={`w-3 h-3 text-slate-400 transition-transform ${selector ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
             </button>
             {selector && (
@@ -166,10 +169,10 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           </div>
           <div className="flex-1">
             <p className={`font-black text-sm`} style={{ color: cumplido ? '#059669' : consec > 0 ? '#d97706' : 'var(--text-primary)' }}>
-              Criterio de dominio: {CRITERIO_PCT}% en {CRITERIO_SESS} sesiones consecutivas
+              {t('reportes.criterioDominio')}: {CRITERIO_PCT}% {t('common.en')} {CRITERIO_SESS} {t('reportes.sesionesConsecutivas')}
             </p>
             <p className={`text-xs mt-0.5 ${cumplido ? 'text-emerald-600' : consec > 0 ? 'text-amber-600' : 'text-slate-500'}`}>
-              {cumplido ? `✅ ¡Criterio cumplido! ${nConsec} sesiones ≥ ${CRITERIO_PCT}%` : consec > 0 ? `⚡ ${consec}/${CRITERIO_SESS} sesiones — ¡cerca!` : `Promedio: ${promedio}% — Meta: ${CRITERIO_PCT}%`}
+              {cumplido ? `✅ ${t('reportes.criterioCumplido')} ${nConsec} ${t('reportes.sesiones')} ≥ ${CRITERIO_PCT}%` : consec > 0 ? `⚡ ${consec}/${CRITERIO_SESS} ${t('reportes.sesiones')} — ${t('reportes.cerca')}` : `${t('reportes.promedio')}: ${promedio}% — ${t('reportes.meta')}: ${CRITERIO_PCT}%`}
             </p>
             <div className="mt-2 bg-white rounded-full h-2 overflow-hidden border border-slate-200">
               <div className={`h-full rounded-full transition-all duration-700 ${cumplido ? 'bg-emerald-500' : consec > 0 ? 'bg-amber-500' : 'bg-violet-500'}`} style={{ width: `${Math.min(100, promedio)}%` }} />
@@ -177,7 +180,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           </div>
           <div className="text-right shrink-0">
             <p className='font-black text-3xl tabular-nums' style={{ color: cumplido ? '#059669' : consec > 0 ? '#d97706' : 'var(--text-primary)' }}>{promedio}%</p>
-            <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>promedio</p>
+            <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{t('reportes.promedio')}</p>
           </div>
         </div>
       </div>
@@ -185,8 +188,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: 'Asistencia', val: asistencia?.tasa ?? 0, sub: `${asistencia?.asistidas ?? 0} de ${asistencia?.total ?? 0} sesiones`, color: 'text-violet-700', bar: 'bg-violet-500' },
-          { label: 'Tareas en casa', val: tareas?.adherencia ?? 0, sub: `${tareas?.completadas ?? 0} de ${tareas?.total ?? 0} tareas`, color: 'text-emerald-600', bar: 'bg-emerald-500' },
+          { label: t('reportes.asistencia'), val: asistencia?.tasa ?? 0, sub: `${asistencia?.asistidas ?? 0} de ${asistencia?.total ?? 0} sesiones`, color: 'text-violet-700', bar: 'bg-violet-500' },
+          { label: t('reportes.tareasEnCasa'), val: tareas?.adherencia ?? 0, sub: `${tareas?.completadas ?? 0} de ${tareas?.total ?? 0} tareas`, color: 'text-emerald-600', bar: 'bg-emerald-500' },
         ].map(stat => (
           <div key={stat.label} className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <p className="text-[10px] font-black uppercase tracking-wider mb-1" style={{ color: "var(--text-muted)" }}>{stat.label}</p>
@@ -204,8 +207,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
         <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-black text-sm" style={{ color: "var(--text-primary)" }}>{tipoActual?.emoji} Progreso ABA — {tipoActual?.label}</h3>
-              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{graficaABA.length} sesiones · {semanas} semanas</p>
+              <h3 className="font-black text-sm" style={{ color: "var(--text-primary)" }}>{tipoActual?.emoji} {t('reportes.progreso')} — {TIPO_LABELS[tipoActual?.id ?? 'lineas'] || tipoActual?.label}</h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{graficaABA.length} {t('reportes.sesiones')} · {semanas} {t('reportes.semanas')}</p>
             </div>
             {['lineas','barras','combinado'].includes(tipo) && (
               <div className="flex items-center gap-1 text-[10px] text-red-400 font-bold bg-red-50 px-2 py-1 rounded-lg border border-red-100">
@@ -225,7 +228,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                 <Tooltip content={<TooltipABA />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                 <ReferenceLine y={CRITERIO_PCT} stroke={C.criterio} strokeDasharray="6 3" strokeWidth={2}
-                  label={{ value: `Meta ${CRITERIO_PCT}%`, position: 'insideTopRight', fontSize: 9, fill: C.criterio, fontWeight: 700 }} />
+                  label={{ value: `${t('reportes.meta')} ${CRITERIO_PCT}%`, position: 'insideTopRight', fontSize: 9, fill: C.criterio, fontWeight: 700 }} />
                 <Line type="linear" dataKey="logro" stroke={C.logro} strokeWidth={3} dot={{ r: 5, fill: C.logro, stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 7 }} name="Logro obj." />
                 {!modoParent && <>
                   <Line type="linear" dataKey="atencion"     stroke={C.atencion}     strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Atención" />
@@ -245,7 +248,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <ReferenceLine y={CRITERIO_PCT} stroke={C.criterio} strokeDasharray="6 3" strokeWidth={2}
-                  label={{ value: `Meta`, position: 'right', fontSize: 9, fill: C.criterio, fontWeight: 700 }} />
+                  label={{ value: t('reportes.meta'), position: 'right', fontSize: 9, fill: C.criterio, fontWeight: 700 }} />
                 <Bar dataKey="logro" name="Logro obj." radius={[6, 6, 0, 0]} maxBarSize={44}>
                   {conColor.map((e: any, i: number) => <Cell key={i} fill={e.fill} />)}
                   <LabelList dataKey="logro" position="top" formatter={(v: any) => `${v}%`} style={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }} />
@@ -413,8 +416,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
         <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <span>🧠</span>
-            <p className="font-black text-violet-800 text-sm">Análisis ARIA del período</p>
-            <span className="ml-auto text-[10px] bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full font-bold">IA Clínica</span>
+            <p className="font-black text-violet-800 text-sm">{t('reportes.analisisARIA')}</p>
+            <span className="ml-auto text-[10px] bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full font-bold">{t('reportes.iaClinica')}</span>
           </div>
           <p className="text-xs text-violet-700 leading-relaxed">{reporteSemanal}</p>
         </div>
