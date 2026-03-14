@@ -408,6 +408,7 @@ export default function KnowledgeBaseView() {
 }
 
 function InstruccionesModal({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n()
   const toast = useToast()
   const [instrucciones, setInstrucciones] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
