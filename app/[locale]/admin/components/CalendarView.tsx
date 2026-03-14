@@ -15,7 +15,7 @@ import { supabase } from '@/lib/supabase'
 // ── Cronómetro de 45 min por cita ──────────────────────────────────────────
 function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) => void }) {
   const { t, locale } = useI18n()
-  const isEN = locale === \'en\'
+  const isEN = locale === 'en'
   const [remaining, setRemaining] = useState<number | null>(null)
   const [phase, setPhase] = useState<'waiting' | 'active' | 'done'>('waiting')
   const calledRef = useRef(false)

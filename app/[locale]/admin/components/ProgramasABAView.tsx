@@ -50,7 +50,7 @@ const FASE_COLORS: Record<string, string> = {
 export default function ProgramasABAView({ childId, childName }: { childId: string; childName: string }) {
   const toast = useToast()
   const { t, locale } = useI18n()
-  const isEN = locale === \'en\'
+  const isEN = locale === 'en'
 
 
   const FASE_LABELS: Record<string, string> = {
@@ -263,7 +263,7 @@ function AlertaCard({ alerta }: { alerta: any }) {
 // ── Tarjeta de programa con gráfica ─────────────────────────────────────────
 function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'lineas', onChangeTipoGrafico }: any) {
   const { t, locale } = useI18n()
-  const isEN = locale === \'en\'
+  const isEN = locale === 'en'
   const [expanded, setExpanded] = useState(false)
   const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [detalle, setDetalle] = useState<any>(null)
@@ -672,7 +672,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 
 function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
   const { t, locale } = useI18n()
-  const isEN = locale === \'en\'
+  const isEN = locale === 'en'
   const labels: Record<string, { label: string; color: string }> = {
     linea_base:    { label: t('programas.lineaBase'),    color: 'bg-slate-100 text-slate-600' },
     intervencion:  { label: isEN ? 'Intervention' : 'Intervención',  color: 'bg-indigo-100 text-indigo-700' },
@@ -691,7 +691,7 @@ function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
 // ── Modal: Registrar Sesión ──────────────────────────────────────────────────
 function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
   const { t, locale } = useI18n()
-  const isEN = locale === \'en\'
+  const isEN = locale === 'en'
   const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
@@ -855,7 +855,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
 // ── Modal: Crear Programa ────────────────────────────────────────────────────
 function CrearProgramaModal({ childId, onClose, onCreated }: any) {
   const { t, locale } = useI18n()
-  const isEN = locale === \'en\'
+  const isEN = locale === 'en'
   const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [step, setStep] = useState(1)
