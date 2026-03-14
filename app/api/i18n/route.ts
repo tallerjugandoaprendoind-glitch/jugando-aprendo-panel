@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import ES from '../../../../messages/es.json'
-import EN from '../../../../messages/en.json'
-import PT from '../../../../messages/pt.json'
-import FR from '../../../../messages/fr.json'
-import DE from '../../../../messages/de.json'
-import IT from '../../../../messages/it.json'
+import ES from '../../../messages/es.json'
+import EN from '../../../messages/en.json'
+import PT from '../../../messages/pt.json'
+import FR from '../../../messages/fr.json'
+import DE from '../../../messages/de.json'
+import IT from '../../../messages/it.json'
 
 const MESSAGES: Record<string, any> = { es: ES, en: EN, pt: PT, fr: FR, de: DE, it: IT }
 
