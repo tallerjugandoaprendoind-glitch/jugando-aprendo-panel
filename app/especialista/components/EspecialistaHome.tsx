@@ -58,7 +58,7 @@ function ProductividadSemanal({ aprobadas, pendientes, rechazadas }: any) {
       </div>
       <div className="flex items-end gap-3 mb-3">
         <p className="text-4xl font-black text-slate-800">{tasa}%</p>
-        <p className="text-sm text-slate-400 mb-1.5">tasa de aprobación</p>
+        <p className="text-sm text-slate-400 mb-1.5">{t('especialista.tasaAprobacion')}</p>
       </div>
       {/* Barra de progreso compuesta */}
       <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden flex mb-3">

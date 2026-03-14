@@ -164,7 +164,7 @@ export default function MiAgenda() {
             <div className="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center">
               <Clock size={14} className="text-emerald-600" />
             </div>
-            <h3 className="font-bold text-slate-800 text-sm">Próximas Citas</h3>
+            <h3 className="font-bold text-slate-800 text-sm">{t('especialista.proximasCitas')}</h3>
           </div>
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 size={20} className="animate-spin text-blue-600" /></div>

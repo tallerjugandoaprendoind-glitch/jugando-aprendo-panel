@@ -340,7 +340,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
 
   const sendMessageWithText = async (text: string) => {
     if (!text.trim()) return
-    if (!selectedChild) { alert('Selecciona un paciente primero.'); return }
+    if (!selectedChild) { alert(t('ui.seleccionaPrimero')); return }
     setMessages(prev => [...prev, { role: 'user', text }])
     setInput('')
     stopSpeaking()
@@ -582,7 +582,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
               )) : (
                 <div className="py-12 text-center">
                   <FileText size={36} className="mx-auto mb-2 opacity-20" style={{ color: 'var(--text-muted)' }}/>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Sin ficha de ingreso</p>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('ui.sinFichaIngreso')}</p>
                 </div>
               )}
             </div>
@@ -713,7 +713,7 @@ function ReporteHistorialCard({ reporte }: { reporte: any }) {
       document.body.appendChild(a); a.click()
       URL.revokeObjectURL(url); document.body.removeChild(a)
     } catch {
-      alert('Error al descargar el reporte')
+      alert(t('ui.errorDescargar'))
     }
   }
 

@@ -306,7 +306,7 @@ export default function ResourcesManagementView() {
             <div className="space-y-5">
               {/* Resource type */}
               <div>
-                <label className="text-xs font-black uppercase tracking-widest block mb-3" style={{ color: "var(--text-muted)" }}>Tipo de Recurso</label>
+                <label className="text-xs font-black uppercase tracking-widest block mb-3" style={{ color: "var(--text-muted)" }}>{t('ui.tipoRecurso')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {RESOURCE_TYPES.map(type => {
                     const Icon = type.icon

@@ -662,7 +662,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
   const [sending, setSending] = useState(false)
 
   const handleSend = async () => {
-    if (!childId) { alert('Selecciona un paciente'); return }
+    if (!childId) { alert(t('ui.seleccionaPaciente2')); return }
     setSending(true)
     await onSend({ childId, message, deadline })
     setSending(false)

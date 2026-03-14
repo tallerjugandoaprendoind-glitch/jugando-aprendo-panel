@@ -145,7 +145,7 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-indigo-100 rounded-xl"><Sparkles className="text-indigo-600" size={22}/></div>
-          <h3 className="font-black text-slate-800 text-lg">Análisis Clínico IA</h3>
+          <h3 className="font-black text-slate-800 text-lg">{t('ui.analisisClinicoIA')}</h3>
         </div>
         <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 transition-all"><X size={18}/></button>
       </div>
@@ -226,7 +226,7 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
             <div className="w-7 h-7 bg-amber-500 rounded-lg flex items-center justify-center">
               <MessageCircle size={14} className="text-white"/>
             </div>
-            <h4 className="font-black text-amber-800">Mensaje para los Padres</h4>
+            <h4 className="font-black text-amber-800">{t('ui.mensajePadres')}</h4>
             <span className="ml-auto px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full border border-amber-300 uppercase">✏️ Editable</span>
           </div>
           {onEditMessage ? (
@@ -289,13 +289,13 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
             <p className="text-xs text-slate-400 mt-1.5">{t('evaluaciones.irABiblioteca')}</p>
           </div>
           <div>
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Mensaje a los Padres</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">{t('ui.mensajePadres2')}</label>
             <textarea rows={3} value={message} onChange={e => setMessage(e.target.value)}
               {...{placeholder: t('ui.send_form_msg')}}
               className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all resize-none"/>
           </div>
           <div>
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Fecha Límite (Opcional)</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">{t('ui.fechaLimite')}</label>
             <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all"/>
           </div>
           <div className="flex gap-3 pt-2">
@@ -746,7 +746,7 @@ export default function NeuroFormsView() {
 
               {expandedResponse === sf.id && sf.status === 'completed' && sf.responses && (
                 <div className="border-t border-slate-100 bg-slate-50/50 p-5">
-                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Respuestas del Formulario</h4>
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('ui.respuestasFormulario')}</h4>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {Object.entries(sf.responses).map(([k, v]) => (
                       <div key={k} className="bg-white rounded-xl p-3 border border-slate-100">

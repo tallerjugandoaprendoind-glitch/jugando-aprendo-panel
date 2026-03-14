@@ -213,7 +213,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
         <div className="max-w-[82%] rounded-3xl rounded-tl-lg overflow-hidden shadow-sm border border-pink-100"
           style={{ background: 'linear-gradient(135deg,#fdf2f8,#faf5ff)' }}>
           <div className="px-5 pt-4 pb-2">
-            <p className="text-xs font-black text-pink-500 uppercase tracking-widest mb-2">Check de bienestar 💜</p>
+            <p className="text-xs font-black text-pink-500 uppercase tracking-widest mb-2">{t('ui.checkBienestar')}</p>
             <p className="text-sm text-slate-700 font-medium leading-relaxed">
               ¿Cómo te has sentido tú esta semana acompañando el proceso de tu hijo/a?
             </p>
@@ -263,7 +263,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
             <div className="flex items-center gap-2 px-4 py-2.5"
               style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)' }}>
               <ShoppingBag size={14} className="text-white" />
-              <span className="text-xs font-black text-white uppercase tracking-wider">Disponible en nuestra tienda</span>
+              <span className="text-xs font-black text-white uppercase tracking-wider">{t('ui.disponibleTienda')}</span>
             </div>
             <div className="flex gap-3 p-4 items-center">
               <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-amber-100 flex items-center justify-center text-3xl border border-amber-200">

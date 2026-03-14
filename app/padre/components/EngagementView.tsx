@@ -247,7 +247,7 @@ const generarPlan = async () => {
                       </div>
                     )}
                     <div>
-                      <p className="text-xs font-bold text-slate-500 mb-1">Días recomendados:</p>
+                      <p className="text-xs font-bold text-slate-500 mb-1">{t('familias.diasRecomendados')}</p>
                       <div className="flex gap-1">
                         {act.dias_recomendados?.map((d, j) => (
                           <span key={j} className="text-[11px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full capitalize">{d}</span>

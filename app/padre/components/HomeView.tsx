@@ -499,7 +499,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         <div className="bg-white rounded-3xl border border-violet-100 shadow-sm overflow-hidden">
           <div className="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-slate-50">
             <MessageCircle size={16} className="text-violet-600" />
-            <h2 className="font-black text-slate-700 text-sm uppercase tracking-wide">Mensajes del Terapeuta</h2>
+            <h2 className="font-black text-slate-700 text-sm uppercase tracking-wide">{t('familias.mensajesTerapeuta2')}</h2>
             <span className="ml-auto text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
               {parentMessages.length} nuevo{parentMessages.length !== 1 ? 's' : ''}
             </span>

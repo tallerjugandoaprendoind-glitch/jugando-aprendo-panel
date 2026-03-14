@@ -65,7 +65,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
       {/* Info / Editar */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="px-5 py-4 flex items-center justify-between border-b border-slate-100">
-          <h4 className="font-bold text-slate-800 text-sm">Información Personal</h4>
+          <h4 className="font-bold text-slate-800 text-sm">{t('especialista.infoPersonal')}</h4>
           {!editando && (
             <button onClick={() => setEditando(true)}
               className="flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors">

@@ -524,7 +524,7 @@ export default function KnowledgeBaseView() {
               </p>
               {resultadoAprender.terminos?.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-[11px] font-bold text-emerald-700 mb-1.5">Términos aprendidos:</p>
+                  <p className="text-[11px] font-bold text-emerald-700 mb-1.5">{t('ui.terminosAprendidos')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {resultadoAprender.terminos.map((t: string, i: number) => (
                       <span key={i} className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{t}</span>
@@ -693,7 +693,7 @@ export default function KnowledgeBaseView() {
           ) : documentos.length === 0 ? (
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600 p-10 text-center">
               <Brain size={32} className="text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-400 font-semibold">Biblioteca vacía</p>
+              <p className="text-slate-400 font-semibold">{t('ui.bibliotecaVacia')}</p>
               <p className="text-slate-400 text-sm mt-1">Usa "{t('whatsapp.aprenderInternet')}" para empezar</p>
             </div>
           ) : (

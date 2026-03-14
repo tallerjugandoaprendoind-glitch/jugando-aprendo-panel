@@ -142,7 +142,7 @@ export default function WhatsAppQRPanel() {
           </div>
 
           <div className="bg-slate-50 rounded-xl p-4 space-y-2">
-            <p className="text-xs font-bold text-slate-600">Cómo escanear:</p>
+            <p className="text-xs font-bold text-slate-600">{t('ui.comoEscanear')}</p>
             {[
               'Abrí WhatsApp Business en tu celular',
               'Tocá los 3 puntos → Dispositivos vinculados',

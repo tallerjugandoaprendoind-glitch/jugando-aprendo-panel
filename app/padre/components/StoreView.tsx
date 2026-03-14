@@ -127,7 +127,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
 
               {/* Nota */}
               <div className="pt-2">
-                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Nota para el centro (opcional)</label>
+                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">{t('familias.notaCentro')}</label>
                 <textarea
                   value={nota} onChange={e => setNota(e.target.value)}
                   rows={2} placeholder={t("tienda.pedidoGuardar")}
@@ -291,7 +291,7 @@ export default function StoreView({ profile }: { profile: any }) {
           <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
             <ShoppingBag size={24} className="text-blue-600" /> Tienda
           </h2>
-          <p className="text-sm text-slate-400 mt-0.5">Materiales y recursos terapéuticos</p>
+          <p className="text-sm text-slate-400 mt-0.5">{t('familias.materialesTerapeuticos')}</p>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={() => setView(v => v === 'catalogo' ? 'mis-pedidos' : 'catalogo')}
@@ -385,7 +385,7 @@ export default function StoreView({ profile }: { profile: any }) {
               <p className="font-bold text-blue-800 text-sm mb-1">¿Cómo funciona la tienda?</p>
               <p className="text-xs text-blue-600 leading-relaxed">
                 {t('ui.physical_items_note')}
-                Los <strong>digitales</strong> te los enviamos por WhatsApp tras confirmar el pago.
+                Los <strong>{t('ui.digitales')}</strong> te los enviamos por WhatsApp tras confirmar el pago.
                 ¿Dudas? Escríbenos al <a href="https://wa.me/51924807183" className="underline font-bold">+51 924 807 183</a>.
               </p>
             </div>
@@ -399,7 +399,7 @@ export default function StoreView({ profile }: { profile: any }) {
           {orders.length === 0 ? (
             <div className="bg-white rounded-2xl border border-slate-200 py-20 text-center">
               <ShoppingBag size={36} className="text-slate-200 mx-auto mb-3" />
-              <p className="font-bold text-slate-500 mb-1">Aún no tienes pedidos</p>
+              <p className="font-bold text-slate-500 mb-1">{t('tienda.sinPedidos')}</p>
               <p className="text-sm text-slate-400 mb-4">Explora la tienda y haz tu primera compra</p>
               <button onClick={() => setView('catalogo')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-all">

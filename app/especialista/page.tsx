@@ -278,7 +278,7 @@ export default function EspecialistaDashboard() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-200">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-black text-slate-800">Cambiar Contraseña</h3>
+              <h3 className="font-black text-slate-800">{t('especialista.cambiarPass')}</h3>
               <button onClick={() => setShowChangePassword(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>

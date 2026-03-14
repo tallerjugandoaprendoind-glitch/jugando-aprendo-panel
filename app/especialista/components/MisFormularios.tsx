@@ -425,7 +425,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
             <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
               <Brain size={16} className="text-purple-600" />
             </div>
-            <h4 className="font-bold text-slate-800">Análisis IA</h4>
+            <h4 className="font-bold text-slate-800">{t('especialista.analisisIA2')}</h4>
             {aiAnalysis.nivel_alerta && (
               <span className={`ml-auto text-xs font-bold px-2.5 py-1 rounded-full border capitalize
                 ${aiAnalysis.nivel_alerta === 'alto' ? 'bg-red-50 text-red-700 border-red-200' :
@@ -504,7 +504,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
             <div className="rounded-2xl overflow-hidden border-2 border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50">
               <div className="bg-gradient-to-r from-amber-500 to-yellow-500 px-4 py-2.5 flex items-center gap-2">
                 <span className="text-lg">🛒</span>
-                <span className="text-xs font-black text-white uppercase tracking-wider">Producto sugerido por IA para este caso</span>
+                <span className="text-xs font-black text-white uppercase tracking-wider">{t('especialista.productoIA')}</span>
               </div>
               <div className="flex gap-4 p-4 items-start">
                 <div className="w-16 h-16 rounded-xl overflow-hidden bg-amber-100 flex-shrink-0 flex items-center justify-center">
@@ -583,7 +583,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
     <div className="space-y-5">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-black text-slate-800">Formularios Clínicos</h2>
+        <h2 className="text-2xl font-black text-slate-800">{t('especialista.formsClinicos')}</h2>
         <p className="text-sm text-slate-500 mt-1">
           Todos los instrumentos de evaluación — el jefe aprueba antes de enviar a los padres
         </p>

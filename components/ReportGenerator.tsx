@@ -183,7 +183,7 @@ export default function ReportGenerator({
       downloadFile(data.file_data, reporte.nombre_archivo)
     } catch (err: any) {
       console.error('Error descargando:', err)
-      alert('Error al descargar el reporte')
+      alert(t('ui.errorDescargar'))
     }
   }
 
@@ -219,7 +219,7 @@ export default function ReportGenerator({
       await loadReportes()
     } catch (err: any) {
       console.error('Error eliminando:', err)
-      alert('Error al eliminar el reporte')
+      alert(t('ui.errorEliminar'))
     }
   }
 

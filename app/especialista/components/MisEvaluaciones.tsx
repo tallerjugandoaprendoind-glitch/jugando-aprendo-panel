@@ -292,7 +292,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
 
               {/* Título */}
               <div>
-                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Título *</label>
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('especialista.tituloEval')}</label>
                 <input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
                   {...{placeholder: t('ui.eval_title')}}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500" />

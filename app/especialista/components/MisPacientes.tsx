@@ -111,7 +111,7 @@ function AIBlock({ analysis }: { analysis: any }) {
     <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-xl overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-violet-100">
         <Sparkles size={13} className="text-violet-600" />
-        <p className="text-xs font-black text-violet-700 uppercase tracking-widest">Análisis de IA</p>
+        <p className="text-xs font-black text-violet-700 uppercase tracking-widest">{t('especialista.analisisDeIA')}</p>
       </div>
       <div className="p-4 space-y-3">
         {visible.map(({ k, l }) => {
@@ -422,7 +422,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
         <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <Sparkles size={28} className="text-white" />
         </div>
-        <h3 className="font-black text-slate-800 text-lg mb-2">Resumen Clínico con IA</h3>
+        <h3 className="font-black text-slate-800 text-lg mb-2">{t('especialista.resumenClinico')}</h3>
         <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">
           Genera un análisis completo del paciente con perfil clínico, áreas prioritarias, plan de tratamiento personalizado y estrategias para el hogar.
         </p>
@@ -458,7 +458,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
           <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
             <Sparkles size={14} className="text-white" />
           </div>
-          <p className="font-black text-slate-800 text-sm">Resumen Clínico IA</p>
+          <p className="font-black text-slate-800 text-sm">{t('especialista.resumenClinico2')}</p>
         </div>
         <button onClick={generarResumen}
           className="flex items-center gap-1.5 text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-xl hover:bg-violet-100 transition-colors">
@@ -519,7 +519,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <Target size={13} className="text-slate-600" />
-            <p className="text-xs font-black text-slate-700 uppercase tracking-widest">Áreas Prioritarias de Intervención</p>
+            <p className="text-xs font-black text-slate-700 uppercase tracking-widest">{t('especialista.areasPrioritarias')}</p>
           </div>
           <div className="p-4 space-y-3">
             {summary.areas_prioridad.map((a: any, i: number) => (
@@ -541,7 +541,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 bg-violet-50 border-b border-violet-100">
             <Lightbulb size={13} className="text-violet-600" />
-            <p className="text-xs font-black text-violet-700 uppercase tracking-widest">Plan de Tratamiento</p>
+            <p className="text-xs font-black text-violet-700 uppercase tracking-widest">{t('especialista.planTratamiento')}</p>
           </div>
           <div className="p-4 space-y-3">
             {summary.recomendaciones_terapeuticas.map((r: any, i: number) => (
@@ -757,7 +757,7 @@ export default function MisPacientes() {
             <ChevronRight size={18} className="rotate-180 text-slate-600" />
           </button>
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Expediente clínico · Solo lectura</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t('especialista.expediente')}</p>
             <h2 className="text-xl font-black text-slate-800">{seleccionado.name}</h2>
           </div>
         </div>
@@ -809,7 +809,7 @@ export default function MisPacientes() {
         {loadingRegistros ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 size={28} className="animate-spin text-blue-600" />
-            <p className="text-sm text-slate-400">Cargando expediente completo...</p>
+            <p className="text-sm text-slate-400">{t('especialista.cargandoExpediente')}</p>
           </div>
         ) : (
           <>
