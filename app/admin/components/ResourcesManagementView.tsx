@@ -217,7 +217,7 @@ export default function ResourcesManagementView() {
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <div className="p-5 bg-violet-50 rounded-3xl mb-4"><BookOpen size={40} className="text-violet-300"/></div>
           <p className="font-bold text-slate-400">{t('ui.no_resources')}</p>
-          <p className="text-xs text-slate-300 mt-1">Comparte el primer material con las familias</p>
+          <p className="text-xs text-slate-300 mt-1">{t('recursos.compartePrimero')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -322,7 +322,7 @@ export default function ResourcesManagementView() {
               </div>
 
               <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Título *</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">{t('recursos.tituloStar')}</label>
                 <input type="text" value={newResource.title} onChange={e => setNewResource(p => ({ ...p, title: e.target.value }))}
                   {...{placeholder: t('ui.resource_title')}}
                   className="w-full p-4 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}/>
@@ -349,7 +349,7 @@ export default function ResourcesManagementView() {
 
               {/* Tags */}
               <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Etiquetas Temáticas</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">{t('recursos.etiquetas')}</label>
                 <div className="flex flex-wrap gap-2">
                   {RESOURCE_TAGS.map(tag => (
                     <button key={tag} type="button" onClick={() => toggleTag(tag)}
@@ -362,7 +362,7 @@ export default function ResourcesManagementView() {
 
               {/* Audience */}
               <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-3">¿Para quién?</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-3">{t('recursos.paraQuien')}</label>
                 <div className="grid grid-cols-2 gap-3 mb-3">
                   <button onClick={() => setNewResource(p => ({ ...p, is_global: true, parent_id: '' }))}
                     className={`p-4 rounded-xl border-2 flex items-center gap-3 transition-all ${newResource.is_global ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200' : 'text-slate-600 border-slate-200 hover:border-blue-300'}`} style={newResource.is_global ? {} : { background: 'var(--muted-bg)' }}>

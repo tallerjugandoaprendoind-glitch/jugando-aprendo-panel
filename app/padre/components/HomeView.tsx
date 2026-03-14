@@ -134,7 +134,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
                   <Heart size={18} color="#be185d" />
                 </div>
                 <div>
-                  <p style={{ fontWeight: 800, fontSize: 15, color: '#111827' }}>¿Cómo estás tú?</p>
+                  <p style={{ fontWeight: 800, fontSize: 15, color: '#111827' }}>{t('familias.comoEstasTu')}</p>
                   <p style={{ fontSize: 11, color: '#9ca3af' }}>{t('ui.wellbeing_check')}</p>
                 </div>
               </div>
@@ -448,7 +448,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             <div className="w-20 h-20 bg-gradient-to-br from-violet-50 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <CalendarDays size={32} className="text-violet-400" />
             </div>
-            <p className="font-bold text-slate-700 text-base mb-2">¡Es momento de agendar!</p>
+            <p className="font-bold text-slate-700 text-base mb-2">{t('familias.momentoAgendar')}</p>
             <p className="text-sm text-slate-400 mb-5 max-w-xs mx-auto leading-relaxed">
               La constancia en las sesiones es clave para el progreso. Agenda tu próxima cita y mantén el avance de {child?.name?.split(' ')[0] || 'tu hijo/a'}.
             </p>
@@ -578,7 +578,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
               <div className="mt-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
                 <PartyPopper size={20} className="text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-emerald-800 text-sm">¡Rendimiento excepcional!</p>
+                  <p className="font-bold text-emerald-800 text-sm">{t('familias.rendimientoExcep')}</p>
                   <p className="text-xs text-emerald-600 mt-0.5 leading-relaxed">
                     {child?.name?.split(' ')[0] || 'Tu hijo/a'} está dominando sus objetivos con un {stats.masteryRate}% de éxito. ¡El esfuerzo de toda la familia está dando frutos!
                   </p>
@@ -590,7 +590,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
               <div className="mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
                 <Star size={20} className="text-blue-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-blue-800 text-sm">¡Cada sesión cuenta!</p>
+                  <p className="font-bold text-blue-800 text-sm">{t('familias.cadaSesionCuenta')}</p>
                   <p className="text-xs text-blue-600 mt-0.5 leading-relaxed">
                     El proceso ABA es gradual y acumulativo. La constancia es la clave del progreso. ¡Están en el camino correcto!
                   </p>

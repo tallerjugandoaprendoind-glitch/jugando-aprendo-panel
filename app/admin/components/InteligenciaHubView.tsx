@@ -210,7 +210,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
           <h3 className="font-black flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
             <Users size={16} className="text-blue-600" /> {t('ui.generarPrediccion2')}
           </h3>
-          <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>La IA analizará sus últimas 12 semanas</p>
+          <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>{t('hub.iaAnalizara')}</p>
         </div>
         <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto">
           {pacientes.length === 0 && (
@@ -244,7 +244,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
         {loading && (
           <div className="rounded-2xl p-12 text-center" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-600 font-medium">Analizando patrones con IA...</p>
+            <p className="text-slate-600 font-medium">{t('hub.analizandoPatrones')}</p>
             <p className="text-xs text-slate-400 mt-1">{t('ui.calculating')}</p>
           </div>
         )}
@@ -255,7 +255,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">Análisis por Programa / Nivel</p>
+                  <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">{t('hub.analisPorPrograma')}</p>
                   <h3 className="text-xl font-black">{selectedPaciente.name}</h3>
                   <p className="text-blue-200 text-sm mt-0.5">
                     {(prediccion as any).programas_analizados || 0} programas · {(prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) || 0} sesiones totales
@@ -670,7 +670,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
       <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-1">
           <Activity size={16} className="text-violet-600" />
-          <span className="font-bold text-violet-800 text-sm">Detector de Patrones ABA — CAPA 1</span>
+          <span className="font-bold text-violet-800 text-sm">{t('hub.detectorPatrones')}</span>
         </div>
         <p className="text-xs text-violet-600">Analiza el historial de sesiones y detecta regresiones, estancamientos, aceleraciones e inconsistencias.</p>
       </div>
@@ -678,7 +678,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('ui.select_patient')}</label>
         <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
           value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
-          <option value="">— Seleccionar —</option>
+          <option value="">{t('hub.seleccionar')}</option>
           {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <button onClick={analizar} disabled={!selected || loading}
@@ -778,14 +778,14 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
       <div className="bg-amber-50 border border-amber-100 rounded-2xl p-4">
         <div className="flex items-center gap-2 mb-1">
           <Target size={16} className="text-amber-600" />
-          <span className="font-bold text-amber-800 text-sm">Generador de Objetivos Adaptativos — CAPA 1</span>
+          <span className="font-bold text-amber-800 text-sm">{t('hub.generadorObjetivos')}</span>
         </div>
         <p className="text-xs text-amber-600">Genera o ajusta objetivos terapéuticos ABA automáticamente según el progreso real del paciente.</p>
       </div>
       <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
         <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
           value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
-          <option value="">— Seleccionar paciente —</option>
+          <option value="">{t('hub.selecPaciente')}</option>
           {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <div className="flex gap-2">
@@ -824,8 +824,8 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
           {(resultado.resultado?.ajustes || []).map((obj: any, i: number) => (
             <div key={i} className=" rounded-xl border border-orange-100 p-4" style={{ background: "var(--card)" }}>
               <p className="font-bold text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{obj.area}</p>
-              <p className="text-xs text-slate-600 mt-1"><strong>Qué ajustar:</strong> {obj.que_ajustar}</p>
-              <p className="text-xs text-slate-600 mt-1"><strong>Cómo:</strong> {obj.como_ajustar}</p>
+              <p className="text-xs text-slate-600 mt-1"><strong>{t('hub.queAjustar')}</strong> {obj.que_ajustar}</p>
+              <p className="text-xs text-slate-600 mt-1"><strong>{t('hub.como')}</strong> {obj.como_ajustar}</p>
               <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-3 py-2 rounded-lg">Meta 4 semanas: {obj.meta_4_semanas}</p>
             </div>
           ))}
@@ -896,7 +896,7 @@ function TabSugerencias() {
             <Sparkles size={16} className="text-orange-600" />
             <span className="font-bold text-orange-800 text-sm">Alertas Proactivas — CAPA 4</span>
           </div>
-          <p className="text-xs text-orange-600">La IA analiza todos los pacientes y alerta antes de que haya un problema.</p>
+          <p className="text-xs text-orange-600">{t('hub.iaAlertaAntes')}</p>
           {meta && (
             <p className="text-[11px] text-orange-500 mt-1">
               {meta.pacientes_analizados} pacientes analizados · {meta.urgentes} alertas urgentes
@@ -924,7 +924,7 @@ function TabSugerencias() {
         <div className=" rounded-2xl border border-slate-100 p-10 text-center" style={{ background: "var(--card)" }}>
           <CheckCircle size={32} className="text-emerald-400 mx-auto mb-3" />
           <p className="font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>Sin alertas activas</p>
-          <p className="text-xs text-slate-400 mt-1">Todos los pacientes están en progreso normal</p>
+          <p className="text-xs text-slate-400 mt-1">{t('hub.todosPacientesOk')}</p>
         </div>
       )}
       {sugerencias.map((s: any, i: number) => (
@@ -1009,7 +1009,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
           {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
 
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">Tipo de reporte</label>
+        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('hub.tipoReporte')}</label>
         <div className="grid grid-cols-3 gap-2">
           {(Object.entries(tipoInfo) as [typeof tipo, typeof tipoInfo['padres']][]).map(([k, v]) => (
             <button key={k} onClick={() => setTipo(k)}
@@ -1090,7 +1090,7 @@ export default function InteligenciaHubView() {
           <Zap size={20} className="text-white" />
         </div>
         <div>
-          <h1 className="text-xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>Hub de Inteligencia</h1>
+          <h1 className="text-xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{t('hub.hubInteligencia')}</h1>
           <p className="text-xs text-slate-400">6 agentes IA · Predicciones · Patrones · Objetivos · Reportes · Seguridad</p>
         </div>
       </div>

@@ -124,7 +124,7 @@ export default function ExcelImportView() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Importar Pacientes</h2>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Sube un archivo CSV para importar pacientes en masa</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('ui.subeCSV')}</p>
         </div>
         <button onClick={downloadTemplate}
           className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-xl border border-green-200 dark:border-green-700 hover:bg-green-100 transition text-sm font-medium">

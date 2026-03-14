@@ -314,7 +314,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           <AlertTriangle size={17} className="text-amber-600" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold text-amber-800 mb-2">¿Cómo funciona el flujo de aprobación?</p>
+          <p className="text-sm font-bold text-amber-800 mb-2">{t('especialista.flujoAprobacion')}</p>
           <div className="grid grid-cols-3 gap-3">
             {[
               { step: '1', label: 'Tú creas', desc: 'Registra evaluación o nota de sesión', color: 'bg-amber-100 text-amber-800' },

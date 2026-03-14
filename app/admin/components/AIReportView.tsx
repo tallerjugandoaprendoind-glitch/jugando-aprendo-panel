@@ -542,13 +542,13 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
                         <DetailBox title={t('ui.observations')} content={d.observaciones_tecnicas} icon={<Eye size={13}/>} color="bg-slate-500/10 border-slate-500/20 text-slate-300" full/>
                         <div className="grid grid-cols-2 gap-3">
                           <DetailBox title="ABC" content={d.antecedente} icon={<Activity size={13}/>} color="bg-purple-500/10 border-purple-500/20 text-purple-300"/>
-                          <DetailBox title="Intervención" content={d.estrategias_manejo} icon={<Zap size={13}/>} color="bg-orange-500/10 border-orange-500/20 text-orange-300"/>
+                          <DetailBox title={t('ui.intervencion')} content={d.estrategias_manejo} icon={<Zap size={13}/>} color="bg-orange-500/10 border-orange-500/20 text-orange-300"/>
                         </div>
                         <div className="rounded-xl p-3" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)' }}>
                           <div className="flex items-center gap-2 mb-1.5">
                             <MessageCircle size={11} className="text-amber-400"/>
-                            <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Mensaje Padres</span>
-                            <span className="ml-auto text-[9px] font-black text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-full">⏳ En Bandeja</span>
+                            <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">{t('ui.mensajePadresLabel')}</span>
+                            <span className="ml-auto text-[9px] font-black text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-full">{t('ui.enBandeja')}</span>
                           </div>
                           <p className="text-xs text-amber-300 italic">"{d.mensaje_padres}"</p>
                         </div>
@@ -569,7 +569,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
           {/* ══ SECCIÓN 3: FICHA DE INGRESO (cerrado por defecto) ══ */}
           <AccordionSection
             id="anamnesis"
-            title="Ficha de Ingreso"
+            title={t('ui.fichaIngreso')}
             icon={<FileText size={16} className="text-blue-400"/>}
             defaultOpen={false}
           >
@@ -617,7 +617,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
           {/* ══ SECCIÓN 5: GRÁFICAS ABA (cerrado por defecto) ══ */}
           <AccordionSection
             id="graficas"
-            title="Gráficas ABA"
+            title={t('ui.graficasABA')}
             icon={<span className="text-base">📊</span>}
             defaultOpen={true}
           >
@@ -630,7 +630,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
       ) : (
           <div className="flex flex-col items-center justify-center h-full text-slate-300 py-40">
               <Brain size={120} className="mb-8 text-slate-200"/>
-              <p className="text-2xl font-black uppercase tracking-[0.4em] text-slate-300">Seleccionar Paciente</p>
+              <p className="text-2xl font-black uppercase tracking-[0.4em] text-slate-300">{t('ui.seleccionarPacienteOpc')}</p>
           </div>
       )}
     </div>

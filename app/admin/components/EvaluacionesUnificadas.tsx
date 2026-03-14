@@ -257,7 +257,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
         <div>
           <label className="text-sm font-bold text-slate-700 block mb-2 flex items-center gap-1.5">
             <Sparkles size={13} className="text-violet-500" /> {question.label}
-            <span className="text-[10px] font-bold text-violet-400 bg-violet-50 px-2 py-0.5 rounded-full border border-violet-200 ml-1">Generado por IA</span>
+            <span className="text-[10px] font-bold text-violet-400 bg-violet-50 px-2 py-0.5 rounded-full border border-violet-200 ml-1">{t('evaluaciones.generadoIA')}</span>
           </label>
           {hasValue ? (
             <textarea rows={4} value={value} onChange={e => onChange(e.target.value)}
@@ -376,7 +376,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
         <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-purple-700 rounded-xl flex items-center justify-center">
           <Sparkles size={16} className="text-white" />
         </div>
-        <h3 className="font-black text-slate-800" style={{ color: "var(--text-primary)" }}>Análisis de IA</h3>
+        <h3 className="font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{t('evaluaciones.analisisIA')}</h3>
       </div>
 
       {/* Alert level */}
@@ -390,7 +390,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
       {/* Clinical analysis */}
       {textoAnalisis ? (
         <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-          <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">📋 Análisis Clínico</h4>
+          <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('evaluaciones.analisisClinico')}</h4>
           <p className="text-sm text-slate-700 leading-relaxed">{textoAnalisis}</p>
         </div>
       ) : null}
@@ -412,7 +412,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
         {/* Work areas */}
         {areasTrabajo.length > 0 && (
           <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
-            <h4 className="text-xs font-black text-amber-600 uppercase tracking-widest mb-2">🎯 Áreas a Trabajar</h4>
+            <h4 className="text-xs font-black text-amber-600 uppercase tracking-widest mb-2">{t('evaluaciones.areasTrabajar')}</h4>
             <ul className="space-y-1">
               {areasTrabajo.map((f: string, i: number) => (
                 <li key={i} className="text-xs text-amber-800 font-medium flex items-center gap-1.5">
@@ -453,7 +453,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
       {/* Next recommended forms */}
       {formsRecomendados.length > 0 && (
         <div>
-          <h4 className="text-xs font-black text-violet-600 uppercase tracking-widest mb-2">📋 Próximas Evaluaciones Recomendadas</h4>
+          <h4 className="text-xs font-black text-violet-600 uppercase tracking-widest mb-2">{t('evaluaciones.proxEvals')}</h4>
           <div className="flex flex-wrap gap-2">
             {formsRecomendados.map((f: string, i: number) => (
               <span key={i} className="px-3 py-1.5 bg-violet-50 border border-violet-200 text-violet-700 rounded-full text-xs font-bold">{f}</span>
@@ -471,7 +471,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
               <div className="w-7 h-7 bg-amber-500 rounded-lg flex items-center justify-center">
                 <MessageCircle size={14} className="text-white"/>
               </div>
-              <h4 className="font-black text-amber-800">Mensaje para los Padres</h4>
+              <h4 className="font-black text-amber-800">{t('ui.mensajePadres')}</h4>
               <span className="ml-auto px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-black rounded-full border border-amber-300 uppercase tracking-widest">✏️ Editable</span>
             </div>
             {onEditMessage ? (
@@ -696,13 +696,13 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
             <p className="text-xs text-slate-400 mt-1.5">{t('evaluaciones.irABiblioteca')}</p>
           </div>
           <div>
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Mensaje</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">{t('evaluaciones.mensaje')}</label>
             <textarea rows={3} value={message} onChange={e => setMessage(e.target.value)}
               {...{placeholder: t('ui.send_form_msg')}}
               className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all resize-none" />
           </div>
           <div>
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Fecha Límite</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">{t('evaluaciones.fechaLimite2')}</label>
             <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)}
               className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all" />
           </div>
@@ -1026,7 +1026,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
           <CheckCircle2 size={40} className="text-emerald-500" />
         </div>
         <div className="text-center">
-          <h2 className="text-2xl font-black text-slate-800 mb-2" style={{ color: "var(--text-primary)" }}>¡Formulario guardado!</h2>
+          <h2 className="text-2xl font-black text-slate-800 mb-2" style={{ color: "var(--text-primary)" }}>{t('evaluaciones.formGuardado')}</h2>
           <p className="text-slate-500 font-medium">{form.title}</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
@@ -1095,7 +1095,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
             </div>
             <select value={selectedChild} onChange={e => setSelectedChild(e.target.value)}
               className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:bg-white/30 transition-all min-w-[180px]">
-              <option value="" className="text-slate-800" style={{ color: "var(--text-primary)" }}>Seleccionar paciente...</option>
+              <option value="" className="text-slate-800" style={{ color: "var(--text-primary)" }}>{t('evaluaciones.selecPac')}</option>
               {children.map((c: any) => <option key={c.id} value={c.id} className="text-slate-800" style={{ color: "var(--text-primary)" }}>{c.name}</option>)}
             </select>
           </div>
@@ -1415,7 +1415,7 @@ export default function EvaluacionesUnificadas() {
                 <Search size={40} className="text-slate-300" />
               </div>
               <p className="font-bold text-slate-400">No se encontraron formularios</p>
-              <p className="text-xs text-slate-300 mt-1">Prueba con otro término de búsqueda o categoría</p>
+              <p className="text-xs text-slate-300 mt-1">{t('evaluaciones.otroBusqueda')}</p>
             </div>
           )}
         </div>
@@ -1428,7 +1428,7 @@ export default function EvaluacionesUnificadas() {
             <div className="flex flex-col items-center justify-center py-20 text-center  rounded-3xl border border-slate-100" style={{ background: "var(--card)" }}>
               <div className="p-5 bg-slate-100 rounded-3xl mb-4"><Send size={40} className="text-slate-300" /></div>
               <p className="font-bold text-slate-400">{t('ui.no_forms_sent')}</p>
-              <p className="text-xs text-slate-300 mt-1">Ve a Biblioteca y envía formularios a los padres</p>
+              <p className="text-xs text-slate-300 mt-1">{t('evaluaciones.irBiblioteca2')}</p>
             </div>
           ) : sentForms.map(sf => (
             <div key={sf.id} className=" rounded-2xl border border-slate-100 shadow-sm overflow-hidden" style={{ background: "var(--card)" }}>

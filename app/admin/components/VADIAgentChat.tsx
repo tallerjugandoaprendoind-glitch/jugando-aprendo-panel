@@ -142,7 +142,7 @@ export default function VADIAgentChat({
             </div>
             <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
               <Loader2 size={14} className="animate-spin text-violet-500" />
-              <span className="text-sm text-slate-500">VADI está pensando...</span>
+              <span className="text-sm text-slate-500">{t('ui.vadiPensando')}</span>
             </div>
           </div>
         )}

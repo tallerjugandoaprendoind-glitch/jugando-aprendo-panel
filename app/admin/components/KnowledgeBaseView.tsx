@@ -334,7 +334,7 @@ export default function KnowledgeBaseView() {
           </div>
           <div className="flex-1">
             <h2 className="text-xl md:text-2xl font-black">{t('nav.cerebro')}</h2>
-            <p className="text-violet-200 text-sm mt-1">Base de conocimiento especializada en ABA, TEA y neurodivergencia</p>
+            <p className="text-violet-200 text-sm mt-1">{t('ui.baseConocimiento')}</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-5">
@@ -378,7 +378,7 @@ export default function KnowledgeBaseView() {
           <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <Cpu size={16} className="text-violet-600" />
-              <span className="font-bold text-violet-800 text-sm">¿Cómo funciona el aprendizaje automático?</span>
+              <span className="font-bold text-violet-800 text-sm">{t('ui.comoFuncAuto')}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {[
@@ -464,10 +464,10 @@ export default function KnowledgeBaseView() {
                   disabled={aprendiendo}
                 />
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                  <p className="text-xs text-blue-700 font-bold mb-1">¿Qué tipo de URLs funcionan?</p>
-                  <p className="text-[11px] text-blue-600">✅ Artículos y blogs públicos · Wikipedia · PDFs en internet</p>
-                  <p className="text-[11px] text-blue-600">✅ Páginas de organizaciones ABA (BACB, ABAI, etc.)</p>
-                  <p className="text-[11px] text-slate-400">❌ Páginas que requieren login · JavaScript dinámico</p>
+                  <p className="text-xs text-blue-700 font-bold mb-1">{t('ui.queTipoURLs')}</p>
+                  <p className="text-[11px] text-blue-600">{t('ui.urlsPublicas')}</p>
+                  <p className="text-[11px] text-blue-600">{t('ui.urlsOrg')}</p>
+                  <p className="text-[11px] text-slate-400">{t('ui.urlsNoFuncionan')}</p>
                 </div>
               </div>
             )}
@@ -612,14 +612,14 @@ export default function KnowledgeBaseView() {
                       <p className="text-xs text-slate-400 mt-1">
                         {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
                         {selectedFile.size > 10 * 1024 * 1024 && (
-                          <span className="ml-2 text-violet-500 font-medium">⚡ Se extraerá el texto localmente (sin límite)</span>
+                          <span className="ml-2 text-violet-500 font-medium">{t('ui.extractaLocal')}</span>
                         )}
                       </p>
                     </div>
                   ) : (
                     <div>
                       <p className="text-sm text-slate-400">{t('whatsapp.clickPDF')}</p>
-                      <p className="text-xs text-slate-300 mt-1">Sin límite de tamaño — archivos grandes se procesan en el navegador</p>
+                      <p className="text-xs text-slate-300 mt-1">{t('ui.sinLimite')}</p>
                     </div>
                   )}
                   <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt,.md"

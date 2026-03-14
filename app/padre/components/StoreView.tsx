@@ -77,7 +77,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-5">
               <CheckCircle size={40} className="text-emerald-600" />
             </div>
-            <h3 className="text-2xl font-black text-slate-800 mb-2">¡Pedido enviado! 🎉</h3>
+            <h3 className="text-2xl font-black text-slate-800 mb-2">{t('tienda.pedidoEnviado')}</h3>
             <p className="text-slate-500 text-sm leading-relaxed mb-6">
               Tu pedido fue registrado. Nos pondremos en contacto contigo para confirmar el pago y la entrega.
             </p>
@@ -137,7 +137,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
 
               {/* Info pago */}
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="text-xs font-black text-blue-700 mb-1">💳 ¿Cómo se paga?</p>
+                <p className="text-xs font-black text-blue-700 mb-1">{t('tienda.comoPaga')}</p>
                 <p className="text-xs text-blue-600 leading-relaxed">
                   El pago se realiza al recoger el pedido en el centro (efectivo o yape). Para artículos digitales te enviaremos el archivo por WhatsApp tras confirmar el pago.
                 </p>
@@ -382,7 +382,7 @@ export default function StoreView({ profile }: { profile: any }) {
               <Package size={18} className="text-blue-600" />
             </div>
             <div>
-              <p className="font-bold text-blue-800 text-sm mb-1">¿Cómo funciona la tienda?</p>
+              <p className="font-bold text-blue-800 text-sm mb-1">{t('tienda.comoFuncTienda')}</p>
               <p className="text-xs text-blue-600 leading-relaxed">
                 {t('ui.physical_items_note')}
                 Los <strong>{t('ui.digitales')}</strong> te los enviamos por WhatsApp tras confirmar el pago.
@@ -400,7 +400,7 @@ export default function StoreView({ profile }: { profile: any }) {
             <div className="bg-white rounded-2xl border border-slate-200 py-20 text-center">
               <ShoppingBag size={36} className="text-slate-200 mx-auto mb-3" />
               <p className="font-bold text-slate-500 mb-1">{t('tienda.sinPedidos')}</p>
-              <p className="text-sm text-slate-400 mb-4">Explora la tienda y haz tu primera compra</p>
+              <p className="text-sm text-slate-400 mb-4">{t('tienda.exploraCompra')}</p>
               <button onClick={() => setView('catalogo')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-all">
                 Ir a la tienda →
@@ -548,7 +548,7 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
 
           {p.tipo === 'digital' && (
             <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 mb-4">
-              <p className="text-xs font-black text-violet-700 mb-1">📄 Artículo digital</p>
+              <p className="text-xs font-black text-violet-700 mb-1">{t('tienda.articuloDigital')}</p>
               <p className="text-xs text-violet-600">Al confirmar tu pedido y pagar, recibirás el archivo por WhatsApp en menos de 24 horas.</p>
             </div>
           )}

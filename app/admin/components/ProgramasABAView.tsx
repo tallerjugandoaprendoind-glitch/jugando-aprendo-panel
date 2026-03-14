@@ -654,7 +654,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     {detalle.unidad_positiva && <p><span className="font-bold">✅ Unidad +:</span> {detalle.unidad_positiva}</p>}
                     {detalle.unidad_negativa && <p><span className="font-bold">❎ Unidad -:</span> {detalle.unidad_negativa}</p>}
                     {(detalle.reforzadores || detalle.ayudas) && <p><span className="font-bold">🤝🏼 Ayudas:</span> {detalle.reforzadores || detalle.ayudas}</p>}
-                    {detalle.correccion_error && <p><span className="font-bold">Corrección:</span> {detalle.correccion_error}</p>}
+                    {detalle.correccion_error && <p><span className="font-bold">{t('programas.correccion')}</span> {detalle.correccion_error}</p>}
                     {detalle.reforzadores && <p><span className="font-bold">Reforzadores:</span> {detalle.reforzadores}</p>}
                     {detalle.materiales && <p><span className="font-bold">Materiales:</span> {detalle.materiales}</p>}
                   </div>
@@ -772,7 +772,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
 
             {/* % de éxito */}
             <div className="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
-              <p className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-3">📊 Porcentaje de éxito</p>
+              <p className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-3">{t('programas.pctExito')}</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-slate-500 font-bold block mb-1">{t('ui.total_opportunities')}</label>
@@ -906,7 +906,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
 
           {step === 1 && (
             <div className="space-y-4">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 1 · Información básica</p>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('programas.paso1Info')}</p>
               <div>
                 <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.nombrePrograma')} *</label>
                 <input value={form.titulo} onChange={e => set('titulo', e.target.value)}
@@ -938,7 +938,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
           {step === 2 && (
             <div className="space-y-4">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 2 · Sets / Objetivos CP</p>
-              <p className="text-xs text-slate-400">Define los pasos progresivos del programa (como en LuTr)</p>
+              <p className="text-xs text-slate-400">{t('programas.definePasos')}</p>
               {objetivos.map((obj, i) => (
                 <div key={i} className="flex gap-2">
                   <span className="w-7 h-7 bg-indigo-600 text-white rounded-full text-xs font-black flex items-center justify-center shrink-0 mt-2.5">{i + 1}</span>
@@ -971,7 +971,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1.5">Criterio de dominio %</label>
+                  <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.criterioDominio')}</label>
                   <input type="number" min="0" max="100" value={form.criterio_dominio_pct}
                     onChange={e => set('criterio_dominio_pct', Number(e.target.value))}
                     className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-center" />

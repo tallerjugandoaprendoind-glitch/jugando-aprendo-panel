@@ -159,7 +159,7 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
       {/* Análisis */}
       {analysis.analisis_clinico && (
         <div>
-          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📊 Análisis Clínico</h4>
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">{t('evaluaciones.analisisClin2')}</h4>
           <p className="text-sm text-slate-700 leading-relaxed bg-white rounded-xl p-4 border border-slate-100">{analysis.analisis_clinico}</p>
         </div>
       )}
@@ -180,7 +180,7 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
         )}
         {analysis.areas_trabajo?.length > 0 && (
           <div>
-            <h4 className="text-xs font-black text-orange-600 uppercase tracking-widest mb-2">🎯 Áreas de Trabajo</h4>
+            <h4 className="text-xs font-black text-orange-600 uppercase tracking-widest mb-2">{t('evaluaciones.areasTrabajar2')}</h4>
             <ul className="space-y-1">
               {analysis.areas_trabajo.map((a: string, i: number) => (
                 <li key={i} className="text-xs text-slate-600 flex items-start gap-2 bg-orange-50 rounded-lg p-2">
@@ -195,7 +195,7 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
       {/* Recomendaciones */}
       {analysis.recomendaciones?.length > 0 && (
         <div>
-          <h4 className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-2">💡 Recomendaciones Terapéuticas</h4>
+          <h4 className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-2">{t('evaluaciones.recomendaciones')}</h4>
           <ul className="space-y-2">
             {analysis.recomendaciones.map((r: string, i: number) => (
               <li key={i} className="text-sm text-slate-700 flex items-start gap-3 bg-indigo-50 rounded-xl p-3">
@@ -210,7 +210,7 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
       {/* Formularios recomendados */}
       {analysis.formularios_recomendados?.length > 0 && (
         <div>
-          <h4 className="text-xs font-black text-violet-600 uppercase tracking-widest mb-2">📋 Próximas Evaluaciones Recomendadas</h4>
+          <h4 className="text-xs font-black text-violet-600 uppercase tracking-widest mb-2">{t('evaluaciones.proxEvals2')}</h4>
           <div className="flex flex-wrap gap-2">
             {analysis.formularios_recomendados.map((f: string, i: number) => (
               <span key={i} className="px-3 py-1.5 bg-violet-50 border border-violet-200 text-violet-700 rounded-full text-xs font-bold">{f}</span>
@@ -725,7 +725,7 @@ export default function NeuroFormsView() {
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="p-5 bg-slate-100 rounded-3xl mb-4"><Send size={40} className="text-slate-300"/></div>
               <p className="font-bold text-slate-400">{t('ui.no_forms_sent')}</p>
-              <p className="text-xs text-slate-300 mt-1">Ve a Biblioteca y envía formularios a los padres</p>
+              <p className="text-xs text-slate-300 mt-1">{t('evaluaciones.irBiblioteca2')}</p>
             </div>
           ) : sentForms.map(sf => (
             <div key={sf.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">

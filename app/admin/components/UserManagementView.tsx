@@ -433,7 +433,7 @@ export default function UserManagementView() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>Gestión de Usuarios</h1>
+          <h1 className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{t('usuarios.gestion')}</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{users.length} usuarios registrados</p>
         </div>
         <div className="flex items-center gap-2">
@@ -533,7 +533,7 @@ export default function UserManagementView() {
                       <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">TÚ</span>
                     )}
                     {!isActive && (
-                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">INACTIVO</span>
+                      <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-red-100 text-red-600">{t('usuarios.inactivo2')}</span>
                     )}
                   </div>
                   <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>{user.email}</p>
@@ -712,7 +712,7 @@ export default function UserManagementView() {
                 style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}>
                 <option value="jefe">👑 Director — Acceso total</option>
                 <option value="especialista">{t('ui.specialist_role')}</option>
-                <option value="padre">🌱 Padre / Tutor — Portal de familias</option>
+                <option value="padre">{t('usuarios.rolPadre')}</option>
               </select>
               {createForm.role === 'especialista' && (
                 <input {...{placeholder: t('ui.specialty')}} value={createForm.specialty}
@@ -752,7 +752,7 @@ export default function UserManagementView() {
             <select value={selectedChildId} onChange={e => setSelectedChildId(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 mb-4"
               style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}>
-              <option value="">— Seleccionar paciente —</option>
+              <option value="">{t('usuarios.selPaciente2')}</option>
               {children.map(c => (
                 <option key={c.id} value={c.id}>
                   {c.name}{c.parent_id && c.parent_id !== linkingParent.id ? ' ⚠️ ya tiene tutor' : ''}

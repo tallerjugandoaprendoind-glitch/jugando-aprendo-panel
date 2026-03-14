@@ -145,7 +145,7 @@ export default function ARIAAgentChat({
               style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}
             >
               <Loader2 size={14} className="animate-spin text-violet-500" />
-              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>ARIA está pensando...</span>
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t('aria.ariaPensando')}</span>
             </div>
           </div>
         )}

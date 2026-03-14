@@ -138,7 +138,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
           <div className="flex flex-col items-center gap-4">
             <RefreshCw className="w-12 h-12 text-blue-600 animate-spin" />
             <p className="text-lg font-bold text-gray-800">Analizando datos...</p>
-            <p className="text-sm text-gray-500">Generando insights con IA</p>
+            <p className="text-sm text-gray-500">{t('dashboard.generandoInsights')}</p>
           </div>
         </div>
       </div>
@@ -166,7 +166,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
                 <BarChart3 className="w-8 h-8" />
               </div>
               <div>
-                <h2 className="text-3xl font-black">Dashboard de Analytics</h2>
+                <h2 className="text-3xl font-black">{t('dashboard.dashboardAnalytics')}</h2>
                 {childName && (
                   <p className="text-blue-100 text-lg font-medium mt-1">{childName}</p>
                 )}
@@ -236,7 +236,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
             {/* ÁREAS DE DESARROLLO */}
             {developmentAreas.length > 0 && (
               <div className="bg-white rounded-2xl shadow-md border-2 border-gray-100 p-6">
-                <h3 className="text-xl font-black text-gray-800 mb-6">Áreas de Desarrollo</h3>
+                <h3 className="text-xl font-black text-gray-800 mb-6">{t('dashboard.areasDesarrollo')}</h3>
                 
                 <div className="space-y-4">
                   {developmentAreas.map((area, idx) => (
@@ -256,7 +256,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
               <div className="bg-white rounded-2xl shadow-md border-2 border-gray-100 p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <Brain className="w-6 h-6 text-purple-600" />
-                  <h3 className="text-xl font-black text-gray-800">Insights con IA</h3>
+                  <h3 className="text-xl font-black text-gray-800">{t('dashboard.insightsIA')}</h3>
                 </div>
 
                 <div className="space-y-3">

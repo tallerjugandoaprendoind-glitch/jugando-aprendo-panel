@@ -184,7 +184,7 @@ function ProductModal({
                   </div>
                   <div className="text-center">
                     <p className="text-sm font-bold text-slate-600">{t('ui.drag_image')}</p>
-                    <p className="text-xs text-slate-400 mt-1">JPG, PNG, WEBP — máximo 5MB</p>
+                    <p className="text-xs text-slate-400 mt-1">{t('tienda.jpgPng')}</p>
                   </div>
                 </div>
               )}
@@ -214,7 +214,7 @@ function ProductModal({
 
           {/* Tipo */}
           <div>
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Tipo de producto *</label>
+            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('tienda.tipoProd')}</label>
             <div className="grid grid-cols-2 gap-3">
               {([['fisico', '📦', 'Físico', 'Se retira en el centro'], ['digital', '📄', 'Digital', 'PDF o archivo descargable']] as const).map(([val, emoji, lbl, desc]) => (
                 <button key={val} type="button" onClick={() => setForm((f: any) => ({ ...f, tipo: val }))}
@@ -256,7 +256,7 @@ function ProductModal({
           </div>
 
           <div>
-            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Categoría</label>
+            <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('tienda.categoria2')}</label>
             <div className="flex flex-wrap gap-2">
               {CATEGORIAS.map(cat => (
                 <button key={cat} type="button" onClick={() => setForm((f: any) => ({ ...f, categoria: cat }))}
@@ -400,7 +400,7 @@ export default function StoreManagementView() {
           <h2 className="text-2xl font-black flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
             <ShoppingBag className="text-blue-600" size={28} /> Tienda
           </h2>
-          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>Gestiona productos, stock y pedidos de los padres</p>
+          <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>{t('tienda.gestionaProd')}</p>
         </div>
         <button onClick={() => { setEditProduct(null); setShowModal(true) }}
           className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-3 rounded-xl shadow-md shadow-blue-200 transition-all hover:scale-105 active:scale-95 dark:shadow-none">
@@ -606,7 +606,7 @@ export default function StoreManagementView() {
                       <div className="border-t border-slate-100 bg-slate-50/50">
                         {/* Items */}
                         <div className="p-5 space-y-3">
-                          <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Artículos del pedido</p>
+                          <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('tienda.articulosPedido2')}</p>
                           {(order.store_order_items || []).map(item => (
                             <div key={item.id} className="flex items-center gap-3 bg-white dark:bg-slate-700 rounded-xl p-3 border border-slate-100 dark:border-slate-600">
                               <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0">
@@ -626,7 +626,7 @@ export default function StoreManagementView() {
                           {/* Notas del padre */}
                           {order.notas && (
                             <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                              <p className="text-xs font-black text-amber-600 mb-1">Nota del padre/madre:</p>
+                              <p className="text-xs font-black text-amber-600 mb-1">{t('tienda.notaPadre')}</p>
                               <p className="text-sm text-amber-800">{order.notas}</p>
                             </div>
                           )}
@@ -645,7 +645,7 @@ export default function StoreManagementView() {
 
                           {/* Cambiar estado */}
                           <div>
-                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Actualizar estado</p>
+                            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('tienda.actualizarEstado')}</p>
                             <div className="flex flex-wrap gap-2">
                               {ESTADOS_FLUJO.map(e => {
                                 const c = ESTADO_CFG[e]

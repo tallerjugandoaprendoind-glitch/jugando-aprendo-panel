@@ -411,15 +411,15 @@ export default function ParentDashboard() {
                 </div>
                 <form onSubmit={handleAddChild} className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Nombre Completo *</label>
-                    <input name="name" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder="Ej: María Fernanda López"/>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">{t('familias.nombreCompletoStar')}</label>
+                    <input name="name" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder={t('familias.ejNombre')}/>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Fecha de Nacimiento *</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">{t('familias.fechaNacStar')}</label>
                     <input name="dob" type="date" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all"/>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Diagnóstico (Opcional)</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">{t('familias.diagOpcional')}</label>
                     <input name="diagnosis" className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder="Ej: TEA Nivel 2"/>
                   </div>
                   <div className="bg-violet-50 border-2 border-violet-100 rounded-2xl p-4">
@@ -644,7 +644,7 @@ export default function ParentDashboard() {
                                         <Sparkles size={24} className="text-white"/>
                                     </div>
                                     <div>
-                                        <h3 className="font-bold text-base">Asistente Clínico Inteligente</h3>
+                                        <h3 className="font-bold text-base">{t('familias.asistenteClinico')}</h3>
                                         <p className="text-xs text-indigo-100 font-semibold flex items-center gap-2">
                                             <Brain size={12}/> Especializado en {selectedChild?.name || 'Terapia ABA'}
                                         </p>
@@ -728,7 +728,7 @@ export default function ParentDashboard() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-2xl text-slate-800">{t('pacientes.nuevo')}</h3>
-                                    <p className="text-sm text-slate-400 font-medium">Agrega la información del niño/a</p>
+                                    <p className="text-sm text-slate-400 font-medium">{t('familias.agendaInfoNino')}</p>
                                 </div>
                             </div>
                             <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
@@ -809,7 +809,7 @@ export default function ParentDashboard() {
                                 <Lock size={24} className="text-white"/>
                             </div>
                             <div>
-                                <h3 className="font-bold text-2xl text-slate-800">Cambiar Contraseña</h3>
+                                <h3 className="font-bold text-2xl text-slate-800">{t('familias.cambiarPass2')}</h3>
                                 <p className="text-sm text-slate-400">{t('ui.new_access_key')}</p>
                             </div>
                         </div>
@@ -828,7 +828,7 @@ export default function ParentDashboard() {
                                 required 
                                 minLength={6}
                                 className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white transition-all" 
-                                placeholder="Mínimo 6 caracteres"
+                                placeholder={t('familias.minimo6')}
                             />
                         </div>
                         <div>
@@ -841,7 +841,7 @@ export default function ParentDashboard() {
                                 required 
                                 minLength={6}
                                 className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white transition-all" 
-                                placeholder="Repite la contraseña"
+                                placeholder={t('familias.repitePass')}
                             />
                         </div>
                         <div className="flex gap-3 pt-2">
@@ -874,8 +874,8 @@ export default function ParentDashboard() {
                                 <User size={24} className="text-white"/>
                             </div>
                             <div>
-                                <h3 className="font-bold text-2xl text-slate-800">Editar Perfil</h3>
-                                <p className="text-sm text-slate-400">Actualiza tu información personal</p>
+                                <h3 className="font-bold text-2xl text-slate-800">{t('familias.editarPerfil2')}</h3>
+                                <p className="text-sm text-slate-400">{t('familias.actualizaInfo')}</p>
                             </div>
                         </div>
                         <button onClick={()=>setShowEditProfile(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
@@ -951,7 +951,7 @@ export default function ParentDashboard() {
                                 <Bell size={24}/>
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg">Centro de Notificaciones</h3>
+                                <h3 className="font-bold text-lg">{t('familias.centrNotif')}</h3>
                                 <p className="text-xs text-blue-100">{notifications.length} notificacion{notifications.length!==1?'es':''} · {unreadCount > 0 ? `${unreadCount} sin leer` : 'todas leídas'}</p>
                             </div>
                         </div>
@@ -1010,7 +1010,7 @@ export default function ParentDashboard() {
                                             <div className="bg-blue-50 rounded-xl p-3 flex items-center gap-2">
                                                 <FileText size={14} className="text-blue-500 flex-shrink-0"/>
                                                 <div>
-                                                    <p className="text-xs text-blue-400">Generado por</p>
+                                                    <p className="text-xs text-blue-400">{t('familias.generadoPor')}</p>
                                                     <p className="text-sm font-semibold text-blue-700">{selectedNoti.metadata.source_title}</p>
                                                 </div>
                                             </div>
@@ -1035,7 +1035,7 @@ export default function ParentDashboard() {
                             </div>
                             <div className="flex-1 text-left">
                               <p className="font-black text-indigo-700 text-sm">📹 Videollamada activa</p>
-                              <p className="text-xs text-indigo-500 font-semibold">Tu terapeuta te espera · Toca para unirte</p>
+                              <p className="text-xs text-indigo-500 font-semibold">{t('familias.terapeutaEspera')}</p>
                             </div>
                             <ChevronRight size={18} className="text-indigo-400 shrink-0"/>
                           </button>
@@ -1045,8 +1045,8 @@ export default function ParentDashboard() {
                                 <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
                                     <Bell size={40} className="text-slate-300"/>
                                 </div>
-                                <p className="font-bold text-slate-400 text-base">Sin notificaciones aún</p>
-                                <p className="text-slate-300 text-sm mt-1">Aquí verás los mensajes del terapeuta</p>
+                                <p className="font-bold text-slate-400 text-base">{t('familias.sinNotificaciones')}</p>
+                                <p className="text-slate-300 text-sm mt-1">{t('familias.verasMensajes')}</p>
                             </div>
                         ) : (
                             notifications.map((noti) => {
@@ -1078,7 +1078,7 @@ export default function ParentDashboard() {
                                                 <p className="text-slate-500 text-xs leading-relaxed line-clamp-2">{noti.message}</p>
                                                 <p className="text-slate-300 text-[10px] font-bold mt-2 flex items-center gap-1">
                                                     <Clock size={10}/> {new Date(noti.created_at).toLocaleDateString(toBCP47(locale),{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
-                                                    <span className="ml-1 text-blue-400">· Toca para leer</span>
+                                                    <span className="ml-1 text-blue-400">{t('familias.tocaParaLeer')}</span>
                                                 </p>
                                             </div>
                                         </div>

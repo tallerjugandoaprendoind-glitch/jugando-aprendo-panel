@@ -277,7 +277,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
 
               {/* Tipo */}
               <div>
-                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Tipo *</label>
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('especialista.tipoStar')}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {TIPOS.map(t => (
                     <button key={t.id} onClick={() => setForm(f => ({ ...f, tipo: t.id }))}

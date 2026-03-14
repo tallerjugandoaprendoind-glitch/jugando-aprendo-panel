@@ -14,6 +14,7 @@ interface Metricas {
 }
 
 export default function DashboardDirectora() {
+  const { t } = useI18n()
   const [metricas, setMetricas] = useState<Metricas | null>(null)
   const [cargando, setCargando] = useState(true)
   const [periodo, setPeriodo] = useState('7d')
@@ -42,7 +43,7 @@ export default function DashboardDirectora() {
     </div>
   )
 
-  if (!metricas) return <p className="text-red-500 p-4">Error cargando el dashboard</p>
+  if (!metricas) return <p className="text-red-500 p-4">{t('common.errorDashboard')}</p>
 
   const { hoy, pacientes, alertas, tareas, financiero, graficas, proximasSesiones } = metricas
 
@@ -52,7 +53,7 @@ export default function DashboardDirectora() {
       {/* Encabezado */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard Clínico</h1>
+          <h1 className="text-2xl font-bold text-gray-800">{t('dashboard.dashboardClinico')}</h1>
           <p className="text-gray-500 text-sm">
             {new Date().toLocaleDateString('es-PE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
@@ -73,7 +74,7 @@ export default function DashboardDirectora() {
           <span className="text-2xl">🚨</span>
           <div>
             <p className="font-bold text-red-700">{alertas.urgentes} alerta{alertas.urgentes > 1 ? 's' : ''} urgente{alertas.urgentes > 1 ? 's' : ''} sin resolver</p>
-            <p className="text-red-600 text-sm">Requieren atención inmediata</p>
+            <p className="text-red-600 text-sm">{t('dashboard.requierenAtencion')}</p>
           </div>
           <button className="ml-auto bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
             Ver alertas
@@ -154,7 +155,7 @@ export default function DashboardDirectora() {
 
         {/* Sesiones por fecha */}
         <div className="bg-white rounded-xl shadow-sm p-5">
-          <h3 className="font-semibold text-gray-700 mb-4">Sesiones por día</h3>
+          <h3 className="font-semibold text-gray-700 mb-4">{t('dashboard.sesionesPorDia')}</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={graficas.sesionesXFecha.slice(-14)}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -170,7 +171,7 @@ export default function DashboardDirectora() {
 
         {/* Próximas sesiones */}
         <div className="bg-white rounded-xl shadow-sm p-5">
-          <h3 className="font-semibold text-gray-700 mb-4">Próximas sesiones</h3>
+          <h3 className="font-semibold text-gray-700 mb-4">{t('dashboard.proximasSesiones')}</h3>
           <div className="space-y-3">
             {proximasSesiones.length === 0 ? (
               <p className="text-gray-400 text-sm text-center py-4">No hay sesiones programadas</p>
@@ -198,8 +199,8 @@ export default function DashboardDirectora() {
       {alertas.recientes && alertas.recientes.length > 0 && (
         <div className="bg-white rounded-xl shadow-sm p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-700">Alertas clínicas recientes</h3>
-            <button className="text-blue-600 text-sm hover:underline">Ver todas</button>
+            <h3 className="font-semibold text-gray-700">{t('dashboard.alertasRecientes')}</h3>
+            <button className="text-blue-600 text-sm hover:underline">{t('dashboard.verTodas')}</button>
           </div>
           <div className="space-y-2">
             {alertas.recientes.map((alerta: any) => (

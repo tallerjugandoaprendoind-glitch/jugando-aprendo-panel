@@ -13,7 +13,7 @@ interface PortalPadresProps {
 }
 
 export default function PortalPadres({ childId, parentUserId, childName }: PortalPadresProps) {
-  const { locale } = useI18n()
+  const { t, locale } = useI18n()
   const [tab, setTab] = useState<'inicio' | 'chat' | 'tareas' | 'progreso' | 'citas'>('inicio')
 
   const tabs = [
@@ -69,6 +69,7 @@ export default function PortalPadres({ childId, parentUserId, childName }: Porta
 
 // ─── TAB INICIO ──────────────────────────────────────────────
 function InicioTab({ childId, childName }: { childId: string; childName: string }) {
+  const { t } = useI18n()
   const [datos, setDatos] = useState<any>(null)
   const [cargando, setCargando] = useState(true)
 
@@ -96,7 +97,7 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🤖</span>
-            <p className="font-semibold text-blue-800 text-sm">Actualización semanal</p>
+            <p className="font-semibold text-blue-800 text-sm">{t('familias.actualizacionSemanal')}</p>
           </div>
           <p className="text-gray-700 text-sm leading-relaxed">{reporteSemanal}</p>
         </div>
@@ -107,7 +108,7 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
         <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">📅</span>
-            <p className="font-semibold text-gray-700 text-sm">Próxima cita</p>
+            <p className="font-semibold text-gray-700 text-sm">{t('common.proximaCita')}</p>
           </div>
           <div className="flex items-center justify-between">
             <div>
@@ -146,7 +147,7 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
         <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">📊</span>
-            <p className="font-semibold text-gray-700 text-sm">Resumen de las últimas 4 semanas</p>
+            <p className="font-semibold text-gray-700 text-sm">{t('familias.resumen4Semanas')}</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <MiniStat icono="✅" valor={datos.progreso.asistencia.asistidas} label="Sesiones" color="blue" />
@@ -161,6 +162,7 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
 
 // ─── TAB CITAS ────────────────────────────────────────────────
 function CitasTab({ childId }: { childId: string }) {
+  const { t } = useI18n()
   const [citas, setCitas] = useState<any[]>([])
   const [cargando, setCargando] = useState(true)
 
@@ -180,7 +182,7 @@ function CitasTab({ childId }: { childId: string }) {
     <div className="space-y-4">
       {citasFuturas.length > 0 && (
         <div>
-          <h3 className="font-semibold text-gray-700 text-sm mb-3">Próximas citas</h3>
+          <h3 className="font-semibold text-gray-700 text-sm mb-3">{t('familias.proximasCitas2')}</h3>
           <div className="space-y-2">
             {citasFuturas.map(c => (
               <CitaCard key={c.id} cita={c} futura />
@@ -191,7 +193,7 @@ function CitasTab({ childId }: { childId: string }) {
 
       {citasPasadas.length > 0 && (
         <div>
-          <h3 className="font-semibold text-gray-500 text-sm mb-3">Historial reciente</h3>
+          <h3 className="font-semibold text-gray-500 text-sm mb-3">{t('familias.historialReciente')}</h3>
           <div className="space-y-2">
             {citasPasadas.map(c => (
               <CitaCard key={c.id} cita={c} />

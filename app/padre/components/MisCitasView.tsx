@@ -478,7 +478,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
       {/* Book new CTA */}
       <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-2xl p-5 flex items-center justify-between gap-4">
         <div>
-          <p className="font-bold text-slate-800 text-sm">¿Necesitas una nueva cita?</p>
+          <p className="font-bold text-slate-800 text-sm">{t('agenda.necesitasNuevaCita')}</p>
           <p className="text-xs text-slate-500 mt-0.5">Tienes {profile?.tokens || 0} token{(profile?.tokens || 0) !== 1 ? 's' : ''} disponible{(profile?.tokens || 0) !== 1 ? 's' : ''}</p>
         </div>
         <button

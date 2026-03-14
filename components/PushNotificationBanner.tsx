@@ -48,8 +48,8 @@ export default function PushNotificationBanner({ userId }: Props) {
             <Bell size={18} className="text-white" />
           </div>
           <div className="flex-1">
-            <p className="font-black text-sm">¡Notificaciones activadas! 🎉</p>
-            <p className="text-xs text-emerald-100 mt-0.5">Te avisaremos cuando el terapeuta te envíe un mensaje.</p>
+            <p className="font-black text-sm">{t('notificaciones.activadas')}</p>
+            <p className="text-xs text-emerald-100 mt-0.5">{t('notificaciones.teAvisaremos')}</p>
           </div>
         </div>
       </div>
@@ -78,7 +78,7 @@ export default function PushNotificationBanner({ userId }: Props) {
               <Bell size={18} className="text-violet-600" />
             </div>
             <div>
-              <p className="font-black text-slate-800 text-sm">¿Activamos las notificaciones?</p>
+              <p className="font-black text-slate-800 text-sm">{t('notificaciones.activamos')}</p>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
                 Te avisaremos al instante cuando el terapeuta te envíe un mensaje sobre tu hijo/a — sin tener que abrir la app.
               </p>

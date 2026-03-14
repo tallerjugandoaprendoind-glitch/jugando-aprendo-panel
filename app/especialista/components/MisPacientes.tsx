@@ -154,24 +154,24 @@ function ABADetail({ r }: { r: any }) {
       <Bloque title={t('ui.session')} icon={Calendar} color="bg-blue-50">
         <Field label="Objetivo principal" value={d.objetivo_principal} />
         <Field label={t("pacientes.tipoSesion")} value={d.tipo_sesion} />
-        <Field label="Duración" value={d.duracion_minutos ? `${d.duracion_minutos} min` : null} />
+        <Field label={t("ui.duracion")} value={d.duracion_minutos ? `${d.duracion_minutos} min` : null} />
       </Bloque>
       <Bloque title={t('ui.abc_record')} icon={Activity} color="bg-blue-50">
         <Field label="Antecedente (A)" value={d.antecedente} />
         <Field label="Conducta (B)" value={d.conducta} />
         <Field label="Consecuencia (C)" value={d.consecuencia} />
-        <Field label="Función estimada" value={d.funcion_estimada} />
+        <Field label={t("ui.funcionEstimada")} value={d.funcion_estimada} />
       </Bloque>
       <Bloque title={t('ui.performance')} icon={BarChart3} color="bg-blue-50">
-        <Field label="Atención" value={d.nivel_atencion} />
+        <Field label={t("ui.atencion")} value={d.nivel_atencion} />
         <Field label="Respuesta a instrucciones" value={d.respuesta_instrucciones} />
-        <Field label="Tolerancia frustración" value={d.tolerancia_frustracion} />
-        <Field label="Interacción social" value={d.interaccion_social} />
-        <Field label="Nivel de logro" value={d.nivel_logro_objetivos} />
+        <Field label={t("ui.toleranciaFrustrac")} value={d.tolerancia_frustracion} />
+        <Field label={t("ui.interaccionSocial")} value={d.interaccion_social} />
+        <Field label={t("ui.nivelLogro")} value={d.nivel_logro_objetivos} />
       </Bloque>
       <Bloque title={t('ui.observations')} icon={ClipboardList} color="bg-blue-50">
-        <div className="col-span-2"><Field label="Clínicas" value={d.observaciones_clinicas} /></div>
-        <Field label="Tarea para casa" value={d.tarea_casa} />
+        <div className="col-span-2"><Field label={t("ui.clinicas")} value={d.observaciones_clinicas} /></div>
+        <Field label={t("ui.tareaParaCasa")} value={d.tarea_casa} />
         <div className="col-span-2"><Field label={t("pacientes.mensajeFamilia")} value={d.mensaje_familia} /></div>
       </Bloque>
       <AIBlock analysis={r.ai_analysis} />
@@ -188,7 +188,7 @@ function AnamnesisDetail({ r }: { r: any }) {
       <Bloque title={t('ui.general_data')} icon={User} color="bg-violet-50">
         <Field label="Informante" value={d.informante} />
         <Field label="Parentesco" value={d.parentesco} />
-        <Field label="Vive con" value={d.vive_con} />
+        <Field label={t("ui.viveCon")} value={d.vive_con} />
         <Field label="Escolaridad" value={d.escolaridad} />
       </Bloque>
       <Bloque title={t('ui.reason_consult')} icon={AlertCircle} color="bg-violet-50">
@@ -197,22 +197,22 @@ function AnamnesisDetail({ r }: { r: any }) {
         <div className="col-span-2"><Field label="Expectativas" value={d.expectativas} /></div>
       </Bloque>
       <Bloque title={t('ui.prenatal_history')} icon={Heart} color="bg-violet-50">
-        <Field label="Tipo de embarazo" value={d.tipo_embarazo} />
-        <Field label="Tipo de parto" value={d.tipo_parto} />
+        <Field label={t("ui.tipoEmbarazo")} value={d.tipo_embarazo} />
+        <Field label={t("ui.tipoParto")} value={d.tipo_parto} />
         <Field label="Complicaciones" value={d.complicaciones_emb} />
         <Field label="Incubadora" value={d.incubadora} />
       </Bloque>
       <Bloque title={t('ui.language_dev')} icon={MessageSquare} color="bg-violet-50">
         <Field label="Primeras palabras" value={d.primeras_palabras} />
         <Field label="Frases" value={d.frases} />
-        <Field label="Comprensión" value={d.comprension} />
-        <Field label="Intención comunicativa" value={d.intencion_comunicativa} />
+        <Field label={t("ui.comprension")} value={d.comprension} />
+        <Field label={t("ui.intencionComun")} value={d.intencion_comunicativa} />
       </Bloque>
-      <Bloque title="Conducta y socialización" icon={Brain} color="bg-violet-50">
+      <Bloque title={t("ui.conductaSocial")} icon={Brain} color="bg-violet-50">
         <Field label="Contacto visual" value={d.contacto_visual} />
-        <Field label="Tipo de juego" value={d.juego} />
+        <Field label={t("ui.tipoJuego")} value={d.juego} />
         <Field label="Rabietas" value={d.rabietas} />
-        <Field label="Relación con pares" value={d.pares} />
+        <Field label={t("ui.relacionPares")} value={d.pares} />
       </Bloque>
       <AIBlock analysis={r.ai_analysis} />
     </div>
@@ -226,15 +226,15 @@ function EntornoDetail({ r }: { r: any }) {
     <div className="space-y-3">
       <Bloque title="Visita" icon={Home} color="bg-amber-50">
         <Field label="Personas presentes" value={d.personas_presentes} />
-        <Field label="Tipo de vivienda" value={d.tipo_vivienda} />
+        <Field label={t("ui.tipoVivienda")} value={d.tipo_vivienda} />
         <div className="col-span-2"><Field label="Comportamiento observado" value={d.comportamiento_observado} /></div>
-        <div className="col-span-2"><Field label="Diferencias con consultorio" value={d.diferencias_consultorio} /></div>
+        <div className="col-span-2"><Field label={t("ui.difConsultorio")} value={d.diferencias_consultorio} /></div>
       </Bloque>
-      <Bloque title="Análisis del entorno" icon={ClipboardList} color="bg-amber-50">
-        <div className="col-span-2"><Field label="Impresión general" value={d.impresion_general} /></div>
+      <Bloque title={t("ui.analisisEntorno")} icon={ClipboardList} color="bg-amber-50">
+        <div className="col-span-2"><Field label={t("ui.impresionGeneral")} value={d.impresion_general} /></div>
         <div className="col-span-2"><Field label="Barreras identificadas" value={d.barreras_identificadas} /></div>
       </Bloque>
-      <Bloque title="Recomendaciones para el hogar" icon={Home} color="bg-green-50">
+      <Bloque title={t("ui.recomendacionesHogar")} icon={Home} color="bg-green-50">
         <div className="col-span-2"><Field label="Mensaje a padres" value={d.mensaje_padres_entorno} /></div>
         <div className="col-span-2"><Field label={t("especialista.activCasa")} value={d.actividades_casa || d.actividades_sugeridas} /></div>
         <Field label="Espacio físico" value={d.recomendaciones_espacio} />

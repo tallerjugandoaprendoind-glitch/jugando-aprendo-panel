@@ -152,7 +152,7 @@ export default function LoginPage(props: PageProps) {
               </div>
               <div>
                 <p style={{ color: '#fff', fontWeight: 800, fontSize: 17, lineHeight: 1.1 }}>Jugando Aprendo</p>
-                <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 12 }}>Centro Terapéutico · Pisco</p>
+                <p style={{ color: 'rgba(255,255,255,.45)', fontSize: 12 }}>{t('auth.centroTerapeutico')}</p>
               </div>
             </div>
 
@@ -182,7 +182,7 @@ export default function LoginPage(props: PageProps) {
           </div>
 
           <div style={{ position: 'relative', zIndex: 10, borderTop: '1px solid rgba(255,255,255,.1)', paddingTop: 22 }}>
-            <p style={{ color: 'rgba(255,255,255,.3)', fontSize: 12 }}>© 2025 Jugando Aprendo · Pisco, Ica, Perú</p>
+            <p style={{ color: 'rgba(255,255,255,.3)', fontSize: 12 }}>{t('auth.copyright')}</p>
           </div>
         </div>
 
@@ -207,14 +207,14 @@ export default function LoginPage(props: PageProps) {
             <form onSubmit={handleSubmit}>
               {isSignUp && (
                 <div className="lp-field">
-                  <label>Nombre Completo</label>
+                  <label>{t('auth.nombreCompleto2')}</label>
                   <User size={15} className="lp-icon" />
-                  <input name="fullName" type="text" placeholder="Ej: María García" required />
+                  <input name="fullName" type="text" placeholder={t('auth.ejNombre')} required />
                 </div>
               )}
 
               <div className="lp-field">
-                <label>Correo Electrónico</label>
+                <label>{t('auth.correoElectronico')}</label>
                 <Mail size={15} className="lp-icon" />
                 <input name="email" type="email" placeholder="tu@correo.com" required />
               </div>
@@ -237,7 +237,7 @@ export default function LoginPage(props: PageProps) {
 
               {showForgotInfo && (
                 <div className="lp-forgot">
-                  <p>Comunícate con <strong>Jugando Aprendo</strong> y restablecerán tu acceso de inmediato.</p>
+                  <p>Comunícate con <strong>Jugando Aprendo</strong> {t('auth.restablecen')}</p>
                   <a href="https://wa.me/51924807183?text=Hola,%20olvidé%20mi%20contraseña." target="_blank" rel="noopener noreferrer">
                     <MessageCircle size={14} /> Contactar por WhatsApp
                   </a>
@@ -258,7 +258,7 @@ export default function LoginPage(props: PageProps) {
               </button>
             </form>
 
-            <div className="lp-sep"><span>o continúa con</span></div>
+            <div className="lp-sep"><span>{t('auth.oContinua')}</span></div>
 
             {/* Google OAuth */}
             <button
@@ -295,9 +295,9 @@ export default function LoginPage(props: PageProps) {
               <Lock size={10} /> Acceso cifrado y protegido
             </p>
             <p style={{ textAlign: 'center', fontSize: 11, color: '#d1d5db', marginTop: 8 }}>
-              <a href="/privacidad" style={{ color: '#9ca3af', textDecoration: 'none' }}>Política de Privacidad</a>
+              <a href="/privacidad" style={{ color: '#9ca3af', textDecoration: 'none' }}>{t('auth.politicaPriv')}</a>
               {' · '}
-              <a href="/terminos" style={{ color: '#9ca3af', textDecoration: 'none' }}>Términos de Servicio</a>
+              <a href="/terminos" style={{ color: '#9ca3af', textDecoration: 'none' }}>{t('auth.terminosServ')}</a>
             </p>
           </div>
         </div>

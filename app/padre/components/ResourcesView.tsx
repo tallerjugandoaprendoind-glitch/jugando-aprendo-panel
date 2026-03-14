@@ -107,7 +107,7 @@ export default function ResourcesView({ profile }: Props) {
             <span className="text-violet-200 text-xs font-black uppercase tracking-wider">{t('programas.materiales')}</span>
           </div>
           <h1 className="text-2xl font-black mb-1">{t('recursos.biblioteca2')}</h1>
-          <p className="text-violet-200 text-sm">Material educativo compartido por el equipo terapéutico</p>
+          <p className="text-violet-200 text-sm">{t('recursos.materialEducativo')}</p>
           <div className="flex items-center gap-4 mt-4">
             <div className="bg-white/15 rounded-2xl px-4 py-2 text-center">
               <p className="text-xl font-black">{resources.length}</p>

@@ -175,7 +175,7 @@ export default function WhatsAppQRPanel() {
       {/* Estado: error */}
       {status === 'error' && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-5">
-          <p className="text-sm font-bold text-red-700">❌ Error de conexión</p>
+          <p className="text-sm font-bold text-red-700">{t('ui.errorConexion')}</p>
           <p className="text-xs text-red-600 mt-1">{error}</p>
           <button
             onClick={checkStatus}

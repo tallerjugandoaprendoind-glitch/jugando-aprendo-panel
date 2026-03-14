@@ -480,7 +480,7 @@ function MonthlyCalendarView() {
               <div className="space-y-5">
                 {/* Tipo sesión */}
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Tipo de sesión</label>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{t('agenda.tipoSesion2')}</label>
                   <div className="grid grid-cols-2 gap-3">
                     {(['individual','grupal'] as const).map(tipo => (
                       <button key={tipo} onClick={()=>{setTipoSesion(tipo);setSelectedParticipants([]);setNewApt(p=>({...p,child_id:''}))}}
@@ -516,7 +516,7 @@ function MonthlyCalendarView() {
                 {/* Paciente / Grupo */}
                 {tipoSesion==='individual' && (
                   <div>
-                    <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Paciente *</label>
+                    <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{t('agenda.pacienteStar')}</label>
                     <select className="w-full p-4 rounded-xl text-sm font-bold outline-none focus:border-blue-500 transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} onChange={e=>setNewApt(p=>({...p,child_id:e.target.value}))} value={newApt.child_id}>
                       <option value="">{t('ui.select_patient_option')}</option>
                       {ninos.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
@@ -526,7 +526,7 @@ function MonthlyCalendarView() {
                 {tipoSesion==='grupal' && (
                   <>
                     <div>
-                      <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Nombre del grupo</label>
+                      <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{t('agenda.nombreGrupo')}</label>
                       <input type="text" placeholder="Ej: Grupo Habilidades Sociales A" className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.group_name} onChange={e=>setNewApt(p=>({...p,group_name:e.target.value}))}/>
                     </div>
                     <div>
@@ -553,11 +553,11 @@ function MonthlyCalendarView() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Fecha *</label>
+                    <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{t('agenda.fechaStar')}</label>
                     <input type="date" className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.date} onChange={e=>setNewApt(p=>({...p,date:e.target.value}))}/>
                   </div>
                   <div>
-                    <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Hora *</label>
+                    <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{t('agenda.horaStar')}</label>
                     <input type="time" className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.time} onChange={e=>setNewApt(p=>({...p,time:e.target.value}))}/>
                   </div>
                 </div>
@@ -595,7 +595,7 @@ function MonthlyCalendarView() {
                   </div>
                   {recurrencia !== 'none' && (
                     <div>
-                      <label className="text-[11px] font-bold mb-1 block" style={{ color: "var(--text-muted)" }}>Cantidad de repeticiones</label>
+                      <label className="text-[11px] font-bold mb-1 block" style={{ color: "var(--text-muted)" }}>{t('agenda.cantRepeticiones')}</label>
                       <select value={recurrenciaSemanas} onChange={e => setRecurrenciaSemanas(Number(e.target.value))}
                         className="w-full p-3 rounded-xl text-sm font-bold outline-none border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}>
                         {[2,3,4,6,8,12].map(n => <option key={n} value={n}>{n} citas ({recurrencia === 'weekly' ? `${n} semanas` : `${n*2} semanas`})</option>)}

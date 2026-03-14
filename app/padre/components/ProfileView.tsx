@@ -8,6 +8,7 @@ import {
 import { InfoRow, HelpItem } from './shared'
 
 function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy, onHelp }: any) {
+  const { t } = useI18n()
     const initial = profile?.full_name ? profile.full_name.charAt(0) : 'U';
     const name = profile?.full_name || 'Usuario';
     const email = profile?.email || 'Correo no disponible';
@@ -27,8 +28,8 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
                 <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
                     <span>📱</span>
                     {phone !== 'No registrado'
-                      ? <span className="text-green-600 font-semibold">{phone} <span className="text-[10px] text-green-400">(WhatsApp activo)</span></span>
-                      : <span className="text-amber-500 font-medium">Agregá tu WhatsApp para recibir alertas</span>
+                      ? <span className="text-green-600 font-semibold">{phone} <span className="text-[10px] text-green-400">{t('familias.whatsappActivo')}</span></span>
+                      : <span className="text-amber-500 font-medium">{t('familias.agregaWsp')}</span>
                     }
                 </p>
              </div>
@@ -85,9 +86,9 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
              </div>
 
              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-3xl border border-blue-100">
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">Versión de la app</p>
+                <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">{t('familias.versionApp')}</p>
                 <p className="text-2xl font-black text-slate-800">2.0.0</p>
-                <p className="text-sm text-slate-500 mt-2">Última actualización: Febrero 2026</p>
+                <p className="text-sm text-slate-500 mt-2">{t('familias.ultimaActualizacion')}</p>
              </div>
         </div>
     )

@@ -50,7 +50,7 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
     cargar()
   }, [childId])
 
-  if (loading) return <div className="flex items-center gap-2 py-8 justify-center text-slate-400" style={{ color: "var(--text-muted)" }}><Loader2 className="animate-spin" size={20}/> Cargando historial...</div>
+  if (loading) return <div className="flex items-center gap-2 py-8 justify-center text-slate-400" style={{ color: "var(--text-muted)" }}><Loader2 className="animate-spin" size={20}/> {t('pacientes.cargandoHist')}</div>
 
   return (
     <div className="space-y-3">
@@ -62,7 +62,7 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
         <div className="py-8 text-center">
           <ClipboardList className="mx-auto text-slate-200 mb-2" size={36}/>
           <p className="text-slate-400 text-sm font-bold">{t('ui.no_evaluations')}</p>
-          <p className="text-slate-300 text-xs mt-1">Las evaluaciones aparecerán aquí al crearlas desde el módulo de Evaluaciones</p>
+          <p className="text-slate-300 text-xs mt-1">{t('pacientes.evalsAparecen')}</p>
         </div>
       ) : evaluaciones.map((ev, i) => (
         <div key={ev.id || i} className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-start gap-3">
@@ -275,8 +275,8 @@ function PatientsView() {
                     </div>
                     <div className="md:col-span-3">
                         <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-green-500 focus:bg-white transition-all font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>
-                            <option value="nombre">📊 Por Nombre</option>
-                            <option value="edad">🎂 Por Edad</option>
+                            <option value="nombre">{t('pacientes.porNombre2')}</option>
+                            <option value="edad">{t('pacientes.porEdad')}</option>
                             <option value="reciente">{t('ui.most_recent')}</option>
                         </select>
                     </div>
@@ -438,7 +438,7 @@ function PatientsView() {
                             {isEditing && (
                                 <div className="space-y-4 animate-fade-in">
                                     <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Nombre Completo</label>
+                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('pacientes.nombreCompleto')}</label>
                                         <input 
                                             type="text" 
                                             value={editForm.name} 
@@ -449,7 +449,7 @@ function PatientsView() {
                                     
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Fecha Nacimiento</label>
+                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('pacientes.fechaNacimiento2')}</label>
                                             <input 
                                                 type="date" 
                                                 value={editForm.birth_date} 

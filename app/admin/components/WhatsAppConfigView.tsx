@@ -133,12 +133,12 @@ export default function WhatsAppConfigView() {
       {tab === 'telegram' && (
         <div className="space-y-4">
           <div className="rounded-xl bg-green-50 border border-green-200 p-4">
-            <p className="text-sm font-bold text-green-800 mb-1">¿Por qué Telegram?</p>
+            <p className="text-sm font-bold text-green-800 mb-1">{t('ui.porqueTelegram')}</p>
             <ul className="text-xs text-green-700 space-y-1">
               <li>{t('ui.whatsapp_free')}</li>
               <li>✅ No requiere verificar empresa ni esperar aprobaciones</li>
               <li>{t('ui.whatsapp_peruvian')}</li>
-              <li>✅ Listo en 3 minutos desde el celular</li>
+              <li>{t('ui.listoMinutos')}</li>
             </ul>
           </div>
 
@@ -205,15 +205,15 @@ export default function WhatsAppConfigView() {
           <div className="rounded-xl bg-blue-50 border border-blue-200 p-4">
             <p className="text-sm font-bold text-blue-800 mb-1">Meta WhatsApp Cloud API</p>
             <ul className="text-xs text-blue-700 space-y-1">
-              <li>✅ 1.000 conversaciones de servicio/mes gratis</li>
-              <li>✅ Notifica directamente al WhatsApp de cualquier usuario</li>
+              <li>{t('ui.milConversaciones')}</li>
+              <li>{t('ui.notificaWhatsApp')}</li>
               <li>{t('ui.whatsapp_meta_warning')}</li>
-              <li>⚠️ Las plantillas deben ser aprobadas por Meta</li>
+              <li>{t('ui.plantillasAprobadas')}</li>
             </ul>
           </div>
 
           <div className="rounded-xl border p-5 space-y-3" style={{ borderColor: 'var(--card-border)', background: 'var(--card)' }}>
-            <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>Variables de entorno</p>
+            <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{t('ui.varEntorno')}</p>
             <div className="flex items-start gap-2">
               <code className="text-xs bg-slate-100 text-slate-700 px-2 py-2 rounded font-mono flex-1 whitespace-pre leading-relaxed">
                 {`META_WA_PHONE_ID = (de Meta Developer Console)\nMETA_WA_TOKEN    = (token de acceso permanente)`}
@@ -235,7 +235,7 @@ export default function WhatsAppConfigView() {
 
       {/* Triggers activos */}
       <div className="rounded-xl border p-5" style={{ borderColor: 'var(--card-border)', background: 'var(--card)' }}>
-        <p className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>🔔 Qué dispara una notificación</p>
+        <p className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>{t('ui.queDisparaNotif')}</p>
         <div className="grid grid-cols-2 gap-2">
           {[
             { icon: '📅', label: 'Cita agendada',      active: true },

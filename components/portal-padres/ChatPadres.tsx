@@ -97,7 +97,7 @@ export default function ChatPadres({ childId, parentUserId, childName }: ChatPad
           </div>
           <div className="ml-auto flex items-center gap-1">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-xs text-blue-100">En línea</span>
+            <span className="text-xs text-blue-100">{t('familias.enLinea')}</span>
           </div>
         </div>
       </div>

@@ -47,14 +47,14 @@ export default function AgendaView({ selectedChild }: { selectedChild?: any }) {
           <Calendar size={20}/>
           <h2 className="text-lg font-black">Citas de {selectedChild?.name}</h2>
         </div>
-        <p className="text-violet-200 text-sm">Programadas por el equipo del centro de terapia.</p>
+        <p className="text-violet-200 text-sm">{t('agenda.programadasEquipo')}</p>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 flex items-start gap-3">
         <Phone size={15} className="text-blue-500 shrink-0 mt-0.5"/>
         <div>
           <p className="text-sm font-bold text-blue-700">{t('agenda.necesitasCambiar')}</p>
-          <p className="text-xs text-blue-600 mt-0.5">Contactá directamente al centro — te ayudarán a coordinar el horario.</p>
+          <p className="text-xs text-blue-600 mt-0.5">{t('agenda.contactaCentro')}</p>
           <div className="flex gap-3 mt-2">
             <a href="tel:+51924807183" className="text-xs font-bold text-blue-700 flex items-center gap-1 hover:underline">
               <Phone size={11}/> +51 924 807 183

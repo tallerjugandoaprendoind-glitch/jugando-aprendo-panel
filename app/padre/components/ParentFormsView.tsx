@@ -125,7 +125,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
       <div className="bg-white rounded-3xl p-8 text-center max-w-sm w-full shadow-2xl">
         <div className="text-5xl mb-4">⚠️</div>
         <h3 className="font-black text-slate-800 text-lg mb-2">{t('ui.form_not_available')}</h3>
-        <p className="text-slate-500 text-sm mb-2">El tipo <strong className="text-red-500">"{form.form_type}"</strong> no se encontró en el sistema.</p>
+        <p className="text-slate-500 text-sm mb-2">El tipo <strong className="text-red-500">"{form.form_type}"</strong> {t('familias.noEncontradoSist')}</p>
         <p className="text-slate-400 text-xs mb-6">{t('evaluaciones.administradorAsigne')}</p>
         <button onClick={onClose} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">{t('common.cerrar')}</button>
       </div>
@@ -427,7 +427,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
           </div>
           Mi Centro
         </h2>
-        <p className="text-slate-500 text-sm">Formularios y materiales del equipo terapéutico</p>
+        <p className="text-slate-500 text-sm">{t('familias.formsMateriales')}</p>
       </div>
 
       {/* Tab navigation */}
@@ -529,7 +529,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
                 <FileText size={40} className="text-indigo-300"/>
               </div>
               <h3 className="font-bold text-slate-600 text-lg mb-1">{t('ui.no_forms_yet')}</h3>
-              <p className="text-slate-400 text-sm max-w-xs">El equipo terapéutico enviará formularios cuando sea necesario</p>
+              <p className="text-slate-400 text-sm max-w-xs">{t('familias.equipoEnviara')}</p>
             </div>
           )}
         </div>
@@ -542,7 +542,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
                 <BookOpen size={40} className="text-violet-300"/>
               </div>
               <h3 className="font-bold text-slate-600 text-lg mb-1">{t('ui.no_materials')}</h3>
-              <p className="text-slate-400 text-sm max-w-xs">Aquí aparecerán videos, guías y recursos que comparta el equipo terapéutico</p>
+              <p className="text-slate-400 text-sm max-w-xs">{t('familias.recursosAparecen')}</p>
             </div>
           ) : (
             <>

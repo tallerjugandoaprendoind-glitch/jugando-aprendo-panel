@@ -364,7 +364,7 @@ function DynamicEvaluationsView() {
                    <Activity size={40} className="md:w-16 md:h-16" strokeWidth={2.5}/>
                 </div>
                 <h3 className="text-2xl md:text-3xl font-black text-slate-800 mb-3 md:mb-4 tracking-tight">Registro ABA</h3>
-                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">Sistema completo con análisis ABC y métricas</p>
+                <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">{t('evaluaciones.sistemaCompleto')}</p>
                 <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
                   <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold">IA Pro</span>
                 </div>

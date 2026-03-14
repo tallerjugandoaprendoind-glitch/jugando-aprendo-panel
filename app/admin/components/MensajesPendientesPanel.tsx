@@ -198,7 +198,7 @@ export default function MensajesPendientesPanel() {
              statusFilter === 'approved' ? 'No hay mensajes enviados aún' : 'Sin mensajes descartados'}
           </p>
           {statusFilter === 'pending_approval' && (
-            <p className="text-xs text-slate-300 mt-1">Los mensajes aparecerán aquí cuando la IA los genere</p>
+            <p className="text-xs text-slate-300 mt-1">{t('mensajes.aparecenAqui')}</p>
           )}
         </div>
       ) : (
@@ -273,7 +273,7 @@ export default function MensajesPendientesPanel() {
                           )}
                           {analysis.areas_trabajo?.length > 0 && (
                             <div>
-                              <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2">🎯 Áreas de Trabajo</p>
+                              <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest mb-2">{t('mensajes.areasTrabajar')}</p>
                               <ul className="space-y-1">
                                 {analysis.areas_trabajo.slice(0,3).map((a: string, i: number) => (
                                   <li key={i} className="text-xs text-slate-600 bg-orange-50 rounded-lg p-2 border border-orange-100">• {a}</li>
@@ -298,7 +298,7 @@ export default function MensajesPendientesPanel() {
 
                         {analysis.recomendaciones?.length > 0 && (
                           <div>
-                            <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">💡 Recomendaciones Terapéuticas</p>
+                            <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest mb-2">{t('mensajes.recomendaciones')}</p>
                             <ul className="space-y-1">
                               {analysis.recomendaciones.slice(0,3).map((r: string, i: number) => (
                                 <li key={i} className="text-xs text-slate-600 bg-violet-50 rounded-lg p-2 border border-violet-100">• {r}</li>

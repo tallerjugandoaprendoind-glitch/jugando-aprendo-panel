@@ -149,7 +149,7 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
       {tareas.length === 0 && (
         <div className="text-center py-12">
           <p className="text-4xl mb-3">🎉</p>
-          <p className="text-gray-500 font-medium">¡Sin tareas pendientes!</p>
+          <p className="text-gray-500 font-medium">{t('familias.sinTareasPend')}</p>
           <p className="text-gray-400 text-sm mt-1">El terapeuta asignará nuevas actividades después de la próxima sesión.</p>
         </div>
       )}
@@ -158,11 +158,11 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
       {modalAbierto && tareaSeleccionada && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4">
-            <h3 className="font-bold text-gray-800">¡Completaste la tarea!</h3>
+            <h3 className="font-bold text-gray-800">{t('familias.completasteTarea')}</h3>
             <p className="text-gray-600 text-sm">"{tareaSeleccionada.titulo}"</p>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">¿Cómo fue la dificultad?</label>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">{t('familias.comoDificultad')}</label>
               <div className="grid grid-cols-3 gap-2">
                 {['facil', 'moderado', 'dificil'].map(d => (
                   <button key={d} onClick={() => completarTarea(tareaSeleccionada.id, d)}

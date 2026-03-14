@@ -217,7 +217,7 @@ export default function KnowledgeBaseView() {
           </div>
           <div className="flex-1">
             <h2 className="text-xl md:text-2xl font-black">Cerebro IA</h2>
-            <p className="text-violet-200 text-sm mt-1">Base de conocimiento especializada en ABA, TEA y neurodivergencia</p>
+            <p className="text-violet-200 text-sm mt-1">{t('ui.baseConocimiento')}</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-5">
@@ -256,7 +256,7 @@ export default function KnowledgeBaseView() {
           <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <Cpu size={16} className="text-violet-600" />
-              <span className="font-bold text-violet-800 text-sm">¿Cómo funciona el aprendizaje automático?</span>
+              <span className="font-bold text-violet-800 text-sm">{t('ui.comoFuncAuto')}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {[
@@ -298,7 +298,7 @@ export default function KnowledgeBaseView() {
                 <textarea
                   value={keywords}
                   onChange={e => setKeywords(e.target.value)}
-                  placeholder="Ejemplos: reforzamiento positivo, comunicación AAC, habilidades sociales TEA..."
+                  placeholder="{t('ui.ejemplosRefuerzo')}"
                   className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
                   rows={3}
                   disabled={aprendiendo}
@@ -342,10 +342,10 @@ export default function KnowledgeBaseView() {
                   disabled={aprendiendo}
                 />
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                  <p className="text-xs text-blue-700 font-bold mb-1">¿Qué tipo de URLs funcionan?</p>
-                  <p className="text-[11px] text-blue-600">✅ Artículos y blogs públicos · Wikipedia · PDFs en internet</p>
-                  <p className="text-[11px] text-blue-600">✅ Páginas de organizaciones ABA (BACB, ABAI, etc.)</p>
-                  <p className="text-[11px] text-slate-400">❌ Páginas que requieren login · JavaScript dinámico</p>
+                  <p className="text-xs text-blue-700 font-bold mb-1">{t('ui.queTipoURLs')}</p>
+                  <p className="text-[11px] text-blue-600">{t('ui.urlsPublicas')}</p>
+                  <p className="text-[11px] text-blue-600">{t('ui.urlsOrg')}</p>
+                  <p className="text-[11px] text-slate-400">{t('ui.urlsNoFuncionan')}</p>
                 </div>
               </div>
             )}
@@ -383,7 +383,7 @@ export default function KnowledgeBaseView() {
             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 size={20} className="text-emerald-500" />
-                <span className="font-black text-emerald-800">¡Aprendizaje completado!</span>
+                <span className="font-black text-emerald-800">{t('ui.aprendizajeComp')}</span>
               </div>
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {[
@@ -402,7 +402,7 @@ export default function KnowledgeBaseView() {
               </p>
               {resultadoAprender.terminos?.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-[11px] font-bold text-emerald-700 mb-1.5">Términos aprendidos:</p>
+                  <p className="text-[11px] font-bold text-emerald-700 mb-1.5">{t('ui.terminosAprendidos')}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {resultadoAprender.terminos.map((t: string, i: number) => (
                       <span key={i} className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{t}</span>
@@ -468,7 +468,7 @@ export default function KnowledgeBaseView() {
               </div>
 
               <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                placeholder="Título del documento *"
+                placeholder="{t('ui.tituloDoc')}"
                 value={form.titulo} onChange={e => setForm(p => ({ ...p, titulo: e.target.value }))} />
 
               <div className="flex gap-2">
@@ -503,7 +503,7 @@ export default function KnowledgeBaseView() {
 
               {inputMode === 'texto' && (
                 <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"
-                  placeholder="Pega aquí el contenido del documento..."
+                  placeholder="{t('ui.pegaContenido')}"
                   rows={6} value={form.texto} onChange={e => setForm(p => ({ ...p, texto: e.target.value }))} />
               )}
 
@@ -511,7 +511,7 @@ export default function KnowledgeBaseView() {
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <input className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                      placeholder="Buscar libro en Archive.org..." value={busqueda}
+                      placeholder="{t('ui.buscarArchive')}" value={busqueda}
                       onChange={e => setBusqueda(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && buscarLibros()} />
                     <button onClick={buscarLibros} disabled={buscando}
@@ -533,7 +533,7 @@ export default function KnowledgeBaseView() {
               )}
 
               <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"
-                placeholder="Descripción (opcional)" rows={2}
+                placeholder="{t('ui.descripcionOpcional')}" rows={2}
                 value={form.descripcion} onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))} />
 
               <button onClick={handleUpload} disabled={uploading}
@@ -550,8 +550,8 @@ export default function KnowledgeBaseView() {
           ) : documentos.length === 0 ? (
             <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-10 text-center">
               <Brain size={32} className="text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-400 font-semibold">Biblioteca vacía</p>
-              <p className="text-slate-400 text-sm mt-1">Usa "Aprender de Internet" para empezar</p>
+              <p className="text-slate-400 font-semibold">{t('ui.baseVacia')}</p>
+              <p className="text-slate-400 text-sm mt-1">{t('ui.usarAprender')}</p>
             </div>
           ) : (
             <div className="space-y-2">

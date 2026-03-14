@@ -362,7 +362,7 @@ export default function ReportGenerator({
           {isLoadingReportes ? (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-slate-400">
               <Loader2 className="animate-spin" size={32} />
-              <p className="text-sm font-bold">Cargando reportes...</p>
+              <p className="text-sm font-bold">{t('common.cargandoReportes')}</p>
             </div>
 
           ) : reportes.length === 0 ? (

@@ -324,7 +324,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
           {false && (
           <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{t('dashboard.cargarCreditos')}</p>
-            <p className="text-xs text-slate-400 mb-3">Total en circulación: <strong className="text-slate-700">{stats.creditosActivos}</strong></p>
+            <p className="text-xs text-slate-400 mb-3">{t('dashboard.totalCirculacion')} <strong className="text-slate-700">{stats.creditosActivos}</strong></p>
             <input
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 mb-3 font-medium"
               placeholder="email@familia.com"

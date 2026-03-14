@@ -137,7 +137,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
         ) : Object.keys(porFecha).length === 0 ? (
           <div className="text-center py-12">
             <p className="text-3xl mb-3">📅</p>
-            <p className="text-gray-500">Sin sesiones en este período</p>
+            <p className="text-gray-500">{t('agenda.sinSesiones2')}</p>
           </div>
         ) : Object.entries(porFecha).sort().map(([fecha, ses]) => (
           <div key={fecha}>
@@ -186,7 +186,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
             </div>
             {modal.notas && <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 italic">{modal.notas}</p>}
             <div>
-              <p className="text-xs text-gray-500 font-medium mb-2">Cambiar estado:</p>
+              <p className="text-xs text-gray-500 font-medium mb-2">{t('agenda.cambiarEstado')}</p>
               <div className="grid grid-cols-2 gap-2">
                 {Object.entries(ESTADOS).map(([estado, cfg]) => (
                   <button key={estado} onClick={() => actualizarEstado(modal.id, estado)}
@@ -213,37 +213,37 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
                 <div>
                   <label className="text-xs font-medium text-gray-600 mb-1 block">Child ID del paciente</label>
                   <input value={formNueva.child_id} onChange={e => setFormNueva(f => ({ ...f, child_id: e.target.value }))}
-                    placeholder="UUID del paciente"
+                    placeholder={t('agenda.uuidPaciente')}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
                 </div>
               )}
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Terapeuta ID</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.terapeutaIdLabel')}</label>
                 <input value={formNueva.terapeuta_id} onChange={e => setFormNueva(f => ({ ...f, terapeuta_id: e.target.value }))}
                   placeholder="UUID del terapeuta"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">Fecha</label>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.fechaLabel')}</label>
                   <input type="date" value={formNueva.fecha} onChange={e => setFormNueva(f => ({ ...f, fecha: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">Hora inicio</label>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.horaInicioLabel')}</label>
                   <input type="time" value={formNueva.hora_inicio} onChange={e => setFormNueva(f => ({ ...f, hora_inicio: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">Tipo</label>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.tipoLabel')}</label>
                   <select value={formNueva.tipo} onChange={e => setFormNueva(f => ({ ...f, tipo: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400">
                     <option value="individual">Individual</option>
                     <option value="grupal">Grupal</option>
                     <option value="domiciliaria">Domiciliaria</option>
-                    <option value="evaluacion">Evaluación</option>
+                    <option value="evaluacion">{t('agenda.evaluacionOpt')}</option>
                   </select>
                 </div>
                 <div>

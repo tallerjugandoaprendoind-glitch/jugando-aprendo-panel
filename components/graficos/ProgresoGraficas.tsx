@@ -154,7 +154,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
             </button>
             {selector && (
               <div className="absolute right-0 top-11 z-30 rounded-2xl shadow-2xl p-2 w-52" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-                <p className="text-[10px] font-black uppercase tracking-wider px-2 py-1.5" style={{ color: "var(--text-muted)" }}>Tipo de gráfico</p>
+                <p className="text-[10px] font-black uppercase tracking-wider px-2 py-1.5" style={{ color: "var(--text-muted)" }}>{t('ui.tipoGrafico')}</p>
                 {TIPOS.map(t => (
                   <button key={t.id} onClick={() => { setTipo(t.id); setSelector(false) }}
                     className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all' style={{ background: tipo === t.id ? 'rgba(109,40,217,0.15)' : 'transparent', color: tipo === t.id ? '#a78bfa' : 'var(--text-secondary)' }}>
@@ -320,7 +320,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* PIE CHART */}
           {tipo === 'pie' && (
             pieData.length === 0
-              ? <p className="text-center text-slate-400 py-8 text-sm">Sin datos para mostrar</p>
+              ? <p className="text-center text-slate-400 py-8 text-sm">{t('ui.sinDatosMostrar')}</p>
               : <div className="flex items-center gap-4">
                   <ResponsiveContainer width="55%" height={200}>
                     <PieChart>
@@ -331,7 +331,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="flex-1 space-y-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Distribución</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">{t('ui.distribucion')}</p>
                     {histo.map(h => (
                       <div key={h.rango} className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: h.color }} />
@@ -379,7 +379,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* Detalle de sesiones (click) */}
           {['lineas','barras','combinado'].includes(tipo) && (
             <div className="mt-4 border-t border-slate-100 pt-3">
-              <p className="text-[10px] font-black uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>Sesiones — clic para ver detalle</p>
+              <p className="text-[10px] font-black uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>{t('ui.sesionesClic')}</p>
               <div className="flex gap-2 flex-wrap">
                 {graficaABA.map((s: any, i: number) => (
                   <button key={i} onClick={() => setDetalle(detalle?.fecha === s.fecha ? null : s)}
@@ -414,8 +414,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
       ) : (
         <div className="text-center py-16 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <p className="text-5xl mb-3">📊</p>
-          <p className="text-sm font-bold" style={{ color: "var(--text-secondary)" }}>Sin sesiones en este período</p>
-          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Registrá sesiones ABA para ver el progreso</p>
+          <p className="text-sm font-bold" style={{ color: "var(--text-secondary)" }}>{t('ui.sinSesiones2')}</p>
+          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{t('ui.registraSesiones')}</p>
         </div>
       )}
 
@@ -434,7 +434,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
       {/* Evaluaciones */}
       {!modoParent && evaluaciones && Object.keys(evaluaciones).length > 0 && (
         <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-          <h3 className="font-black text-slate-700 text-sm mb-3">🧪 Evaluaciones neuropsicológicas</h3>
+          <h3 className="font-black text-slate-700 text-sm mb-3">{t('ui.evalsNeurop')}</h3>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(evaluaciones).map(([nombre, d]: [string, any]) => (
               <div key={nombre} className="flex items-center gap-2 p-2.5 bg-violet-50 rounded-xl border border-violet-100">

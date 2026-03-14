@@ -368,7 +368,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
       </div>
 
       {/* Preguntas rápidas */}
-      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">¿Por dónde empezamos?</p>
+      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('aria.dondeEmpezamos')}</p>
       <div className="flex flex-col gap-2 w-full max-w-sm">
         {quick.map(({ icon, text, color, border }) => (
           <button key={text} onClick={() => onQuickSend(text)}
@@ -605,7 +605,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
             </div>
             <div className="flex-1">
               <p className="text-sm font-black text-red-700">Escuchando...</p>
-              <p className="text-xs text-red-500 font-medium">Habla ahora, enviaré tu mensaje automáticamente</p>
+              <p className="text-xs text-red-500 font-medium">{t('aria.hablaAhora')}</p>
             </div>
             <button onClick={stopListening}
               className="p-1.5 rounded-xl bg-red-100 hover:bg-red-200 transition-all">
@@ -714,7 +714,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
             {speaking ? (
               <button
                 onClick={stopSpeaking}
-                title="Detener voz de ARIA"
+                title={t('aria.detenerVoz')}
                 className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
                 style={{
                   background: 'linear-gradient(135deg,#6366f1,#7c3aed)',
