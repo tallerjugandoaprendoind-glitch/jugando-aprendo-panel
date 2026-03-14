@@ -5,13 +5,9 @@
 // Ubicación: components/ReportGenerator.tsx
 // ==============================================================================
 
-'use client'
-
 import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect } from 'react'
-import { useI18n } from '@/lib/i18n-context'
 import { supabase } from '@/lib/supabase'
-import { useI18n } from '@/lib/i18n-context'
 import {
   FileText, Download, Trash2, Loader2, FileDown, Eye,
   AlertCircle, Clock, CheckCircle2, Sparkles, RefreshCw,
