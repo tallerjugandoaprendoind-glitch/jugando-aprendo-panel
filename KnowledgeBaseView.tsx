@@ -486,7 +486,7 @@ export default function KnowledgeBaseView() {
                   <Upload size={20} className="text-slate-400 mx-auto mb-2" />
                   {selectedFile
                     ? <p className="text-sm font-semibold text-slate-700">{selectedFile.name}</p>
-                    : <p className="text-sm text-slate-400">Click para seleccionar PDF o TXT</p>}
+                    : <p className="text-sm text-slate-400">{t('ui.clickSelecPDF2')}</p>}
                   <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt,.doc,.docx"
                     onChange={e => {
                       const f = e.target.files?.[0]

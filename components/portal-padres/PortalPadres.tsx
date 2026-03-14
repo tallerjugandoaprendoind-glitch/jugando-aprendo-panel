@@ -150,9 +150,9 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
             <p className="font-semibold text-gray-700 text-sm">{t('familias.resumen4Semanas')}</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <MiniStat icono="✅" valor={datos.progreso.asistencia.asistidas} label="Sesiones" color="blue" />
-            <MiniStat icono="📋" valor={`${datos.progreso.tareas.adherencia}%`} label="Tareas" color="orange" />
-            <MiniStat icono="📈" valor={`${datos.progreso.asistencia.tasa}%`} label="Asistencia" color="green" />
+            <MiniStat icono="✅" valor={datos.progreso.asistencia.asistidas} label={t("ui.sesionesLabel2")} color="blue" />
+            <MiniStat icono="📋" valor={`${datos.progreso.tareas.adherencia}%`} label={t("ui.tareasLabel2")} color="orange" />
+            <MiniStat icono="📈" valor={`${datos.progreso.asistencia.tasa}%`} label={t("ui.asistenciaLabel2")} color="green" />
           </div>
         </div>
       )}

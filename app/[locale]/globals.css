@@ -1,0 +1,454 @@
+@import "tailwindcss";
+
+/* ============================================================
+   CSS VARIABLES - LIGHT & DARK
+   ============================================================ */
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+  --card: #ffffff;
+  --card-border: #e2e8f0;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #f1f5f9;
+  --input-bg: #f8fafc;
+  --input-border: #e2e8f0;
+  --muted: #94a3b8;
+  --muted-bg: #f1f5f9;
+  --primary: #7c3aed;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.10);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;  /* dark gray — más visible */
+}
+
+.dark {
+  --background: #0d1117;
+  --foreground: #e2e8f0;
+  --card: #161b22;
+  --card-border: #21262d;
+  --sidebar-bg: #0d1117;
+  --sidebar-border: #21262d;
+  --input-bg: #21262d;
+  --input-border: #30363d;
+  --muted: #6b7280;
+  --muted-bg: #21262d;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.6);
+  --text-primary: #e2e8f0;
+  --text-secondary: #94a3b8;
+  --text-muted: #9ca3af;  /* dark mode — más visible */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+/* ============================================================
+   DARK MODE — solo afecta admin-content y modales fixed
+   NO usa !important para no romper dark: de Tailwind
+   ============================================================ */
+
+/* Fondo principal */
+.dark .admin-content {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Cards blancas — solo dentro de admin y modales */
+.dark .admin-content .bg-white,
+.dark .fixed > .bg-white,
+.dark .fixed > div > .bg-white {
+  background-color: var(--card) !important;
+}
+
+/* Fondos slate — sin tocar dark:bg-* de Tailwind */
+.dark .admin-content .bg-slate-50:not([class*="dark:"]),
+.dark .admin-content .bg-slate-100:not([class*="dark:"]) {
+  background-color: var(--muted-bg) !important;
+}
+
+
+/* CRÍTICO: Preservar inline styles — los !important del CSS global NO deben
+   sobreescribir background/color definidos como atributos style= en el HTML.
+   Los estilos inline tienen mayor especificidad que cualquier clase CSS. */
+
+/* Asegurarse que bg-slate-700 y bg-slate-800 NO se sobreescriban en dark */
+.dark .admin-content .bg-slate-700 { background-color: #334155 !important; }
+.dark .admin-content .bg-slate-800 { background-color: #1e293b !important; }
+.dark .admin-content .bg-slate-900 { background-color: #0f172a !important; }
+
+/* Borders */
+.dark .admin-content .border-slate-100:not([class*="dark:"]),
+.dark .fixed .border-slate-100:not([class*="dark:"]) {
+  border-color: var(--card-border) !important;
+}
+.dark .admin-content .border-slate-200:not([class*="dark:"]),
+.dark .fixed .border-slate-200:not([class*="dark:"]) {
+  border-color: var(--input-border) !important;
+}
+
+/* Texto — el global sólo actúa si no hay dark: variant explícita */
+.dark .admin-content .text-slate-800:not([class*="dark:"]),
+.dark .fixed .text-slate-800:not([class*="dark:"]) {
+  color: var(--text-primary) !important;
+}
+.dark .admin-content .text-slate-700:not([class*="dark:"]),
+.dark .fixed .text-slate-700:not([class*="dark:"]) {
+  color: var(--text-secondary) !important;
+}
+.dark .admin-content .text-slate-600:not([class*="dark:"]),
+.dark .fixed .text-slate-600:not([class*="dark:"]) {
+  color: var(--text-secondary) !important;
+}
+.dark .admin-content .text-slate-500:not([class*="dark:"]) {
+  color: var(--text-muted) !important;
+}
+.dark .admin-content .text-slate-400:not([class*="dark:"]) {
+  color: #6b7280 !important;
+}
+.dark .admin-content .text-slate-900:not([class*="dark:"]),
+.dark .fixed .text-slate-900:not([class*="dark:"]) {
+  color: var(--foreground) !important;
+}
+
+/* Hovers */
+.dark .admin-content .hover\:bg-slate-50:hover,
+.dark .admin-content .hover\:bg-slate-100:hover {
+  background-color: var(--muted-bg) !important;
+}
+
+/* Inputs — solo los que NO tienen dark: prefix ya */
+.dark .admin-content input:not([class*="dark:"]),
+.dark .admin-content select:not([class*="dark:"]),
+.dark .admin-content textarea:not([class*="dark:"]),
+.dark .fixed input:not([class*="dark:"]),
+.dark .fixed select:not([class*="dark:"]),
+.dark .fixed textarea:not([class*="dark:"]) {
+  background-color: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+}
+.dark .admin-content input::placeholder,
+.dark .admin-content textarea::placeholder,
+.dark .fixed input::placeholder,
+.dark .fixed textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Tables */
+.dark .admin-content thead,
+.dark .admin-content thead th {
+  background-color: var(--muted-bg) !important;
+  color: var(--text-muted) !important;
+}
+
+/* Status badges - ajustados para dark sin perder color */
+.dark .admin-content .bg-emerald-50:not([class*="dark:"]) {
+  background-color: rgba(6,78,59,0.25) !important;
+}
+.dark .admin-content .bg-amber-50:not([class*="dark:"]) {
+  background-color: rgba(92,57,0,0.25) !important;
+}
+.dark .admin-content .bg-red-50:not([class*="dark:"]) {
+  background-color: rgba(127,29,29,0.25) !important;
+}
+.dark .admin-content .bg-violet-50:not([class*="dark:"]) {
+  background-color: rgba(109,40,217,0.18) !important;
+}
+.dark .admin-content .bg-blue-50:not([class*="dark:"]) {
+  background-color: rgba(29,78,216,0.18) !important;
+}
+.dark .admin-content .bg-indigo-50:not([class*="dark:"]) {
+  background-color: rgba(55,48,163,0.18) !important;
+}
+.dark .admin-content .bg-purple-50:not([class*="dark:"]),
+.dark .admin-content .bg-purple-100:not([class*="dark:"]) {
+  background-color: rgba(109,40,217,0.18) !important;
+}
+.dark .admin-content .bg-blue-100:not([class*="dark:"]) {
+  background-color: rgba(29,78,216,0.18) !important;
+}
+.dark .admin-content .bg-slate-800:not([class*="dark:"]) {
+  background-color: var(--muted-bg) !important;
+}
+
+/* Badge text colors */
+.dark .admin-content .text-emerald-700:not([class*="dark:"]) { color: #6ee7b7 !important; }
+.dark .admin-content .text-amber-700:not([class*="dark:"])   { color: #fcd34d !important; }
+.dark .admin-content .text-red-700:not([class*="dark:"])     { color: #fca5a5 !important; }
+.dark .admin-content .text-blue-700:not([class*="dark:"])    { color: #93c5fd !important; }
+.dark .admin-content .text-purple-700:not([class*="dark:"])  { color: #c4b5fd !important; }
+.dark .admin-content .text-violet-700:not([class*="dark:"])  { color: #c4b5fd !important; }
+
+/* Borders de badges */
+.dark .admin-content .border-emerald-200:not([class*="dark:"]) { border-color: #065f46 !important; }
+.dark .admin-content .border-amber-200:not([class*="dark:"])   { border-color: #78350f !important; }
+.dark .admin-content .border-red-200:not([class*="dark:"])     { border-color: #7f1d1d !important; }
+
+/* Divide */
+.dark .admin-content .divide-slate-50 > * + *,
+.dark .admin-content .divide-y > * + * {
+  border-color: var(--card-border) !important;
+}
+
+/* Modales fixed */
+.dark .fixed .bg-white {
+  background-color: var(--card) !important;
+}
+.dark .fixed .bg-slate-50:not([class*="dark:"]) {
+  background-color: var(--muted-bg) !important;
+}
+.dark .fixed .text-slate-700:not([class*="dark:"]),
+.dark .fixed .text-slate-800:not([class*="dark:"]) {
+  color: var(--text-primary) !important;
+}
+.dark .fixed .hover\:bg-slate-100:hover {
+  background-color: var(--muted-bg) !important;
+}
+
+/* ============================================================
+   GLASS MORPHISM
+   ============================================================ */
+.glass { background: rgba(255,255,255,0.7); backdrop-filter: blur(12px); }
+.dark .glass { background: rgba(22,27,34,0.9); }
+
+/* ============================================================
+   CARD PRO
+   ============================================================ */
+.card-pro {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.card-pro:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+
+/* ============================================================
+   ANIMACIONES
+   ============================================================ */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.35s ease-out; }
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fade-in-up 0.4s ease-out; }
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in { animation: scale-in 0.25s ease-out; }
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up { animation: slide-up 0.4s ease-out; }
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--muted-bg) 25%, var(--card-border) 50%, var(--muted-bg) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   SCROLLBAR CUSTOM
+   ============================================================ */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+/* ============================================================
+   BADGES DE ROLES
+   ============================================================ */
+.role-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.04em;
+  padding: 3px 10px; border-radius: 999px; border: 1px solid; text-transform: uppercase;
+}
+.role-jefe          { background: #f5f3ff; color: #6d28d9; border-color: #c4b5fd; }
+.role-especialista  { background: #eff6ff; color: #1d4ed8; border-color: #93c5fd; }
+.role-padre         { background: #ecfdf5; color: #065f46; border-color: #6ee7b7; }
+.dark .role-jefe         { background: #2e1065; color: #c4b5fd; border-color: #6d28d9; }
+.dark .role-especialista { background: #1e3a5f; color: #93c5fd; border-color: #2563eb; }
+.dark .role-padre        { background: #064e3b; color: #6ee7b7; border-color: #059669; }
+
+/* ============================================================
+   LOGIN PAGE - Protegida de dark mode global
+   ============================================================ */
+.login-root { background: #f5f4fe !important; color: #1e1b4b !important; }
+.dark .login-root,
+.dark .login-root * { background: revert !important; color: revert !important; border-color: revert !important; }
+.dark .login-root { background: #f5f4fe !important; }
+
+/* ============================================================
+   MOBILE RESPONSIVENESS
+   ============================================================ */
+@media (max-width: 767px) {
+  .flex.min-h-screen { display: block !important; }
+  .admin-content, .flex-1.overflow-y-auto, main {
+    padding-left: 0 !important; padding-right: 0 !important; width: 100% !important;
+  }
+  .grid-cols-2, .grid-cols-3, .grid-cols-4 { grid-template-columns: 1fr !important; }
+  .p-8 { padding: 20px 16px !important; }
+  .p-6 { padding: 16px !important; }
+  .px-8 { padding-left: 16px !important; padding-right: 16px !important; }
+  .px-6 { padding-left: 14px !important; padding-right: 14px !important; }
+  table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+  .fixed.inset-0 > .bg-white, .fixed.inset-0 > div > .bg-white {
+    margin: 0 !important; border-radius: 0 !important;
+    max-height: 100svh !important; overflow-y: auto;
+  }
+  h1,h2,h3 { word-break: break-word; }
+  .chat-container { height: calc(100svh - 120px) !important; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .grid-cols-3, .grid-cols-4 { grid-template-columns: repeat(2,1fr) !important; }
+  .p-8 { padding: 24px !important; }
+}
+
+@media (max-width: 767px) {
+  body { padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .mobile-nav-icon { width: 28px !important; height: 28px !important; }
+  img { max-width: 100%; height: auto; }
+  input, select, textarea { width: 100% !important; font-size: 16px !important; }
+  .table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+@supports (padding-top: env(safe-area-inset-top)) {
+  .lp-nav, nav { padding-top: env(safe-area-inset-top, 0); }
+  .lp-wa { bottom: calc(22px + env(safe-area-inset-bottom, 0px)); }
+}
+
+@media (max-width: 767px) {
+  button, a, [role="button"] { min-height: 44px; min-width: 44px; }
+  button svg, a svg { min-height: unset; min-width: unset; }
+}
+
+* { -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 767px) {
+  input[type="text"], input[type="email"], input[type="tel"],
+  input[type="password"], input[type="number"], input[type="search"],
+  textarea, select { font-size: 16px !important; }
+}
+
+/* ── CalendarView ───────────────────────────────────────────────────────── */
+.dark .admin-content .bg-gradient-to-br.from-slate-50,
+.dark .admin-content .from-slate-50.via-white {
+  background: var(--background) !important;
+}
+.dark .admin-content .bg-blue-50 {
+  background-color: rgba(37,99,235,0.1) !important;
+}
+.dark .admin-content .hover\:bg-blue-50\/50:hover {
+  background-color: rgba(37,99,235,0.06) !important;
+}
+.dark .admin-content .bg-slate-50\/30 {
+  background-color: var(--muted-bg) !important;
+}
+.dark .admin-content .divide-slate-50 > * + * {
+  border-color: var(--card-border) !important;
+}
+.dark .admin-content input[type="date"],
+.dark .admin-content input[type="time"],
+.dark .admin-content select {
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+  color-scheme: dark;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE IMPROVEMENTS — Vanty v4
+   ══════════════════════════════════════════════════════════════ */
+
+/* Touch targets más grandes en mobile */
+@media (max-width: 768px) {
+  button, [role="button"] {
+    min-height: 40px;
+  }
+
+  /* Admin sidebar colapsado en mobile — más compacto */
+  .admin-content {
+    padding: 12px !important;
+  }
+
+  /* Modales ocupan toda la pantalla en mobile */
+  .modal-fullscreen-mobile {
+    max-height: 100dvh !important;
+    border-radius: 24px 24px 0 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Cards más compactas */
+  .card-mobile-compact {
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Tabs scrollables horizontalmente */
+  .tabs-scroll-mobile {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .tabs-scroll-mobile::-webkit-scrollbar { display: none; }
+  .tabs-scroll-mobile > * { white-space: nowrap; }
+
+  /* Gráficos en mobile — altura reducida */
+  .recharts-wrapper {
+    font-size: 11px !important;
+  }
+
+  /* Texto de la ficha del paciente en mobile */
+  .patient-card-mobile h2 {
+    font-size: 1rem !important;
+  }
+
+  /* Form steps más compactos */
+  .form-step-mobile {
+    padding: 16px !important;
+  }
+
+  /* Botones de acción fijos en bottom en mobile */
+  .sticky-bottom-mobile {
+    position: sticky;
+    bottom: 0;
+    background: var(--card);
+    padding: 12px;
+    border-top: 1px solid var(--card-border);
+    z-index: 10;
+  }
+}
+
+/* Smooth scroll global */
+* { scroll-behavior: smooth; }
+
+/* Better tap highlight */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Prevent text selection on buttons */
+button { user-select: none; -webkit-user-select: none; }

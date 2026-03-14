@@ -1,0 +1,74 @@
+import type { Metadata, Viewport } from 'next'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages } from 'next-intl/server'
+import { ToastProvider } from '@/components/Toast'
+import { ThemeProvider } from '@/components/ThemeContext'
+import '../globals.css'
+
+export const viewport: Viewport = {
+  themeColor: '#5B3FC8',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
+
+export const metadata: Metadata = {
+  title: 'Vanty | Terapia ABA y Neurodivergencia en Pisco, Ica',
+  description: 'Centro especializado en terapia ABA y desarrollo infantil en Pisco, Ica.',
+  manifest: '/manifest.json',
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Vanty' },
+  formatDetection: { telephone: false },
+  verification: { google: 'TasBD1QvgPC7uYxtTQFVg-vl4WV2uVmGHgnb_yAZrE0' },
+  icons: {
+    icon: [
+      { url: '/icons/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+  },
+}
+
+export default async function LocaleLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode
+  params: Promise<{ locale: string }>
+}) {
+  const { locale } = await params
+  const messages = await getMessages()
+
+  return (
+    <html lang={locale} suppressHydrationWarning>
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Vanty" />
+        <meta name="mobile-web-app-capable" content="yes" />
+      </head>
+      <body className="antialiased">
+        <NextIntlClientProvider messages={messages} locale={locale}>
+          <ThemeProvider>
+            <ToastProvider>
+              {children}
+            </ToastProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                  .then(function(reg) { console.log('SW registrado:', reg.scope); })
+                  .catch(function(err) { console.log('SW error:', err); });
+              });
+            }
+          `
+        }} />
+      </body>
+    </html>
+  )
+}

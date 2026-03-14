@@ -285,13 +285,13 @@ export default function KnowledgeBaseView() {
               </div>
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">Título *</label>
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('recursos.tituloStar')}</label>
                   <input value={form.titulo} onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
                     placeholder="ej: Principios de Conducta - Malott 8va Ed."
                     className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400" />
                 </div>
                 <div>
-                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">Tipo</label>
+                  <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">{t('ui.tipoDoc')}</label>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(tipoConfig).map(([k, v]) => (
                       <button key={k} onClick={() => setForm(f => ({ ...f, tipo: k }))}
@@ -306,7 +306,7 @@ export default function KnowledgeBaseView() {
                 <div>
                   <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">Descripción</label>
                   <input value={form.descripcion} onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
-                    placeholder="Breve descripción del contenido"
+                    placeholder={t('ui.breveDesc')}
                     className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-violet-400" />
                 </div>
 
@@ -360,7 +360,7 @@ export default function KnowledgeBaseView() {
                       <input
                         value={form.url}
                         onChange={e => setForm(f => ({ ...f, url: e.target.value }))}
-                        placeholder="https://drive.google.com/file/d/... o cualquier URL pública"
+                        placeholder={t('ui.urlPublica')}
                         className="w-full pl-9 pr-3 py-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-violet-400"
                       />
                     </div>
@@ -379,7 +379,7 @@ export default function KnowledgeBaseView() {
                 {/* ── Modo: Texto ── */}
                 {inputMode === 'texto' && (
                   <textarea value={form.texto} onChange={e => setForm(f => ({ ...f, texto: e.target.value }))}
-                    rows={6} placeholder="Pega aquí el contenido del documento..."
+                    rows={6} placeholder={t('ui.pegaContenido')}
                     className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-violet-400" />
                 )}
 
@@ -468,14 +468,14 @@ function InstruccionesModal({ onClose }: { onClose: () => void }) {
           )}
 
           <div className="border-t border-slate-100 pt-4 space-y-3">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">+ Nueva instrucción</p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('ui.nuevaInstruccion2')}</p>
             <div className="grid grid-cols-2 gap-3">
               <select value={nueva.categoria} onChange={e => setNueva(n => ({ ...n, categoria: e.target.value }))}
                 className="p-2.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-xs font-bold outline-none focus:border-violet-400">
                 <option value="protocolo">Protocolo</option>
-                <option value="estilo">Estilo de comunicación</option>
-                <option value="terminologia">Terminología</option>
-                <option value="regla">Regla clínica</option>
+                <option value="estilo">{t('ui.estiloComunicacion')}</option>
+                <option value="terminologia">{t('ui.terminologia')}</option>
+                <option value="regla">{t('ui.reglaClinica')}</option>
               </select>
               <input type="number" min="1" max="10" value={nueva.prioridad}
                 onChange={e => setNueva(n => ({ ...n, prioridad: Number(e.target.value) }))}
@@ -483,10 +483,10 @@ function InstruccionesModal({ onClose }: { onClose: () => void }) {
                 placeholder="Prioridad 1-10" />
             </div>
             <input value={nueva.titulo} onChange={e => setNueva(n => ({ ...n, titulo: e.target.value }))}
-              placeholder="ej: Criterio de dominio estándar"
+              placeholder={t('ui.ejCriterio')}
               className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-violet-400" />
             <textarea value={nueva.contenido} onChange={e => setNueva(n => ({ ...n, contenido: e.target.value }))}
-              rows={3} placeholder="Instrucción que ARIA debe seguir siempre..."
+              rows={3} placeholder={t('ui.instruccionARIA')}
               className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-violet-400" />
             <button onClick={handleSave} disabled={saving}
               className="w-full py-3 bg-violet-600 text-white rounded-xl font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2">

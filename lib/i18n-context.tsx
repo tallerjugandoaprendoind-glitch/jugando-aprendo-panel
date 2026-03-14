@@ -1,39 +1,44 @@
 'use client'
-import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
-import { createTranslator, type Locale, DEFAULT_LOCALE, LOCALES } from './i18n'
-import ES from '../messages/es.json'
-import EN from '../messages/en.json'
-
-const MESSAGES: Record<Locale, Record<string, any>> = { es: ES, en: EN }
+/**
+ * i18n-context.tsx
+ * Compatibility shim — wraps next-intl so all existing useI18n() calls
+ * continue working unchanged. The locale is now URL-based (/es/... or /en/...).
+ */
+import { useLocale, useMessages } from 'next-intl'
+import { useRouter, usePathname } from 'next/navigation'
+import { createTranslator, type Locale } from './i18n'
+import type { ReactNode } from 'react'
 
 export type T = (key: string, vars?: Record<string, string>) => string
-interface I18nCtx { t: T; locale: Locale; changeLocale: (l: Locale) => void }
 
-const I18nContext = createContext<I18nCtx>({
-  t: createTranslator(ES),
-  locale: 'es',
-  changeLocale: () => {},
-})
+export function useI18n() {
+  const locale = useLocale() as Locale
+  const messages = useMessages() as Record<string, any>
+  const router = useRouter()
+  const pathname = usePathname()
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE)
+  const t = createTranslator(messages)
 
-  useEffect(() => {
-    const stored = localStorage.getItem('vanty_locale') as Locale
-    if (stored && LOCALES.includes(stored)) setLocale(stored)
-  }, [])
+  const changeLocale = (newLocale: Locale) => {
+    // Swap the locale segment in the URL: /es/admin → /en/admin
+    const segments = pathname.split('/')
+    if (segments[1] === 'es' || segments[1] === 'en') {
+      segments[1] = newLocale
+    } else {
+      segments.splice(1, 0, newLocale)
+    }
+    // Also save to localStorage so API calls can read it
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('vanty_locale', newLocale)
+    }
+    router.push(segments.join('/') || '/')
+  }
 
-  const changeLocale = useCallback((loc: Locale) => {
-    localStorage.setItem('vanty_locale', loc)
-    setLocale(loc)
-  }, [])
-
-  // useMemo: solo recalcula t cuando locale cambia
-  const t = useMemo(() => createTranslator(MESSAGES[locale]), [locale])
-
-  const value = useMemo(() => ({ t, locale, changeLocale }), [t, locale, changeLocale])
-
-  return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
+  return { t, locale, changeLocale }
 }
 
-export function useI18n() { return useContext(I18nContext) }
+// I18nProvider is now a no-op — NextIntlClientProvider in [locale]/layout.tsx
+// handles everything. Kept for backward compatibility.
+export function I18nProvider({ children }: { children: ReactNode }) {
+  return <>{children}</>
+}
