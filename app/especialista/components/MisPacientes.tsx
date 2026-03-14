@@ -14,8 +14,6 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
 function calcularEdad(fecha: string) {
-  const { t } = useI18n()
-
   if (!fecha) return 'N/D'
   const hoy = new Date(), nac = new Date(fecha)
   const anos = hoy.getFullYear() - nac.getFullYear()
@@ -23,8 +21,6 @@ function calcularEdad(fecha: string) {
 }
 
 function formatDate(d: string) {
-  const { t } = useI18n()
-
   if (!d) return '—'
   try { return new Date(d).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' }) }
   catch { return d }
@@ -49,7 +45,6 @@ const TYPE_CONFIG: Record<string, { bg: string; text: string; border: string; ic
   'default':             { bg: 'bg-slate-50',   text: 'text-slate-600',   border: 'border-slate-200',   icon: FileText },
 }
 function getTypeCfg(type: string) { return TYPE_CONFIG[type] || TYPE_CONFIG['default'] }
-const { t } = useI18n()
 
 
 function Field({ label, value }: { label: string; value: any }) {
@@ -137,8 +132,6 @@ function WordBtn({ report }: { report: any }) {
   const { t } = useI18n()
 
   const dl = () => {
-    const { t } = useI18n()
-
     const blob = new Blob([Uint8Array.from(atob(report.file_data), c => c.charCodeAt(0))],
       { type: report.mime_type || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
     const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: report.nombre_archivo || 'reporte.docx' })
