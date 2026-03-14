@@ -112,6 +112,7 @@ const ALL_UNIFIED_FORMS = [
 
 // ─── QUESTION RENDERER ───────────────────────────────────────────────────────
 function QuestionRenderer({ question, value, onChange }: any) {
+  const { t } = useI18n()
   const freq = ['Nunca', 'Raramente', 'A veces', 'Frecuentemente', 'Casi siempre', 'Siempre']
 
   if (question.type === 'frequency' || question.type === 'radio') {
