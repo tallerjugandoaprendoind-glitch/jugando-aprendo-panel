@@ -66,7 +66,7 @@ function useTextToSpeech() {
 
 // ── Hook de Speech-to-Text ────────────────────────────────────────────────────
 function useSpeechToText(onResult: (text: string) => void) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   const [listening, setListening] = useState(false)
   const [supported, setSupported] = useState(false)
