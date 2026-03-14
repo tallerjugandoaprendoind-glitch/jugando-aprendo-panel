@@ -49,7 +49,7 @@ export default function MensajesPendientesPanel() {
       if (json.error) throw new Error(json.error)
       setMessages(json.data || [])
     } catch (err: any) {
-      toast.error('Error cargando mensajes: ' + err.message)
+      toast.error((isEN?'Error loading messages: ':'Error cargando mensajes: ') + err.message)
     } finally {
       setLoading(false)
     }
@@ -73,11 +73,11 @@ export default function MensajesPendientesPanel() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('Cambios guardados')
+      toast.success(isEN?'Changes saved':'Cambios guardados')
       setEditingId(null)
       setMessages(prev => prev.map(m => m.id === id ? { ...m, edited_message: editText } : m))
     } catch (err: any) {
-      toast.error('Error al guardar: ' + err.message)
+      toast.error((isEN?'Error saving: ':'Error al guardar: ') + err.message)
     } finally {
       setActionLoading(null)
     }
@@ -99,7 +99,7 @@ export default function MensajesPendientesPanel() {
       setEditingId(null)
       loadMessages()
     } catch (err: any) {
-      toast.error('Error al aprobar: ' + err.message)
+      toast.error((isEN?'Error approving: ':'Error al aprobar: ') + err.message)
     } finally {
       setActionLoading(null)
     }
@@ -116,7 +116,7 @@ export default function MensajesPendientesPanel() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('Mensaje descartado')
+      toast.success(isEN?'Message discarded':'Mensaje descartado')
       loadMessages()
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -194,8 +194,8 @@ export default function MensajesPendientesPanel() {
             <MessageCircle size={26} className="text-slate-300"/>
           </div>
           <p className="font-bold text-slate-500">
-            {statusFilter === 'pending_approval' ? 'No hay mensajes pendientes' :
-             statusFilter === 'approved' ? 'No hay mensajes enviados aún' : 'Sin mensajes descartados'}
+            {statusFilter === 'pending_approval' ? (isEN?'No pending messages':'No hay mensajes pendientes') :
+             statusFilter === 'approved' ? (isEN?'No messages sent yet':'No hay mensajes enviados aún') : (isEN?'No discarded messages':'Sin mensajes descartados')}
           </p>
           {statusFilter === 'pending_approval' && (
             <p className="text-xs text-slate-300 mt-1">{t('mensajes.aparecenAqui')}</p>
@@ -370,7 +370,7 @@ export default function MensajesPendientesPanel() {
                           <button onClick={() => approveMessage(msg.id)} disabled={!!isLoadingApprove}
                             className="flex-[2] py-3 px-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-black text-sm hover:opacity-90 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50 flex items-center justify-center gap-2">
                             {isLoadingApprove ? <Loader2 size={16} className="animate-spin"/> : <Send size={16}/>}
-                            {isLoadingApprove ? 'Enviando...' : '✅ Aprobar y Enviar al Padre/Madre'}
+                            {isLoadingApprove ? (isEN?'Sending...':'Enviando...') : (isEN?'✅ Approve & Send to Parent':'✅ Aprobar y Enviar al Padre/Madre')}
                           </button>
                         </div>
                       </div>

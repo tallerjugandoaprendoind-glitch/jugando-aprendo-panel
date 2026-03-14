@@ -95,7 +95,7 @@ export default function VADIAgentChat({
     } catch (err: any) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Ocurrió un error al procesar tu consulta. Por favor intenta de nuevo.',
+        content: isEN ? 'An error occurred processing your query. Please try again.' : 'Ocurrió un error al procesar tu consulta. Por favor intenta de nuevo.',
         timestamp: new Date().toISOString(),
       }])
     } finally {
@@ -121,7 +121,7 @@ export default function VADIAgentChat({
             <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-black">BETA</span>
           </h3>
           <p className="text-violet-200 text-[10px]">
-            {childId ? `Caso activo: ${childName || 'Paciente'}` : 'Conocimiento: Malott · DSM-5 · IBAO · LuTr'}
+            {childId ? `${isEN?'Active case':'Caso activo'}: ${childName || (isEN?'Patient':'Paciente')}` : 'Knowledge: Malott · DSM-5 · IBAO · LuTr'}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">

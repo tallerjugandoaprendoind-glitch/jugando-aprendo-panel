@@ -155,7 +155,7 @@ function LineChartProgreso({ sesiones, criterio = 90, color = '#7c3aed', titulo 
           <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--text-muted)' }} />
           <Tooltip
             contentStyle={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 10, fontSize: 11 }}
-            formatter={(v: any) => [`${v}%`, 'Logro']}
+            formatter={(v: any) => [`${v}%`, locale === 'en' ? 'Achievement' : 'Logro']}
           />
           <ReferenceLine y={criterio} stroke="#10b981" strokeDasharray="4 2" strokeWidth={1.5} />
           <Area type="monotone" dataKey="pct" fill={`${color}18`} stroke="none" />
@@ -375,6 +375,8 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabSeguridad() {
   const [datos, setDatos] = useState<Seguridad | null>(null)
+  const { locale } = useI18n()
+  const isEN = locale === 'en'
   const [alertas, setAlertas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -420,9 +422,9 @@ function TabSeguridad() {
         </div>
 
         {[
-          { icon: Eye, label: 'Accesos (7d)', value: datos?.totalAccesos || 0, color: 'blue' },
-          { icon: AlertTriangle, label: 'Alertas activas', value: datos?.alertasActivas || 0, color: (datos?.alertasActivas || 0) > 0 ? 'red' : 'green' },
-          { icon: Shield, label: 'Exportaciones', value: datos?.exportacionesTotal || 0, color: 'purple' },
+          { icon: Eye, label: isEN ? 'Accesses (7d)' : 'Accesos (7d)', value: datos?.totalAccesos || 0, color: 'blue' },
+          { icon: AlertTriangle, label: isEN ? 'Active alerts' : 'Alertas activas', value: datos?.alertasActivas || 0, color: (datos?.alertasActivas || 0) > 0 ? 'red' : 'green' },
+          { icon: Shield, label: isEN ? 'Exports' : 'Exportaciones', value: datos?.exportacionesTotal || 0, color: 'purple' },
         ].map(m => (
           <div key={m.label} className=" rounded-2xl border border-slate-200 p-5 flex flex-col justify-between" style={{ background: "var(--card)" }}>
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
@@ -634,7 +636,8 @@ function TabCompetitividad() {
 // TAB: PATRONES ABA (CAPA 1)
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const [selected, setSelected] = useState<Paciente | null>(null)
   const [resultado, setResultado] = useState<any>(null)
@@ -691,9 +694,9 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         <div className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Sesiones', val: resultado.sesiones_analizadas || 0 },
-              { label: 'Patrones', val: resultado.patrones?.length || 0 },
-              { label: 'Urgentes', val: resultado.patrones_urgentes || 0 },
+              { label: isEN ? 'Sessions' : 'Sesiones', val: resultado.sesiones_analizadas || 0 },
+              { label: isEN ? 'Patterns' : 'Patrones', val: resultado.patrones?.length || 0 },
+              { label: isEN ? 'Urgent' : 'Urgentes', val: resultado.patrones_urgentes || 0 },
             ].map(m => (
               <div key={m.label} className=" rounded-xl border border-slate-100 p-3 text-center" style={{ background: "var(--card)" }}>
                 <p className="text-2xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{m.val}</p>
@@ -749,7 +752,8 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
 // TAB: OBJETIVOS ADAPTATIVOS (CAPA 1)
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const [selected, setSelected] = useState<Paciente | null>(null)
   const [resultado, setResultado] = useState<any>(null)
@@ -789,7 +793,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
           {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <div className="flex gap-2">
-          {([['generar', 'Generar nuevos'], ['ajustar', 'Ajustar existentes'], ['evaluar_dominio', 'Evaluar dominio']] as const).map(([val, lbl]) => (
+          {((isEN ? [['generar', 'Generate new'], ['ajustar', 'Adjust existing'], ['evaluar_dominio', 'Evaluate mastery']] : [['generar', 'Generar nuevos'], ['ajustar', 'Ajustar existentes'], ['evaluar_dominio', 'Evaluar dominio']]) as const).map(([val, lbl]) => (
             <button key={val} onClick={() => setAccion(val)}
               className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${accion === val ? 'bg-amber-100 text-amber-700' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
               {lbl}
@@ -950,7 +954,8 @@ function TabSugerencias() {
 // TAB: REPORTES IA (CAPA 2)
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const [selected, setSelected] = useState<Paciente | null>(null)
   const [tipo, setTipo] = useState<'padres' | 'seguro' | 'comparativo'>('padres')
@@ -969,7 +974,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       })
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || 'Error generando reporte')
+        throw new Error(err.error || (isEN ? 'Error generating report' : 'Error generando reporte'))
       }
       // Descargar el .docx directamente
       const blob = await res.blob()
@@ -977,7 +982,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       const a = document.createElement('a')
       const cd = res.headers.get('content-disposition') || ''
       const match = cd.match(/filename="([^"]+)"/)
-      a.download = match?.[1] || `Reporte_${tipo}_${selected.name}.docx`
+      a.download = match?.[1] || `Report_${tipo}_${selected.name}.docx`
       a.href = url
       a.click()
       URL.revokeObjectURL(url)
@@ -987,9 +992,9 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
   }
 
   const tipoInfo = {
-    padres:      { label: 'Para padres',          desc: 'Lenguaje emocional y accesible',    emoji: '👨‍👩‍👧' },
-    seguro:      { label: 'Para seguros / IMSS',  desc: 'Formato técnico-legal con CIE-10',  emoji: '🏥' },
-    comparativo: { label: 'Comparativo + pred.',  desc: '"En 3 meses logrará X"',            emoji: '📊' },
+    padres:      { label: isEN ? 'For parents'  : 'Para padres',         desc: isEN ? 'Emotional and accessible language'         : 'Lenguaje emocional y accesible',    emoji: '👨‍👩‍👧' },
+    seguro:      { label: isEN ? 'For insurance' : 'Para seguros / IMSS', desc: isEN ? 'Technical-legal format with ICD-10'         : 'Formato técnico-legal con CIE-10',  emoji: '🏥' },
+    comparativo: { label: isEN ? 'Comparative + pred.' : 'Comparativo + pred.', desc: isEN ? '"In 3 months they will achieve X"' : '"En 3 meses logrará X"', emoji: '📊' },
   }
 
   return (
@@ -1035,9 +1040,9 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       {/* Info cards */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { emoji: '👨‍👩‍👧', title: 'Padres', desc: 'Carta emocional con logros, actividades en casa y predicción. Sin tecnicismos.' },
-          { emoji: '🏥', title: 'Seguros', desc: 'CIE-10, justificación médica, tabla de programas, firma profesional.' },
-          { emoji: '📊', title: 'Comparativo', desc: 'Progreso entre períodos con gráficos de predicción a 30 y 90 días.' },
+          { emoji: '👨‍👩‍👧', title: isEN ? 'Parents' : 'Padres', desc: isEN ? 'Emotional letter with achievements, home activities and prediction. No jargon.' : 'Carta emocional con logros, actividades en casa y predicción. Sin tecnicismos.' },
+          { emoji: '🏥', title: isEN ? 'Insurance' : 'Seguros', desc: isEN ? 'ICD-10, medical justification, program table, professional signature.' : 'CIE-10, justificación médica, tabla de programas, firma profesional.' },
+          { emoji: '📊', title: isEN ? 'Comparative' : 'Comparativo', desc: isEN ? 'Progress between periods with 30 and 90-day prediction charts.' : 'Progreso entre períodos con gráficos de predicción a 30 y 90 días.' },
         ].map((c, i) => (
           <div key={i} className=" border border-slate-100 rounded-xl p-3" style={{ background: "var(--card)" }}>
             <p className="text-xl mb-1">{c.emoji}</p>
@@ -1054,7 +1059,8 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
 // COMPONENTE PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function InteligenciaHubView() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [tab, setTab] = useState<Tab>('predicciones')
   const [pacientes, setPacientes] = useState<Paciente[]>([])
 
@@ -1066,7 +1072,7 @@ export default function InteligenciaHubView() {
         const data = json.data || []
         setPacientes(data.map((r: any) => ({
           id: r.id,
-          name: r.name || r.nombre || 'Sin nombre',
+          name: r.name || r.nombre || (typeof window !== 'undefined' && localStorage.getItem('vanty_locale') === 'en' ? 'No name' : 'Sin nombre'),
           diagnosis: r.diagnosis || r.diagnostico || '',
         })))
       })
@@ -1075,11 +1081,11 @@ export default function InteligenciaHubView() {
 
   const tabs = [
     { id: 'predicciones' as Tab, icon: Brain, label: t('hub.predicciones'), color: 'blue' },
-    { id: 'patrones' as Tab, icon: Activity, label: 'Patrones ABA', color: 'violet' },
-    { id: 'objetivos' as Tab, icon: Target, label: 'Objetivos IA', color: 'amber' },
-    { id: 'sugerencias' as Tab, icon: Sparkles, label: 'Alertas Proactivas', color: 'orange' },
-    { id: 'reportes' as Tab, icon: BookOpen, label: 'Reportes IA', color: 'teal' },
-    { id: 'seguridad' as Tab, icon: Shield, label: 'Seguridad', color: 'emerald' },
+    { id: 'patrones' as Tab, icon: Activity, label: isEN ? 'ABA Patterns' : 'Patrones ABA', color: 'violet' },
+    { id: 'objetivos' as Tab, icon: Target, label: isEN ? 'AI Goals' : 'Objetivos IA', color: 'amber' },
+    { id: 'sugerencias' as Tab, icon: Sparkles, label: isEN ? 'Proactive Alerts' : 'Alertas Proactivas', color: 'orange' },
+    { id: 'reportes' as Tab, icon: BookOpen, label: isEN ? 'AI Reports' : 'Reportes IA', color: 'teal' },
+    { id: 'seguridad' as Tab, icon: Shield, label: isEN ? 'Security' : 'Seguridad', color: 'emerald' },
   ]
 
   return (

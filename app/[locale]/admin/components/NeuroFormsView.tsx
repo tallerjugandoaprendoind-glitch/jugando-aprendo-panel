@@ -20,7 +20,7 @@ import {
 // ─── DYNAMIC FORM RENDERER ───────────────────────────────────────────────────
 function DynamicFormQuestion({ question, value, onChange }: any) {
   const { t, locale } = useI18n()
-  const freq = ['Nunca', 'Raramente', 'A veces', 'Frecuentemente', 'Casi siempre', 'Siempre']
+  const freq = isEN ? ['Never','Rarely','Sometimes','Frequently','Almost always','Always'] : ['Nunca','Raramente','A veces','Frecuentemente','Casi siempre','Siempre']
 
   if (question.type === 'frequency') {
     return (
@@ -104,7 +104,7 @@ function DynamicFormQuestion({ question, value, onChange }: any) {
       <div>
         <p className="text-sm font-bold text-slate-700 mb-3">{question.label}</p>
         <div className="flex gap-3">
-          {['Sí', 'No'].map(opt => (
+          {(isEN ? ['Yes','No'] : ['Sí','No']).map(opt => (
             <button key={opt} type="button" onClick={() => onChange(opt)}
               className={`px-8 py-3 rounded-xl border-2 font-bold transition-all ${value === opt ? (opt === 'Sí' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-600 text-white border-slate-600') : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300'}`}>
               {opt}
@@ -129,7 +129,8 @@ function DynamicFormQuestion({ question, value, onChange }: any) {
 
 // ─── AI ANALYSIS RESULT PANEL ─────────────────────────────────────────────────
 function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: { analysis: any; onClose: () => void; editableMessage?: string; onEditMessage?: (v: string) => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   if (!analysis) return null
   const alertColors: Record<string, string> = {
@@ -251,7 +252,8 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
 
 // ─── SEND FORM TO PARENT MODAL ────────────────────────────────────────────────
 function SendFormModal({ form, children, onSend, onClose }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [childId, setChildId] = useState('')
   const [message, setMessage] = useState('')
   const [deadline, setDeadline] = useState('')
@@ -302,7 +304,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
             <button onClick={onClose} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl border-2 border-slate-100 transition-all">{t('common.cancelar')}</button>
             <button onClick={handleSend} disabled={sending || !childId} className="flex-[2] py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {sending ? <Loader2 size={18} className="animate-spin"/> : <Send size={18}/>}
-              {sending ? 'Enviando...' : 'Enviar Formulario'}
+              {sending ? (isEN?'Sending...':'Enviando...') : (isEN?'Send Form':'Enviar Formulario')}
             </button>
           </div>
         </div>
@@ -351,7 +353,8 @@ export default function NeuroFormsView() {
   })
 
   const handleStartForm = (form: FormDefinition) => {
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
+    const isEN = locale === 'en'
 
     setSelectedForm(form)
     setCurrentStep(0)
@@ -375,8 +378,8 @@ export default function NeuroFormsView() {
         body: JSON.stringify({
           formType: selectedForm.id,
           formData: responses,
-          childName: child?.name || 'Paciente',
-          childAge: child?.age || 'No especificado',
+          childName: child?.name || (isEN?'Patient':'Paciente'),
+          childAge: child?.age || (isEN?'Not specified':'No especificado'),
           diagnosis: child?.diagnosis || '',
         }),
       })
@@ -386,14 +389,14 @@ export default function NeuroFormsView() {
       setEditedMessage(json.analysis?.mensaje_padres || '')
       toast.success('✨ Análisis generado')
     } catch (err: any) {
-      toast.error('Error en análisis: ' + err.message)
+      toast.error((isEN?'Analysis error: ':'Error en análisis: ') + err.message)
     } finally {
       setIsAnalyzing(false)
     }
   }
 
   const handleSaveForm = async () => {
-    if (!selectedForm || !selectedChild) { toast.error('Selecciona un paciente'); return }
+    if (!selectedForm || !selectedChild) { toast.error(isEN?'Select a patient':'Selecciona un paciente'); return }
     setIsSaving(true)
     try {
       await supabase.from('form_responses').insert([{
@@ -425,11 +428,11 @@ export default function NeuroFormsView() {
         }
       }
 
-      toast.success('Formulario guardado correctamente')
+      toast.success(isEN?'Form saved successfully':'Formulario guardado correctamente')
       setSelectedForm(null)
       setAiAnalysis(null)
     } catch (err: any) {
-      toast.error('Error al guardar: ' + err.message)
+      toast.error((isEN?'Error saving: ':'Error al guardar: ') + err.message)
     } finally {
       setIsSaving(false)
     }
@@ -465,7 +468,7 @@ export default function NeuroFormsView() {
       toast.success(`📤 Formulario enviado correctamente`)
       loadSentForms()
     } catch (err: any) {
-      toast.error('Error al enviar: ' + err.message)
+      toast.error((isEN?'Error sending: ':'Error al enviar: ') + err.message)
     }
   }
 
@@ -564,7 +567,7 @@ export default function NeuroFormsView() {
                 <button onClick={handleAnalyzeWithAI} disabled={isAnalyzing || answeredCount < 3}
                   className="flex-[2] py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-violet-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:from-violet-700">
                   {isAnalyzing ? <Loader2 size={18} className="animate-spin"/> : <Sparkles size={18}/>}
-                  {isAnalyzing ? 'Analizando...' : 'Analizar con IA'}
+                  {isAnalyzing?(isEN?'Analyzing...':'Analizando...'):(isEN?'Analyze with AI':'Analizar con IA')}
                 </button>
               )}
             </div>
@@ -709,9 +712,9 @@ export default function NeuroFormsView() {
           <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm mb-6">
             <div className="grid grid-cols-3 gap-4 text-center">
               {[
-                { label: 'Enviados', value: sentForms.length, color: 'text-indigo-600' },
-                { label: 'Pendientes', value: sentForms.filter(f => f.status === 'pending').length, color: 'text-amber-600' },
-                { label: 'Completados', value: sentForms.filter(f => f.status === 'completed').length, color: 'text-emerald-600' },
+                { label: isEN?'Sent':'Enviados', value: sentForms.length, color: 'text-indigo-600' },
+                { label: isEN?'Pending':'Pendientes', value: sentForms.filter(f => f.status === 'pending').length, color: 'text-amber-600' },
+                { label: isEN?'Completed':'Completados', value: sentForms.filter(f => f.status === 'completed').length, color: 'text-emerald-600' },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <p className={`text-2xl font-black ${color}`}>{value}</p>
@@ -735,7 +738,7 @@ export default function NeuroFormsView() {
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="font-bold text-slate-800 text-sm truncate">{sf.form_title}</p>
                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase ${sf.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                      {sf.status === 'completed' ? 'Completado' : 'Pendiente'}
+                      {sf.status === 'completed' ? (isEN?'Completed':'Completado') : (isEN?'Pending':'Pendiente')}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium">Para: {sf.profiles?.full_name || sf.profiles?.email}</p>

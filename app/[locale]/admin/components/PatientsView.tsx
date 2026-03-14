@@ -39,9 +39,9 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
         ])
         const all = [
           ...(r1.data || []).map((e: any) => ({ ...e, tipo: e.form_type || 'evaluacion', fuente: '📋' })),
-          ...(r2.data || []).map((e: any) => ({ ...e, form_title: e.form_title || 'Anamnesis', tipo: 'anamnesis', fuente: '📄' })),
-          ...(r3.data || []).map((e: any) => ({ ...e, created_at: e.fecha_sesion || e.created_at, form_title: e.form_title || 'Sesión ABA', tipo: 'aba', fuente: '🎯' })),
-          ...(r4.data || []).map((e: any) => ({ ...e, form_title: e.form_title || 'Entorno Hogar', tipo: 'entorno', fuente: '🏠' })),
+          ...(r2.data || []).map((e: any) => ({ ...e, form_title: e.form_title || (isEN?'Anamnesis':'Anamnesis'), tipo: 'anamnesis', fuente: '📄' })),
+          ...(r3.data || []).map((e: any) => ({ ...e, created_at: e.fecha_sesion || e.created_at, form_title: e.form_title || (isEN?'ABA Session':'Sesión ABA'), tipo: 'aba', fuente: '🎯' })),
+          ...(r4.data || []).map((e: any) => ({ ...e, form_title: e.form_title || (isEN?'Home Environment':'Entorno Hogar'), tipo: 'entorno', fuente: '🏠' })),
         ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         setEvaluaciones(all)
       } catch {}
@@ -141,9 +141,9 @@ function PatientsView() {
 
     const alertaColor = (dias: number | null) => {
         if (dias === null) return { bg: 'bg-slate-100', text: 'text-slate-500', label: t('pacientes.sinSesiones') }
-        if (dias <= 14) return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: `Hace ${dias}d` }
-        if (dias <= 30) return { bg: 'bg-amber-100', text: 'text-amber-700', label: `Hace ${dias}d ⚠️` }
-        return { bg: 'bg-red-100', text: 'text-red-700', label: `Hace ${dias}d 🚨` }
+        if (dias <= 14) return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: isEN?`${dias}d ago`:`Hace ${dias}d` }
+        if (dias <= 30) return { bg: 'bg-amber-100', text: 'text-amber-700', label: isEN?`${dias}d ago ⚠️`:`Hace ${dias}d ⚠️` }
+        return { bg: 'bg-red-100', text: 'text-red-700', label: isEN?`${dias}d ago 🚨`:`Hace ${dias}d 🚨` }
     }
 
     const calcularEdadDesdeString = (birthDate: string): number => {
@@ -460,7 +460,7 @@ function PatientsView() {
                                         <div>
                                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Edad (auto)</label>
                                             <div className="w-full p-4 bg-green-50 border-2 border-green-200 rounded-xl font-black text-green-700 flex items-center justify-center">
-                                                {editForm.age > 0 ? `${editForm.age} años` : 'Sin edad'}
+                                                {editForm.age > 0 ? isEN?`${editForm.age} years`:`${editForm.age} años` : isEN?'No age':'Sin edad'}
                                             </div>
                                         </div>
                                     </div>
@@ -496,7 +496,7 @@ function PatientsView() {
                                     <button onClick={() => setIsEditing(false)} disabled={isSaving} className="flex-1 px-6 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-all disabled:opacity-50">{t('common.cancelar')}</button>
                                     <button onClick={guardarCambios} disabled={isSaving} className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                                         {isSaving ? <Loader2 className="animate-spin" size={18}/> : <Save size={18}/>}
-                                        {isSaving ? 'Guardando...' : 'Guardar'}
+                                        {isSaving?(isEN?'Saving...':'Guardando...'):(isEN?'Save':'Guardar')}
                                     </button>
                                 </>
                             )}

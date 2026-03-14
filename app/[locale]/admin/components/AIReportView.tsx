@@ -54,7 +54,7 @@ function useTextToSpeech() {
       audio.play()
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        console.warn('ElevenLabs TTS falló, usando fallback del navegador')
+        console.warn('ElevenLabs TTS failed, using browser fallback')
         if ('speechSynthesis' in window) {
           const clean = text.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\n{2,}/g, '. ').trim().slice(0, 4000)
           const utter = new SpeechSynthesisUtterance(clean)
@@ -137,7 +137,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   const [mobileTab, setMobileTab] = useState<'chat' | 'history' | 'reports' | 'graficas'>('chat')
   
   const [messages, setMessages] = useState<any[]>([
-      { role: 'ai', text: 'Hola 👋. Selecciona un paciente para iniciar el análisis clínico.' }
+      { role: 'ai', text: isEN ? 'Hello 👋. Select a patient to start the clinical analysis.' : 'Hola 👋. Selecciona un paciente para iniciar el análisis clínico.' }
   ])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
@@ -171,7 +171,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
     }
     setHistoryData({ anamnesis: null, aba: [], entorno: [] }) 
     
-    setMessages([{ role: 'ai', text: 'Cargando historial del paciente...' }])
+    setMessages([{ role: 'ai', text: isEN ? 'Loading patient history...' : 'Cargando historial del paciente...' }])
     
     console.log('🔍 Buscando datos para child_id:', childId)
     
@@ -311,7 +311,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
   const totalEvaluaciones = [resolvedBrief2, resolvedAdos2, resolvedVineland, resolvedWiscv, resolvedBasc3].filter(Boolean).length;
   const totalFormularios = (filteredFormResponses.length || 0) + (parentFormsCompleted?.length || 0)
   const parentFormsText = (parentFormsCompleted || []).length > 0
-    ? `\n📨 **Formularios de Padres (${parentFormsCompleted!.length}):**\n${parentFormsCompleted!.slice(0,5).map((f: any) => `  • ${f.form_title || f.form_type} (${f.completed_at ? new Date(f.completed_at).toLocaleDateString(toBCP47(locale)) : 'Sin fecha'})`).join('\n')}`
+    ? `\n📨 **Formularios de Padres (${parentFormsCompleted!.length}):**\n${parentFormsCompleted!.slice(0,5).map((f: any) => `  • ${f.form_title || f.form_type} (${f.completed_at ? new Date(f.completed_at).toLocaleDateString(toBCP47(locale)) : isEN ? 'No date' : 'Sin fecha'})`).join('\n')}`
     : '';
   
   // Añadir alertas si faltan datos críticos
@@ -405,7 +405,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
               <button onClick={toggleVoice} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
                 style={{ background: voiceEnabled ? 'rgba(134,239,172,0.15)' : 'var(--muted-bg)', color: voiceEnabled ? '#86efac' : 'var(--text-muted)', border: '1px solid var(--card-border)' }}>
                 {voiceEnabled ? <Volume2 size={13}/> : <VolumeX size={13}/>}
-                {voiceEnabled ? 'Voz ON' : 'Voz OFF'}
+                {voiceEnabled ? (isEN ? 'Voice ON' : 'Voz ON') : (isEN ? 'Voice OFF' : 'Voz OFF')}
               </button>
             </div>
 

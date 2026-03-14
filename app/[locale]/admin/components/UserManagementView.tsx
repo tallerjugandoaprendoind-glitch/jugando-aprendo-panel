@@ -12,20 +12,22 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 
-const ROLES = [
-  { value: 'jefe',        label: 'Director',     description: 'Acceso total al sistema', icon: Crown,       dotColor: 'bg-purple-500', badgeClass: 'role-director'    },
-  { value: 'especialista',label: 'Especialista',  description: 'Terapeuta / Clínico',     icon: Stethoscope, dotColor: 'bg-blue-500',   badgeClass: 'role-especialista' },
-  { value: 'padre',       label: 'Padre / Tutor', description: 'Portal de familias',      icon: Heart,       dotColor: 'bg-pink-500',   badgeClass: 'role-padre'       },
+const getRoles = (isEN: boolean) => [
+  { value: 'jefe',        label: isEN?'Director':'Director',     description: isEN?'Full system access':'Acceso total al sistema', icon: Crown,       dotColor: 'bg-purple-500', badgeClass: 'role-director'    },
+  { value: 'especialista',label: isEN?'Specialist':'Especialista',  description: isEN?'Therapist / Clinician':'Terapeuta / Clínico',     icon: Stethoscope, dotColor: 'bg-blue-500',   badgeClass: 'role-especialista' },
+  { value: 'padre',       label: isEN?'Parent / Guardian':'Padre / Tutor', description: isEN?'Family portal':'Portal de familias',      icon: Heart,       dotColor: 'bg-pink-500',   badgeClass: 'role-padre'       },
 ]
 
 function getRoleInfo(role: string) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
-  return ROLES.find(r => r.value === role || (role === 'admin' && r.value === 'jefe')) || ROLES[0]
+  return getRoles(isEN).find(r => r.value === role || (role === 'admin' && r.value === 'jefe')) || getRoles(isEN)[0]
 }
 
 function RoleBadge({ role }: { role: string }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const info = getRoleInfo(role)
   const Icon = info.icon
@@ -43,7 +45,8 @@ function RoleSelector({ currentRole, onSelect, disabled }: {
   onSelect: (role: string) => void
   disabled?: boolean
 }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [open, setOpen] = useState(false)
   const current = getRoleInfo(currentRole)
 
@@ -67,7 +70,7 @@ function RoleSelector({ currentRole, onSelect, disabled }: {
             className="absolute left-0 z-50 rounded-xl shadow-2xl min-w-[220px] overflow-hidden"
             style={{ background: 'var(--card)', border: '1px solid var(--card-border)', top: 'calc(100% + 4px)' }}
           >
-            {ROLES.map(r => {
+            {getRoles(isEN).map(r => {
               const RIcon = r.icon
               const isSelected = currentRole === r.value || (currentRole === 'admin' && r.value === 'jefe')
               return (
@@ -111,7 +114,8 @@ interface UserData {
 }
 
 function StatCard({ value, label, icon: Icon, color }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   return (
     <div className="rounded-2xl p-4 flex items-center gap-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
@@ -131,7 +135,8 @@ function PacientesVinculados({ userId, children, onUnlink }: {
   children: any[]
   onUnlink: (childId: string) => void
 }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const hijos = children.filter(c =>
     c.parent_id === userId ||
     (c.parent_ids && c.parent_ids.includes(userId))
@@ -168,7 +173,8 @@ function PacientesVinculados({ userId, children, onUnlink }: {
 }
 
 export default function UserManagementView() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const toast = useToast()
   const [users, setUsers] = useState<UserData[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -226,7 +232,7 @@ export default function UserManagementView() {
         if (kids) setChildren(kids)
       } catch {}
     } catch (err: any) {
-      toast.error('Error cargando usuarios: ' + err.message)
+      toast.error((isEN?'Error loading users: ':'Error cargando usuarios: ') + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -237,7 +243,8 @@ export default function UserManagementView() {
   // Protección: director no puede cambiar rol de otro director
   // Solo un "super director" (el primero registrado / admin) puede hacerlo
   const canChangeRole = (targetUser: UserData) => {
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
+    const isEN = locale === 'en'
 
     if (!currentUserId) return false
     if (targetUser.id === currentUserId) return false // no puede cambiarse a sí mismo
@@ -249,7 +256,7 @@ export default function UserManagementView() {
 
   const handleChangeRole = async (user: UserData, newRole: string) => {
     if (!canChangeRole(user)) {
-      toast.error('No podés cambiar el rol de un Director. Contactá al administrador del sistema.')
+      toast.error(isEN?"You can't change a Director's role. Contact the system administrator.":"No podés cambiar el rol de un Director. Contactá al administrador del sistema.")
       return
     }
     setSavingRole(user.id)
@@ -274,7 +281,7 @@ export default function UserManagementView() {
     if (user.id === currentUserId) return
     const targetRole = user.profile?.role || ''
     if (targetRole === 'jefe' || targetRole === 'admin') {
-      toast.error('No podés desactivar a un Director.')
+      toast.error(isEN?"You can't deactivate a Director.":"No podés desactivar a un Director.")
       return
     }
     try {
@@ -294,8 +301,8 @@ export default function UserManagementView() {
 
   const handleChangePassword = async () => {
     if (!changingPasswordFor) return
-    if (!newPassword || newPassword.length < 6) { toast.error('Mínimo 6 caracteres'); return }
-    if (newPassword !== confirmPassword) { toast.error('Las contraseñas no coinciden'); return }
+    if (!newPassword || newPassword.length < 6) { toast.error(isEN?'Minimum 6 characters':'Mínimo 6 caracteres'); return }
+    if (newPassword !== confirmPassword) { toast.error(isEN?'Passwords do not match':'Las contraseñas no coinciden'); return }
     setSavingPassword(true)
     try {
       const res = await fetch('/api/admin/users', {
@@ -352,7 +359,7 @@ export default function UserManagementView() {
       const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
       const child = children.find(c => c.id === selectedChildId)
-      if (!child) throw new Error('Paciente no encontrado')
+      if (!child) throw new Error(isEN?'Patient not found':'Paciente no encontrado')
 
       // Si ya tiene un parent_id, verificar si es diferente (2do padre)
       if (child.parent_id && child.parent_id !== linkingParent.id) {

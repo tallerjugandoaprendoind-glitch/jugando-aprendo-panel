@@ -37,22 +37,22 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
       const newFormsMap: Record<string, any> = {
         objetivo_iep: {
           id: 'objetivo_iep', title: 'Objetivo IEP', icon: '🎯',
-          color: 'from-blue-600 to-indigo-600', description: 'Plan de educación individualizado',
+          color: 'from-blue-600 to-indigo-600', description: isEN?'Individualized Education Plan':'Plan de educación individualizado',
           sections: newMod.OBJETIVO_IEP_DATA,
         },
         nota_sesion: {
-          id: 'nota_sesion', title: 'Nota de Sesión', icon: '📋',
-          color: 'from-emerald-600 to-teal-600', description: 'Registro de sesión clínica',
+          id: 'nota_sesion', title: isEN?'Session Note':'Nota de Sesión', icon: '📋',
+          color: 'from-emerald-600 to-teal-600', description: isEN?'Clinical session record':'Registro de sesión clínica',
           sections: newMod.NOTA_SESION_DATA,
         },
         informe_mensual: {
-          id: 'informe_mensual', title: 'Informe Mensual de Progreso', icon: '📊',
-          color: 'from-violet-600 to-purple-600', description: 'Evaluación mensual del progreso',
+          id: 'informe_mensual', title: isEN?'Monthly Progress Report':'Informe Mensual de Progreso', icon: '📊',
+          color: 'from-violet-600 to-purple-600', description: isEN?'Monthly progress evaluation':'Evaluación mensual del progreso',
           sections: newMod.INFORME_MENSUAL_DATA,
         },
         registro_conductual: {
-          id: 'registro_conductual', title: 'Registro Conductual ABC', icon: '📝',
-          color: 'from-orange-600 to-red-600', description: 'Análisis funcional de conducta',
+          id: 'registro_conductual', title: isEN?'ABC Behavioral Record':'Registro Conductual ABC', icon: '📝',
+          color: 'from-orange-600 to-red-600', description: isEN?'Functional behavior analysis':'Análisis funcional de conducta',
           sections: newMod.REGISTRO_CONDUCTUAL_ABC_DATA,
         },
       }
@@ -62,43 +62,43 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
       // 3. Buscar en formConstants (anamnesis, aba, entorno_hogar, evaluaciones clínicas)
       const formConstantsMap: Record<string, any> = {
         anamnesis: {
-          id: 'anamnesis', title: 'Historia Clínica', icon: '📋',
-          color: 'from-blue-600 to-cyan-600', description: 'Anamnesis e historia del desarrollo',
+          id: 'anamnesis', title: isEN?'Clinical History':'Historia Clínica', icon: '📋',
+          color: 'from-blue-600 to-cyan-600', description: isEN?'Anamnesis and developmental history':'Anamnesis e historia del desarrollo',
           sections: formMod.ANAMNESIS_DATA,
         },
         aba: {
           id: 'aba', title: 'Sesión ABA', icon: '🧠',
-          color: 'from-indigo-600 to-violet-600', description: 'Registro de sesión de terapia ABA',
+          color: 'from-indigo-600 to-violet-600', description: isEN?'ABA therapy session record':'Registro de sesión de terapia ABA',
           sections: formMod.ABA_DATA,
         },
         entorno_hogar: {
-          id: 'entorno_hogar', title: 'Evaluación del Entorno del Hogar', icon: '🏠',
-          color: 'from-green-600 to-emerald-600', description: 'Evaluación del ambiente familiar',
+          id: 'entorno_hogar', title: isEN?'Home Environment Assessment':'Evaluación del Entorno del Hogar', icon: '🏠',
+          color: 'from-green-600 to-emerald-600', description: isEN?'Family environment assessment':'Evaluación del ambiente familiar',
           sections: formMod.ENTORNO_HOGAR_DATA,
         },
         brief2: {
-          id: 'brief2', title: 'Evaluación BRIEF-2', icon: '🔬',
-          color: 'from-indigo-500 to-indigo-700', description: 'Funciones ejecutivas',
+          id: 'brief2', title: 'BRIEF-2', icon: '🔬',
+          color: 'from-indigo-500 to-indigo-700', description: isEN?'Executive functions':'Funciones ejecutivas',
           sections: formMod.BRIEF2_DATA,
         },
         ados2: {
-          id: 'ados2', title: 'Evaluación ADOS-2', icon: '🔍',
-          color: 'from-teal-500 to-teal-700', description: 'Diagnóstico del autismo',
+          id: 'ados2', title: 'ADOS-2', icon: '🔍',
+          color: 'from-teal-500 to-teal-700', description: isEN?'Autism diagnosis':'Diagnóstico del autismo',
           sections: formMod.ADOS2_DATA,
         },
         vineland3: {
-          id: 'vineland3', title: 'Evaluación Vineland-3', icon: '📈',
-          color: 'from-emerald-500 to-emerald-700', description: 'Conducta adaptativa',
+          id: 'vineland3', title: 'Vineland-3', icon: '📈',
+          color: 'from-emerald-500 to-emerald-700', description: isEN?'Adaptive behavior':'Conducta adaptativa',
           sections: formMod.VINELAND3_DATA,
         },
         wiscv: {
-          id: 'wiscv', title: 'Evaluación WISC-V', icon: '🧩',
-          color: 'from-violet-500 to-violet-700', description: 'Escala de inteligencia',
+          id: 'wiscv', title: 'WISC-V', icon: '🧩',
+          color: 'from-violet-500 to-violet-700', description: isEN?'Intelligence scale':'Escala de inteligencia',
           sections: formMod.WISCV_DATA,
         },
         basc3: {
-          id: 'basc3', title: 'Evaluación BASC-3', icon: '📊',
-          color: 'from-rose-500 to-rose-700', description: 'Sistema conductual',
+          id: 'basc3', title: 'BASC-3', icon: '📊',
+          color: 'from-rose-500 to-rose-700', description: isEN?'Behavioral system':'Sistema conductual',
           sections: formMod.BASC3_DATA,
         },
       }
@@ -217,7 +217,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
 
               {q.type === 'boolean' && (
                 <div className="flex gap-3">
-                  {['Sí ✅', 'No ❌'].map(opt => (
+                  {(isEN?['Yes ✅','No ❌']:['Sí ✅','No ❌']).map(opt => (
                     <button key={opt} type="button" onClick={() => answer(q.id, opt)}
                       className={`flex-1 py-4 rounded-xl border-2 font-bold text-sm transition-all ${responses[q.id] === opt ? (opt.includes('Sí') ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-600 text-white border-slate-600') : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'}`}>
                       {opt}
@@ -243,7 +243,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
           ) : (
             <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-sm shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {submitting ? <Loader2 size={18} className="animate-spin"/> : <CheckCircle2 size={18}/>}
-              {submitting ? 'Enviando...' : '✅ Enviar Respuestas'}
+              {submitting?(isEN?'Sending...':'Enviando...'):(isEN?'✅ Submit Responses':'✅ Enviar Respuestas')}
             </button>
           )}
         </div>
@@ -254,16 +254,17 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
 
 // ─── RESOURCE CARD ────────────────────────────────────────────────────────────
 function ResourceCard({ resource }: { resource: any }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const [showPreview, setShowPreview] = useState(false)
 
   const icons: Record<string, any> = {
     video: { icon: <Play size={20}/>, color: 'text-red-600', bg: 'bg-red-100', label: 'Video' },
     pdf: { icon: <FileText size={20}/>, color: 'text-blue-600', bg: 'bg-blue-100', label: 'PDF' },
-    link: { icon: <LinkIcon size={20}/>, color: 'text-violet-600', bg: 'bg-violet-100', label: 'Enlace' },
-    image: { icon: <ImageIcon size={20}/>, color: 'text-emerald-600', bg: 'bg-emerald-100', label: 'Imagen' },
-    document: { icon: <BookOpen size={20}/>, color: 'text-amber-600', bg: 'bg-amber-100', label: 'Documento' },
+    link: { icon: <LinkIcon size={20}/>, color: 'text-violet-600', bg: 'bg-violet-100', label: isEN?'Link':'Enlace' },
+    image: { icon: <ImageIcon size={20}/>, color: 'text-emerald-600', bg: 'bg-emerald-100', label: isEN?'Image':'Imagen' },
+    document: { icon: <BookOpen size={20}/>, color: 'text-amber-600', bg: 'bg-amber-100', label: isEN?'Document':'Documento' },
     audio: { icon: <Music size={20}/>, color: 'text-indigo-600', bg: 'bg-indigo-100', label: 'Audio' },
   }
 

@@ -32,14 +32,14 @@ const defaultS = { pill: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'bg-b
 
 // ─── FORMULARIOS CLÍNICOS PROFESIONALES ─────────────────────────────────────
 const CLINICAL_FORMS: any[] = [
-  { id: 'anamnesis',    formKey: 'anamnesis',    title: 'Historia Clínica',              subtitle: 'Historia clínica integral del paciente',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: ANAMNESIS_DATA },
-  { id: 'aba',          formKey: 'aba',          title: 'Registro ABA',                    subtitle: 'Análisis Aplicado de la Conducta',               category: 'conductual',icon: '🎯', estimatedMinutes: 20, sections: ABA_DATA },
-  { id: 'entorno_hogar',formKey: 'entorno_hogar',title: 'Evaluación del Entorno del Hogar',subtitle: 'Visita domiciliaria y entorno familiar',          category: 'familia',   icon: '🏠', estimatedMinutes: 25, sections: ENTORNO_HOGAR_DATA },
-  { id: 'brief2',       formKey: 'brief2',       title: 'BRIEF-2',                         subtitle: 'Evaluación de Funciones Ejecutivas',             category: 'cognitivo', icon: '🧠', estimatedMinutes: 25, sections: BRIEF2_DATA, evalType: 'BRIEF2' },
-  { id: 'ados2',        formKey: 'ados2',        title: 'ADOS-2',                          subtitle: 'Diagnóstico del Espectro Autista',               category: 'tea',       icon: '🧩', estimatedMinutes: 30, sections: ADOS2_DATA,  evalType: 'ADOS2' },
-  { id: 'vineland3',    formKey: 'vineland3',    title: 'Vineland-3',                      subtitle: 'Conducta Adaptativa',                           category: 'habilidades',icon: '🤝', estimatedMinutes: 25, sections: VINELAND3_DATA, evalType: 'VINELAND3' },
-  { id: 'wiscv',        formKey: 'wiscv',        title: 'WISC-V',                          subtitle: 'Escala de Inteligencia para Niños',             category: 'cognitivo', icon: '📊', estimatedMinutes: 35, sections: WISCV_DATA,  evalType: 'WISCV' },
-  { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                          subtitle: 'Sistema de Evaluación Conductual',              category: 'conductual',icon: '📈', estimatedMinutes: 30, sections: BASC3_DATA,  evalType: 'BASC3' },
+  { id: 'anamnesis',    formKey: 'anamnesis',    title: isEN?'Clinical History':'Historia Clínica',              subtitle: isEN?'Comprehensive patient clinical history':'Historia clínica integral del paciente',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: ANAMNESIS_DATA },
+  { id: 'aba',          formKey: 'aba',          title: isEN?'ABA Record':'Registro ABA',                    subtitle: isEN?'Applied Behavior Analysis':'Análisis Aplicado de la Conducta',               category: 'conductual',icon: '🎯', estimatedMinutes: 20, sections: ABA_DATA },
+  { id: 'entorno_hogar',formKey: 'entorno_hogar',title: isEN?'Home Environment Assessment':'Evaluación del Entorno del Hogar',subtitle: isEN?'Home visit and family environment':'Visita domiciliaria y entorno familiar',          category: 'familia',   icon: '🏠', estimatedMinutes: 25, sections: ENTORNO_HOGAR_DATA },
+  { id: 'brief2',       formKey: 'brief2',       title: 'BRIEF-2',                         subtitle: isEN?'Executive Functions Assessment':'Evaluación de Funciones Ejecutivas',             category: 'cognitivo', icon: '🧠', estimatedMinutes: 25, sections: BRIEF2_DATA, evalType: 'BRIEF2' },
+  { id: 'ados2',        formKey: 'ados2',        title: 'ADOS-2',                          subtitle: isEN?'Autism Spectrum Diagnosis':'Diagnóstico del Espectro Autista',               category: 'tea',       icon: '🧩', estimatedMinutes: 30, sections: ADOS2_DATA,  evalType: 'ADOS2' },
+  { id: 'vineland3',    formKey: 'vineland3',    title: 'Vineland-3',                      subtitle: isEN?'Adaptive Behavior':'Conducta Adaptativa',                           category: 'habilidades',icon: '🤝', estimatedMinutes: 25, sections: VINELAND3_DATA, evalType: 'VINELAND3' },
+  { id: 'wiscv',        formKey: 'wiscv',        title: 'WISC-V',                          subtitle: isEN?'Intelligence Scale for Children':'Escala de Inteligencia para Niños',             category: 'cognitivo', icon: '📊', estimatedMinutes: 35, sections: WISCV_DATA,  evalType: 'WISCV' },
+  { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                          subtitle: isEN?'Behavioral Assessment System':'Sistema de Evaluación Conductual',              category: 'conductual',icon: '📈', estimatedMinutes: 30, sections: BASC3_DATA,  evalType: 'BASC3' },
 ]
 
 const ALL_SPECIALIST_FORMS = [
@@ -49,7 +49,8 @@ const ALL_SPECIALIST_FORMS = [
 
 // ─── QUESTION RENDERER ───────────────────────────────────────────────────────
 function QuestionField({ q, value, onChange }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const base = "w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
 
   if (q.type === 'select' || q.type === 'frequency') return (
@@ -99,7 +100,7 @@ function QuestionField({ q, value, onChange }: any) {
   }
 
   if (q.type === 'boolean' || (q.type === 'radio' && (q.options || []).length <= 3)) {
-    const opts = q.options || ['Sí', 'No']
+    const opts = q.options || (isEN ? ['Yes','No'] : ['Sí','No'])
     return (
       <div className="flex gap-3 flex-wrap">
         {opts.map((v: string) => (
@@ -177,7 +178,8 @@ function QuestionField({ q, value, onChange }: any) {
 
 // ─── FORM FILL VIEW ──────────────────────────────────────────────────────────
 function FormFillView({ form, children, onBack, userId, toast }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [step, setStep] = useState(0)
   const [responses, setResponses] = useState<Record<string, any>>({})
   const [childId, setChildId] = useState('')
@@ -197,11 +199,11 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
   const answer = (id: string, val: any) => setResponses(p => ({ ...p, [id]: val }))
 
   const handleAnalyze = async () => {
-    if (!childId) { toast.error('Selecciona un paciente'); return }
+    if (!childId) { toast.error(isEN?'Select a patient':'Selecciona un paciente'); return }
     setAnalyzing(true)
     try {
       const child = children.find((c: any) => c.id === childId)
-      const childName = child?.name || 'Paciente'
+      const childName = child?.name || (isEN?'Patient':'Paciente')
       const childAge = child?.age || calcularEdadNumerica(child?.birth_date) || 'N/E'
       let res: Response
 
@@ -263,12 +265,12 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       )
       setEditedActividades(analysis?.actividades_casa || analysis?.actividad_casa || '')
       toast.success('✨ Análisis IA generado')
-    } catch (e: any) { toast.error('Error: ' + e.message) }
+    } catch (e: any) { toast.error((isEN?'Error: ':'Error: ') + e.message) }
     finally { setAnalyzing(false) }
   }
 
   const handleSave = async () => {
-    if (!childId) { toast.error('Selecciona un paciente'); return }
+    if (!childId) { toast.error(isEN?'Select a patient':'Selecciona un paciente'); return }
     setSaving(true)
     try {
       const table = form.isSoft ? 'form_responses' :
@@ -304,7 +306,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       }
       setDone(true)
       toast.success('✅ Enviado al jefe para aprobación')
-    } catch (e: any) { toast.error('Error: ' + e.message) }
+    } catch (e: any) { toast.error((isEN?'Error: ':'Error: ') + e.message) }
     finally { setSaving(false) }
   }
 
@@ -555,7 +557,8 @@ const TABS = [
 ]
 
 export default function MisFormularios({ userId }: { userId: string }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const toast = useToast()
   const [children, setChildren] = useState<any[]>([])
   const [search, setSearch] = useState('')

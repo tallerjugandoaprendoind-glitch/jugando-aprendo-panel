@@ -16,7 +16,8 @@ type Tab = 'aprender' | 'biblioteca' | 'diagnosticos'
 
 export default function KnowledgeBaseView() {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [tab, setTab] = useState<Tab>('aprender')
   const [documentos, setDocumentos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,7 +30,20 @@ export default function KnowledgeBaseView() {
   const [urlAprender, setUrlAprender] = useState('')
   const [modoFuente, setModoFuente] = useState<'keywords' | 'url'>('keywords')
 
-  const temasSugeridos = [
+  const temasSugeridos = isEN ? [
+    'Positive reinforcement ABA',
+    'Augmentative communication AAC ASD',
+    'Functional behavior analysis',
+    'Autism social skills',
+    'Impulse control ADHD',
+    'Shaping ABA',
+    'Daily living skills training',
+    'Emotional regulation children',
+    'ABA play therapy',
+    'Verbal behavior language',
+    'Reducing repetitive behaviors',
+    'Sensory integration ASD',
+  ] : [
     'Reforzamiento positivo ABA',
     'Comunicación aumentativa AAC TEA',
     'Análisis funcional de conducta',
@@ -62,16 +76,16 @@ export default function KnowledgeBaseView() {
       const res = await fetch('/api/knowledge/ingest')
       const json = await res.json()
       setDocumentos(json.data || [])
-    } catch { toast.error('Error cargando documentos') }
+    } catch { toast.error(isEN ? 'Error loading documents' : 'Error cargando documentos') }
     finally { setLoading(false) }
   }
 
   useEffect(() => { loadDocs() }, [])
 
   const handleAprender = async () => {
-    if (!keywords.trim()) { toast.error('Escribe palabras clave'); return }
+    if (!keywords.trim()) { toast.error(isEN ? 'Enter keywords' : 'Escribe palabras clave'); return }
     setAprendiendo(true)
-    setLogAprender([`🚀 Iniciando aprendizaje: "${keywords}"...`])
+    setLogAprender([`🚀 ${isEN ? 'Starting learning' : 'Iniciando aprendizaje'}: "${keywords}"...`])
     setResultadoAprender(null)
     try {
       const res = await fetch('/api/knowledge/aprender', {
@@ -83,7 +97,7 @@ export default function KnowledgeBaseView() {
       if (json.error) throw new Error(json.error)
       setLogAprender(json.log || [])
       setResultadoAprender(json)
-      toast.success(`✅ ${json.totalChunks} fragmentos aprendidos`)
+      toast.success(`✅ ${json.totalChunks} ${isEN ? 'fragments learned' : 'fragmentos aprendidos'}`)
       await loadDocs()
     } catch (e: any) {
       toast.error(e.message)
@@ -99,15 +113,15 @@ export default function KnowledgeBaseView() {
         body: JSON.stringify({ id, locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
-      if (json.ok) { toast.success(`✅ Re-indexado: ${json.chunks} fragmentos`); await loadDocs() }
-      else toast.error(json.error || 'Error al re-indexar')
+      if (json.ok) { toast.success(`✅ ${isEN ? 'Re-indexed' : 'Re-indexado'}: ${json.chunks} ${isEN ? 'fragments' : 'fragmentos'}`); await loadDocs() }
+      else toast.error(json.error || (isEN ? 'Error re-indexing' : 'Error al re-indexar'))
     } catch (e: any) { toast.error(e.message) }
   }
 
   const handleAprenderUrl = async () => {
-    if (!urlAprender.trim()) { toast.error('Ingresa una URL'); return }
+    if (!urlAprender.trim()) { toast.error(isEN ? 'Enter a URL' : 'Ingresa una URL'); return }
     setAprendiendo(true)
-    setLogAprender([`🌐 Leyendo URL: "${urlAprender}"...`])
+    setLogAprender([`🌐 ${isEN ? 'Reading URL' : 'Leyendo URL'}: "${urlAprender}"...`])
     setResultadoAprender(null)
     try {
       let hostname = urlAprender
@@ -116,21 +130,21 @@ export default function KnowledgeBaseView() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
-          titulo: `Página web: ${hostname}`,
+          titulo: `${isEN ? 'Web page' : 'Página web'}: ${hostname}`,
           tipo: 'articulo',
           sourceUrl: urlAprender,
         }),
       })
       const json = await res.json()
-      if (!res.ok || !json.ok) throw new Error(json.error || 'Error leyendo la URL')
+      if (!res.ok || !json.ok) throw new Error(json.error || (isEN ? 'Error reading URL' : 'Error leyendo la URL'))
       setLogAprender([
-        `✅ URL leída: ${json.chars?.toLocaleString() || 0} caracteres`,
-        `✅ Método: ${json.method || 'scraping'}`,
-        `✅ Indexados: ${json.chunks || 0} fragmentos`,
-        `🎉 La IA ya aprendió el contenido de esa página`,
+        `✅ ${isEN ? 'URL read' : 'URL leída'}: ${json.chars?.toLocaleString() || 0} ${isEN ? 'characters' : 'caracteres'}`,
+        `✅ ${isEN ? 'Method' : 'Método'}: ${json.method || 'scraping'}`,
+        `✅ ${isEN ? 'Indexed' : 'Indexados'}: ${json.chunks || 0} ${isEN ? 'fragments' : 'fragmentos'}`,
+        `🎉 ${isEN ? 'AI has learned the content from that page' : 'La IA ya aprendió el contenido de esa página'}`,
       ])
       setResultadoAprender({ keywords: urlAprender, terminos: [urlAprender], fuentes: 1, documentos: 1, totalChunks: json.chunks || 0 })
-      toast.success(`✅ ${json.chunks} fragmentos aprendidos de la URL`)
+      toast.success(`✅ ${json.chunks} ${isEN ? 'fragments learned from URL' : 'fragmentos aprendidos de la URL'}`)
       await loadDocs()
     } catch (e: any) {
       toast.error(e.message)
@@ -146,14 +160,14 @@ export default function KnowledgeBaseView() {
       const json = await res.json()
       if (json.error) throw new Error(json.error)
       setResultadosBusqueda(json.resultados || [])
-      if (!json.resultados?.length) toast.error('Sin resultados. Prueba otro título.')
+      if (!json.resultados?.length) toast.error(isEN ? 'No results. Try a different title.' : 'Sin resultados. Prueba otro título.')
     } catch (e: any) { toast.error(e.message) }
     finally { setBuscando(false) }
   }
 
   // ── Extraer texto de PDF en el navegador usando pdfjs-dist (npm) ────────────
   const extractPdfTextInBrowser = async (file: File, onProgress: (p: string) => void): Promise<string> => {
-    onProgress('Cargando lector de PDF...')
+    onProgress(isEN ? 'Loading PDF reader...' : 'Cargando lector de PDF...')
 
     const pdfjs = await import('pdfjs-dist')
     // Worker inline — evita problemas de CORS con archivos externos
@@ -167,12 +181,12 @@ export default function KnowledgeBaseView() {
     const pdf = await loadingTask.promise
 
     const totalPages = pdf.numPages
-    onProgress(`Leyendo ${totalPages} páginas...`)
+    onProgress(`${isEN ? 'Reading' : 'Leyendo'} ${totalPages} ${isEN ? 'pages...' : 'páginas...'}`)
 
     const textos: string[] = []
     for (let i = 1; i <= totalPages; i++) {
       if (i % 30 === 0 || i === totalPages) {
-        onProgress(`Leyendo página ${i} de ${totalPages}...`)
+        onProgress(`${isEN ? 'Reading page' : 'Leyendo página'} ${i} ${isEN ? 'of' : 'de'} ${totalPages}...`)
       }
       const page = await pdf.getPage(i)
       const textContent = await page.getTextContent()
@@ -185,16 +199,16 @@ export default function KnowledgeBaseView() {
     }
 
     const fullText = textos.join('\n\n')
-    onProgress(`✅ ${totalPages} páginas leídas — ${Math.round(fullText.length / 1000)}k caracteres`)
+    onProgress(`✅ ${totalPages} ${isEN ? 'pages read' : 'páginas leídas'} — ${Math.round(fullText.length / 1000)}k ${isEN ? 'characters' : 'caracteres'}`)
     return fullText
   }
 
   const handleUpload = async () => {
-    if (!form.titulo) { toast.error('El título es requerido'); return }
-    if (inputMode === 'archivo' && !selectedFile) { toast.error('Selecciona un archivo'); return }
-    if (inputMode === 'url' && !form.url.trim()) { toast.error('Ingresa una URL válida'); return }
-    if (inputMode === 'texto' && !form.texto.trim()) { toast.error('Pega el contenido'); return }
-    if (inputMode === 'buscar' && !libroSeleccionado) { toast.error('Selecciona un libro'); return }
+    if (!form.titulo) { toast.error(isEN ? 'Title is required' : 'El título es requerido'); return }
+    if (inputMode === 'archivo' && !selectedFile) { toast.error(isEN ? 'Select a file' : 'Selecciona un archivo'); return }
+    if (inputMode === 'url' && !form.url.trim()) { toast.error(isEN ? 'Enter a valid URL' : 'Ingresa una URL válida'); return }
+    if (inputMode === 'texto' && !form.texto.trim()) { toast.error(isEN ? 'Paste content' : 'Pega el contenido'); return }
+    if (inputMode === 'buscar' && !libroSeleccionado) { toast.error(isEN ? 'Select a book' : 'Selecciona un libro'); return }
     setUploading(true)
     try {
       const body: Record<string, any> = { titulo: form.titulo, tipo: form.tipo, descripcion: form.descripcion }
@@ -205,22 +219,22 @@ export default function KnowledgeBaseView() {
 
         if (isPdf && isBig) {
           // ── Archivos grandes: extraer texto en el navegador ──────────────
-          setUploadProgress(`Archivo grande (${Math.round(selectedFile.size / 1024 / 1024)}MB) — extrayendo texto localmente...`)
+          setUploadProgress(`${isEN ? 'Large file' : 'Archivo grande'} (${Math.round(selectedFile.size / 1024 / 1024)}MB) — ${isEN ? 'extracting text locally...' : 'extrayendo texto localmente...'}`)
           try {
             const texto = await extractPdfTextInBrowser(selectedFile, setUploadProgress)
             if (!texto || texto.trim().length < 100) {
-              throw new Error('No se pudo extraer texto del PDF. El archivo puede estar escaneado o protegido.')
+              throw new Error(isEN ? 'Could not extract text from PDF. File may be scanned or protected.' : 'No se pudo extraer texto del PDF. El archivo puede estar escaneado o protegido.')
             }
             body.texto = texto
             body.fileName = selectedFile.name
           } catch (pdfErr: any) {
             // Si pdfjs falla, intentar subir a Storage de todas formas
             console.warn('pdfjs falló, subiendo archivo directo:', pdfErr.message)
-            setUploadProgress('Subiendo archivo a servidor...')
+            setUploadProgress(isEN ? 'Uploading file to server...' : 'Subiendo archivo a servidor...')
             const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
             const { data: up, error: upErr } = await supabasePublic.storage
               .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
-            if (upErr) throw new Error(`Error al subir: ${upErr.message}`)
+            if (upErr) throw new Error(`${isEN ? 'Upload error' : 'Error al subir'}: ${upErr.message}`)
             const { data: signed } = await supabasePublic.storage
               .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
             body.storageUrl = signed?.signedUrl
@@ -228,11 +242,11 @@ export default function KnowledgeBaseView() {
           }
         } else {
           // ── Archivos pequeños (<10MB): subir a Storage normal ────────────
-          setUploadProgress('Subiendo archivo...')
+          setUploadProgress(isEN ? 'Uploading file...' : 'Subiendo archivo...')
           const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
           const { data: up, error: upErr } = await supabasePublic.storage
             .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
-          if (upErr) throw new Error(`Error al subir: ${upErr.message}`)
+          if (upErr) throw new Error(`${isEN ? 'Upload error' : 'Error al subir'}: ${upErr.message}`)
           const { data: signed } = await supabasePublic.storage
             .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
           body.storageUrl = signed?.signedUrl
@@ -269,10 +283,10 @@ export default function KnowledgeBaseView() {
 
         let totalChunksIndexados = 0
         for (let i = 0; i < partes.length; i++) {
-          setUploadProgress(`Indexando parte ${i + 1} de ${partes.length}...`)
+          setUploadProgress(`${isEN ? 'Indexing part' : 'Indexando parte'} ${i + 1} ${isEN ? 'of' : 'de'} ${partes.length}...`)
           const partBody = {
             ...body,
-            titulo: partes.length > 1 ? `${body.titulo} (Parte ${i + 1}/${partes.length})` : body.titulo,
+            titulo: partes.length > 1 ? `${body.titulo} (${isEN ? 'Part' : 'Parte'} ${i + 1}/${partes.length})` : body.titulo,
             texto: partes[i],
           }
           const res = await fetch('/api/knowledge/ingest', {
@@ -282,13 +296,13 @@ export default function KnowledgeBaseView() {
           let json: any
           try { json = await res.json() }
           catch { throw new Error(await res.text() || `Error HTTP ${res.status}`) }
-          if (!res.ok) throw new Error(json.error || `Error en parte ${i + 1}`)
+          if (!res.ok) throw new Error(json.error || `${isEN ? 'Error in part' : 'Error en parte'} ${i + 1}`)
           totalChunksIndexados += json.chunks || 0
         }
-        toast.success(`✅ ${totalChunksIndexados} fragmentos indexados en ${partes.length} partes`)
+        toast.success(`✅ ${totalChunksIndexados} ${isEN ? 'fragments indexed in' : 'fragmentos indexados en'} ${partes.length} ${isEN ? 'parts' : 'partes'}`)
       } else {
         // Texto pequeño o no es texto → request único normal
-        setUploadProgress('Indexando en el Cerebro IA... (puede tardar 1-3 min)')
+        setUploadProgress(isEN ? 'Indexing to AI Brain... (may take 1-3 min)' : 'Indexando en el Cerebro IA... (puede tardar 1-3 min)')
         const res = await fetch('/api/knowledge/ingest', {
           method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
           body: JSON.stringify(body),
@@ -296,9 +310,9 @@ export default function KnowledgeBaseView() {
         let json: any
         try { json = await res.json() }
         catch { throw new Error(await res.text() || `Error HTTP ${res.status}`) }
-        if (!res.ok) throw new Error(json.error || 'Error al indexar')
-        if (!json.success) throw new Error(json.error || 'El indexado falló')
-        toast.success(`✅ ${json.chunks} fragmentos indexados correctamente`)
+        if (!res.ok) throw new Error(json.error || (isEN ? 'Error indexing' : 'Error al indexar'))
+        if (!json.success) throw new Error(json.error || (isEN ? 'Indexing failed' : 'El indexado falló'))
+        toast.success(`✅ ${json.chunks} ${isEN ? 'fragments indexed successfully' : 'fragmentos indexados correctamente'}`)
       }
 
       setShowForm(false)
@@ -315,7 +329,7 @@ export default function KnowledgeBaseView() {
       method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
       body: JSON.stringify({ id, locale: localStorage.getItem('vanty_locale') || 'es' }),
     })
-    toast.success('Documento eliminado')
+    toast.success(isEN ? 'Document deleted' : 'Documento eliminado')
     await loadDocs()
   }
 
@@ -366,7 +380,7 @@ export default function KnowledgeBaseView() {
         </button>
         <button onClick={() => setTab('biblioteca')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'biblioteca' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
-          <BookMarked size={15} /> Biblioteca ({documentos.length})
+          <BookMarked size={15} /> {isEN ? 'Library' : 'Biblioteca'} ({documentos.length})
         </button>
       </div>
 
@@ -381,12 +395,17 @@ export default function KnowledgeBaseView() {
               <span className="font-bold text-violet-800 text-sm">{t('ui.comoFuncAuto')}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {[
+              {(isEN ? [
+                { icon: '🔍', t: 'Expands keywords', d: 'AI generates 8-12 related technical terms' },
+                { icon: '🌐', t: 'Searches the internet', d: 'Wikipedia ES/EN + scientific PubMed articles' },
+                { icon: '🤖', t: 'Synthesizes with AI', d: 'Generates structured clinical summary for ABA' },
+                { icon: '🧠', t: 'Indexes to the Brain', d: 'ARIA and all agents already know the topic' },
+              ] : [
                 { icon: '🔍', t: 'Expande palabras clave', d: 'La IA genera 8-12 términos técnicos relacionados' },
                 { icon: '🌐', t: 'Busca en internet', d: 'Wikipedia ES/EN + artículos PubMed científicos' },
                 { icon: '🤖', t: 'Sintetiza con IA', d: 'Genera resumen clínico estructurado para ABA' },
                 { icon: '🧠', t: 'Indexa en el Cerebro', d: 'ARIA y todos los agentes ya saben ese tema' },
-              ].map((s, i) => (
+              ]).map((s, i) => (
                 <div key={i} className="bg-white dark:bg-slate-700 rounded-xl p-3 border border-violet-100 dark:border-violet-900/30">
                   <p className="text-xl mb-1">{s.icon}</p>
                   <p className="text-xs font-bold text-violet-700">{s.t}</p>
@@ -403,11 +422,11 @@ export default function KnowledgeBaseView() {
             <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
               <button onClick={() => setModoFuente('keywords')}
                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'keywords' ? 'bg-white shadow text-violet-700' : 'text-slate-500'}`}>
-                🔍 Palabras clave
+                🔍 {isEN ? 'Keywords' : 'Palabras clave'}
               </button>
               <button onClick={() => setModoFuente('url')}
                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'url' ? 'bg-white shadow text-violet-700' : 'text-slate-500'}`}>
-                🌐 URL de página web
+                🌐 {isEN ? 'Web page URL' : 'URL de página web'}
               </button>
             </div>
 
@@ -415,7 +434,7 @@ export default function KnowledgeBaseView() {
             {modoFuente === 'keywords' && (
               <div className="space-y-4">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
-                  ¿Qué tema quieres que aprenda la IA?
+                  {isEN ? 'What topic do you want the AI to learn?' : '¿Qué tema quieres que aprenda la IA?'}
                 </label>
                 <textarea
                   value={keywords}
@@ -426,7 +445,7 @@ export default function KnowledgeBaseView() {
                   disabled={aprendiendo}
                 />
                 <div>
-                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">Temas sugeridos:</p>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide mb-2">{isEN ? 'Suggested topics:' : 'Temas sugeridos:'}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {temasSugeridos.map(tema => (
                       <button key={tema} onClick={() => setKeywords(tema)} disabled={aprendiendo}
@@ -440,9 +459,9 @@ export default function KnowledgeBaseView() {
                   {(['completo', 'rapido'] as const).map(m => (
                     <button key={m} onClick={() => setModo(m)}
                       className={`flex-1 p-3 rounded-xl border text-left transition ${modo === m ? 'bg-violet-600 text-white border-violet-600' : 'border-slate-200 text-slate-500 hover:border-violet-200'}`}>
-                      <p className="text-xs font-bold">{m === 'completo' ? '🔬 Completo' : '⚡ Rápido'}</p>
+                      <p className="text-xs font-bold">{m === 'completo' ? (isEN ? '🔬 Complete' : '🔬 Completo') : (isEN ? '⚡ Fast' : '⚡ Rápido')}</p>
                       <p className={`text-[10px] mt-0.5 ${modo === m ? 'text-violet-200' : 'text-slate-400'}`}>
-                        {m === 'completo' ? 'Más fuentes, más fragmentos, más rico' : 'Solo síntesis IA, más veloz'}
+                        {m === 'completo' ? (isEN ? 'More sources, more fragments, richer' : 'Más fuentes, más fragmentos, más rico') : (isEN ? 'AI synthesis only, faster' : 'Solo síntesis IA, más veloz')}
                       </p>
                     </button>
                   ))}
@@ -454,12 +473,12 @@ export default function KnowledgeBaseView() {
             {modoFuente === 'url' && (
               <div className="space-y-3">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
-                  URL de página web a aprender
+                  {isEN ? 'Web page URL to learn from' : 'URL de página web a aprender'}
                 </label>
                 <input
                   value={urlAprender}
                   onChange={e => setUrlAprender(e.target.value)}
-                  placeholder="https://ejemplo.com/articulo-sobre-aba"
+                  placeholder={isEN ? 'https://example.com/article-about-aba' : 'https://ejemplo.com/articulo-sobre-aba'}
                   className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-400"
                   disabled={aprendiendo}
                 />
@@ -478,8 +497,8 @@ export default function KnowledgeBaseView() {
               disabled={aprendiendo || (modoFuente === 'keywords' ? !keywords.trim() : !urlAprender.trim())}
               className="w-full py-3.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl font-black flex items-center justify-center gap-2 text-sm transition shadow-md">
               {aprendiendo
-                ? <><Loader2 size={16} className="animate-spin" /> Aprendiendo desde internet...</>
-                : <><Sparkles size={16} /> Aprender ahora</>}
+                ? <><Loader2 size={16} className="animate-spin" /> {isEN ? 'Learning from internet...' : 'Aprendiendo desde internet...'}</>
+                : <><Sparkles size={16} /> {isEN ? 'Learn now' : 'Aprender ahora'}</>}
             </button>
           </div>
 
@@ -496,7 +515,7 @@ export default function KnowledgeBaseView() {
                   'text-slate-300'
                 }>{line}</p>
               ))}
-              {aprendiendo && <p className="text-violet-400 animate-pulse">⟳ Procesando...</p>}
+              {aprendiendo && <p className="text-violet-400 animate-pulse">⟳ {isEN ? 'Processing...' : 'Procesando...'}</p>}
             </div>
           )}
 
@@ -509,9 +528,9 @@ export default function KnowledgeBaseView() {
               </div>
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {[
-                  { v: resultadoAprender.fuentes, l: 'Fuentes' },
-                  { v: resultadoAprender.documentos, l: 'Documentos' },
-                  { v: resultadoAprender.totalChunks, l: 'Fragmentos' },
+                  { v: resultadoAprender.fuentes, l: isEN ? 'Sources' : 'Fuentes' },
+                  { v: resultadoAprender.documentos, l: isEN ? 'Documents' : 'Documentos' },
+                  { v: resultadoAprender.totalChunks, l: isEN ? 'Fragments' : 'Fragmentos' },
                 ].map((s, i) => (
                   <div key={i} className="bg-white rounded-xl p-3 text-center border border-emerald-100">
                     <p className="text-xl font-black text-emerald-700">{s.v}</p>
@@ -520,7 +539,7 @@ export default function KnowledgeBaseView() {
                 ))}
               </div>
               <p className="text-xs text-emerald-700 bg-white rounded-xl px-3 py-2.5 border border-emerald-100">
-                🤖 ARIA ya conoce sobre <strong>"{resultadoAprender.keywords}"</strong>. Prueba preguntarle ahora.
+                🤖 {isEN ? 'ARIA now knows about' : 'ARIA ya conoce sobre'} <strong>"{resultadoAprender.keywords}"</strong>. {isEN ? 'Try asking now.' : 'Prueba preguntarle ahora.'}
               </p>
               {resultadoAprender.terminos?.length > 0 && (
                 <div className="mt-3">
@@ -539,7 +558,7 @@ export default function KnowledgeBaseView() {
           {docsAuto.length > 0 && (
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
-                Temas ya aprendidos por la IA ({docsAuto.length})
+                {isEN ? `Topics already learned by AI (${docsAuto.length})` : `Temas ya aprendidos por la IA (${docsAuto.length})`}
               </p>
               <div className="space-y-2">
                 {docsAuto.map(doc => (
@@ -548,7 +567,7 @@ export default function KnowledgeBaseView() {
                       <span className="text-base">🧠</span>
                       <div className="min-w-0">
                         <p className="text-xs font-semibold text-slate-700 truncate">{doc.titulo.replace('[IA] ', '')}</p>
-                        <p className="text-[10px] text-slate-400">{doc.total_chunks || 0} fragmentos · {new Date(doc.created_at).toLocaleDateString('es-ES')}</p>
+                        <p className="text-[10px] text-slate-400">{doc.total_chunks || 0} {isEN ? 'fragments' : 'fragmentos'} · {new Date(doc.created_at).toLocaleDateString(isEN ? 'en-US' : 'es-ES')}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 flex-shrink-0">
@@ -570,7 +589,7 @@ export default function KnowledgeBaseView() {
         <div className="space-y-4">
           <button onClick={() => setShowForm(v => !v)}
             className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 text-sm transition">
-            {showForm ? <><X size={16} /> {t('common.cancelar')}</> : <><Plus size={16} /> Agregar documento manualmente</>}
+            {showForm ? <><X size={16} /> {t('common.cancelar')}</> : <><Plus size={16} /> {isEN ? 'Add document manually' : 'Agregar documento manualmente'}</>}
           </button>
 
           {showForm && (
@@ -579,7 +598,9 @@ export default function KnowledgeBaseView() {
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {(['archivo', 'url', 'texto', 'buscar'] as const).map(m => {
                   const icons: Record<string, string> = { archivo: '📎', url: '🔗', texto: '📝', buscar: '🔍' }
-                  const labels: Record<string, string> = { archivo: 'Archivo PDF/TXT', url: 'URL', texto: 'Pegar texto', buscar: 'Buscar libro' }
+                  const labels: Record<string, string> = isEN
+                    ? { archivo: 'PDF/TXT File', url: 'URL', texto: 'Paste text', buscar: 'Search book' }
+                    : { archivo: 'Archivo PDF/TXT', url: 'URL', texto: 'Pegar texto', buscar: 'Buscar libro' }
                   return (
                     <button key={m} onClick={() => { setInputMode(m); setLibroSeleccionado(null) }}
                       className={`p-2.5 rounded-xl border text-xs font-bold transition text-center ${inputMode === m ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-violet-200'}`}>
@@ -682,8 +703,8 @@ export default function KnowledgeBaseView() {
               <button onClick={handleUpload} disabled={uploading}
                 className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50">
                 {uploading
-                  ? <><Loader2 size={14} className="animate-spin" /> {uploadProgress || 'Procesando...'}</>
-                  : <><Save size={14} /> Indexar en el Cerebro</>}
+                  ? <><Loader2 size={14} className="animate-spin" /> {uploadProgress || (isEN ? 'Processing...' : 'Procesando...')}</>
+                  : <><Save size={14} /> {isEN ? 'Index to Brain' : 'Indexar en el Cerebro'}</>}
               </button>
             </div>
           )}
@@ -694,13 +715,13 @@ export default function KnowledgeBaseView() {
             <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600 p-10 text-center">
               <Brain size={32} className="text-slate-200 mx-auto mb-3" />
               <p className="text-slate-400 font-semibold">{t('ui.bibliotecaVacia')}</p>
-              <p className="text-slate-400 text-sm mt-1">Usa "{t('whatsapp.aprenderInternet')}" para empezar</p>
+              <p className="text-slate-400 text-sm mt-1">{isEN ? `Use "${t('whatsapp.aprenderInternet')}" to get started` : `Usa "${t('whatsapp.aprenderInternet')}" para empezar`}</p>
             </div>
           ) : (
             <div className="space-y-2">
               {docsManual.length > 0 && (
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1">
-                  Subidos manualmente ({docsManual.length})
+                  {isEN ? `Manually uploaded (${docsManual.length})` : `Subidos manualmente (${docsManual.length})`}
                 </p>
               )}
               {docsManual.map(doc => (
@@ -708,7 +729,7 @@ export default function KnowledgeBaseView() {
               ))}
               {docsAuto.length > 0 && (
                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wide px-1 pt-2">
-                  Auto-aprendidos ({docsAuto.length})
+                  {isEN ? `Auto-learned (${docsAuto.length})` : `Auto-aprendidos (${docsAuto.length})`}
                 </p>
               )}
               {docsAuto.map(doc => (
@@ -727,7 +748,8 @@ function DocCard({ doc, onDelete, onRetry }: {
   onDelete: (id: string) => void
   onRetry?: (id: string) => void
 }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const isAuto = doc.source_url?.startsWith('auto:')
   return (
     <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3.5 flex items-center justify-between gap-3 hover:border-slate-200 transition">
@@ -743,8 +765,8 @@ function DocCard({ doc, onDelete, onRetry }: {
             <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md ${isAuto ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-500'}`}>
               {isAuto ? 'auto' : doc.tipo}
             </span>
-            <span className="text-[10px] text-slate-400">{doc.total_chunks || 0} fragmentos</span>
-            <span className="text-[10px] text-slate-400">{new Date(doc.created_at).toLocaleDateString('es-ES')}</span>
+            <span className="text-[10px] text-slate-400">{doc.total_chunks || 0} {isEN ? 'fragments' : 'fragmentos'}</span>
+            <span className="text-[10px] text-slate-400">{new Date(doc.created_at).toLocaleDateString(isEN ? 'en-US' : 'es-ES')}</span>
           </div>
         </div>
       </div>

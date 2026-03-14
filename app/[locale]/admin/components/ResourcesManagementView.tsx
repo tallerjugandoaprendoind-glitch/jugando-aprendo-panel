@@ -12,13 +12,13 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
-const RESOURCE_TYPES = [
-  { id: 'video', label: 'Video', icon: Video, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', hint: 'YouTube, Vimeo, URL de video...' },
+const getResourceTypes = (isEN: boolean) => [
+  { id: 'video', label: 'Video', icon: Video, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', hint: isEN?'YouTube, Vimeo, video URL...':'YouTube, Vimeo, URL de video...' },
   { id: 'pdf', label: 'PDF / Doc', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', hint: 'URL de PDF o documento en Google Drive' },
-  { id: 'link', label: 'Enlace web', icon: LinkIcon, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200', hint: 'Cualquier página web útil...' },
-  { id: 'image', label: 'Imagen', icon: ImageIcon, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', hint: 'URL de imagen...' },
-  { id: 'document', label: 'Material', icon: BookOpen, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', hint: 'Guías, artículos, materiales...' },
-  { id: 'audio', label: 'Audio', icon: Music, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', hint: 'Podcast, meditación, música...' },
+  { id: 'link', label: isEN?'Web link':'Enlace web', icon: LinkIcon, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200', hint: isEN?'Any useful web page...':'Cualquier página web útil...' },
+  { id: 'image', label: isEN?'Image':'Imagen', icon: ImageIcon, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', hint: isEN?'Image URL...':'URL de imagen...' },
+  { id: 'document', label: isEN?'Material':'Material', icon: BookOpen, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', hint: isEN?'Guides, articles, materials...':'Guías, artículos, materiales...' },
+  { id: 'audio', label: 'Audio', icon: Music, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', hint: isEN?'Podcast, meditation, music...':'Podcast, meditación, música...' },
 ]
 
 const RESOURCE_TAGS = [
@@ -66,9 +66,9 @@ export default function ResourcesManagementView() {
   useEffect(() => { load() }, [load])
 
   const handleSave = async () => {
-    if (!newResource.title.trim()) { toast.error('El título es obligatorio'); return }
-    if (!newResource.url.trim()) { toast.error('La URL es obligatoria'); return }
-    if (!newResource.is_global && !newResource.child_id) { toast.error('Selecciona un paciente'); return }
+    if (!newResource.title.trim()) { toast.error(isEN?'Title is required':'El título es obligatorio'); return }
+    if (!newResource.url.trim()) { toast.error(isEN?'URL is required':'La URL es obligatoria'); return }
+    if (!newResource.is_global && !newResource.child_id) { toast.error(isEN?'Select a patient':'Selecciona un paciente'); return }
     setIsSaving(true)
     try {
       // Get parent_id from child if specific patient selected
@@ -121,7 +121,7 @@ export default function ResourcesManagementView() {
     if (!confirm('¿Eliminar este recurso?')) return
     try {
       await fetch('/api/admin/resources', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' }, body: JSON.stringify({ id }) })
-      toast.success('Recurso eliminado')
+      toast.success(isEN?'Resource deleted':'Recurso eliminado')
       load()
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -206,7 +206,7 @@ export default function ResourcesManagementView() {
         </div>
         <select value={filterType} onChange={e => setFilterType(e.target.value)} className="p-3.5 rounded-xl text-sm font-bold outline-none focus:border-violet-400 transition-all border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}>
           <option value="all">{t('common.todos')}</option>
-          {RESOURCE_TYPES.map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
+          {getResourceTypes(isEN).map(t => <option key={t.id} value={t.id}>{t.label}</option>)}
         </select>
       </div>
 
@@ -222,7 +222,7 @@ export default function ResourcesManagementView() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map(resource => {
-            const typeInfo = RESOURCE_TYPES.find(t => t.id === resource.resource_type) || RESOURCE_TYPES[2]
+            const typeInfo = getResourceTypes(isEN).find(t => t.id === resource.resource_type) || getResourceTypes(isEN)[2]
             const IconComp = typeInfo.icon
             const patient = patients.find(p => p.id === resource.child_id)
 
@@ -308,7 +308,7 @@ export default function ResourcesManagementView() {
               <div>
                 <label className="text-xs font-black uppercase tracking-widest block mb-3" style={{ color: "var(--text-muted)" }}>{t('ui.tipoRecurso')}</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {RESOURCE_TYPES.map(type => {
+                  {getResourceTypes(isEN).map(type => {
                     const Icon = type.icon
                     return (
                       <button key={type.id} onClick={() => setNewResource(p => ({ ...p, resource_type: type.id }))}
@@ -339,7 +339,7 @@ export default function ResourcesManagementView() {
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">
                   URL *
                   <span className="ml-2 font-normal text-slate-300">
-                    {RESOURCE_TYPES.find(t => t.id === newResource.resource_type)?.hint}
+                    {getResourceTypes(isEN).find(t => t.id === newResource.resource_type)?.hint}
                   </span>
                 </label>
                 <input type="url" value={newResource.url} onChange={e => setNewResource(p => ({ ...p, url: e.target.value }))}

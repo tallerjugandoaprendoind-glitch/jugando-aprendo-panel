@@ -14,7 +14,8 @@ import { supabase } from '@/lib/supabase'
 
 // ── Cronómetro de 45 min por cita ──────────────────────────────────────────
 function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === \'en\'
   const [remaining, setRemaining] = useState<number | null>(null)
   const [phase, setPhase] = useState<'waiting' | 'active' | 'done'>('waiting')
   const calledRef = useRef(false)
@@ -69,7 +70,7 @@ function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) =>
         <div className="flex items-center justify-between mb-0.5">
           <span className={`text-[10px] font-black uppercase tracking-wider
             ${urgent ? 'text-red-600' : warning ? 'text-amber-600' : 'text-emerald-700'}`}>
-            {urgent ? '⚠️ Finalizando' : 'Sesión en curso'}
+            {urgent ? '⚠️ Ending' : (isEN ? 'Session in progress' : 'Sesión en curso')}
           </span>
           <span className={`text-xs font-black tabular-nums
             ${urgent ? 'text-red-600' : warning ? 'text-amber-600' : 'text-emerald-700'}`}>
@@ -94,12 +95,12 @@ const SERVICES = [
   'Evaluación Vineland-3','Evaluación WISC-V','Evaluación BASC-3',
   'Sesión Familiar','Sesión de Orientación','Visita Domiciliaria',
 ]
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  confirmed: { label: 'Confirmada', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-  pending:   { label: 'Pendiente',  color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200'   },
-  cancelled: { label: 'Cancelada',  color: 'text-red-700',     bg: 'bg-red-50 border-red-200'       },
-  completed: { label: 'Completada', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200'     },
-}
+const getStatusConfig = (isEN: boolean): Record<string, { label: string; color: string; bg: string }> => ({
+  confirmed: { label: isEN ? 'Confirmed' : 'Confirmada', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
+  pending:   { label: isEN ? 'Pending' : 'Pendiente',  color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200'   },
+  cancelled: { label: isEN ? 'Cancelled' : 'Cancelada',  color: 'text-red-700',     bg: 'bg-red-50 border-red-200'       },
+  completed: { label: isEN ? 'Completed' : 'Completada', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200'     },
+})
 
 function MonthlyCalendarView() {
   const toast = useToast()
@@ -114,7 +115,7 @@ function MonthlyCalendarView() {
   const [currentMonth, setCurrentMonth] = useState<Date | null>(null)
   const [tipoSesion, setTipoSesion] = useState<'individual'|'grupal'>('individual')
   const [modalidadCita, setModalidadCita] = useState<'presencial'|'virtual'>('presencial')
-  const [newApt, setNewApt] = useState({ child_id:'', date:'', time:'09:00', service:'Terapia ABA', notes:'', group_name:'', status:'confirmed' })
+  const [newApt, setNewApt] = useState({ child_id:'', date:'', time:'09:00', service: isEN ? 'ABA Therapy' : 'Terapia ABA', notes:'', group_name:'', status:'confirmed' })
   const [recurrencia, setRecurrencia] = useState<'none'|'weekly'|'biweekly'>('none')
   const [recurrenciaSemanas, setRecurrenciaSemanas] = useState(4)
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([])
@@ -200,19 +201,19 @@ function MonthlyCalendarView() {
       const res = await fetch('/api/admin/appointments', { method:'DELETE', headers:{'Content-Type':'application/json', 'x-locale': localStorage.getItem('vanty_locale') || 'es'}, body: JSON.stringify({ id }) })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('Cita eliminada'); cargarCitas()
+      toast.success(isEN ? 'Appointment deleted' : 'Cita eliminada'); cargarCitas()
     } catch (err:any) { toast.error('Error: ' + err.message) }
   }
 
   const handleSave = async () => {
-    if (tipoSesion==='individual' && !newApt.child_id) { toast.error('Selecciona un paciente'); return }
-    if (tipoSesion==='grupal' && selectedParticipants.length===0) { toast.error('Selecciona participantes'); return }
+    if (tipoSesion==='individual' && !newApt.child_id) { toast.error(isEN ? 'Select a patient' : 'Selecciona un paciente'); return }
+    if (tipoSesion==='grupal' && selectedParticipants.length===0) { toast.error(isEN ? 'Select participants' : 'Selecciona participantes'); return }
     setIsSaving(true)
     try {
       let payload: any[]
       const extra = { modalidad: modalidadCita }
       if (tipoSesion==='grupal') {
-        payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (Grupal: ${newApt.group_name||'Sin nombre'})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, ...extra }))
+        payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (${isEN ? 'Group' : 'Grupal'}: ${newApt.group_name||(isEN ? 'No name' : 'Sin nombre')})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, ...extra }))
       } else {
         payload = [{ child_id:newApt.child_id, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:newApt.service, is_group:false, notes:newApt.notes, status:newApt.status, ...extra }]
       }
@@ -335,10 +336,10 @@ function MonthlyCalendarView() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           {[
-            {label:'Total',      value:apts.length,        color:'blue'},
-            {label:'Hoy',        value:todayApts.length,   color:'emerald'},
-            {label:'Esta semana',value:weekApts.length,    color:'violet'},
-            {label:'Virtuales',  value:virtualApts.length, color:'indigo'},
+            {label: isEN ? 'Total' : 'Total',      value:apts.length,        color:'blue'},
+            {label: isEN ? 'Today' : 'Hoy',        value:todayApts.length,   color:'emerald'},
+            {label: isEN ? 'This week' : 'Esta semana', value:weekApts.length,    color:'violet'},
+            {label: isEN ? 'Virtual' : 'Virtuales',  value:virtualApts.length, color:'indigo'},
           ].map(({label,value,color}) => (
             <div key={label} className="rounded-2xl p-5 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</p>
@@ -415,7 +416,7 @@ function MonthlyCalendarView() {
                     <p className="font-bold text-slate-400 text-sm">{t('ui.no_appointments')}</p>
                   </div>
                 ) : filteredApts.map(a => {
-                  const sc = STATUS_CONFIG[a.status||'confirmed']||STATUS_CONFIG.confirmed
+                  const sc = getStatusConfig(isEN)[a.status||'confirmed']||getStatusConfig(isEN).confirmed
                   const isVirtual = a.modalidad==='virtual'
                   const isUpcoming = a.appointment_date>=todayStr && a.status!=='cancelled' && a.status!=='completed'
                   return (
@@ -496,7 +497,7 @@ function MonthlyCalendarView() {
                   <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{t('agenda.modalidad')}</label>
                   <div className="grid grid-cols-2 gap-3">
                     {([
-                      {value:'presencial',icon:<MapPin size={16}/>,label:'Presencial',active:'bg-slate-800 text-white border-slate-800 shadow-lg shadow-slate-200'},
+                      {value:'presencial',icon:<MapPin size={16}/>,label: isEN ? 'In-person' : 'Presencial', active:'bg-slate-800 text-white border-slate-800 shadow-lg shadow-slate-200'},
                       {value:'virtual',   icon:<Video size={16}/>, label:'Virtual 📹', active:'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200'},
                     ] as const).map(opt => (
                       <button key={opt.value} onClick={()=>setModalidadCita(opt.value)}
@@ -582,9 +583,9 @@ function MonthlyCalendarView() {
                   </label>
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     {([
-                      { value: 'none',      label: 'No repetir' },
+                      { value: 'none',      label: isEN ? 'No repeat' : 'No repetir' },
                       { value: 'weekly',    label: t('agenda.semanal') },
-                      { value: 'biweekly',  label: 'Quincenal' },
+                      { value: 'biweekly',  label: isEN ? 'Biweekly' : 'Quincenal' },
                     ] as const).map(opt => (
                       <button key={opt.value} onClick={() => setRecurrencia(opt.value)}
                         className={`py-2.5 rounded-xl text-xs font-black border-2 transition-all ${recurrencia === opt.value ? 'border-blue-500 text-blue-600' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
@@ -612,7 +613,7 @@ function MonthlyCalendarView() {
                   <button onClick={handleSave} disabled={isSaving}
                     className={`flex-[2] py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-white ${modalidadCita==='virtual'?'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-indigo-200':tipoSesion==='grupal'?'bg-gradient-to-r from-purple-600 to-violet-600 shadow-purple-200':'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-blue-200'}`}>
                     {isSaving?<Loader2 size={18} className="animate-spin"/>:modalidadCita==='virtual'?<Video size={18}/>:<Plus size={18}/>}
-                    {isSaving?'Guardando...':modalidadCita==='virtual'?'Agendar Virtual':tipoSesion==='grupal'?'Agendar Grupo':'Confirmar Cita'}
+                    {isSaving?(isEN?'Saving...':'Guardando...'):modalidadCita==='virtual'?(isEN?'Schedule Virtual':'Agendar Virtual'):tipoSesion==='grupal'?(isEN?'Schedule Group':'Agendar Grupo'):(isEN?'Confirm Appointment':'Confirmar Cita')}
                   </button>
                 </div>
               </div>

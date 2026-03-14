@@ -15,7 +15,8 @@ import { useToast } from '@/components/Toast'
 
 // ── Tarjeta de estadística principal ───────────────────────────────────────
 function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   return (
     <div
       onClick={onClick}
@@ -38,7 +39,8 @@ function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any
 
 // ── Fila de cita próxima ────────────────────────────────────────────────────
 function CitaRow({ cita }: { cita: any }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   if (!cita.appointment_date) return null
   const fecha = new Date(cita.appointment_date + 'T00:00:00')
   const mesCorto = fecha.toLocaleString('es', { month: 'short' }).toUpperCase()
@@ -64,7 +66,8 @@ function CitaRow({ cita }: { cita: any }) {
 
 // ── Alerta clínica ──────────────────────────────────────────────────────────
 function AlertaClinica({ tipo, paciente, mensaje, onClick }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const cfg: Record<string, any> = {
     sin_sesion: { icon: '😴', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', label: t('dashboard.sinSesion') },
     bienestar_bajo: { icon: '💙', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', label: t('dashboard.bienestar') },
@@ -88,7 +91,8 @@ function AlertaClinica({ tipo, paciente, mensaje, onClick }: any) {
 // ── Panel de respuestas de bienestar de padres ──────────────────────────────
 function BienestarPanel({ data }: { data: any[] }) {
   if (data.length === 0) return null
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const counts = {
     bien:    data.filter(d => (d.responses?.answer || d.form_title || '').includes('Bien')).length,
     regular: data.filter(d => (d.responses?.answer || d.form_title || '').includes('Regular')).length,
@@ -105,9 +109,9 @@ function BienestarPanel({ data }: { data: any[] }) {
       </div>
       <div className="grid grid-cols-3 gap-3 mb-3">
         {[
-          { emoji: '😊', label: 'Con energía', value: counts.bien, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-          { emoji: '😐', label: 'Regular', value: counts.regular, color: 'bg-amber-50 text-amber-700 border-amber-200' },
-          { emoji: '😔', label: 'Necesita apoyo', value: counts.dificil, color: 'bg-red-50 text-red-700 border-red-200' },
+          { emoji: '😊', label: isEN?'Energized':'Con energía', value: counts.bien, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+          { emoji: '😐', label: isEN?'Average':'Regular', value: counts.regular, color: 'bg-amber-50 text-amber-700 border-amber-200' },
+          { emoji: '😔', label: isEN?'Needs support':'Necesita apoyo', value: counts.dificil, color: 'bg-red-50 text-red-700 border-red-200' },
         ].map(({ emoji, label, value, color }) => (
           <div key={label} className={`flex flex-col items-center p-3 rounded-xl border ${color}`}>
             <span className="text-xl mb-1">{emoji}</span>
@@ -299,7 +303,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                 { label: t('evaluaciones.nuevo'),  icon: FileText,      view: 'evaluaciones', bg: '#2563eb', fg: '#ffffff' },
                 { label: t('agenda.nuevaCita'),      icon: Calendar,      view: 'agenda',       bg: '#1e293b', fg: '#ffffff' },
                 { label: t('nav.historial'),    icon: Brain,         view: 'reportes',     bg: '#7c3aed', fg: '#ffffff' },
-                { label: 'Ver Pacientes',     icon: Users,         view: 'ninos',        bg: '#334155', fg: '#ffffff' },
+                { label: isEN?'View Patients':'Ver Pacientes',     icon: Users,         view: 'ninos',        bg: '#334155', fg: '#ffffff' },
                 { label: t('mensajes.titulo'),   icon: MessageCircle, view: 'mensajes',     bg: '#d1fae5', fg: '#065f46', badge: stats.mensajesPendientes },
               ].map(({ label, icon: Icon, view, bg, fg, badge }: any) => (
                 <button key={view} onClick={() => navigateTo(view)}

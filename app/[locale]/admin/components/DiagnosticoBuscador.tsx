@@ -41,19 +41,30 @@ const DIAGNOSTICOS = [
   { cie11: '6A80',   dsm5: '315.35', nombre: 'Tartamudeo (Disfluencia del habla infantil)', area: 'Comunicación', desc: 'Alteraciones de la fluidez normal del habla con sonidos/sílabas repetidos.' },
 ]
 
-const AREAS = ['Todos', 'Neurodesarrollo', 'Ansiedad', 'TOC', 'Trauma', 'Neurológico', 'Comunicación']
+const getAreas = (isEN: boolean) => isEN
+  ? ['All', 'Neurodevelopment', 'Anxiety', 'OCD', 'Trauma', 'Neurological', 'Communication']
+  : ['Todos', 'Neurodesarrollo', 'Ansiedad', 'TOC', 'Trauma', 'Neurológico', 'Comunicación']
+// Map EN area back to ES for filtering (data uses ES keys)
+const areaEnToEs: Record<string, string> = {
+  'All': 'Todos', 'Neurodevelopment': 'Neurodesarrollo', 'Anxiety': 'Ansiedad',
+  'OCD': 'TOC', 'Trauma': 'Trauma', 'Neurological': 'Neurológico', 'Communication': 'Comunicación'
+}
 
 export default function DiagnosticoBuscador() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
+  const AREAS = getAreas(isEN)
+  const [initialArea] = [isEN ? 'All' : 'Todos']
   const [q, setQ]           = useState('')
-  const [area, setArea]     = useState('Todos')
+  const [area, setArea]     = useState<string>('')
   const [copied, setCopied] = useState<string | null>(null)
 
   const filtrado = DIAGNOSTICOS.filter(d => {
     const match = q.length < 2 || [d.nombre, d.cie11, d.dsm5, d.desc].some(f =>
       f.toLowerCase().includes(q.toLowerCase())
     )
-    const areaMatch = area === 'Todos' || d.area === area
+    const esArea = areaEnToEs[area] || area
+    const areaMatch = !area || esArea === 'Todos' || d.area === esArea
     return match && areaMatch
   })
 

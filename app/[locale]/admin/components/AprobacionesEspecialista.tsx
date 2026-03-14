@@ -10,18 +10,18 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
-const TIPO_LABEL: Record<string, string> = {
-  conducta: 'Evaluación de Conducta',
-  progreso: 'Reporte de Progreso',
-  sesion: 'Nota de Sesión',
-  familia: 'Recomendaciones para Familia',
-}
+const getTIPO_LABEL = (isEN: boolean) => ({
+  conducta: isEN?'Behavior Assessment':'Evaluación de Conducta',
+  progreso: isEN?'Progress Report':'Reporte de Progreso',
+  sesion: isEN?'Session Note':'Nota de Sesión',
+  familia: isEN?'Family Recommendations':'Recomendaciones para Familia',
+})
 
-const STATUS_CFG: Record<string, { label: string; color: string; bg: string; border: string; icon: any }> = {
-  pending_approval: { label: 'Pendiente', color: '#f59e0b', bg: '#f59e0b15', border: '#f59e0b30', icon: Clock },
-  approved:         { label: 'Aprobado',  color: '#10b981', bg: '#10b98115', border: '#10b98130', icon: CheckCircle },
-  rejected:         { label: 'Rechazado', color: '#ef4444', bg: '#ef444415', border: '#ef444430', icon: XCircle },
-}
+const getStatusCfg = (isEN: boolean) => ({
+  pending_approval: { label: isEN?'Pending':'Pendiente', color: '#f59e0b', bg: '#f59e0b15', border: '#f59e0b30', icon: Clock },
+  approved:         { label: isEN?'Approved':'Aprobado',  color: '#10b981', bg: '#10b98115', border: '#10b98130', icon: CheckCircle },
+  rejected:         { label: isEN?'Rejected':'Rechazado', color: '#ef4444', bg: '#ef444415', border: '#ef444430', icon: XCircle },
+})
 
 interface Submission {
   id: string
@@ -41,7 +41,8 @@ interface Submission {
 
 export default function AprobacionesEspecialista() {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [filtro, setFiltro] = useState<'pending_approval' | 'approved' | 'rejected' | 'all'>('pending_approval')
@@ -64,7 +65,7 @@ export default function AprobacionesEspecialista() {
       if (autoAprobacion && data) {
         const pendientes = data.filter(s => s.status === 'pending_approval')
         for (const s of pendientes) {
-          await supabase.from('specialist_submissions').update({ status: 'approved', admin_comment: 'Auto-aprobado' }).eq('id', s.id)
+          await supabase.from('specialist_submissions').update({ status: 'approved', admin_comment: isEN?'Auto-approved':'Auto-aprobado' }).eq('id', s.id)
         }
         if (pendientes.length > 0) {
           // Recargar
@@ -148,7 +149,7 @@ export default function AprobacionesEspecialista() {
       <div className="flex gap-2 flex-wrap">
         {(['pending_approval', 'approved', 'rejected', 'all'] as const).map(f => {
           const isActive = filtro === f
-          const cfg = f !== 'all' ? STATUS_CFG[f] : null
+          const cfg = f !== 'all' ? getStatusCfg(isEN)[f] : null
           return (
             <button key={f} onClick={() => setFiltro(f)}
               style={{
@@ -157,7 +158,7 @@ export default function AprobacionesEspecialista() {
                 color: isActive ? (cfg?.color || '#06b6d4') : '#475569',
               }}
               className="text-xs font-bold px-3 py-1.5 rounded-full transition-all">
-              {f === 'all' ? 'Todas' : STATUS_CFG[f].label}
+              {f === 'all' ? (isEN?'All':'Todas') : getStatusCfg(isEN)[f].label}
             </button>
           )
         })}
@@ -172,13 +173,13 @@ export default function AprobacionesEspecialista() {
           className="text-center py-16 rounded-2xl">
           <ShieldCheck size={40} style={{ color: '#334155' }} className="mx-auto mb-3" />
           <p style={{ color: '#475569' }} className="font-medium text-sm">
-            {filtro === 'pending_approval' ? '¡Sin pendientes! Todo al día.' : 'Sin registros en este estado'}
+            {filtro === 'pending_approval' ? (isEN?'No pending items! All up to date.':'¡Sin pendientes! Todo al día.') : (isEN?'No records in this status':'Sin registros en este estado')}
           </p>
         </div>
       ) : (
         <div className="space-y-3">
           {submissions.map(sub => {
-            const cfg = STATUS_CFG[sub.status] || STATUS_CFG.pending_approval
+            const cfg = getStatusCfg(isEN)[sub.status] || getStatusCfg(isEN).pending_approval
             const Icon = cfg.icon
             const abierto = expandido === sub.id
             const esPendiente = sub.status === 'pending_approval'
@@ -202,7 +203,7 @@ export default function AprobacionesEspecialista() {
                           <span style={{ color: '#475569' }} className="flex items-center gap-1 text-xs">
                             <Stethoscope size={11} /> {(sub as any).profiles?.full_name}
                           </span>
-                          <span style={{ color: '#334155' }} className="text-xs">{TIPO_LABEL[sub.tipo] || sub.tipo}</span>
+                          <span style={{ color: '#334155' }} className="text-xs">{getTIPO_LABEL(isEN)[sub.tipo] || sub.tipo}</span>
                         </div>
                       </div>
                       <span style={{ background: cfg.bg, color: cfg.color, border: `1px solid ${cfg.border}` }}

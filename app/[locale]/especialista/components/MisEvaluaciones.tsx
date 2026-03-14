@@ -10,49 +10,50 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
-const STATUS: Record<string, any> = {
-  pending_approval: { label: 'En revisión', color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200',  icon: Clock },
-  approved:         { label: 'Aprobado',    color: 'text-emerald-700',bg: 'bg-emerald-50',border: 'border-emerald-200',icon: CheckCircle2 },
-  rejected:         { label: 'Rechazado',   color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',    icon: XCircle },
-}
+const getStatus = (isEN: boolean): Record<string, any> => ({
+  pending_approval: { label: isEN?'Under review':'En revisión', color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200',  icon: Clock },
+  approved:         { label: isEN?'Approved':'Aprobado',    color: 'text-emerald-700',bg: 'bg-emerald-50',border: 'border-emerald-200',icon: CheckCircle2 },
+  rejected:         { label: isEN?'Rejected':'Rechazado',   color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',    icon: XCircle },
+})
 
-const TIPOS = [
-  { id: 'conducta', label: 'Conducta',      desc: 'Análisis ABC',          color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  { id: 'progreso', label: 'Progreso',       desc: 'Avance terapéutico',    color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  { id: 'sesion',   label: 'Nota de sesión', desc: 'Registro clínico',      color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  { id: 'familia',  label: 'Para familia',   desc: 'Guías para el hogar',   color: 'bg-amber-50 text-amber-700 border-amber-200' },
+const getTipos = (isEN: boolean) => [
+  { id: 'conducta', label: isEN?'Behavior':'Conducta',      desc: isEN?'ABC Analysis':'Análisis ABC',          color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { id: 'progreso', label: isEN?'Progress':'Progreso',       desc: isEN?'Therapeutic progress':'Avance terapéutico',    color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { id: 'sesion',   label: isEN?'Session note':'Nota de sesión', desc: isEN?'Clinical record':'Registro clínico',      color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { id: 'familia',  label: isEN?'For family':'Para familia',   desc: isEN?'Home guides':'Guías para el hogar',   color: 'bg-amber-50 text-amber-700 border-amber-200' },
 ]
 
-const TEMPLATES: Record<string, any> = {
+const getTemplates = (isEN: boolean): Record<string, any> => ({
   conducta: {
-    titulo: 'Análisis de conducta - [Nombre]',
+    titulo: isEN?'Behavior analysis - [Name]':'Análisis de conducta - [Nombre]',
     contenido: 'Antecedente: [Describir qué ocurrió antes]\n\nConducta: [Describir exactamente la conducta, duración e intensidad]\n\nConsecuencia: [Qué ocurrió después]',
     observaciones: 'La conducta ocurrió [X] veces. El niño mostró [describir estado emocional].',
     recomendaciones: '1. [Estrategia para casa]\n2. [Reforzadores recomendados]\n3. [Situaciones a evitar]',
   },
   progreso: {
-    titulo: 'Reporte de progreso - [Nombre] - [Mes]',
+    titulo: isEN?'Progress report - [Name] - [Month]':'Reporte de progreso - [Nombre] - [Mes]',
     contenido: 'Objetivo trabajado: [Nombre]\n\nLogros esta semana:\n- [Logro 1]\n- [Logro 2]\n\nNivel de dominio: [X]%',
     observaciones: 'El niño mostró [descripción]. Se observó mayor respuesta a [estímulo].',
     recomendaciones: 'Para casa:\n1. [Actividad 1]\n2. [Actividad 2]',
   },
   sesion: {
-    titulo: 'Nota de sesión - [Nombre] - [Fecha]',
+    titulo: isEN?'Session note - [Name] - [Date]':'Nota de sesión - [Nombre] - [Fecha]',
     contenido: 'Duración: [X] minutos\n\nActividades:\n1. [Actividad 1] - [resultado]\n2. [Actividad 2] - [resultado]\n\nRespuesta: [descripción]',
     observaciones: 'Llegó a la sesión [estado]. Durante la sesión [momentos clave].',
     recomendaciones: 'Para la próxima sesión: [actividades/temas]',
   },
   familia: {
-    titulo: 'Guía para la familia - [Nombre]',
+    titulo: isEN?'Family guide - [Name]':'Guía para la familia - [Nombre]',
     contenido: 'Estimadas familias,\n\nEsta semana trabajamos en [objetivo]. Actividades en casa:\n\n🌟 Actividad 1: [Descripción]\n🌟 Actividad 2: [Descripción]',
     observaciones: 'Practiquen al menos [X] veces por día.',
     recomendaciones: 'Si notan algo diferente en casa, comuníquenlo en la próxima sesión.',
   },
-}
+})
 
 export default function MisEvaluaciones({ userId }: { userId: string }) {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [evaluaciones, setEvaluaciones] = useState<any[]>([])
   const [ninos, setNinos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -117,7 +118,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
       <div className="flex gap-2 flex-wrap">
         {(['all', 'pending_approval', 'approved', 'rejected'] as const).map(f => {
           const isActive = filtro === f
-          const cfg = f !== 'all' ? STATUS[f] : null
+          const cfg = f !== 'all' ? getStatus(isEN)[f] : null
           return (
             <button key={f} onClick={() => setFiltro(f)}
               className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border transition-all
@@ -125,7 +126,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                   ? (cfg ? `${cfg.bg} ${cfg.color} ${cfg.border}` : 'bg-blue-600 text-white border-blue-600')
                   : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'
                 }`}>
-              {f === 'all' ? 'Todas' : STATUS[f].label}
+              {f === 'all' ? 'Todas' : getStatus(isEN)[f].label}
               <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-black
                 ${isActive ? 'bg-white/30' : 'bg-slate-100 text-slate-500'}`}>
                 {counts[f]}
@@ -153,10 +154,10 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
       ) : (
         <div className="space-y-2">
           {filtradas.map(ev => {
-            const cfg = STATUS[ev.status] || STATUS.pending_approval
+            const cfg = getStatus(isEN)[ev.status] || STATUS.pending_approval
             const Icon = cfg.icon
             const abierto = expandido === ev.id
-            const tipo = TIPOS.find(t => t.id === ev.tipo)
+            const tipo = getTipos(isEN).find(t => t.id === ev.tipo)
             return (
               <div key={ev.id}
                 className={`bg-white rounded-2xl border overflow-hidden transition-all shadow-sm
@@ -242,7 +243,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
               <div>
                 <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('especialista.tipoEval')} *</label>
                 <div className="grid grid-cols-2 gap-2 mb-3">
-                  {TIPOS.map(t => (
+                  {getTipos(isEN).map(t => (
                     <button key={t.id} type="button"
                       onClick={() => setForm(f => ({ ...f, tipo: t.id }))}
                       className={`p-3 rounded-xl border-2 text-left transition-all ${form.tipo === t.id ? `${t.color} border-current` : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'}`}>
@@ -251,16 +252,16 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                     </button>
                   ))}
                 </div>
-                {TEMPLATES[form.tipo] && (
+                {getTemplates(isEN)[form.tipo] && (
                   <button
                     type="button"
                     onClick={() => {
-                      const tpl = TEMPLATES[form.tipo]
+                      const tpl = getTemplates(isEN)[form.tipo]
                       setForm(f => ({ ...f, titulo: tpl.titulo, contenido: tpl.contenido, observaciones: tpl.observaciones, recomendaciones: tpl.recomendaciones }))
                     }}
                     className="w-full py-2.5 border-2 border-dashed border-blue-300 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
                   >
-                    ✨ Usar plantilla de {TIPOS.find(t => t.id === form.tipo)?.label}
+                    ✨ Usar plantilla de {getTipos(isEN).find(t => t.id === form.tipo)?.label}
                   </button>
                 )}
               </div>
@@ -279,7 +280,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
               <div>
                 <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('especialista.tipoStar')}</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {TIPOS.map(t => (
+                  {getTipos(isEN).map(t => (
                     <button key={t.id} onClick={() => setForm(f => ({ ...f, tipo: t.id }))}
                       className={`text-left p-3 rounded-xl border-2 transition-all
                         ${form.tipo === t.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-blue-300'}`}>
