@@ -34,7 +34,7 @@ import { calcularEdadNumerica } from '../utils/helpers'
 
 // ─── CATEGORÍAS ORDENADAS POR ÁREA CLÍNICA ──────────────────────────────────
 const UNIFIED_CATEGORIES = [
-  { id: 'all',        label: t('evaluaciones.todasPlantillas'), icon: '🗂️', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+  { id: 'all',        label: 'Todas las plantillas', icon: '🗂️', color: 'bg-slate-100 text-slate-700 border-slate-200' },
   { id: 'conductual', label: 'ABA / Sesión',          icon: '🎯', color: 'bg-orange-50 text-orange-700 border-orange-200' },
   { id: 'familia',    label: 'Familia / Hogar',       icon: '🏠', color: 'bg-pink-50 text-pink-700 border-pink-200' },
   { id: 'clinico',    label: 'Historia Clínica',      icon: '📋', color: 'bg-slate-50 text-slate-700 border-slate-200' },

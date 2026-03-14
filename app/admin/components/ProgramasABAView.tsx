@@ -18,10 +18,10 @@ import { useToast } from '@/components/Toast'
 type TipoGrafico = 'lineas' | 'barras' | 'histograma' | 'pie'
 
 const TIPOS_GRAFICO_PROGRAMA = [
-  { id: 'lineas'    as TipoGrafico, emoji: '📈', label: t('reportes.lineas') },
-  { id: 'barras'    as TipoGrafico, emoji: '📊', label: t('reportes.barras') },
-  { id: 'histograma'as TipoGrafico, emoji: '🗂️', label: t('reportes.histograma') },
-  { id: 'pie'       as TipoGrafico, emoji: '🥧', label: t('reportes.pie') },
+  { id: 'lineas'    as TipoGrafico, emoji: '📈', label: 'Líneas' },
+  { id: 'barras'    as TipoGrafico, emoji: '📊', label: 'Barras' },
+  { id: 'histograma'as TipoGrafico, emoji: '🗂️', label: 'Histograma' },
+  { id: 'pie'       as TipoGrafico, emoji: '🥧', label: 'Pie' },
 ]
 
 function colorPorPct(pct: number) {
