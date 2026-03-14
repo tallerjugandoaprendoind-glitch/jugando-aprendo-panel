@@ -168,7 +168,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
 
 // ── Vista principal de la tienda ──────────────────────────────────────────────
 export default function StoreView({ profile }: { profile: any }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [view, setView] = useState<'catalogo' | 'mis-pedidos'>('catalogo')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])

@@ -79,7 +79,7 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
 }
 
 function PatientsView() {
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
     const [listaNinos, setListaNinos] = useState<any[]>([])
     const [listaNinosFiltrada, setListaNinosFiltrada] = useState<any[]>([])
     const [isLoading, setIsLoading] = useState(true)

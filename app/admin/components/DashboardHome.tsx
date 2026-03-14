@@ -130,6 +130,9 @@ function BienestarPanel({ data }: { data: any[] }) {
 function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   const toast = useToast()
   const { t, locale } = useI18n()
+  const [loading, setLoading] = useState(false)
+  const [emailCredito, setEmailCredito] = useState('')
+  const [stats, setStats] = useState({ pacientes: 0, sesionesHoy: 0, creditosActivos: 0, analisisIA: 0, sinSesion30d: 0, mensajesPendientes: 0 })
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
   const [actividadReciente, setActividadReciente] = useState<any[]>([])
   const [alertasClinicas, setAlertasClinicas] = useState<any[]>([])

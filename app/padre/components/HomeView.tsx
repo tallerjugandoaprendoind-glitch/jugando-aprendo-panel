@@ -39,7 +39,7 @@ function calcAge(birthDate: string) {
 }
 
 function formatDate(dateStr: string) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   const [y, m, d] = dateStr.split('-').map(Number)
   return { day: d, month: MONTHS_ES[m-1], monthFull: MONTHS_FULL[m-1], year: y }
@@ -187,7 +187,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
 }
 
 export default function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppointment }: Props) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const supabase = supabaseClient
   const [nextAppt, setNextAppt] = useState<any>(null)
   const [stats, setStats] = useState({ sessions: 0, goalsAchieved: 0, hoursTotal: 0, level: 'Inicial', monthSessions: 0, masteryRate: 0 })

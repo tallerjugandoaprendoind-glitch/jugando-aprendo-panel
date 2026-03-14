@@ -42,7 +42,7 @@ function StatCard({ label, value, sub, color, bg, border, icon: Icon, onClick, l
 
 // ── Chip de productividad semanal ───────────────────────────────────────────
 function ProductividadSemanal({ aprobadas, pendientes, rechazadas }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
   const total = aprobadas + pendientes + rechazadas
   if (total === 0) return null
@@ -85,7 +85,7 @@ const TIPS_CLINICOS = [
 ]
 
 export default function EspecialistaHome({ userId, profile, setActiveView }: Props) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [stats, setStats] = useState({ pendientes: 0, aprobadas: 0, rechazadas: 0, citasHoy: 0, totalPacientes: 0, citasProximas: 0, sesionesEstaSemana: 0 })
   const [recientes, setRecientes] = useState<any[]>([])
   const [proximasCitas, setProximasCitas] = useState<any[]>([])

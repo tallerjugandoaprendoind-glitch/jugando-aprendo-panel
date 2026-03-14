@@ -304,7 +304,7 @@ function ProductModal({
 // ── Vista principal ───────────────────────────────────────────────────────────
 export default function StoreManagementView() {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [tab, setTab] = useState<'productos' | 'pedidos'>('productos')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
