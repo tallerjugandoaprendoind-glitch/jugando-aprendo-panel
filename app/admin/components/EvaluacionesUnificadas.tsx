@@ -583,7 +583,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         source_id:        sf.id,
       }])
       if (insertError) {
-        const { t } = useI18n()
+        const { t, locale } = useI18n()
         console.error('❌ Error guardando reporte en BD:', insertError)
         toast.error('Reporte descargado pero no se pudo guardar en historial: ' + insertError.message)
       }
@@ -1282,7 +1282,7 @@ export default function EvaluacionesUnificadas() {
   }
 
   const handleSendForm = async (form: any, { childId, message, deadline }: any) => {
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
     try {
       // Derive parent_id from child record
       const { data: child } = await supabase.from('children').select('parent_id').eq('id', childId).single()

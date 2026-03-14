@@ -38,7 +38,7 @@ const SOURCE_LABELS: Record<string, { label: string; icon: string; color: string
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
-  return d.toLocaleDateString(toBCP47(locale), { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const loc = typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es'; return d.toLocaleDateString(loc === 'en' ? 'en-US' : 'es-PE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 function AnalysisCard({ analysis }: { analysis: any }) {

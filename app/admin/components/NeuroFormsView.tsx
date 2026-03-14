@@ -313,7 +313,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
 
 // ─── MAIN COMPONENT ─────────────────────────────────────────────────────────
 export default function NeuroFormsView() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const toast = useToast()
   const [activeTab, setActiveTab] = useState<'biblioteca' | 'respuestas'>('biblioteca')
   const [activeCategory, setActiveCategory] = useState<string>('all')
@@ -360,7 +360,6 @@ export default function NeuroFormsView() {
   }
 
   const handleAnswer = (questionId: string, value: any) => {
-    const { t } = useI18n()
 
     setResponses(prev => ({ ...prev, [questionId]: value }))
   }

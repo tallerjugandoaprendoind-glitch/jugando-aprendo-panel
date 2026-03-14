@@ -23,7 +23,7 @@ function calcularEdad(fecha: string) {
 
 function formatDate(d: string) {
   if (!d) return '—'
-  try { return new Date(d).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'short', year: 'numeric' }) }
+  try { const loc = typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es'; return new Date(d).toLocaleDateString(loc === 'en' ? 'en-US' : 'es-PE', { day: 'numeric', month: 'short', year: 'numeric' }) }
   catch { return d }
 }
 

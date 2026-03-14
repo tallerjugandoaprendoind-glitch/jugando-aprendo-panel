@@ -88,6 +88,7 @@ function useTextToSpeech() {
 
 // ── Hook Speech-to-Text ───────────────────────────────────────────────────────
 function useSpeechToText(onResult: (text: string) => void) {
+  const { locale } = useI18n()
   const [listening, setListening] = useState(false)
   const [supported, setSupported] = useState(false)
   const recognitionRef = useRef<any>(null)
@@ -125,7 +126,7 @@ import { useToast } from '@/components/Toast'
 import ReportGenerator from '@/components/ReportGenerator'
 
 function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, name: string} | null) => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
   const [listaNinos, setListaNinos] = useState<any[]>([])
   const [selectedChild, setSelectedChild] = useState('')
   const [historyData, setHistoryData] = useState<any>({ anamnesis: null, aba: [], entorno: [] })
