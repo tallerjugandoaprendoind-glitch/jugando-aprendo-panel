@@ -74,8 +74,8 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
 
   useState(() => {
     Promise.all([
-      fetch(`/api/progreso-paciente?child_id=${childId}&semanas=4&locale=${locale || 'es'}`).then(r => r.json()),
-      fetch(`/api/tareas-hogar?child_id=${childId}&activas=true&locale=${locale || 'es'}`).then(r => r.json()),
+      fetch(`/api/progreso-paciente?child_id=${childId}&semanas=4&locale=${localStorage.getItem('vanty_locale') || 'es'}`).then(r => r.json()),
+      fetch(`/api/tareas-hogar?child_id=${childId}&activas=true&locale=${localStorage.getItem('vanty_locale') || 'es'}`).then(r => r.json()),
       fetch(`/api/agenda?child_id=${childId}`).then(r => r.json()),
     ]).then(([progreso, tareas, agenda]) => {
       setDatos({ progreso, tareas, agenda })

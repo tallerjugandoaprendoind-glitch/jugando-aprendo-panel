@@ -54,7 +54,7 @@ export default function EngagementView({ childId }: { childId: string }) {
   const cargarPlan = async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/engagement-padres?child_id=${childId}&locale=${locale || 'es'}`)
+      const res = await fetch(`/api/engagement-padres?child_id=${childId}&locale=${localStorage.getItem('vanty_locale') || 'es'}alStorage.getItem('vanty_locale') || 'es'}`)
       const json = await res.json()
       if (json.plan) {
         setPlan(json.plan)

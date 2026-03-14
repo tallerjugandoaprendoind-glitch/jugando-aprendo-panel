@@ -76,7 +76,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
 
   async function cargar() {
     setCargando(true)
-    try { const r = await fetch(`/api/progreso-paciente?child_id=${childId}&semanas=${semanas}&locale=${locale || 'es'}`); setDatos(await r.json()) }
+    try { const r = await fetch(`/api/progreso-paciente?child_id=${childId}&semanas=${semanas}&locale=${localStorage.getItem('vanty_locale') || 'es'}`); setDatos(await r.json()) }
     catch {} finally { setCargando(false) }
   }
 

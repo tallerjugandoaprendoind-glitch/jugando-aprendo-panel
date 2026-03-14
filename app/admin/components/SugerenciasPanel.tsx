@@ -53,10 +53,10 @@ function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: str
     if (!s.id) return
     setResolviendo(true)
     try {
-      await fetch(`/api/agente-sugerencias?locale=${locale || 'es'}`', {
+      await fetch('/api/agente-sugerencias', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
-        body: JSON.stringify({ sugerenciaId: s.id, nota: 'Marcado como resuelto desde el panel' , locale: localStorage.getItem('vanty_locale') || 'es' })
+        body: JSON.stringify({ sugerenciaId: s.id, nota: 'Marcado como resuelto desde el panel', locale: typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' })
       })
       onResolver(s.id)
     } catch { /* */ }

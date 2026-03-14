@@ -172,7 +172,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
       const programasPorPac: Record<string, any[]> = {}
       await Promise.all(
         ninos.map(async (n: any) => {
-          const res = await fetch(`/api/programas-aba?child_id=${n.id}&locale=${locale || 'es'}`)
+          const res = await fetch(`/api/programas-aba?child_id=${n.id}&locale=${localStorage.getItem('vanty_locale') || 'es'}`)
           const json = await res.json()
           programasPorPac[n.id] = json.data || []
         })
