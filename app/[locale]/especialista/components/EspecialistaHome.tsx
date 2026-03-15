@@ -86,6 +86,7 @@ const getTipsClinicos = (isEN: boolean) => [
 
 export default function EspecialistaHome({ userId, profile, setActiveView }: Props) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [stats, setStats] = useState({ pendientes: 0, aprobadas: 0, rechazadas: 0, citasHoy: 0, totalPacientes: 0, citasProximas: 0, sesionesEstaSemana: 0 })
   const [recientes, setRecientes] = useState<any[]>([])
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
