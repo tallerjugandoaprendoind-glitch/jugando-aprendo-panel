@@ -12,7 +12,7 @@ const DIAS_ABREV = ['D','L','M','X','J','V','S']
 
 const STATUS_CFG: Record<string, { label: string; text: string; dot: string; badge: string }> = {
   confirmed: { label: 'Confirmed', text: 'text-emerald-700', dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  pending:   { label: 'Pendiente',  text: 'text-amber-700',   dot: 'bg-amber-400',   badge: 'bg-amber-50 text-amber-700 border-amber-200' },
+  pending:   { label: 'Pending',  text: 'text-amber-700',   dot: 'bg-amber-400',   badge: 'bg-amber-50 text-amber-700 border-amber-200' },
   cancelled: { label: 'Cancelled',  text: 'text-red-700',     dot: 'bg-red-400',     badge: 'bg-red-50 text-red-700 border-red-200' },
   completed: { label: 'Completada', text: 'text-blue-700',    dot: 'bg-blue-500',    badge: 'bg-blue-50 text-blue-700 border-blue-200' },
 }

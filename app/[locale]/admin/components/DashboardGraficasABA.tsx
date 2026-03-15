@@ -14,12 +14,12 @@ import {
 import { supabase } from '@/lib/supabase'
 
 const getAreaConfig = (isEN: boolean): Record<string, any> => ({
-  comunicacion: { color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',     label: isEN?'Communication':'Comunicación', emoji: '💬' },
-  conducta:     { color: 'text-red-700',     bg: 'bg-red-50 border-red-200',       label: isEN?'Behavior':'Conducta',     emoji: '🎯' },
-  cognitivo:    { color: 'text-violet-700',  bg: 'bg-violet-50 border-violet-200', label: isEN?'Cognitive':'Cognitivo',    emoji: '🧠' },
+  comunicacion: { color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',     label: 'Communication', emoji: '💬' },
+  conducta:     { color: 'text-red-700',     bg: 'bg-red-50 border-red-200',       label: 'Behavior',     emoji: '🎯' },
+  cognitivo:    { color: 'text-violet-700',  bg: 'bg-violet-50 border-violet-200', label: 'Cognitive',    emoji: '🧠' },
   social:       { color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200',label: 'Social',      emoji: '👥' },
-  autonomia:    { color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',   label: isEN?'Autonomy':'Autonomía',    emoji: '🌟' },
-  academico:    { color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-200', label: isEN?'Academic':'Académico',    emoji: '📚' },
+  autonomia:    { color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',   label: 'Autonomy',    emoji: '🌟' },
+  academico:    { color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-200', label: 'Academic',    emoji: '📚' },
   sensorial:    { color: 'text-pink-700',    bg: 'bg-pink-50 border-pink-200',     label: 'Sensory',    emoji: '✋' },
 })
 
@@ -40,7 +40,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
     if (data[i].fase !== data[i - 1].fase) cambiosFase.push(i + 0.5)
   }
   const faseLabel: Record<string, string> = {
-    linea_base: isEN?'Baseline':'Línea Base', intervencion: isEN?'Intervention':'Intervención',
+    linea_base: 'Baseline', intervencion: 'Intervention',
     mantenimiento: 'Mantenimiento', seguimiento: 'Seguimiento',
   }
   const ultimoPct = data.length > 0 ? data[data.length - 1].pct : null
@@ -116,7 +116,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
                 <XAxis dataKey="sesion" tick={{ fontSize: 9 }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 9 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} tickFormatter={v => `${v}%`} />
                 <Tooltip
-                  formatter={(v: any) => [`${v}%`, isEN?'Achievement':'Éxito']}
+                  formatter={(v: any) => [`${v}%`, 'Achievement']}
                   labelFormatter={(l) => {
                     const d = data[l - 1]
                     return d ? `Sesión ${l} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}` : `Sesión ${l}`
@@ -142,7 +142,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
         )
       ) : (
         <div className="h-12 flex items-center justify-center text-[10px] text-slate-300 gap-1">
-          <BarChart3 size={12} /> {data.length === 0 ? isEN ? 'No sessions yet' : 'Sin sesiones aún' : isEN ? '2+ sessions needed for the chart' : 'Se necesitan 2+ sesiones para la gráfica'}
+          <BarChart3 size={12} /> {data.length === 0 ? 'No sessions yet' : '2+ sessions needed for the chart'}
         </div>
       )}
       <div className="mt-2 text-[10px] text-slate-400 text-right">{sesiones.length} {sesiones.length !== 1 ? t('programas.sesionesPlural') : t('programas.sesionPlural')}</div>
@@ -253,7 +253,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
           Solo con datos
         </button>
         <button onClick={cargarTodo} className="px-4 py-2 rounded-xl text-xs font-bold border border-slate-200 bg-white text-slate-600 hover:border-indigo-300 transition-all">
-          Actualizar
+          Refresh
         </button>
       </div>
 
@@ -262,7 +262,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
           <BarChart3 size={36} className="text-slate-200 mx-auto mb-3" />
           <p className="font-bold text-slate-500 mb-1">
-            {soloConDatos ? isEN ? 'No patient has sessions recorded yet' : 'Ningún paciente tiene sesiones registradas aún' : isEN ? 'No patients found' : 'No se encontraron pacientes'}
+            {soloConDatos ? 'No patient has sessions recorded yet' : 'No patients found'}
           </p>
           <p className="text-xs text-slate-400 mb-4">
             {soloConDatos

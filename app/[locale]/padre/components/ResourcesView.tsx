@@ -12,8 +12,8 @@ import { supabase } from '@/lib/supabase'
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string; border: string; label: string }> = {
   video:    { icon: Video,       color: 'text-red-600',    bg: 'bg-red-50',     border: 'border-red-200',    label: 'Video' },
   pdf:      { icon: FileText,    color: 'text-blue-600',   bg: 'bg-blue-50',    border: 'border-blue-200',   label: 'PDF / Doc' },
-  link:     { icon: LinkIcon,    color: 'text-violet-600', bg: 'bg-violet-50',  border: 'border-violet-200', label: 'Enlace web' },
-  image:    { icon: ImageIcon,   color: 'text-emerald-600',bg: 'bg-emerald-50', border: 'border-emerald-200',label: 'Imagen' },
+  link:     { icon: LinkIcon,    color: 'text-violet-600', bg: 'bg-violet-50',  border: 'border-violet-200', label: 'Web link' },
+  image:    { icon: ImageIcon,   color: 'text-emerald-600',bg: 'bg-emerald-50', border: 'border-emerald-200',label: 'Image' },
   document: { icon: Book,        color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  label: 'Material' },
   audio:    { icon: Music,       color: 'text-indigo-600', bg: 'bg-indigo-50',  border: 'border-indigo-200', label: 'Audio' },
 }
@@ -148,7 +148,7 @@ export default function ResourcesView({ profile }: Props) {
       {/* Refresh */}
       <div className="flex justify-end">
         <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-violet-600 transition-all">
-          <RefreshCw size={13}/> Actualizar
+          <RefreshCw size={13}/> Refresh
         </button>
       </div>
 
@@ -164,12 +164,12 @@ export default function ResourcesView({ profile }: Props) {
             <Book size={28} className="text-violet-300"/>
           </div>
           <h3 className="font-bold text-slate-700 mb-1">
-            {resources.length === 0 ? 'Sin recursos por ahora' : 'No se encontraron resultados'}
+            {resources.length === 0 ? 'No resources yet' : 'No results found'}
           </h3>
           <p className="text-slate-400 text-sm">
             {resources.length === 0 
-              ? (isEN?'The therapy team will share materials soon':'El equipo terapéutico compartirá materiales pronto')
-              : (isEN?'Try a different search term':'Prueba con otro término de búsqueda')}
+              ? ('The therapy team will share materials soon')
+              : ('Try a different search term')}
           </p>
         </div>
       ) : (
@@ -193,7 +193,7 @@ export default function ResourcesView({ profile }: Props) {
                       <p className="font-black text-slate-800 text-sm truncate">{resource.title}</p>
                       {isPersonal && (
                         <span className="px-1.5 py-0.5 bg-violet-50 text-violet-600 rounded-full text-[9px] font-black border border-violet-200 flex items-center gap-0.5 shrink-0">
-                          <Bell size={8}/> Para ti
+                          <Bell size={8}/> For you
                         </span>
                       )}
                     </div>
@@ -277,7 +277,7 @@ export default function ResourcesView({ profile }: Props) {
                     rel="noopener noreferrer"
                     className="flex-1 py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-violet-200 hover:opacity-90 transition-all flex items-center justify-center gap-2"
                   >
-                    <ExternalLink size={16}/> Abrir {cfg.label}
+                    <ExternalLink size={16}/> Open {cfg.label}
                   </a>
                 </div>
               </div>

@@ -432,7 +432,7 @@ function DynamicEvaluationsView() {
                         Profesional
                     </span>
                     <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-full text-xs font-bold border border-orange-100">
-                        IA Análisis
+                        AI Analysis
                     </span>
                   </div>
                 </div>

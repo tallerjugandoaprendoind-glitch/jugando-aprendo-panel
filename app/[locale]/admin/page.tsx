@@ -513,7 +513,7 @@ export default function AdminDashboard() {
                 </button>
                 <button onClick={handleChangePassword} disabled={changingPassword}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 transition flex items-center justify-center gap-2">
-                  {changingPassword ? <><Loader2 size={16} className="animate-spin" /> Actualizando...</> : 'Actualizar'}
+                  {changingPassword ? <><Loader2 size={16} className="animate-spin" /> Updating...</> : 'Update'}
                 </button>
               </div>
             </div>

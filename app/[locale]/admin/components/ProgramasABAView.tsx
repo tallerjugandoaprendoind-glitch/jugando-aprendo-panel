@@ -18,9 +18,9 @@ import { useToast } from '@/components/Toast'
 type TipoGrafico = 'lineas' | 'barras' | 'histograma' | 'pie'
 
 const getTiposGrafico = (isEN: boolean) => [
-  { id: 'lineas'    as TipoGrafico, emoji: '📈', label: isEN ? 'Lines' : 'Líneas' },
-  { id: 'barras'    as TipoGrafico, emoji: '📊', label: isEN ? 'Bars' : 'Barras' },
-  { id: 'histograma'as TipoGrafico, emoji: '🗂️', label: isEN ? 'Histogram' : 'Histograma' },
+  { id: 'lineas'    as TipoGrafico, emoji: '📈', label: 'Lines' },
+  { id: 'barras'    as TipoGrafico, emoji: '📊', label: 'Bars' },
+  { id: 'histograma'as TipoGrafico, emoji: '🗂️', label: 'Histogram' },
   { id: 'pie'       as TipoGrafico, emoji: '🥧', label: 'Pie' },
 ]
 
@@ -33,13 +33,13 @@ function colorPorPct(pct: number) {
 
 // ── Colores por área ────────────────────────────────────────────────────────
 const getAreaConfig = (isEN: boolean): Record<string, any> => ({
-  comunicacion: { color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200',   label: isEN ? 'Communication' : 'Comunicación',   emoji: '💬' },
-  conducta:     { color: 'text-red-700',    bg: 'bg-red-50 border-red-200',     label: isEN ? 'Behavior' : 'Conducta',       emoji: '🎯' },
-  cognitivo:    { color: 'text-violet-700', bg: 'bg-violet-50 border-violet-200',label: isEN ? 'Cognitive' : 'Cognitivo',     emoji: '🧠' },
+  comunicacion: { color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200',   label: 'Communication',   emoji: '💬' },
+  conducta:     { color: 'text-red-700',    bg: 'bg-red-50 border-red-200',     label: 'Behavior',       emoji: '🎯' },
+  cognitivo:    { color: 'text-violet-700', bg: 'bg-violet-50 border-violet-200',label: 'Cognitive',     emoji: '🧠' },
   social:       { color: 'text-emerald-700',bg: 'bg-emerald-50 border-emerald-200',label: 'Social',      emoji: '👥' },
-  autonomia:    { color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-200', label: isEN ? 'Autonomy' : 'Autonomía',      emoji: '🌟' },
-  academico:    { color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200',label: isEN ? 'Academic' : 'Académico',     emoji: '📚' },
-  sensorial:    { color: 'text-pink-700',   bg: 'bg-pink-50 border-pink-200',   label: isEN ? 'Sensory' : 'Sensorial',      emoji: '✋' },
+  autonomia:    { color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-200', label: 'Autonomy',      emoji: '🌟' },
+  academico:    { color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200',label: 'Academic',     emoji: '📚' },
+  sensorial:    { color: 'text-pink-700',   bg: 'bg-pink-50 border-pink-200',   label: 'Sensory',      emoji: '✋' },
 })
 
 const FASE_COLORS: Record<string, string> = {
@@ -97,7 +97,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       const res = await fetch(`/api/programas-aba?child_id=${childId}`)
       const json = await res.json()
       setProgramas(json.data || [])
-    } catch { toast.error(isEN ? 'Error loading programs' : 'Error cargando programas') }
+    } catch { toast.error('Error loading programs') }
     finally { setLoading(false) }
   }, [childId])
 
@@ -471,7 +471,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
-                            formatter={(value: any) => [`${value}%`, isEN?'Achievement':'Éxito']}
+                            formatter={(value: any) => [`${value}%`, 'Achievement']}
                             labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           {cambiosFase.map(x => <ReferenceLine key={x} x={x} stroke="#a5b4fc" strokeDasharray="4 2" strokeWidth={1.5} />)}
@@ -512,7 +512,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <XAxis dataKey="sesion" tick={{ fontSize: 10 }} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
-                            formatter={(value: any) => [`${value}%`, isEN?'Achievement':'Éxito']}
+                            formatter={(value: any) => [`${value}%`, 'Achievement']}
                             labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
@@ -545,7 +545,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <BarChart data={histData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                             <XAxis dataKey="rango" tick={{ fontSize: 10 }} />
-                            <YAxis tick={{ fontSize: 10 }} label={{ value: isEN ? 'Sessions' : 'Sesiones', angle: -90, position: 'insideLeft', fontSize: 10 }} />
+                            <YAxis tick={{ fontSize: 10 }} label={{ value: 'Sessions', angle: -90, position: 'insideLeft', fontSize: 10 }} />
                             <Tooltip formatter={(v: any) => [`${v} ${t('programas.sesiones') || 'sesiones'}`, t('programas.cantidad')]} />
                             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                               {histData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
@@ -658,7 +658,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     {(detalle.reforzadores || detalle.ayudas) && <p><span className="font-bold">🤝🏼 Ayudas:</span> {detalle.reforzadores || detalle.ayudas}</p>}
                     {detalle.correccion_error && <p><span className="font-bold">{t('programas.correccion')}</span> {detalle.correccion_error}</p>}
                     {detalle.reforzadores && <p><span className="font-bold">Reforzadores:</span> {detalle.reforzadores}</p>}
-                    {detalle.materiales && <p><span className="font-bold">Materiales:</span> {detalle.materiales}</p>}
+                    {detalle.materiales && <p><span className="font-bold">Materials:</span> {detalle.materiales}</p>}
                   </div>
                 </div>
               )}
@@ -675,9 +675,9 @@ function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
   const isEN = locale === 'en'
   const labels: Record<string, { label: string; color: string }> = {
     linea_base:    { label: t('programas.lineaBase'),    color: 'bg-slate-100 text-slate-600' },
-    intervencion:  { label: isEN ? 'Intervention' : 'Intervención',  color: 'bg-indigo-100 text-indigo-700' },
+    intervencion:  { label: 'Intervention',  color: 'bg-indigo-100 text-indigo-700' },
     mantenimiento: { label: t('programas.mantenimiento'), color: 'bg-emerald-100 text-emerald-700' },
-    seguimiento:   { label: isEN ? 'Follow-up' : 'Seguimiento',   color: 'bg-amber-100 text-amber-700' },
+    seguimiento:   { label: 'Follow-up',   color: 'bg-amber-100 text-amber-700' },
     dominado:      { label: t('programas.dominado'),   color: 'bg-emerald-100 text-emerald-700' },
   }
   const cfg = labels[fase] || { label: fase, color: 'bg-slate-100 text-slate-500' }
@@ -710,7 +710,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
 
   const handleSave = async () => {
     if (!form.oportunidades_totales) {
-      toast.error(isEN ? 'Enter total opportunities' : 'Ingresa oportunidades totales')
+      toast.error('Enter total opportunities')
       return
     }
     setSaving(true)
@@ -735,7 +735,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(isEN?'✅ Session recorded':'✅ Sesión registrada')
+      toast.success('✅ Session recorded')
       onSaved()
     } catch (e: any) {
       toast.error(e.message)
@@ -808,7 +808,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
             <div>
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">🤝🏼 {t('programas.nivelAyuda')}</label>
               <div className="flex flex-wrap gap-1.5 mb-2">
-                {(isEN ? ['Independent', 'Gesture', 'Verbal', 'Modeling', 'Partial physical', 'Full physical'] : ['Independiente', 'Gesto', 'Verbal', 'Modelado', 'Físico parcial', 'Físico total']).map(nivel => (
+                {(['Independent', 'Gesture', 'Verbal', 'Modeling', 'Partial physical', 'Full physical']).map(nivel => (
                   <button key={nivel}
                     onClick={() => setForm(f => ({ ...f, nivel_ayuda: nivel, nivel_ayuda_custom: nivel }))}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
@@ -843,7 +843,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
             <button onClick={handleSave} disabled={saving}
               className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-black text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
               {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-              {saving ? (isEN ? 'Saving...' : 'Guardando...') : (isEN ? 'Save Session' : 'Guardar Sesión')}
+              {saving ? ('Saving...') : ('Save Session')}
             </button>
           </div>
         </div>
@@ -862,7 +862,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
   const [form, setForm] = useState({
     titulo: '', area: 'comunicacion', objetivo_lp: '',
     sd_estimulo: '', correccion_error: '', reforzadores: '', materiales: '',
-    unidad_positiva: '', unidad_negativa: '', generalizacion: isEN ? 'Encourage the family to practice this exercise at home.' : 'Promover con la familia que realicen este ejercicio en casa.',
+    unidad_positiva: '', unidad_negativa: '', generalizacion: 'Encourage the family to practice this exercise at home.',
     total_unidades: '10u.', notas_programa: '', drive_url: '',
     tipo_medicion: 'porcentaje', criterio_dominio_pct: 90, criterio_sesiones_consecutivas: 2,
   })
@@ -871,7 +871,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSave = async () => {
-    if (!form.titulo || !form.objetivo_lp) { toast.error(isEN ? 'Title and objective are required' : 'Título y objetivo son requeridos'); return }
+    if (!form.titulo || !form.objetivo_lp) { toast.error('Title and objective are required'); return }
     setSaving(true)
     try {
       const res = await fetch('/api/programas-aba', {
@@ -887,7 +887,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(isEN ? '✅ Program created' : '✅ Programa creado')
+      toast.success('✅ Program created')
       onCreated()
     } catch (e: any) { toast.error(e.message) }
     finally { setSaving(false) }
@@ -995,14 +995,14 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
             <div className="space-y-3">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 3 · Procedimiento</p>
               {[
-                { key: 'materiales',       label: isEN ? '📚 Materials' : '📚 Materiales',                   placeholder: isEN ? 'Materials needed for the session' : 'Materiales necesarios para la sesión' },
-                { key: 'sd_estimulo',      label: isEN ? '📍 Sd / Discriminative stimulus' : '📍 Sd / Estímulo discriminativo',  placeholder: isEN ? 'Verbal instruction or gesture that initiates behavior' : 'Instrucción verbal o gesto que inicia la conducta' },
-                { key: 'unidad_positiva',  label: isEN ? '✅ Positive unit' : '✅ Unidad positiva',              placeholder: isEN ? 'Expected correct response' : 'Respuesta correcta esperada' },
-                { key: 'unidad_negativa',  label: isEN ? '❎ Negative unit' : '❎ Unidad negativa',             placeholder: isEN ? 'Incorrect response / error' : 'Respuesta incorrecta / error' },
-                { key: 'reforzadores',     label: isEN ? '🤝🏼 Prompts' : '🤝🏼 Ayudas',                      placeholder: isEN ? 'As indicated in the set. E.g.: Gesture + verbal' : 'Las indicadas en el set. Ej: Gesto + verbal' },
-                { key: 'correccion_error', label: isEN ? '📍 Error correction' : '📍 Corrección del error',         placeholder: isEN ? 'How to correct an incorrect response' : 'Cómo se corrige si la respuesta es incorrecta' },
-                { key: 'generalizacion',   label: isEN ? '➡️ Generalization' : '➡️ Generalización',              placeholder: isEN ? 'Encourage the family to practice at home.' : 'Promover con la familia que realicen este ejercicio en casa.' },
-                { key: 'notas_programa',   label: isEN ? '🙈 Notes' : '🙈 Notas',                        placeholder: isEN ? 'General program observations...' : 'Observaciones generales del programa...' },
+                { key: 'materiales',       label: '📚 Materials',                   placeholder: 'Materials needed for the session' },
+                { key: 'sd_estimulo',      label: '📍 Sd / Discriminative stimulus',  placeholder: 'Verbal instruction or gesture that initiates behavior' },
+                { key: 'unidad_positiva',  label: '✅ Positive unit',              placeholder: 'Expected correct response' },
+                { key: 'unidad_negativa',  label: '❎ Negative unit',             placeholder: 'Incorrect response / error' },
+                { key: 'reforzadores',     label: '🤝🏼 Prompts',                      placeholder: 'As indicated in the set. E.g.: Gesture + verbal' },
+                { key: 'correccion_error', label: '📍 Error correction',         placeholder: 'How to correct an incorrect response' },
+                { key: 'generalizacion',   label: '➡️ Generalization',              placeholder: 'Encourage the family to practice at home.' },
+                { key: 'notas_programa',   label: '🙈 Notes',                        placeholder: 'General program observations...' },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
                   <label className="text-xs font-bold text-slate-500 block mb-1">{label}</label>
@@ -1037,7 +1037,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
               <button onClick={handleSave} disabled={saving}
                 className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-black text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                {saving ? (isEN ? 'Creating...' : 'Creando...') : (isEN ? 'Create Program' : 'Crear Programa')}
+                {saving ? ('Creating...') : ('Create Program')}
               </button>
             )}
           </div>

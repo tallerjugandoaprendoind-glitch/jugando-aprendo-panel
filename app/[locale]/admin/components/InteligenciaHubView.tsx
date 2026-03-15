@@ -156,7 +156,7 @@ function LineChartProgreso({ sesiones, criterio = 90, color = '#7c3aed', titulo 
           <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--text-muted)' }} />
           <Tooltip
             contentStyle={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 10, fontSize: 11 }}
-            formatter={(v: any) => [`${v}%`, isEN ? 'Achievement' : 'Logro']}
+            formatter={(v: any) => [`${v}%`, 'Achievement']}
           />
           <ReferenceLine y={criterio} stroke="#10b981" strokeDasharray="4 2" strokeWidth={1.5} />
           <Area type="monotone" dataKey="pct" fill={`${color}18`} stroke="none" />
@@ -226,7 +226,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{p.name}</p>
-                <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>{p.diagnosis || isEN ? 'No diagnosis' : 'Sin diagnóstico'}</p>
+                <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>{p.diagnosis || 'No diagnosis'}</p>
               </div>
               <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
             </button>
@@ -260,13 +260,13 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                   <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">{t('hub.analisPorPrograma')}</p>
                   <h3 className="text-xl font-black">{selectedPaciente.name}</h3>
                   <p className="text-blue-200 text-sm mt-0.5">
-                    {(prediccion as any).programas_analizados || 0} {isEN ? "programs" : "programas"} · {(prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) || 0} {isEN ? "total sessions" : "sesiones totales"}
+                    {(prediccion as any).programas_analizados || 0} {"programs"} · {(prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) || 0} {"total sessions"}
                   </p>
                 </div>
                 <div className="bg-white/15 rounded-xl px-3 py-2 text-center">
                   <p className="text-white/70 text-[10px] uppercase tracking-wide">{t('ui.criteria')}</p>
                   <p className="text-white font-black text-sm">≥90% × 2</p>
-                  <p className="text-white/70 text-[10px]">{isEN ? "consecutive sessions" : "sesiones consecutivas"}</p>
+                  <p className="text-white/70 text-[10px]">{"consecutive sessions"}</p>
                 </div>
               </div>
             </div>
@@ -274,7 +274,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             {/* Sin programas */}
             {((prediccion as any).programas_analizados === 0) && (
               <div className="rounded-xl p-6 text-center border-2 border-dashed" style={{ borderColor: "var(--card-border)", background: "var(--muted-bg)" }}>
-                <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>{isEN ? "No active ABA programs" : "Sin programas ABA activos"}</p>
+                <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>{"No active ABA programs"}</p>
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>{t('hub.creaProgramas')}el paciente para generar análisis por nivel.</p>
               </div>
             )}
@@ -331,7 +331,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                               <div className="flex items-center gap-3 shrink-0 ml-2">
                                 <span className="text-xs" style={{ color: "var(--text-muted)" }}>media {set.media}%</span>
                                 <span className={`text-xs font-black ${set.criterio_logrado ? "text-emerald-400" : "text-amber-400"}`}>
-                                  {set.criterio_logrado ? isEN ? "✅ Mastered" : "✅ Logrado" : `${set.ultimo_pct}%`}
+                                  {set.criterio_logrado ? "✅ Mastered" : `${set.ultimo_pct}%`}
                                 </span>
                               </div>
                             </div>
@@ -424,9 +424,9 @@ function TabSeguridad() {
         </div>
 
         {[
-          { icon: Eye, label: isEN ? 'Accesses (7d)' : 'Accesos (7d)', value: datos?.totalAccesos || 0, color: 'blue' },
-          { icon: AlertTriangle, label: isEN ? 'Active alerts' : 'Alertas activas', value: datos?.alertasActivas || 0, color: (datos?.alertasActivas || 0) > 0 ? 'red' : 'green' },
-          { icon: Shield, label: isEN ? 'Exports' : 'Exportaciones', value: datos?.exportacionesTotal || 0, color: 'purple' },
+          { icon: Eye, label: 'Accesses (7d)', value: datos?.totalAccesos || 0, color: 'blue' },
+          { icon: AlertTriangle, label: 'Active alerts', value: datos?.alertasActivas || 0, color: (datos?.alertasActivas || 0) > 0 ? 'red' : 'green' },
+          { icon: Shield, label: 'Exports', value: datos?.exportacionesTotal || 0, color: 'purple' },
         ].map(m => (
           <div key={m.label} className=" rounded-2xl border border-slate-200 p-5 flex flex-col justify-between" style={{ background: "var(--card)" }}>
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 ${
@@ -475,7 +475,7 @@ function TabSeguridad() {
             <AlertTriangle size={14} className="text-amber-500" /> Alertas de Seguridad
           </h4>
           <button onClick={cargar} className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1">
-            <RefreshCw size={11} /> Actualizar
+            <RefreshCw size={11} /> Refresh
           </button>
         </div>
         {alertas.length === 0 ? (
@@ -696,9 +696,9 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         <div className="space-y-3">
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: isEN ? 'Sessions' : 'Sesiones', val: resultado.sesiones_analizadas || 0 },
-              { label: isEN ? 'Patterns' : 'Patrones', val: resultado.patrones?.length || 0 },
-              { label: isEN ? 'Urgent' : 'Urgentes', val: resultado.patrones_urgentes || 0 },
+              { label: 'Sessions', val: resultado.sesiones_analizadas || 0 },
+              { label: 'Patterns', val: resultado.patrones?.length || 0 },
+              { label: 'Urgent', val: resultado.patrones_urgentes || 0 },
             ].map(m => (
               <div key={m.label} className=" rounded-xl border border-slate-100 p-3 text-center" style={{ background: "var(--card)" }}>
                 <p className="text-2xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{m.val}</p>
@@ -786,7 +786,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
           <Target size={16} className="text-amber-600" />
           <span className="font-bold text-amber-800 text-sm">{t('hub.generadorObjetivos')}</span>
         </div>
-        <p className="text-xs text-amber-600">{isEN ? "Generate or adjust ABA therapeutic goals" : "Genera o ajusta objetivos terapéuticos ABA"} automáticamente según el progreso real del paciente.</p>
+        <p className="text-xs text-amber-600">{"Generate or adjust ABA therapeutic goals"} automáticamente según el progreso real del paciente.</p>
       </div>
       <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
         <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
@@ -795,7 +795,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
           {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
         <div className="flex gap-2">
-          {((isEN ? [['generar', 'Generate new'], ['ajustar', 'Adjust existing'], ['evaluar_dominio', 'Evaluate mastery']] : [['generar', 'Generar nuevos'], ['ajustar', 'Ajustar existentes'], ['evaluar_dominio', 'Evaluar dominio']]) as [string, string][]).map(([val, lbl]) => (
+          {([['generar', 'Generate new'], ['ajustar', 'Adjust existing'], ['evaluar_dominio', 'Evaluate mastery']] as [string, string][]).map(([val, lbl]) => (
             <button key={val} onClick={() => setAccion(val as 'generar' | 'ajustar' | 'evaluar_dominio')}
               className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${accion === val ? 'bg-amber-100 text-amber-700' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
               {lbl}
@@ -976,7 +976,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       })
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || (isEN ? 'Error generating report' : 'Error generando reporte'))
+        throw new Error(err.error || ('Error generating report'))
       }
       // Descargar el .docx directamente
       const blob = await res.blob()
@@ -994,9 +994,9 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
   }
 
   const tipoInfo = {
-    padres:      { label: isEN ? 'For parents'  : 'Para padres',         desc: isEN ? 'Emotional and accessible language'         : 'Lenguaje emocional y accesible',    emoji: '👨‍👩‍👧' },
-    seguro:      { label: isEN ? 'For insurance' : 'Para seguros / IMSS', desc: isEN ? 'Technical-legal format with ICD-10'         : 'Formato técnico-legal con CIE-10',  emoji: '🏥' },
-    comparativo: { label: isEN ? 'Comparative + pred.' : 'Comparativo + pred.', desc: isEN ? '"In 3 months they will achieve X"' : '"En 3 meses logrará X"', emoji: '📊' },
+    padres:      { label: 'For parents',         desc: 'Emotional and accessible language',    emoji: '👨‍👩‍👧' },
+    seguro:      { label: 'For insurance', desc: 'Technical-legal format with ICD-10',  emoji: '🏥' },
+    comparativo: { label: 'Comparative + pred.', desc: '"In 3 months they will achieve X"', emoji: '📊' },
   }
 
   return (
@@ -1006,7 +1006,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
           <BookOpen size={16} className="text-teal-600" />
           <span className="font-bold text-teal-800 text-sm">Reportes Profesionales Word — CAPA 2</span>
         </div>
-        <p className="text-xs text-teal-600">{isEN ? "Generate professional .docx documents ready" : "Genera documentos .docx profesionales listo"}s para imprimir o enviar: para padres, aseguradoras o análisis comparativo.</p>
+        <p className="text-xs text-teal-600">{"Generate professional .docx documents ready"}s para imprimir o enviar: para padres, aseguradoras o análisis comparativo.</p>
       </div>
       <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{'Paciente'}</label>
@@ -1042,9 +1042,9 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       {/* Info cards */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { emoji: '👨‍👩‍👧', title: isEN ? 'Parents' : 'Padres', desc: isEN ? 'Emotional letter with achievements, home activities and prediction. No jargon.' : 'Carta emocional con logros, actividades en casa y predicción. Sin tecnicismos.' },
-          { emoji: '🏥', title: isEN ? 'Insurance' : 'Seguros', desc: isEN ? 'ICD-10, medical justification, program table, professional signature.' : 'CIE-10, justificación médica, tabla de programas, firma profesional.' },
-          { emoji: '📊', title: isEN ? 'Comparative' : 'Comparativo', desc: isEN ? 'Progress between periods with 30 and 90-day prediction charts.' : 'Progreso entre períodos con gráficos de predicción a 30 y 90 días.' },
+          { emoji: '👨‍👩‍👧', title: 'Parents', desc: 'Emotional letter with achievements, home activities and prediction. No jargon.' },
+          { emoji: '🏥', title: 'Insurance', desc: 'ICD-10, medical justification, program table, professional signature.' },
+          { emoji: '📊', title: 'Comparative', desc: 'Progress between periods with 30 and 90-day prediction charts.' },
         ].map((c, i) => (
           <div key={i} className=" border border-slate-100 rounded-xl p-3" style={{ background: "var(--card)" }}>
             <p className="text-xl mb-1">{c.emoji}</p>
@@ -1083,11 +1083,11 @@ export default function InteligenciaHubView() {
 
   const tabs = [
     { id: 'predicciones' as Tab, icon: Brain, label: t('hub.predicciones'), color: 'blue' },
-    { id: 'patrones' as Tab, icon: Activity, label: isEN ? 'ABA Patterns' : 'Patrones ABA', color: 'violet' },
-    { id: 'objetivos' as Tab, icon: Target, label: isEN ? 'AI Goals' : 'Objetivos IA', color: 'amber' },
-    { id: 'sugerencias' as Tab, icon: Sparkles, label: isEN ? 'Proactive Alerts' : 'Alertas Proactivas', color: 'orange' },
-    { id: 'reportes' as Tab, icon: BookOpen, label: isEN ? 'AI Reports' : 'Reportes IA', color: 'teal' },
-    { id: 'seguridad' as Tab, icon: Shield, label: isEN ? 'Security' : 'Seguridad', color: 'emerald' },
+    { id: 'patrones' as Tab, icon: Activity, label: 'ABA Patterns', color: 'violet' },
+    { id: 'objetivos' as Tab, icon: Target, label: 'AI Goals', color: 'amber' },
+    { id: 'sugerencias' as Tab, icon: Sparkles, label: 'Proactive Alerts', color: 'orange' },
+    { id: 'reportes' as Tab, icon: BookOpen, label: 'AI Reports', color: 'teal' },
+    { id: 'seguridad' as Tab, icon: Shield, label: 'Security', color: 'emerald' },
   ]
 
   return (

@@ -43,7 +43,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
     dot: 'bg-emerald-500'
   },
   pending: { 
-    label: 'Pendiente', 
+    label: 'Pending', 
     color: 'text-amber-700', 
     bg: 'bg-amber-50 border-amber-200', 
     icon: <AlertCircle size={14}/>,
@@ -66,7 +66,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 }
 
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-const getDaysES = (isEN: boolean) => isEN ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+const getDaysES = (isEN: boolean) => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
 function formatDate(dateStr: string) {
   const { t, locale } = useI18n()
@@ -262,7 +262,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         {/* Time filter */}
         <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
           {[
-            { key: 'upcoming', label: isEN?'📅 Upcoming':'📅 Próximas' },
+            { key: 'upcoming', label: '📅 Upcoming' },
             { key: 'past', label: '📋 Historial' },
             { key: 'all', label: '🗓️ Todas' },
           ].map(({ key, label }) => (
@@ -285,7 +285,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           {[
             { key: 'all', label: 'Todas' },
             { key: 'confirmed', label: '✅ Confirmadas' },
-            { key: 'pending', label: isEN ? '⏳ Pending' : '⏳ Pendientes' },
+            { key: 'pending', label: '⏳ Pending' },
             { key: 'completed', label: '🏆 Completadas' },
             { key: 'cancelled', label: '❌ Canceladas' },
           ].map(({ key, label }) => (
@@ -318,7 +318,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           <h3 className="font-bold text-slate-800 text-lg mb-2">{t('ui.no_appointments_here')}</h3>
           <p className="text-slate-400 text-sm mb-6">
             {filter === 'upcoming' 
-              ? (isEN?'You have no upcoming appointments scheduled.':'No tienes citas próximas agendadas.')
+              ? ('You have no upcoming appointments scheduled.')
               : 'No hay citas en el historial seleccionado.'}
           </p>
           {filter === 'upcoming' && (
@@ -384,7 +384,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                                   {cfg.label}
                                 </span>
                                 {apt.is_group && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-200">{isEN ? '👥 Group' : '👥 Grupal'}</span>
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-200">{'👥 Group'}</span>
                                 )}
                               </div>
                               
@@ -479,7 +479,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
       <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-2xl p-5 flex items-center justify-between gap-4">
         <div>
           <p className="font-bold text-slate-800 text-sm">{t('agenda.necesitasNuevaCita')}</p>
-          <p className="text-xs text-slate-500 mt-0.5">Tienes {profile?.tokens || 0} token{(profile?.tokens || 0) !== 1 ? 's' : ''} disponible{(profile?.tokens || 0) !== 1 ? 's' : ''}</p>
+          <p className="text-xs text-slate-500 mt-0.5">You have {profile?.tokens || 0} token{(profile?.tokens || 0) !== 1 ? 's' : ''} disponible{(profile?.tokens || 0) !== 1 ? 's' : ''}</p>
         </div>
         <button
           onClick={() => onChangeView('agenda')}

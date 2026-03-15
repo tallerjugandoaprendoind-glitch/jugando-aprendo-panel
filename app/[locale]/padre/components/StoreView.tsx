@@ -35,11 +35,11 @@ interface Order {
 }
 
 const getEstadoCfg = (isEN: boolean): Record<string, any> => ({
-  pendiente:  { label: isEN?'Pending confirmation':'Pendiente de confirmación', icon: Clock,       color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200' },
-  confirmado: { label: 'Confirmado',                icon: CheckCircle, color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-200'  },
-  listo:      { label: isEN?'Ready to pick up!':'¡Listo para recoger!',      icon: Package,     color: 'text-violet-600',  bg: 'bg-violet-50',  border: 'border-violet-200'},
-  entregado:  { label: 'Entregado',                 icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200'},
-  cancelado:  { label: 'Cancelado',                 icon: XCircle,     color: 'text-red-500',     bg: 'bg-red-50',     border: 'border-red-200'   },
+  pendiente:  { label: 'Pending confirmation', icon: Clock,       color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200' },
+  confirmado: { label: 'Confirmed',                       icon: CheckCircle, color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-200'  },
+  listo:      { label: 'Ready to pick up!',       icon: Package,     color: 'text-violet-600',  bg: 'bg-violet-50',  border: 'border-violet-200'},
+  entregado:  { label: 'Delivered',                       icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200'},
+  cancelado:  { label: 'Cancelled',                       icon: XCircle,     color: 'text-red-500',     bg: 'bg-red-50',     border: 'border-red-200'   },
 })
 
 // ── Carrito flotante ──────────────────────────────────────────────────────────
@@ -64,7 +64,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
           <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
-            <ShoppingCart size={20} className="text-blue-600" /> Mi carrito
+            <ShoppingCart size={20} className="text-blue-600" /> {t('tienda.carrito')}
             {cart.length > 0 && <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">{cart.length}</span>}
           </h3>
           <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
@@ -79,11 +79,11 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
             </div>
             <h3 className="text-2xl font-black text-slate-800 mb-2">{t('tienda.pedidoEnviado')}</h3>
             <p className="text-slate-500 text-sm leading-relaxed mb-6">
-              Tu pedido fue registrado. Nos pondremos en contacto contigo para confirmar el pago y la entrega.
+              {t('tienda.confirmaPedido')}
             </p>
             <a href="https://wa.me/51924807183" target="_blank" rel="noopener noreferrer"
               className="flex items-center gap-2 px-6 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all">
-              <Phone size={16} /> Coordinar por WhatsApp
+              <Phone size={16} /> {t('agenda.notificarPadre')}
             </a>
           </div>
         ) : cart.length === 0 ? (
@@ -139,7 +139,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
               <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
                 <p className="text-xs font-black text-blue-700 mb-1">{t('tienda.comoPaga')}</p>
                 <p className="text-xs text-blue-600 leading-relaxed">
-                  El pago se realiza al recoger el pedido en el centro (efectivo o yape). Para artículos digitales te enviaremos el archivo por WhatsApp tras confirmar el pago.
+                  {t('ui.physical_items_note')}
                 </p>
               </div>
             </div>
@@ -153,10 +153,10 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
               <button onClick={handleCheckout} disabled={placing}
                 className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-base rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
                 {placing ? <Loader2 size={18} className="animate-spin" /> : <ShoppingBag size={18} />}
-                {placing ? 'Enviando pedido...' : 'Confirmar pedido'}
+                {placing ? t('common.enviando') : t('tienda.pagar')}
               </button>
               <p className="text-center text-xs text-slate-400">
-                Al confirmar, el centro recibirá tu pedido y te contactará
+                {t('tienda.confirmaPedido')}
               </p>
             </div>
           </>
@@ -290,14 +290,14 @@ export default function StoreView({ profile }: { profile: any }) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-            <ShoppingBag size={24} className="text-blue-600" /> Tienda
+            <ShoppingBag size={24} className="text-blue-600" /> {t('nav.tienda')}
           </h2>
           <p className="text-sm text-slate-400 mt-0.5">{t('familias.materialesTerapeuticos')}</p>
         </div>
         <div className="flex items-center gap-3">
           <button onClick={() => setView(v => v === 'catalogo' ? 'mis-pedidos' : 'catalogo')}
             className={`text-sm font-bold px-4 py-2.5 rounded-xl border transition-all ${view === 'mis-pedidos' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'}`}>
-            {view === 'catalogo' ? `Mis pedidos (${orders.length})` : '← Tienda'}
+            {view === 'catalogo' ? `${t('tienda.misCompras')} (${orders.length})` : `← ${t('nav.tienda')}`}
           </button>
           {view === 'catalogo' && (
             <button onClick={() => setShowCart(true)} className="relative p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-md shadow-blue-200">
@@ -327,14 +327,14 @@ export default function StoreView({ profile }: { profile: any }) {
               {['todos', 'fisico', 'digital'].map(f => (
                 <button key={f} onClick={() => setFilterTipo(f)}
                   className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition-all ${filterTipo === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'}`}>
-                  {f === 'todos' ? (isEN?'All':'Todo') : f === 'fisico' ? (isEN?'📦 Physical':'📦 Físicos') : (isEN?'📄 Digital':'📄 Digitales')}
+                  {f === 'todos' ? t('ui.all_items') : f === 'fisico' ? `📦 ${t('ui.physical_items_note').split(' ')[0]}` : `📄 ${t('ui.digitales')}`}
                 </button>
               ))}
               <div className="w-px bg-slate-200 self-stretch mx-1" />
               {categorias.map(c => (
                 <button key={c} onClick={() => setFilterCat(c)}
                   className={`px-3.5 py-2 rounded-xl border text-xs font-bold capitalize transition-all ${filterCat === c ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
-                  {c === 'todos' ? 'Categorías' : c}
+                  {c === 'todos' ? t('tienda.categoria') : c}
                 </button>
               ))}
             </div>
@@ -344,7 +344,7 @@ export default function StoreView({ profile }: { profile: any }) {
           {destacados.length > 0 && search === '' && filterTipo === 'todos' && filterCat === 'todos' && (
             <div>
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                <Star size={12} className="text-amber-400 fill-amber-400" /> Destacados
+                <Star size={12} className="text-amber-400 fill-amber-400" /> {t('recursos.recursosDestacados')}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {destacados.map(p => (
@@ -372,7 +372,7 @@ export default function StoreView({ profile }: { profile: any }) {
               <p className="font-bold text-slate-400">{t('ui.no_items_found')}</p>
               <button onClick={() => { setSearch(''); setFilterTipo('todos'); setFilterCat('todos') }}
                 className="mt-3 text-xs font-bold text-blue-600 hover:underline">
-                Limpiar filtros
+                {t('ui.clear_filters')}
               </button>
             </div>
           ) : null}
@@ -386,8 +386,6 @@ export default function StoreView({ profile }: { profile: any }) {
               <p className="font-bold text-blue-800 text-sm mb-1">{t('tienda.comoFuncTienda')}</p>
               <p className="text-xs text-blue-600 leading-relaxed">
                 {t('ui.physical_items_note')}
-                Los <strong>{t('ui.digitales')}</strong> te los enviamos por WhatsApp tras confirmar el pago.
-                ¿Dudas? Escríbenos al <a href="https://wa.me/51924807183" className="underline font-bold">+51 924 807 183</a>.
               </p>
             </div>
           </div>
@@ -404,7 +402,7 @@ export default function StoreView({ profile }: { profile: any }) {
               <p className="text-sm text-slate-400 mb-4">{t('tienda.exploraCompra')}</p>
               <button onClick={() => setView('catalogo')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-all">
-                Ir a la tienda →
+                {t('tienda.exploraCompra')}
               </button>
             </div>
           ) : orders.map(order => {
@@ -438,11 +436,11 @@ export default function StoreView({ profile }: { profile: any }) {
                     </div>
                   ))}
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-sm text-slate-500 font-medium">Total pagado</span>
+                    <span className="text-sm text-slate-500 font-medium">{t('tienda.articulosPedido')}</span>
                     <span className="text-xl font-black text-blue-600">S/ {Number(order.total_soles).toFixed(2)}</span>
                   </div>
                   {order.notas && (
-                    <p className="text-xs text-slate-400 italic">Tu nota: "{order.notas}"</p>
+                    <p className="text-xs text-slate-400 italic">{t('tienda.notaPadre')} "{order.notas}"</p>
                   )}
                 </div>
               </div>
@@ -484,7 +482,7 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
         </div>
         {sinStock && (
           <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <span className="bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-full">Sin stock</span>
+            <span className="bg-red-500 text-white text-xs font-black px-3 py-1.5 rounded-full">{t('tienda.agotado')}</span>
           </div>
         )}
         {p.tipo === 'fisico' && p.stock > 0 && p.stock <= 3 && (
@@ -526,9 +524,9 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
           </button>
           <div className="absolute top-4 left-4 flex gap-2">
             <span className={`text-xs font-black px-3 py-1 rounded-full text-white ${p.tipo === 'digital' ? 'bg-violet-600' : 'bg-slate-700'}`}>
-              {p.tipo === 'digital' ? '📄 Digital' : (isEN?'📦 Physical':'📦 Físico')}
+              {p.tipo === 'digital' ? '📄 Digital' : ('📦 Physical')}
             </span>
-            {p.destacado && <span className="text-xs font-black px-3 py-1 rounded-full bg-amber-400 text-white">⭐ Destacado</span>}
+            {p.destacado && <span className="text-xs font-black px-3 py-1 rounded-full bg-amber-400 text-white">⭐ Featured</span>}
           </div>
         </div>
 
@@ -541,17 +539,17 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
           <div className="flex gap-2 mb-4">
             <span className="text-xs font-bold capitalize bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">{p.categoria}</span>
             {p.tipo === 'fisico' && <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-100 text-emerald-700' : p.stock > 0 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
-              {p.stock === 0 ? 'Sin stock' : `${p.stock} disponibles`}
+              {p.stock === 0 ? t('tienda.agotado') : `${p.stock} ${t('tienda.stock')}`}
             </span>}
             {p.tipo === 'digital' && <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700">{t('ui.descargaInmediata')}</span>}
           </div>
 
-          <p className="text-slate-600 text-sm leading-relaxed mb-6">{p.descripcion || 'Sin descripción disponible.'}</p>
+          <p className="text-slate-600 text-sm leading-relaxed mb-6">{p.descripcion || 'No description available.'}</p>
 
           {p.tipo === 'digital' && (
             <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 mb-4">
               <p className="text-xs font-black text-violet-700 mb-1">{t('tienda.articuloDigital')}</p>
-              <p className="text-xs text-violet-600">{isEN ? "When you confirm your order and pay, you will receive" : "Al confirmar tu pedido y pagar, recibirás"} el archivo por WhatsApp en menos de 24 horas.</p>
+              <p className="text-xs text-violet-600">{"When you confirm your order and pay, you will receive"} el archivo por WhatsApp en menos de 24 horas.</p>
             </div>
           )}
 

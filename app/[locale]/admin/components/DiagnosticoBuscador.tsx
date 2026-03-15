@@ -41,9 +41,7 @@ const DIAGNOSTICOS = [
   { cie11: '6A80',   dsm5: '315.35', nombre: 'Tartamudeo (Disfluencia del habla infantil)', area: 'Comunicación', desc: 'Alteraciones de la fluidez normal del habla con sonidos/sílabas repetidos.' },
 ]
 
-const getAreas = (isEN: boolean) => isEN
-  ? ['All', 'Neurodevelopment', 'Anxiety', 'OCD', 'Trauma', 'Neurological', 'Communication']
-  : ['Todos', 'Neurodesarrollo', 'Ansiedad', 'TOC', 'Trauma', 'Neurológico', 'Comunicación']
+const getAreas = (isEN: boolean) => ['All', 'Neurodevelopment', 'Anxiety', 'OCD', 'Trauma', 'Neurological', 'Communication']
 // Map EN area back to ES for filtering (data uses ES keys)
 const areaEnToEs: Record<string, string> = {
   'All': 'Todos', 'Neurodevelopment': 'Neurodesarrollo', 'Anxiety': 'Ansiedad',
@@ -54,7 +52,7 @@ export default function DiagnosticoBuscador() {
   const { t, locale } = useI18n()
   const isEN = locale === 'en'
   const AREAS = getAreas(isEN)
-  const [initialArea] = [isEN ? 'All' : 'Todos']
+  const [initialArea] = ['All']
   const [q, setQ]           = useState('')
   const [area, setArea]     = useState<string>('')
   const [copied, setCopied] = useState<string | null>(null)

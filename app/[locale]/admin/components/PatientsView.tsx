@@ -40,9 +40,9 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
         ])
         const all = [
           ...(r1.data || []).map((e: any) => ({ ...e, tipo: e.form_type || 'evaluacion', fuente: '📋' })),
-          ...(r2.data || []).map((e: any) => ({ ...e, form_title: e.form_title || (isEN?'Anamnesis':'Anamnesis'), tipo: 'anamnesis', fuente: '📄' })),
-          ...(r3.data || []).map((e: any) => ({ ...e, created_at: e.fecha_sesion || e.created_at, form_title: e.form_title || (isEN?'ABA Session':'Sesión ABA'), tipo: 'aba', fuente: '🎯' })),
-          ...(r4.data || []).map((e: any) => ({ ...e, form_title: e.form_title || (isEN?'Home Environment':'Entorno Hogar'), tipo: 'entorno', fuente: '🏠' })),
+          ...(r2.data || []).map((e: any) => ({ ...e, form_title: e.form_title || ('Anamnesis'), tipo: 'anamnesis', fuente: '📄' })),
+          ...(r3.data || []).map((e: any) => ({ ...e, created_at: e.fecha_sesion || e.created_at, form_title: e.form_title || ('ABA Session'), tipo: 'aba', fuente: '🎯' })),
+          ...(r4.data || []).map((e: any) => ({ ...e, form_title: e.form_title || ('Home Environment'), tipo: 'entorno', fuente: '🏠' })),
         ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         setEvaluaciones(all)
       } catch {}
@@ -143,9 +143,9 @@ function PatientsView() {
 
     const alertaColor = (dias: number | null) => {
         if (dias === null) return { bg: 'bg-slate-100', text: 'text-slate-500', label: t('pacientes.sinSesiones') }
-        if (dias <= 14) return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: isEN?`${dias}d ago`:`Hace ${dias}d` }
-        if (dias <= 30) return { bg: 'bg-amber-100', text: 'text-amber-700', label: isEN?`${dias}d ago ⚠️`:`Hace ${dias}d ⚠️` }
-        return { bg: 'bg-red-100', text: 'text-red-700', label: isEN?`${dias}d ago 🚨`:`Hace ${dias}d 🚨` }
+        if (dias <= 14) return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: `${dias}d ago` }
+        if (dias <= 30) return { bg: 'bg-amber-100', text: 'text-amber-700', label: `${dias}d ago ⚠️` }
+        return { bg: 'bg-red-100', text: 'text-red-700', label: `${dias}d ago 🚨` }
     }
 
     const calcularEdadDesdeString = (birthDate: string): number => {
@@ -234,9 +234,9 @@ function PatientsView() {
             if (error) {
                 alert(`❌ ERROR: ${error.message}`);
             } else if (!data || data.length === 0) {
-                alert(isEN ? "⚠️ No records updated. Check permissions." : "⚠️ No se actualizó ningún registro. Verifica los permisos.");
+                alert("⚠️ No records updated. Check permissions.");
             } else {
-                alert(isEN ? `✅ Saved successfully. Age: ${edad} years.` : `✅ Guardado correctamente. Edad: ${edad} años.`);
+                alert(`✅ Saved successfully. Age: ${edad} years.`);
                 await cargarPacientes();
                 setIsEditing(false);
                 setShowPatientModal(false);
@@ -255,12 +255,12 @@ function PatientsView() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h3 className="font-bold text-xl md:text-2xl text-slate-800 flex items-center gap-3">
-                            <Users className="text-blue-600" size={28}/> {isEN ? 'Patient Directory' : 'Directorio de Pacientes'}
+                            <Users className="text-blue-600" size={28}/> {'Patient Directory'}
                         </h3>
-                        <p className="text-slate-400 text-xs md:text-sm mt-1">{listaNinosFiltrada.length} {isEN ? "of" : "de"} {listaNinos.length} {isEN ? "patients" : "pacientes"}</p>
+                        <p className="text-slate-400 text-xs md:text-sm mt-1">{listaNinosFiltrada.length} {"of"} {listaNinos.length} {"patients"}</p>
                     </div>
                     <button onClick={cargarPacientes} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm text-slate-600 transition-all flex items-center gap-2">
-                        <Activity size={16}/> {isEN ? "Refresh" : "Actualizar"}
+                        <Activity size={16}/> {"Refresh"}
                     </button>
                 </div>
 
@@ -331,7 +331,7 @@ function PatientsView() {
                                         </td>
                                         <td className="p-4 lg:p-6">
                                             <span className="font-black text-slate-700" style={{ color: "var(--text-secondary)" }}>
-                                                {nino.age ? isEN ? `${nino.age} years` : `${nino.age} años` : "N/A"}
+                                                {nino.age ? `${nino.age} years` : "N/A"}
                                             </span>
                                         </td>
                                         <td className="p-4 lg:p-6"><span className="px-4 py-2 rounded-xl text-xs font-black bg-purple-50 text-purple-600 border border-purple-100 inline-block">{(nino.diagnosis === 'En evaluación' ? t('pacientes.enEvaluacion') : nino.diagnosis) || t('pacientes.enEvaluacion')}</span></td>
@@ -371,9 +371,9 @@ function PatientsView() {
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-black">{isEditing ? 'Editar Paciente' : selectedPatient.name}</h3>
-                                        <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || isEN ? "Pending diagnosis" : "Diagnóstico pendiente"}</p>
+                                        <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || "Pending diagnosis"}</p>
                                         {!isEditing && selectedPatient.age && (
-                                          <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} {isEN ? "years" : "años"}</p>
+                                          <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} {"years"}</p>
                                         )}
                                     </div>
                                 </div>
@@ -397,8 +397,8 @@ function PatientsView() {
                               <div className="flex gap-2 mb-4 border-b border-slate-100 pb-4">
                                 {[
                                   { id: 'info', label: '📋 Info', icon: User },
-                                  { id: 'programas', label: isEN ? '📈 ABA Programs' : '📈 Programas ABA', icon: Activity },
-                                  { id: 'evaluaciones', label: isEN ? '📝 Assessments' : '📝 Evaluaciones', icon: ClipboardList },
+                                  { id: 'programas', label: '📈 ABA Programs', icon: Activity },
+                                  { id: 'evaluaciones', label: '📝 Assessments', icon: ClipboardList },
                                   { id: 'vadi', label: '🤖 ARIA', icon: Brain },
                                 ].map(tab => (
                                   <button key={tab.id} onClick={() => setPatientTab(tab.id as any)}
@@ -415,7 +415,7 @@ function PatientsView() {
                             {!isEditing && patientTab === 'info' && (
                                 <>
                                     <InfoRow label={t('pacientes.fechaNacimiento')} value={selectedPatient.birth_date ? new Date(selectedPatient.birth_date).toLocaleDateString(toBCP47(locale)) : t('pacientes.noRegistrada')} icon={<Calendar size={16}/>}/>
-                                    <InfoRow label="Edad" value={selectedPatient.age ? isEN ? `${selectedPatient.age} years` : `${selectedPatient.age} años` : "No disponible"} icon={<Baby size={16}/>}/>
+                                    <InfoRow label="Edad" value={selectedPatient.age ? `${selectedPatient.age} years` : "No disponible"} icon={<Baby size={16}/>}/>
                                     <InfoRow label={t('pacientes.diagnostico')} value={selectedPatient.diagnosis || t('pacientes.enEvaluacion')} icon={<Stethoscope size={16}/>}/>
                                 </>
                             )}
@@ -462,7 +462,7 @@ function PatientsView() {
                                         <div>
                                             <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Edad (auto)</label>
                                             <div className="w-full p-4 bg-green-50 border-2 border-green-200 rounded-xl font-black text-green-700 flex items-center justify-center">
-                                                {editForm.age > 0 ? isEN?`${editForm.age} years`:`${editForm.age} años` : isEN?'No age':'Sin edad'}
+                                                {editForm.age > 0 ? `${editForm.age} years` : 'No age'}
                                             </div>
                                         </div>
                                     </div>
@@ -498,7 +498,7 @@ function PatientsView() {
                                     <button onClick={() => setIsEditing(false)} disabled={isSaving} className="flex-1 px-6 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-all disabled:opacity-50">{t('common.cancelar')}</button>
                                     <button onClick={guardarCambios} disabled={isSaving} className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
                                         {isSaving ? <Loader2 className="animate-spin" size={18}/> : <Save size={18}/>}
-                                        {isSaving?(isEN?'Saving...':'Guardando...'):(isEN?'Save':'Guardar')}
+                                        {isSaving?('Saving...'):('Save')}
                                     </button>
                                 </>
                             )}

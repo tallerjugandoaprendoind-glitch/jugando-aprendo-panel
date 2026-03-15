@@ -238,7 +238,7 @@ const generarPlan = async () => {
                     </div>
                     {act.materiales_necesarios?.length > 0 && (
                       <div>
-                        <p className="text-xs font-bold text-slate-500 mb-1">Materiales:</p>
+                        <p className="text-xs font-bold text-slate-500 mb-1">Materials:</p>
                         <div className="flex flex-wrap gap-1">
                           {act.materiales_necesarios.map((m, j) => (
                             <span key={j} className="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">{m}</span>

@@ -27,18 +27,18 @@ interface Sugerencia {
 }
 
 const getTipoConfig = (isEN: boolean): Record<string, { icon: any; color: string; bg: string; label: string }> => ({
-  objetivo_estancado:  { icon: Clock,         color: 'text-red-600',    bg: 'bg-red-50 border-red-200',    label: isEN?'Stagnation':'Estancamiento' },
-  cambio_fase:         { icon: TrendingUp,     color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-200',  label: isEN?'Ready to advance':'Listo para avanzar' },
-  reforzador:          { icon: Star,           color: 'text-amber-600',  bg: 'bg-amber-50 border-amber-200',label: isEN?'Reinforcers':'Reforzadores' },
-  conducta_desafiante: { icon: AlertTriangle,  color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200', label: isEN?'Behaviors':'Conductas' },
-  logro_celebrar:      { icon: Trophy,         color: 'text-emerald-600',bg: 'bg-emerald-50 border-emerald-200', label: isEN?'Achievement!':'¡Logro!' },
-  carga_sesiones:      { icon: TrendingDown,   color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200', label: isEN?'Frequency':'Frecuencia' },
+  objetivo_estancado:  { icon: Clock,         color: 'text-red-600',    bg: 'bg-red-50 border-red-200',    label: 'Stagnation' },
+  cambio_fase:         { icon: TrendingUp,     color: 'text-blue-600',   bg: 'bg-blue-50 border-blue-200',  label: 'Ready to advance' },
+  reforzador:          { icon: Star,           color: 'text-amber-600',  bg: 'bg-amber-50 border-amber-200',label: 'Reinforcers' },
+  conducta_desafiante: { icon: AlertTriangle,  color: 'text-orange-600', bg: 'bg-orange-50 border-orange-200', label: 'Behaviors' },
+  logro_celebrar:      { icon: Trophy,         color: 'text-emerald-600',bg: 'bg-emerald-50 border-emerald-200', label: 'Achievement!' },
+  carga_sesiones:      { icon: TrendingDown,   color: 'text-purple-600', bg: 'bg-purple-50 border-purple-200', label: 'Frequency' },
 })
 
 const getPrioridadConfig = (isEN: boolean) => ({
-  alta:  { label: isEN?'🔴 Urgent':'🔴 Urgente',  badge: 'bg-red-100 text-red-700' },
-  media: { label: isEN?'🟡 Medium':'🟡 Medio',    badge: 'bg-amber-100 text-amber-700' },
-  baja:  { label: isEN?'🟢 Info':'🟢 Info',       badge: 'bg-emerald-100 text-emerald-700' },
+  alta:  { label: '🔴 Urgent',  badge: 'bg-red-100 text-red-700' },
+  media: { label: '🟡 Medium',    badge: 'bg-amber-100 text-amber-700' },
+  baja:  { label: '🟢 Info',       badge: 'bg-emerald-100 text-emerald-700' },
 })
 
 function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: string) => void }) {
@@ -166,7 +166,7 @@ export default function SugerenciasPanel({ childId }: { childId?: string }) {
         </div>
         <button onClick={cargar}
           className="p-1.5 hover:bg-slate-100 rounded-lg transition-colors"
-          title="Actualizar">
+          title="Refresh">
           <RefreshCw size={14} className={`text-slate-400 ${loading ? 'animate-spin' : ''}`} />
         </button>
       </div>

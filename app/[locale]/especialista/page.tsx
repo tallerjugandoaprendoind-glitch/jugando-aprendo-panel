@@ -111,9 +111,9 @@ export default function EspecialistaDashboard() {
   }
 
   const PAGE_TITLES: Record<string, string> = {
-    inicio: isEN ? 'Main Panel' : 'Panel Principal', pacientes: isEN ? 'My Patients' : 'Mis Pacientes',
-    formularios: isEN ? 'Clinical Forms' : 'Formularios Clínicos', evaluaciones: isEN ? 'My Assessments' : 'Mis Evaluaciones',
-    agenda: isEN ? 'My Schedule' : 'Mi Agenda', perfil: isEN ? 'My Profile' : 'Mi Perfil',
+    inicio: 'Main Panel', pacientes: 'My Patients',
+    formularios: 'Clinical Forms', evaluaciones: 'My Assessments',
+    agenda: 'My Schedule', perfil: 'My Profile',
   }
 
   if (loading) return (
@@ -305,7 +305,7 @@ export default function EspecialistaDashboard() {
                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
               >
                 {changingPassword ? <Loader2 size={16} className="animate-spin" /> : null}
-                {changingPassword ? 'Actualizando...' : 'Actualizar Contraseña'}
+                {changingPassword ? 'Updating...' : 'Update Password'}
               </button>
             </div>
           </div>

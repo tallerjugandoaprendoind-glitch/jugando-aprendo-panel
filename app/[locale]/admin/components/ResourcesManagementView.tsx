@@ -13,12 +13,12 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
 const getResourceTypes = (isEN: boolean): Record<string, any>[] => [
-  { id: 'video', label: 'Video', icon: Video, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', hint: isEN?'YouTube, Vimeo, video URL...':'YouTube, Vimeo, URL de video...' },
+  { id: 'video', label: 'Video', icon: Video, color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-200', hint: 'YouTube, Vimeo, video URL...' },
   { id: 'pdf', label: 'PDF / Doc', icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200', hint: 'URL de PDF o documento en Google Drive' },
-  { id: 'link', label: isEN?'Web link':'Enlace web', icon: LinkIcon, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200', hint: isEN?'Any useful web page...':'Cualquier página web útil...' },
-  { id: 'image', label: isEN?'Image':'Imagen', icon: ImageIcon, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', hint: isEN?'Image URL...':'URL de imagen...' },
-  { id: 'document', label: isEN?'Material':'Material', icon: BookOpen, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', hint: isEN?'Guides, articles, materials...':'Guías, artículos, materiales...' },
-  { id: 'audio', label: 'Audio', icon: Music, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', hint: isEN?'Podcast, meditation, music...':'Podcast, meditación, música...' },
+  { id: 'link', label: 'Web link', icon: LinkIcon, color: 'text-violet-600', bg: 'bg-violet-50', border: 'border-violet-200', hint: 'Any useful web page...' },
+  { id: 'image', label: 'Image', icon: ImageIcon, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200', hint: 'Image URL...' },
+  { id: 'document', label: 'Material', icon: BookOpen, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200', hint: 'Guides, articles, materials...' },
+  { id: 'audio', label: 'Audio', icon: Music, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200', hint: 'Podcast, meditation, music...' },
 ]
 
 const RESOURCE_TAGS = [
@@ -67,9 +67,9 @@ export default function ResourcesManagementView() {
   useEffect(() => { load() }, [load])
 
   const handleSave = async () => {
-    if (!newResource.title.trim()) { toast.error(isEN?'Title is required':'El título es obligatorio'); return }
-    if (!newResource.url.trim()) { toast.error(isEN?'URL is required':'La URL es obligatoria'); return }
-    if (!newResource.is_global && !newResource.child_id) { toast.error(isEN?'Select a patient':'Selecciona un paciente'); return }
+    if (!newResource.title.trim()) { toast.error('Title is required'); return }
+    if (!newResource.url.trim()) { toast.error('URL is required'); return }
+    if (!newResource.is_global && !newResource.child_id) { toast.error('Select a patient'); return }
     setIsSaving(true)
     try {
       // Get parent_id from child if specific patient selected
@@ -119,10 +119,10 @@ export default function ResourcesManagementView() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm(isEN?'Delete this resource?':'¿Eliminar este recurso?')) return
+    if (!confirm('Delete this resource?')) return
     try {
       await fetch('/api/admin/resources', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' }, body: JSON.stringify({ id }) })
-      toast.success(isEN?'Resource deleted':'Recurso eliminado')
+      toast.success('Resource deleted')
       load()
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -187,8 +187,8 @@ export default function ResourcesManagementView() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           { label: 'Total', value: resources.length, color: 'violet' },
-          { label: isEN ? 'For everyone' : 'Para todos', value: globalCount, color: 'blue' },
-          { label: isEN?'Specific':'Específicos', value: specificCount, color: 'indigo' },
+          { label: 'For everyone', value: globalCount, color: 'blue' },
+          { label: 'Specific', value: specificCount, color: 'indigo' },
           { label: 'Tipos', value: new Set(resources.map(r => r.resource_type)).size, color: 'emerald' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-5 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
@@ -239,7 +239,7 @@ export default function ResourcesManagementView() {
                       <div className="flex items-center gap-1 mt-0.5">
                         {resource.is_global ? (
                           <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500">
-                            <Globe size={9}/> {isEN ? 'For everyone' : 'Para todos'}
+                            <Globe size={9}/> {'For everyone'}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-[9px] font-bold text-indigo-600">

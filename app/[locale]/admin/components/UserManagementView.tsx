@@ -13,9 +13,9 @@ import {
 import { useToast } from '@/components/Toast'
 
 const getRoles = (isEN: boolean): Record<string, any>[] => [
-  { value: 'jefe',        label: isEN?'Director':'Director',     description: isEN?'Full system access':'Acceso total al sistema', icon: Crown,       dotColor: 'bg-purple-500', badgeClass: 'role-director'    },
-  { value: 'especialista',label: isEN?'Specialist':'Especialista',  description: isEN?'Therapist / Clinician':'Terapeuta / Clínico',     icon: Stethoscope, dotColor: 'bg-blue-500',   badgeClass: 'role-especialista' },
-  { value: 'padre',       label: isEN?'Parent / Guardian':'Padre / Tutor', description: isEN?'Family portal':'Portal de familias',      icon: Heart,       dotColor: 'bg-pink-500',   badgeClass: 'role-padre'       },
+  { value: 'jefe',        label: 'Director',     description: 'Full system access', icon: Crown,       dotColor: 'bg-purple-500', badgeClass: 'role-director'    },
+  { value: 'especialista',label: 'Specialist',  description: 'Therapist / Clinician',     icon: Stethoscope, dotColor: 'bg-blue-500',   badgeClass: 'role-especialista' },
+  { value: 'padre',       label: 'Parent / Guardian', description: 'Family portal',      icon: Heart,       dotColor: 'bg-pink-500',   badgeClass: 'role-padre'       },
 ]
 
 function getRoleInfo(role: string) {
@@ -232,7 +232,7 @@ export default function UserManagementView() {
         if (kids) setChildren(kids)
       } catch {}
     } catch (err: any) {
-      toast.error((isEN?'Error loading users: ':'Error cargando usuarios: ') + err.message)
+      toast.error(('Error loading users: ') + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -254,7 +254,7 @@ export default function UserManagementView() {
 
   const handleChangeRole = async (user: UserData, newRole: string) => {
     if (!canChangeRole(user)) {
-      toast.error(isEN?"You can't change a Director's role. Contact the system administrator.":"No podés cambiar el rol de un Director. Contactá al administrador del sistema.")
+      toast.error("You can't change a Director's role. Contact the system administrator.")
       return
     }
     setSavingRole(user.id)
@@ -279,7 +279,7 @@ export default function UserManagementView() {
     if (user.id === currentUserId) return
     const targetRole = user.profile?.role || ''
     if (targetRole === 'jefe' || targetRole === 'admin') {
-      toast.error(isEN?"You can't deactivate a Director.":"No podés desactivar a un Director.")
+      toast.error("You can't deactivate a Director.")
       return
     }
     try {
@@ -290,7 +290,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(json.is_active ? isEN ? '✅ User activated' : '✅ Usuario activado' : isEN ? '⏸ User deactivated' : '⏸ Usuario desactivado')
+      toast.success(json.is_active ? '✅ User activated' : '⏸ User deactivated')
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, profile: { ...u.profile, is_active: json.is_active } } : u))
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -299,8 +299,8 @@ export default function UserManagementView() {
 
   const handleChangePassword = async () => {
     if (!changingPasswordFor) return
-    if (!newPassword || newPassword.length < 6) { toast.error(isEN?'Minimum 6 characters':'Mínimo 6 caracteres'); return }
-    if (newPassword !== confirmPassword) { toast.error(isEN?'Passwords do not match':'Las contraseñas no coinciden'); return }
+    if (!newPassword || newPassword.length < 6) { toast.error('Minimum 6 characters'); return }
+    if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return }
     setSavingPassword(true)
     try {
       const res = await fetch('/api/admin/users', {
@@ -310,7 +310,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(isEN?'✅ Password updated':'✅ Contraseña actualizada')
+      toast.success('✅ Password updated')
       setChangingPasswordFor(null); setNewPassword(''); setConfirmPassword('')
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -327,7 +327,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(isEN ? '✅ Tokens updated' : '✅ Tokens actualizados')
+      toast.success('✅ Tokens updated')
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, profile: { ...u.profile, tokens: newTokens } } : u))
       setEditingTokensFor(null)
     } catch (err: any) {
@@ -357,7 +357,7 @@ export default function UserManagementView() {
       const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
       const child = children.find(c => c.id === selectedChildId)
-      if (!child) throw new Error(isEN?'Patient not found':'Paciente no encontrado')
+      if (!child) throw new Error('Patient not found')
 
       // Si ya tiene un parent_id, verificar si es diferente (2do padre)
       if (child.parent_id && child.parent_id !== linkingParent.id) {
@@ -366,7 +366,7 @@ export default function UserManagementView() {
           .update({ parent_id: linkingParent.id })
           .eq('id', selectedChildId)
         if (error) throw new Error(error.message)
-        toast.success(isEN?`✅ Patient linked (replaced previous guardian). To link`:`✅ Paciente vinculado (reemplazó al tutor anterior). Para vincular 2 tutores simultáneamente, consultá al admin de DB.`)
+        toast.success(`✅ Patient linked (replaced previous guardian). To link`)
       } else {
         const { error } = await sb.from('children')
           .update({ parent_id: linkingParent.id })
@@ -394,7 +394,7 @@ export default function UserManagementView() {
   }
 
   const handleCreateUser = async () => {
-    if (!createForm.email || !createForm.password) { toast.error(isEN?'Email and password':'Email y contraseña son requeridos'); return }
+    if (!createForm.email || !createForm.password) { toast.error('Email and password'); return }
     setCreatingUser(true)
     try {
       const res = await fetch('/api/admin/users', {
@@ -404,7 +404,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(isEN ? '✅ User created' : '✅ Usuario creado')
+      toast.success('✅ User created')
       setShowCreateModal(false)
       setCreateForm({ email: '', password: '', full_name: '', role: 'especialista', specialty: '' })
       cargarUsuarios()
@@ -560,7 +560,7 @@ export default function UserManagementView() {
                   <button
                     onClick={() => handleToggleActive(user)}
                     disabled={isSelf || isDirector}
-                    title={isSelf ? (isEN?'You cannot deactivate yourself':'No podés desactivarte') : isDirector ? (isEN?'Cannot deactivate directors':'No podés desactivar directores') : isActive ? (isEN?'Deactivate':'Desactivar') : (isEN?'Activate':'Activar')}
+                    title={isSelf ? ('You cannot deactivate yourself') : isDirector ? ('Cannot deactivate directors') : isActive ? ('Deactivate') : ('Activate')}
                     className="p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     style={{ color: isActive ? '#10b981' : 'var(--text-muted)' }}>
                     {isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
@@ -630,7 +630,7 @@ export default function UserManagementView() {
                             const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' }, body: JSON.stringify({ action: 'confirm_email', userId: user.id }) })
                             const json = await res.json()
                             if (json.error) throw new Error(json.error)
-                            toast.success(isEN ? '✅ Email confirmed' : '✅ Email confirmado')
+                            toast.success('✅ Email confirmed')
                             cargarUsuarios()
                           } catch (err: any) { toast.error('Error: ' + err.message) }
                         }}
@@ -688,7 +688,7 @@ export default function UserManagementView() {
             <button onClick={handleChangePassword} disabled={savingPassword}
               className="mt-4 w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
               {savingPassword ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
-              Actualizar contraseña
+              Update password
             </button>
           </div>
         </div>
@@ -705,7 +705,7 @@ export default function UserManagementView() {
               <button onClick={() => setShowCreateModal(false)} className="p-1.5 rounded-lg hover:opacity-80" style={{ color: 'var(--text-muted)' }}><X size={16} /></button>
             </div>
             <div className="space-y-3">
-              {isEN?['Full name', 'Email', 'Password (minimum 6 characters)']:['Nombre completo', 'Email', 'Contraseña (mínimo 6 caracteres)'].map((ph, i) => (
+              {['Full name', 'Email', 'Password (minimum 6 characters)'].map((ph, i) => (
                 <input key={i} placeholder={ph} type={i === 2 ? 'password' : i === 1 ? 'email' : 'text'}
                   value={i === 0 ? createForm.full_name : i === 1 ? createForm.email : createForm.password}
                   onChange={e => setCreateForm(f => ({ ...f, [i === 0 ? 'full_name' : i === 1 ? 'email' : 'password']: e.target.value }))}
@@ -760,7 +760,7 @@ export default function UserManagementView() {
               <option value="">{t('usuarios.selPaciente2')}</option>
               {children.map(c => (
                 <option key={c.id} value={c.id}>
-                  {c.name}{c.parent_id && c.parent_id !== linkingParent.id ? isEN ? ' ⚠️ already has guardian' : ' ⚠️ ya tiene tutor' : ''}
+                  {c.name}{c.parent_id && c.parent_id !== linkingParent.id ? ' ⚠️ already has guardian' : ''}
                 </option>
               ))}
             </select>

@@ -11,7 +11,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
   const { t } = useI18n()
     const initial = profile?.full_name ? profile.full_name.charAt(0) : 'U';
     const name = profile?.full_name || 'Usuario';
-    const email = profile?.email || 'Correo no disponible';
+    const email = profile?.email || 'Email not available';
     const phone = profile?.phone || 'No registrado';
 
     return (

@@ -24,11 +24,11 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
   const hasPhone = !!profile?.phone
 
   const handleSave = async () => {
-    if (!phone.trim()) { setError(isEN?'Enter your number':'Ingresá tu número'); return }
+    if (!phone.trim()) { setError('Enter your number'); return }
     // Validar formato básico con código país
     const clean = phone.replace(/\s/g, '')
     if (!clean.startsWith('+') || clean.length < 10) {
-      setError(isEN?'Include country code, e.g.: +51 924 807 183':'Incluí el código de país, ej: +51 924 807 183')
+      setError('Include country code, e.g.: +51 924 807 183')
       return
     }
     setSaving(true)
@@ -77,7 +77,7 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
           <p className="text-xs text-slate-400">
             {step === 'confirm'
               ? <span className="text-green-600 font-semibold">✅ Activo — {profile?.phone}</span>
-              : (isEN?'Receive appointment, report and message alerts':'Recibí alertas de citas, informes y mensajes')}
+              : ('Receive appointment, report and message alerts')}
           </p>
         </div>
         {step === 'confirm' && (
@@ -95,9 +95,9 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
         <div className="p-5 space-y-3">
           <div className="bg-green-50 rounded-2xl p-4 space-y-2">
             {[
-              isEN ? '📅 New appointment scheduled' : '📅 Nueva cita agendada',
+              '📅 New appointment scheduled',
               '❌ Cita cancelada o modificada',
-              '📊 Informe de progreso disponible',
+              '📊 Progress report available',
               '💬 Mensaje nuevo del terapeuta',
               '📋 Formulario para completar',
             ].map((item, i) => (

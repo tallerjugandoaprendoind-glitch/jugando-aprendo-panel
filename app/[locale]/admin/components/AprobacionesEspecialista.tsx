@@ -11,16 +11,16 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
 const getTIPO_LABEL = (isEN: boolean): Record<string, string> => ({
-  conducta: isEN?'Behavior Assessment':'Evaluación de Conducta',
-  progreso: isEN?'Progress Report':'Reporte de Progreso',
-  sesion: isEN?'Session Note':'Nota de Sesión',
-  familia: isEN?'Family Recommendations':'Recomendaciones para Familia',
+  conducta: 'Behavior Assessment',
+  progreso: 'Progress Report',
+  sesion: 'Session Note',
+  familia: 'Family Recommendations',
 })
 
 const getStatusCfg = (isEN: boolean): Record<string, any> => ({
-  pending_approval: { label: isEN?'Pending':'Pendiente', color: '#f59e0b', bg: '#f59e0b15', border: '#f59e0b30', icon: Clock },
-  approved:         { label: isEN?'Approved':'Aprobado',  color: '#10b981', bg: '#10b98115', border: '#10b98130', icon: CheckCircle },
-  rejected:         { label: isEN?'Rejected':'Rechazado', color: '#ef4444', bg: '#ef444415', border: '#ef444430', icon: XCircle },
+  pending_approval: { label: 'Pending', color: '#f59e0b', bg: '#f59e0b15', border: '#f59e0b30', icon: Clock },
+  approved:         { label: 'Approved',  color: '#10b981', bg: '#10b98115', border: '#10b98130', icon: CheckCircle },
+  rejected:         { label: 'Rejected', color: '#ef4444', bg: '#ef444415', border: '#ef444430', icon: XCircle },
 })
 
 interface Submission {
@@ -65,7 +65,7 @@ export default function AprobacionesEspecialista() {
       if (autoAprobacion && data) {
         const pendientes = data.filter(s => s.status === 'pending_approval')
         for (const s of pendientes) {
-          await supabase.from('specialist_submissions').update({ status: 'approved', admin_comment: isEN?'Auto-approved':'Auto-aprobado' }).eq('id', s.id)
+          await supabase.from('specialist_submissions').update({ status: 'approved', admin_comment: 'Auto-approved' }).eq('id', s.id)
         }
         if (pendientes.length > 0) {
           // Recargar
@@ -96,7 +96,7 @@ export default function AprobacionesEspecialista() {
         })
         .eq('id', id)
       if (error) throw error
-      toast.success(tipo === 'approved' ? (isEN?'✅ Evaluation approved':'✅ Evaluación aprobada') : (isEN?'❌ Evaluation rejected':'❌ Evaluación rechazada'))
+      toast.success(tipo === 'approved' ? ('✅ Evaluation approved') : ('❌ Evaluation rejected'))
       setExpandido(null)
       cargar()
     } catch (e: any) {
@@ -158,7 +158,7 @@ export default function AprobacionesEspecialista() {
                 color: isActive ? (cfg?.color || '#06b6d4') : '#475569',
               }}
               className="text-xs font-bold px-3 py-1.5 rounded-full transition-all">
-              {f === 'all' ? (isEN?'All':'Todas') : getStatusCfg(isEN)[f].label}
+              {f === 'all' ? ('All') : getStatusCfg(isEN)[f].label}
             </button>
           )
         })}
@@ -173,7 +173,7 @@ export default function AprobacionesEspecialista() {
           className="text-center py-16 rounded-2xl">
           <ShieldCheck size={40} style={{ color: '#334155' }} className="mx-auto mb-3" />
           <p style={{ color: '#475569' }} className="font-medium text-sm">
-            {filtro === 'pending_approval' ? (isEN?'No pending items! All up to date.':'¡Sin pendientes! Todo al día.') : (isEN?'No records in this status':'Sin registros en este estado')}
+            {filtro === 'pending_approval' ? ('No pending items! All up to date.') : ('No records in this status')}
           </p>
         </div>
       ) : (

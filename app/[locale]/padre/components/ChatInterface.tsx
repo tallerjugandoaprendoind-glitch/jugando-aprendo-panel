@@ -259,7 +259,7 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
             </p>
           </div>
           <div className="px-4 pb-4 flex flex-col gap-2">
-            {(isEN ? ['😊 Good, with energy', '😐 OK, a bit tired', '😔 Difficult, I need support'] : ['😊 Bien, con energía', '😐 Regular, algo cansado/a', '😔 Difícil, necesito apoyo']).map(opt => (
+            {(['😊 Good, with energy', '😐 OK, a bit tired', '😔 Difficult, I need support']).map(opt => (
               <button key={opt}
                 onClick={() => onWellbeingAnswer?.(opt)}
                 className="text-left px-4 py-3 text-sm font-semibold text-slate-700 rounded-2xl border-2 border-purple-100 transition-all hover:border-purple-400 hover:bg-purple-50 bg-white">
@@ -363,10 +363,10 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
   const isEN = locale === 'en'
 
   const quick = [
-    { icon: '📋', text: isEN ? 'How did the last session go?' : '¿Cómo le fue en la última sesión?', color: '#eef2ff', border: '#c7d2fe' },
-    { icon: '🏠', text: isEN ? 'Give me tips for home' : 'Dame consejos para casa', color: '#f0fdf4', border: '#bbf7d0' },
-    { icon: '🎯', text: isEN ? 'What objectives are being worked on?' : '¿Qué objetivos está trabajando?', color: '#fff7ed', border: '#fed7aa' },
-    { icon: '💙', text: isEN ? 'I need emotional support' : 'Necesito apoyo emocional', color: '#fdf2f8', border: '#f9a8d4' },
+    { icon: '📋', text: 'How did the last session go?', color: '#eef2ff', border: '#c7d2fe' },
+    { icon: '🏠', text: 'Give me tips for home', color: '#f0fdf4', border: '#bbf7d0' },
+    { icon: '🎯', text: 'What objectives are being worked on?', color: '#fff7ed', border: '#fed7aa' },
+    { icon: '💙', text: 'I need emotional support', color: '#fdf2f8', border: '#f9a8d4' },
   ]
   return (
     <div className="flex flex-col items-center px-6 py-8 text-center" style={{ animation: 'fadeUp .5s ease' }}>
@@ -385,7 +385,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
       </div>
 
       <h3 className="text-xl font-black text-slate-800 mb-1">
-        {isEN ? "Hello! I'm" : "¡Hola! Soy"} <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
+        {"Hello! I'm"} <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
       </h3>
       <p className="text-sm text-slate-500 font-medium mb-1">
         Tu asistente clínico de Jugando Aprendo
@@ -489,7 +489,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
     stopSpeaking()
 
     if (!childId) {
-      const errMsg = isEN ? '⚠️ Loading patient profile, please try again in a moment.' : '⚠️ Cargando perfil del paciente, intenta de nuevo en un momento.'
+      const errMsg = '⚠️ Loading patient profile, please try again in a moment.'
       setMessages(p => [...p, { role: 'user', text: txt }, { role: 'ai', text: errMsg }])
       speak(errMsg)
       return
@@ -699,7 +699,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
           <div className="shrink-0 px-4 pb-2">
             <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
               {[t('aria.pregSugerida_sesion'), t('aria.pregSugerida_casa'), t('aria.pregSugerida_objetivos'), t('aria.pregSugerida_apoyo')].map((q, i) => {
-                const texts = isEN ? ['How did the last session go?', 'Give me tips for home activities', 'What objectives are being worked on?', 'I need emotional support'] : ['¿Cómo le fue en la última sesión?', 'Dame consejos para actividades en casa', '¿Qué objetivos está trabajando?', 'Necesito apoyo emocional']
+                const texts = ['How did the last session go?', 'Give me tips for home activities', 'What objectives are being worked on?', 'I need emotional support']
                 return (
                   <button key={i} onClick={() => send(texts[i])}
                     className="shrink-0 px-3.5 py-2 bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-2xl text-xs font-semibold transition-all whitespace-nowrap shadow-sm">
@@ -721,7 +721,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-                placeholder={listening ? (isEN ? '🎤 Listening...' : '🎤 Escuchando...') : childName ? (isEN ? `Ask me about ${childName}...` : `Pregúntame sobre ${childName}...`) : (isEN ? 'Type your question...' : 'Escribe tu pregunta...')}
+                placeholder={listening ? ('🎤 Listening...') : childName ? (`Ask me about ${childName}...`) : ('Type your question...')}
                 disabled={typing || listening}
                 className="w-full text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
                 style={{
@@ -753,7 +753,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
               <button
                 onClick={handleMicClick}
                 disabled={typing}
-                title={listening ? (isEN ? 'Stop recording' : 'Detener grabación') : (isEN ? 'Talk to ARIA' : 'Hablar con ARIA')}
+                title={listening ? ('Stop recording') : ('Talk to ARIA')}
                 className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-40 hover:scale-105 active:scale-95"
                 style={{
                   background: listening

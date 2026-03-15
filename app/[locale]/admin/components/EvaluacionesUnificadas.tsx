@@ -34,66 +34,66 @@ import { calcularEdadNumerica } from '../utils/helpers'
 
 // ─── CATEGORÍAS ORDENADAS POR ÁREA CLÍNICA ──────────────────────────────────
 const getUnifiedCategories = (isEN: boolean) => [
-  { id: 'all',        label: isEN ? 'All templates'        : 'Todas las plantillas', icon: '🗂️', color: 'bg-slate-100 text-slate-700 border-slate-200' },
-  { id: 'conductual', label: isEN ? 'ABA / Session'        : 'ABA / Sesión',          icon: '🎯', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-  { id: 'familia',    label: isEN ? 'Family / Home'        : 'Familia / Hogar',       icon: '🏠', color: 'bg-pink-50 text-pink-700 border-pink-200' },
-  { id: 'clinico',    label: isEN ? 'Clinical History'     : 'Historia Clínica',      icon: '📋', color: 'bg-slate-50 text-slate-700 border-slate-200' },
-  { id: 'tea',        label: isEN ? 'ASD / Diagnosis'      : 'TEA / Diagnóstico',     icon: '🧩', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { id: 'all',        label: 'All templates', icon: '🗂️', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+  { id: 'conductual', label: 'ABA / Session',          icon: '🎯', color: 'bg-orange-50 text-orange-700 border-orange-200' },
+  { id: 'familia',    label: 'Family / Home',       icon: '🏠', color: 'bg-pink-50 text-pink-700 border-pink-200' },
+  { id: 'clinico',    label: 'Clinical History',      icon: '📋', color: 'bg-slate-50 text-slate-700 border-slate-200' },
+  { id: 'tea',        label: 'ASD / Diagnosis',     icon: '🧩', color: 'bg-purple-50 text-purple-700 border-purple-200' },
   { id: 'tdah',       label: 'ADHD',                                                  icon: '⚡', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  { id: 'habilidades',label: isEN ? 'Adaptive Behavior'    : 'Conducta Adaptativa',   icon: '🌟', color: 'bg-green-50 text-green-700 border-green-200' },
-  { id: 'cognitivo',  label: isEN ? 'Cognitive / IQ'       : 'Cognitivo / CI',        icon: '🧠', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
-  { id: 'sensorial',  label: isEN ? 'Sensory'              : 'Sensorial',             icon: '🌀', color: 'bg-teal-50 text-teal-700 border-teal-200' },
+  { id: 'habilidades',label: 'Adaptive Behavior',   icon: '🌟', color: 'bg-green-50 text-green-700 border-green-200' },
+  { id: 'cognitivo',  label: 'Cognitive / IQ',        icon: '🧠', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  { id: 'sensorial',  label: 'Sensory',             icon: '🌀', color: 'bg-teal-50 text-teal-700 border-teal-200' },
 ]
 
 const getClinicalForms = (isEN: boolean) => [
   {
-    id: 'aba', title: isEN ? 'ABA Session' : 'Sesión ABA', subtitle: isEN ? 'Behavioral session record' : 'Registro de sesión conductual',
-    category: 'conductual', icon: '🎯', tags: isEN ? ['ABA', 'Session', 'Behavioral'] : ['ABA', 'Sesión', 'Conductual'],
+    id: 'aba', title: 'ABA Session', subtitle: 'Behavioral session record',
+    category: 'conductual', icon: '🎯', tags: ['ABA', 'Session', 'Behavioral'],
     color: 'from-orange-500 to-red-600', estimatedMinutes: 15, targetRole: 'admin',
-    description: isEN ? 'Structured record of an Applied Behavior Analysis session' : 'Registro estructurado de sesión de Análisis Conductual Aplicado',
+    description: 'Structured record of an Applied Behavior Analysis session',
     formKey: 'aba', area: 'ABA'
   },
   {
-    id: 'entorno_hogar', title: isEN ? 'Home Environment' : 'Entorno en el Hogar', subtitle: isEN ? 'Family environment observation' : 'Observación del ambiente familiar',
-    category: 'familia', icon: '🏠', tags: isEN ? ['Home', 'Family', 'Environment'] : ['Hogar', 'Familia', 'Ambiente'],
+    id: 'entorno_hogar', title: 'Home Environment', subtitle: 'Family environment observation',
+    category: 'familia', icon: '🏠', tags: ['Home', 'Family', 'Environment'],
     color: 'from-pink-500 to-rose-600', estimatedMinutes: 20, targetRole: 'both',
-    description: isEN ? 'Analysis of the family environment and its impact on child development' : 'Análisis del entorno familiar y su impacto en el desarrollo del niño',
+    description: 'Analysis of the family environment and its impact on child development',
     formKey: 'entorno_hogar', area: 'ABA'
   },
   {
-    id: 'anamnesis', title: isEN ? 'Clinical History' : 'Historia Clínica', subtitle: isEN ? 'Relevant client data and family context' : 'Datos relevantes del cliente y contexto familiar',
-    category: 'clinico', icon: '📋', tags: isEN ? ['History', 'Initial', 'Complete'] : ['Historia', 'Inicial', 'Completo'],
+    id: 'anamnesis', title: 'Clinical History', subtitle: 'Relevant client data and family context',
+    category: 'clinico', icon: '📋', tags: ['History', 'Initial', 'Complete'],
     color: 'from-slate-600 to-slate-800', estimatedMinutes: 30, targetRole: 'admin',
-    description: isEN ? 'Complete patient clinical history, family background and early development' : 'Historia clínica completa del paciente, antecedentes familiares y desarrollo temprano',
-    formKey: 'anamnesis', area: isEN ? 'Clinical' : 'Clínico'
+    description: 'Complete patient clinical history, family background and early development',
+    formKey: 'anamnesis', area: 'Clinical'
   },
   {
-    id: 'ados2', title: 'ADOS-2', subtitle: isEN ? 'Diagnostic results record' : 'Registro de resultados diagnósticos',
-    category: 'tea', icon: '🔬', tags: isEN ? ['ASD', 'ADOS', 'Diagnosis'] : ['TEA', 'ADOS', 'Diagnóstico'],
+    id: 'ados2', title: 'ADOS-2', subtitle: 'Diagnostic results record',
+    category: 'tea', icon: '🔬', tags: ['ASD', 'ADOS', 'Diagnosis'],
     color: 'from-purple-600 to-violet-700', estimatedMinutes: 10, targetRole: 'admin',
-    description: isEN ? '⚠️ Runs on official ADOS-2 platform. Record results and scores here only.' : '⚠️ Corre en plataforma oficial ADOS-2. Aquí solo registrá los resultados y puntuaciones.',
-    formKey: 'ados2', area: isEN ? 'Results' : 'Resultados', externalPlatform: true
+    description: '⚠️ Runs on official ADOS-2 platform. Record results and scores here only.',
+    formKey: 'ados2', area: 'Results', externalPlatform: true
   },
   {
-    id: 'vineland3', title: 'Vineland-3', subtitle: isEN ? 'Adaptive behavior record' : 'Registro de conducta adaptativa',
-    category: 'habilidades', icon: '🌟', tags: isEN ? ['Adaptive', 'Vineland', 'Functional'] : ['Adaptativo', 'Vineland', 'Funcional'],
+    id: 'vineland3', title: 'Vineland-3', subtitle: 'Adaptive behavior record',
+    category: 'habilidades', icon: '🌟', tags: ['Adaptive', 'Vineland', 'Functional'],
     color: 'from-green-500 to-emerald-600', estimatedMinutes: 10, targetRole: 'admin',
-    description: isEN ? '⚠️ Runs on official Vineland-3 platform. Record composite scores and profile here only.' : '⚠️ Corre en plataforma oficial Vineland-3. Aquí solo registrá puntuaciones compuestas y perfil.',
-    formKey: 'vineland3', area: isEN ? 'Results' : 'Resultados', externalPlatform: true
+    description: '⚠️ Runs on official Vineland-3 platform. Record composite scores and profile here only.',
+    formKey: 'vineland3', area: 'Results', externalPlatform: true
   },
   {
-    id: 'wiscv', title: 'WISC-V', subtitle: isEN ? 'Intelligence record (ages 6-16)' : 'Registro de inteligencia (6-16 años)',
-    category: 'cognitivo', icon: '📊', tags: isEN ? ['IQ', 'Intelligence', 'WISC'] : ['CI', 'Inteligencia', 'WISC'],
+    id: 'wiscv', title: 'WISC-V', subtitle: 'Intelligence record (ages 6-16)',
+    category: 'cognitivo', icon: '📊', tags: ['IQ', 'Intelligence', 'WISC'],
     color: 'from-blue-600 to-cyan-600', estimatedMinutes: 10, targetRole: 'admin',
-    description: isEN ? '⚠️ Runs on official WISC-V platform. Record IQ and percentiles here only.' : '⚠️ Corre en plataforma oficial WISC-V. Aquí solo registrá IQ y percentiles.',
-    formKey: 'wiscv', area: isEN ? 'Results' : 'Resultados', externalPlatform: true
+    description: '⚠️ Runs on official WISC-V platform. Record IQ and percentiles here only.',
+    formKey: 'wiscv', area: 'Results', externalPlatform: true
   },
   {
-    id: 'basc3', title: 'BASC-3', subtitle: isEN ? 'Behavioral assessment record' : 'Registro de evaluación conductual',
-    category: 'conductual', icon: '📈', tags: isEN ? ['Behavioral', 'BASC', 'Emotional'] : ['Conductual', 'BASC', 'Emocional'],
+    id: 'basc3', title: 'BASC-3', subtitle: 'Behavioral assessment record',
+    category: 'conductual', icon: '📈', tags: ['Behavioral', 'BASC', 'Emotional'],
     color: 'from-amber-500 to-orange-600', estimatedMinutes: 10, targetRole: 'admin',
-    description: isEN ? '⚠️ Runs on official BASC-3 platform. Record T-scores and scales here only.' : '⚠️ Corre en plataforma oficial BASC-3. Aquí solo registrá T-scores y escalas.',
-    formKey: 'basc3', area: isEN ? 'Results' : 'Resultados', externalPlatform: true
+    description: '⚠️ Runs on official BASC-3 platform. Record T-scores and scales here only.',
+    formKey: 'basc3', area: 'Results', externalPlatform: true
   },
 ]
 
@@ -107,9 +107,7 @@ const getAllUnifiedForms = (isEN: boolean) => [
 function QuestionRenderer({ question, value, onChange }: any) {
   const { t, locale } = useI18n()
   const isEN = locale === 'en'
-  const freq = isEN
-    ? ['Never', 'Rarely', 'Sometimes', 'Frequently', 'Almost always', 'Always']
-    : ['Nunca', 'Raramente', 'A veces', 'Frecuentemente', 'Casi siempre', 'Siempre']
+  const freq = ['Never', 'Rarely', 'Sometimes', 'Frequently', 'Almost always', 'Always']
 
   if (question.type === 'frequency' || question.type === 'radio') {
     const opts = question.options || freq
@@ -151,7 +149,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
   }
   if (question.type === 'scale') {
     const scale = [1, 2, 3, 4, 5]
-    const labels = question.scaleLabels || { min: isEN ? 'Never/Mild' : 'Nunca/Leve', max: isEN ? 'Always/Severe' : 'Siempre/Severo' }
+    const labels = question.scaleLabels || { min: 'Never/Mild', max: 'Always/Severe' }
     return (
       <div>
         <p className="text-sm font-bold text-slate-700 mb-3">{question.label}</p>
@@ -175,7 +173,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
       <div>
         <p className="text-sm font-bold text-slate-700 mb-3">{question.label}</p>
         <div className="flex gap-3">
-          {(isEN ? ['Yes', 'No'] : ['Sí', 'No']).map(opt => (
+          {(['Yes', 'No']).map(opt => (
             <button key={opt} type="button" onClick={() => onChange(opt)}
               className={`flex-1 py-3 rounded-xl border-2 font-bold text-sm transition-all ${value === opt ? (opt === 'Sí' || opt === 'Yes' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-600 text-white border-slate-600') : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300'}`}>
               {opt}
@@ -547,7 +545,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         ai_analysis: fullRecord?.ai_analysis,
       }
       const reportType = fullRecord?.form_type || sf.form_type || 'formulario'
-      const formTitle  = fullRecord?.form_title  || sf.form_title  || (locale === 'en' ? 'Form' : 'Formulario')
+      const formTitle  = fullRecord?.form_title  || sf.form_title  || 'Form'
 
       // Call generate-report from browser (no serverless timeout issue)
       const res = await fetch('/api/generate-report', {
@@ -564,7 +562,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
 
       if (!res.ok) throw new Error(`Error ${res.status}`)
       const json = await res.json()
-      if (!json.success || !json.fileData) throw new Error(json.error || (locale === 'en' ? 'No data' : 'Sin datos'))
+      if (!json.success || !json.fileData) throw new Error(json.error || 'No data')
 
       // Save to reportes_generados
       const { error: insertError } = await supabase.from('reportes_generados').insert([{
@@ -576,12 +574,12 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         mime_type:        json.mimeType,
         tamano_bytes:     Math.round((json.fileData.length * 3) / 4),
         fecha_generacion: new Date().toISOString(),
-        generado_por:     locale === 'en' ? 'AI + Psychologist' : 'IA + Psicólogo',
+        generado_por:     'AI + Psychologist',
         source_id:        sf.id,
       }])
       if (insertError) {
         console.error('❌ Error guardando reporte en BD:', insertError)
-        toast.error((locale === 'en' ? 'Report downloaded but could not save to history: ' : 'Reporte descargado pero no se pudo guardar en historial: ') + insertError.message)
+        toast.error('Report downloaded but could not save to history: ' + insertError.message)
       }
 
       // Auto-download
@@ -595,11 +593,11 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
       document.body.appendChild(a); a.click()
       URL.revokeObjectURL(url); document.body.removeChild(a)
 
-      toast.success(locale === 'en' ? '✅ Word report generated and downloaded' : '✅ Reporte Word generado y descargado')
+      toast.success'✅ Word report generated and downloaded'
       onReportGenerated()
     } catch (err: any) {
       console.error('Error generando reporte:', err)
-      toast.error((locale === 'en' ? 'Error generating report: ' : 'Error al generar reporte: ') + (err.message || (locale === 'en' ? 'Try again' : 'Intenta de nuevo')))
+      toast.error('Error generating report: ' + (err.message || 'Try again'))
     } finally {
       setGenerating(false)
     }
@@ -611,13 +609,13 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1 flex-wrap">
             <p className="font-bold text-slate-800 text-sm truncate" style={{ color: "var(--text-primary)" }}>
-              {sf.form_title || sf.form_type || (locale === 'en' ? 'Form' : 'Formulario')}
+              {sf.form_title || sf.form_type || 'Form'}
             </p>
             {sf._source && (
               <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 uppercase tracking-wider whitespace-nowrap">
-                {sf._source === 'anamnesis_completa' ? (locale === 'en' ? 'Anamnesis' : 'Anamnesis') :
+                {sf._source === 'anamnesis_completa' ? 'Anamnesis' :
                  sf._source === 'registro_aba' ? 'ABA' :
-                 sf._source === 'registro_entorno_hogar' ? (locale === 'en' ? 'Home' : 'Hogar') : 'NeuroForm'}
+                 sf._source === 'registro_entorno_hogar' ? 'Home' : 'NeuroForm'}
               </span>
             )}
           </div>
@@ -628,7 +626,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
           {sf.ai_analysis && (
             <span className="px-2 py-1 bg-violet-50 text-violet-600 rounded-full text-[10px] font-bold border border-violet-200 flex items-center gap-1">
-              <Sparkles size={9} /> {locale === 'en' ? 'With AI' : 'Con IA'}
+              <Sparkles size={9} /> {'With AI'}
             </span>
           )}
           <button
@@ -678,7 +676,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
         <div className="bg-violet-50 rounded-xl p-4 mb-6 border border-violet-100">
           <p className="text-xs font-black text-violet-400 uppercase tracking-widest mb-1">{t('evaluaciones.titulo')}</p>
           <p className="font-bold text-violet-800">{form.title}</p>
-          <p className="text-xs text-violet-600 mt-0.5">{form.estimatedMinutes} {isEN ? 'min approx.' : 'min aprox.'}</p>
+          <p className="text-xs text-violet-600 mt-0.5">{form.estimatedMinutes} {'min approx.'}</p>
         </div>
 
         <div className="space-y-4">
@@ -707,7 +705,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
             <button onClick={handleSend} disabled={sending || !childId}
               className="flex-[2] py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-              {sending ? (isEN ? 'Sending...' : 'Enviando...') : (isEN ? 'Send' : 'Enviar')}
+              {sending ? ('Sending...') : ('Send')}
             </button>
           </div>
         </div>
@@ -858,12 +856,12 @@ function FormFillView({ form, children, onBack, toast }: any) {
         setEditedMessage(analysis?.mensaje_padres || analysis?.informe_padres_vineland || analysis?.informe_padres_wisc || analysis?.informe_padres_basc || analysis?.informe_familia_ados || analysis?.informe_padres_entorno || analysis?.mensaje_padres_entorno || analysis?.informe_padres || '')
         setEditedActividades(analysis?.actividades_casa || analysis?.actividad_casa || '')
       }
-      toast.success(isEN ? '✨ AI analysis generated' : '✨ Análisis IA generado')
+      toast.success('✨ AI analysis generated')
     } catch (err: any) {
       const isQuota = err.message?.includes('Cuota') || err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')
       toast.error(isQuota
-        ? (isEN ? '⏳ AI quota exhausted. Wait 1-2 min and try again.' : '⏳ Cuota de IA agotada. Espera 1-2 minutos e intenta nuevamente.')
-        : (isEN ? 'Analysis error: ' : 'Error en análisis: ') + err.message
+        ? ('⏳ AI quota exhausted. Wait 1-2 min and try again.')
+        : ('Analysis error: ') + err.message
       )
     } finally {
       setIsAnalyzing(false)
@@ -871,8 +869,8 @@ function FormFillView({ form, children, onBack, toast }: any) {
   }
 
   const handleSave = async () => {
-    if (!selectedChild) { toast.error(isEN ? 'Select a patient' : 'Selecciona un paciente'); return }
-    if (answeredCount < 2) { toast.error(isEN ? 'Answer at least 2 questions' : 'Responde al menos 2 preguntas'); return }
+    if (!selectedChild) { toast.error('Select a patient'); return }
+    if (answeredCount < 2) { toast.error('Answer at least 2 questions'); return }
     setIsSaving(true)
     try {
       const table = isClinicalForm ? 'form_responses' : (
@@ -924,7 +922,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
       setSavedRecordId((savedRecord as any)?.id || null)
       setSavedChildId(selectedChild)
       setShowSuccessScreen(true)
-      toast.success(isEN ? '✅ Form saved successfully' : '✅ Formulario guardado correctamente')
+      toast.success('✅ Form saved successfully')
 
       // Queue AI-generated parent message for admin approval (if it exists)
       if (aiAnalysis?.mensaje_padres) {
@@ -948,7 +946,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
       }
       // No llamamos onBack() aquí - la pantalla de éxito permite al usuario descargar el reporte
     } catch (err: any) {
-      toast.error((isEN ? 'Error saving: ' : 'Error al guardar: ') + err.message)
+      toast.error(('Error saving: ') + err.message)
     } finally {
       setIsSaving(false)
     }
@@ -977,7 +975,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
           }),
         })
         const json = await res.json()
-        if (!json.success || !json.fileData) throw new Error(json.error || (isEN ? 'No data' : 'Sin datos'))
+        if (!json.success || !json.fileData) throw new Error(json.error || ('No data'))
 
         // Guardar en reportes_generados
         await supabase.from('reportes_generados').insert([{
@@ -989,7 +987,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
           mime_type:        json.mimeType,
           tamano_bytes:     Math.round((json.fileData.length * 3) / 4),
           fecha_generacion: new Date().toISOString(),
-          generado_por:     locale === 'en' ? 'AI + Psychologist' : 'IA + Psicólogo',
+          generado_por:     'AI + Psychologist',
           source_id:        savedRecordId,
         }])
 
@@ -1004,9 +1002,9 @@ function FormFillView({ form, children, onBack, toast }: any) {
         document.body.appendChild(a); a.click()
         URL.revokeObjectURL(url); document.body.removeChild(a)
 
-        toast.success(locale === 'en' ? '✅ Word report downloaded' : '✅ Reporte Word descargado')
+        toast.success'✅ Word report downloaded'
       } catch (err: any) {
-        toast.error((isEN ? 'Error generating report: ' : 'Error generando reporte: ') + (err.message || (isEN ? 'Try again' : 'Intenta de nuevo')))
+        toast.error(('Error generating report: ') + (err.message || ('Try again')))
       } finally {
         setIsGeneratingReport(false)
       }
@@ -1042,7 +1040,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         </div>
         {aiAnalysis && (
           <p className="text-xs text-violet-600 font-bold flex items-center gap-1">
-            <Sparkles size={12} /> Análisis IA disponible — se incluirá en el reporte
+            <Sparkles size={12} /> AI Analysis available — will be included in the report
           </p>
         )}
       </div>
@@ -1127,7 +1125,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
                 <button onClick={handleAnalyzeWithAI} disabled={isAnalyzing || answeredCount < 3}
                   className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold disabled:opacity-40 transition-all shadow-lg shadow-violet-200 hover:opacity-90">
                   {isAnalyzing ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
-                  {isAnalyzing ? (isEN ? 'Analyzing...' : 'Analizando...') : (isEN ? 'Analyze with AI' : 'Analizar con IA')}
+                  {isAnalyzing ? ('Analyzing...') : ('Analyze with AI')}
                 </button>
                 {currentStep === totalSteps - 1 && (
                   <button onClick={handleSave} disabled={isSaving || !selectedChild}
@@ -1268,9 +1266,9 @@ export default function EvaluacionesUnificadas() {
     // Merge all saved form sources into one unified historial
     const allSaved = [
       ...(formResponsesRes.data || []),
-      ...(anamnesisRes.data || []).map((r: any) => ({ ...r, _source: 'anamnesis_completa', form_title: r.form_title || (locale === 'en' ? 'Clinical History (Anamnesis)' : 'Historia Clínica (Anamnesis)') })),
-      ...(abaRes.data || []).map((r: any) => ({ ...r, _source: 'registro_aba', form_title: r.form_title || (locale === 'en' ? 'ABA Session' : 'Sesión ABA') })),
-      ...(entornoRes.data || []).map((r: any) => ({ ...r, _source: 'registro_entorno_hogar', form_title: r.form_title || (locale === 'en' ? 'Home Environment' : 'Entorno del Hogar') })),
+      ...(anamnesisRes.data || []).map((r: any) => ({ ...r, _source: 'anamnesis_completa', form_title: r.form_title || 'Clinical History (Anamnesis)' })),
+      ...(abaRes.data || []).map((r: any) => ({ ...r, _source: 'registro_aba', form_title: r.form_title || 'ABA Session' })),
+      ...(entornoRes.data || []).map((r: any) => ({ ...r, _source: 'registro_entorno_hogar', form_title: r.form_title || 'Home Environment' })),
     ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
     setSavedForms(allSaved)
@@ -1298,10 +1296,10 @@ export default function EvaluacionesUnificadas() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(isEN ? '📤 Form sent' : '📤 Formulario enviado')
+      toast.success('📤 Form sent')
       loadData()
     } catch (err: any) {
-      toast.error((isEN ? 'Error sending: ' : 'Error al enviar: ') + err.message)
+      toast.error(('Error sending: ') + err.message)
     }
   }
 
@@ -1337,10 +1335,10 @@ export default function EvaluacionesUnificadas() {
       {/* ── HEADER STATS ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: isEN ? 'Forms' : 'Formularios', value: stats.total, icon: '📋', color: 'from-violet-600 to-indigo-600', bg: 'bg-violet-50' },
+          { label: 'Forms', value: stats.total, icon: '📋', color: 'from-violet-600 to-indigo-600', bg: 'bg-violet-50' },
           { label: t('evaluaciones.enviados_stat'), value: stats.sent, icon: '📤', color: 'from-blue-600 to-cyan-600', bg: 'bg-blue-50' },
-          { label: isEN ? 'Pending' : 'Pendientes', value: stats.pending, icon: '⏳', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
-          { label: isEN ? 'Completed' : 'Completados', value: stats.completed, icon: '✅', color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-50' },
+          { label: 'Pending', value: stats.pending, icon: '⏳', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
+          { label: 'Completed', value: stats.completed, icon: '✅', color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-50' },
         ].map(({ label, value, icon, color, bg }) => (
           <div key={label} className={`${bg} rounded-2xl p-4 border border-white shadow-sm`}>
             <div className="flex items-center justify-between mb-2">

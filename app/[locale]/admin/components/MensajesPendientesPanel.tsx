@@ -50,7 +50,7 @@ export default function MensajesPendientesPanel() {
       if (json.error) throw new Error(json.error)
       setMessages(json.data || [])
     } catch (err: any) {
-      toast.error((isEN?'Error loading messages: ':'Error cargando mensajes: ') + err.message)
+      toast.error(('Error loading messages: ') + err.message)
     } finally {
       setLoading(false)
     }
@@ -74,11 +74,11 @@ export default function MensajesPendientesPanel() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(isEN?'Changes saved':'Cambios guardados')
+      toast.success('Changes saved')
       setEditingId(null)
       setMessages(prev => prev.map(m => m.id === id ? { ...m, edited_message: editText } : m))
     } catch (err: any) {
-      toast.error((isEN?'Error saving: ':'Error al guardar: ') + err.message)
+      toast.error(('Error saving: ') + err.message)
     } finally {
       setActionLoading(null)
     }
@@ -100,14 +100,14 @@ export default function MensajesPendientesPanel() {
       setEditingId(null)
       loadMessages()
     } catch (err: any) {
-      toast.error((isEN?'Error approving: ':'Error al aprobar: ') + err.message)
+      toast.error(('Error approving: ') + err.message)
     } finally {
       setActionLoading(null)
     }
   }
 
   const rejectMessage = async (id: string) => {
-    if (!confirm(isEN?'Discard this message? It will not reach the parent.':'¿Descartar este mensaje? No llegará al padre/madre.')) return
+    if (!confirm('Discard this message? It will not reach the parent.')) return
     setActionLoading(id + '_reject')
     try {
       const res = await fetch('/api/admin/parent-messages', {
@@ -117,7 +117,7 @@ export default function MensajesPendientesPanel() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(isEN?'Message discarded':'Mensaje descartado')
+      toast.success('Message discarded')
       loadMessages()
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -127,8 +127,8 @@ export default function MensajesPendientesPanel() {
   }
 
   const sourceLabel: Record<string, string> = {
-    parent_form: isEN?'📝 Parent Form':'📝 Formulario de Padre', session_report: isEN?'📊 Session Report':'📊 Reporte de Sesión',
-    neuroforma: isEN?'🧠 NeuroForm':'🧠 NeuroForma', evaluacion: isEN?'📋 Assessment':'📋 Evaluación', entorno_hogar: isEN?'🏠 Home Environment':'🏠 Entorno del Hogar',
+    parent_form: '📝 Parent Form', session_report: '📊 Session Report',
+    neuroforma: '🧠 NeuroForm', evaluacion: '📋 Assessment', entorno_hogar: '🏠 Home Environment',
   }
   const pendingCount = messages.filter(m => m.status === 'pending_approval').length
 
@@ -149,7 +149,7 @@ export default function MensajesPendientesPanel() {
         </div>
         <button onClick={loadMessages}
           className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-amber-400 hover:text-amber-600 transition-all">
-          <RefreshCw size={14}/> Actualizar
+          <RefreshCw size={14}/> Refresh
         </button>
       </div>
 
@@ -167,7 +167,7 @@ export default function MensajesPendientesPanel() {
       {/* Tabs */}
       <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
         {([
-          { key: 'pending_approval', label: isEN ? '⏳ Pending' : '⏳ Pendientes' },
+          { key: 'pending_approval', label: '⏳ Pending' },
           { key: 'approved',         label: '✅ Enviados' },
           { key: 'rejected',         label: '🗑️ Descartados' },
         ] as const).map(({ key, label }) => (
@@ -195,8 +195,8 @@ export default function MensajesPendientesPanel() {
             <MessageCircle size={26} className="text-slate-300"/>
           </div>
           <p className="font-bold text-slate-500">
-            {statusFilter === 'pending_approval' ? (isEN?'No pending messages':'No hay mensajes pendientes') :
-             statusFilter === 'approved' ? (isEN?'No messages sent yet':'No hay mensajes enviados aún') : (isEN?'No discarded messages':'Sin mensajes descartados')}
+            {statusFilter === 'pending_approval' ? ('No pending messages') :
+             statusFilter === 'approved' ? ('No messages sent yet') : ('No discarded messages')}
           </p>
           {statusFilter === 'pending_approval' && (
             <p className="text-xs text-slate-300 mt-1">{t('mensajes.aparecenAqui')}</p>
@@ -235,7 +235,7 @@ export default function MensajesPendientesPanel() {
                           msg.status === 'pending_approval' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                           msg.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                           'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                          {msg.status === 'pending_approval' ? isEN ? '⏳ Pending' : '⏳ Pendiente' : msg.status === 'approved' ? isEN ? '✅ Sent' : '✅ Enviado' : isEN ? '🗑️ Discarded' : '🗑️ Descartado'}
+                          {msg.status === 'pending_approval' ? '⏳ Pending' : msg.status === 'approved' ? '✅ Sent' : '🗑️ Discarded'}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 flex-wrap text-xs text-slate-400">
@@ -371,7 +371,7 @@ export default function MensajesPendientesPanel() {
                           <button onClick={() => approveMessage(msg.id)} disabled={!!isLoadingApprove}
                             className="flex-[2] py-3 px-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-black text-sm hover:opacity-90 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50 flex items-center justify-center gap-2">
                             {isLoadingApprove ? <Loader2 size={16} className="animate-spin"/> : <Send size={16}/>}
-                            {isLoadingApprove ? (isEN?'Sending...':'Enviando...') : (isEN?'✅ Approve & Send to Parent':'✅ Aprobar y Enviar al Padre/Madre')}
+                            {isLoadingApprove ? ('Sending...') : ('✅ Approve & Send to Parent')}
                           </button>
                         </div>
                       </div>

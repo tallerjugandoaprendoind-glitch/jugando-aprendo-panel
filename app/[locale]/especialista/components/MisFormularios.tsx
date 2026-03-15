@@ -32,14 +32,14 @@ const defaultS = { pill: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'bg-b
 
 // ─── FORMULARIOS CLÍNICOS PROFESIONALES ─────────────────────────────────────
 const getClinicalForms = (isEN: boolean): any[] => [
-  { id: 'anamnesis',    formKey: 'anamnesis',    title: isEN?'Clinical History':'Historia Clínica',              subtitle: isEN?'Comprehensive patient clinical history':'Historia clínica integral del paciente',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: getAnamnesisData(isEN) },
-  { id: 'aba',          formKey: 'aba',          title: isEN?'ABA Record':'Registro ABA',                    subtitle: isEN?'Applied Behavior Analysis':'Análisis Aplicado de la Conducta',               category: 'conductual',icon: '🎯', estimatedMinutes: 20, sections: getAbaData(isEN) },
-  { id: 'entorno_hogar',formKey: 'entorno_hogar',title: isEN?'Home Environment Assessment':'Evaluación del Entorno del Hogar',subtitle: isEN?'Home visit and family environment':'Visita domiciliaria y entorno familiar',          category: 'familia',   icon: '🏠', estimatedMinutes: 25, sections: getEntornoHogarData(isEN) },
-  { id: 'brief2',       formKey: 'brief2',       title: 'BRIEF-2',                         subtitle: isEN?'Executive Functions Assessment':'Evaluación de Funciones Ejecutivas',             category: 'cognitivo', icon: '🧠', estimatedMinutes: 25, sections: getBrief2Data(isEN),  evalType: 'BRIEF2' },
-  { id: 'ados2',        formKey: 'ados2',        title: 'ADOS-2',                          subtitle: isEN?'Autism Spectrum Diagnosis':'Diagnóstico del Espectro Autista',               category: 'tea',       icon: '🧩', estimatedMinutes: 30, sections: getAdos2Data(isEN),   evalType: 'ADOS2' },
-  { id: 'vineland3',    formKey: 'vineland3',    title: 'Vineland-3',                      subtitle: isEN?'Adaptive Behavior':'Conducta Adaptativa',                           category: 'habilidades',icon: '🤝', estimatedMinutes: 25, sections: getVineland3Data(isEN), evalType: 'VINELAND3' },
-  { id: 'wiscv',        formKey: 'wiscv',        title: 'WISC-V',                          subtitle: isEN?'Intelligence Scale for Children':'Escala de Inteligencia para Niños',             category: 'cognitivo', icon: '📊', estimatedMinutes: 35, sections: getWiscvData(isEN),   evalType: 'WISCV' },
-  { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                          subtitle: isEN?'Behavioral Assessment System':'Sistema de Evaluación Conductual',              category: 'conductual',icon: '📈', estimatedMinutes: 30, sections: getBasc3Data(isEN),   evalType: 'BASC3' },
+  { id: 'anamnesis',    formKey: 'anamnesis',    title: 'Clinical History',              subtitle: 'Comprehensive patient clinical history',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: getAnamnesisData(isEN) },
+  { id: 'aba',          formKey: 'aba',          title: 'ABA Record',                    subtitle: 'Applied Behavior Analysis',               category: 'conductual',icon: '🎯', estimatedMinutes: 20, sections: getAbaData(isEN) },
+  { id: 'entorno_hogar',formKey: 'entorno_hogar',title: 'Home Environment Assessment',subtitle: 'Home visit and family environment',          category: 'familia',   icon: '🏠', estimatedMinutes: 25, sections: getEntornoHogarData(isEN) },
+  { id: 'brief2',       formKey: 'brief2',       title: 'BRIEF-2',                         subtitle: 'Executive Functions Assessment',             category: 'cognitivo', icon: '🧠', estimatedMinutes: 25, sections: getBrief2Data(isEN),  evalType: 'BRIEF2' },
+  { id: 'ados2',        formKey: 'ados2',        title: 'ADOS-2',                          subtitle: 'Autism Spectrum Diagnosis',               category: 'tea',       icon: '🧩', estimatedMinutes: 30, sections: getAdos2Data(isEN),   evalType: 'ADOS2' },
+  { id: 'vineland3',    formKey: 'vineland3',    title: 'Vineland-3',                      subtitle: 'Adaptive Behavior',                           category: 'habilidades',icon: '🤝', estimatedMinutes: 25, sections: getVineland3Data(isEN), evalType: 'VINELAND3' },
+  { id: 'wiscv',        formKey: 'wiscv',        title: 'WISC-V',                          subtitle: 'Intelligence Scale for Children',             category: 'cognitivo', icon: '📊', estimatedMinutes: 35, sections: getWiscvData(isEN),   evalType: 'WISCV' },
+  { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                          subtitle: 'Behavioral Assessment System',              category: 'conductual',icon: '📈', estimatedMinutes: 30, sections: getBasc3Data(isEN),   evalType: 'BASC3' },
 ]
 
 const getAllSpecialistForms = (isEN: boolean) => [
@@ -100,7 +100,7 @@ function QuestionField({ q, value, onChange }: any) {
   }
 
   if (q.type === 'boolean' || (q.type === 'radio' && (q.options || []).length <= 3)) {
-    const opts = q.options || (isEN ? ['Yes','No'] : ['Sí','No'])
+    const opts = q.options || (['Yes','No'])
     return (
       <div className="flex gap-3 flex-wrap">
         {opts.map((v: string) => (
@@ -199,11 +199,11 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
   const answer = (id: string, val: any) => setResponses(p => ({ ...p, [id]: val }))
 
   const handleAnalyze = async () => {
-    if (!childId) { toast.error(isEN?'Select a patient':'Selecciona un paciente'); return }
+    if (!childId) { toast.error('Select a patient'); return }
     setAnalyzing(true)
     try {
       const child = children.find((c: any) => c.id === childId)
-      const childName = child?.name || (isEN?'Patient':'Paciente')
+      const childName = child?.name || ('Patient')
       const childAge = child?.age || calcularEdadNumerica(child?.birth_date) || 'N/E'
       let res: Response
 
@@ -264,13 +264,13 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         analysis?.informe_padres || ''
       )
       setEditedActividades(analysis?.actividades_casa || analysis?.actividad_casa || '')
-      toast.success(isEN?'✨ AI analysis generated':'✨ Análisis IA generado')
-    } catch (e: any) { toast.error((isEN?'Error: ':'Error: ') + e.message) }
+      toast.success('✨ AI analysis generated')
+    } catch (e: any) { toast.error(('Error: ') + e.message) }
     finally { setAnalyzing(false) }
   }
 
   const handleSave = async () => {
-    if (!childId) { toast.error(isEN?'Select a patient':'Selecciona un paciente'); return }
+    if (!childId) { toast.error('Select a patient'); return }
     setSaving(true)
     try {
       const table = form.isSoft ? 'form_responses' :
@@ -305,8 +305,8 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         }
       }
       setDone(true)
-      toast.success(isEN?'✅ Sent for supervisor approval':'✅ Enviado al jefe para aprobación')
-    } catch (e: any) { toast.error((isEN?'Error: ':'Error: ') + e.message) }
+      toast.success('✅ Sent for supervisor approval')
+    } catch (e: any) { toast.error(('Error: ') + e.message) }
     finally { setSaving(false) }
   }
 
@@ -362,7 +362,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
           className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">{t('ui.select_patient_option')}</option>
           {children.map((c: any) => (
-            <option key={c.id} value={c.id}>{c.name}{c.age ? ` · ${c.age} ${isEN ? 'years' : 'años'}` : ''}</option>
+            <option key={c.id} value={c.id}>{c.name}{c.age ? ` · ${c.age} ${'years'}` : ''}</option>
           ))}
         </select>
       </div>
@@ -534,7 +534,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
           <button onClick={handleSave} disabled={saving}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm disabled:opacity-50 shadow-md transition-colors">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-            {saving?(isEN?'Saving...':'Guardando...'):(isEN?'✅ Save & Send for Approval':'✅ Guardar y Enviar para Aprobación')}
+            {saving?('Saving...'):('✅ Save & Send for Approval')}
           </button>
         </div>
         )
@@ -546,7 +546,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 const getTabs = (isEN: boolean) => [
   { id: 'all',        label: 'All' },
-  { id: 'clinico',    label: isEN?'🏥 Clinical Pro':'🏥 Clínico Pro' },
+  { id: 'clinico',    label: '🏥 Clinical Pro' },
   { id: 'tea',        label: '🧩 TEA' },
   { id: 'tdah',       label: '⚡ TDAH' },
   { id: 'conductual', label: '🎯 Conductual' },
@@ -654,7 +654,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
                     </p>
                     <div className="flex items-center gap-2 mt-2.5">
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${s.pill} uppercase tracking-wide`}>
-                        {form.category || (isEN?'clinical':'clínico')}
+                        {form.category || ('clinical')}
                       </span>
                       {form.estimatedMinutes && (
                         <span className="flex items-center gap-1 text-[10px] text-slate-400">

@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
   confirmed:  { label: 'Confirmed',  color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
-  pending:    { label: 'Pendiente',   color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',     icon: AlertCircle },
+  pending:    { label: 'Pending',   color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',     icon: AlertCircle },
   cancelled:  { label: 'Cancelled',  color: 'text-red-700',     bg: 'bg-red-50 border-red-200',         icon: XCircle },
   completed:  { label: 'Completada', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',       icon: CheckCircle2 },
 }

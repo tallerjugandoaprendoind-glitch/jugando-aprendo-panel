@@ -21,7 +21,7 @@ import {
 function DynamicFormQuestion({ question, value, onChange }: any) {
   const { t, locale } = useI18n()
   const isEN = locale === 'en'
-  const freq = isEN ? ['Never','Rarely','Sometimes','Frequently','Almost always','Always'] : ['Nunca','Raramente','A veces','Frecuentemente','Casi siempre','Siempre']
+  const freq = ['Never','Rarely','Sometimes','Frequently','Almost always','Always']
 
   if (question.type === 'frequency') {
     return (
@@ -105,7 +105,7 @@ function DynamicFormQuestion({ question, value, onChange }: any) {
       <div>
         <p className="text-sm font-bold text-slate-700 mb-3">{question.label}</p>
         <div className="flex gap-3">
-          {(isEN ? ['Yes','No'] : ['Sí','No']).map(opt => (
+          {(['Yes','No']).map(opt => (
             <button key={opt} type="button" onClick={() => onChange(opt)}
               className={`px-8 py-3 rounded-xl border-2 font-bold transition-all ${value === opt ? (opt === 'Sí' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-600 text-white border-slate-600') : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-300'}`}>
               {opt}
@@ -305,7 +305,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
             <button onClick={onClose} className="flex-1 py-4 text-slate-400 font-black uppercase text-xs tracking-widest hover:bg-slate-50 rounded-xl border-2 border-slate-100 transition-all">{t('common.cancelar')}</button>
             <button onClick={handleSend} disabled={sending || !childId} className="flex-[2] py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {sending ? <Loader2 size={18} className="animate-spin"/> : <Send size={18}/>}
-              {sending ? (isEN?'Sending...':'Enviando...') : (isEN?'Send Form':'Enviar Formulario')}
+              {sending ? ('Sending...') : ('Send Form')}
             </button>
           </div>
         </div>
@@ -377,8 +377,8 @@ export default function NeuroFormsView() {
         body: JSON.stringify({
           formType: selectedForm.id,
           formData: responses,
-          childName: child?.name || (isEN?'Patient':'Paciente'),
-          childAge: child?.age || (isEN?'Not specified':'No especificado'),
+          childName: child?.name || ('Patient'),
+          childAge: child?.age || ('Not specified'),
           diagnosis: child?.diagnosis || '',
         }),
       })
@@ -386,16 +386,16 @@ export default function NeuroFormsView() {
       if (json.error) throw new Error(json.error)
       setAiAnalysis(json.analysis)
       setEditedMessage(json.analysis?.mensaje_padres || '')
-      toast.success(isEN?'✨ Analysis generated':'✨ Análisis generado')
+      toast.success('✨ Analysis generated')
     } catch (err: any) {
-      toast.error((isEN?'Analysis error: ':'Error en análisis: ') + err.message)
+      toast.error(('Analysis error: ') + err.message)
     } finally {
       setIsAnalyzing(false)
     }
   }
 
   const handleSaveForm = async () => {
-    if (!selectedForm || !selectedChild) { toast.error(isEN?'Select a patient':'Selecciona un paciente'); return }
+    if (!selectedForm || !selectedChild) { toast.error('Select a patient'); return }
     setIsSaving(true)
     try {
       await supabase.from('form_responses').insert([{
@@ -427,11 +427,11 @@ export default function NeuroFormsView() {
         }
       }
 
-      toast.success(isEN?'Form saved successfully':'Formulario guardado correctamente')
+      toast.success('Form saved successfully')
       setSelectedForm(null)
       setAiAnalysis(null)
     } catch (err: any) {
-      toast.error((isEN?'Error saving: ':'Error al guardar: ') + err.message)
+      toast.error(('Error saving: ') + err.message)
     } finally {
       setIsSaving(false)
     }
@@ -467,7 +467,7 @@ export default function NeuroFormsView() {
       toast.success(`📤 Formulario enviado correctamente`)
       loadSentForms()
     } catch (err: any) {
-      toast.error((isEN?'Error sending: ':'Error al enviar: ') + err.message)
+      toast.error(('Error sending: ') + err.message)
     }
   }
 
@@ -566,7 +566,7 @@ export default function NeuroFormsView() {
                 <button onClick={handleAnalyzeWithAI} disabled={isAnalyzing || answeredCount < 3}
                   className="flex-[2] py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg shadow-violet-200 transition-all disabled:opacity-50 flex items-center justify-center gap-2 hover:from-violet-700">
                   {isAnalyzing ? <Loader2 size={18} className="animate-spin"/> : <Sparkles size={18}/>}
-                  {isAnalyzing?(isEN?'Analyzing...':'Analizando...'):(isEN?'Analyze with AI':'Analizar con IA')}
+                  {isAnalyzing?('Analyzing...'):('Analyze with AI')}
                 </button>
               )}
             </div>
@@ -597,7 +597,7 @@ export default function NeuroFormsView() {
             NeuroFormas Clínicas
           </h2>
           <p className="text-slate-400 text-sm font-medium mt-1 ml-1">
-            Formularios especializados · Análisis IA en tiempo real · TDAH, TEA, Sensorial y más
+            Specialized forms · Real-time AI analysis · ADHD, ASD, Sensory and more
           </p>
         </div>
         <div className="flex gap-2">
@@ -667,7 +667,7 @@ export default function NeuroFormsView() {
                           <Clock size={10}/>{form.estimatedMinutes} min
                         </p>
                         <p className="text-[9px] font-bold opacity-70 mt-1">
-                          {form.targetRole === 'parent' ? (isEN?'👨‍👩 For parents':'👨‍👩 Para padres') : form.targetRole === 'both' ? '🔄 Ambos' : '🩺 Clínico'}
+                          {form.targetRole === 'parent' ? ('👨‍👩 For parents') : form.targetRole === 'both' ? '🔄 Ambos' : '🩺 Clínico'}
                         </p>
                       </div>
                     </div>
@@ -711,9 +711,9 @@ export default function NeuroFormsView() {
           <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm mb-6">
             <div className="grid grid-cols-3 gap-4 text-center">
               {[
-                { label: isEN?'Sent':'Enviados', value: sentForms.length, color: 'text-indigo-600' },
-                { label: isEN?'Pending':'Pendientes', value: sentForms.filter(f => f.status === 'pending').length, color: 'text-amber-600' },
-                { label: isEN?'Completed':'Completados', value: sentForms.filter(f => f.status === 'completed').length, color: 'text-emerald-600' },
+                { label: 'Sent', value: sentForms.length, color: 'text-indigo-600' },
+                { label: 'Pending', value: sentForms.filter(f => f.status === 'pending').length, color: 'text-amber-600' },
+                { label: 'Completed', value: sentForms.filter(f => f.status === 'completed').length, color: 'text-emerald-600' },
               ].map(({ label, value, color }) => (
                 <div key={label}>
                   <p className={`text-2xl font-black ${color}`}>{value}</p>
@@ -737,7 +737,7 @@ export default function NeuroFormsView() {
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="font-bold text-slate-800 text-sm truncate">{sf.form_title}</p>
                     <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border uppercase ${sf.status === 'completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
-                      {sf.status === 'completed' ? (isEN?'Completed':'Completado') : (isEN?'Pending':'Pendiente')}
+                      {sf.status === 'completed' ? ('Completed') : ('Pending')}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 font-medium">Para: {sf.profiles?.full_name || sf.profiles?.email}</p>

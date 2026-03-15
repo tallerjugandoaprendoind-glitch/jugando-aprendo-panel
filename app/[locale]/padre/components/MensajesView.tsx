@@ -29,9 +29,9 @@ interface Notification {
 
 const getSourceLabels = (isEN: boolean): Record<string, { label: string; icon: string; color: string; bg: string }> => ({
   parent_form:     { label: 'Formulario respondido',  icon: '📝', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200' },
-  session_report:  { label: isEN?'Session report':'Reporte de sesión',      icon: '📊', color: 'text-purple-700',  bg: 'bg-purple-50 border-purple-200' },
+  session_report:  { label: 'Session report',      icon: '📊', color: 'text-purple-700',  bg: 'bg-purple-50 border-purple-200' },
   neuroforma:      { label: 'NeuroForma',              icon: '🧠', color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-200' },
-  evaluacion:      { label: isEN?'Assessment':'Evaluación',              icon: '📋', color: 'text-teal-700',    bg: 'bg-teal-50 border-teal-200' },
+  evaluacion:      { label: 'Assessment',              icon: '📋', color: 'text-teal-700',    bg: 'bg-teal-50 border-teal-200' },
   entorno_hogar:   { label: 'Entorno del hogar',       icon: '🏠', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
   parent_message:  { label: 'Mensaje del terapeuta',   icon: '💬', color: 'text-violet-700',  bg: 'bg-violet-50 border-violet-200' },
 })
@@ -204,7 +204,7 @@ export default function MensajesView({ profile }: { profile: any }) {
           onClick={loadNotifications}
           className="flex items-center gap-2 px-4 py-2.5 bg-white border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-600 hover:border-violet-300 hover:text-violet-600 transition-all"
         >
-          <RefreshCw size={14} /> Actualizar
+          <RefreshCw size={14} /> Refresh
         </button>
       </div>
 

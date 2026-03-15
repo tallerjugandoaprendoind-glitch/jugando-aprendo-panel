@@ -77,11 +77,11 @@ function ProductividadSemanal({ aprobadas, pendientes, rechazadas }: any) {
 
 // ── Tip clínico del día ─────────────────────────────────────────────────────
 const getTipsClinicos = (isEN: boolean) => [
-  { emoji: '🎯', texto: isEN ? 'Record target behaviors with antecedent, behavior and consequence (ABC) to improve the quality of your ABA analysis.' : 'Registra las conductas objetivo con antecedente, conducta y consecuencia (ABC) para mejorar la calidad de tu análisis ABA.' },
-  { emoji: '📊', texto: isEN ? 'When a goal exceeds 80% mastery for 3 consecutive sessions, it is time to propose a new goal to the supervisor.' : 'Cuando un objetivo supera el 80% de dominio por 3 sesiones consecutivas, es momento de proponer un nuevo objetivo al jefe.' },
-  { emoji: '💙', texto: isEN ? 'Remember to briefly ask the parent how they have felt this week. Caregiver wellbeing directly affects the child\'s progress.' : 'Recuerda preguntar brevemente al padre/madre cómo se ha sentido esta semana. El bienestar del cuidador afecta directamente el progreso del niño.' },
-  { emoji: '📝', texto: isEN ? 'Session notes with specific observations ("asked for water 3 times using signs") are more useful than general ones ("good session").' : 'Las notas de sesión con observaciones específicas ("pidió agua 3 veces usando señas") son más útiles que las generales ("buena sesión").' },
-  { emoji: '🏆', texto: isEN ? 'Celebrate micro-achievements with the child and family. A new goal reached, however small, deserves recognition.' : 'Celebra los micro-logros con el niño y la familia. Un objetivo nuevo alcanzado, por pequeño que sea, merece reconocimiento.' },
+  { emoji: '🎯', texto: 'Record target behaviors with antecedent, behavior and consequence (ABC) to improve the quality of your ABA analysis.' },
+  { emoji: '📊', texto: 'When a goal exceeds 80% mastery for 3 consecutive sessions, it is time to propose a new goal to the supervisor.' },
+  { emoji: '💙', texto: 'Remember to briefly ask the parent how they have felt this week. Caregiver wellbeing directly affects the child\'s progress.' },
+  { emoji: '📝', texto: 'Session notes with specific observations ("asked for water 3 times using signs") are more useful than general ones ("good session").' },
+  { emoji: '🏆', texto: 'Celebrate micro-achievements with the child and family. A new goal reached, however small, deserves recognition.' },
 ]
 
 export default function EspecialistaHome({ userId, profile, setActiveView }: Props) {
@@ -98,7 +98,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
   useEffect(() => {
     const now = new Date()
     const h = now.getHours()
-    setSaludo(h < 12 ? (isEN?'Good morning':'Buenos días') : h < 18 ? (isEN?'Good afternoon':'Buenas tardes') : (isEN?'Good evening':'Buenas noches'))
+    setSaludo(h < 12 ? ('Good morning') : h < 18 ? ('Good afternoon') : ('Good evening'))
     setFechaStr(now.toLocaleDateString(toBCP47(locale), { weekday: 'long', day: 'numeric', month: 'long' }))
   }, [])
 
@@ -144,13 +144,13 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
 
   const STAT_CARDS = [
     { label: t('nav.pacientes'), value: stats.totalPacientes, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', view: 'pacientes', icon: Baby, sub: 'Total activos' },
-    { label: isEN?'Sessions this week':'Sesiones esta semana', value: stats.sesionesEstaSemana, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', view: 'agenda', icon: Activity, sub: 'Últimos 7 días' },
-    { label: isEN?'Under review':'En revisión', value: stats.pendientes, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', view: 'evaluaciones', icon: Clock, sub: 'Esperando aprobación', pulse: stats.pendientes > 0 },
+    { label: 'Sessions this week', value: stats.sesionesEstaSemana, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', view: 'agenda', icon: Activity, sub: 'Últimos 7 días' },
+    { label: 'Under review', value: stats.pendientes, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', view: 'evaluaciones', icon: Clock, sub: 'Esperando aprobación', pulse: stats.pendientes > 0 },
     { label: 'Aprobadas', value: stats.aprobadas, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', view: 'evaluaciones', icon: CheckCircle2, sub: 'Confirmadas' },
   ]
 
   const STATUS_CFG: Record<string, any> = {
-    pending_approval: { label: isEN?'Under review':'En revisión', color: 'text-amber-700', bg: 'bg-amber-50 border border-amber-200' },
+    pending_approval: { label: 'Under review', color: 'text-amber-700', bg: 'bg-amber-50 border border-amber-200' },
     approved: { label: t('especialista.aprobado'), color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-200' },
     rejected: { label: t('especialista.rechazado'), color: 'text-red-700', bg: 'bg-red-50 border border-red-200' },
   }
@@ -168,7 +168,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             {profile?.full_name?.split(' ')[0] || 'Especialista'}
           </h2>
           <p className="text-blue-200 text-sm font-medium mb-5">
-            {profile?.specialty || (isEN?'Clinical Specialist':'Especialista Clínico')} · {fechaStr}
+            {profile?.specialty || ('Clinical Specialist')} · {fechaStr}
           </p>
 
           <div className="flex flex-wrap gap-3">

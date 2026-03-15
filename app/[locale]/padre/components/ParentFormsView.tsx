@@ -38,22 +38,22 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
       const newFormsMap: Record<string, any> = {
         objetivo_iep: {
           id: 'objetivo_iep', title: 'Objetivo IEP', icon: '🎯',
-          color: 'from-blue-600 to-indigo-600', description: isEN?'Individualized Education Plan':'Plan de educación individualizado',
+          color: 'from-blue-600 to-indigo-600', description: 'Individualized Education Plan',
           sections: newMod.OBJETIVO_IEP_DATA,
         },
         nota_sesion: {
-          id: 'nota_sesion', title: isEN?'Session Note':'Nota de Sesión', icon: '📋',
-          color: 'from-emerald-600 to-teal-600', description: isEN?'Clinical session record':'Registro de sesión clínica',
+          id: 'nota_sesion', title: 'Session Note', icon: '📋',
+          color: 'from-emerald-600 to-teal-600', description: 'Clinical session record',
           sections: newMod.NOTA_SESION_DATA,
         },
         informe_mensual: {
-          id: 'informe_mensual', title: isEN?'Monthly Progress Report':'Informe Mensual de Progreso', icon: '📊',
-          color: 'from-violet-600 to-purple-600', description: isEN?'Monthly progress evaluation':'Evaluación mensual del progreso',
+          id: 'informe_mensual', title: 'Monthly Progress Report', icon: '📊',
+          color: 'from-violet-600 to-purple-600', description: 'Monthly progress evaluation',
           sections: newMod.INFORME_MENSUAL_DATA,
         },
         registro_conductual: {
-          id: 'registro_conductual', title: isEN?'ABC Behavioral Record':'Registro Conductual ABC', icon: '📝',
-          color: 'from-orange-600 to-red-600', description: isEN?'Functional behavior analysis':'Análisis funcional de conducta',
+          id: 'registro_conductual', title: 'ABC Behavioral Record', icon: '📝',
+          color: 'from-orange-600 to-red-600', description: 'Functional behavior analysis',
           sections: newMod.REGISTRO_CONDUCTUAL_ABC_DATA,
         },
       }
@@ -63,43 +63,43 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
       // 3. Buscar en formConstants (anamnesis, aba, entorno_hogar, evaluaciones clínicas)
       const formConstantsMap: Record<string, any> = {
         anamnesis: {
-          id: 'anamnesis', title: isEN?'Clinical History':'Historia Clínica', icon: '📋',
-          color: 'from-blue-600 to-cyan-600', description: isEN?'Anamnesis and developmental history':'Anamnesis e historia del desarrollo',
+          id: 'anamnesis', title: 'Clinical History', icon: '📋',
+          color: 'from-blue-600 to-cyan-600', description: 'Anamnesis and developmental history',
           sections: formMod.ANAMNESIS_DATA,
         },
         aba: {
           id: 'aba', title: 'Sesión ABA', icon: '🧠',
-          color: 'from-indigo-600 to-violet-600', description: isEN?'ABA therapy session record':'Registro de sesión de terapia ABA',
+          color: 'from-indigo-600 to-violet-600', description: 'ABA therapy session record',
           sections: formMod.ABA_DATA,
         },
         entorno_hogar: {
-          id: 'entorno_hogar', title: isEN?'Home Environment Assessment':'Evaluación del Entorno del Hogar', icon: '🏠',
-          color: 'from-green-600 to-emerald-600', description: isEN?'Family environment assessment':'Evaluación del ambiente familiar',
+          id: 'entorno_hogar', title: 'Home Environment Assessment', icon: '🏠',
+          color: 'from-green-600 to-emerald-600', description: 'Family environment assessment',
           sections: formMod.ENTORNO_HOGAR_DATA,
         },
         brief2: {
           id: 'brief2', title: 'BRIEF-2', icon: '🔬',
-          color: 'from-indigo-500 to-indigo-700', description: isEN?'Executive functions':'Funciones ejecutivas',
+          color: 'from-indigo-500 to-indigo-700', description: 'Executive functions',
           sections: formMod.BRIEF2_DATA,
         },
         ados2: {
           id: 'ados2', title: 'ADOS-2', icon: '🔍',
-          color: 'from-teal-500 to-teal-700', description: isEN?'Autism diagnosis':'Diagnóstico del autismo',
+          color: 'from-teal-500 to-teal-700', description: 'Autism diagnosis',
           sections: formMod.ADOS2_DATA,
         },
         vineland3: {
           id: 'vineland3', title: 'Vineland-3', icon: '📈',
-          color: 'from-emerald-500 to-emerald-700', description: isEN?'Adaptive behavior':'Conducta adaptativa',
+          color: 'from-emerald-500 to-emerald-700', description: 'Adaptive behavior',
           sections: formMod.VINELAND3_DATA,
         },
         wiscv: {
           id: 'wiscv', title: 'WISC-V', icon: '🧩',
-          color: 'from-violet-500 to-violet-700', description: isEN?'Intelligence scale':'Escala de inteligencia',
+          color: 'from-violet-500 to-violet-700', description: 'Intelligence scale',
           sections: formMod.WISCV_DATA,
         },
         basc3: {
           id: 'basc3', title: 'BASC-3', icon: '📊',
-          color: 'from-rose-500 to-rose-700', description: isEN?'Behavioral system':'Sistema conductual',
+          color: 'from-rose-500 to-rose-700', description: 'Behavioral system',
           sections: formMod.BASC3_DATA,
         },
       }
@@ -218,7 +218,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
 
               {q.type === 'boolean' && (
                 <div className="flex gap-3">
-                  {(isEN?['Yes ✅','No ❌']:['Sí ✅','No ❌']).map(opt => (
+                  {(['Yes ✅','No ❌']).map(opt => (
                     <button key={opt} type="button" onClick={() => answer(q.id, opt)}
                       className={`flex-1 py-4 rounded-xl border-2 font-bold text-sm transition-all ${responses[q.id] === opt ? (opt.includes('Sí') ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-600 text-white border-slate-600') : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'}`}>
                       {opt}
@@ -244,7 +244,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
           ) : (
             <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-sm shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {submitting ? <Loader2 size={18} className="animate-spin"/> : <CheckCircle2 size={18}/>}
-              {submitting?(isEN?'Sending...':'Enviando...'):(isEN?'✅ Submit Responses':'✅ Enviar Respuestas')}
+              {submitting?('Sending...'):('✅ Submit Responses')}
             </button>
           )}
         </div>
@@ -263,9 +263,9 @@ function ResourceCard({ resource }: { resource: any }) {
   const icons: Record<string, any> = {
     video: { icon: <Play size={20}/>, color: 'text-red-600', bg: 'bg-red-100', label: 'Video' },
     pdf: { icon: <FileText size={20}/>, color: 'text-blue-600', bg: 'bg-blue-100', label: 'PDF' },
-    link: { icon: <LinkIcon size={20}/>, color: 'text-violet-600', bg: 'bg-violet-100', label: isEN?'Link':'Enlace' },
-    image: { icon: <ImageIcon size={20}/>, color: 'text-emerald-600', bg: 'bg-emerald-100', label: isEN?'Image':'Imagen' },
-    document: { icon: <BookOpen size={20}/>, color: 'text-amber-600', bg: 'bg-amber-100', label: isEN?'Document':'Documento' },
+    link: { icon: <LinkIcon size={20}/>, color: 'text-violet-600', bg: 'bg-violet-100', label: 'Link' },
+    image: { icon: <ImageIcon size={20}/>, color: 'text-emerald-600', bg: 'bg-emerald-100', label: 'Image' },
+    document: { icon: <BookOpen size={20}/>, color: 'text-amber-600', bg: 'bg-amber-100', label: 'Document' },
     audio: { icon: <Music size={20}/>, color: 'text-indigo-600', bg: 'bg-indigo-100', label: 'Audio' },
   }
 
@@ -290,7 +290,7 @@ function ResourceCard({ resource }: { resource: any }) {
                 <button onClick={() => resource.resource_type === 'video' ? setShowPreview(true) : window.open(resource.url, '_blank')}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-bold text-xs transition-all">
                   {resource.resource_type === 'video' ? <Play size={12}/> : <Eye size={12}/>}
-                  {resource.resource_type === 'video' ? 'Ver video' : resource.resource_type === 'pdf' ? 'Abrir PDF' : 'Abrir'}
+                  {resource.resource_type === 'video' ? 'Watch video' : resource.resource_type === 'pdf' ? 'Open PDF' : 'Abrir'}
                 </button>
               )}
             </div>
@@ -401,7 +401,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
       }
       
       setActiveForm(null)
-      setSuccessMsg(isEN?'Form completed! The therapy team will review it soon':'¡Formulario completado! El equipo terapéutico lo revisará pronto 💙')
+      setSuccessMsg('Form completed! The therapy team will review it soon')
       setTimeout(() => setSuccessMsg(''), 5000)
       loadData()
     } catch (err) {
@@ -442,7 +442,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
         </button>
         <button onClick={() => setActiveTab('resources')}
           className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'resources' ? 'bg-white text-indigo-700 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
-          <BookOpen size={16}/> Materiales
+          <BookOpen size={16}/> Materials
           {resourcesCount > 0 && <span className="bg-indigo-100 text-indigo-600 text-xs font-black px-2 py-0.5 rounded-full ml-1">{resourcesCount}</span>}
         </button>
       </div>
@@ -468,7 +468,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-[9px] font-black px-2 py-1 bg-amber-100 text-amber-700 border border-amber-200 rounded-full uppercase tracking-wider animate-pulse">
-                              ● Pendiente
+                              ● Pending
                             </span>
                             {form.deadline && (
                               <span className="text-[9px] font-black px-2 py-1 bg-red-50 text-red-600 border border-red-100 rounded-full flex items-center gap-1">
@@ -550,7 +550,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
           ) : (
             <>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                {resources.length} material{resources.length !== 1 ? 'es' : ''} disponible{resources.length !== 1 ? 's' : ''}
+                {resources.length} material{resources.length !== 1 ? 's' : ''} available
               </p>
               <div className="space-y-3">
                 {resources.map(resource => <ResourceCard key={resource.id} resource={resource}/>)}

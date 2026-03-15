@@ -104,9 +104,9 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
   const [answer, setAnswer] = useState('')
 
   const options = [
-    { emoji: '😊', label: isEN?'Good, with energy to keep going':' Bien, con energía para seguir', color: '#16a34a', bg: '#dcfce7', border: '#86efac' },
+    { emoji: '😊', label: 'Good, with energy to keep going', color: '#16a34a', bg: '#dcfce7', border: '#86efac' },
     { emoji: '😐', label: 'Regular, algo cansado/a', color: '#d97706', bg: '#fef3c7', border: '#fcd34d' },
-    { emoji: '😔', label: isEN?'Difficult, I need more support':'Difícil, necesito más apoyo', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5' },
+    { emoji: '😔', label: 'Difficult, I need more support', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5' },
   ]
 
   const handleAnswer = (opt: string) => {
@@ -287,7 +287,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
     let level = 'Inicial'
     if (totalSess >= 50) level = 'Avanzado'
     else if (totalSess >= 20) level = 'Intermedio'
-    else if (totalSess >= 5) level = isEN?'Basic':'Básico'
+    else if (totalSess >= 5) level = 'Basic'
 
     if (prevGoals !== -1 && achieved > prevGoals && achieved > 0) {
       setShowCelebration(true)
@@ -330,10 +330,10 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             <h1 className="text-2xl font-black leading-tight mb-3">{child?.name || t('pacientes.sinPacienteSeleccionado')}</h1>
             <div className="flex flex-wrap gap-2">
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
-                <Baby size={11} /> {age} {isEN ? "years" : "años"}
+                <Baby size={11} /> {age} {"years"}
               </span>
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold">
-                {child?.diagnosis || (isEN ? 'Under evaluation' : 'En evaluación')}
+                {child?.diagnosis || ('Under evaluation')}
               </span>
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
                 <Activity size={11} /> {stats.sessions} sesiones
@@ -416,7 +416,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                     <div className="flex items-center gap-2 flex-wrap mb-1">
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border flex items-center gap-1 ${nextAppt.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'}`}>
                         {nextAppt.status === 'confirmed' ? <CheckCircle size={11} /> : <AlertCircle size={11} />}
-                        {nextAppt.status === 'confirmed' ? 'Confirmada' : 'Pendiente'}
+                        {nextAppt.status === 'confirmed' ? 'Confirmed' : 'Pending'}
                       </span>
                     </div>
                     <p className="font-bold text-slate-800">{nextAppt.service_type || 'Terapia'}</p>
@@ -450,7 +450,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             </div>
             <p className="font-bold text-slate-700 text-base mb-2">{t('familias.momentoAgendar')}</p>
             <p className="text-sm text-slate-400 mb-5 max-w-xs mx-auto leading-relaxed">
-              {isEN ? 'Consistency in sessions is key to progress. Schedule your next appointment and maintain the progress of' : 'La constancia en las sesiones es clave para el progreso. Agenda tu próxima cita y mantén el avance de'} {child?.name?.split(' ')[0] || 'tu hijo/a'}.
+              {'Consistency in sessions is key to progress. Schedule your next appointment and maintain the progress of'} {child?.name?.split(' ')[0] || 'tu hijo/a'}.
             </p>
             <button onClick={() => onChangeView('agenda')}
               className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg shadow-purple-200 hover:opacity-90 transition-all flex items-center gap-2 mx-auto">
@@ -548,7 +548,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             </div>
             <p className="text-base font-bold text-slate-600 mb-2">{t('ui.progress_here')}</p>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto mb-5">
-              {isEN ? 'After the first therapy sessions, you will see progress charts, achieved goals and much more.' : 'Después de las primeras sesiones de terapia, verás gráficos de avance, objetivos logrados y mucho más.'}
+              {'After the first therapy sessions, you will see progress charts, achieved goals and much more.'}
             </p>
             <button onClick={() => onChangeView('agenda')}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white rounded-xl font-bold text-sm hover:bg-violet-700 transition-all">

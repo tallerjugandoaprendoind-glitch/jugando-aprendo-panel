@@ -53,11 +53,11 @@ interface OrderItem {
 
 // ── Configuración de estados ──────────────────────────────────────────────────
 const getEstadoCfg = (isEN: boolean): Record<string, any> => ({
-  pendiente:  { label: isEN?'Pending':'Pendiente',   icon: Clock,       bg: 'bg-amber-50',   border: 'border-amber-200',  text: 'text-amber-700',   dot: 'bg-amber-400'  },
-  confirmado: { label: isEN?'Confirmed':'Confirmado', icon: CheckCircle, bg: 'bg-blue-50',    border: 'border-blue-200',   text: 'text-blue-700',    dot: 'bg-blue-400'   },
-  listo:      { label: isEN?'Ready':'Listo',       icon: Package,     bg: 'bg-violet-50',  border: 'border-violet-200', text: 'text-violet-700',  dot: 'bg-violet-400' },
-  entregado:  { label: isEN?'Delivered':'Entregado',  icon: CheckCircle, bg: 'bg-emerald-50', border: 'border-emerald-200',text: 'text-emerald-700', dot: 'bg-emerald-400'},
-  cancelado:  { label: isEN?'Cancelled':'Cancelado',  icon: XCircle,     bg: 'bg-red-50',     border: 'border-red-200',    text: 'text-red-700',     dot: 'bg-red-400'    },
+  pendiente:  { label: 'Pending',   icon: Clock,       bg: 'bg-amber-50',   border: 'border-amber-200',  text: 'text-amber-700',   dot: 'bg-amber-400'  },
+  confirmado: { label: 'Confirmed', icon: CheckCircle, bg: 'bg-blue-50',    border: 'border-blue-200',   text: 'text-blue-700',    dot: 'bg-blue-400'   },
+  listo:      { label: 'Ready',       icon: Package,     bg: 'bg-violet-50',  border: 'border-violet-200', text: 'text-violet-700',  dot: 'bg-violet-400' },
+  entregado:  { label: 'Delivered',  icon: CheckCircle, bg: 'bg-emerald-50', border: 'border-emerald-200',text: 'text-emerald-700', dot: 'bg-emerald-400'},
+  cancelado:  { label: 'Cancelled',  icon: XCircle,     bg: 'bg-red-50',     border: 'border-red-200',    text: 'text-red-700',     dot: 'bg-red-400'    },
 })
 
 const CATEGORIAS = ['material', 'guia', 'juego', 'libro', 'otro']
@@ -90,8 +90,8 @@ function ProductModal({
   const [dragOver, setDragOver] = useState(false)
 
   const handleImage = (file: File) => {
-    if (!file.type.startsWith('image/')) { toast.error(isEN?'Images only (JPG, PNG, WEBP)':'Solo imágenes (JPG, PNG, WEBP)'); return }
-    if (file.size > 5 * 1024 * 1024) { toast.error(isEN?'Maximum 5MB':'Máximo 5MB'); return }
+    if (!file.type.startsWith('image/')) { toast.error('Images only (JPG, PNG, WEBP)'); return }
+    if (file.size > 5 * 1024 * 1024) { toast.error('Maximum 5MB'); return }
     setImageFile(file)
     setImagePreview(URL.createObjectURL(file))
   }
@@ -101,15 +101,15 @@ function ProductModal({
     const ext = imageFile.name.split('.').pop()
     const path = `products/${Date.now()}.${ext}`
     const { error } = await supabase.storage.from('store-images').upload(path, imageFile, { upsert: true })
-    if (error) { toast.error((isEN?'Error uploading image: ':'Error subiendo imagen: ') + error.message); return null }
+    if (error) { toast.error(('Error uploading image: ') + error.message); return null }
     const { data } = supabase.storage.from('store-images').getPublicUrl(path)
     return data.publicUrl
   }
 
   const handleSave = async () => {
-    if (!form.nombre.trim()) { toast.error(isEN?'Name is required':'El nombre es obligatorio'); return }
-    if (!form.precio_soles || Number(form.precio_soles) < 0) { toast.error(isEN?'Invalid price':'Precio inválido'); return }
-    if (form.tipo === 'fisico' && (form.stock === '' || Number(form.stock) < 0)) { toast.error(isEN?'Invalid stock':'Stock inválido'); return }
+    if (!form.nombre.trim()) { toast.error('Name is required'); return }
+    if (!form.precio_soles || Number(form.precio_soles) < 0) { toast.error('Invalid price'); return }
+    if (form.tipo === 'fisico' && (form.stock === '' || Number(form.stock) < 0)) { toast.error('Invalid stock'); return }
 
     setSaving(true)
     try {
@@ -129,11 +129,11 @@ function ProductModal({
       if (product) {
         const { error } = await supabase.from('store_products').update(payload).eq('id', product.id)
         if (error) throw error
-        toast.success(isEN?'Product updated ✅':'Producto actualizado ✅')
+        toast.success('Product updated ✅')
       } else {
         const { error } = await supabase.from('store_products').insert(payload)
         if (error) throw error
-        toast.success(isEN?'Product created ✅':'Producto creado ✅')
+        toast.success('Product created ✅')
       }
       onSaved()
     } catch (e: any) {
@@ -217,7 +217,7 @@ function ProductModal({
           <div>
             <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('tienda.tipoProd')}</label>
             <div className="grid grid-cols-2 gap-3">
-              {([['fisico', '📦', isEN?'Physical':'Físico', isEN?'Picked up at center':'Se retira en el centro'], ['digital', '📄', 'Digital', isEN?'PDF or downloadable file':'PDF o archivo descargable']] as const).map(([val, emoji, lbl, desc]) => (
+              {([['fisico', '📦', 'Physical', 'Picked up at center'], ['digital', '📄', 'Digital', 'PDF or downloadable file']] as const).map(([val, emoji, lbl, desc]) => (
                 <button key={val} type="button" onClick={() => setForm((f: any) => ({ ...f, tipo: val }))}
                   className={`p-4 rounded-2xl border-2 text-left transition-all ${form.tipo === val ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                   <div className="text-2xl mb-1">{emoji}</div>
@@ -244,7 +244,7 @@ function ProductModal({
             </div>
             <div>
               <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">
-                {form.tipo === 'digital' ? isEN?'Stock (auto: unlimited)':'Stock (auto: ilimitado)' : isEN?'Available stock *':'Stock disponible *'}
+                {form.tipo === 'digital' ? 'Stock (auto: unlimited)' : 'Available stock *'}
               </label>
               <input
                 type="number" min="0" value={form.tipo === 'digital' ? '∞' : form.stock}
@@ -271,8 +271,8 @@ function ProductModal({
           {/* Toggles */}
           <div className="grid grid-cols-2 gap-4">
             {[
-              { key: 'activo', label: isEN?'Visible in store':'Visible en tienda', desc: isEN?'Parents can see it':'Los padres pueden verlo', color: 'text-emerald-600' },
-              { key: 'destacado', label: isEN?'Featured product':'Producto destacado', desc: isEN?'Appears first with ⭐':'Aparece primero con ⭐', color: 'text-amber-600' },
+              { key: 'activo', label: 'Visible in store', desc: 'Parents can see it', color: 'text-emerald-600' },
+              { key: 'destacado', label: 'Featured product', desc: 'Appears first with ⭐', color: 'text-amber-600' },
             ].map(({ key, label, desc, color }) => (
               <button key={key} type="button" onClick={() => setForm((f: any) => ({ ...f, [key]: !f[key] }))}
                 className={`flex items-center gap-3 p-4 rounded-2xl border-2 text-left transition-all ${form[key] ? `border-current bg-opacity-5 ${color}` : 'border-slate-200 text-slate-400'}`}>
@@ -294,7 +294,7 @@ function ProductModal({
           <button onClick={handleSave} disabled={saving}
             className="flex-1 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-            {saving?(isEN?'Saving...':'Guardando...'):product?(isEN?'Save changes':'Guardar cambios'):(isEN?'Create product':'Crear producto')}
+            {saving?('Saving...'):product?('Save changes'):('Create product')}
           </button>
         </div>
       </div>
@@ -344,11 +344,11 @@ export default function StoreManagementView() {
   const toggleActivo = async (p: Product) => {
     await supabase.from('store_products').update({ activo: !p.activo }).eq('id', p.id)
     setProducts(prev => prev.map(x => x.id === p.id ? { ...x, activo: !x.activo } : x))
-    toast.success(p.activo?(isEN?'Product hidden':'Producto ocultado'):(isEN?'Product activated':'Producto activado'))
+    toast.success(p.activo?('Product hidden'):('Product activated'))
   }
 
   const deleteProduct = async (p: Product) => {
-    if (!confirm(isEN?`Delete "${p.nombre}"? This action cannot be undone.`:`¿Eliminar "${p.nombre}"? Esta acción no se puede deshacer.`)) return
+    if (!confirm(`Delete "${p.nombre}"? This action cannot be undone.`)) return
     const { error } = await supabase.from('store_products').delete().eq('id', p.id)
     if (error) { toast.error('Error: ' + error.message); return }
     setProducts(prev => prev.filter(x => x.id !== p.id))
@@ -400,7 +400,7 @@ export default function StoreManagementView() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h2 className="text-2xl font-black flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
-            <ShoppingBag className="text-blue-600" size={28} /> Tienda
+            <ShoppingBag className="text-blue-600" size={28} /> Store
           </h2>
           <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>{t('tienda.gestionaProd')}</p>
         </div>
@@ -457,7 +457,7 @@ export default function StoreManagementView() {
             {['todos', 'fisico', 'digital'].map(f => (
               <button key={f} onClick={() => setFilterTipo(f)}
                 className={`px-4 py-2.5 rounded-xl border text-sm font-bold capitalize transition-all ${filterTipo === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-blue-300'}`}>
-                {f === 'todos' ? (isEN?'All':'Todos') : f === 'fisico' ? (isEN?'📦 Physical':'📦 Físicos') : (isEN?'📄 Digital':'📄 Digitales')}
+                {f === 'todos' ? ('All') : f === 'fisico' ? ('📦 Physical') : ('📄 Digital')}
               </button>
             ))}
           </div>
@@ -488,14 +488,14 @@ export default function StoreManagementView() {
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex gap-2">
                       <span className={`text-xs font-black px-2.5 py-1 rounded-full ${p.tipo === 'digital' ? 'bg-violet-600 text-white' : 'bg-slate-700 text-white'}`}>
-                        {p.tipo === 'digital' ? '📄 Digital' : (isEN?'📦 Physical':'📦 Físico')}
+                        {p.tipo === 'digital' ? '📄 Digital' : ('📦 Physical')}
                       </span>
-                      {p.destacado && <span className="text-xs font-black px-2.5 py-1 rounded-full bg-amber-400 text-white">⭐ Destacado</span>}
+                      {p.destacado && <span className="text-xs font-black px-2.5 py-1 rounded-full bg-amber-400 text-white">⭐ Featured</span>}
                     </div>
                     {/* Stock alerta */}
                     {p.tipo === 'fisico' && p.stock <= 3 && (
                       <div className="absolute bottom-3 right-3 bg-red-500 text-white text-xs font-black px-2.5 py-1 rounded-full">
-                        {p.stock === 0 ? 'Sin stock' : `Solo ${p.stock} ud.`}
+                        {p.stock === 0 ? t('tienda.agotado') : `Solo ${p.stock} ud.`}
                       </div>
                     )}
                   </div>

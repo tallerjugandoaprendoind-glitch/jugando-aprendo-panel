@@ -109,9 +109,9 @@ function BienestarPanel({ data }: { data: any[] }) {
       </div>
       <div className="grid grid-cols-3 gap-3 mb-3">
         {[
-          { emoji: '😊', label: isEN?'Energized':'Con energía', value: counts.bien, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-          { emoji: '😐', label: isEN?'Average':'Regular', value: counts.regular, color: 'bg-amber-50 text-amber-700 border-amber-200' },
-          { emoji: '😔', label: isEN?'Needs support':'Necesita apoyo', value: counts.dificil, color: 'bg-red-50 text-red-700 border-red-200' },
+          { emoji: '😊', label: 'Energized', value: counts.bien, color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+          { emoji: '😐', label: 'Average', value: counts.regular, color: 'bg-amber-50 text-amber-700 border-amber-200' },
+          { emoji: '😔', label: 'Needs support', value: counts.dificil, color: 'bg-red-50 text-red-700 border-red-200' },
         ].map(({ emoji, label, value, color }) => (
           <div key={label} className={`flex flex-col items-center p-3 rounded-xl border ${color}`}>
             <span className="text-xl mb-1">{emoji}</span>
@@ -304,7 +304,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                 { label: t('evaluaciones.nuevo'),  icon: FileText,      view: 'evaluaciones', bg: '#2563eb', fg: '#ffffff' },
                 { label: t('agenda.nuevaCita'),      icon: Calendar,      view: 'agenda',       bg: '#1e293b', fg: '#ffffff' },
                 { label: t('nav.historial'),    icon: Brain,         view: 'reportes',     bg: '#7c3aed', fg: '#ffffff' },
-                { label: isEN?'View Patients':'Ver Pacientes',     icon: Users,         view: 'ninos',        bg: '#334155', fg: '#ffffff' },
+                { label: 'View Patients',     icon: Users,         view: 'ninos',        bg: '#334155', fg: '#ffffff' },
                 { label: t('mensajes.titulo'),   icon: MessageCircle, view: 'mensajes',     bg: '#d1fae5', fg: '#065f46', badge: stats.mensajesPendientes },
               ].map(({ label, icon: Icon, view, bg, fg, badge }: any) => (
                 <button key={view} onClick={() => navigateTo(view)}
@@ -398,7 +398,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-slate-700 truncate">{a.children?.name}</p>
-                    <p className="text-xs text-slate-400 truncate">{a.datos?.objetivo || isEN ? 'Session recorded' : 'Sesión registrada'}</p>
+                    <p className="text-xs text-slate-400 truncate">{a.datos?.objetivo || 'Session recorded'}</p>
                   </div>
                   <p className="text-[10px] text-slate-400 font-medium flex-shrink-0">
                     {new Date(a.created_at).toLocaleDateString(toBCP47(locale), { day: '2-digit', month: 'short' })}

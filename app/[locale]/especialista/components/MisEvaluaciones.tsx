@@ -11,39 +11,39 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
 const getStatus = (isEN: boolean): Record<string, any> => ({
-  pending_approval: { label: isEN?'Under review':'En revisión', color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200',  icon: Clock },
-  approved:         { label: isEN?'Approved':'Aprobado',    color: 'text-emerald-700',bg: 'bg-emerald-50',border: 'border-emerald-200',icon: CheckCircle2 },
-  rejected:         { label: isEN?'Rejected':'Rechazado',   color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',    icon: XCircle },
+  pending_approval: { label: 'Under review', color: 'text-amber-700',  bg: 'bg-amber-50',  border: 'border-amber-200',  icon: Clock },
+  approved:         { label: 'Approved',    color: 'text-emerald-700',bg: 'bg-emerald-50',border: 'border-emerald-200',icon: CheckCircle2 },
+  rejected:         { label: 'Rejected',   color: 'text-red-700',    bg: 'bg-red-50',    border: 'border-red-200',    icon: XCircle },
 })
 
 const getTipos = (isEN: boolean): Record<string, any>[] => [
-  { id: 'conducta', label: isEN?'Behavior':'Conducta',      desc: isEN?'ABC Analysis':'Análisis ABC',          color: 'bg-purple-50 text-purple-700 border-purple-200' },
-  { id: 'progreso', label: isEN?'Progress':'Progreso',       desc: isEN?'Therapeutic progress':'Avance terapéutico',    color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  { id: 'sesion',   label: isEN?'Session note':'Nota de sesión', desc: isEN?'Clinical record':'Registro clínico',      color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  { id: 'familia',  label: isEN?'For family':'Para familia',   desc: isEN?'Home guides':'Guías para el hogar',   color: 'bg-amber-50 text-amber-700 border-amber-200' },
+  { id: 'conducta', label: 'Behavior',      desc: 'ABC Analysis',          color: 'bg-purple-50 text-purple-700 border-purple-200' },
+  { id: 'progreso', label: 'Progress',       desc: 'Therapeutic progress',    color: 'bg-blue-50 text-blue-700 border-blue-200' },
+  { id: 'sesion',   label: 'Session note', desc: 'Clinical record',      color: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  { id: 'familia',  label: 'For family',   desc: 'Home guides',   color: 'bg-amber-50 text-amber-700 border-amber-200' },
 ]
 
 const getTemplates = (isEN: boolean): Record<string, any> => ({
   conducta: {
-    titulo: isEN?'Behavior analysis - [Name]':'Análisis de conducta - [Nombre]',
-    contenido: isEN?'Antecedent: [Describe what happened before]\n\nBehavior: [Describe the behavior exactly, duration and intensity]\n\nConsequence: [What happened after]':'Antecedente: [Describir qué ocurrió antes]\n\nConducta: [Describir exactamente la conducta, duración e intensidad]\n\nConsecuencia: [Qué ocurrió después]',
-    observaciones: isEN?'The behavior occurred [X] times. The child showed [describe emotional state].':'La conducta ocurrió [X] veces. El niño mostró [describir estado emocional].',
+    titulo: 'Behavior analysis - [Name]',
+    contenido: 'Antecedent: [Describe what happened before]\n\nBehavior: [Describe the behavior exactly, duration and intensity]\n\nConsequence: [What happened after]',
+    observaciones: 'The behavior occurred [X] times. The child showed [describe emotional state].',
     recomendaciones: '1. [Estrategia para casa]\n2. [Reforzadores recomendados]\n3. [Situaciones a evitar]',
   },
   progreso: {
-    titulo: isEN?'Progress report - [Name] - [Month]':'Reporte de progreso - [Nombre] - [Mes]',
+    titulo: 'Progress report - [Name] - [Month]',
     contenido: 'Objetivo trabajado: [Nombre]\n\nLogros esta semana:\n- [Logro 1]\n- [Logro 2]\n\nNivel de dominio: [X]%',
-    observaciones: isEN?'The child showed [description]. Greater response to [stimulus] was observed.':'El niño mostró [descripción]. Se observó mayor respuesta a [estímulo].',
+    observaciones: 'The child showed [description]. Greater response to [stimulus] was observed.',
     recomendaciones: 'Para casa:\n1. [Actividad 1]\n2. [Actividad 2]',
   },
   sesion: {
-    titulo: isEN?'Session note - [Name] - [Date]':'Nota de sesión - [Nombre] - [Fecha]',
+    titulo: 'Session note - [Name] - [Date]',
     contenido: 'Duración: [X] minutos\n\nActividades:\n1. [Actividad 1] - [resultado]\n2. [Actividad 2] - [resultado]\n\nRespuesta: [descripción]',
-    observaciones: isEN?'Arrived at session [state]. During the session [key moments].':'Llegó a la sesión [estado]. Durante la sesión [momentos clave].',
+    observaciones: 'Arrived at session [state]. During the session [key moments].',
     recomendaciones: 'Para la próxima sesión: [actividades/temas]',
   },
   familia: {
-    titulo: isEN?'Family guide - [Name]':'Guía para la familia - [Nombre]',
+    titulo: 'Family guide - [Name]',
     contenido: 'Estimadas familias,\n\nEsta semana trabajamos en [objetivo]. Actividades en casa:\n\n🌟 Actividad 1: [Descripción]\n🌟 Actividad 2: [Descripción]',
     observaciones: 'Practiquen al menos [X] veces por día.',
     recomendaciones: 'Si notan algo diferente en casa, comuníquenlo en la próxima sesión.',

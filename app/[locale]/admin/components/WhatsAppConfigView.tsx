@@ -36,8 +36,8 @@ export default function WhatsAppConfigView() {
       setTestResult({
         ok: d.sent,
         msg: d.sent
-          ? isEN ? '✅ Message sent successfully' : '✅ Mensaje enviado correctamente'
-          : (isEN?'❌ Could not send. Check your environment variables in Vercel.':'❌ No se pudo enviar. Verificá las variables de entorno en Vercel.'),
+          ? '✅ Message sent successfully'
+          : ('❌ Could not send. Check your environment variables in Vercel.'),
       })
     } finally { setSending(false) }
   }
@@ -81,7 +81,7 @@ export default function WhatsAppConfigView() {
         }
         <div className="flex-1">
           <p className={`text-sm font-bold ${configured ? 'text-green-800' : 'text-amber-800'}`}>
-            {isEN?'Active channel':'Canal activo'}: {status?.label || (isEN?'Not configured':'Sin configurar')}
+            {'Active channel'}: {status?.label || ('Not configured')}
           </p>
           {!configured && (
             <p className="text-xs text-amber-700 mt-0.5">
@@ -96,7 +96,7 @@ export default function WhatsAppConfigView() {
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white border border-green-300 text-green-700 hover:bg-green-50 transition-all disabled:opacity-50"
           >
             <Send size={12} />
-            {sending?(isEN?'Sending...':'Enviando...'):(isEN?'Test':'Probar')}
+            {sending?('Sending...'):('Test')}
           </button>
         )}
       </div>
@@ -110,7 +110,7 @@ export default function WhatsAppConfigView() {
       {/* Tabs */}
       <div className="flex gap-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
         {([
-          { id: 'telegram',  label: '✈️ Telegram', badge: isEN?'Recommended':'Recomendado' },
+          { id: 'telegram',  label: '✈️ Telegram', badge: 'Recommended' },
           { id: 'whatsapp',  label: '💬 WhatsApp',  badge: 'Meta Cloud API' },
         ] as const).map(t => (
           <button
@@ -150,27 +150,27 @@ export default function WhatsAppConfigView() {
 
             {[
               {
-                n: '1', title: isEN?'Create the bot':'Crear el bot',
-                desc: isEN?'On Telegram find @BotFather → type /newbot → follow the steps.':'En Telegram buscá @BotFather → escribí /newbot → seguí los pasos.',
+                n: '1', title: 'Create the bot',
+                desc: 'On Telegram find @BotFather → type /newbot → follow the steps.',
                 code: '/newbot',
-                note: isEN?'It will ask for a name (e.g.: "Vanty Jugando Aprendo") and username (e.g.: vanty_ja_bot). At the end it gives you the TOKEN.':'Te va a pedir un nombre (ej: "Vanty Jugando Aprendo") y un username (ej: vanty_ja_bot). Al final te da el TOKEN.',
+                note: 'It will ask for a name (e.g.: "Vanty Jugando Aprendo") and username (e.g.: vanty_ja_bot). At the end it gives you the TOKEN.',
               },
               {
-                n: '2', title: isEN?'Create the alerts group':'Crear el grupo de alertas',
-                desc: isEN?'Create a Telegram group called "Vanty Alerts" and add the bot you created.':'Creá un grupo en Telegram llamado "Vanty Alertas" y agregá el bot que creaste.',
-                note: isEN?'You can add the entire center team to the group.':'Podés agregar al grupo a todo el equipo del centro.',
+                n: '2', title: 'Create the alerts group',
+                desc: 'Create a Telegram group called "Vanty Alerts" and add the bot you created.',
+                note: 'You can add the entire center team to the group.',
               },
               {
-                n: '3', title: isEN?'Get the Chat ID':'Obtener el Chat ID',
-                desc: isEN?'Send any message in the group, then open this URL in the browser:':'Mandá cualquier mensaje en el grupo, luego abrí esta URL en el navegador:',
+                n: '3', title: 'Get the Chat ID',
+                desc: 'Send any message in the group, then open this URL in the browser:',
                 code: 'https://api.telegram.org/bot<TU_TOKEN>/getUpdates',
-                note: isEN?'Look for "chat" → "id" in the response. It is a negative number like -1001234567890.':'Buscá "chat" → "id" en la respuesta. Es un número negativo como -1001234567890.',
+                note: 'Look for "chat" → "id" in the response. It is a negative number like -1001234567890.',
               },
               {
-                n: '4', title: isEN?'Configure in Vercel':'Configurar en Vercel',
+                n: '4', title: 'Configure in Vercel',
                 desc: 'Settings → Environment Variables → agregar:',
                 code: 'TELEGRAM_BOT_TOKEN = 7123456789:AAFxxxxxxxx\nTELEGRAM_CHAT_ID   = -1001234567890',
-                note: isEN?'After saving, do a Redeploy in Vercel for the changes to take effect.':'Después de guardar, hacé Redeploy en Vercel para que tome los cambios.',
+                note: 'After saving, do a Redeploy in Vercel for the changes to take effect.',
               },
             ].map(step => (
               <div key={step.n} className="flex gap-3">
@@ -239,11 +239,11 @@ export default function WhatsAppConfigView() {
         <p className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>{t('ui.queDisparaNotif')}</p>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { icon: '📅', label: isEN ? 'Appointment scheduled' : 'Cita agendada',      active: true },
+            { icon: '📅', label: 'Appointment scheduled',      active: true },
             { icon: '❌', label: 'Cita cancelada',     active: true },
-            { icon: '📋', label: isEN ? 'Form submitted' : 'Formulario subido',  active: true },
-            { icon: '📊', label: isEN ? 'Report generated' : 'Informe generado',   active: true },
-            { icon: '⚠️', label: isEN?'AI clinical alert':'Alerta clínica IA',  active: false },
+            { icon: '📋', label: 'Form submitted',  active: true },
+            { icon: '📊', label: 'Report generated',   active: true },
+            { icon: '⚠️', label: 'AI clinical alert',  active: false },
             { icon: '💬', label: 'Mensaje terapeuta',  active: false },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">

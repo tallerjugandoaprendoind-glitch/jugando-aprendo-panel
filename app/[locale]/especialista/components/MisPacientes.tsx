@@ -19,7 +19,7 @@ function calcularEdad(fecha: string, isEN = false) {
   const hoy = new Date(), nac = new Date(fecha)
   const anos = hoy.getFullYear() - nac.getFullYear()
   const age = hoy.getMonth() < nac.getMonth() || (hoy.getMonth() === nac.getMonth() && hoy.getDate() < nac.getDate()) ? anos - 1 : anos
-  return isEN ? `${age} years` : `${age} años`
+  return `${age} years`
 }
 
 function formatDate(d: string) {
@@ -85,11 +85,11 @@ function AIBlock({ analysis }: { analysis: any }) {
 
   if (!analysis) return null
   const fields = [
-    { k: 'analisis_clinico', l: isEN?'Clinical Analysis':'Análisis Clínico' },
-    { k: 'analisis_ia', l: isEN?'AI Analysis':'Análisis IA' },
-    { k: 'analisis_vineland_ia', l: isEN?'Adaptive Analysis':'Análisis Adaptativo' },
-    { k: 'analisis_diagnostico_ia', l: isEN?'Diagnostic Analysis':'Análisis Diagnóstico' },
-    { k: 'analisis_basc_ia', l: 'Análisis Conductual' },
+    { k: 'analisis_clinico', l: 'Clinical Analysis' },
+    { k: 'analisis_ia', l: 'AI Analysis' },
+    { k: 'analisis_vineland_ia', l: 'Adaptive Analysis' },
+    { k: 'analisis_diagnostico_ia', l: 'Diagnostic Analysis' },
+    { k: 'analisis_basc_ia', l: 'Behavioral Analysis' },
     { k: 'perfil_cognitivo_ia', l: 'Perfil Cognitivo' },
     { k: 'nivel_alerta', l: 'Nivel de Alerta' },
     { k: 'nivel_severidad', l: 'Nivel de Severidad' },
@@ -338,7 +338,7 @@ function RecordCard({ item }: { item: any }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-1">
             <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-              {item._type || 'Registro'}
+              {item._type || 'Record'}
             </span>
             <span className="text-xs text-slate-400">{formatDate(item._date)}</span>
           </div>

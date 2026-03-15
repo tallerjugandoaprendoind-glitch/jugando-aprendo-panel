@@ -503,7 +503,7 @@ export default function ParentDashboard() {
                     <NavBtnDesktop icon={<MessageCircle size={20}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                     <NavBtnDesktop icon={<Bell size={20}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                     <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
-                    <NavBtnDesktop icon={<ShoppingBag size={20}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
+                    <NavBtnDesktop icon={<ShoppingBag size={20}/>} label={t('nav.tienda')} active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
                     <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                     <NavBtnDesktop icon={<User size={20}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
                 </nav>
@@ -515,7 +515,7 @@ export default function ParentDashboard() {
                     <p className="text-xs font-bold text-blue-700 mb-1 flex items-center gap-1.5">
                         <Calendar size={12}/> Tus citas
                     </p>
-                    <p className="text-xs text-blue-500 leading-relaxed">{isEN ? "Appointments are scheduled by the center team. For changes, contact reception." : "Las citas son programadas por el equipo del centro. Para cambios, contactá a recepción."}</p>
+                    <p className="text-xs text-blue-500 leading-relaxed">{"Appointments are scheduled by the center team. For changes, contact reception."}</p>
                 </div>
                 
                 {/* BOTÓN NOTIFICACIONES SIDEBAR MEJORADO */}
@@ -582,7 +582,7 @@ export default function ParentDashboard() {
                         <div className="text-left">
                             <span className="font-bold text-sm block">{child.name.split(' ')[0]}</span>
                             <span className={`text-[10px] font-semibold flex items-center gap-1 ${selectedChild?.id === child.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                                <Baby size={10}/> {calculateAge(child.birth_date)} {isEN ? "years" : "años"}
+                                <Baby size={10}/> {calculateAge(child.birth_date)} {"years"}
                             </span>
                         </div>
                     </button>
@@ -708,7 +708,7 @@ export default function ParentDashboard() {
                     </button>
                 </div>
                 <NavBtnMobile icon={<Book size={22}/>} label="Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
-                <NavBtnMobile icon={<ShoppingBag size={22}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
+                <NavBtnMobile icon={<ShoppingBag size={22}/>} label={t('nav.tienda')} active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
                 <NavBtnMobile icon={<User size={22}/>} label="Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
         </div>
@@ -791,7 +791,7 @@ export default function ParentDashboard() {
                                     type="submit" 
                                     className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                                 >
-                                    <CheckCircle2 size={18}/> {isEN ? 'Save' : 'Guardar'}
+                                    <CheckCircle2 size={18}/> {'Save'}
                                 </button>
                             </div>
                         </form>
@@ -857,7 +857,7 @@ export default function ParentDashboard() {
                                 type="submit" 
                                 className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:bg-purple-700 transition-all hover:scale-105 active:scale-95"
                             >
-                                Actualizar
+                                Refresh
                             </button>
                         </div>
                     </form>
@@ -970,12 +970,12 @@ export default function ParentDashboard() {
                             {(()=>{
                                 const ft = selectedNoti.metadata?.form_type || selectedNoti.metadata?.source || selectedNoti.type || ''
                                 const cfg =
-                                    ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-700', border:'border-indigo-200', label:'Sesión ABA'} :
-                                    ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Historia Clínica'} :
-                                    ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-700',  border:'border-green-200',  label:'Entorno del Hogar'} :
+                                    ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-700', border:'border-indigo-200', label:'ABA Session'} :
+                                    ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Clinical History'} :
+                                    ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-700',  border:'border-green-200',  label:'Home Environment'} :
                                     ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-700', border:'border-purple-200', label:'Evaluación Clínica'} :
                                     selectedNoti.type==='video_call'      ? {icon:<Video size={20}/>,         bg:'bg-indigo-100', text:'text-indigo-700', border:'border-indigo-200', label:'Videollamada'} :
-                                    selectedNoti.type==='form_request'    ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-700', border:'border-orange-200', label:'Nuevo formulario'} :
+                                    selectedNoti.type==='form_request'    ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-700', border:'border-orange-200', label:'New form'} :
                                     selectedNoti.type==='parent_message'  ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
                                     selectedNoti.type==='success'         ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-700', border:'border-yellow-200', label:'¡Buenas noticias!'} :
                                     selectedNoti.type==='warning'         ? {icon:<AlertCircle size={20}/>,   bg:'bg-red-100',    text:'text-red-700',    border:'border-red-200',    label:'Aviso'} :
@@ -1053,12 +1053,12 @@ export default function ParentDashboard() {
                             notifications.map((noti) => {
                                 const ft = noti.metadata?.form_type || noti.metadata?.source || noti.type || ''
                                 const iconConfig =
-                                    ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-200', label:'Sesión ABA'} :
-                                    ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Historia Clínica'} :
-                                    ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-600',  border:'border-green-200',  label:'Entorno del Hogar'} :
+                                    ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-200', label:'ABA Session'} :
+                                    ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Clinical History'} :
+                                    ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-600',  border:'border-green-200',  label:'Home Environment'} :
                                     ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-600', border:'border-purple-200', label:'Evaluación Clínica'} :
                                     noti.type==='video_call'     ? {icon:<Video size={20}/>,         bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-200', label:'Videollamada'} :
-                                    noti.type==='form_request'   ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-600', border:'border-orange-200', label:'Nuevo formulario'} :
+                                    noti.type==='form_request'   ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-600', border:'border-orange-200', label:'New form'} :
                                     noti.type==='parent_message' ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
                                     noti.type==='success'        ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-600', border:'border-yellow-200', label:'¡Buenas noticias!'} :
                                     noti.type==='warning'        ? {icon:<AlertCircle size={20}/>,   bg:'bg-red-100',    text:'text-red-600',    border:'border-red-200',    label:'Aviso'} :
@@ -1104,7 +1104,7 @@ export default function ParentDashboard() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg">Privacidad y Seguridad</h3>
-                                <p className="text-xs text-purple-100">{isEN ? "Your data is protected" : "Tus datos están protegidos"}</p>
+                                <p className="text-xs text-purple-100">{"Your data is protected"}</p>
                             </div>
                         </div>
                         <button onClick={()=>setShowPrivacy(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
@@ -1170,7 +1170,7 @@ export default function ParentDashboard() {
                         <HelpItem 
                             icon={<Calendar className="text-blue-600"/>}
                             title="¿Cómo ver mis citas?"
-                            description={isEN ? "In the 'My Appointments' section you can see all appointments scheduled by the center. For changes or cancellations, contact reception directly." : "En la sección 'Mis Citas' podés ver todas las citas programadas por el centro. Para cambios o cancelaciones, contactá a recepción directamente."}
+                            description={"In the 'My Appointments' section you can see all appointments scheduled by the center. For changes or cancellations, contact reception directly."}
                         />
                         <HelpItem 
                             icon={<MessageCircle className="text-purple-600"/>}

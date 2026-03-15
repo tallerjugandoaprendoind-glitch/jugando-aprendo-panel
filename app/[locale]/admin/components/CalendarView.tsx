@@ -70,7 +70,7 @@ function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) =>
         <div className="flex items-center justify-between mb-0.5">
           <span className={`text-[10px] font-black uppercase tracking-wider
             ${urgent ? 'text-red-600' : warning ? 'text-amber-600' : 'text-emerald-700'}`}>
-            {urgent ? '⚠️ Ending' : (isEN ? 'Session in progress' : 'Sesión en curso')}
+            {urgent ? '⚠️ Ending' : ('Session in progress')}
           </span>
           <span className={`text-xs font-black tabular-nums
             ${urgent ? 'text-red-600' : warning ? 'text-amber-600' : 'text-emerald-700'}`}>
@@ -91,18 +91,14 @@ function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) =>
 }
 
 const getServices = (isEN: boolean): string[] =>
-  isEN
-  ? ['ABA Therapy','Initial Assessment','BRIEF-2 Follow-up','ADOS-2 Assessment',
+  ['ABA Therapy','Initial Assessment','BRIEF-2 Follow-up','ADOS-2 Assessment',
      'Vineland-3 Assessment','WISC-V Assessment','BASC-3 Assessment',
      'Family Session','Orientation Session','Home Visit']
-  : ['Terapia ABA','Evaluación Inicial','Seguimiento BRIEF-2','Evaluación ADOS-2',
-     'Evaluación Vineland-3','Evaluación WISC-V','Evaluación BASC-3',
-     'Sesión Familiar','Sesión de Orientación','Visita Domiciliaria']
 const getStatusConfig = (isEN: boolean): Record<string, any> => ({
-  confirmed: { label: isEN ? 'Confirmed' : 'Confirmada', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-  pending:   { label: isEN ? 'Pending' : 'Pendiente',  color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200'   },
-  cancelled: { label: isEN ? 'Cancelled' : 'Cancelada',  color: 'text-red-700',     bg: 'bg-red-50 border-red-200'       },
-  completed: { label: isEN ? 'Completed' : 'Completada', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200'     },
+  confirmed: { label: 'Confirmed', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
+  pending:   { label: 'Pending',  color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200'   },
+  cancelled: { label: 'Cancelled',  color: 'text-red-700',     bg: 'bg-red-50 border-red-200'       },
+  completed: { label: 'Completed', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200'     },
 })
 
 function MonthlyCalendarView() {
@@ -182,7 +178,7 @@ function MonthlyCalendarView() {
         body: JSON.stringify({ id, status: 'completed' , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       setApts(prev => prev.map(a => a.id === id ? { ...a, status: 'completed' } : a))
-      toast.success(isEN?'✅ Session ended · Appointment moved to history':'✅ Sesión finalizada · Cita movida al historial')
+      toast.success('✅ Session ended · Appointment moved to history')
     } catch {
       cargarCitas()
     }
@@ -200,24 +196,24 @@ function MonthlyCalendarView() {
 
   const eliminarCita = async (id:string, e:React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm(isEN?'Delete this appointment?':'¿Eliminar esta cita?')) return
+    if (!confirm('Delete this appointment?')) return
     try {
       const res = await fetch('/api/admin/appointments', { method:'DELETE', headers:{'Content-Type':'application/json', 'x-locale': localStorage.getItem('vanty_locale') || 'es'}, body: JSON.stringify({ id }) })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(isEN ? 'Appointment deleted' : 'Cita eliminada'); cargarCitas()
+      toast.success('Appointment deleted'); cargarCitas()
     } catch (err:any) { toast.error('Error: ' + err.message) }
   }
 
   const handleSave = async () => {
-    if (tipoSesion==='individual' && !newApt.child_id) { toast.error(isEN ? 'Select a patient' : 'Selecciona un paciente'); return }
-    if (tipoSesion==='grupal' && selectedParticipants.length===0) { toast.error(isEN ? 'Select participants' : 'Selecciona participantes'); return }
+    if (tipoSesion==='individual' && !newApt.child_id) { toast.error('Select a patient'); return }
+    if (tipoSesion==='grupal' && selectedParticipants.length===0) { toast.error('Select participants'); return }
     setIsSaving(true)
     try {
       let payload: any[]
       const extra = { modalidad: modalidadCita }
       if (tipoSesion==='grupal') {
-        payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (${isEN ? 'Group' : 'Grupal'}: ${newApt.group_name||(isEN ? 'No name' : 'Sin nombre')})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, ...extra }))
+        payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (${'Group'}: ${newApt.group_name||('No name')})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, ...extra }))
       } else {
         payload = [{ child_id:newApt.child_id, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:newApt.service, is_group:false, notes:newApt.notes, status:newApt.status, ...extra }]
       }
@@ -325,9 +321,9 @@ function MonthlyCalendarView() {
           <div>
             <h2 className="font-black text-2xl md:text-3xl tracking-tight flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
               <div className="p-2.5 rounded-2xl" style={{ background: "rgba(37,99,235,0.15)" }}><Calendar className="text-blue-500" size={28}/></div>
-              {isEN ? 'Appointment Calendar' : 'Calendario de Citas'}
+              {'Appointment Calendar'}
             </h2>
-            <p className="text-slate-400 text-sm font-medium mt-1 ml-1">{apts.length} {isEN ? "appointments" : "citas"} · {todayApts.length} {isEN ? "today" : "hoy"} · {virtualApts.length} {isEN ? "virtual" : "virtuales"}</p>
+            <p className="text-slate-400 text-sm font-medium mt-1 ml-1">{apts.length} {"appointments"} · {todayApts.length} {"today"} · {virtualApts.length} {"virtual"}</p>
           </div>
           <div className="flex gap-3">
             <button onClick={cargarCitas} className="p-3 rounded-xl border-2 border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-600 transition-all"><RefreshCw size={18}/></button>
@@ -340,10 +336,10 @@ function MonthlyCalendarView() {
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           {[
-            {label: isEN ? 'Total' : 'Total',      value:apts.length,        color:'blue'},
-            {label: isEN ? 'Today' : 'Hoy',        value:todayApts.length,   color:'emerald'},
-            {label: isEN ? 'This week' : 'Esta semana', value:weekApts.length,    color:'violet'},
-            {label: isEN ? 'Virtual' : 'Virtuales',  value:virtualApts.length, color:'indigo'},
+            {label: 'Total',      value:apts.length,        color:'blue'},
+            {label: 'Today',        value:todayApts.length,   color:'emerald'},
+            {label: 'This week', value:weekApts.length,    color:'violet'},
+            {label: 'Virtual',  value:virtualApts.length, color:'indigo'},
           ].map(({label,value,color}) => (
             <div key={label} className="rounded-2xl p-5 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
               <p className="text-xs font-bold uppercase tracking-wide" style={{ color: "var(--text-muted)" }}>{label}</p>
@@ -435,7 +431,7 @@ function MonthlyCalendarView() {
                             }
                             {a.is_group && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100 uppercase">{t('ui.grupal')}</span>}
                           </div>
-                          <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{a.children?.name||( isEN ? 'Patient' : 'Paciente')}</p>
+                          <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{a.children?.name||( 'Patient')}</p>
                           <p className="text-xs font-medium mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{a.service_type}</p>
                           <div className="flex items-center gap-3 mt-1.5 text-xs font-bold" style={{ color: "var(--text-muted)" }}>
                             <span className="flex items-center gap-1"><Calendar size={11}/>{a.appointment_date}</span>
@@ -490,7 +486,7 @@ function MonthlyCalendarView() {
                     {(['individual','grupal'] as const).map(tipo => (
                       <button key={tipo} onClick={()=>{setTipoSesion(tipo);setSelectedParticipants([]);setNewApt(p=>({...p,child_id:''}))}}
                         className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all flex items-center justify-center gap-2 ${tipoSesion===tipo?(tipo==='individual'?'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200':'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-200'):'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
-                        {tipo==='individual'?<><User size={16}/>{isEN ? 'Individual' : 'Individual'}</>:<><Users size={16}/>{isEN ? 'Group' : 'Grupal'}</>}
+                        {tipo==='individual'?<><User size={16}/>{'Individual'}</>:<><Users size={16}/>{'Group'}</>}
                       </button>
                     ))}
                   </div>
@@ -501,7 +497,7 @@ function MonthlyCalendarView() {
                   <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{t('agenda.modalidad')}</label>
                   <div className="grid grid-cols-2 gap-3">
                     {([
-                      {value:'presencial',icon:<MapPin size={16}/>,label: isEN ? 'In-person' : 'Presencial', active:'bg-slate-800 text-white border-slate-800 shadow-lg shadow-slate-200'},
+                      {value:'presencial',icon:<MapPin size={16}/>,label: 'In-person', active:'bg-slate-800 text-white border-slate-800 shadow-lg shadow-slate-200'},
                       {value:'virtual',   icon:<Video size={16}/>, label:'Virtual 📹', active:'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-200'},
                     ] as const).map(opt => (
                       <button key={opt.value} onClick={()=>setModalidadCita(opt.value)}
@@ -513,7 +509,7 @@ function MonthlyCalendarView() {
                   {modalidadCita==='virtual' && (
                     <div className="mt-2 flex items-start gap-2 px-3 py-2.5 bg-indigo-50 rounded-xl border border-indigo-100">
                       <Video size={13} className="text-indigo-500 shrink-0 mt-0.5"/>
-                      <p className="text-xs text-indigo-600 font-semibold leading-relaxed">{isEN ? "The session link is generated automatically and the parent receives a notification to join." : "Al iniciar la sesión se genera el link automáticamente y el padre recibe una notificación para unirse."}</p>
+                      <p className="text-xs text-indigo-600 font-semibold leading-relaxed">{"The session link is generated automatically and the parent receives a notification to join."}</p>
                     </div>
                   )}
                 </div>
@@ -551,7 +547,7 @@ function MonthlyCalendarView() {
 
                 {/* Servicio, fecha, hora, estado */}
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{isEN ? 'Service' : 'Servicio'}</label>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{'Service'}</label>
                   <select className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.service} onChange={e=>setNewApt(p=>({...p,service:e.target.value}))}>
                     {getServices(isEN).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -576,20 +572,20 @@ function MonthlyCalendarView() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{isEN ? 'Notes (optional)' : 'Notas (opcional)'}</label>
-                  <textarea rows={2} placeholder={isEN ? "Observations..." : "Observaciones..."} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all resize-none" value={newApt.notes} onChange={e=>setNewApt(p=>({...p,notes:e.target.value}))}/>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{'Notes (optional)'}</label>
+                  <textarea rows={2} placeholder={"Observations..."} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all resize-none" value={newApt.notes} onChange={e=>setNewApt(p=>({...p,notes:e.target.value}))}/>
                 </div>
 
                 {/* Recurrencia */}
                 <div className="rounded-xl border-2 p-4" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
                   <label className="text-xs font-black uppercase tracking-widest block mb-3" style={{ color: "var(--text-muted)" }}>
-                    {isEN ? '🔄 Repeat appointment' : '🔄 Repetir cita'}
+                    {'🔄 Repeat appointment'}
                   </label>
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     {([
-                      { value: 'none',      label: isEN ? 'No repeat' : 'No repetir' },
+                      { value: 'none',      label: 'No repeat' },
                       { value: 'weekly',    label: t('agenda.semanal') },
-                      { value: 'biweekly',  label: isEN ? 'Biweekly' : 'Quincenal' },
+                      { value: 'biweekly',  label: 'Biweekly' },
                     ] as const).map(opt => (
                       <button key={opt.value} onClick={() => setRecurrencia(opt.value)}
                         className={`py-2.5 rounded-xl text-xs font-black border-2 transition-all ${recurrencia === opt.value ? 'border-blue-500 text-blue-600' : 'border-slate-200 text-slate-500 hover:border-slate-300'}`}
@@ -603,10 +599,10 @@ function MonthlyCalendarView() {
                       <label className="text-[11px] font-bold mb-1 block" style={{ color: "var(--text-muted)" }}>{t('agenda.cantRepeticiones')}</label>
                       <select value={recurrenciaSemanas} onChange={e => setRecurrenciaSemanas(Number(e.target.value))}
                         className="w-full p-3 rounded-xl text-sm font-bold outline-none border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}>
-                        {[2,3,4,6,8,12].map(n => <option key={n} value={n}>{n} {isEN ? 'appointments' : 'citas'} ({recurrencia === 'weekly' ? `${n} ${isEN ? 'weeks' : 'semanas'}` : `${n*2} ${isEN ? 'weeks' : 'semanas'}`})</option>)}
+                        {[2,3,4,6,8,12].map(n => <option key={n} value={n}>{n} {'appointments'} ({recurrencia === 'weekly' ? `${n} ${'weeks'}` : `${n*2} ${'weeks'}`})</option>)}
                       </select>
                       <p className="text-[10px] mt-1.5 font-medium text-blue-500">
-                        {isEN ? `${recurrenciaSemanas} appointments will be created ${recurrencia === 'weekly' ? 'every week' : 'every 2 weeks'} from the selected date.` : `Se crearán ${recurrenciaSemanas} citas ${recurrencia === 'weekly' ? 'cada semana' : 'cada 2 semanas'} a partir de la fecha seleccionada.`}
+                        {`${recurrenciaSemanas} appointments will be created ${recurrencia === 'weekly' ? 'every week' : 'every 2 weeks'} from the selected date.`}
                       </p>
                     </div>
                   )}
@@ -617,7 +613,7 @@ function MonthlyCalendarView() {
                   <button onClick={handleSave} disabled={isSaving}
                     className={`flex-[2] py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-white ${modalidadCita==='virtual'?'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-indigo-200':tipoSesion==='grupal'?'bg-gradient-to-r from-purple-600 to-violet-600 shadow-purple-200':'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-blue-200'}`}>
                     {isSaving?<Loader2 size={18} className="animate-spin"/>:modalidadCita==='virtual'?<Video size={18}/>:<Plus size={18}/>}
-                    {isSaving?(isEN?'Saving...':'Guardando...'):modalidadCita==='virtual'?(isEN?'Schedule Virtual':'Agendar Virtual'):tipoSesion==='grupal'?(isEN?'Schedule Group':'Agendar Grupo'):(isEN?'Confirm Appointment':'Confirmar Cita')}
+                    {isSaving?('Saving...'):modalidadCita==='virtual'?('Schedule Virtual'):tipoSesion==='grupal'?('Schedule Group'):('Confirm Appointment')}
                   </button>
                 </div>
               </div>

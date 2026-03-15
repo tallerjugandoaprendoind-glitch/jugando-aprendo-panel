@@ -145,10 +145,10 @@ export default function WhatsAppQRPanel() {
           <div className="bg-slate-50 rounded-xl p-4 space-y-2">
             <p className="text-xs font-bold text-slate-600">{t('ui.comoEscanear')}</p>
             {[
-              isEN?'Open WhatsApp Business on your phone,':'Abrí WhatsApp Business en tu celular',
-              isEN?'Tap the 3 dots → Linked devices,':'Tocá los 3 puntos → Dispositivos vinculados',
-              isEN?'Tap "Link a device"':'Tocá "Vincular un dispositivo"',
-              isEN?'Scan this QR':'Escaneá este QR',
+              'Open WhatsApp Business on your phone,',
+              'Tap the 3 dots → Linked devices,',
+              'Tap "Link a device"',
+              'Scan this QR',
             ].map((step, i) => (
               <p key={i} className="text-xs text-slate-500 flex items-center gap-2">
                 <span className="w-4 h-4 rounded-full bg-violet-100 text-violet-600 text-[10px] font-black flex items-center justify-center shrink-0">{i+1}</span>
