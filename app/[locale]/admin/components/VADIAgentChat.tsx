@@ -188,7 +188,7 @@ export default function VADIAgentChat({
           </button>
         </div>
         <p className="text-[10px] text-slate-300 mt-1.5 text-center">
-          {isEN ? "VADI uses Malott, DSM-5 TR, IBAO Guidelines and the patient's history" : "{isEN ? "VADI uses Malott, DSM-5 TR, IBAO Guidelines and the patient's history" : "VADI usa Malott, DSM-5 TR, IBAO Guidelines y el historial del paciente"}"}
+          {isEN ? "VADI uses Malott, DSM-5 TR, IBAO Guidelines and the patient's history" : "VADI usa Malott, DSM-5 TR, IBAO Guidelines y el historial del paciente"}
         </p>
       </div>
     </div>
