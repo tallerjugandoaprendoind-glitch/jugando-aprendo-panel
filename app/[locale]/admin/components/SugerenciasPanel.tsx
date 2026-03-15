@@ -43,6 +43,7 @@ const getPrioridadConfig = (isEN: boolean) => ({
 
 function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: string) => void }) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [expandido, setExpandido] = useState(false)
   const [resolviendo, setResolviendo] = useState(false)
   const cfg = getTipoConfig(isEN)[s.tipo] || getTipoConfig(isEN).objetivo_estancado

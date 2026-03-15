@@ -544,7 +544,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
 }
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
-const TABS = [
+const getTabs = (isEN: boolean) => [
   { id: 'all',        label: 'All' },
   { id: 'clinico',    label: isEN?'🏥 Clinical Pro':'🏥 Clínico Pro' },
   { id: 'tea',        label: '🧩 TEA' },
@@ -615,7 +615,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
 
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-        {TABS.map(tab => {
+        {getTabs(isEN).map(tab => {
           const isActive = activeTab === tab.id
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}

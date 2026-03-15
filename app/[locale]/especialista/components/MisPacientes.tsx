@@ -80,7 +80,8 @@ function Bloque({ title, icon: Icon, color, children }: any) {
 }
 
 function AIBlock({ analysis }: { analysis: any }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   if (!analysis) return null
   const fields = [
@@ -613,7 +614,8 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function MisPacientes() {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [ninos, setNinos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')

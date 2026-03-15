@@ -10,7 +10,8 @@ import { RefreshCw, CheckCircle, Wifi, WifiOff, Smartphone } from 'lucide-react'
 type Status = 'loading' | 'connected' | 'qr' | 'waiting' | 'error' | 'unconfigured'
 
 export default function WhatsAppQRPanel() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [status, setStatus]   = useState<Status>('loading')
   const [qr, setQr]           = useState<string | null>(null)
   const [polling, setPolling] = useState(false)

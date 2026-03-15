@@ -66,18 +66,19 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 }
 
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-const DAYS_ES = isEN ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+const getDaysES = (isEN: boolean) => isEN ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
 function formatDate(dateStr: string) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [y, m, d] = dateStr.split('-').map(Number)
   const date = new Date(y, m - 1, d)
   return {
     day: d,
     month: MONTHS_ES[m - 1],
     year: y,
-    dayName: DAYS_ES[date.getDay()],
-    full: `${DAYS_ES[date.getDay()]}, ${d} de ${['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][m-1]} ${y}`
+    dayName: getDaysES(isEN)[date.getDay()],
+    full: `${getDaysES(isEN)[date.getDay()]}, ${d} de ${['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'][m-1]} ${y}`
   }
 }
 
@@ -98,7 +99,8 @@ function isUpcoming(dateStr: string) {
 }
 
 export default function MisCitasView({ profile, selectedChild, onCancelAppointment, onChangeView }: Props) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const supabase = supabaseClient
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)

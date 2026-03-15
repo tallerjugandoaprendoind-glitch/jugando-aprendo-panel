@@ -35,7 +35,8 @@ interface Props {
 }
 
 export default function ResourcesView({ profile }: Props) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [resources, setResources] = useState<Resource[]>([])
   const [loading, setLoading] = useState(true)
   const [selected, setSelected] = useState<Resource | null>(null)

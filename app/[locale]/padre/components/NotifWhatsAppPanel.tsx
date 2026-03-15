@@ -13,7 +13,8 @@ interface Props {
 }
 
 export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [phone, setPhone]     = useState(profile?.phone || '')
   const [saving, setSaving]   = useState(false)
   const [saved, setSaved]     = useState(false)

@@ -9,7 +9,8 @@ import { useToast } from '@/components/Toast'
 
 export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate: () => void }) {
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [editando, setEditando] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [cambioPass, setCambioPass] = useState(false)

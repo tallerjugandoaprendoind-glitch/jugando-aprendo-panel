@@ -34,13 +34,13 @@ interface Order {
   store_order_items: any[]
 }
 
-const ESTADO_CFG: Record<string, any> = {
+const getEstadoCfg = (isEN: boolean): Record<string, any> => ({
   pendiente:  { label: isEN?'Pending confirmation':'Pendiente de confirmación', icon: Clock,       color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200' },
   confirmado: { label: 'Confirmado',                icon: CheckCircle, color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-200'  },
   listo:      { label: isEN?'Ready to pick up!':'¡Listo para recoger!',      icon: Package,     color: 'text-violet-600',  bg: 'bg-violet-50',  border: 'border-violet-200'},
   entregado:  { label: 'Entregado',                 icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200'},
   cancelado:  { label: 'Cancelado',                 icon: XCircle,     color: 'text-red-500',     bg: 'bg-red-50',     border: 'border-red-200'   },
-}
+})
 
 // ── Carrito flotante ──────────────────────────────────────────────────────────
 function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
@@ -169,7 +169,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
 // ── Vista principal de la tienda ──────────────────────────────────────────────
 export default function StoreView({ profile }: { profile: any }) {
   const { t, locale } = useI18n()
-  const [view, setView] = useState<'catalogo' | 'mis-pedidos'>('catalogo')
+  const isEN = locale === 'en'
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -407,7 +407,7 @@ export default function StoreView({ profile }: { profile: any }) {
               </button>
             </div>
           ) : orders.map(order => {
-            const cfg = ESTADO_CFG[order.estado] || ESTADO_CFG.pendiente
+            const cfg = getEstadoCfg(isEN)[order.estado] || getEstadoCfg(isEN).pendiente
             const StatusIcon = cfg.icon
             return (
               <div key={order.id} className={`bg-white rounded-2xl border-2 overflow-hidden ${cfg.border}`}>
@@ -508,7 +508,8 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
 
 // ── Detalle de producto (modal) ───────────────────────────────────────────────
 function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const sinStock = p.tipo === 'fisico' && p.stock === 0
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>

@@ -171,7 +171,8 @@ function LineChartProgreso({ sesiones, criterio = 90, color = '#7c3aed', titulo 
 // TAB: PREDICCIONES
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
-    const { t } = useI18n()
+    const { t, locale } = useI18n()
+    const isEN = locale === 'en'
 
     const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null)
   const [prediccion, setPrediccion] = useState<Prediccion | null>(null)

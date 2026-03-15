@@ -97,7 +97,8 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
 
 // ── Wellbeing Mini-Survey ──────────────────────────────────────────────────
 function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: () => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const [answered, setAnswered] = useState(false)
   const [answer, setAnswer] = useState('')
