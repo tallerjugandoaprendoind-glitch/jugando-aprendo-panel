@@ -17,7 +17,7 @@ import {
 // ═══════════════════════════════════════════════════════════════
 //  EDITA TUS VIDEOS AQUÍ — soporta YouTube, TikTok, Drive, Vimeo
 // ═══════════════════════════════════════════════════════════════
-const VIDEOS = [
+const getVideos = (isEN: boolean) => [
   {
     url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     title: '¿Qué es la terapia ABA?',
@@ -408,7 +408,7 @@ export default function LandingPage() {
         <div className="lp-modal" onClick={() => setPlayingVideo(null)}>
           <div className="lp-modal-inner" onClick={e => e.stopPropagation()}>
             <button className="lp-modal-x" onClick={() => setPlayingVideo(null)}><X size={18} color="#1c1917" /></button>
-            <iframe src={getEmbedUrl(VIDEOS[playingVideo].url)} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title={VIDEOS[playingVideo].title} />
+            <iframe src={getEmbedUrl(getVideos(isEN)[playingVideo].url)} allow="autoplay; fullscreen; picture-in-picture" allowFullScreen title={getVideos(isEN)[playingVideo].title} />
           </div>
         </div>
       )}
@@ -690,7 +690,7 @@ export default function LandingPage() {
           </div>
 
           <div className="lp-grid-3">
-            {VIDEOS.map((v, i) => {
+            {getVideos(isEN).map((v, i) => {
               const pl = getPlatformLabel(v.url)
               return (
                 <div key={i} className="lp-video-card" onClick={() => setPlayingVideo(i)}>

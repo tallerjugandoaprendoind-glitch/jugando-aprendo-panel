@@ -36,6 +36,7 @@ import { TIME_SLOTS, calculateAge } from './utils/helpers'
 
 export default function ParentDashboard() {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const router = useRouter()
    
   const [loading, setLoading] = useState(true)

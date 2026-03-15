@@ -170,6 +170,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
 export default function StoreView({ profile }: { profile: any }) {
   const { t, locale } = useI18n()
   const isEN = locale === 'en'
+  const [view, setView] = useState<'catalogo' | 'mis-pedidos'>('catalogo')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)

@@ -27,14 +27,14 @@ interface Notification {
   }
 }
 
-const SOURCE_LABELS: Record<string, { label: string; icon: string; color: string; bg: string }> = {
+const getSourceLabels = (isEN: boolean): Record<string, { label: string; icon: string; color: string; bg: string }> => ({
   parent_form:     { label: 'Formulario respondido',  icon: '📝', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200' },
   session_report:  { label: isEN?'Session report':'Reporte de sesión',      icon: '📊', color: 'text-purple-700',  bg: 'bg-purple-50 border-purple-200' },
   neuroforma:      { label: 'NeuroForma',              icon: '🧠', color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-200' },
   evaluacion:      { label: isEN?'Assessment':'Evaluación',              icon: '📋', color: 'text-teal-700',    bg: 'bg-teal-50 border-teal-200' },
   entorno_hogar:   { label: 'Entorno del hogar',       icon: '🏠', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
   parent_message:  { label: 'Mensaje del terapeuta',   icon: '💬', color: 'text-violet-700',  bg: 'bg-violet-50 border-violet-200' },
-}
+})
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
@@ -133,6 +133,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
 
 export default function MensajesView({ profile }: { profile: any }) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -224,7 +225,7 @@ export default function MensajesView({ profile }: { profile: any }) {
             const isOpen = expanded === noti.id
             const meta = noti.metadata || {}
             const sourceKey = meta.source || noti.type || 'parent_message'
-            const sourceInfo = SOURCE_LABELS[sourceKey] || SOURCE_LABELS['parent_message']
+            const sourceInfo = getSourceLabels(isEN)[sourceKey] || getSourceLabels(isEN)['parent_message']
             const analysis = meta.ai_analysis
 
             return (
