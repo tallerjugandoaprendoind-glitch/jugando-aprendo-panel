@@ -132,7 +132,8 @@ function LineChartProgreso({ sesiones, criterio = 90, color = '#7c3aed', titulo 
   color?: string
   titulo?: string
 }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   if (!sesiones || sesiones.length < 2) return (
     <div className="flex items-center justify-center h-24 rounded-xl border" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
       <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{t('ui.few_sessions')}</p>
@@ -155,7 +156,7 @@ function LineChartProgreso({ sesiones, criterio = 90, color = '#7c3aed', titulo 
           <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--text-muted)' }} />
           <Tooltip
             contentStyle={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 10, fontSize: 11 }}
-            formatter={(v: any) => [`${v}%`, locale === 'en' ? 'Achievement' : 'Logro']}
+            formatter={(v: any) => [`${v}%`, isEN ? 'Achievement' : 'Logro']}
           />
           <ReferenceLine y={criterio} stroke="#10b981" strokeDasharray="4 2" strokeWidth={1.5} />
           <Area type="monotone" dataKey="pct" fill={`${color}18`} stroke="none" />
