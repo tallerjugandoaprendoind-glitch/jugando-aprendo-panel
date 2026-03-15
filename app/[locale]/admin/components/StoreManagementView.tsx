@@ -306,6 +306,7 @@ function ProductModal({
 export default function StoreManagementView() {
   const toast = useToast()
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [tab, setTab] = useState<'productos' | 'pedidos'>('productos')
   const [products, setProducts] = useState<Product[]>([])
   const [orders, setOrders] = useState<Order[]>([])

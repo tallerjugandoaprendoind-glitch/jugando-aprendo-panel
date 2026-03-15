@@ -105,6 +105,7 @@ const getStatusConfig = (isEN: boolean): Record<string, any> => ({
 function MonthlyCalendarView() {
   const toast = useToast()
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [apts, setApts] = useState<any[]>([])
   const [ninos, setNinos] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
