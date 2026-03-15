@@ -9,43 +9,43 @@ import { Search, X, Copy, Check } from 'lucide-react'
 
 const DIAGNOSTICOS = [
   // Neurodesarrollo (más relevantes para Jugando Aprendo)
-  { cie11: '6A02', dsm5: '299.00', nombre: 'Trastorno del Espectro Autista (TEA)',           area: 'Neurodesarrollo', desc: 'Déficits persistentes en comunicación e interacción social, patrones restrictivos y repetitivos de comportamiento.' },
-  { cie11: '6A02.0', dsm5: '299.00', nombre: 'TEA sin discapacidad intelectual',            area: 'Neurodesarrollo', desc: 'Sin discapacidad intelectual acompañante ni trastorno del lenguaje funcional.' },
-  { cie11: '6A02.1', dsm5: '299.00', nombre: 'TEA con discapacidad intelectual',            area: 'Neurodesarrollo', desc: 'Con discapacidad intelectual acompañante.' },
-  { cie11: '6A05',   dsm5: '314.01', nombre: 'TDAH — Presentación combinada',               area: 'Neurodesarrollo', desc: 'Inatención + hiperactividad/impulsividad durante ≥6 meses.' },
-  { cie11: '6A05.0', dsm5: '314.00', nombre: 'TDAH — Predominio inatento',                  area: 'Neurodesarrollo', desc: 'Patrón persistente de inatención sin hiperactividad significativa.' },
-  { cie11: '6A05.1', dsm5: '314.01', nombre: 'TDAH — Predominio hiperactivo/impulsivo',     area: 'Neurodesarrollo', desc: 'Hiperactividad e impulsividad sin patrón de inatención significativa.' },
-  { cie11: '6A00',   dsm5: '319',    nombre: 'Discapacidad Intelectual (DI)',                area: 'Neurodesarrollo', desc: 'Déficits en funcionamiento intelectual y conducta adaptativa.' },
-  { cie11: '6A00.0', dsm5: '319',    nombre: 'DI leve',                                     area: 'Neurodesarrollo', desc: 'CI aprox. 50-69. Habilidades académicas con apoyo.' },
+  { cie11: '6A02', dsm5: '299.00', nombre: 'Autism Spectrum Disorder (ASD)',           area: 'Neurodesarrollo', desc: 'Déficits persistentes en comunicación e interacción social, patrones restrictivos y repetitivos de comportamiento.' },
+  { cie11: '6A02.0', dsm5: '299.00', nombre: 'ASD without intellectual disability',            area: 'Neurodesarrollo', desc: 'Sin discapacidad intelectual acompañante ni trastorno del lenguaje funcional.' },
+  { cie11: '6A02.1', dsm5: '299.00', nombre: 'ASD with intellectual disability',            area: 'Neurodesarrollo', desc: 'Con discapacidad intelectual acompañante.' },
+  { cie11: '6A05',   dsm5: '314.01', nombre: 'ADHD — Combined presentation',               area: 'Neurodesarrollo', desc: 'Inatención + hiperactividad/impulsividad durante ≥6 meses.' },
+  { cie11: '6A05.0', dsm5: '314.00', nombre: 'ADHD — Predominantly inattentive',                  area: 'Neurodesarrollo', desc: 'Patrón persistente de inatención sin hiperactividad significativa.' },
+  { cie11: '6A05.1', dsm5: '314.01', nombre: 'ADHD — Predominantly hyperactive/impulsive',     area: 'Neurodesarrollo', desc: 'Hiperactividad e impulsividad sin patrón de inatención significativa.' },
+  { cie11: '6A00',   dsm5: '319',    nombre: 'Intellectual Disability (ID)',                area: 'Neurodesarrollo', desc: 'Déficits en funcionamiento intelectual y conducta adaptativa.' },
+  { cie11: '6A00.0', dsm5: '319',    nombre: 'Mild ID',                                     area: 'Neurodesarrollo', desc: 'CI aprox. 50-69. Habilidades académicas con apoyo.' },
   { cie11: '6A00.1', dsm5: '319',    nombre: 'DI moderada',                                 area: 'Neurodesarrollo', desc: 'CI aprox. 35-49. Requiere apoyo sustancial.' },
   { cie11: '6A00.2', dsm5: '319',    nombre: 'DI grave',                                    area: 'Neurodesarrollo', desc: 'CI aprox. 20-34. Requiere apoyo extenso.' },
-  { cie11: '6A01',   dsm5: '315.39', nombre: 'Trastorno del Desarrollo del Lenguaje',       area: 'Neurodesarrollo', desc: 'Dificultades persistentes en la adquisición y uso del lenguaje.' },
-  { cie11: '6A01.0', dsm5: '315.32', nombre: 'Trastorno del lenguaje mixto receptivo-expresivo', area: 'Neurodesarrollo', desc: 'Comprensión y expresión del lenguaje afectadas.' },
+  { cie11: '6A01',   dsm5: '315.39', nombre: 'Developmental Language Disorder',       area: 'Neurodesarrollo', desc: 'Dificultades persistentes en la adquisición y uso del lenguaje.' },
+  { cie11: '6A01.0', dsm5: '315.32', nombre: 'Mixed receptive-expressive language disordvo', area: 'Neurodesarrollo', desc: 'Comprensión y expresión del lenguaje afectadas.' },
   { cie11: '6A06',   dsm5: '307.3',  nombre: 'Trastorno de Movimientos Estereotipados',     area: 'Neurodesarrollo', desc: 'Movimientos repetitivos y aparentemente impulsados que interfieren el funcionamiento.' },
-  { cie11: '8A05.00',dsm5: '307.20', nombre: 'Trastorno de Tics Provisional',               area: 'Neurodesarrollo', desc: 'Tics motores o vocales simples o múltiples durante <12 meses.' },
-  { cie11: '8A05.01',dsm5: '307.22', nombre: 'Trastorno de Tics Motor Crónico',             area: 'Neurodesarrollo', desc: 'Tics motores múltiples, >12 meses.' },
-  { cie11: '8A05.02',dsm5: '307.23', nombre: 'Síndrome de Tourette',                        area: 'Neurodesarrollo', desc: 'Tics motores múltiples + al menos 1 tic vocal.' },
+  { cie11: '8A05.00',dsm5: '307.20', nombre: 'Provisional Tic Disorder',               area: 'Neurodesarrollo', desc: 'Tics motores o vocales simples o múltiples durante <12 meses.' },
+  { cie11: '8A05.01',dsm5: '307.22', nombre: 'Chronic Motor Tic Disorder',             area: 'Neurodesarrollo', desc: 'Tics motores múltiples, >12 meses.' },
+  { cie11: '8A05.02',dsm5: '307.23', nombre: 'Tourette Syndrome',                        area: 'Neurodesarrollo', desc: 'Tics motores múltiples + al menos 1 tic vocal.' },
   // Ansiedad y emocional
-  { cie11: '6B00',   dsm5: '300.02', nombre: 'Trastorno de Ansiedad Generalizada (TAG)',    area: 'Ansiedad', desc: 'Ansiedad y preocupación excesivas, difíciles de controlar, sobre múltiples eventos.' },
-  { cie11: '6B01',   dsm5: '300.23', nombre: 'Trastorno de Ansiedad Social (Fobia Social)', area: 'Ansiedad', desc: 'Miedo intenso a situaciones sociales de evaluación por otros.' },
-  { cie11: '6B03',   dsm5: '309.21', nombre: 'Trastorno de Ansiedad por Separación',        area: 'Ansiedad', desc: 'Miedo o ansiedad excesivos ante la separación de figuras de apego.' },
-  { cie11: '6B04',   dsm5: '300.29', nombre: 'Fobia Específica',                            area: 'Ansiedad', desc: 'Miedo o ansiedad intensos ante un objeto o situación específica.' },
+  { cie11: '6B00',   dsm5: '300.02', nombre: 'Generalized Anxiety Disorder (GAD)',    area: 'Ansiedad', desc: 'Ansiedad y preocupación excesivas, difíciles de controlar, sobre múltiples eventos.' },
+  { cie11: '6B01',   dsm5: '300.23', nombre: 'Social Anxiety Disorder (Social Phobia)', area: 'Ansiedad', desc: 'Miedo intenso a situaciones sociales de evaluación por otros.' },
+  { cie11: '6B03',   dsm5: '309.21', nombre: 'Separation Anxiety Disorder',        area: 'Ansiedad', desc: 'Miedo o ansiedad excesivos ante la separación de figuras de apego.' },
+  { cie11: '6B04',   dsm5: '300.29', nombre: 'Specific Phobia',                            area: 'Ansiedad', desc: 'Miedo o ansiedad intensos ante un objeto o situación específica.' },
   // TOC y relacionados
   { cie11: '6B20',   dsm5: '300.3',  nombre: 'TOC — Trastorno Obsesivo Compulsivo',         area: 'TOC', desc: 'Obsesiones y/o compulsiones que consumen tiempo y causan malestar significativo.' },
   // Apego y estrés
-  { cie11: '6B44',   dsm5: '313.89', nombre: 'Trastorno de Apego Reactivo',                 area: 'Trauma', desc: 'Patrón de comportamiento inhibido, emocionalmente retraído ante cuidadores.' },
-  { cie11: '6B43',   dsm5: '313.89', nombre: 'Trastorno de Relación Social Desinhibida',   area: 'Trauma', desc: 'Comportamiento de acercamiento excesivo a extraños.' },
+  { cie11: '6B44',   dsm5: '313.89', nombre: 'Reactive Attachment Disorder',                 area: 'Trauma', desc: 'Patrón de comportamiento inhibido, emocionalmente retraído ante cuidadores.' },
+  { cie11: '6B43',   dsm5: '313.89', nombre: 'Disinhibited Social Engagement Disorder',   area: 'Trauma', desc: 'Comportamiento de acercamiento excesivo a extraños.' },
   // Neurológico
-  { cie11: '8A60',   dsm5: '345.x',  nombre: 'Epilepsia (Trastornos Epilépticos)',          area: 'Neurológico', desc: 'Predisposición del cerebro a generar crisis epilépticas de forma recurrente.' },
+  { cie11: '8A60',   dsm5: '345.x',  nombre: 'Epilepsy (Epileptic Disorders)',          area: 'Neurological', desc: 'Predisposición del cerebro a generar crisis epilépticas de forma recurrente.' },
   // Comunicación
-  { cie11: '6A80',   dsm5: '315.35', nombre: 'Tartamudeo (Disfluencia del habla infantil)', area: 'Comunicación', desc: 'Alteraciones de la fluidez normal del habla con sonidos/sílabas repetidos.' },
+  { cie11: '6A80',   dsm5: '315.35', nombre: 'Stuttering (Childhood-onset fluency disorder)', area: 'Communication', desc: 'Alteraciones de la fluidez normal del habla con sonidos/sílabas repetidos.' },
 ]
 
 const getAreas = (isEN: boolean) => ['All', 'Neurodevelopment', 'Anxiety', 'OCD', 'Trauma', 'Neurological', 'Communication']
 // Map EN area back to ES for filtering (data uses ES keys)
 const areaEnToEs: Record<string, string> = {
   'All': 'Todos', 'Neurodevelopment': 'Neurodesarrollo', 'Anxiety': 'Ansiedad',
-  'OCD': 'TOC', 'Trauma': 'Trauma', 'Neurological': 'Neurológico', 'Communication': 'Comunicación'
+  'OCD': 'TOC', 'Trauma': 'Trauma', 'Neurological': 'Neurological', 'Communication': 'Communication'
 }
 
 export default function DiagnosticoBuscador() {
@@ -111,7 +111,7 @@ export default function DiagnosticoBuscador() {
       <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
         {filtrado.length === 0 && (
           <p className="text-sm text-center py-8" style={{ color: 'var(--text-muted)' }}>
-            No se encontraron diagnósticos para "{q}"
+            No diagnoses found for "{q}"
           </p>
         )}
         {filtrado.map(d => (
@@ -151,7 +151,7 @@ export default function DiagnosticoBuscador() {
         ))}
       </div>
       <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
-        {filtrado.length} de {DIAGNOSTICOS.length} diagnósticos · CIE-11 (OMS, 2022) + DSM-5-TR (APA, 2022)
+        {filtrado.length} of {DIAGNOSTICOS.length} diagnoses · ICD-11 (OMS, 2022) + DSM-5-TR (APA, 2022)
       </p>
     </div>
   )

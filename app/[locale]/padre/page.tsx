@@ -191,7 +191,7 @@ export default function ParentDashboard() {
   // La clínica agenda las citas directamente desde el panel administrativo
 
   const handleCancelAppointment = async (appointmentId: string, isReschedule: boolean = false) => {
-    if(!confirm("¿Seguro que deseas cancelar esta cita? Si necesitás cambiar el horario, contactá al centro.")) return
+    if(!confirm("Are you sure you want to cancel this appointment? If you need to reschedule, please contact the centro.")) return
 
     setBookingLoading(true)
     try {
@@ -211,10 +211,10 @@ export default function ParentDashboard() {
     
     const name = e.target.name.value
     const dob = e.target.dob.value
-    const diagnosis = e.target.diagnosis?.value || 'En evaluación'
+    const diagnosis = e.target.diagnosis?.value || 'In evaluation'
     
     if(!profile?.id) {
-        alert("❌ Error: No se encontró tu perfil")
+        alert('❌ Error: Your profile was not found')
         return
     }
 
@@ -236,7 +236,7 @@ export default function ParentDashboard() {
             name: name.trim(), 
             birth_date: dob,
             age: age,
-            diagnosis: diagnosis || 'En evaluación'
+            diagnosis: diagnosis || 'In evaluation'
         }]).select()
 
         if (error) {
@@ -291,12 +291,12 @@ export default function ParentDashboard() {
     const confirmPass = e.target.confirmPassword.value
     
     if (newPass !== confirmPass) {
-      alert("❌ Las contraseñas no coinciden")
+      alert('❌ Passwords do not match')
       return
     }
     
     if (newPass.length < 6) {
-      alert("❌ La contraseña debe tener al menos 6 caracteres")
+      alert('❌ Password must be at least 6 characters')
       return
     }
     
@@ -304,7 +304,7 @@ export default function ParentDashboard() {
       const { error } = await supabase.auth.updateUser({ password: newPass })
       if (error) throw error
       
-      triggerCelebration('🔐 Contraseña actualizada')
+      triggerCelebration('🔐 Password updated')
       setShowChangePass(false)
     } catch (error: any) {
       alert("Error: " + error.message)
@@ -352,7 +352,7 @@ export default function ParentDashboard() {
             </h1>
             <p className="text-slate-500 text-base leading-relaxed mb-8">
               Estamos felices de tenerte en <strong className="text-violet-600">Jugando Aprendo</strong>.
-              Para comenzar, necesitamos registrar a tu hijo/a y podrás acceder a todo el sistema de seguimiento con IA.
+              To get started, we need to register your child so you can access the full progress tracking systemon IA.
             </p>
 
             {/* Features preview */}
@@ -383,7 +383,7 @@ export default function ParentDashboard() {
 
           {/* Help contact */}
           <p className="text-center text-sm text-slate-400 mt-6">
-            ¿Tienes dudas? Escríbenos:{' '}
+            Questions? Write to us:{' '}
             <a href="https://wa.me/51924807183" className="text-violet-600 font-bold hover:underline">
               +51 924 807 183
             </a>
@@ -425,7 +425,7 @@ export default function ParentDashboard() {
                   </div>
                   <div className="bg-violet-50 border-2 border-violet-100 rounded-2xl p-4">
                     <p className="text-xs text-violet-700 font-bold flex items-center gap-2">
-                      <Sparkles size={14}/> La edad se calculará automáticamente
+                      <Sparkles size={14}/> Age will be calculated automatically
                     </p>
                   </div>
                   <div className="flex gap-3 pt-2">
@@ -775,7 +775,7 @@ export default function ParentDashboard() {
 
                             <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-4">
                                 <p className="text-xs text-blue-700 font-bold flex items-center gap-2">
-                                    <Sparkles size={14}/> La edad se calculará automáticamente
+                                    <Sparkles size={14}/> Age will be calculated automatically
                                 </p>
                             </div>
                             

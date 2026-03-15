@@ -232,7 +232,7 @@ const generarPlan = async () => {
                     <p className="text-sm text-slate-600">{act.descripcion}</p>
                     <div className="bg-violet-50 rounded-xl p-3">
                       <p className="text-xs font-bold text-violet-700 mb-1 flex items-center gap-1">
-                        <Target size={12} /> ¿Por qué importa?
+                        <Target size={12} /> Why does it matter?
                       </p>
                       <p className="text-xs text-violet-600">{act.por_que_importa}</p>
                     </div>

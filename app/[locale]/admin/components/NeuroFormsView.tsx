@@ -594,7 +594,7 @@ export default function NeuroFormsView() {
         <div>
           <h2 className="font-black text-2xl md:text-3xl text-slate-800 tracking-tight flex items-center gap-3">
             <div className="p-2.5 bg-indigo-100 rounded-2xl"><Brain className="text-indigo-600" size={28}/></div>
-            NeuroFormas Clínicas
+            Clinical NeuroForms
           </h2>
           <p className="text-slate-400 text-sm font-medium mt-1 ml-1">
             Specialized forms · Real-time AI analysis · ADHD, ASD, Sensory and more
@@ -667,7 +667,7 @@ export default function NeuroFormsView() {
                           <Clock size={10}/>{form.estimatedMinutes} min
                         </p>
                         <p className="text-[9px] font-bold opacity-70 mt-1">
-                          {form.targetRole === 'parent' ? ('👨‍👩 For parents') : form.targetRole === 'both' ? '🔄 Ambos' : '🩺 Clínico'}
+                          {form.targetRole === 'parent' ? ('👨‍👩 For parents') : form.targetRole === 'both' ? '🔄 Both' : '🩺 Clínico'}
                         </p>
                       </div>
                     </div>

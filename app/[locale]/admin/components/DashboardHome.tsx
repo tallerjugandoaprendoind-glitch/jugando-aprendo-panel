@@ -413,7 +413,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                   <p className="text-sm font-bold text-slate-400">{t('dashboard.sinActividad')}</p>
                   <button onClick={() => navigateTo('evaluaciones')}
                     className="mt-3 text-xs font-bold text-orange-500 hover:underline">
-                    Registrar sesión →
+                    Record session →
                   </button>
                 </div>
               )

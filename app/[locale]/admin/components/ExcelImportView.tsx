@@ -83,7 +83,7 @@ export default function ExcelImportView() {
         const row = rows[i]
         const nombre = (row['nombre'] || row['Nombre'] || '').trim()
         if (!nombre) {
-          res.errores.push({ fila: i + 2, motivo: 'Nombre vacío' })
+          res.errores.push({ fila: i + 2, motivo: 'Empty name' })
           continue
         }
         try {

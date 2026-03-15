@@ -18,8 +18,8 @@ export function calcularEdad(birthDate: string | Date | null): string {
   if (months < 0) { years--; months += 12 }
   
   if (years === 0) return `${months} mes${months !== 1 ? 'es' : ''}`
-  if (months === 0) return `${years} año${years !== 1 ? 's' : ''}`
-  return `${years} año${years !== 1 ? 's' : ''} ${months} mes${months !== 1 ? 'es' : ''}`
+  if (months === 0) return `${years} year${years !== 1 ? 's' : ''}`
+  return `${years} year${years !== 1 ? 's' : ''} ${months} month${months !== 1 ? 's' : ''}`
 }
 
 /**

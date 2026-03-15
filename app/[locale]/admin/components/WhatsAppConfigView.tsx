@@ -85,7 +85,7 @@ export default function WhatsAppConfigView() {
           </p>
           {!configured && (
             <p className="text-xs text-amber-700 mt-0.5">
-              Seguí los pasos de abajo para activar Telegram (recomendado — gratis y confiable).
+              Follow the steps below to activate Telegram (recommended — free and reliable).
             </p>
           )}
         </div>
@@ -145,7 +145,7 @@ export default function WhatsAppConfigView() {
 
           <div className="rounded-xl border p-5 space-y-4" style={{ borderColor: 'var(--card-border)', background: 'var(--card)' }}>
             <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-              ⚙️ Configuración paso a paso
+              ⚙️ Step-by-step configuration
             </p>
 
             {[

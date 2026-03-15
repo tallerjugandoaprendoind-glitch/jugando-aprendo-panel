@@ -94,16 +94,16 @@ function AIBlock({ analysis }: { analysis: any }) {
     { k: 'nivel_alerta', l: 'Nivel de Alerta' },
     { k: 'nivel_severidad', l: 'Nivel de Severidad' },
     { k: 'indicadores_clave', l: 'Indicadores Clave' },
-    { k: 'areas_fortaleza', l: 'Áreas de Fortaleza' },
-    { k: 'areas_trabajo', l: 'Áreas a Trabajar' },
-    { k: 'areas_prioridad', l: 'Áreas Prioritarias' },
+    { k: 'areas_fortaleza', l: 'Strength Areas' },
+    { k: 'areas_trabajo', l: 'Work Areas' },
+    { k: 'areas_prioridad', l: 'Priority Areas' },
     { k: 'recomendaciones', l: 'Recomendaciones' },
-    { k: 'recomendaciones_ia', l: 'Recomendaciones Terapéuticas' },
-    { k: 'recomendaciones_intervencion', l: 'Plan de Intervención' },
+    { k: 'recomendaciones_ia', l: 'Therapeutic Recommendations' },
+    { k: 'recomendaciones_intervencion', l: 'Intervention Plan' },
     { k: 'implicaciones_educativas', l: 'Implicaciones Educativas' },
     { k: 'plan_intervencion_conductual', l: 'Plan Conductual' },
     { k: 'fortalezas_conductuales', l: 'Fortalezas Conductuales' },
-    { k: 'areas_preocupacion', l: 'Áreas de Preocupación' },
+    { k: 'areas_preocupacion', l: 'Concern Areas' },
     { k: 'mensaje_padres', l: 'Parent Message' },
     { k: 'informe_padres', l: 'Parent Report' },
   ]
@@ -251,9 +251,9 @@ function EvalDetail({ r, tipo }: { r: any; tipo: string }) {
   const d = r.respuestas || r.responses || r.datos || r
   const metricMap: Record<string, { l: string; k: string }[]> = {
     'BRIEF-2': [
-      { k: 'inhibicion', l: 'Inhibición' }, { k: 'flexibilidad', l: 'Flexibilidad' },
+      { k: 'inhibicion', l: 'Inhibition' }, { k: 'flexibilidad', l: 'Flexibility' },
       { k: 'emocional', l: 'Control Emocional' }, { k: 'memoria', l: 'Memoria de Trabajo' },
-      { k: 'planificacion', l: 'Planificación' }, { k: 'total_brief', l: 'Total BRIEF-2' },
+      { k: 'planificacion', l: 'Planning' }, { k: 'total_brief', l: 'Total BRIEF-2' },
       { k: 'nivel_riesgo', l: 'Nivel de Riesgo' },
     ],
     'ADOS-2': [
@@ -262,8 +262,8 @@ function EvalDetail({ r, tipo }: { r: any; tipo: string }) {
       { k: 'puntuacion_total', l: 'Afecto Social Total' }, { k: 'nivel_severidad', l: 'Severidad' },
     ],
     'Vineland-3': [
-      { k: 'puntuacion_comunicacion', l: 'Communication' }, { k: 'puntuacion_socializacion', l: 'Socialización' },
-      { k: 'puntuacion_vida_diaria', l: 'Vida Diaria' }, { k: 'indice_conducta_adaptativa', l: 'Índice Global' },
+      { k: 'puntuacion_comunicacion', l: 'Communication' }, { k: 'puntuacion_socializacion', l: 'Socialization' },
+      { k: 'puntuacion_vida_diaria', l: 'Daily Living' }, { k: 'indice_conducta_adaptativa', l: 'Índice Global' },
     ],
     'WISC-V': [
       { k: 'icv_total', l: 'ICV' }, { k: 'icv_percentil', l: 'Percentil ICV' },
@@ -272,10 +272,10 @@ function EvalDetail({ r, tipo }: { r: any; tipo: string }) {
       { k: 'imt_total', l: 'IMT' }, { k: 'imt_percentil', l: 'Percentil IMT' },
       { k: 'ivp_total', l: 'IVP' }, { k: 'ivp_percentil', l: 'Percentil IVP' },
       { k: 'ci_total', l: 'CI Total' }, { k: 'ci_percentil', l: 'Percentil CI' },
-      { k: 'clasificacion_ci', l: 'Clasificación' },
+      { k: 'clasificacion_ci', l: 'Classification' },
     ],
     'BASC-3': [
-      { k: 'indice_sintomas_conductuales', l: 'Índice de Síntomas' },
+      { k: 'indice_sintomas_conductuales', l: 'Symptom Index' },
       { k: 'perfil_riesgo', l: 'Perfil de Riesgo' },
     ],
   }
@@ -321,7 +321,7 @@ function RecordCard({ item }: { item: any }) {
   const hasFull = !!item._fullData
 
   const renderDetail = () => {
-    if (item._type === 'Sesión ABA' || item._type === 'ABA Session') return <ABADetail r={item._fullData} />
+    if (item._type === 'ABA Session' || item._type === 'ABA Session') return <ABADetail r={item._fullData} />
     if (item._type === 'Anamnesis') return <AnamnesisDetail r={item._fullData} />
     if (item._type === 'Visita Domiciliaria') return <EntornoDetail r={item._fullData} />
     if (['BRIEF-2','ADOS-2','Vineland-3','WISC-V','BASC-3'].includes(item._type)) return <EvalDetail r={item._fullData} tipo={item._type} />
@@ -426,7 +426,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
         </div>
         <h3 className="font-black text-slate-800 text-lg mb-2">{t('especialista.resumenClinico')}</h3>
         <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">
-          Genera un análisis completo del paciente con perfil clínico, áreas prioritarias, plan de tratamiento personalizado y estrategias para el hogar.
+          Generate a complete patient analysis with clinical profile, priority areas, treatment planatamiento personalizado y estrategias para el hogar.
         </p>
         {records.length === 0 ? (
           <p className="text-sm text-slate-400 italic">{t('pacientes.sinRegistros').split('para')[0]} resumen.</p>
@@ -503,7 +503,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
         {summary.perfil_desafios?.length > 0 && (
           <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4">
             <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-              <AlertCircle size={10} /> Desafíos
+              <AlertCircle size={10} /> Challenges
             </p>
             <div className="space-y-2">
               {summary.perfil_desafios.map((f: string, i: number) => (
@@ -602,7 +602,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
       {summary.mensaje_equipo && (
         <div className="bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl p-4">
           <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-            <Shield size={10} /> Mensaje al Equipo Terapéutico
+            <Shield size={10} /> Message to Therapy Team
           </p>
           <p className="text-sm text-indigo-900 leading-relaxed italic">"{summary.mensaje_equipo}"</p>
         </div>
@@ -669,13 +669,13 @@ export default function MisPacientes() {
 
       ;(anamR.data || []).forEach((r: any) => combined.push({
         id: r.id, _type: 'Anamnesis', _date: r.fecha_creacion?.split('T')[0],
-        _content: r.datos?.motivo_principal || 'Historia clínica inicial',
+        _content: r.datos?.motivo_principal || 'Initial clinical history',
         _fullData: r, _wordReport: findWord('anamnesis'),
       }))
 
       ;(abaR.data || []).forEach((r: any) => combined.push({
-        id: r.id, _type: 'Sesión ABA', _date: r.fecha_sesion,
-        _content: r.datos?.objetivo_principal || r.datos?.conducta || 'Sesión ABA',
+        id: r.id, _type: 'ABA Session', _date: r.fecha_sesion,
+        _content: r.datos?.objetivo_principal || r.datos?.conducta || 'ABA Session',
         _fullData: r, _wordReport: null,
       }))
 
@@ -698,13 +698,13 @@ export default function MisPacientes() {
         const snippets: Record<string, string> = {
           'BRIEF-2': `Riesgo: ${d.nivel_riesgo || '—'}`,
           'ADOS-2': `Severidad: ${d.nivel_severidad || d.severidad || '—'}`,
-          'Vineland-3': `Índice adaptativo: ${d.indice_conducta_adaptativa || '—'}`,
+          'Vineland-3': `Adaptive index: ${d.indice_conducta_adaptativa || '—'}`,
           'WISC-V': `CI Total: ${d.ci_total || '—'}`,
           'BASC-3': `Perfil: ${d.perfil_riesgo || '—'}`,
         }
         combined.push({
           id: r.id || key, _type: tipo, _date: r.created_at?.split('T')[0] || r.fecha_evaluacion,
-          _content: snippets[tipo] || `Evaluación ${tipo} completada`,
+          _content: snippets[tipo] || `${tipo} evaluation completed`,
           _fullData: r, _wordReport: findWord(key),
         })
       })
@@ -958,7 +958,7 @@ export default function MisPacientes() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm text-slate-800">{n.name}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{calcularEdad(n.birth_date, isEN)} · {n.diagnosis || 'Sin diagnóstico'}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{calcularEdad(n.birth_date, true)} · {n.diagnosis || 'Sin diagnóstico'}</p>
                 <p className="text-xs text-slate-400 truncate">{n.profiles?.full_name || 'Sin tutor'}</p>
               </div>
               <div className="flex items-center gap-2">

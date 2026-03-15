@@ -53,10 +53,10 @@ export async function login(formData: FormData) {
     
     // Retornar mensajes amigables
     if (authError.message.includes('Invalid login credentials')) {
-      return { error: 'Correo o contraseña incorrectos' }
+      return { error: 'Incorrect email or password' }
     }
     if (authError.message.includes('Email not confirmed')) {
-      return { error: 'Por favor confirma tu correo electrónico' }
+      return { error: 'Please confirm your email address' }
     }
     
     return { error: authError.message }
@@ -99,7 +99,7 @@ export async function signup(formData: FormData) {
   }
 
   if (password.length < 6) {
-    return { error: 'La contraseña debe tener al menos 6 caracteres' }
+    return { error: 'Password must be at least 6 characters' }
   }
 
   // Registrar usuario en Supabase Auth
@@ -119,7 +119,7 @@ export async function signup(formData: FormData) {
     console.error('Error en signup:', authError)
     
     if (authError.message.includes('User already registered')) {
-      return { error: 'Este correo ya está registrado. Intenta iniciar sesión.' }
+      return { error: 'This email is already registered. Try signing in.' }
     }
     
     return { error: authError.message }

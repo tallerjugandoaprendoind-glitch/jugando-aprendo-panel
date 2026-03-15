@@ -214,7 +214,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
           <div className="px-5 pt-4 pb-2">
             <p className="text-xs font-black text-pink-500 uppercase tracking-widest mb-2">{t('ui.checkBienestar')}</p>
             <p className="text-sm text-slate-700 font-medium leading-relaxed">
-              ¿Cómo te has sentido tú esta semana acompañando el proceso de tu hijo/a?
+              How have you been feeling this week supporting your child's journey?
             </p>
           </div>
           <div className="px-4 pb-4 flex flex-col gap-2">
@@ -453,7 +453,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
         headers: { 'Content-Type': 'application/json', 'x-locale': locale || 'es' },
         body: JSON.stringify({
           question: isEmotional
-            ? `${txt}\n\n[INSTRUCCIÓN: El padre/madre experimenta carga emocional. Valida primero con calidez genuina antes de información clínica.]`
+            ? `${txt}\n\n[INSTRUCTION: The parent is experiencing emotional burden. Validate first with warmth and genuinentes de información clínica.]`
             : txt,
           childId,
           childName,
@@ -569,7 +569,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
               <p className="font-black text-slate-800 text-base">ARIA</p>
               <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                En línea
+                Online
               </span>
               {speaking && (
                 <span className="flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full"
@@ -580,7 +580,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
               )}
             </div>
             <p className="text-xs text-slate-400 font-medium truncate">
-              Asistente clínico IA · {childName ? `Historial de ${childName}` : 'Jugando Aprendo'}
+              AI Clinical Assistant · {childName ? `History: ${childName}` : 'Jugando Aprendo'}
             </p>
           </div>
           {/* Botón silenciar voz */}

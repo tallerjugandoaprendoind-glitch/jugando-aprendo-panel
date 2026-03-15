@@ -163,7 +163,7 @@ function DynamicEvaluationsView() {
           return newState
         })
         
-        alert("✨ ¡Análisis IA completado!");
+        alert("✨ AI Analysis complete!");
 
      } catch (e: any) {
         console.error('💥 Error completo:', e);
@@ -213,46 +213,46 @@ function DynamicEvaluationsView() {
       let message = '';
 
       if (formType === 'aba') {
-        title = `📋 Nuevo reporte de sesión - ${childName}`;
+        title = `📋 New session report - ${childName}`;
         const mensajePadres = datos.mensaje_padres || datos.destacar_positivo || datos.proximos_pasos;
         const objetivo = datos.objetivo_principal || datos.conducta || '';
         const tarea = datos.actividad_casa || datos.instrucciones_padres || datos.tarea_hogar || '';
         if (mensajePadres) {
           message = mensajePadres;
         } else {
-          message = `Sesión del ${fecha} registrada.${objetivo ? ` Trabajamos en: ${objetivo}.` : ''}${tarea ? ` Actividad para casa: ${tarea}` : ''}`;
+          message = `Session on ${fecha} recorded.${objetivo ? ` Trabajamos en: ${objetivo}.` : ''}${tarea ? ` Actividad para casa: ${tarea}` : ''}`;
         }
       } else if (formType === 'anamnesis') {
         title = `📝 Ficha de ingreso completada - ${childName}`;
         const motivo = datos.motivo_principal || datos.expectativas || '';
-        message = `Hemos completado la ficha de ingreso de ${childName} el ${fecha}.${motivo ? ` Motivo: ${motivo}` : ' Pronto comenzaremos con el proceso de evaluación.'}`;
+        message = `We have completed the intake form for ${childName} on ${fecha}.${motivo ? ` Reason: ${motivo}` : ' onto comenzaremos con el proceso de evaluación.'}`;
       } else if (formType === 'entorno_hogar') {
         title = `🏠 Reporte de visita al hogar - ${childName}`;
         const obs = datos.mensaje_padres_entorno || datos.impresion_general || datos.recomendaciones_espacio || '';
-        message = obs || `Realizamos una visita al hogar de ${childName} el ${fecha}. Pronto recibirás el informe con nuestras recomendaciones.`;
+        message = obs || `We conducted a home visit for ${childName} on ${fecha}. You will soon receive the report with nuestras recomendaciones.`;
       } else if (formType === 'brief2') {
-        title = `🧠 Evaluación BRIEF-2 completada - ${childName}`;
+        title = `🧠 BRIEF-2 Assessment completed - ${childName}`;
         const analisis = datos.informe_padres || datos.analisis_ia || datos.recomendaciones_ia || '';
-        message = analisis || `La evaluación BRIEF-2 de ${childName} fue completada el ${fecha}. Evalúa el funcionamiento ejecutivo (atención, memoria de trabajo, flexibilidad cognitiva).`;
+        message = analisis || `The BRIEF-2 assessment for ${childName} was completed on ${fecha}. Evalúa el funcionamiento ejecutivo (atención, memoria de trabajo, flexibilidad cognitiva).`;
       } else if (formType === 'ados2') {
-        title = `🔬 Evaluación ADOS-2 completada - ${childName}`;
+        title = `🔬 ADOS-2 Assessment completed - ${childName}`;
         const informe = datos.informe_familia_ados || datos.recomendaciones_intervencion || '';
-        message = informe || `La evaluación ADOS-2 de ${childName} fue completada el ${fecha}. Te contactaremos para explicar los resultados en detalle.`;
+        message = informe || `The ADOS-2 assessment for ${childName} was completed on ${fecha}. We willcontactaremos para explicar los resultados en detalle.`;
       } else if (formType === 'vineland3') {
-        title = `📊 Evaluación Vineland-3 completada - ${childName}`;
+        title = `📊 Vineland-3 Assessment completed - ${childName}`;
         const informe = datos.informe_padres_vineland || datos.analisis_vineland_ia || '';
-        message = informe || `La evaluación de conducta adaptativa Vineland-3 de ${childName} fue completada el ${fecha}.`;
+        message = informe || `The Vineland-3 adaptive behavior assessment for ${childName} was complcompletada el ${fecha}.`;
       } else if (formType === 'wiscv') {
-        title = `🎯 Evaluación WISC-V completada - ${childName}`;
+        title = `🎯 WISC-V Assessment completed - ${childName}`;
         const informe = datos.informe_padres_wisc || datos.perfil_cognitivo_ia || '';
-        message = informe || `La evaluación cognitiva WISC-V de ${childName} fue completada el ${fecha}.`;
+        message = informe || `The WISC-V cognitive assessment for ${childName} was completed on ${fecha}.`;
       } else if (formType === 'basc3') {
-        title = `📈 Evaluación BASC-3 completada - ${childName}`;
+        title = `📈 BASC-3 Assessment completed - ${childName}`;
         const informe = datos.informe_padres_basc || datos.analisis_basc_ia || '';
-        message = informe || `La evaluación conductual BASC-3 de ${childName} fue completada el ${fecha}.`;
+        message = informe || `The BASC-3 behavioral assessment for ${childName} was completed on ${fecha}.`;
       } else {
-        title = `📄 Nuevo registro clínico - ${childName}`;
-        message = `Se realizó un nuevo registro clínico para ${childName} el ${fecha}.`;
+        title = `📄 New clinical record - ${childName}`;
+        message = `A new clinical record was created for ${childName} on ${fecha}.`;
       }
 
       // 4. Insertar en la tabla notifications
@@ -324,7 +324,7 @@ function DynamicEvaluationsView() {
       // 🔔 NUEVO: ENVIAR NOTIFICACIÓN AL PADRE AUTOMÁTICAMENTE
       await enviarNotificacionPadre(selectedChild, activeForm, respuestas);
 
-      const wantsReport = confirm('✅ ¡Evaluación guardada exitosamente!\n\n¿Deseas generar el Reporte Word ahora?');
+      const wantsReport = confirm('✅ Evaluation saved successfully!\n\nWould you like to generate the Word Report ahora?');
       if (wantsReport) {
         setShowReportModal(true);
       } else {
@@ -424,7 +424,7 @@ function DynamicEvaluationsView() {
                   </h3>
                   
                   <p className="text-slate-500 text-sm md:text-base max-w-xs font-medium leading-relaxed mb-4">
-                      Evaluación profesional estandarizada
+                      Standardized professional evaluation
                   </p>
 
                   <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
@@ -454,7 +454,7 @@ function DynamicEvaluationsView() {
                   </div>
                   <div className="min-w-0 flex-1">
                       <p className="text-blue-300 text-[9px] md:text-[10px] font-black uppercase tracking-widest truncate mb-1">
-                        EVALUACIÓN EN CURSO
+                        EVALUATION IN PROGRESS
                       </p>
                       <h2 className="text-base md:text-xl lg:text-2xl font-black truncate leading-tight">
                         {currentSection?.title}
@@ -592,7 +592,7 @@ function DynamicEvaluationsView() {
                        <div className="space-y-3">
                          <div className="flex items-center justify-between">
                            <span className="text-sm font-bold text-slate-500">
-                             {q.labels?.[0] || 'Mínimo'}
+                             {q.labels?.[0] || 'Minimum'}
                            </span>
                            <div className="flex items-center gap-2">
                              <span className="text-3xl font-black text-blue-600">
@@ -601,7 +601,7 @@ function DynamicEvaluationsView() {
                              <span className="text-sm text-slate-400">/ {q.max || 5}</span>
                            </div>
                            <span className="text-sm font-bold text-slate-500">
-                             {q.labels?.[q.labels.length - 1] || 'Máximo'}
+                             {q.labels?.[q.labels.length - 1] || 'Maximum'}
                            </span>
                          </div>
                          <input 
@@ -692,7 +692,7 @@ function DynamicEvaluationsView() {
                className="px-6 md:px-8 py-3 md:py-4 font-black text-sm md:text-base text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2"
              >
                <ChevronLeft size={18}/>
-               Atrás
+               Back
              </button>
              
              {currentStep < (formConfig!.length - 1) ? (
@@ -735,7 +735,7 @@ function DynamicEvaluationsView() {
              childName={listaNinos.find(n => n.id === selectedChild)?.name || ''}
              evaluationType={activeForm!}
              evaluationData={respuestas}
-             evaluationId={savedEvaluationId!}  // <--- CORRECCIÓN AQUÍ (Signo !)
+             evaluationId={savedEvaluationId!}  // <--- FIX (! operator)
              compact={false}
              onClose={() => {
                setShowReportModal(false);

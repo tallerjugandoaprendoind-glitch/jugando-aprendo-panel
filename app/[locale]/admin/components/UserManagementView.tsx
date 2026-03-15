@@ -631,7 +631,7 @@ export default function UserManagementView() {
                         <button onClick={() => { setEditingTokensFor(user.id); setNewTokens(user.profile?.tokens || 0) }}
                           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                           style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
-                          <Ticket size={12} /> Editar tokens
+                          <Ticket size={12} /> Edit tokens
                         </button>
                       )}
 
@@ -757,7 +757,7 @@ export default function UserManagementView() {
               <button onClick={() => setLinkingParent(null)} className="p-1.5 rounded-lg hover:opacity-80" style={{ color: 'var(--text-muted)' }}><X size={16} /></button>
             </div>
             <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>
-              Padre/Tutor: <strong style={{ color: 'var(--text-primary)' }}>{linkingParent.profile?.full_name || linkingParent.email}</strong>
+              Guardian: <strong style={{ color: 'var(--text-primary)' }}>{linkingParent.profile?.full_name || linkingParent.email}</strong>
             </p>
             <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
               If the patient already has a guardian, they will be replaced. For dual-guardian access, create two parent accounts and link them separately.
@@ -782,7 +782,7 @@ export default function UserManagementView() {
               className="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-white"
               style={{ background: '#db2777' }}>
               {savingLink ? <Loader2 size={16} className="animate-spin" /> : <Link2 size={16} />}
-              Vincular
+              Link
             </button>
           </div>
         </div>

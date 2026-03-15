@@ -63,9 +63,9 @@ export default function LoginPage(props: PageProps) {
       }
     } catch (err: any) {
       const msg = err.message || ''
-      if (msg.includes('Invalid login credentials')) setErrorMessage('Correo o contraseña incorrectos.')
+      if (msg.includes('Invalid login credentials')) setErrorMessage('Incorrect email or password.')
       else if (msg.includes('Email not confirmed')) setErrorMessage('Cuenta no confirmada. Contacta al administrador.')
-      else if (msg.includes('User already registered')) setErrorMessage('Este correo ya está registrado.')
+      else if (msg.includes('User already registered')) setErrorMessage('This email is already registered.')
       else setErrorMessage(msg || 'Error al procesar la solicitud.')
       setIsLoading(false)
     }
@@ -160,14 +160,14 @@ export default function LoginPage(props: PageProps) {
               Tu hijo merece<br/><span style={{ color: '#a5b4fc' }}>lo mejor.</span>
             </h2>
             <p style={{ color: 'rgba(255,255,255,.55)', fontSize: 15, lineHeight: 1.75, marginBottom: 44, maxWidth: 340 }}>
-              Plataforma de gestión clínica ABA potenciada con Inteligencia Artificial para el seguimiento real de tu hijo.
+              ABA clinical management platform powered by Artificial Intelligence for real-time progress tracking tu hijo.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { icon: '🧩', title: 'Formularios TEA y TDAH', desc: 'BRIEF-2, ADOS-2, WISC-V y más' },
+                { icon: '🧩', title: 'ASD and ADHD Forms', desc: 'BRIEF-2, ADOS-2, WISC-V and more' },
                 { icon: '🤖', title: 'AI Analysis with Gemini', desc: 'Automatic clinical reports' },
-                { icon: '📊', title: 'Progreso en tiempo real', desc: 'Gráficos y seguimiento visual' },
+                { icon: '📊', title: 'Real-time progress', desc: 'Charts and visual tracking' },
                 { icon: '💙', title: 'Portal para familias', desc: 'Citas, formularios y asistente IA' },
               ].map(({ icon, title, desc }) => (
                 <div key={title} className="lp-card">
@@ -201,7 +201,7 @@ export default function LoginPage(props: PageProps) {
               {isSignUp ? 'Bienvenido al equipo' : 'Ingresa a tu cuenta'}
             </h1>
             <p style={{ fontSize: 14, color: '#6b7280', marginBottom: 28 }}>
-              {isSignUp ? 'Completa los datos para comenzar' : 'Continúa el seguimiento de tu hijo'}
+              {isSignUp ? 'Completa los datos para comenzar' : 'Continue tracking your child\'s progress'}
             </p>
 
             <form onSubmit={handleSubmit}>
@@ -222,7 +222,7 @@ export default function LoginPage(props: PageProps) {
               <div className="lp-field">
                 <label>{t('auth.password')}</label>
                 <Lock size={15} className="lp-icon" />
-                <input name="password" type={showPassword ? 'text' : 'password'} placeholder={isSignUp ? 'Mínimo 6 caracteres' : '••••••••'} required minLength={6} style={{ paddingRight: 44 }} />
+                <input name="password" type={showPassword ? 'text' : 'password'} placeholder={isSignUp ? 'Min. 6 caracteres' : '••••••••'} required minLength={6} style={{ paddingRight: 44 }} />
                 <button type="button" className="lp-eye" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
@@ -231,14 +231,14 @@ export default function LoginPage(props: PageProps) {
               {!isSignUp && (
                 <button type="button" onClick={() => setShowForgotInfo(!showForgotInfo)}
                   style={{ background: 'none', border: 'none', color: '#4f46e5', fontSize: 13, fontWeight: 600, cursor: 'pointer', marginBottom: 14, padding: 0, fontFamily: 'inherit', display: 'block' }}>
-                  ¿Olvidaste tu contraseña?
+                  Forgot your password?
                 </button>
               )}
 
               {showForgotInfo && (
                 <div className="lp-forgot">
-                  <p>Comunícate con <strong>Jugando Aprendo</strong> {t('auth.restablecen')}</p>
-                  <a href="https://wa.me/51924807183?text=Hola,%20olvidé%20mi%20contraseña." target="_blank" rel="noopener noreferrer">
+                  <p>Contact <strong>Jugando Aprendo</strong> {t('auth.restablecen')}</p>
+                  <a href="https://wa.me/51924807183?text=Hello,%20I%20forgot%20my%20password." target="_blank" rel="noopener noreferrer">
                     <MessageCircle size={14} /> Contactar por WhatsApp
                   </a>
                 </div>
@@ -287,7 +287,7 @@ export default function LoginPage(props: PageProps) {
               <span style={{ fontSize: 14, color: '#6b7280' }}>{isSignUp ? '¿Ya tienes cuenta? ' : '¿Primera vez? '}</span>
               <button onClick={() => { setIsSignUp(!isSignUp); setErrorMessage(''); setShowForgotInfo(false) }}
                 style={{ background: 'none', border: 'none', color: '#4f46e5', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                {isSignUp ? 'Iniciar sesión' : 'Crear una cuenta'}
+                {isSignUp ? 'Sign in' : 'Create an account'}
               </button>
             </div>
 

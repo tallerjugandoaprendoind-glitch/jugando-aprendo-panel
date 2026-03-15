@@ -121,12 +121,12 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
       {step === 'idle' && (
         <div className="p-5 space-y-4">
           <p className="text-xs text-slate-500 leading-relaxed">
-            Ingresá tu número de WhatsApp con el código de país para recibir alertas importantes del centro.
+            Enter your WhatsApp number with country code to receive important alerts from the center.
           </p>
 
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
-              Número WhatsApp
+              WhatsApp Number
             </label>
             <input
               type="tel"
@@ -137,13 +137,13 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
             />
             {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
             <p className="text-[10px] text-slate-400">
-              Perú: +51 · Colombia: +57 · México: +52 · España: +34
+              Peru: +51 · Colombia: +57 · Mexico: +52 · Spain: +34
             </p>
           </div>
 
           {saved && (
             <div className="bg-green-50 border border-green-200 rounded-2xl p-3 text-xs text-green-700 font-semibold text-center">
-              ✅ Número guardado. Ya estás suscrito a las notificaciones.
+              ✅ Number saved. You are now subscribed to notifications.
             </div>
           )}
 
@@ -157,7 +157,7 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
           </button>
 
           <p className="text-[10px] text-slate-400 text-center leading-relaxed">
-            Solo recibirás alertas del centro. Tu número no se comparte con terceros.
+            You will only receive alerts from the center. Your number is not shared with third parties.
           </p>
         </div>
       )}

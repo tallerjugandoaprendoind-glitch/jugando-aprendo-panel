@@ -586,7 +586,7 @@ export default function StoreManagementView() {
                         <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
                           {order.parent_phone && <span className="flex items-center gap-1"><Phone size={10} />{order.parent_phone}</span>}
                           <span>{new Date(order.created_at).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
-                          <span>{order.store_order_items?.length || 0} artículo(s)</span>
+                          <span>{order.store_order_items?.length || 0} item(s)</span>
                         </div>
                       </div>
 

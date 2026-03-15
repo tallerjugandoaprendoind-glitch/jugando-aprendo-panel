@@ -73,7 +73,7 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
           ¡Gran logro!
         </h2>
         <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 16, lineHeight: 1.6, marginBottom: 20 }}>
-          <strong style={{ color: '#fbbf24' }}>{childName}</strong> alcanzó{' '}
+          <strong style={{ color: '#fbbf24' }}>{childName}</strong> achieved{' '}
           <strong style={{ color: '#fbbf24' }}>{goalsAchieved} objetivo{goalsAchieved !== 1 ? 's' : ''}</strong> con dominio ≥80%.
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
@@ -142,7 +142,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
               </button>
             </div>
             <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.6, marginBottom: 16 }}>
-              Acompañar a <strong>{childName || 'tu hijo/a'}</strong> es un trabajo importante. ¿Cómo te has sentido tú esta semana?
+              Supporting <strong>{childName || 'your child'}</strong> is important work. How have you been feeling esta semana?
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {options.map(opt => (
@@ -172,7 +172,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
             <div style={{ fontSize: 40, marginBottom: 12 }}>💙</div>
             <h3 style={{ fontWeight: 800, fontSize: 18, color: '#111827', marginBottom: 8 }}>{t('ui.thanks_sharing')}</h3>
             <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.6 }}>
-              Tu terapeuta tomará esto en cuenta. Recuerda que cuidarte a ti también es parte del proceso.
+              Your therapist will take this into account. Remember that taking care of yourself is also part of the process.
             </p>
           </div>
         )}
@@ -454,7 +454,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             </p>
             <button onClick={() => onChangeView('agenda')}
               className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg shadow-purple-200 hover:opacity-90 transition-all flex items-center gap-2 mx-auto">
-              <CalendarDays size={16} /> Agendar sesión ahora
+              <CalendarDays size={16} /> Schedule session now
             </button>
           </div>
         )}
@@ -535,7 +535,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
               onClick={() => setShowCelebration(true)}
               className="flex items-center gap-1.5 text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full hover:bg-amber-100 transition-all"
             >
-              <Trophy size={12} /> Ver celebración 🎉
+              <Trophy size={12} /> View celebration 🎉
             </button>
           )}
         </div>
@@ -552,7 +552,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             </p>
             <button onClick={() => onChangeView('agenda')}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white rounded-xl font-bold text-sm hover:bg-violet-700 transition-all">
-              <CalendarDays size={14} /> Agendar primera sesión
+              <CalendarDays size={14} /> Schedule first session
             </button>
           </div>
         ) : (
@@ -580,7 +580,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 <div>
                   <p className="font-bold text-emerald-800 text-sm">{t('familias.rendimientoExcep')}</p>
                   <p className="text-xs text-emerald-600 mt-0.5 leading-relaxed">
-                    {child?.name?.split(' ')[0] || 'Tu hijo/a'} está dominando sus objetivos con un {stats.masteryRate}% de éxito. ¡El esfuerzo de toda la familia está dando frutos!
+                    {child?.name?.split(' ')[0] || 'Your child'} is mastering their goals with a {stats.masteryRate}% mastery rate. The effort de toda la familia está dando frutos!
                   </p>
                 </div>
               </div>
@@ -592,7 +592,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 <div>
                   <p className="font-bold text-blue-800 text-sm">{t('familias.cadaSesionCuenta')}</p>
                   <p className="text-xs text-blue-600 mt-0.5 leading-relaxed">
-                    El proceso ABA es gradual y acumulativo. La constancia es la clave del progreso. ¡Están en el camino correcto!
+                    The ABA process is gradual and cumulative. Consistency is the key to progress. You are on el camino correcto!
                   </p>
                 </div>
               </div>

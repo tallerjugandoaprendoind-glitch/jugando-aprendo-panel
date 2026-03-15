@@ -76,7 +76,7 @@ export default function WhatsAppQRPanel() {
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 space-y-4">
           <p className="text-sm font-bold text-amber-800">⚙️ Microservice not configured</p>
           <p className="text-xs text-amber-700">
-            Para activar WhatsApp directo a los padres, necesitás deployar el microservicio en Railway y agregar las variables de entorno.
+            To activate direct WhatsApp to parents, you need to deploy the microservice on Railway and add las variables de entorno.
           </p>
           <div className="space-y-2">
             {[
@@ -103,7 +103,7 @@ export default function WhatsAppQRPanel() {
             <div>
               <p className="font-bold text-green-800 text-sm">WhatsApp conectado ✅</p>
               <p className="text-xs text-green-600 mt-0.5">
-                Las notificaciones llegarán directo al WhatsApp de cada padre
+                Notifications will arrive directly to each parent's WhatsApp
               </p>
             </div>
           </div>
@@ -119,7 +119,7 @@ export default function WhatsAppQRPanel() {
             onClick={checkStatus}
             className="mt-4 flex items-center gap-2 text-xs text-green-600 hover:text-green-800 transition-colors"
           >
-            <RefreshCw size={12}/> Verificar conexión
+            <RefreshCw size={12}/> Verify connection
           </button>
         </div>
       )}
@@ -130,7 +130,7 @@ export default function WhatsAppQRPanel() {
           <div className="flex items-center gap-2">
             <Smartphone size={18} className="text-violet-500"/>
             <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>
-              Escaneá este QR con WhatsApp Business
+              Scan this QR with WhatsApp Business
             </p>
           </div>
 
@@ -158,7 +158,7 @@ export default function WhatsAppQRPanel() {
           </div>
 
           <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
-            El QR expira en 60 segundos. Actualizando automáticamente...
+            QR expires in 60 seconds. Updating automatically...
           </p>
         </div>
       )}

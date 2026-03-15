@@ -119,7 +119,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
                   formatter={(v: any) => [`${v}%`, 'Achievement']}
                   labelFormatter={(l) => {
                     const d = data[l - 1]
-                    return d ? `Sesión ${l} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}` : `Sesión ${l}`
+                    return d ? `Session ${l} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}` : `Session ${l}`
                   }}
                 />
                 {cambiosFase.map(x => (
@@ -267,7 +267,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
           <p className="text-xs text-slate-400 mb-4">
             {soloConDatos
               ? 'Go to Patients, open a patient and record ABA sessions'
-              : 'Intenta con otro término de búsqueda'}
+              : 'Try a different search term'}
           </p>
           <button onClick={onIrAPacientes}
             className="px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 mx-auto">
@@ -337,7 +337,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
                             >
                               <div className="flex items-center justify-between mb-1 px-1">
                                 <span className="text-[10px] text-slate-400 font-medium">
-                                  {graficasExpandidas[`${paciente.id}-${prog.id}`] ? 'Ver menos' : 'Ver gráfica completa'}
+                                  {graficasExpandidas[`${paciente.id}-${prog.id}`] ? 'View less' : 'View full chart'}
                                 </span>
                                 {graficasExpandidas[`${paciente.id}-${prog.id}`]
                                   ? <ChevronUp size={12} className="text-slate-300" />

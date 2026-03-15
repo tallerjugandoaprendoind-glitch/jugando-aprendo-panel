@@ -23,7 +23,7 @@ const getResourceTypes = (isEN: boolean): Record<string, any>[] => [
 
 const RESOURCE_TAGS = [
   'TDAH', 'TEA', 'Sensorial', 'Lenguaje', 'Conducta', 'Social', 'Familia',
-  'Relajación', 'Juego', 'Rutinas', 'Emociones', 'Escuela', 'ABA', 'PECS'
+  'Relaxation', 'Play', 'Routines', 'Emotions', 'School', 'ABA', 'PECS'
 ]
 
 export default function ResourcesManagementView() {

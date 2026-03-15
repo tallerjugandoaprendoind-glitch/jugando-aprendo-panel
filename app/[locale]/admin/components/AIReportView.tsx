@@ -138,7 +138,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   const [mobileTab, setMobileTab] = useState<'chat' | 'history' | 'reports' | 'graficas'>('chat')
   
   const [messages, setMessages] = useState<any[]>([
-      { role: 'ai', text: 'Hola 👋. Selecciona un paciente para iniciar el análisis clínico.' }
+      { role: 'ai', text: 'Hello 👋. Select a patient to start the clinical analysis.' }
   ])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
@@ -360,7 +360,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
       setMessages(prev => [...prev, { role: 'ai', text: data.text }])
       speak(data.text)
     } catch {
-      setMessages(prev => [...prev, { role: 'ai', text: '❌ Error de conexión.' }])
+      setMessages(prev => [...prev, { role: 'ai', text: '❌ Connection error.' }])
     } finally {
       setTyping(false)
     }

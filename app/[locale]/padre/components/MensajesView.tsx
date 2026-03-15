@@ -53,7 +53,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
       {resumen_ejecutivo && (
         <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl border border-blue-100 p-5">
           <p className="text-xs font-black text-blue-500 uppercase tracking-widest flex items-center gap-2 mb-3">
-            <Info size={13} /> Resumen clínico
+            <Info size={13} /> Clinical summary
           </p>
           <p className="text-base text-slate-700 leading-relaxed font-medium">
             {resumen_ejecutivo}
@@ -80,7 +80,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
         {areas_trabajo?.length > 0 && (
           <div className="bg-orange-50 rounded-2xl border border-orange-100 p-4">
             <p className="text-xs font-black text-orange-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-              <Target size={13} /> Áreas en desarrollo
+              <Target size={13} /> Development areas
             </p>
             <ul className="space-y-2">
               {areas_trabajo.slice(0, 4).map((a: string, i: number) => (
@@ -197,7 +197,7 @@ export default function MensajesView({ profile }: { profile: any }) {
             )}
           </h2>
           <p className="text-slate-500 text-base mt-2 ml-1 leading-relaxed">
-            Aquí encontrarás todos los mensajes, análisis y recomendaciones que el equipo clínico te envía sobre el progreso de tu hijo/a.
+            Here you will find all messages, analyses and recommendations that the clinical team sends you about el progreso de tu hijo/a.
           </p>
         </div>
         <button
@@ -216,7 +216,7 @@ export default function MensajesView({ profile }: { profile: any }) {
           </div>
           <p className="font-black text-slate-500 text-lg mb-2">{t('ui.no_messages')}</p>
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto">
-            Cuando el terapeuta te envíe un mensaje o análisis sobre tu hijo/a, aparecerá aquí con toda la información detallada.
+            When the therapist sends you a message or analysis about your child, it will appear here with all themación detallada.
           </p>
         </div>
       ) : (

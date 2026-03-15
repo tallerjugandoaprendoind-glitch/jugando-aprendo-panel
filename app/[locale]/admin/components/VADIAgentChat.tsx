@@ -35,8 +35,8 @@ export default function VADIAgentChat({
   const [sugerencias] = useState([
     childId ? (`How is ${childName||'this patient'}'s overall progress?`) : ('What are the best reinforcers for nonverbal ASD?'),
     'What does Malott say about escape extinction?',
-    childId ? `¿Qué programas recomiendas para ${childName || 'este paciente'}?` : '¿Cómo aplico el modelo ético IBAO ante un dilema?',
-    '¿Cuáles son los criterios DSM-5 para TEA nivel 2?',
+    childId ? `What programs do you recommend for ${childName || 'this patient'}?` : 'How to applco el modelo ético IBAO ante un dilema?',
+    'What are the DSM-5 criteria for ASD level 2?',
   ])
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)

@@ -163,7 +163,7 @@ function QuestionField({ q, value, onChange }: any) {
       </div>
     ) : (
       <div className="w-full px-4 py-3 rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 text-sm text-slate-400">
-        Se calculará automáticamente con la IA
+        Will be calculated automatically with AI
       </div>
     )
   }
@@ -318,7 +318,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       <div>
         <h3 className="text-2xl font-black text-slate-800 mb-2">{t('evaluaciones.formularioEnviado')}</h3>
         <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
-          El análisis fue guardado. El jefe lo revisará antes de enviarlo al padre/madre.
+          Analysis saved. The supervisor will review it before sending to the parent.
         </p>
       </div>
       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-xs flex gap-3 text-left">
@@ -490,7 +490,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
                 <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mb-3 flex gap-2">
                   <span className="text-blue-600 flex-shrink-0 text-xs font-bold">1</span>
                   <p className="text-xs text-blue-700 leading-relaxed">
-                    Una sola actividad basada en lo trabajado hoy en sesión.
+                    A single activity based on today's session work.
                   </p>
                 </div>
                 <textarea
@@ -588,7 +588,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
       <div>
         <h2 className="text-2xl font-black text-slate-800">{t('especialista.formsClinicos')}</h2>
         <p className="text-sm text-slate-500 mt-1">
-          Todos los instrumentos de evaluación — el jefe aprueba antes de enviar a los padres
+          All assessment instruments — supervisor approves before sending to parents
         </p>
       </div>
 

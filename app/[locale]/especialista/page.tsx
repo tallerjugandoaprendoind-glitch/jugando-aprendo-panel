@@ -85,13 +85,13 @@ export default function EspecialistaDashboard() {
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
   const handleChangePassword = async () => {
-    if (newPassword.length < 6) { toast.warning('Mínimo 6 caracteres'); return }
-    if (newPassword !== confirmPassword) { toast.error('Las contraseñas no coinciden'); return }
+    if (newPassword.length < 6) { toast.warning('Minimum 6 characters'); return }
+    if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return }
     setChangingPassword(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) throw error
-      toast.success('Contraseña actualizada')
+      toast.success('Password updated')
       setShowChangePassword(false)
     } catch (e: any) { toast.error(e.message) }
     finally { setChangingPassword(false) }
@@ -149,7 +149,7 @@ export default function EspecialistaDashboard() {
           <div className="flex-1 min-w-0">
             <p className="font-black text-sm leading-tight truncate text-slate-800">Jugando Aprendo</p>
             <p className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
-              <Stethoscope size={9} /> Panel Clínico
+              <Stethoscope size={9} /> Clinical Panel
             </p>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="ml-auto md:hidden text-slate-400 hover:text-slate-600">

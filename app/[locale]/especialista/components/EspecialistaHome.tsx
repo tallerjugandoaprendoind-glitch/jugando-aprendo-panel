@@ -191,7 +191,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               <button onClick={() => setActiveView('evaluaciones')}
                 className="flex items-center gap-2 px-4 py-2 bg-amber-400/20 hover:bg-amber-400/30 rounded-xl text-sm font-semibold text-amber-100 transition-all border border-amber-400/30">
                 <Clock size={14} />
-                {stats.pendientes} pendiente{stats.pendientes !== 1 ? 's' : ''} de aprobación
+                {stats.pendientes} pending approval
                 <ArrowUpRight size={13} />
               </button>
             )}
@@ -318,7 +318,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           <p className="text-sm font-bold text-amber-800 mb-2">{t('especialista.flujoAprobacion')}</p>
           <div className="grid grid-cols-3 gap-3">
             {[
-              { step: '1', label: 'Tú creas', desc: 'Registra evaluación o nota de sesión', color: 'bg-amber-100 text-amber-800' },
+              { step: '1', label: 'You create', desc: 'Record evaluation or session note', color: 'bg-amber-100 text-amber-800' },
               { step: '2', label: 'Jefe revisa', desc: 'El admin valida y aprueba o da feedback', color: 'bg-orange-100 text-orange-800' },
               { step: '3', label: 'Parents see', desc: 'Once approved, it reaches the family', color: 'bg-green-100 text-green-800' },
             ].map(({ step, label, desc, color }) => (

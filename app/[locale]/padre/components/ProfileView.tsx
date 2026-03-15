@@ -50,7 +50,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
                         <div className="p-3 bg-blue-100 rounded-2xl group-hover:bg-blue-200 transition-colors">
                             <Lock size={22} className="text-blue-600"/>
                         </div>
-                        Cambiar Contraseña
+                        Change Password
                     </span>
                     <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>
                 </button>
@@ -80,7 +80,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
                         <div className="p-3 bg-red-100 rounded-2xl group-hover:bg-red-200 transition-colors">
                             <LogOut size={22}/>
                         </div>
-                        Cerrar Sesión
+                        Sign Out
                     </span>
                 </button>
              </div>

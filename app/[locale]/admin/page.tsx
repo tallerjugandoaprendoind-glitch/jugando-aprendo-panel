@@ -103,7 +103,7 @@ export default function AdminDashboard() {
     inicio: t('dashboard.titulo'), agenda: t('nav.agenda'), ninos: t('nav.pacientes'),
     evaluaciones: t('nav.evaluaciones'), reportes: t('nav.historial'),
     recursos: t('nav.recursos'), mensajes: t('mensajes.titulo'),
-    usuarios: t('nav.usuarios'), importar: 'Importar CSV',
+    usuarios: t('nav.usuarios'), importar: t('nav.importarCSV'),
     programas: t('nav.programas'), vadi: t('nav.aria'), cerebro: t('nav.cerebro'),
     inteligencia: t('nav.hub'),
   }
@@ -176,17 +176,17 @@ export default function AdminDashboard() {
     try {
       await supabase.auth.signOut()
       router.push('/login')
-    } catch { toast.error('Error al cerrar sesión') }
+    } catch { toast.error('Error signing out') }
   }
 
   const handleChangePassword = async () => {
-    if (newPassword.length < 6) { toast.warning('Mínimo 6 caracteres'); return }
-    if (newPassword !== confirmPassword) { toast.error('Las contraseñas no coinciden'); return }
+    if (newPassword.length < 6) { toast.warning('Minimum 6 characters'); return }
+    if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return }
     setChangingPassword(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) throw error
-      toast.success('Contraseña actualizada')
+      toast.success('Password updated')
       setShowChangePassword(false)
     } catch (e: any) { toast.error(e.message) }
     finally { setChangingPassword(false) }
@@ -226,7 +226,7 @@ export default function AdminDashboard() {
             <p className={`text-[10px] font-medium flex items-center gap-1
               ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
               <RoleIcon size={9} />
-              Panel {roleName}
+              {t('common.perfil')} {roleName}
             </p>
           </div>
           <button onClick={() => setSidebarOpen(false)}
@@ -250,7 +250,7 @@ export default function AdminDashboard() {
           <div className={`pt-4 mt-2 border-t ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
             <p className={`text-[10px] font-bold uppercase tracking-widest px-3 mb-2
               ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-              Configuración
+              {t('common.configuracion')}
             </p>
             {SECONDARY_NAV.filter((item: any) => !item.hidden).map(item => (
               <SidebarLink
@@ -329,7 +329,7 @@ export default function AdminDashboard() {
                 {PAGE_TITLES[currentView] || 'Panel'}
               </h1>
               <p className={`text-[10px] hidden sm:block ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                Jugando Aprendo · Gestión Integral
+                Jugando Aprendo · Integral Management
               </p>
             </div>
           </div>
@@ -488,7 +488,7 @@ export default function AdminDashboard() {
             ${isDark ? 'bg-[#161b22] border border-[#30363d]' : 'bg-white'}`}>
             <div className="flex items-center justify-between mb-5">
               <h2 className={`text-lg font-black ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
-                Cambiar Contraseña
+                Change Password
               </h2>
               <button onClick={() => setShowChangePassword(false)}
                 className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg">

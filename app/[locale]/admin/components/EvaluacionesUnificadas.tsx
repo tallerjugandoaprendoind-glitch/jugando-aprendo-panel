@@ -299,7 +299,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
           </div>
         ) : (
           <div className="w-full p-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-xl text-slate-400 text-sm">
-            Se calculará con el análisis IA
+            Will be calculated with AI analysis
           </div>
         )}
       </div>
@@ -1062,7 +1062,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
-                Sección {currentStep + 1} de {totalSteps}
+                Section {currentStep + 1} of {totalSteps}
               </p>
               <p className="text-xs font-bold text-violet-600">{Math.round(progress)}% completado</p>
             </div>

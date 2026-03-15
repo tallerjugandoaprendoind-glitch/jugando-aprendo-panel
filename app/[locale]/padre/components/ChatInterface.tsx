@@ -167,14 +167,14 @@ function getEmotionalPrefix(text: string): string {
 
   const l = text.toLowerCase()
   if (l.includes('cansad') || l.includes('agotad'))
-    return '💙 Entiendo que estás cansado/a, y eso es completamente válido. Acompañar a un hijo en este proceso requiere muchísima energía.\n\n'
+    return '💙 I understand you are tired, and that is completely valid. Supporting a child in thisroceso requiere muchísima energía.\n\n'
   if (l.includes('culpa'))
-    return '💙 No hay culpa aquí. Eres un papá/mamá que busca lo mejor para su hijo/a — eso ya dice todo de ti.\n\n'
+    return '💙 There is no blame here. You are a parent doing their best for your child — that says everything de ti.\n\n'
   if (l.includes('no avanza') || l.includes('no mejora'))
-    return '💙 El progreso en terapia ABA no siempre es lineal, pero sí real. Hay avances que se acumulan aunque no los veamos cada día.\n\n'
+    return '💙 Progress in ABA therapy is not always linear, but it is real. There are gains that accumulate aunque no los veamos cada día.\n\n'
   if (l.includes('solo') || l.includes('sola') || l.includes('nadie entiende'))
-    return '💙 No estás solo/a. Todo el equipo de Jugando Aprendo está aquí para acompañarte — a ti y a tu familia.\n\n'
-  return '💙 Escucho cómo te sientes, y es completamente válido. Estoy aquí.\n\n'
+    return '💙 You are not alone. The entire Jugando Aprendo team is here to support you — and youru familia.\n\n'
+  return '💙 I hear how you are feeling, and it is completely valid. I am here.\n\n'
 }
 
 // ── Robot SVG mascota ─────────────────────────────────────────────────────────
@@ -255,7 +255,7 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
           <div className="px-5 pt-4 pb-2">
             <p className="text-xs font-black text-pink-500 uppercase tracking-widest mb-2">{t('ui.checkBienestar')}</p>
             <p className="text-sm text-slate-700 font-medium leading-relaxed">
-              ¿Cómo te has sentido tú esta semana acompañando el proceso de tu hijo/a?
+              How have you been feeling this week supporting your child's journey?
             </p>
           </div>
           <div className="px-4 pb-4 flex flex-col gap-2">
@@ -388,7 +388,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
         {"Hello! I'm"} <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
       </h3>
       <p className="text-sm text-slate-500 font-medium mb-1">
-        Tu asistente clínico de Jugando Aprendo
+        Your clinical assistant from Jugando Aprendo
       </p>
       <p className="text-xs text-slate-400 mb-6 leading-relaxed max-w-xs">
         {t('aria.revisadoHistorial')} <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> y estoy lista para ayudarte en lo que necesites.
@@ -477,7 +477,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
     }
     setMessages(p => [...p,
       { role: 'user', text: opt },
-      { role: 'ai', text: '¡Gracias por compartir cómo te sientes! 💜 Tu bienestar también importa mucho para el progreso de tu hijo/a.' }
+      { role: 'ai', text: 'Thank you for sharing how you feel! 💜 Your wellbeing also mattersa mucho para el progreso de tu hijo/a.' }
     ])
   }, [parentId, childId])
 
@@ -514,7 +514,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         headers: { 'Content-Type': 'application/json', 'x-locale': locale || 'es' },
         body: JSON.stringify({
           question: isEmotional
-            ? `${txt}\n\n[INSTRUCCIÓN: El padre/madre experimenta carga emocional. Valida primero con calidez genuina antes de información clínica.]`
+            ? `${txt}\n\n[INSTRUCTION: The parent is experiencing emotional burden. Validate first with genuine warmth antes de información clínica.]`
             : txt,
           childId,
           childName,
@@ -630,7 +630,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
               <p className="font-black text-slate-800 text-base">ARIA</p>
               <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                 <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-                En línea
+                Online
               </span>
               {speaking && (
                 <span className="flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full"
@@ -641,7 +641,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
               )}
             </div>
             <p className="text-xs text-slate-400 font-medium truncate">
-              Asistente clínico IA · {childName ? `Historial de ${childName}` : 'Jugando Aprendo'}
+              AI Clinical Assistant · {childName ? `History: ${childName}` : 'Jugando Aprendo'}
             </p>
           </div>
           {/* Botón silenciar voz */}
@@ -798,7 +798,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
           {/* Hint de voz */}
           {micSupported && (
             <p className="text-center text-[10px] text-slate-400 mt-2 font-medium">
-              {listening ? '🔴 Grabando · Habla claro cerca del micrófono' : '🎤 Toca el micrófono para hablar · ⌨️ O escribe tu mensaje'}
+              {listening ? '🔴 Recording · Speak clearly near the microphone' : '🎤 Tap the microphone to spblar · ⌨️ O escribe tu mensaje'}
             </p>
           )}
           <p className="text-center text-[10px] text-slate-300 mt-1 font-medium">

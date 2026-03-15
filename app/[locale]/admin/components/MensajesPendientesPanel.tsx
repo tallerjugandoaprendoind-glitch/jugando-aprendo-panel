@@ -141,7 +141,7 @@ export default function MensajesPendientesPanel() {
             <div className="p-2.5 bg-amber-100 rounded-2xl">
               <ShieldCheck className="text-amber-600" size={26}/>
             </div>
-            Bandeja de Aprobación
+            Approval Inbox
           </h2>
           <p className="text-slate-400 text-sm mt-1 ml-1">
             Revisa, edita y autoriza mensajes antes de enviarlos a los padres

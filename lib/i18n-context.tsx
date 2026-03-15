@@ -20,6 +20,9 @@ export function useI18n() {
   const t = createTranslator(messages)
 
   const changeLocale = (newLocale: Locale) => {
+    if (typeof window === 'undefined') return
+    // Save to localStorage so API calls can read it
+    localStorage.setItem('vanty_locale', newLocale)
     // Swap the locale segment in the URL: /es/admin → /en/admin
     const segments = pathname.split('/')
     if (segments[1] === 'es' || segments[1] === 'en') {
@@ -27,11 +30,8 @@ export function useI18n() {
     } else {
       segments.splice(1, 0, newLocale)
     }
-    // Also save to localStorage so API calls can read it
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('vanty_locale', newLocale)
-    }
-    router.push(segments.join('/') || '/')
+    // Hard navigation forces server to re-run getMessages() for new locale
+    window.location.href = segments.join('/') || '/'
   }
 
   return { t, locale, changeLocale }

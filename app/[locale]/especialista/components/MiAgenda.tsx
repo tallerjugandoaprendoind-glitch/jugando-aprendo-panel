@@ -37,16 +37,16 @@ export default function MiAgenda() {
   useEffect(() => { cargar() }, [cargar])
   useEffect(() => { setMes(new Date()) }, [])
 
-  const año = mes?.getFullYear() ?? new Date().getFullYear()
+  const anio = mes?.getFullYear() ?? new Date().getFullYear()
   const mesN = mes?.getMonth() ?? new Date().getMonth()
-  const primerDia = new Date(año, mesN, 1).getDay()
-  const diasEnMes = new Date(año, mesN + 1, 0).getDate()
+  const primerDia = new Date(anio, mesN, 1).getDay()
+  const diasEnMes = new Date(anio, mesN + 1, 0).getDate()
   const hoy = new Date().toISOString().split('T')[0]
 
   const citasPorDia: Record<number, any[]> = {}
   citas.filter(c => {
     const f = new Date(c.appointment_date + 'T00:00:00')
-    return f.getFullYear() === año && f.getMonth() === mesN
+    return f.getFullYear() === anio && f.getMonth() === mesN
   }).forEach(c => {
     const d = new Date(c.appointment_date + 'T00:00:00').getDate()
     if (!citasPorDia[d]) citasPorDia[d] = []
@@ -66,14 +66,14 @@ export default function MiAgenda() {
       {/* Calendar */}
       <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-          <button onClick={() => setMes(new Date(año, mesN - 1, 1))}
+          <button onClick={() => setMes(new Date(anio, mesN - 1, 1))}
             className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
             <ChevronLeft size={16} />
           </button>
           <h3 className="font-black text-slate-800 text-base">
-            {MESES[mesN]} <span className="text-slate-400 font-medium">{año}</span>
+            {MESES[mesN]} <span className="text-slate-400 font-medium">{anio}</span>
           </h3>
-          <button onClick={() => setMes(new Date(año, mesN + 1, 1))}
+          <button onClick={() => setMes(new Date(anio, mesN + 1, 1))}
             className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 transition-colors">
             <ChevronRight size={16} />
           </button>
@@ -92,7 +92,7 @@ export default function MiAgenda() {
             {Array.from({ length: primerDia }, (_, i) => <div key={`e-${i}`} />)}
             {Array.from({ length: diasEnMes }, (_, i) => {
               const dia = i + 1
-              const fechaStr = `${año}-${String(mesN + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+              const fechaStr = `${anio}-${String(mesN + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
               const tieneCitas = citasPorDia[dia] || []
               const esHoy = fechaStr === hoy
               const sel = diaSeleccionado === fechaStr

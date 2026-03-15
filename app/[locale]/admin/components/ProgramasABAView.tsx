@@ -389,7 +389,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                   {/* Header con selector de tipo */}
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                      📈 Gráfica de progreso
+                      📈 Progress chart
                     </p>
                     {/* Selector de tipo — solo analista */}
                     <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
@@ -942,7 +942,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
 
           {step === 2 && (
             <div className="space-y-4">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 2 · Sets / Objetivos CP</p>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Step 2 · Sets / Goals CP</p>
               <p className="text-xs text-slate-400">{t('programas.definePasos')}</p>
               {objetivos.map((obj, i) => (
                 <div key={i} className="flex gap-2">
@@ -1025,7 +1025,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
             {step > 1 && (
               <button onClick={() => setStep(s => s - 1)}
                 className="flex-1 py-3 text-slate-500 font-bold border-2 border-slate-100 rounded-xl hover:bg-slate-50">
-                ← Atrás
+                ← Back
               </button>
             )}
             {step < 3 ? (

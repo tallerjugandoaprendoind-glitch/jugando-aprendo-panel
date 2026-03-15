@@ -38,15 +38,15 @@ const getTemplates = (isEN: boolean): Record<string, any> => ({
   },
   sesion: {
     titulo: 'Session note - [Name] - [Date]',
-    contenido: 'Duración: [X] minutos\n\nActividades:\n1. [Actividad 1] - [resultado]\n2. [Actividad 2] - [resultado]\n\nRespuesta: [descripción]',
+    contenido: 'Duration: [X] minutes\n\nActivities:\n1. [Activity 1] - [result]\n2. [Activity 2] - [result]\n\nResponesta: [descripción]',
     observaciones: 'Arrived at session [state]. During the session [key moments].',
-    recomendaciones: 'Para la próxima sesión: [actividades/temas]',
+    recomendaciones: 'For the next session: [activities/topics]',
   },
   familia: {
     titulo: 'Family guide - [Name]',
-    contenido: 'Estimadas familias,\n\nEsta semana trabajamos en [objetivo]. Actividades en casa:\n\n🌟 Actividad 1: [Descripción]\n🌟 Actividad 2: [Descripción]',
-    observaciones: 'Practiquen al menos [X] veces por día.',
-    recomendaciones: 'Si notan algo diferente en casa, comuníquenlo en la próxima sesión.',
+    contenido: 'Dear families,\n\nThis week we worked on [goal]. Home activities:\n\n🌟 Activity 1: [Description]\n🌟 Actividad 2: [Descripción]',
+    observaciones: 'Practice at least [X] times per day.',
+    recomendaciones: 'If you notice anything different at home, share it at the next session.',
   },
 })
 
@@ -84,7 +84,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
     try {
       const { error } = await supabase.from('specialist_submissions').insert({ specialist_id: userId, ...form, status: 'pending_approval' })
       if (error) throw error
-      toast.success('¡Enviado para aprobación!')
+      toast.success('Sent for approval!')
       setMostrarForm(false)
       setForm({ child_id: '', tipo: 'conducta', titulo: '', contenido: '', observaciones: '', recomendaciones: '' })
       cargar()
@@ -187,7 +187,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                     {ev.admin_comment && (
                       <div className={`mt-3 px-4 py-3 rounded-xl text-xs border-l-4 ${ev.status === 'rejected' ? 'bg-red-50 border-red-400' : 'bg-blue-50 border-blue-400'}`}>
                         <p className={`text-[10px] font-black uppercase tracking-wide mb-1 ${ev.status === 'rejected' ? 'text-red-600' : 'text-blue-500'}`}>
-                          {ev.status === 'rejected' ? '🚨 Motivo del rechazo — por favor corrígelo' : '💬 Comentario del jefe'}
+                          {ev.status === 'rejected' ? '🚨 Rejection reason — please correct it' : '💬 Supervisor comment'}
                         </p>
                         <p className="text-slate-700 leading-relaxed">{ev.admin_comment}</p>
                         {ev.status === 'rejected' && (
@@ -198,7 +198,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                             }}
                             className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-black text-red-700 bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-200 transition-all"
                           >
-                            ✏️ Crear versión corregida
+                            ✏️ Create corrected version
                           </button>
                         )}
                       </div>
@@ -335,7 +335,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                 <button onClick={enviar} disabled={enviando}
                   className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm disabled:opacity-50 transition-all shadow-sm">
                   {enviando ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                  {enviando ? 'Enviando...' : 'Enviar para aprobación'}
+                  {enviando ? 'Sending...' : 'Submit for approval'}
                 </button>
               </div>
             </div>

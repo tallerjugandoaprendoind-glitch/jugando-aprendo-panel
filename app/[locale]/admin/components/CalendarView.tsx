@@ -262,7 +262,7 @@ function MonthlyCalendarView() {
         body: JSON.stringify({ appointment_id: apt.id, child_id: apt.child_id, initiated_by: 'admin' , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const data = await res.json()
-      if (data.limitReached) { toast.error('⚠️ Límite mensual de 10,000 min alcanzado. Se reinicia el próximo mes.'); return }
+      if (data.limitReached) { toast.error('⚠️ Monthly limit of 10,000 min reached. It resets neximo mes.'); return }
       if (data.error) throw new Error(data.error)
       setVideoSession({ roomUrl: data.room_url, sessionId: data.session_id, appointmentId: apt.id })
       toast.success('📹 Sala creada · Padre notificado')
@@ -358,7 +358,7 @@ function MonthlyCalendarView() {
               <button onClick={() => currentMonth && setCurrentMonth(new Date(currentMonth.getFullYear(),currentMonth.getMonth()+1))} className="p-2 rounded-xl hover:bg-slate-100"><ChevronRight size={20}/></button>
             </div>
             <div className="grid grid-cols-7 border-b" style={{ borderColor: "var(--card-border)" }}>
-              {['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'].map(d => <div key={d} className="py-3 text-center text-xs font-black text-slate-400 uppercase tracking-widest">{d}</div>)}
+              {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => <div key={d} className="py-3 text-center text-xs font-black text-slate-400 uppercase tracking-widest">{d}</div>)}
             </div>
             <div className="grid grid-cols-7">
               {Array.from({length:firstDay}).map((_,i) => <div key={`e${i}`} className="min-h-[80px] border-b border-r border-slate-50 bg-slate-50/30"/>)}
@@ -469,7 +469,7 @@ function MonthlyCalendarView() {
           </div>
         </div>
 
-        {/* ── Modal Nueva Cita ── */}
+        {/* ── New Appointment Modal ── */}
         {show && (
           <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <div className="p-6 md:p-8 rounded-3xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto" style={{ background: "var(--card)" }}>

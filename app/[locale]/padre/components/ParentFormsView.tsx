@@ -68,7 +68,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
           sections: formMod.ANAMNESIS_DATA,
         },
         aba: {
-          id: 'aba', title: 'Sesión ABA', icon: '🧠',
+          id: 'aba', title: 'ABA Session', icon: '🧠',
           color: 'from-indigo-600 to-violet-600', description: 'ABA therapy session record',
           sections: formMod.ABA_DATA,
         },
@@ -234,7 +234,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
         <div className="p-5 border-t border-slate-100 flex gap-3 bg-white">
           {currentStep > 0 && (
             <button onClick={() => setCurrentStep(s => s - 1)} className="px-5 py-4 border-2 border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all flex items-center gap-2">
-              <ChevronLeft size={16}/> Atrás
+              <ChevronLeft size={16}/> Back
             </button>
           )}
           {currentStep < total - 1 ? (
