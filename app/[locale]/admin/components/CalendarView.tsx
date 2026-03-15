@@ -90,15 +90,14 @@ function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) =>
   )
 }
 
-const SERVICES = [
+const getServices = (isEN: boolean): string[] =>
   isEN
-  ?['ABA Therapy','Initial Assessment','BRIEF-2 Follow-up','ADOS-2 Assessment',
-   'Vineland-3 Assessment','WISC-V Assessment','BASC-3 Assessment',
-   'Family Session','Orientation Session','Home Visit']
-  :['Terapia ABA','Evaluación Inicial','Seguimiento BRIEF-2','Evaluación ADOS-2',
-   'Evaluación Vineland-3','Evaluación WISC-V','Evaluación BASC-3',
-   'Sesión Familiar','Sesión de Orientación','Visita Domiciliaria'],
-]
+  ? ['ABA Therapy','Initial Assessment','BRIEF-2 Follow-up','ADOS-2 Assessment',
+     'Vineland-3 Assessment','WISC-V Assessment','BASC-3 Assessment',
+     'Family Session','Orientation Session','Home Visit']
+  : ['Terapia ABA','Evaluación Inicial','Seguimiento BRIEF-2','Evaluación ADOS-2',
+     'Evaluación Vineland-3','Evaluación WISC-V','Evaluación BASC-3',
+     'Sesión Familiar','Sesión de Orientación','Visita Domiciliaria']
 const getStatusConfig = (isEN: boolean): Record<string, any> => ({
   confirmed: { label: isEN ? 'Confirmed' : 'Confirmada', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
   pending:   { label: isEN ? 'Pending' : 'Pendiente',  color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200'   },
@@ -554,7 +553,7 @@ function MonthlyCalendarView() {
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Servicio</label>
                   <select className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.service} onChange={e=>setNewApt(p=>({...p,service:e.target.value}))}>
-                    {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+                    {getServices(isEN).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
