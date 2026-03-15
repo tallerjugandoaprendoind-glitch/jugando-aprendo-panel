@@ -239,7 +239,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
         {!selectedPaciente && !loading && (
           <div className="rounded-2xl p-12 text-center" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <Brain size={48} className="text-slate-200 mx-auto mb-4" />
-            <p className="font-medium" style={{ color: "var(--text-muted)" }}>{t('ui.seleccionaPacientePrediccion').replace(' para generar predicción','')} {t('ui.seleccionaPacientePrediccion').split(' para')[1] || ''} predicciones con IA</p>
+            <p className="font-medium" style={{ color: "var(--text-muted)" }}>{t('ui.seleccionaPacientePrediccion').replace(' para generar predicción','')} {t('ui.seleccionaPacientePrediccion').split(' para')[1] || ''} {t('hub.prediccionesIA')}</p>
           </div>
         )}
 
@@ -419,7 +419,7 @@ function TabSeguridad() {
               <span className="text-2xl font-black" style={{ color: scoreColor }}>{datos?.scoreSeguridad}</span>
             </div>
           </div>
-          <p className="text-xs font-black text-slate-500 uppercase mt-2">Security Score</p>
+          <p className="text-xs font-black text-slate-500 uppercase mt-2">{isEN ? 'Security Score' : 'Puntuación de Seguridad'}</p>
           <Badge label={datos?.estado || 'desconocido'} color={estadoColor} />
         </div>
 
@@ -472,7 +472,7 @@ function TabSeguridad() {
       <div className=" rounded-2xl border border-slate-200 overflow-hidden" style={{ background: "var(--card)" }}>
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h4 className="font-black text-slate-700 text-sm flex items-center gap-2">
-            <AlertTriangle size={14} className="text-amber-500" /> Security Alerts
+            <AlertTriangle size={14} className="text-amber-500" /> {isEN ? 'Security Alerts' : 'Alertas de Seguridad'}
           </h4>
           <button onClick={cargar} className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1">
             <RefreshCw size={11} /> Refresh
@@ -611,7 +611,7 @@ function TabCompetitividad() {
                     </div>
                   </div>
                   <ProgressBar value={score} color={scoreColor === 'green' ? 'green' : scoreColor === 'yellow' ? 'yellow' : 'red'} />
-                  <p className="text-[10px] text-slate-400 mt-1">{isEN ? `Optimal: ${m.benchmark.optimo} · Good: ${m.be` : `Óptimo: ${m.benchmark.optimo} · Bueno: ${m.be`}nchmark.bueno}</p>
+                  <p className="text-[10px] text-slate-400 mt-1">{isEN ? `Optimal: ${m.benchmark.optimo} · Good: ${m.benchmark.bueno}` : `Óptimo: ${m.benchmark.optimo} · Bueno: ${m.benchmark.bueno}`}</p>
                 </div>
               </div>
             )
@@ -697,7 +697,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
           <div className="grid grid-cols-3 gap-3">
             {[
               { label: 'Sessions', val: resultado.sesiones_analizadas || 0 },
-              { label: 'Patterns', val: resultado.patrones?.length || 0 },
+              { label: isEN ? 'Patterns' : 'Patrones', val: resultado.patrones?.length || 0 },
               { label: 'Urgent', val: resultado.patrones_urgentes || 0 },
             ].map(m => (
               <div key={m.label} className=" rounded-xl border border-slate-100 p-3 text-center" style={{ background: "var(--card)" }}>
@@ -786,7 +786,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
           <Target size={16} className="text-amber-600" />
           <span className="font-bold text-amber-800 text-sm">{t('hub.generadorObjetivos')}</span>
         </div>
-        <p className="text-xs text-amber-600">{"Generate or adjust ABA therapeutic goals"} automáticamente según el progreso real del paciente.</p>
+        <p className="text-xs text-amber-600">{isEN ? 'Generate or adjust ABA therapeutic goals automatically' : 'Generar o ajustar objetivos terapéuticos ABA automát'}icamente según el progreso real del paciente.</p>
       </div>
       <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
         <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
@@ -822,7 +822,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
               </div>
               <p className="text-xs text-slate-500">{obj.descripcion}</p>
               {obj.criterio_dominio && <p className="text-xs font-semibold text-slate-600 mt-1">✓ Meta: {obj.criterio_dominio}</p>}
-              {obj.metodologia && <p className="text-xs text-slate-500 mt-1">Método: {obj.metodologia}</p>}
+              {obj.metodologia && <p className="text-xs text-slate-500 mt-1">{isEN ? 'Method' : 'Método'}: {obj.metodologia}</p>}
               {obj.justificacion_clinica && <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-3 py-2 rounded-lg">{obj.justificacion_clinica}</p>}
             </div>
           ))}
@@ -832,7 +832,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
               <p className="font-bold text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{obj.area}</p>
               <p className="text-xs text-slate-600 mt-1"><strong>{t('hub.queAjustar')}</strong> {obj.que_ajustar}</p>
               <p className="text-xs text-slate-600 mt-1"><strong>{t('hub.como')}</strong> {obj.como_ajustar}</p>
-              <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-3 py-2 rounded-lg">Meta 4 semanas: {obj.meta_4_semanas}</p>
+              <p className="text-xs text-amber-700 mt-2 bg-amber-50 px-3 py-2 rounded-lg">{isEN ? '4-week target' : 'Meta 4 semanas'}: {obj.meta_4_semanas}</p>
             </div>
           ))}
           {/* evaluar_dominio → resultado.resultado.evaluaciones */}
@@ -842,7 +842,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
                 <p className="font-bold text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{obj.programa}</p>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${obj.estado === 'listo_para_avanzar' ? 'bg-green-100 text-green-700' : obj.estado === 'necesita_ajuste' ? 'bg-red-100 text-red-600' : 'bg-slate-100 text-slate-600'}`}>{obj.estado?.replace(/_/g,' ')}</span>
               </div>
-              <p className="text-xs text-slate-600">Acción: {obj.accion}</p>
+              <p className="text-xs text-slate-600">{isEN ? 'Action' : 'Acción'}: {obj.accion}</p>
               <p className="text-xs text-slate-500 mt-1">{obj.justificacion}</p>
               {obj.siguiente_paso && <p className="text-xs text-blue-700 mt-2 bg-blue-50 px-3 py-2 rounded-lg">→ {obj.siguiente_paso}</p>}
             </div>
@@ -900,7 +900,7 @@ function TabSugerencias() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} className="text-orange-600" />
-            <span className="font-bold text-orange-800 text-sm">Proactive Alerts — LAYER 4</span>
+            <span className="font-bold text-orange-800 text-sm">{isEN ? 'Proactive Alerts — LAYER 4' : 'Alertas Proactivas — CAPA 4'}</span>
           </div>
           <p className="text-xs text-orange-600">{t('hub.iaAlertaAntes')}</p>
           {meta && (
@@ -1006,7 +1006,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
           <BookOpen size={16} className="text-teal-600" />
           <span className="font-bold text-teal-800 text-sm">Reportes Profesionales Word — CAPA 2</span>
         </div>
-        <p className="text-xs text-teal-600">{"Generate professional .docx documents ready"}s para imprimir o enviar: para padres, aseguradoras o análisis comparativo.</p>
+        <p className="text-xs text-teal-600">{isEN ? 'Generate professional .docx documents ready to share' : 'Genera documentos .docx profesionales listos para'} imprimir o enviar: para padres, aseguradoras o análisis comparativo.</p>
       </div>
       <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{'Paciente'}</label>
@@ -1083,11 +1083,11 @@ export default function InteligenciaHubView() {
 
   const tabs = [
     { id: 'predicciones' as Tab, icon: Brain, label: t('hub.predicciones'), color: 'blue' },
-    { id: 'patrones' as Tab, icon: Activity, label: 'ABA Patterns', color: 'violet' },
-    { id: 'objetivos' as Tab, icon: Target, label: 'AI Goals', color: 'amber' },
-    { id: 'sugerencias' as Tab, icon: Sparkles, label: 'Proactive Alerts', color: 'orange' },
-    { id: 'reportes' as Tab, icon: BookOpen, label: 'AI Reports', color: 'teal' },
-    { id: 'seguridad' as Tab, icon: Shield, label: 'Security', color: 'emerald' },
+    { id: 'patrones' as Tab, icon: Activity, label: isEN ? 'ABA Patterns' : 'Patrones ABA', color: 'violet' },
+    { id: 'objetivos' as Tab, icon: Target, label: isEN ? 'AI Goals' : 'Objetivos IA', color: 'amber' },
+    { id: 'sugerencias' as Tab, icon: Sparkles, label: isEN ? 'Proactive Alerts' : 'Alertas Proactivas', color: 'orange' },
+    { id: 'reportes' as Tab, icon: BookOpen, label: isEN ? 'AI Reports' : 'Reportes IA', color: 'teal' },
+    { id: 'seguridad' as Tab, icon: Shield, label: isEN ? 'Security' : 'Seguridad', color: 'emerald' },
   ]
 
   return (
@@ -1099,7 +1099,7 @@ export default function InteligenciaHubView() {
         </div>
         <div>
           <h1 className="text-xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{t('hub.hubInteligencia')}</h1>
-          <p className="text-xs text-slate-400">6 AI agents · Predictions · Patterns · Goals · Reports · Security</p>
+          <p className="text-xs text-slate-400">{isEN ? '6 AI agents · Predictions · Patterns · Goals · Reports · Security' : '6 agentes IA · Predicciones · Patrones · Objetivos · Reportes · Seguridad'}</p>
         </div>
       </div>
 

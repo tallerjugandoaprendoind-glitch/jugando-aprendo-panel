@@ -234,12 +234,8 @@ export default function UserManagementView() {
         const kidsRes = await fetch('/api/admin/children')
         const kidsJson = await kidsRes.json()
         if (kidsJson.data) {
-          const normalized = kidsJson.data.map((k: any) => ({
-            ...k,
-            parent_id: k.parent_id || k.tutor_id || k.guardian_id || null,
-            parent_id2: k.parent_id2 || null,
-          }))
-          setChildren(normalized)
+          // Keep all original fields so PacientesVinculados filter works correctly
+          setChildren(kidsJson.data)
         }
       } catch {}
     } catch (err: any) {
@@ -450,7 +446,7 @@ export default function UserManagementView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{t('usuarios.gestion')}</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{users.length} registered users</p>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{users.length} {t('usuarios.registrados')}</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={cargarUsuarios} className="p-2 rounded-xl transition-colors hover:opacity-80"
@@ -468,9 +464,9 @@ export default function UserManagementView() {
       <div className="flex gap-1 border-b" style={{ borderColor: 'var(--card-border)' }}>
         {[
           { id: 'todos',       label: t('common.todos'),        count: users.length,        icon: Users,       color: 'text-slate-500' },
-          { id: 'jefe',        label: 'Directors',   count: totalJefes,          icon: Crown,       color: 'text-purple-600' },
-          { id: 'especialista',label: 'Specialists', count: totalEspecialistas,  icon: Stethoscope, color: 'text-blue-600' },
-          { id: 'padre',       label: 'Parents',       count: totalPadres,         icon: Heart,       color: 'text-pink-600' },
+          { id: 'jefe',        label: t('usuarios.directores'),   count: totalJefes,          icon: Crown,       color: 'text-purple-600' },
+          { id: 'especialista',label: t('usuarios.especialistas'), count: totalEspecialistas,  icon: Stethoscope, color: 'text-blue-600' },
+          { id: 'padre',       label: t('usuarios.padres'),       count: totalPadres,         icon: Heart,       color: 'text-pink-600' },
         ].map(tab => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -493,10 +489,10 @@ export default function UserManagementView() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard value={totalActivos}       label="Active"       icon={UserCheck}   color="bg-emerald-500" />
-        <StatCard value={totalJefes}         label="Directors"    icon={Crown}        color="bg-purple-500" />
-        <StatCard value={totalEspecialistas} label="Specialists" icon={Stethoscope}  color="bg-blue-500" />
-        <StatCard value={totalPadres}        label="Parents"        icon={Heart}        color="bg-pink-500" />
+        <StatCard value={totalActivos}       label={t('usuarios.activos')}       icon={UserCheck}   color="bg-emerald-500" />
+        <StatCard value={totalJefes}         label={t('usuarios.directores')}    icon={Crown}        color="bg-purple-500" />
+        <StatCard value={totalEspecialistas} label={t('usuarios.especialistas')} icon={Stethoscope}  color="bg-blue-500" />
+        <StatCard value={totalPadres}        label={t('usuarios.padres')}        icon={Heart}        color="bg-pink-500" />
       </div>
 
       {/* Buscador */}
@@ -571,7 +567,7 @@ export default function UserManagementView() {
                   <button
                     onClick={() => handleToggleActive(user)}
                     disabled={isSelf || isDirector}
-                    title={isSelf ? ('You cannot deactivate yourself') : isDirector ? ('Cannot deactivate directors') : isActive ? ('Deactivate') : ('Activate')}
+                    title={isSelf ? (t('usuarios.noDesactivarSelf')) : isDirector ? (t('usuarios.noDesactivarDirector')) : isActive ? (t('usuarios.desactivar')) : (t('usuarios.activar'))}
                     className="p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     style={{ color: isActive ? '#10b981' : 'var(--text-muted)' }}>
                     {isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
@@ -592,9 +588,9 @@ export default function UserManagementView() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Meta */}
                     <div className="space-y-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                      <p className="flex items-center gap-1.5"><Calendar size={11} /> Created: {new Date(user.created_at).toLocaleDateString('en-US')}</p>
-                      <p className="flex items-center gap-1.5"><Clock size={11} /> Last access: {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('en-US') : 'Never'}</p>
-                      <p className="flex items-center gap-1.5"><Ticket size={11} /> Tokens: <strong style={{ color: 'var(--text-primary)' }}>{user.profile?.tokens ?? 0}</strong></p>
+                      <p className="flex items-center gap-1.5"><Calendar size={11} /> {t('usuarios.creado')}: {new Date(user.created_at).toLocaleDateString(toBCP47 ? toBCP47(locale) : locale === 'en' ? 'en-US' : 'es-ES')}</p>
+                      <p className="flex items-center gap-1.5"><Clock size={11} /> {t('usuarios.ultimoAcceso')}: {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-ES') : t('common.nunca')}</p>
+                      <p className="flex items-center gap-1.5"><Ticket size={11} /> {t('usuarios.tokens')}: <strong style={{ color: 'var(--text-primary)' }}>{user.profile?.tokens ?? 0}</strong></p>
                       {user.profile?.specialty && (
                         <p className="flex items-center gap-1.5"><Briefcase size={11} /> {user.profile.specialty}</p>
                       )}
@@ -605,13 +601,13 @@ export default function UserManagementView() {
                       <button onClick={() => { setChangingPasswordFor(user); setNewPassword(''); setConfirmPassword('') }}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                         style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
-                        <Lock size={12} /> Change password
+                        <Lock size={12} /> {t('ui.change_password')}
                       </button>
 
                       <button onClick={() => handleSendResetEmail(user)}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                         style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
-                        <Send size={12} /> {t('common.enviandoReset')}
+                        <Send size={12} /> {t('usuarios.enviarReset')}
                       </button>
 
                       {editingTokensFor === user.id ? (
@@ -631,7 +627,7 @@ export default function UserManagementView() {
                         <button onClick={() => { setEditingTokensFor(user.id); setNewTokens(user.profile?.tokens || 0) }}
                           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                           style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
-                          <Ticket size={12} /> Edit tokens
+                          <Ticket size={12} /> {t('usuarios.editarTokens')}
                         </button>
                       )}
 
@@ -647,7 +643,7 @@ export default function UserManagementView() {
                         }}
                           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                           style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', color: '#059669' }}>
-                          <CheckCircle2 size={12} /> Confirmar email
+                          <CheckCircle2 size={12} /> {t('usuarios.confirmarEmail')}
                         </button>
                       )}
 

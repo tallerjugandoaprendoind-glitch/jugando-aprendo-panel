@@ -109,12 +109,22 @@ function PatientsView() {
 
     const cargarPacientes = async () => {
         setIsLoading(true)
-        const { data } = await supabase
-            .from('children')
-            .select('*')
-            .order('created_at', { ascending: false })
+        // Use admin API to bypass RLS
+        let data: any[] = []
+        try {
+            const res = await fetch('/api/admin/children')
+            const json = await res.json()
+            data = json.data || []
+        } catch {
+            // fallback to anon client
+            const { data: fallback } = await supabase
+                .from('children')
+                .select('*')
+                .order('created_at', { ascending: false })
+            data = fallback || []
+        }
         
-        if (data) {
+        if (data.length > 0) {
             setListaNinos(data)
             setListaNinosFiltrada(data)
             // Cargar última sesión de cada paciente
