@@ -1,6 +1,6 @@
 // ==============================================================================
-// ABA CLINICAL FORMS — Jugando Aprendo
-// Organized by diagnostic category with AI analysis
+// FORMULARIOS CLÍNICOS ABA — Jugando Aprendo
+// Organizados por categoría diagnóstica con análisis IA
 // ==============================================================================
 
 export type FormCategory = 'tdah' | 'tea' | 'conductual' | 'sensorial' | 'habilidades' | 'familia' | 'seguimiento'
@@ -37,11 +37,11 @@ export interface FormQuestion {
   helpText?: string
 }
 
-// ─── CATEGORIES WITH METADATA ───────────────────────────────────────────────
+// ─── CATEGORÍAS CON METADATA ───────────────────────────────────────────────
 export const FORM_CATEGORIES = {
   tdah: {
-    label: 'ADHD',
-    fullLabel: 'Attention Deficit Hyperactivity Disorder',
+    label: 'TDAH',
+    fullLabel: 'Trastorno por Déficit de Atención e Hiperactividad',
     color: 'from-orange-500 to-amber-500',
     bg: 'bg-orange-50',
     border: 'border-orange-200',
@@ -49,8 +49,8 @@ export const FORM_CATEGORIES = {
     icon: '⚡',
   },
   tea: {
-    label: 'ASD',
-    fullLabel: 'Autism Spectrum Disorder',
+    label: 'TEA',
+    fullLabel: 'Trastorno del Espectro Autista',
     color: 'from-blue-500 to-indigo-500',
     bg: 'bg-blue-50',
     border: 'border-blue-200',
@@ -58,8 +58,8 @@ export const FORM_CATEGORIES = {
     icon: '🧩',
   },
   conductual: {
-    label: 'Behavioral',
-    fullLabel: 'Behavior Analysis and Modification',
+    label: 'Conductual',
+    fullLabel: 'Análisis y Modificación de Conducta',
     color: 'from-red-500 to-rose-500',
     bg: 'bg-red-50',
     border: 'border-red-200',
@@ -67,8 +67,8 @@ export const FORM_CATEGORIES = {
     icon: '📊',
   },
   sensorial: {
-    label: 'Sensory',
-    fullLabel: 'Sensory Processing and Integration',
+    label: 'Sensorial',
+    fullLabel: 'Procesamiento e Integración Sensorial',
     color: 'from-violet-500 to-purple-500',
     bg: 'bg-violet-50',
     border: 'border-violet-200',
@@ -76,8 +76,8 @@ export const FORM_CATEGORIES = {
     icon: '🌀',
   },
   habilidades: {
-    label: 'Skills',
-    fullLabel: 'Social Skills, Communication and Language',
+    label: 'Habilidades',
+    fullLabel: 'Habilidades Sociales, Comunicación y Lenguaje',
     color: 'from-emerald-500 to-teal-500',
     bg: 'bg-emerald-50',
     border: 'border-emerald-200',
@@ -85,8 +85,8 @@ export const FORM_CATEGORIES = {
     icon: '🤝',
   },
   familia: {
-    label: 'Family',
-    fullLabel: 'Forms for Parents and Family',
+    label: 'Familia',
+    fullLabel: 'Formularios para Padres y Familia',
     color: 'from-pink-500 to-rose-400',
     bg: 'bg-pink-50',
     border: 'border-pink-200',
@@ -94,8 +94,8 @@ export const FORM_CATEGORIES = {
     icon: '🏠',
   },
   seguimiento: {
-    label: 'Follow-up',
-    fullLabel: 'Clinical Follow-up and Progress',
+    label: 'Seguimiento',
+    fullLabel: 'Seguimiento Clínico y Progreso',
     color: 'from-cyan-500 to-sky-500',
     bg: 'bg-cyan-50',
     border: 'border-cyan-200',
@@ -104,67 +104,67 @@ export const FORM_CATEGORIES = {
   },
 }
 
-const FREQ_OPTIONS = ['Never', 'Rarely (1-2 times/month)', 'Sometimes (1-2 times/week)', 'Frequently (3-4 times/week)', 'Almost always (daily)', 'Always (multiple times a day)']
-const INTENSITY_OPTIONS = ['Not applicable', 'Mild - barely affects', 'Moderate - partially affects', 'Intense - affects a lot', 'Very intense - debilitating']
-const CONCERN_OPTIONS = ['No concern', 'Mild concern', 'Moderate concern', 'Significant concern', 'Severe concern']
+const FREQ_OPTIONS = ['Nunca', 'Raramente (1-2 veces/mes)', 'A veces (1-2 veces/semana)', 'Frecuentemente (3-4 veces/semana)', 'Casi siempre (diario)', 'Siempre (varias veces al día)']
+const INTENSITY_OPTIONS = ['No aplica', 'Leve - casi no afecta', 'Moderado - afecta parcialmente', 'Intenso - afecta mucho', 'Muy intenso - incapacitante']
+const CONCERN_OPTIONS = ['Sin preocupación', 'Leve preocupación', 'Preocupación moderada', 'Preocupación significativa', 'Preocupación grave']
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CATEGORY: ADHD
+// CATEGORÍA: TDAH
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const SCREENING_TDAH: FormDefinition = {
   id: 'screening_tdah',
-  title: 'ADHD Screening (Conners Adapted)',
-  subtitle: 'Assessment of inattention and hyperactivity symptoms',
+  title: 'Screening TDAH (Conners Adaptado)',
+  subtitle: 'Evaluación de síntomas de inatención e hiperactividad',
   category: 'tdah',
   icon: '⚡',
   color: 'from-orange-500 to-amber-500',
   targetRole: 'admin',
   estimatedMinutes: 20,
-  description: 'Assessment based on DSM-5 criteria and Conners scale to identify and quantify ADHD symptoms.',
-  tags: ['ADHD', 'Inattention', 'Hyperactivity', 'Impulsivity', 'DSM-5'],
+  description: 'Evaluación basada en criterios DSM-5 y escala Conners para identificar y cuantificar síntomas de TDAH.',
+  tags: ['TDAH', 'Inatención', 'Hiperactividad', 'Impulsividad', 'DSM-5'],
   sections: [
     {
-      title: '1. Inattention Symptoms',
-      description: 'Evaluate the frequency of each behavior in the last 6 months',
+      title: '1. Síntomas de Inatención',
+      description: 'Evalúa la frecuencia de cada comportamiento en los últimos 6 meses',
       questions: [
-        { id: 'inat_detalles', label: 'Fails to pay attention to details or makes careless mistakes', type: 'frequency', options: FREQ_OPTIONS, required: true },
-        { id: 'inat_atencion', label: 'Has difficulty sustaining attention in tasks or play', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'inat_escucha', label: 'Often does not seem to listen when spoken to directly', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'inat_instrucciones', label: 'Does not follow instructions and fails to finish schoolwork or chores', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'inat_organizar', label: 'Has difficulty organizing tasks and activities', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'inat_esfuerzo', label: 'Avoids tasks requiring sustained mental effort', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'inat_objetos', label: 'Often loses things needed (toys, pencils, books)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'inat_distraido', label: 'Is easily distracted by external stimuli', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'inat_olvidadizo', label: 'Is forgetful in daily activities', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'inat_detalles', label: 'No presta atención a los detalles o comete errores por descuido', type: 'frequency', options: FREQ_OPTIONS, required: true },
+        { id: 'inat_atencion', label: 'Tiene dificultad para mantener la atención en tareas o juegos', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'inat_escucha', label: 'Parece no escuchar cuando se le habla directamente', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'inat_instrucciones', label: 'No sigue instrucciones y no termina tareas escolares o del hogar', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'inat_organizar', label: 'Tiene dificultad para organizar tareas y actividades', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'inat_esfuerzo', label: 'Evita tareas que requieren esfuerzo mental sostenido', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'inat_objetos', label: 'Pierde objetos necesarios (juguetes, lápices, libros)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'inat_distraido', label: 'Se distrae fácilmente con estímulos externos', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'inat_olvidadizo', label: 'Olvidadizo en las actividades diarias', type: 'frequency', options: FREQ_OPTIONS },
       ]
     },
     {
-      title: '2. Hyperactivity-Impulsivity Symptoms',
+      title: '2. Síntomas de Hiperactividad-Impulsividad',
       questions: [
-        { id: 'hiper_manos', label: 'Often fidgets with hands or feet or squirms in seat', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hiper_asiento', label: 'Leaves seat when expected to remain seated', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hiper_corretea', label: 'Runs about or climbs in inappropriate situations', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hiper_juego', label: 'Has difficulty playing or engaging in activities quietly', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hiper_motor', label: 'Acts as if driven by a motor, always on the go', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hiper_habla', label: 'Talks excessively', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hiper_responde', label: 'Blurts out answers before questions are completed', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hiper_turno', label: 'Has difficulty waiting their turn', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hiper_interrumpe', label: 'Interrupts or intrudes on conversations or games', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hiper_manos', label: 'Mueve en exceso manos o pies, o se retuerce en el asiento', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hiper_asiento', label: 'Se levanta del asiento cuando debería permanecer sentado', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hiper_corretea', label: 'Corretea o trepa en situaciones inapropiadas', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hiper_juego', label: 'Tiene dificultad para jugar o realizar actividades tranquilas', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hiper_motor', label: 'Actúa como si tuviera un motor, siempre en movimiento', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hiper_habla', label: 'Habla en exceso', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hiper_responde', label: 'Responde antes de que terminen la pregunta', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hiper_turno', label: 'Tiene dificultad para esperar su turno', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hiper_interrumpe', label: 'Interrumpe o irrumpe en conversaciones o juegos', type: 'frequency', options: FREQ_OPTIONS },
       ]
     },
     {
-      title: '3. Functional Impact',
+      title: '3. Impacto Funcional',
       questions: [
-        { id: 'impacto_escuela', label: 'Impact on school performance', type: 'select', options: CONCERN_OPTIONS },
-        { id: 'impacto_social', label: 'Impact on peer relationships', type: 'select', options: CONCERN_OPTIONS },
-        { id: 'impacto_familia', label: 'Impact on family dynamics', type: 'select', options: CONCERN_OPTIONS },
-        { id: 'inicio_sintomas', label: 'Age of symptom onset (approximate)', type: 'number', placeholder: 'Ej: 4', helpText: 'DSM-5 requires symptoms before age 12' },
-        { id: 'duracion_sintomas', label: 'Duration of symptoms', type: 'select', options: ['Less than 6 months', '6-12 months', '1-2 years', 'More than 2 years'] },
-        { id: 'contextos', label: 'In which contexts do they occur?', type: 'multiselect', options: ['Home', 'School', 'With other children', 'In public places', 'In all contexts'] },
-        { id: 'evaluacion_previa', label: 'Has had prior evaluation or diagnosis?', type: 'select', options: ['No', 'Yes - no formal diagnosis', 'Yes - ADHD Inattentive diagnosis', 'Yes - ADHD Hyperactive-Impulsive diagnosis', 'Yes - ADHD Combined diagnosis'] },
-        { id: 'medicacion', label: 'Currently receiving medication?', type: 'select', options: ['No', 'Yes - Methylphenidate', 'Yes - Atomoxetine', 'Yes - other stimulant', 'Unknown'] },
-        { id: 'observaciones_tdah', label: 'Additional Evaluator Observations', type: 'textarea', placeholder: 'Clinical notes on behavior during the evaluation...' },
+        { id: 'impacto_escuela', label: 'Impacto en rendimiento escolar', type: 'select', options: CONCERN_OPTIONS },
+        { id: 'impacto_social', label: 'Impacto en relaciones con compañeros', type: 'select', options: CONCERN_OPTIONS },
+        { id: 'impacto_familia', label: 'Impacto en dinámica familiar', type: 'select', options: CONCERN_OPTIONS },
+        { id: 'inicio_sintomas', label: 'Edad de inicio de síntomas (aproximada)', type: 'number', placeholder: 'Ej: 4', helpText: 'DSM-5 requiere síntomas antes de los 12 años' },
+        { id: 'duracion_sintomas', label: 'Duración de los síntomas', type: 'select', options: ['Menos de 6 meses', '6-12 meses', '1-2 años', 'Más de 2 años'] },
+        { id: 'contextos', label: '¿En qué contextos se presentan?', type: 'multiselect', options: ['Casa', 'Escuela/Colegio', 'Con otros niños', 'En lugares públicos', 'En todos los contextos'] },
+        { id: 'evaluacion_previa', label: '¿Ha tenido evaluación o diagnóstico previo?', type: 'select', options: ['No', 'Sí - sin diagnóstico formal', 'Sí - diagnóstico de TDAH Inatento', 'Sí - diagnóstico de TDAH Hiperactivo-Impulsivo', 'Sí - diagnóstico de TDAH Combinado'] },
+        { id: 'medicacion', label: '¿Recibe medicación actualmente?', type: 'select', options: ['No', 'Sí - Metilfenidato', 'Sí - Atomoxetina', 'Sí - otro estimulante', 'Desconoce'] },
+        { id: 'observaciones_tdah', label: 'Observaciones Adicionales del Evaluador', type: 'textarea', placeholder: 'Notas clínicas sobre el comportamiento durante la evaluación...' },
       ]
     }
   ]
@@ -172,108 +172,108 @@ export const SCREENING_TDAH: FormDefinition = {
 
 export const CONDUCTA_CASA_TDAH: FormDefinition = {
   id: 'conducta_casa_tdah',
-  title: 'Home Behavior - ADHD',
-  subtitle: 'Parent report on behaviors at home',
+  title: 'Conducta en Casa - TDAH',
+  subtitle: 'Informe de los padres sobre conductas en el hogar',
   category: 'tdah',
   icon: '🏠',
   color: 'from-amber-500 to-yellow-500',
   targetRole: 'parent',
   estimatedMinutes: 15,
-  description: 'Form for parents to report their child\'s behavior at home.',
-  tags: ['ADHD', 'Home', 'Parents', 'Routines'],
+  description: 'Formulario para que los padres reporten la conducta de su hijo en el hogar.',
+  tags: ['TDAH', 'Casa', 'Padres', 'Rutinas'],
   sections: [
     {
-      title: '1. Daily Routines',
-      description: 'Tell us about your child\'s routines at home',
+      title: '1. Rutinas Diarias',
+      description: 'Cuéntenos sobre las rutinas de su hijo en casa',
       questions: [
-        { id: 'rutina_manana', label: 'How is the morning routine (waking up, breakfast, getting ready)?', type: 'select', options: ['No difficulties', 'Mild difficulties (needs reminders)', 'Moderate difficulties (requires constant help)', 'Very difficult (causes daily conflict)'] },
-        { id: 'tarea_escolar', label: 'How does the child do schoolwork at home?', type: 'select', options: ['Does them alone without problems', 'Needs supervision', 'Requires constant support', 'It is a daily battle', 'Does not do them'] },
-        { id: 'tiempo_tarea', label: 'How long does homework typically take?', type: 'select', options: ['Less than 30 minutes', '30-60 minutes', '1-2 hours', 'More than 2 hours', 'Does not finish'] },
-        { id: 'hora_dormir', label: 'How is bedtime?', type: 'select', options: ['No problems', 'Takes long to fall asleep', 'Gets up repeatedly', 'Very difficult - great resistance', 'Very little sleep'] },
+        { id: 'rutina_manana', label: '¿Cómo es la rutina de la mañana (levantarse, desayunar, prepararse)?', type: 'select', options: ['Sin dificultades', 'Dificultades leves (necesita recordatorios)', 'Dificultades moderadas (requiere ayuda constante)', 'Muy difícil (causa conflicto diario)'] },
+        { id: 'tarea_escolar', label: '¿Cómo realiza las tareas escolares en casa?', type: 'select', options: ['Las hace solo sin problemas', 'Necesita supervisión', 'Requiere apoyo constante', 'Es una batalla diaria', 'No las hace'] },
+        { id: 'tiempo_tarea', label: '¿Cuánto tiempo tarda en hacer la tarea normalmente?', type: 'select', options: ['Menos de 30 minutos', '30-60 minutos', '1-2 horas', 'Más de 2 horas', 'No termina'] },
+        { id: 'hora_dormir', label: '¿Cómo es la hora de dormir?', type: 'select', options: ['Sin problemas', 'Tarda en dormirse', 'Se levanta repetidamente', 'Muy difícil - gran resistencia', 'Muy poco sueño'] },
       ]
     },
     {
-      title: '2. Behavior at Home',
+      title: '2. Comportamiento en el Hogar',
       questions: [
-        { id: 'obedece_instrucciones', label: 'Follows instructions the first time?', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'rabietas', label: 'Has tantrums or emotional outbursts?', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hermanos', label: 'How does the child get along with siblings or other children at home?', type: 'select', options: ['Very well', 'Well with some normal conflicts', 'Many conflicts', 'Very frequent and intense conflicts', 'No siblings'] },
-        { id: 'actividades_preferidas', label: 'In which activities does the child concentrate well?', type: 'textarea', placeholder: 'E.g.: video games, drawing, LEGO, watching videos...' },
-        { id: 'estres_familiar', label: 'How much stress does their behavior create in the family?', type: 'select', options: INTENSITY_OPTIONS },
+        { id: 'obedece_instrucciones', label: '¿Obedece las instrucciones a la primera?', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'rabietas', label: '¿Tiene rabietas o explosiones emocionales?', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hermanos', label: '¿Cómo se lleva con hermanos u otros niños en casa?', type: 'select', options: ['Muy bien', 'Bien con algunos conflictos normales', 'Muchos conflictos', 'Conflictos muy frecuentes e intensos', 'No tiene hermanos'] },
+        { id: 'actividades_preferidas', label: '¿En qué actividades se concentra bien?', type: 'textarea', placeholder: 'Ej: videojuegos, dibujo, LEGO, ver videos...' },
+        { id: 'estres_familiar', label: '¿Cuánto estrés genera su conducta en la familia?', type: 'select', options: INTENSITY_OPTIONS },
       ]
     },
     {
-      title: '3. Strategies Used by Parents',
+      title: '3. Estrategias que Usan los Padres',
       questions: [
-        { id: 'estrategias_funcionan', label: 'What strategies work for you?', type: 'textarea', placeholder: 'Describe what things help manage their behavior...' },
-        { id: 'estrategias_no_funcionan', label: 'What strategies do NOT work?', type: 'textarea', placeholder: 'Describe what does not help or makes the situation worse...' },
-        { id: 'ayuda_necesaria', label: 'In what area do you need the most help as a family?', type: 'textarea', placeholder: 'Tell us how we can best support you...' },
+        { id: 'estrategias_funcionan', label: '¿Qué estrategias les funcionan?', type: 'textarea', placeholder: 'Describe qué cosas ayudan a manejar su conducta...' },
+        { id: 'estrategias_no_funcionan', label: '¿Qué estrategias NO les funcionan?', type: 'textarea', placeholder: 'Describe qué cosas no ayudan o empeoran la situación...' },
+        { id: 'ayuda_necesaria', label: '¿En qué aspecto necesitan más ayuda como familia?', type: 'textarea', placeholder: 'Cuéntenos cómo podemos apoyarlos mejor...' },
       ]
     }
   ]
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CATEGORY: ASD / AUTISM
+// CATEGORÍA: TEA / AUTISMO
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const SCREENING_TEA: FormDefinition = {
   id: 'screening_tea',
-  title: 'ASD Screening (M-CHAT-R/F Adapted)',
-  subtitle: 'Early detection of autism spectrum',
+  title: 'Screening TEA (M-CHAT-R/F Adaptado)',
+  subtitle: 'Detección temprana del espectro autista',
   category: 'tea',
   icon: '🧩',
   color: 'from-blue-500 to-indigo-500',
   targetRole: 'admin',
   estimatedMinutes: 25,
-  description: 'Based on M-CHAT-R/F and DSM-5 criteria for ASD. Evaluates social communication, repetitive patterns and sensory processing.',
-  tags: ['ASD', 'Autism', 'Social Communication', 'Screening'],
+  description: 'Basado en el M-CHAT-R/F y criterios DSM-5 para TEA. Evalúa comunicación social, patrones repetitivos y sensorialidad.',
+  tags: ['TEA', 'Autismo', 'Comunicación Social', 'Screening'],
   sections: [
     {
-      title: '1. Social Communication and Language',
-      description: 'Evaluates communication and social interaction skills',
+      title: '1. Comunicación Social y Lenguaje',
+      description: 'Evalúa habilidades de comunicación e interacción social',
       questions: [
-        { id: 'tea_contacto_visual', label: 'Eye contact with familiar people', type: 'select', options: ['Normal/consistent', 'Reduced but present', 'Scarce', 'Absent'] },
-        { id: 'tea_sonrisa_social', label: 'Social smile (responds to others\' smiles)', type: 'select', options: ['Present and consistent', 'Present sometimes', 'Rarely', 'Absent'] },
-        { id: 'tea_señalar', label: 'Pointing to share interest (proto-declarative)', type: 'select', options: ['Present', 'Sometimes', 'Rarely', 'Absent'] },
-        { id: 'tea_nombre', label: 'Responds when called by name', type: 'select', options: ['Always/almost always', 'Sometimes', 'Rarely', 'Never'] },
-        { id: 'tea_atencion_conjunta', label: 'Joint attention (looking where the adult looks)', type: 'select', options: ['Present', 'Sometimes', 'Rarely', 'Absent'] },
-        { id: 'tea_mostrar_objetos', label: 'Shows objects to share with others', type: 'select', options: ['Yes, usually', 'Sometimes', 'Rarely', 'No'] },
-        { id: 'tea_juego_imitativo', label: 'Imitates actions of others', type: 'select', options: ['Yes, spontaneously', 'When asked', 'Rarely', 'Does not imitate'] },
-        { id: 'tea_juego_simbolico', label: 'Symbolic play (pretend play)', type: 'select', options: ['Present and varied', 'Simple functional play', 'Very limited', 'Absent'] },
-        { id: 'tea_interes_ninos', label: 'Interest in playing with other children', type: 'select', options: ['Actively seeks', 'Accepts when offered', 'Prefers to play alone', 'Actively avoids'] },
-        { id: 'tea_lenguaje_edad', label: 'Language level for their age', type: 'select', options: ['Within normal range', 'Mild delay', 'Moderate delay', 'Significant delay', 'No oral language'] },
+        { id: 'tea_contacto_visual', label: 'Contacto visual con personas conocidas', type: 'select', options: ['Normal/consistente', 'Reducido pero presente', 'Escaso', 'Ausente'] },
+        { id: 'tea_sonrisa_social', label: 'Sonrisa social (responde a sonrisas de otros)', type: 'select', options: ['Presente y consistente', 'Presente a veces', 'Raramente', 'Ausente'] },
+        { id: 'tea_señalar', label: 'Señalar para compartir interés (proto-declarativo)', type: 'select', options: ['Presente', 'A veces', 'Raramente', 'Ausente'] },
+        { id: 'tea_nombre', label: 'Responde cuando se le llama por su nombre', type: 'select', options: ['Siempre/casi siempre', 'A veces', 'Raramente', 'Nunca'] },
+        { id: 'tea_atencion_conjunta', label: 'Atención conjunta (mirar donde mira el adulto)', type: 'select', options: ['Presente', 'A veces', 'Raramente', 'Ausente'] },
+        { id: 'tea_mostrar_objetos', label: 'Muestra objetos para enseñárselos a otros', type: 'select', options: ['Sí, habitualmente', 'A veces', 'Raramente', 'No'] },
+        { id: 'tea_juego_imitativo', label: 'Imita acciones de otras personas', type: 'select', options: ['Sí, espontáneamente', 'Cuando se le pide', 'Raramente', 'No imita'] },
+        { id: 'tea_juego_simbolico', label: 'Juego simbólico (hace como si...)', type: 'select', options: ['Presente y variado', 'Juego funcional simple', 'Muy limitado', 'Ausente'] },
+        { id: 'tea_interes_ninos', label: 'Interés por jugar con otros niños', type: 'select', options: ['Busca activamente', 'Lo acepta cuando se ofrece', 'Prefiere jugar solo', 'Evita activamente'] },
+        { id: 'tea_lenguaje_edad', label: 'Nivel de lenguaje para su edad', type: 'select', options: ['Dentro de rango normal', 'Leve retraso', 'Retraso moderado', 'Retraso significativo', 'Sin lenguaje oral'] },
       ]
     },
     {
-      title: '2. Repetitive and Restricted Patterns',
+      title: '2. Patrones Repetitivos y Restringidos',
       questions: [
-        { id: 'tea_estereotipias', label: 'Repetitive movements (hand-flapping, rocking, spinning)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tea_rituales', label: 'Rigid rituals or routines', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tea_alineacion', label: 'Lines up or arranges objects repetitively', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tea_intereses_restringidos', label: 'Very intense and restricted interests', type: 'select', options: ['No', 'Mild', 'Moderate (interferes sometimes)', 'Intense (interferes frequently)'] },
-        { id: 'tea_cambios', label: 'Resistance to changes in routines or environment', type: 'select', options: INTENSITY_OPTIONS },
-        { id: 'tea_uso_objetos', label: 'Unusual or non-functional use of objects', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tea_estereotipias', label: 'Movimientos repetitivos (aleteo, balanceo, girar)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tea_rituales', label: 'Rituales o rutinas inflexibles', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tea_alineacion', label: 'Alinea o ordena objetos de forma repetitiva', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tea_intereses_restringidos', label: 'Intereses muy intensos y restringidos', type: 'select', options: ['No', 'Leve', 'Moderado (interfiere algunas veces)', 'Intenso (interfiere frecuentemente)'] },
+        { id: 'tea_cambios', label: 'Resistencia a cambios en rutinas o entorno', type: 'select', options: INTENSITY_OPTIONS },
+        { id: 'tea_uso_objetos', label: 'Uso inusual o poco funcional de objetos', type: 'frequency', options: FREQ_OPTIONS },
       ]
     },
     {
-      title: '3. Sensory Processing',
+      title: '3. Procesamiento Sensorial',
       questions: [
-        { id: 'tea_hipersensibilidad_auditiva', label: 'Sound hypersensitivity (covers ears, becomes distressed)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tea_hipersensibilidad_tactil', label: 'Tactile hypersensitivity (does not tolerate certain textures/clothing)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tea_busqueda_sensorial', label: 'Sensory seeking (smells objects, scratches, licks)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tea_selectividad_comida', label: 'Extreme food selectivity', type: 'select', options: ['No / Normal', 'Mild (few restrictions)', 'Moderate (affects nutrition)', 'Severe (very few foods)'] },
+        { id: 'tea_hipersensibilidad_auditiva', label: 'Hipersensibilidad a sonidos (tapas oídos, se angustia)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tea_hipersensibilidad_tactil', label: 'Hipersensibilidad táctil (no tolera ciertas texturas/ropa)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tea_busqueda_sensorial', label: 'Búsqueda sensorial (huele objetos, se rasca, lame)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tea_selectividad_comida', label: 'Selectividad alimentaria extrema', type: 'select', options: ['No / Normal', 'Leve (pocas restricciones)', 'Moderada (afecta nutrición)', 'Severa (muy pocos alimentos)'] },
       ]
     },
     {
-      title: '4. History and Context',
+      title: '4. Historia y Contexto',
       questions: [
-        { id: 'tea_edad_primeras_preocupaciones', label: 'Age when first concerns were noticed', type: 'text', placeholder: 'E.g.: 18 months, 2 years...' },
-        { id: 'tea_regresion', label: 'Was there a loss of previously acquired skills?', type: 'select', options: ['No', 'Yes - language', 'Yes - social skills', 'Yes - both', 'Not clear'] },
-        { id: 'tea_diagnostico_previo', label: 'Has a prior diagnosis?', type: 'select', options: ['No', 'ASD level 1 (formerly Asperger)', 'ASD level 2', 'ASD level 3', 'ASD unspecified', 'Other PDD'] },
-        { id: 'tea_nivel_funcionamiento', label: 'Estimated general functioning level', type: 'select', options: ['High - independent life possible', 'Medium - requires some support', 'Low - requires significant support', 'Very low - requires total support'] },
-        { id: 'tea_antecedentes_familiares', label: 'Family history of ASD, ADHD, or other?', type: 'textarea', placeholder: 'Describe if there are family members with a similar diagnosis...' },
-        { id: 'tea_observaciones', label: 'Clinical Evaluator Observations', type: 'textarea', placeholder: 'Notes on behavior during the session, diagnostic impression...' },
+        { id: 'tea_edad_primeras_preocupaciones', label: 'Edad cuando se notaron las primeras preocupaciones', type: 'text', placeholder: 'Ej: 18 meses, 2 años...' },
+        { id: 'tea_regresion', label: '¿Hubo pérdida de habilidades previamente adquiridas?', type: 'select', options: ['No', 'Sí - lenguaje', 'Sí - habilidades sociales', 'Sí - ambas', 'No está claro'] },
+        { id: 'tea_diagnostico_previo', label: '¿Tiene diagnóstico previo?', type: 'select', options: ['No', 'TEA nivel 1 (antes Asperger)', 'TEA nivel 2', 'TEA nivel 3', 'TEA sin especificar', 'Otro TGD'] },
+        { id: 'tea_nivel_funcionamiento', label: 'Nivel de funcionamiento general estimado', type: 'select', options: ['Alto - vida independiente posible', 'Medio - requiere algún apoyo', 'Bajo - requiere apoyo significativo', 'Muy bajo - requiere apoyo total'] },
+        { id: 'tea_antecedentes_familiares', label: '¿Antecedentes familiares de TEA, TDAH u otro?', type: 'textarea', placeholder: 'Describe si hay familiares con diagnóstico similar...' },
+        { id: 'tea_observaciones', label: 'Observaciones Clínicas del Evaluador', type: 'textarea', placeholder: 'Notas sobre comportamiento durante la sesión, impresión diagnóstica...' },
       ]
     }
   ]
@@ -281,197 +281,197 @@ export const SCREENING_TEA: FormDefinition = {
 
 export const CONDUCTA_CASA_TEA: FormDefinition = {
   id: 'conducta_casa_tea',
-  title: 'My child at home - ASD',
-  subtitle: 'Parent form about daily life',
+  title: 'Mi hijo en casa - TEA',
+  subtitle: 'Formulario para padres sobre el día a día',
   category: 'tea',
   icon: '🏡',
   color: 'from-blue-400 to-cyan-500',
   targetRole: 'parent',
   estimatedMinutes: 20,
-  description: 'Tell us what your child is like at home. This information helps us personalize the therapy better.',
-  tags: ['ASD', 'Home', 'Parents', 'Communication'],
+  description: 'Cuéntenos cómo es su hijo en casa. Esta información nos ayuda a personalizar mejor la terapia.',
+  tags: ['TEA', 'Casa', 'Padres', 'Comunicación'],
   sections: [
     {
-      title: '1. Communication at Home',
-      description: 'Tell us about your child\'s communication',
+      title: '1. Comunicación en Casa',
+      description: 'Cuéntenos sobre la comunicación de su hijo',
       questions: [
-        { id: 'como_comunica', label: 'How does your child mainly communicate?', type: 'multiselect', options: ['Single words', 'Short phrases', 'Complete sentences', 'Gestures and signs', 'Pictograms/PECS', 'Tablet/AAC device', 'Pointing to objects', 'Leading the adult', 'Crying or vocalizations'] },
-        { id: 'palabras_funcionales', label: 'Approximately how many functional words does the child use?', type: 'select', options: ['No words', '1-10 words', '11-50 words', '51-100 words', 'More than 100 words'] },
-        { id: 'pide_cosas', label: 'Does the child ask for things they want?', type: 'select', options: ['Yes, clearly with words', 'Yes, with gestures/pointing', 'Tries but with difficulty', 'Rarely tries', 'Does not ask - takes things directly'] },
-        { id: 'comprende', label: 'Does the child understand what you say?', type: 'select', options: ['Understands complex instructions well', 'Understands simple instructions (1-2 steps)', 'Understands only single words', 'Understands very little'] },
+        { id: 'como_comunica', label: '¿Cómo se comunica su hijo principalmente?', type: 'multiselect', options: ['Palabras sueltas', 'Frases cortas', 'Oraciones completas', 'Gestos y señas', 'Pictogramas/PECS', 'Tablet/comunicador', 'Señalando objetos', 'Llevando al adulto', 'Llanto o vocalizaciones'] },
+        { id: 'palabras_funcionales', label: '¿Cuántas palabras funcionales usa aproximadamente?', type: 'select', options: ['No usa palabras', '1-10 palabras', '11-50 palabras', '51-100 palabras', 'Más de 100 palabras'] },
+        { id: 'pide_cosas', label: '¿Pide cosas que quiere?', type: 'select', options: ['Sí, claramente con palabras', 'Sí, con gestos/señalando', 'Lo intenta pero con dificultad', 'Raramente lo intenta', 'No pide - toma las cosas directamente'] },
+        { id: 'comprende', label: '¿Comprende lo que le decís?', type: 'select', options: ['Comprende bien instrucciones complejas', 'Comprende instrucciones simples (1-2 pasos)', 'Comprende solo palabras sueltas', 'Comprende muy poco'] },
       ]
     },
     {
-      title: '2. Routines and Daily Life',
+      title: '2. Rutinas y Vida Diaria',
       questions: [
-        { id: 'rutinas_importancia', label: 'How important are routines for your child?', type: 'select', options: ['Changes do not affect them', 'Prefers routines but tolerates changes', 'Needs routines, becomes upset with changes', 'Routines are essential, any change causes crisis'] },
-        { id: 'higiene', label: 'How is personal hygiene (bath, teeth, etc.)?', type: 'select', options: ['No difficulties', 'Needs reminders', 'Requires physical support', 'Very difficult / intense resistance'] },
-        { id: 'alimentacion', label: 'How is feeding/eating?', type: 'textarea', placeholder: 'Describe what foods the child accepts, textures rejected, schedules, etc.' },
-        { id: 'sueño', label: 'How is sleep?', type: 'select', options: ['Sleeps well', 'Difficulty initiating sleep', 'Wakes frequently', 'Very little total sleep', 'Very disrupted sleep patterns'] },
+        { id: 'rutinas_importancia', label: '¿Qué tan importante son las rutinas para su hijo?', type: 'select', options: ['No le afectan los cambios', 'Prefiere rutinas pero tolera cambios', 'Necesita rutinas, se altera con cambios', 'Las rutinas son esenciales, cualquier cambio genera crisis'] },
+        { id: 'higiene', label: '¿Cómo es la higiene personal (baño, dientes, etc.)?', type: 'select', options: ['Sin dificultades', 'Necesita recordatorios', 'Requiere apoyo físico', 'Es muy difícil / resistencia intensa'] },
+        { id: 'alimentacion', label: '¿Cómo es la alimentación?', type: 'textarea', placeholder: 'Describe qué alimentos acepta, texturas que rechaza, horarios, etc.' },
+        { id: 'sueño', label: '¿Cómo es el sueño?', type: 'select', options: ['Duerme bien', 'Dificultad para iniciar el sueño', 'Se despierta frecuentemente', 'Muy poco sueño total', 'Patrones de sueño muy alterados'] },
       ]
     },
     {
-      title: '3. What Makes Us Happy and Concerns Us',
-      description: 'Share freely - all information is valuable',
+      title: '3. Lo que nos Alegra y nos Preocupa',
+      description: 'Comparte libremente - toda información es valiosa',
       questions: [
-        { id: 'fortalezas_hijo', label: 'What are your child\'s strengths and talents?', type: 'textarea', placeholder: 'What they do well, what they love, their special abilities...' },
-        { id: 'mayor_preocupacion', label: 'What is your biggest concern currently?', type: 'textarea', placeholder: 'Tell us what worries you most as a parent...' },
-        { id: 'sueños_familia', label: 'What do you dream for your child\'s future?', type: 'textarea', placeholder: 'Your expectations and hopes for the future...' },
-        { id: 'apoyo_familia', label: 'What support do you receive as a family?', type: 'multiselect', options: ['Partner support', 'Grandparent support', 'Support from other parents with similar children', 'Support group', 'Psychologist/therapist for the family', 'None currently'] },
+        { id: 'fortalezas_hijo', label: '¿Cuáles son las fortalezas y talentos de su hijo?', type: 'textarea', placeholder: 'Lo que hace bien, lo que le encanta, sus habilidades especiales...' },
+        { id: 'mayor_preocupacion', label: '¿Cuál es su mayor preocupación actualmente?', type: 'textarea', placeholder: 'Cuéntenos qué le preocupa más como padre/madre...' },
+        { id: 'sueños_familia', label: '¿Qué sueñan para el futuro de su hijo?', type: 'textarea', placeholder: 'Sus expectativas y esperanzas para el futuro...' },
+        { id: 'apoyo_familia', label: '¿Qué apoyo reciben como familia?', type: 'multiselect', options: ['Apoyo de pareja', 'Apoyo de abuelos', 'Apoyo de otros padres con hijos similares', 'Grupo de apoyo', 'Psicólogo/terapeuta para la familia', 'Ninguno actualmente'] },
       ]
     }
   ]
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CATEGORY: SENSORY
+// CATEGORÍA: SENSORIAL
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const PERFIL_SENSORIAL: FormDefinition = {
   id: 'perfil_sensorial',
-  title: 'Sensory Processing Profile',
-  subtitle: 'Sensory integration assessment (Dunn adapted)',
+  title: 'Perfil de Procesamiento Sensorial',
+  subtitle: 'Evaluación de integración sensorial (Dunn adaptado)',
   category: 'sensorial',
   icon: '🌀',
   color: 'from-violet-500 to-purple-500',
   targetRole: 'admin',
   estimatedMinutes: 20,
-  description: 'Evaluates how each sensory system processes: hyper/hyposensitivity, sensory seeking and avoidance.',
-  tags: ['Sensory', 'Sensory Integration', 'Processing', 'Occupational'],
+  description: 'Evalúa cómo procesa cada sistema sensorial: hiper/hiposensibilidad, búsqueda sensorial y evitación.',
+  tags: ['Sensorial', 'Integración Sensorial', 'Procesamiento', 'Ocupacional'],
   sections: [
     {
-      title: '1. Auditory System',
+      title: '1. Sistema Auditivo',
       questions: [
-        { id: 'aud_tapas', label: 'Covers ears at everyday sounds', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'aud_ruido_fondo', label: 'Distracted by background noises others ignore', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'aud_volumen', label: 'Speaks very loud or soft without realizing', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'aud_busqueda', label: 'Seeks sounds or makes noises repetitively', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'aud_multisensorial', label: 'Difficulty processing speech with background noise', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'aud_tapas', label: 'Se tapa los oídos ante sonidos cotidianos', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'aud_ruido_fondo', label: 'Se distrae con ruidos de fondo que otros ignoran', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'aud_volumen', label: 'Habla muy alto o muy bajo sin darse cuenta', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'aud_busqueda', label: 'Busca sonidos o hace ruidos repetitivamente', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'aud_multisensorial', label: 'Dificultad para procesar habla con ruido de fondo', type: 'frequency', options: FREQ_OPTIONS },
       ]
     },
     {
-      title: '2. Tactile System',
+      title: '2. Sistema Táctil',
       questions: [
-        { id: 'tac_rechazo', label: 'Rejects being touched (hugs, caresses)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tac_ropa', label: 'Sensitivity to clothing textures (tags, seams)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tac_manos', label: 'Avoids having dirty or wet hands', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tac_busqueda', label: 'Touches everything, seeks physical pressure', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tac_temperatura', label: 'Indifferent to cold, heat, or pain', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'tac_temperatura2', label: 'Hyper-reactive to pain or temperature', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tac_rechazo', label: 'Rechaza ser tocado (abrazos, caricias)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tac_ropa', label: 'Sensibilidad a texturas de ropa (etiquetas, costuras)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tac_manos', label: 'Evita mantenerse con manos sucias o mojadas', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tac_busqueda', label: 'Toca todo lo que encuentra, busca presión física', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tac_temperatura', label: 'Indiferente al frío, calor o dolor', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'tac_temperatura2', label: 'Hiper-reactivo al dolor o temperatura', type: 'frequency', options: FREQ_OPTIONS },
       ]
     },
     {
-      title: '3. Visual and Olfactory System',
+      title: '3. Sistema Visual y Olfativo',
       questions: [
-        { id: 'vis_luces', label: 'Hypersensitive to bright lights (squints, cries)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'vis_lineas', label: 'Looks at objects from the side or very close', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'olf_olores', label: 'Hypersensitive to smells (moves away, disgust face)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'olf_huele', label: 'Smells objects or people in unusual ways', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'gust_selectivo', label: 'Selectivity by food textures/flavors', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'vis_luces', label: 'Hipersensible a luces brillantes (los cierra, llora)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'vis_lineas', label: 'Mira objetos de costado o de cerca', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'olf_olores', label: 'Hipersensible a olores (se aleja, gesto de asco)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'olf_huele', label: 'Huele objetos o personas de forma inusual', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'gust_selectivo', label: 'Selectividad por texturas/sabores de alimentos', type: 'frequency', options: FREQ_OPTIONS },
       ]
     },
     {
-      title: '4. Proprioceptive and Vestibular System',
+      title: '4. Sistema Propioceptivo y Vestibular',
       questions: [
-        { id: 'vest_mareo', label: 'Gets dizzy easily (swings, cars)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'vest_busca', label: 'Seeks spinning, swinging, moving excessively', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'prop_torpeza', label: 'Clumsiness, frequently bumps into objects/people', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'prop_fuerza', label: 'Uses too much force (breaks things unintentionally)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'prop_presion', label: 'Seeks deep pressure (weights, squeezes, vests)', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'prop_postura', label: 'Poor posture, leans on everything', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'vest_mareo', label: 'Se marea fácilmente (columpios, autos)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'vest_busca', label: 'Busca girar, columpiarse, moverse en exceso', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'prop_torpeza', label: 'Torpeza, choca con objetos/personas frecuentemente', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'prop_fuerza', label: 'Usa demasiada fuerza (rompe cosas sin querer)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'prop_presion', label: 'Busca presión profunda (pesos, apretones, chalecos)', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'prop_postura', label: 'Postura pobre, se recuesta sobre todo', type: 'frequency', options: FREQ_OPTIONS },
       ]
     },
     {
-      title: '5. Impact on Functioning',
+      title: '5. Impacto en Funcionamiento',
       questions: [
-        { id: 'sens_participa_actividades', label: 'Avoids activities for sensory reasons?', type: 'multiselect', options: ['Contact sports', 'Art/crafts', 'Music/concerts', 'Eating at restaurants', 'Crowded public places', 'Shopping malls', 'Public transport', 'None'] },
-        { id: 'sens_melts', label: 'Has "meltdowns" or sensory overload?', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'sens_duracion_colapso', label: 'Typical duration of a sensory overload', type: 'select', options: ['No meltdowns', 'Less than 5 minutes', '5-15 minutes', '15-30 minutes', 'More than 30 minutes'] },
-        { id: 'sens_regulacion', label: 'What helps with self-regulation?', type: 'textarea', placeholder: 'Describe what strategies regulate overload episodes...' },
+        { id: 'sens_participa_actividades', label: '¿Evita actividades por razones sensoriales?', type: 'multiselect', options: ['Deportes de contacto', 'Arte/manualidades', 'Música/conciertos', 'Comer en restaurantes', 'Lugares públicos concurridos', 'Centros comerciales', 'Transporte público', 'Ninguna'] },
+        { id: 'sens_melts', label: '¿Tiene "colapsos" o sobrecarga sensorial?', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'sens_duracion_colapso', label: 'Duración típica de una sobrecarga sensorial', type: 'select', options: ['No tiene colapsos', 'Menos de 5 minutos', '5-15 minutos', '15-30 minutos', 'Más de 30 minutos'] },
+        { id: 'sens_regulacion', label: '¿Qué ayuda a regularse?', type: 'textarea', placeholder: 'Describe qué estrategias regulan los episodios de sobrecarga...' },
       ]
     }
   ]
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CATEGORY: SOCIAL SKILLS
+// CATEGORÍA: HABILIDADES SOCIALES
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const HABILIDADES_SOCIALES: FormDefinition = {
   id: 'habilidades_sociales',
-  title: 'Social Skills Assessment',
-  subtitle: 'Inventory of social and communicative competencies',
+  title: 'Evaluación de Habilidades Sociales',
+  subtitle: 'Inventario de competencias sociales y comunicativas',
   category: 'habilidades',
   icon: '🤝',
   color: 'from-emerald-500 to-teal-500',
   targetRole: 'admin',
   estimatedMinutes: 20,
-  description: 'Evaluates pragmatic skills, conflict resolution, emotional recognition and social competencies.',
-  tags: ['Social Skills', 'Pragmatics', 'Emotions', 'Communication'],
+  description: 'Evalúa habilidades pragmáticas, resolución de conflictos, reconocimiento emocional y competencias sociales.',
+  tags: ['Habilidades Sociales', 'Pragmática', 'Emociones', 'Comunicación'],
   sections: [
     {
-      title: '1. Initiating and Maintaining Interactions',
+      title: '1. Inicio y Mantenimiento de Interacciones',
       questions: [
-        { id: 'hs_inicia', label: 'Initiates conversations or play with peers', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hs_saluda', label: 'Greets and says goodbye appropriately', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hs_mantiene', label: 'Maintains conversation topic', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hs_turno', label: 'Respects conversational turn-taking', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'hs_contexto', label: 'Adapts language to context and listener', type: 'select', options: ['Yes, appropriately', 'Sometimes', 'Rarely', 'Does not do it'] },
-        { id: 'hs_espacio_personal', label: 'Respects others\' personal space', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hs_inicia', label: 'Inicia conversaciones o juegos con pares', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hs_saluda', label: 'Saluda y despide apropiadamente', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hs_mantiene', label: 'Mantiene el tema de conversación', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hs_turno', label: 'Respeta el turno de habla', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'hs_contexto', label: 'Adapta el lenguaje al contexto e interlocutor', type: 'select', options: ['Sí, adecuadamente', 'A veces', 'Raramente', 'No lo hace'] },
+        { id: 'hs_espacio_personal', label: 'Respeta el espacio personal de otros', type: 'frequency', options: FREQ_OPTIONS },
       ]
     },
     {
-      title: '2. Emotional Recognition and Expression',
+      title: '2. Reconocimiento y Expresión Emocional',
       questions: [
-        { id: 'em_reconoce_caras', label: 'Recognizes emotions in others\' faces', type: 'select', options: ['Correctly most of the time', 'Only basic emotions (happy/sad)', 'With great difficulty', 'Does not recognize them'] },
-        { id: 'em_expresa', label: 'Expresses own emotions appropriately', type: 'select', options: ['Yes, appropriately', 'Expresses them but intensely', 'Difficulty expressing them', 'Barely expresses them'] },
-        { id: 'em_empatia', label: 'Shows empathy when others are sad or hurt', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'em_regula', label: 'Regulates emotions without escalating behavior', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'em_estrategias', label: 'What emotional regulation strategies are used?', type: 'textarea', placeholder: 'Breathes, asks for help, steps away, has regulatory object...' },
+        { id: 'em_reconoce_caras', label: 'Reconoce emociones en rostros de otros', type: 'select', options: ['Correctamente la mayoría', 'Solo emociones básicas (feliz/triste)', 'Con mucha dificultad', 'No las reconoce'] },
+        { id: 'em_expresa', label: 'Expresa sus propias emociones adecuadamente', type: 'select', options: ['Sí, de forma apropiada', 'Las expresa pero de forma intensa', 'Dificultad para expresarlas', 'Casi no las expresa'] },
+        { id: 'em_empatia', label: 'Muestra empatía cuando otros están tristes o heridos', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'em_regula', label: 'Regula sus emociones sin escalar la conducta', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'em_estrategias', label: '¿Qué estrategias de regulación emocional usa?', type: 'textarea', placeholder: 'Respira, pide ayuda, se aleja, tiene objeto regulador...' },
       ]
     },
     {
-      title: '3. Conflict Resolution and Play',
+      title: '3. Resolución de Conflictos y Juego',
       questions: [
-        { id: 'conf_comparte', label: 'Shares toys and materials', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'conf_resuelve', label: 'Resolves conflicts without aggression', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'conf_pide_disculpas', label: 'Apologizes when doing something wrong', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'juego_tipo', label: 'Predominant play type', type: 'select', options: ['Solitary', 'Parallel (alongside others without interacting)', 'Associative (interacts briefly)', 'Cooperative (team play with rules)'] },
-        { id: 'juego_reglas', label: 'Accepts and follows game rules', type: 'frequency', options: FREQ_OPTIONS },
-        { id: 'juego_perder', label: 'Tolerates losing or things not going as desired', type: 'select', options: INTENSITY_OPTIONS },
+        { id: 'conf_comparte', label: 'Comparte juguetes y materiales', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'conf_resuelve', label: 'Resuelve conflictos sin agresión', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'conf_pide_disculpas', label: 'Pide disculpas cuando hace algo mal', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'juego_tipo', label: 'Tipo de juego predominante', type: 'select', options: ['Solitario', 'Paralelo (junto a otros pero sin interactuar)', 'Asociativo (interacciona brevemente)', 'Cooperativo (juego en equipo con reglas)'] },
+        { id: 'juego_reglas', label: 'Acepta y sigue las reglas de juegos', type: 'frequency', options: FREQ_OPTIONS },
+        { id: 'juego_perder', label: 'Tolera perder o que no salga como quiere', type: 'select', options: INTENSITY_OPTIONS },
       ]
     }
   ]
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CATEGORY: FAMILY (to be filled by parents)
+// CATEGORÍA: FAMILIA (para que llenen los padres)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const INFORME_PADRES_GENERAL: FormDefinition = {
   id: 'informe_padres_general',
-  title: 'How is my child this week?',
-  subtitle: 'Weekly parent report',
+  title: '¿Cómo está mi hijo esta semana?',
+  subtitle: 'Reporte semanal de los padres',
   category: 'familia',
   icon: '💌',
   color: 'from-pink-500 to-rose-400',
   targetRole: 'parent',
   estimatedMinutes: 10,
-  description: 'Share with the therapy team how your child was during the week.',
-  tags: ['Parents', 'Follow-up', 'Weekly', 'Home'],
+  description: 'Comparte con el equipo terapéutico cómo estuvo tu hijo durante la semana.',
+  tags: ['Padres', 'Seguimiento', 'Semanal', 'Casa'],
   sections: [
     {
-      title: 'How was the week?',
-      description: 'All information is valuable to us 💙',
+      title: '¿Cómo estuvo la semana?',
+      description: 'Toda información es valiosa para nosotros 💙',
       questions: [
-        { id: 'semana_general', label: 'How would you rate the week overall?', type: 'select', options: ['⭐ Very difficult', '⭐⭐ Difficult', '⭐⭐⭐ Normal', '⭐⭐⭐⭐ Good', '⭐⭐⭐⭐⭐ Excellent'] },
-        { id: 'logro_semana', label: 'Was there any achievement or positive thing this week?', type: 'textarea', placeholder: 'Tell us something good that happened, even something small 😊' },
-        { id: 'dificultad_semana', label: 'Was there any difficulty or challenging situation?', type: 'textarea', placeholder: 'Describe what was difficult this week...' },
-        { id: 'practica_casa', label: 'Did you practice the recommended strategies?', type: 'select', options: ['Yes, every day', 'Most days', 'Some days', 'Barely could', 'Could not / did not remember'] },
-        { id: 'dudas', label: 'Do you have any questions for the therapist?', type: 'textarea', placeholder: 'Write your questions here and we will answer them at the next session...' },
-        { id: 'estado_animo_hijo', label: 'How was your child\'s mood?', type: 'select', options: ['Very happy and calm', 'Well overall', 'Variable', 'More irritable than usual', 'Very difficult'] },
-        { id: 'sueño_semana', label: 'How was sleep this week?', type: 'select', options: ['Very well', 'Well', 'Fair', 'Poor', 'Very poor'] },
-        { id: 'mensaje_terapeuta', label: 'Anything else you want to tell the therapist?', type: 'textarea', placeholder: 'Anything you consider important...' },
+        { id: 'semana_general', label: '¿Cómo calificarías la semana en general?', type: 'select', options: ['⭐ Muy difícil', '⭐⭐ Difícil', '⭐⭐⭐ Normal', '⭐⭐⭐⭐ Buena', '⭐⭐⭐⭐⭐ Excelente'] },
+        { id: 'logro_semana', label: '¿Hubo algún logro o cosa positiva esta semana?', type: 'textarea', placeholder: 'Cuéntanos algo bueno que pasó, aunque sea pequeño 😊' },
+        { id: 'dificultad_semana', label: '¿Hubo alguna dificultad o situación difícil?', type: 'textarea', placeholder: 'Describe lo que fue difícil esta semana...' },
+        { id: 'practica_casa', label: '¿Practicaron las estrategias recomendadas?', type: 'select', options: ['Sí, todos los días', 'La mayoría de días', 'Algunos días', 'Casi no pudimos', 'No pudimos / no recordamos'] },
+        { id: 'dudas', label: '¿Tienen alguna duda o pregunta para el terapeuta?', type: 'textarea', placeholder: 'Escribe tus preguntas aquí y las respondemos en la próxima sesión...' },
+        { id: 'estado_animo_hijo', label: '¿Cómo estuvo el estado de ánimo de tu hijo?', type: 'select', options: ['Muy alegre y tranquilo', 'Bien en general', 'Variable', 'Más irritable de lo habitual', 'Muy difícil'] },
+        { id: 'sueño_semana', label: '¿Cómo fue el sueño esta semana?', type: 'select', options: ['Muy bien', 'Bien', 'Regular', 'Mal', 'Muy mal'] },
+        { id: 'mensaje_terapeuta', label: '¿Algo más que quieras contarle al terapeuta?', type: 'textarea', placeholder: 'Cualquier cosa que consideres importante...' },
       ]
     }
   ]
@@ -479,64 +479,64 @@ export const INFORME_PADRES_GENERAL: FormDefinition = {
 
 export const HISTORIA_FAMILIAR: FormDefinition = {
   id: 'historia_familiar',
-  title: 'Family and Developmental History',
-  subtitle: 'Initial form to get to know your family',
+  title: 'Historia Familiar y del Desarrollo',
+  subtitle: 'Formulario inicial para conocer a su familia',
   category: 'familia',
   icon: '👨‍👩‍👧',
   color: 'from-rose-500 to-pink-500',
   targetRole: 'parent',
   estimatedMinutes: 30,
-  description: 'Initial form to learn about the family context and your child\'s developmental history.',
-  tags: ['Clinical History', 'Development', 'Family', 'Initial'],
+  description: 'Formulario inicial para conocer el contexto familiar y la historia de desarrollo de su hijo.',
+  tags: ['Historia Clínica', 'Desarrollo', 'Familia', 'Inicial'],
   sections: [
     {
-      title: '1. Family and Environment',
+      title: '1. Familia y Entorno',
       questions: [
-        { id: 'fam_composicion', label: 'Who does the child live with?', type: 'multiselect', options: ['Father', 'Mother', 'Siblings', 'Grandparents', 'Other relatives', 'Only with one parent'] },
-        { id: 'fam_hermanos_cuantos', label: 'How many siblings does the child have?', type: 'select', options: ['None (only child)', '1 sibling', '2 siblings', '3 or more siblings'] },
-        { id: 'fam_idioma', label: 'What language(s) are spoken at home?', type: 'text', placeholder: 'E.g.: Spanish, they also speak Quechua...' },
-        { id: 'fam_situacion', label: 'What is the current family situation?', type: 'select', options: ['Stable and without significant events', 'Recent change (move, job)', 'Recent separation or divorce', 'Recent family loss', 'Difficult economic situation', 'Other significant change'] },
+        { id: 'fam_composicion', label: '¿Con quiénes vive el niño?', type: 'multiselect', options: ['Padre', 'Madre', 'Hermanos', 'Abuelos', 'Otros familiares', 'Solo con un progenitor'] },
+        { id: 'fam_hermanos_cuantos', label: '¿Cuántos hermanos tiene?', type: 'select', options: ['Ninguno (hijo único)', '1 hermano/a', '2 hermanos/as', '3 o más hermanos/as'] },
+        { id: 'fam_idioma', label: '¿Qué idioma(s) se hablan en casa?', type: 'text', placeholder: 'Ej: Español, también hablan quechua...' },
+        { id: 'fam_situacion', label: '¿Cómo es la situación familiar actualmente?', type: 'select', options: ['Estable y sin eventos significativos', 'Cambio reciente (mudanza, trabajo)', 'Separación o divorcio reciente', 'Pérdida familiar reciente', 'Situación económica difícil', 'Otro cambio importante'] },
       ]
     },
     {
-      title: '2. Pregnancy and Birth',
+      title: '2. Embarazo y Nacimiento',
       questions: [
-        { id: 'emb_complicaciones', label: 'Were there complications during pregnancy?', type: 'textarea', placeholder: 'Infections, medications, stress, other...' },
-        { id: 'emb_semanas', label: 'At how many weeks was the child born?', type: 'select', options: ['Extreme preterm (<28 wk)', 'Very preterm (28-32 wk)', 'Late preterm (33-36 wk)', 'Full term (37-42 wk)', 'Post-term (>42 wk)'] },
-        { id: 'nac_peso', label: 'What was the birth weight?', type: 'text', placeholder: 'E.g.: 3.200 kg' },
-        { id: 'nac_complicaciones', label: 'Were there complications at birth?', type: 'textarea', placeholder: 'NICU, oxygen, jaundice, other...' },
+        { id: 'emb_complicaciones', label: '¿Hubo complicaciones durante el embarazo?', type: 'textarea', placeholder: 'Infecciones, medicamentos, estrés, otros...' },
+        { id: 'emb_semanas', label: '¿A cuántas semanas nació?', type: 'select', options: ['Prematuro extremo (<28 sem)', 'Gran prematuro (28-32 sem)', 'Prematuro tardío (33-36 sem)', 'A término (37-42 sem)', 'Post-término (>42 sem)'] },
+        { id: 'nac_peso', label: '¿Cuánto pesó al nacer?', type: 'text', placeholder: 'Ej: 3.200 kg' },
+        { id: 'nac_complicaciones', label: '¿Hubo complicaciones al nacer?', type: 'textarea', placeholder: 'UCIN, oxígeno, ictericia, otros...' },
       ]
     },
     {
-      title: '3. Developmental Milestones',
+      title: '3. Hitos del Desarrollo',
       questions: [
-        { id: 'hito_sonrisa', label: 'At what age was the first social smile?', type: 'text', placeholder: 'E.g.: 2 months' },
-        { id: 'hito_sento', label: 'At what age did they sit independently?', type: 'text', placeholder: 'E.g.: 6 months' },
-        { id: 'hito_camino', label: 'At what age did they walk independently?', type: 'text', placeholder: 'E.g.: 12-14 months' },
-        { id: 'hito_palabras', label: 'At what age were first words spoken?', type: 'text', placeholder: 'E.g.: 12 months' },
-        { id: 'hito_frases', label: 'At what age were two words combined?', type: 'text', placeholder: 'E.g.: 24 months' },
-        { id: 'hito_control', label: 'At what age was toilet training achieved?', type: 'select', options: ['Before 2 years', '2-3 years', '3-4 years', 'After 4 years', 'Not yet achieved'] },
-        { id: 'hito_preocupaciones', label: 'At what point did you start to worry?', type: 'textarea', placeholder: 'Describe when and what you noticed...' },
+        { id: 'hito_sonrisa', label: '¿A qué edad dio la primera sonrisa social?', type: 'text', placeholder: 'Ej: 2 meses' },
+        { id: 'hito_sento', label: '¿A qué edad se sentó solo?', type: 'text', placeholder: 'Ej: 6 meses' },
+        { id: 'hito_camino', label: '¿A qué edad caminó solo?', type: 'text', placeholder: 'Ej: 12-14 meses' },
+        { id: 'hito_palabras', label: '¿A qué edad dijo sus primeras palabras?', type: 'text', placeholder: 'Ej: 12 meses' },
+        { id: 'hito_frases', label: '¿A qué edad combinó dos palabras?', type: 'text', placeholder: 'Ej: 24 meses' },
+        { id: 'hito_control', label: '¿A qué edad controló esfínteres?', type: 'select', options: ['Antes de los 2 años', '2-3 años', '3-4 años', 'Después de los 4 años', 'Aún no controla'] },
+        { id: 'hito_preocupaciones', label: '¿En qué momento se empezaron a preocupar?', type: 'textarea', placeholder: 'Describe cuándo y qué notaron...' },
       ]
     },
     {
-      title: '4. Health and Medical History',
+      title: '4. Salud y Antecedentes Médicos',
       questions: [
-        { id: 'med_enfermedades', label: 'Has the child had significant illnesses?', type: 'textarea', placeholder: 'Hospitalizations, surgeries, chronic conditions...' },
-        { id: 'med_medicacion', label: 'Is the child currently taking any medication?', type: 'textarea', placeholder: 'Name, dose, purpose...' },
-        { id: 'med_alergias', label: 'Does the child have allergies?', type: 'text', placeholder: 'Foods, medications, other...' },
-        { id: 'med_audiologia', label: 'Has hearing been evaluated?', type: 'select', options: ['Yes - normal hearing', 'Yes - mild hearing loss', 'Yes - moderate/severe hearing loss', 'Not evaluated'] },
-        { id: 'med_oftalmologia', label: 'Has vision been evaluated?', type: 'select', options: ['Yes - normal vision', 'Yes - uses glasses', 'Not evaluated'] },
-        { id: 'med_antecedentes_familia', label: 'Relevant family history?', type: 'textarea', placeholder: 'ASD, ADHD, intellectual disability, language problems in family...' },
+        { id: 'med_enfermedades', label: '¿Ha tenido enfermedades importantes?', type: 'textarea', placeholder: 'Hospitalizaciones, cirugías, enfermedades crónicas...' },
+        { id: 'med_medicacion', label: '¿Toma algún medicamento actualmente?', type: 'textarea', placeholder: 'Nombre, dosis, para qué...' },
+        { id: 'med_alergias', label: '¿Tiene alergias?', type: 'text', placeholder: 'Alimentos, medicamentos, otros...' },
+        { id: 'med_audiologia', label: '¿Se ha evaluado la audición?', type: 'select', options: ['Sí - audición normal', 'Sí - pérdida auditiva leve', 'Sí - pérdida auditiva moderada/severa', 'No se ha evaluado'] },
+        { id: 'med_oftalmologia', label: '¿Se ha evaluado la visión?', type: 'select', options: ['Sí - visión normal', 'Sí - usa lentes', 'No se ha evaluado'] },
+        { id: 'med_antecedentes_familia', label: '¿Antecedentes familiares relevantes?', type: 'textarea', placeholder: 'TEA, TDAH, discapacidad intelectual, problemas de lenguaje en familia...' },
       ]
     }
   ]
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// COMPLETE INDEX OF ALL FORMS
+// ÍNDICE COMPLETO DE TODOS LOS FORMULARIOS
 // ═══════════════════════════════════════════════════════════════════════════════
-// Import competitive forms
+// Importar formularios competitivos
 import {
   EVALUACION_FUNCIONAL_CONDUCTA,
   PLAN_INTERVENCION_CONDUCTUAL,
@@ -549,7 +549,7 @@ import {
 } from './competitiveForms'
 
 export const ALL_FORMS: FormDefinition[] = [
-  // Base forms
+  // Formularios base
   SCREENING_TDAH,
   CONDUCTA_CASA_TDAH,
   SCREENING_TEA,
@@ -558,7 +558,7 @@ export const ALL_FORMS: FormDefinition[] = [
   HABILIDADES_SOCIALES,
   INFORME_PADRES_GENERAL,
   HISTORIA_FAMILIAR,
-  // Competitive forms (Thread Learning / Central Reach level)
+  // Formularios competitivos (nivel Thread Learning / Central Reach)
   EVALUACION_FUNCIONAL_CONDUCTA,
   PLAN_INTERVENCION_CONDUCTUAL,
   OBJETIVOS_IEP,

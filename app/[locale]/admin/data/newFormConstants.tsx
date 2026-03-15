@@ -7,7 +7,7 @@ export const FORM_TABLE_MAPPING_NEW: Record<string, string> = {
   'registro_conductual': 'registro_conductual_abc',
 }
 
-const S = (isEN: boolean, es: string, en: string) => en
+const S = (isEN: boolean, es: string, en: string) => isEN ? en : es
 const A = (isEN: boolean, es: string[], en: string[]) => en
 
 export function getObjetivoIepData(isEN: boolean) {

@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
-import { ALL_FORMS } from '@/app/admin/data/neurodivergentForms'
+import { getFormsForLocale } from '@/app/[locale]/admin/data/formsIndex'
 import {
   getAnamnesisData, getAbaData, getEntornoHogarData, getBrief2Data,
   getAdos2Data, getVineland3Data, getWiscvData, getBasc3Data
@@ -42,10 +42,13 @@ const getClinicalForms = (isEN: boolean): any[] => [
   { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                          subtitle: 'Behavioral Assessment System',              category: 'conductual',icon: '📈', estimatedMinutes: 30, sections: getBasc3Data(isEN),   evalType: 'BASC3' },
 ]
 
-const getAllSpecialistForms = (isEN: boolean) => [
-  ...getClinicalForms(isEN),
-  ...ALL_FORMS.map(f => ({ ...f, formKey: f.id, isSoft: true })),
-]
+const getAllSpecialistForms = (isEN: boolean) => {
+  const { ALL_FORMS } = getFormsForLocale(isEN ? 'en' : 'es')
+  return [
+    ...getClinicalForms(isEN),
+    ...ALL_FORMS.map((f: any) => ({ ...f, formKey: f.id, isSoft: true })),
+  ]
+}
 
 // ─── QUESTION RENDERER ───────────────────────────────────────────────────────
 function QuestionField({ q, value, onChange }: any) {

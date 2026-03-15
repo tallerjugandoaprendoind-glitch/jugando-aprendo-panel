@@ -20,8 +20,8 @@ export const EVALUATION_COLORS = {
 
 
 
-const S = (isEN: boolean, es: string, en: string) => en
-const A = (isEN: boolean, esArr: string[], enArr: string[]) => enArr
+const S = (isEN: boolean, es: string, en: string) => isEN ? en : es
+const A = (isEN: boolean, esArr: string[], enArr: string[]) => isEN ? enArr : esArr
 
 // ─── ANAMNESIS ───────────────────────────────────────────────────────────────
 export function getAnamnesisData(isEN: boolean) {

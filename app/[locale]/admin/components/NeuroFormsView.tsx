@@ -13,9 +13,9 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import {
-  ALL_FORMS, FORM_CATEGORIES, ADMIN_FORMS, PARENT_FORMS,
   type FormDefinition, type FormCategory
 } from '../data/neurodivergentForms'
+import { getFormsForLocale } from '../data/formsIndex'
 
 // ─── DYNAMIC FORM RENDERER ───────────────────────────────────────────────────
 function DynamicFormQuestion({ question, value, onChange }: any) {
@@ -317,6 +317,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
 // ─── MAIN COMPONENT ─────────────────────────────────────────────────────────
 export default function NeuroFormsView() {
   const { t, locale } = useI18n()
+  const { ALL_FORMS, FORM_CATEGORIES, ADMIN_FORMS, PARENT_FORMS } = getFormsForLocale(locale)
   const isEN = locale === 'en'
   const toast = useToast()
   const [activeTab, setActiveTab] = useState<'biblioteca' | 'respuestas'>('biblioteca')

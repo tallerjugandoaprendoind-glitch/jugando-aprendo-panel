@@ -24,8 +24,9 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import {
-  ALL_FORMS, FORM_CATEGORIES, type FormDefinition, type FormCategory
+  type FormDefinition, type FormCategory
 } from '../data/neurodivergentForms'
+import { getFormsForLocale } from '../data/formsIndex'
 import {
   getAnamnesisData, getAbaData, getEntornoHogarData, getBrief2Data,
   getAdos2Data, getVineland3Data, getWiscvData, getBasc3Data
@@ -98,10 +99,13 @@ const getClinicalForms = (isEN: boolean) => [
 ]
 
 // Merge NeuroForms from neurodivergentForms.ts + Clinical forms (locale-aware, built at runtime)
-const getAllUnifiedForms = (isEN: boolean) => [
-  ...getClinicalForms(isEN),
-  ...ALL_FORMS.map((f: FormDefinition) => ({ ...f, formKey: null, isClinicalForm: true })),
-]
+const getAllUnifiedForms = (isEN: boolean) => {
+  const { ALL_FORMS: localeForms } = getFormsForLocale(isEN ? 'en' : 'es')
+  return [
+    ...getClinicalForms(isEN),
+    ...localeForms.map((f: FormDefinition) => ({ ...f, formKey: null, isClinicalForm: true })),
+  ]
+}
 
 // ─── QUESTION RENDERER ───────────────────────────────────────────────────────
 function QuestionRenderer({ question, value, onChange }: any) {
@@ -1323,7 +1327,7 @@ export default function EvaluacionesUnificadas() {
 
   const stats = {
     total: ALL_UNIFIED_FORMS.length,
-    neuro: ALL_FORMS.length,
+    neuro: getAllUnifiedForms(isEN).filter((f: any) => f.isClinicalForm).length,
     clinical: getClinicalForms(isEN).length,
     sent: sentForms.length,
     pending: sentForms.filter(f => f.status === 'pending').length,
