@@ -795,7 +795,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
         </select>
         <div className="flex gap-2">
           {((isEN ? [['generar', 'Generate new'], ['ajustar', 'Adjust existing'], ['evaluar_dominio', 'Evaluate mastery']] : [['generar', 'Generar nuevos'], ['ajustar', 'Ajustar existentes'], ['evaluar_dominio', 'Evaluar dominio']]) as [string, string][]).map(([val, lbl]) => (
-            <button key={val} onClick={() => setAccion(val)}
+            <button key={val} onClick={() => setAccion(val as 'generar' | 'ajustar' | 'evaluar_dominio')}
               className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${accion === val ? 'bg-amber-100 text-amber-700' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}>
               {lbl}
             </button>
