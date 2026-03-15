@@ -257,7 +257,7 @@ export default function MensajesPendientesPanel() {
                     {analysis.resumen_ejecutivo && (
                       <div className="bg-white rounded-2xl border border-slate-100 p-4 space-y-3">
                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                          <Sparkles size={12} className="text-violet-500"/> Análisis Clínico Generado
+                          <Sparkles size={12} className="text-violet-500"/> {isEN ? 'Clinical Analysis Generated' : 'Análisis Clínico Generado'}
                         </p>
                         <p className="text-sm text-slate-700 leading-relaxed">{analysis.resumen_ejecutivo}</p>
 

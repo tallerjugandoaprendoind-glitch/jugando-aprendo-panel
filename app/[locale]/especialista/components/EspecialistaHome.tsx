@@ -68,7 +68,7 @@ function ProductividadSemanal({ aprobadas, pendientes, rechazadas }: any) {
       </div>
       <div className="flex gap-4 text-xs font-bold">
         <span className="flex items-center gap-1.5 text-emerald-700"><span className="w-2 h-2 bg-emerald-500 rounded-full inline-block" />{aprobadas} aprobadas</span>
-        <span className="flex items-center gap-1.5 text-amber-700"><span className="w-2 h-2 bg-amber-400 rounded-full inline-block" />{pendientes} en revisión</span>
+        <span className="flex items-center gap-1.5 text-amber-700"><span className="w-2 h-2 bg-amber-400 rounded-full inline-block" />{pendientes} {isEN ? 'under review' : 'en revisión'}</span>
         <span className="flex items-center gap-1.5 text-red-700"><span className="w-2 h-2 bg-red-400 rounded-full inline-block" />{rechazadas} rechazadas</span>
       </div>
     </div>
@@ -144,8 +144,8 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
 
   const STAT_CARDS = [
     { label: t('nav.pacientes'), value: stats.totalPacientes, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', view: 'pacientes', icon: Baby, sub: 'Total activos' },
-    { label: 'Sessions this week', value: stats.sesionesEstaSemana, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', view: 'agenda', icon: Activity, sub: 'Últimos 7 días' },
-    { label: 'Under review', value: stats.pendientes, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', view: 'evaluaciones', icon: Clock, sub: 'Esperando aprobación', pulse: stats.pendientes > 0 },
+    { label: 'Sessions this week', value: stats.sesionesEstaSemana, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', view: 'agenda', icon: Activity, sub: isEN ? 'Last 7 days' : 'Últimos 7 días' },
+    { label: 'Under review', value: stats.pendientes, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', view: 'evaluaciones', icon: Clock, sub: isEN ? 'Awaiting approval' : 'Esperando aprobación', pulse: stats.pendientes > 0 },
     { label: 'Aprobadas', value: stats.aprobadas, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', view: 'evaluaciones', icon: CheckCircle2, sub: 'Confirmadas' },
   ]
 

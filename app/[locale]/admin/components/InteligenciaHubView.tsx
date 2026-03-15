@@ -358,7 +358,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             {(prediccion as any).resumen_general && (
               <div className="rounded-xl border p-5" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                 <p className="text-xs font-black uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: "var(--text-muted)" }}>
-                  <Sparkles size={12} className="text-blue-500" /> ANÁLISIS CLÍNICO IA — SUPERVISORA
+                  <Sparkles size={12} className="text-blue-500" /> {isEN ? 'CLINICAL AI ANALYSIS — SUPERVISOR' : 'ANÁLISIS CLÍNICO IA — SUPERVISORA'}
                 </p>
                 <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
                   {(prediccion as any).resumen_general}
@@ -448,7 +448,7 @@ function TabSeguridad() {
       {datos?.accesosPorRol && Object.keys(datos.accesosPorRol).length > 0 && (
         <div className=" rounded-2xl border border-slate-200 p-5" style={{ background: "var(--card)" }}>
           <h4 className="font-black text-slate-700 text-sm mb-4 flex items-center gap-2">
-            <Users size={14} className="text-blue-500" /> Accesos por Rol (últimos 7 días)
+            <Users size={14} className="text-blue-500" /> {isEN ? 'Access by Role (last 7 days)' : 'Accesos por Rol (últimos 7 días)'}
           </h4>
           <div className="space-y-3">
             {Object.entries(datos.accesosPorRol).map(([rol, count]) => {
@@ -582,7 +582,7 @@ function TabCompetitividad() {
       <div className=" rounded-2xl border border-slate-200 overflow-hidden" style={{ background: "var(--card)" }}>
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h4 className="font-black text-slate-700 text-sm flex items-center gap-2">
-            <BarChart3 size={14} className="text-purple-500" /> Métricas vs Estándares de Industria
+            <BarChart3 size={14} className="text-purple-500" /> {isEN ? 'Metrics vs Industry Standards' : 'Métricas vs Estándares de Industria'}
           </h4>
           <div className="flex gap-1.5">
             {[7, 30, 90].map(d => (
@@ -611,7 +611,7 @@ function TabCompetitividad() {
                     </div>
                   </div>
                   <ProgressBar value={score} color={scoreColor === 'green' ? 'green' : scoreColor === 'yellow' ? 'yellow' : 'red'} />
-                  <p className="text-[10px] text-slate-400 mt-1">Óptimo: {m.benchmark.optimo} · Bueno: {m.benchmark.bueno}</p>
+                  <p className="text-[10px] text-slate-400 mt-1">{isEN ? `Optimal: ${m.benchmark.optimo} · Good: ${m.be` : `Óptimo: ${m.benchmark.optimo} · Bueno: ${m.be`}nchmark.bueno}</p>
                 </div>
               </div>
             )
@@ -623,7 +623,7 @@ function TabCompetitividad() {
       {datos.analisisEstrategico && (
         <div className=" rounded-2xl border border-slate-200 p-5" style={{ background: "var(--card)" }}>
           <p className="text-xs font-black text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <Sparkles size={12} className="text-purple-500" /> ANÁLISIS ESTRATÉGICO IA
+            <Sparkles size={12} className="text-purple-500" /> {isEN ? 'STRATEGIC AI ANALYSIS' : 'ANÁLISIS ESTRATÉGICO IA'}
           </p>
           <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
             {datos.analisisEstrategico}

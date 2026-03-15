@@ -898,7 +898,7 @@ export default function ParentDashboard() {
                         <div>
                             <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">
                                 <span className="flex items-center gap-2">
-                                  <span>📱</span> Número WhatsApp
+                                  <span>📱</span> {isEN ? 'WhatsApp Number' : 'Número WhatsApp'}
                                 </span>
                                 <span className="text-[10px] font-normal text-green-600 mt-0.5 block">
                                   Recibirás alertas de citas, informes y mensajes del terapeuta

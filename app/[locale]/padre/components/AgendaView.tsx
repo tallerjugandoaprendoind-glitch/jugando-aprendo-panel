@@ -73,7 +73,7 @@ export default function AgendaView({ selectedChild }: { selectedChild?: any }) {
       ) : (
         <>
           <div>
-            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">Próximas ({proximas.length})</p>
+            <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-3">{isEN ? 'Upcoming (' : 'Próximas ('}{proximas.length})</p>
             {proximas.length === 0 ? (
               <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center">
                 <Calendar size={28} className="text-slate-200 mx-auto mb-2"/>

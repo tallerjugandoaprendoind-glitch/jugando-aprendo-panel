@@ -177,7 +177,7 @@ function QuestionRenderer({ question, value, onChange }: any) {
       <div>
         <p className="text-sm font-bold text-slate-700 mb-3">{question.label}</p>
         <div className="flex gap-3">
-          {(['Yes', 'No']).map(opt => (
+          {(isEN ? ['Yes', 'No'] : ['Sí', 'No']).map(opt => (
             <button key={opt} type="button" onClick={() => onChange(opt)}
               className={`flex-1 py-3 rounded-xl border-2 font-bold text-sm transition-all ${value === opt ? (opt === 'Sí' || opt === 'Yes' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-600 text-white border-slate-600') : 'bg-white border-slate-200 text-slate-600 hover:border-violet-300'}`}>
               {opt}
@@ -709,7 +709,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
             <button onClick={handleSend} disabled={sending || !childId}
               className="flex-[2] py-4 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-              {sending ? ('Sending...') : ('Send')}
+              {sending ? t('common.enviando') : t('common.enviar')}
             </button>
           </div>
         </div>
@@ -1039,7 +1039,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
             onClick={onBack}
             className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-black text-sm transition-all"
           >
-            <ChevronLeft size={18} /> Volver
+            <ChevronLeft size={18} /> {t('common.volver')}
           </button>
         </div>
         {aiAnalysis && (
@@ -1061,14 +1061,14 @@ function FormFillView({ form, children, onBack, toast }: any) {
       <div className="flex-shrink-0 border-b shadow-sm z-20" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-4">
           <button onClick={onBack} className="flex items-center gap-1.5 hover:text-violet-500 font-bold transition-all text-sm group" style={{ color: "var(--text-muted)" }}>
-            <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Volver
+            <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> {t('common.volver')}
           </button>
           <div className="flex-1">
             <div className="flex items-center justify-between mb-1">
               <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
                 Section {currentStep + 1} of {totalSteps}
               </p>
-              <p className="text-xs font-bold text-violet-600">{Math.round(progress)}% completado</p>
+              <p className="text-xs font-bold text-violet-600">{Math.round(progress)}% {t('common.completado')}</p>
             </div>
             <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--muted-bg)" }}>
               <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500"
@@ -1119,7 +1119,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         <div className="flex items-center justify-between gap-4">
           <button onClick={() => setCurrentStep(s => s - 1)} disabled={currentStep === 0}
             className="flex items-center gap-2 px-6 py-3  border-2 border-slate-200 text-slate-600 rounded-xl font-bold hover:border-violet-300 disabled:opacity-40 transition-all" style={{ background: "var(--card)" }}>
-            <ChevronLeft size={18} /> Anterior
+            <ChevronLeft size={18} /> {t('common.anterior')}
           </button>
 
           <div className="flex items-center gap-3">
@@ -1151,7 +1151,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
                 )}
                 <button onClick={() => setCurrentStep(s => s + 1)}
                   className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-violet-200 hover:opacity-90">
-                  Siguiente <ChevronRight size={18} />
+                  {t('common.siguiente')} <ChevronRight size={18} />
                 </button>
               </>
             )}

@@ -377,7 +377,7 @@ function MonthlyCalendarView() {
                           {apt.appointment_time?.slice(0,5)} {apt.children?.name||'?'}
                         </div>
                       ))}
-                      {dayApts.length>2 && <div className="text-[9px] text-slate-400 font-bold pl-1">+{dayApts.length-2} más</div>}
+                      {dayApts.length>2 && <div className="text-[9px] text-slate-400 font-bold pl-1">+{dayApts.length-2} {isEN ? 'more' : 'más'}</div>}
                     </div>
                   </div>
                 )
@@ -405,7 +405,7 @@ function MonthlyCalendarView() {
             {/* Lista citas */}
             <div className="rounded-2xl shadow-sm overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
               <div className="p-4 border-b" style={{ borderColor: "var(--card-border)" }}>
-                <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Citas ({filteredApts.length})</p>
+                <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('agenda.citasDelDia')} ({filteredApts.length})</p>
               </div>
               <div className="max-h-[520px] overflow-y-auto divide-y divide-slate-50">
                 {isLoading ? (

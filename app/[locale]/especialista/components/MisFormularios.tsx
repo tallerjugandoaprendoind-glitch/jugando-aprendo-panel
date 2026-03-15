@@ -400,7 +400,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         {step < total - 1 ? (
           <button onClick={() => setStep(s => s + 1)}
             className="flex-1 py-3 rounded-xl bg-blue-50 border border-blue-200 font-bold text-sm text-blue-700 hover:bg-blue-100 transition-colors">
-            Siguiente →
+            {t('common.siguiente')} →
           </button>
         ) : (
           <button onClick={handleAnalyze} disabled={analyzing || !childId}

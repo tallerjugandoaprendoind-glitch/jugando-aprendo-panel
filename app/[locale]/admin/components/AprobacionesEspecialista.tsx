@@ -158,7 +158,7 @@ export default function AprobacionesEspecialista() {
                 color: isActive ? (cfg?.color || '#06b6d4') : '#475569',
               }}
               className="text-xs font-bold px-3 py-1.5 rounded-full transition-all">
-              {f === 'all' ? ('All') : getStatusCfg(isEN)[f].label}
+              {f === 'all' ? t('common.todos') : getStatusCfg(isEN)[f].label}
             </button>
           )
         })}

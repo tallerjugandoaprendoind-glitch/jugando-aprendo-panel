@@ -170,7 +170,7 @@ export const OBJETIVOS_IEP: FormDefinition = {
       questions: [
         { id: 'nivel_comunicacion', label: 'Communication and Language - current level', type: 'textarea', required: true, placeholder: 'Ej: Utiliza 50 palabras aproximadas, combina 2 palabras ocasionalmente, comprende instrucciones de 1 paso consistentemente...' },
         { id: 'nivel_social', label: 'Social Skills - current level', type: 'textarea', placeholder: 'Ej: Juego paralelo con pares, responde a nombre 80% en ambiente 1:1, iniciación social ausente...' },
-        { id: 'nivel_autonomia', label: 'Autonomy and Daily Living - current level', type: 'textarea', placeholder: 'Ej: Come solo con cuchara con supervisión, requiere asistencia parcial en vestido, control de esfínteres en proceso...' },
+        { id: 'nivel_autonomia', label: 'Autonomy and Daily Living - current level', type: 'textarea', placeholder: 'E.g.: Eats alone with spoon under supervision, requires partial dressing assistance, toilet training in progress...' },
         { id: 'nivel_cognitivo', label: 'Cognitive and Academic Skills - current level', type: 'textarea', placeholder: 'Ej: Matching de colores y formas básicas, secuencia de 3 imágenes, conteo 1-5 con apoyo...' },
         { id: 'nivel_conductual', label: 'Behavior and Emotional Regulation - current level', type: 'textarea', placeholder: 'Ej: 3-5 rabietas/semana, duración 5-15 min, función escape, conductas de autoestimulación 40% del tiempo...' },
         { id: 'fortalezas_principales', label: 'Strengths and motivational areas', type: 'textarea', required: true, placeholder: 'Ej: Alta motivación por vehículos y música, excelente memoria visual, buen seguimiento de rutinas predecibles...' },
@@ -357,7 +357,7 @@ export const HABILIDADES_ADAPTATIVAS: FormDefinition = {
       title: '🍽️ Feeding',
       questions: [
         { id: 'come_solo', label: 'Eats independently', type: 'select', options: NIVEL_INDEPENDENCIA },
-        { id: 'uso_utensilios', label: 'Uso de utensilios (cuchara, tenedor)', type: 'select', options: NIVEL_INDEPENDENCIA },
+        { id: 'uso_utensilios', label: 'Use of utensils (spoon, fork)', type: 'select', options: NIVEL_INDEPENDENCIA },
         { id: 'variedad_alimentos', label: 'Dietary variety', type: 'select', options: ['Very restricted (1-5 foods)', 'Restricted (5-15 foods)', 'Moderate (15-30 foods)', 'Broad (no significant restrictions)'] },
         { id: 'conductas_alimentacion', label: 'Problematic feeding behaviors', type: 'multiselect', options: ['Ninguna', 'Rechazo de texturas', 'Rechazo de colores/presentación', 'Conductas de escupir', 'Masticación problemática', 'Arcadas / náuseas', 'Comer solo alimentos de marca específica'] },
       ]

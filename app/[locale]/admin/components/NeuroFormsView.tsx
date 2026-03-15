@@ -155,7 +155,7 @@ function AIAnalysisPanel({ analysis, onClose, editableMessage, onEditMessage }: 
       {/* Alert level */}
       <div className={`px-4 py-3 rounded-xl border-2 font-bold text-sm flex items-center gap-2 ${alertColors[level]}`}>
         <AlertTriangle size={16}/>
-        Nivel de Alerta Clínica: <span className="uppercase font-black">{level}</span>
+        {isEN ? 'Clinical Alert Level' : 'Nivel de Alerta Clínica'}: <span className="uppercase font-black">{level}</span>
       </div>
 
       {/* Análisis */}
@@ -484,7 +484,7 @@ export default function NeuroFormsView() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
           <button onClick={() => setSelectedForm(null)} className="flex items-center gap-2 text-slate-500 hover:text-indigo-600 font-bold transition-all group">
-            <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform"/> Volver a Formularios
+            <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform"/> {t('common.volver')}
           </button>
           <div className="flex items-center gap-3">
             {/* Patient selector */}
@@ -556,12 +556,12 @@ export default function NeuroFormsView() {
             <div className="flex gap-3">
               {currentStep > 0 && (
                 <button onClick={() => setCurrentStep(s => s - 1)} className="flex-1 py-4 border-2 border-slate-200 text-slate-600 rounded-xl font-black uppercase text-xs tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center gap-2">
-                  <ChevronLeft size={16}/> Anterior
+                  <ChevronLeft size={16}/> {t('common.anterior')}
                 </button>
               )}
               {currentStep < totalSteps - 1 ? (
                 <button onClick={() => setCurrentStep(s => s + 1)} className="flex-[2] py-4 bg-gradient-to-r from-indigo-600 to-violet-600 text-white rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 hover:from-indigo-700">
-                  Siguiente <ChevronRight size={16}/>
+                  {t('common.siguiente')} <ChevronRight size={16}/>
                 </button>
               ) : (
                 <button onClick={handleAnalyzeWithAI} disabled={isAnalyzing || answeredCount < 3}
@@ -668,7 +668,7 @@ export default function NeuroFormsView() {
                           <Clock size={10}/>{form.estimatedMinutes} min
                         </p>
                         <p className="text-[9px] font-bold opacity-70 mt-1">
-                          {form.targetRole === 'parent' ? ('👨‍👩 For parents') : form.targetRole === 'both' ? '🔄 Both' : '🩺 Clínico'}
+                          {form.targetRole === 'parent' ? (isEN ? '👨‍👩 For parents' : '👨‍👩 Para padres') : form.targetRole === 'both' ? (isEN ? '🔄 Both' : '🔄 Ambos') : '🩺 Clínico'}
                         </p>
                       </div>
                     </div>

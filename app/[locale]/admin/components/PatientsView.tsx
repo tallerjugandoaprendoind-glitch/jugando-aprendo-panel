@@ -255,12 +255,12 @@ function PatientsView() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h3 className="font-bold text-xl md:text-2xl text-slate-800 flex items-center gap-3">
-                            <Users className="text-blue-600" size={28}/> {'Patient Directory'}
+                            <Users className="text-blue-600" size={28}/> {t('pacientes.titulo')}
                         </h3>
-                        <p className="text-slate-400 text-xs md:text-sm mt-1">{listaNinosFiltrada.length} {"of"} {listaNinos.length} {"patients"}</p>
+                        <p className="text-slate-400 text-xs md:text-sm mt-1">{listaNinosFiltrada.length} {t('common.de')} {listaNinos.length} {t('ui.no_patients').split(' ')[2] || 'patients'}</p>
                     </div>
                     <button onClick={cargarPacientes} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm text-slate-600 transition-all flex items-center gap-2">
-                        <Activity size={16}/> {"Refresh"}
+                        <Activity size={16}/> {t('pacientes.actualizar')}
                     </button>
                 </div>
 
@@ -348,8 +348,8 @@ function PatientsView() {
                                         </td>
                                         <td className="p-4 lg:p-6 text-right lg:pr-10">
                                             <div className="flex items-center justify-end gap-2">
-                                              <button onClick={() => { verDetallePaciente(nino); setPatientTab('programas') }} className="px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5"><BarChart3 size={13}/> Programs</button>
-                                              <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> View</button>
+                                              <button onClick={() => { verDetallePaciente(nino); setPatientTab('programas') }} className="px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5"><BarChart3 size={13}/> {t('nav.programas')}</button>
+                                              <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> {t('common.ver')}</button>
                                             </div>
                                         </td>
                                     </tr>
@@ -370,7 +370,7 @@ function PatientsView() {
                                         {isEditing ? <Edit size={32}/> : selectedPatient.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 className="text-2xl font-black">{isEditing ? 'Editar Paciente' : selectedPatient.name}</h3>
+                                        <h3 className="text-2xl font-black">{isEditing ? t('pacientes.titulo') : selectedPatient.name}</h3>
                                         <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || "Pending diagnosis"}</p>
                                         {!isEditing && selectedPatient.age && (
                                           <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} {"years"}</p>
@@ -383,7 +383,7 @@ function PatientsView() {
                                       onClick={() => setPatientTab('programas')}
                                       className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
                                     >
-                                      <Activity size={13}/> Ver programas
+                                      <Activity size={13}/> {t('nav.programas')}
                                     </button>
                                   )}
                                   <button onClick={() => {setShowPatientModal(false); setIsEditing(false)}} className="p-2 hover:bg-white/20 rounded-xl transition-colors"><X size={24}/></button>
