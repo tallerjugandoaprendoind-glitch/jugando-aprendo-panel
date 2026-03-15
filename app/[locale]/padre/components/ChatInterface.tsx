@@ -358,7 +358,8 @@ function TypingIndicator() {
 
 // ── Pantalla de bienvenida ────────────────────────────────────────────────────
 function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickSend: (q: string) => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const quick = [
     { icon: '📋', text: '¿Cómo le fue en la última sesión?', color: '#eef2ff', border: '#c7d2fe' },
