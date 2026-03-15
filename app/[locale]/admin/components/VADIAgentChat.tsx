@@ -150,7 +150,7 @@ export default function VADIAgentChat({
         <div ref={bottomRef} />
       </div>
 
-      {/* Sugerencias rápidas (solo si no hay conversación) */}
+      {/* Quick suggestions (only if no conversation yet) */}
       {messages.length <= 1 && (
         <div className="px-4 pb-2">
           <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2">{t('ui.suggested_questions')}</p>

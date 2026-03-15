@@ -12,10 +12,14 @@ import type { ReactNode } from 'react'
 export type T = (key: string, vars?: Record<string, string>) => string
 
 export function useI18n() {
-  const locale = useLocale() as Locale
+  const nextIntlLocale = useLocale() as Locale
+  // Fallback: also read from URL pathname for reliability
+  const pathname = usePathname()
+  const urlLocale = (pathname?.split('/')[1] === 'en' ? 'en' : 
+                     pathname?.split('/')[1] === 'es' ? 'es' : null) as Locale | null
+  const locale = (urlLocale || nextIntlLocale) as Locale
   const messages = useMessages() as Record<string, any>
   const router = useRouter()
-  const pathname = usePathname()
 
   const t = createTranslator(messages)
 

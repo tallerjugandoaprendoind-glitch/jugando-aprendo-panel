@@ -256,7 +256,7 @@ export default function UserManagementView() {
   const canChangeRole = (targetUser: UserData) => {
 
     if (!currentUserId) return false
-    if (targetUser.id === currentUserId) return false // no puede cambiarse a sí mismo
+    if (targetUser.id === currentUserId) return false // cannot change their own role
     const targetRole = targetUser.profile?.role || ''
     const isTargetDirector = targetRole === 'jefe' || targetRole === 'admin'
     if (isTargetDirector) return false // nadie puede degradar a un director excepto superadmin en DB

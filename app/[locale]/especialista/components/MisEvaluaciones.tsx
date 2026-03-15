@@ -38,7 +38,7 @@ const getTemplates = (isEN: boolean): Record<string, any> => ({
   },
   sesion: {
     titulo: 'Session note - [Name] - [Date]',
-    contenido: 'Duration: [X] minutes\n\nActivities:\n1. [Activity 1] - [result]\n2. [Activity 2] - [result]\n\nResponesta: [descripción]',
+    contenido: 'Duration: [X] minutes\n\nActivities:\n1. [Activity 1] - [result]\n2. [Activity 2] - [result]\n\nResponsesta: [descripción]',
     observaciones: 'Arrived at session [state]. During the session [key moments].',
     recomendaciones: 'For the next session: [activities/topics]',
   },

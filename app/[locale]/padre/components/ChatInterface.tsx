@@ -167,11 +167,11 @@ function getEmotionalPrefix(text: string): string {
 
   const l = text.toLowerCase()
   if (l.includes('cansad') || l.includes('agotad'))
-    return '💙 I understand you are tired, and that is completely valid. Supporting a child in thisroceso requiere muchísima energía.\n\n'
+    return '💙 I understand you are tired, and that is completely valid. Supporting a child in  thisroceso requiere muchísima energía.\n\n'
   if (l.includes('culpa'))
     return '💙 There is no blame here. You are a parent doing their best for your child — that says everything de ti.\n\n'
   if (l.includes('no avanza') || l.includes('no mejora'))
-    return '💙 Progress in ABA therapy is not always linear, but it is real. There are gains that accumulate aunque no los veamos cada día.\n\n'
+    return '💙 Progress in ABA therapy is not always linear, but it is real. Gains accumulateat accumulate aunque no los veamos cada día.\n\n'
   if (l.includes('solo') || l.includes('sola') || l.includes('nadie entiende'))
     return '💙 You are not alone. The entire Jugando Aprendo team is here to support you — and youru familia.\n\n'
   return '💙 I hear how you are feeling, and it is completely valid. I am here.\n\n'

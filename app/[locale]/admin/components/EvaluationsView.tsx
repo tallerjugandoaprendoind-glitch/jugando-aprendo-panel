@@ -190,7 +190,7 @@ function DynamicEvaluationsView() {
         .single();
 
       if (!child?.parent_id) {
-        console.log('⚠️ Este niño no tiene padre asociado, no se envía notificación');
+        console.log('⚠️ This child has no associated parent, notification not sent');
         return;
       }
 
@@ -202,7 +202,7 @@ function DynamicEvaluationsView() {
         .single();
 
       if (!parentProfile?.user_id) {
-        console.log('⚠️ No se encontró user_id del padre en profiles');
+        console.log('⚠️ Parent user_id not found in profiles');
         return;
       }
 

@@ -216,7 +216,7 @@ export default function MensajesView({ profile }: { profile: any }) {
           </div>
           <p className="font-black text-slate-500 text-lg mb-2">{t('ui.no_messages')}</p>
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto">
-            When the therapist sends you a message or analysis about your child, it will appear here with all themación detallada.
+            When the therapist sends you a message or analysis about your child, it will appear here ith all themación detallada.
           </p>
         </div>
       ) : (

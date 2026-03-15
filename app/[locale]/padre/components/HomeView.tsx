@@ -211,7 +211,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       const timer = setTimeout(() => {
         setShowWellbeing(true)
         localStorage.setItem(key, '1')
-      }, 15000) // 15s después de cargar
+      }, 15000) // 15s after loading
       return () => clearTimeout(timer)
     }
   }, [child?.id])
