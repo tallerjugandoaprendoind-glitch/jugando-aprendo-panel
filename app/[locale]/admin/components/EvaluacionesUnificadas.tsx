@@ -593,7 +593,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
       document.body.appendChild(a); a.click()
       URL.revokeObjectURL(url); document.body.removeChild(a)
 
-      toast.success'✅ Word report generated and downloaded'
+      toast.success('✅ Word report generated and downloaded')
       onReportGenerated()
     } catch (err: any) {
       console.error('Error generando reporte:', err)
@@ -1002,7 +1002,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         document.body.appendChild(a); a.click()
         URL.revokeObjectURL(url); document.body.removeChild(a)
 
-        toast.success'✅ Word report downloaded'
+        toast.success('✅ Word report downloaded')
       } catch (err: any) {
         toast.error(('Error generating report: ') + (err.message || ('Try again')))
       } finally {
