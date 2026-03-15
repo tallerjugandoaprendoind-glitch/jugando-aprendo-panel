@@ -186,7 +186,8 @@ function RobotAvatar({ size = 36, animated = false }: { size?: number; animated?
 
 // ── Burbuja de mensaje ────────────────────────────────────────────────────────
 function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: () => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const isUser = m.role === 'user'
 
@@ -202,7 +203,6 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
   }
 
   if (m.type === 'wellbeing') {
-    const { t } = useI18n()
     return (
       <div className="flex gap-3 mb-4 items-start">
         <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center"

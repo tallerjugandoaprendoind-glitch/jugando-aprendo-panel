@@ -227,7 +227,8 @@ function RobotAvatar({ size = 36, animated = false }: { size?: number; animated?
 
 // ── Burbuja de mensaje ────────────────────────────────────────────────────────
 function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; onNavigateToStore?: () => void; onWellbeingAnswer?: (opt: string) => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const isUser = m.role === 'user'
 
