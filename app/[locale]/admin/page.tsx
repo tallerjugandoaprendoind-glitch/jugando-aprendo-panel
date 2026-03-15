@@ -294,7 +294,7 @@ export default function AdminDashboard() {
                 className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors
                   ${isDark ? 'text-slate-300 hover:bg-[#21262d]' : 'text-slate-600 hover:bg-slate-50'}`}
               >
-                <Key size={14} /> Cambiar contraseña
+                <Key size={14} /> Change password
               </button>
               <button
                 onClick={handleLogout}

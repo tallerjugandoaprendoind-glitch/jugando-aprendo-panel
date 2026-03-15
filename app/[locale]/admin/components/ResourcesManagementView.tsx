@@ -167,10 +167,10 @@ export default function ResourcesManagementView() {
         <div>
           <h2 className="font-black text-2xl md:text-3xl text-slate-800 tracking-tight flex items-center gap-3">
             <div className="p-2.5 bg-violet-100 rounded-2xl"><BookOpen className="text-violet-600" size={28}/></div>
-            Centro de Recursos
+            Resource Center
           </h2>
           <p className="text-slate-400 text-sm font-medium mt-1 ml-1">
-            Comparte videos, PDFs, guías y materiales con las familias
+            Share videos, PDFs, guides and materials with families
           </p>
         </div>
         <div className="flex gap-3">
@@ -178,7 +178,7 @@ export default function ResourcesManagementView() {
             <RefreshCw size={18}/>
           </button>
           <button onClick={() => setShowForm(true)} className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-violet-700 hover:to-indigo-700 shadow-lg shadow-violet-200/50 transition-all flex items-center gap-2">
-            <Plus size={18}/> Compartir Recurso
+            <Plus size={18}/> Share Resource
           </button>
         </div>
       </div>
@@ -280,7 +280,7 @@ export default function ResourcesManagementView() {
                   {resource.url && (
                     <a href={resource.url} target="_blank" rel="noopener noreferrer"
                       className={`flex items-center gap-2 text-xs font-bold ${typeInfo.color} hover:underline`}>
-                      <Eye size={12}/> Vista previa
+                      <Eye size={12}/> Preview
                     </a>
                   )}
                   
@@ -299,7 +299,7 @@ export default function ResourcesManagementView() {
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-black text-xl flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
                 {editingId ? <Pencil size={20} className="text-indigo-600"/> : <Gift size={20} className="text-violet-600"/>}
-                {editingId ? 'Editar Recurso' : 'Compartir Recurso'}
+                {editingId ? 'Edit Resource' : 'Share Resource'}
               </h3>
               <button onClick={() => { setShowForm(false); setEditingId(null); setNewResource({ title: '', description: '', resource_type: 'video', url: '', is_global: true, child_id: '', tags: [] }) }} className="p-2 rounded-full hover:bg-slate-100 transition-all"><X size={20}/></button>
             </div>

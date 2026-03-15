@@ -104,8 +104,8 @@ function AIBlock({ analysis }: { analysis: any }) {
     { k: 'plan_intervencion_conductual', l: 'Plan Conductual' },
     { k: 'fortalezas_conductuales', l: 'Fortalezas Conductuales' },
     { k: 'areas_preocupacion', l: 'Áreas de Preocupación' },
-    { k: 'mensaje_padres', l: 'Mensaje a Padres' },
-    { k: 'informe_padres', l: 'Informe a Padres' },
+    { k: 'mensaje_padres', l: 'Parent Message' },
+    { k: 'informe_padres', l: 'Parent Report' },
   ]
   const visible = fields.filter(({ k }) => analysis[k])
   if (!visible.length) return null
@@ -257,12 +257,12 @@ function EvalDetail({ r, tipo }: { r: any; tipo: string }) {
       { k: 'nivel_riesgo', l: 'Nivel de Riesgo' },
     ],
     'ADOS-2': [
-      { k: 'comunicacion', l: 'Comunicación' }, { k: 'interaccion', l: 'Interacción Social' },
+      { k: 'comunicacion', l: 'Communication' }, { k: 'interaccion', l: 'Social Interaction' },
       { k: 'juego', l: 'Juego' }, { k: 'conductas_repetitivas', l: 'Conductas Repetitivas' },
       { k: 'puntuacion_total', l: 'Afecto Social Total' }, { k: 'nivel_severidad', l: 'Severidad' },
     ],
     'Vineland-3': [
-      { k: 'puntuacion_comunicacion', l: 'Comunicación' }, { k: 'puntuacion_socializacion', l: 'Socialización' },
+      { k: 'puntuacion_comunicacion', l: 'Communication' }, { k: 'puntuacion_socializacion', l: 'Socialización' },
       { k: 'puntuacion_vida_diaria', l: 'Vida Diaria' }, { k: 'indice_conducta_adaptativa', l: 'Índice Global' },
     ],
     'WISC-V': [
@@ -413,7 +413,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
     'ABA/Conductual': 'bg-blue-100 text-blue-700',
     'Cognitiva': 'bg-purple-100 text-purple-700',
     'Social': 'bg-teal-100 text-teal-700',
-    'Comunicación': 'bg-indigo-100 text-indigo-700',
+    'Communication': 'bg-indigo-100 text-indigo-700',
     'Familia': 'bg-orange-100 text-orange-700',
     'Escolar': 'bg-emerald-100 text-emerald-700',
   }
@@ -568,7 +568,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
       {summary.estrategias_casa?.length > 0 && (
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
           <p className="text-[10px] font-black text-amber-700 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-            <Home size={10} /> Estrategias para los Padres en Casa
+            <Home size={10} /> Home Strategies for Parents
           </p>
           <div className="space-y-2">
             {summary.estrategias_casa.map((e: string, i: number) => (
@@ -584,7 +584,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
       {summary.objetivos_proximas_sesiones?.length > 0 && (
         <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
           <p className="text-[10px] font-black text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-1.5">
-            <Zap size={10} /> Objetivos para Próximas Sesiones
+            <Zap size={10} /> Goals for Upcoming Sessions
           </p>
           <div className="space-y-2">
             {summary.objetivos_proximas_sesiones.map((o: string, i: number) => (
@@ -747,7 +747,7 @@ export default function MisPacientes() {
 
     const tabs = [
       { id: 'resumen', label: 'Resumen IA', icon: Sparkles, count: null },
-      { id: 'historial', label: 'Historial', icon: Activity, count: registros.length },
+      { id: 'historial', label: 'History', icon: Activity, count: registros.length },
       { id: 'evaluaciones', label: t('nav.evaluaciones'), icon: Brain, count: evalItems.length },
       { id: 'reportes', label: t('nav.reportes'), icon: Download, count: wordReports.length },
     ]
@@ -783,7 +783,7 @@ export default function MisPacientes() {
                   </span>
                 )}
                 <span className="text-xs font-bold text-white/70 bg-white/10 px-2.5 py-1 rounded-full">
-                  {registros.length} registros
+                  {registros.length} records
                 </span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -824,7 +824,7 @@ export default function MisPacientes() {
                   <div className="flex flex-wrap gap-2">
                     <button onClick={() => setFilterType('all')}
                       className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all ${filterType === 'all' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200'}`}>
-                      Todos ({registros.length})
+                      All ({registros.length})
                     </button>
                     {uniqueTypes.map(t => {
                       const cfg = getTypeCfg(t)
@@ -840,7 +840,7 @@ export default function MisPacientes() {
                 {filtered.length === 0 ? (
                   <div className="py-16 text-center bg-white rounded-2xl border border-slate-100">
                     <FileText size={22} className="text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-400 text-sm font-semibold">Sin registros</p>
+                    <p className="text-slate-400 text-sm font-semibold">No records</p>
                   </div>
                 ) : (
                   <div className="space-y-2">

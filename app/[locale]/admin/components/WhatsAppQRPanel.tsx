@@ -66,7 +66,7 @@ export default function WhatsAppQRPanel() {
             WhatsApp Business
           </h2>
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-            Conectá el número oficial del centro para notificar a los padres
+            Connect the center's official number to notify parents
           </p>
         </div>
       </div>
@@ -74,14 +74,14 @@ export default function WhatsAppQRPanel() {
       {/* Estado: sin configurar */}
       {status === 'unconfigured' && (
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-5 space-y-4">
-          <p className="text-sm font-bold text-amber-800">⚙️ Microservicio no configurado</p>
+          <p className="text-sm font-bold text-amber-800">⚙️ Microservice not configured</p>
           <p className="text-xs text-amber-700">
             Para activar WhatsApp directo a los padres, necesitás deployar el microservicio en Railway y agregar las variables de entorno.
           </p>
           <div className="space-y-2">
             {[
               { label: 'WSP_SERVICE_URL', desc: 'URL de tu servicio en Railway' },
-              { label: 'WSP_SERVICE_SECRET', desc: 'Clave secreta del servicio' },
+              { label: 'WSP_SERVICE_SECRET', desc: 'Service secret key' },
             ].map(v => (
               <div key={v.label} className="bg-white rounded-lg p-3 border border-amber-100">
                 <code className="text-xs font-mono font-bold text-amber-800">{v.label}</code>
@@ -90,7 +90,7 @@ export default function WhatsAppQRPanel() {
             ))}
           </div>
           <p className="text-[10px] text-amber-600">
-            Mientras tanto, CallMeBot sigue funcionando para notificaciones al admin.
+            In the meantime, CallMeBot keeps working for admin notifications.
           </p>
         </div>
       )}

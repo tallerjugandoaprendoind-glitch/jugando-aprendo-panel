@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from('children')
-      .select('id, name, diagnosis, age')
+      .select('id, name, diagnosis, age, parent_id, parent_id2, tutor_id, guardian_id')
       .order('name')
     if (error) throw error
     return NextResponse.json({ data: data || [] })

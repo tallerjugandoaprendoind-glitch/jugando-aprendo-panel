@@ -70,7 +70,7 @@ function DynamicFormQuestion({ question, value, onChange }: any) {
           ))}
         </div>
         <div className="flex justify-between mt-1">
-          <span className="text-xs text-slate-400">Nunca/Leve</span>
+          <span className="text-xs text-slate-400">Never/Mild</span>
           <span className="text-xs text-slate-400">Siempre/Severo</span>
         </div>
       </div>

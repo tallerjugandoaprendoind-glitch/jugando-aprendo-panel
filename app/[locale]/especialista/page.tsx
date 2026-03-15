@@ -191,7 +191,7 @@ export default function EspecialistaDashboard() {
                 onClick={() => { setShowChangePassword(true); setShowProfileMenu(false) }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
               >
-                <Key size={14} /> Cambiar contraseña
+                <Key size={14} /> Change password
               </button>
               <button
                 onClick={handleLogout}

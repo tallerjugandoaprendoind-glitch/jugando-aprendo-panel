@@ -139,6 +139,9 @@ function PacientesVinculados({ userId, children, onUnlink }: {
   const isEN = locale === 'en'
   const hijos = children.filter(c =>
     c.parent_id === userId ||
+    c.parent_id2 === userId ||
+    c.tutor_id === userId ||
+    c.guardian_id === userId ||
     (c.parent_ids && c.parent_ids.includes(userId))
   )
 
@@ -153,7 +156,7 @@ function PacientesVinculados({ userId, children, onUnlink }: {
   return (
     <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--card-border)' }}>
       <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
-        Pacientes vinculados ({hijos.length})
+        Linked patients ({hijos.length})
       </p>
       <div className="flex flex-wrap gap-2">
         {hijos.map((h: any) => (
@@ -226,10 +229,18 @@ export default function UserManagementView() {
       if (json.error) throw new Error(json.error)
       setUsers(json.data || [])
 
-      // Cargar niños con soporte para múltiples padres
+      // Load children via admin API (bypasses RLS to see all parent links)
       try {
-        const { data: kids } = await sb.from('children').select('id, name, parent_id').order('name')
-        if (kids) setChildren(kids)
+        const kidsRes = await fetch('/api/admin/children')
+        const kidsJson = await kidsRes.json()
+        if (kidsJson.data) {
+          const normalized = kidsJson.data.map((k: any) => ({
+            ...k,
+            parent_id: k.parent_id || k.tutor_id || k.guardian_id || null,
+            parent_id2: k.parent_id2 || null,
+          }))
+          setChildren(normalized)
+        }
       } catch {}
     } catch (err: any) {
       toast.error(('Error loading users: ') + err.message)
@@ -372,7 +383,7 @@ export default function UserManagementView() {
           .update({ parent_id: linkingParent.id })
           .eq('id', selectedChildId)
         if (error) throw new Error(error.message)
-        toast.success(`✅ ${child.name} vinculado a ${linkingParent.profile?.full_name || linkingParent.email}`)
+        toast.success(`✅ ${child.name} linked to ${linkingParent.profile?.full_name || linkingParent.email}`)
       }
 
       setChildren(prev => prev.map(c => c.id === selectedChildId ? { ...c, parent_id: linkingParent.id } : c))
@@ -389,7 +400,7 @@ export default function UserManagementView() {
       const { error } = await sb.from('children').update({ parent_id: null }).eq('id', childId)
       if (error) throw new Error(error.message)
       setChildren(prev => prev.map(c => c.id === childId ? { ...c, parent_id: null } : c))
-      toast.success('Paciente desvinculado')
+      toast.success('Patient unlinked')
     } catch (err: any) { toast.error('Error: ' + err.message) }
   }
 
@@ -439,7 +450,7 @@ export default function UserManagementView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>{t('usuarios.gestion')}</h1>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{users.length} usuarios registrados</p>
+          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{users.length} registered users</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={cargarUsuarios} className="p-2 rounded-xl transition-colors hover:opacity-80"
@@ -457,9 +468,9 @@ export default function UserManagementView() {
       <div className="flex gap-1 border-b" style={{ borderColor: 'var(--card-border)' }}>
         {[
           { id: 'todos',       label: t('common.todos'),        count: users.length,        icon: Users,       color: 'text-slate-500' },
-          { id: 'jefe',        label: 'Directores',   count: totalJefes,          icon: Crown,       color: 'text-purple-600' },
-          { id: 'especialista',label: 'Especialistas', count: totalEspecialistas,  icon: Stethoscope, color: 'text-blue-600' },
-          { id: 'padre',       label: 'Padres',       count: totalPadres,         icon: Heart,       color: 'text-pink-600' },
+          { id: 'jefe',        label: 'Directors',   count: totalJefes,          icon: Crown,       color: 'text-purple-600' },
+          { id: 'especialista',label: 'Specialists', count: totalEspecialistas,  icon: Stethoscope, color: 'text-blue-600' },
+          { id: 'padre',       label: 'Parents',       count: totalPadres,         icon: Heart,       color: 'text-pink-600' },
         ].map(tab => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -482,10 +493,10 @@ export default function UserManagementView() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard value={totalActivos}       label="Activos"       icon={UserCheck}   color="bg-emerald-500" />
-        <StatCard value={totalJefes}         label="Directores"    icon={Crown}        color="bg-purple-500" />
-        <StatCard value={totalEspecialistas} label="Especialistas" icon={Stethoscope}  color="bg-blue-500" />
-        <StatCard value={totalPadres}        label="Padres"        icon={Heart}        color="bg-pink-500" />
+        <StatCard value={totalActivos}       label="Active"       icon={UserCheck}   color="bg-emerald-500" />
+        <StatCard value={totalJefes}         label="Directors"    icon={Crown}        color="bg-purple-500" />
+        <StatCard value={totalEspecialistas} label="Specialists" icon={Stethoscope}  color="bg-blue-500" />
+        <StatCard value={totalPadres}        label="Parents"        icon={Heart}        color="bg-pink-500" />
       </div>
 
       {/* Buscador */}
@@ -581,8 +592,8 @@ export default function UserManagementView() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Meta */}
                     <div className="space-y-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                      <p className="flex items-center gap-1.5"><Calendar size={11} /> Creado: {new Date(user.created_at).toLocaleDateString('es')}</p>
-                      <p className="flex items-center gap-1.5"><Clock size={11} /> Último acceso: {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('es') : 'Nunca'}</p>
+                      <p className="flex items-center gap-1.5"><Calendar size={11} /> Created: {new Date(user.created_at).toLocaleDateString('en-US')}</p>
+                      <p className="flex items-center gap-1.5"><Clock size={11} /> Last access: {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('en-US') : 'Never'}</p>
                       <p className="flex items-center gap-1.5"><Ticket size={11} /> Tokens: <strong style={{ color: 'var(--text-primary)' }}>{user.profile?.tokens ?? 0}</strong></p>
                       {user.profile?.specialty && (
                         <p className="flex items-center gap-1.5"><Briefcase size={11} /> {user.profile.specialty}</p>
@@ -594,7 +605,7 @@ export default function UserManagementView() {
                       <button onClick={() => { setChangingPasswordFor(user); setNewPassword(''); setConfirmPassword('') }}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                         style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
-                        <Lock size={12} /> Cambiar contraseña
+                        <Lock size={12} /> Change password
                       </button>
 
                       <button onClick={() => handleSendResetEmail(user)}
@@ -741,7 +752,7 @@ export default function UserManagementView() {
           <div className="rounded-2xl shadow-2xl p-6 w-full max-w-sm animate-scale-in" style={{ background: 'var(--card)' }}>
             <div className="flex items-center justify-between mb-5">
               <h3 className="font-black flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-                <Heart size={18} className="text-pink-500" /> Vincular paciente
+                <Heart size={18} className="text-pink-500" /> Link patient
               </h3>
               <button onClick={() => setLinkingParent(null)} className="p-1.5 rounded-lg hover:opacity-80" style={{ color: 'var(--text-muted)' }}><X size={16} /></button>
             </div>
@@ -749,10 +760,10 @@ export default function UserManagementView() {
               Padre/Tutor: <strong style={{ color: 'var(--text-primary)' }}>{linkingParent.profile?.full_name || linkingParent.email}</strong>
             </p>
             <p className="text-xs mb-4" style={{ color: 'var(--text-muted)' }}>
-              Si el paciente ya tiene tutor asignado, será reemplazado. Para acceso de dos tutores simultáneos, creá dos cuentas de padre y vincinalas por separado.
+              If the patient already has a guardian, they will be replaced. For dual-guardian access, create two parent accounts and link them separately.
             </p>
             <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: 'var(--text-muted)' }}>
-              Seleccioná el paciente
+              Select the patient
             </label>
             <select value={selectedChildId} onChange={e => setSelectedChildId(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-pink-500 mb-4"
@@ -765,7 +776,7 @@ export default function UserManagementView() {
               ))}
             </select>
             {children.length === 0 && (
-              <p className="text-xs text-amber-500 font-medium mb-3">No hay pacientes registrados.</p>
+              <p className="text-xs text-amber-500 font-medium mb-3">No patients registered.</p>
             )}
             <button onClick={handleLinkParentChild} disabled={savingLink || !selectedChildId}
               className="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-white"

@@ -161,7 +161,7 @@ export default function ExcelImportView() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
             <FileText className="w-4 h-4 text-gray-400" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Vista previa (primeras 5 filas)</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Preview (first 5 rows)</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

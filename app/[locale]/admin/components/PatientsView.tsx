@@ -272,7 +272,7 @@ function PatientsView() {
                     </div>
                     <div className="md:col-span-4">
                         <select value={filterDiagnosis} onChange={(e) => setFilterDiagnosis(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-purple-500 focus:bg-white transition-all font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>
-                            {diagnosticosUnicos.map(diag => <option key={diag} value={diag}>{diag === 'todos' ? '🔍 Todos' : `📋 ${diag}`}</option>)}
+                            {diagnosticosUnicos.map(diag => <option key={diag} value={diag}>{diag === 'todos' ? '🔍 All' : `📋 ${diag}`}</option>)}
                         </select>
                     </div>
                     <div className="md:col-span-3">
@@ -348,8 +348,8 @@ function PatientsView() {
                                         </td>
                                         <td className="p-4 lg:p-6 text-right lg:pr-10">
                                             <div className="flex items-center justify-end gap-2">
-                                              <button onClick={() => { verDetallePaciente(nino); setPatientTab('programas') }} className="px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5"><BarChart3 size={13}/> Programas</button>
-                                              <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> Ver</button>
+                                              <button onClick={() => { verDetallePaciente(nino); setPatientTab('programas') }} className="px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5"><BarChart3 size={13}/> Programs</button>
+                                              <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> View</button>
                                             </div>
                                         </td>
                                     </tr>

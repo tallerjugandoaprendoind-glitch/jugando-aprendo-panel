@@ -266,7 +266,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
           </p>
           <p className="text-xs text-slate-400 mb-4">
             {soloConDatos
-              ? 'Ve a Pacientes, abre un paciente y registra sesiones ABA'
+              ? 'Go to Patients, open a patient and record ABA sessions'
               : 'Intenta con otro término de búsqueda'}
           </p>
           <button onClick={onIrAPacientes}

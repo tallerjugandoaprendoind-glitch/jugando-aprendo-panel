@@ -419,7 +419,7 @@ function TabSeguridad() {
               <span className="text-2xl font-black" style={{ color: scoreColor }}>{datos?.scoreSeguridad}</span>
             </div>
           </div>
-          <p className="text-xs font-black text-slate-500 uppercase mt-2">Score Seguridad</p>
+          <p className="text-xs font-black text-slate-500 uppercase mt-2">Security Score</p>
           <Badge label={datos?.estado || 'desconocido'} color={estadoColor} />
         </div>
 
@@ -472,7 +472,7 @@ function TabSeguridad() {
       <div className=" rounded-2xl border border-slate-200 overflow-hidden" style={{ background: "var(--card)" }}>
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h4 className="font-black text-slate-700 text-sm flex items-center gap-2">
-            <AlertTriangle size={14} className="text-amber-500" /> Alertas de Seguridad
+            <AlertTriangle size={14} className="text-amber-500" /> Security Alerts
           </h4>
           <button onClick={cargar} className="text-xs text-blue-600 hover:text-blue-800 font-bold flex items-center gap-1">
             <RefreshCw size={11} /> Refresh
@@ -481,7 +481,7 @@ function TabSeguridad() {
         {alertas.length === 0 ? (
           <div className="p-8 text-center">
             <CheckCircle size={32} className="text-emerald-400 mx-auto mb-2" />
-            <p className="text-slate-500 font-medium text-sm">✅ Sin alertas activas. Sistema seguro.</p>
+            <p className="text-slate-500 font-medium text-sm">✅ No active alerts. System secure.</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-50">
@@ -688,7 +688,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         </select>
         <button onClick={analizar} disabled={!selected || loading}
           className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
-          {loading ? <><RefreshCw size={14} className="animate-spin" /> Analizando patrones...</> : <><Activity size={14} /> Detectar Patrones</>}
+          {loading ? <><RefreshCw size={14} className="animate-spin" /> Analyzing patterns...</> : <><Activity size={14} /> Detect Patterns</>}
         </button>
         {error && <p className="text-red-500 text-xs">{error}</p>}
       </div>
@@ -804,7 +804,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
         </div>
         <button onClick={ejecutar} disabled={!selected || loading}
           className="w-full py-2.5 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
-          {loading ? <><RefreshCw size={14} className="animate-spin" /> {t('common.procesando')}</> : <><Target size={14} /> Ejecutar</>}
+          {loading ? <><RefreshCw size={14} className="animate-spin" /> {t('common.procesando')}</> : <><Target size={14} /> Run</>}
         </button>
         {error && <p className="text-red-500 text-xs">{error}</p>}
       </div>
@@ -853,7 +853,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
               <p className="text-sm text-amber-800 whitespace-pre-wrap">{resultado.resultado.texto_libre}</p>
             </div>
           )}
-          <p className="text-xs text-slate-400">Programas analizados: {resultado.programas_analizados || 0} · Patrones considerados: {resultado.patrones_considerados || 0}</p>
+          <p className="text-xs text-slate-400">Programs analyzed: {resultado.programas_analizados || 0} · Patterns considered: {resultado.patrones_considerados || 0}</p>
         </div>
       )}
     </div>
@@ -900,12 +900,12 @@ function TabSugerencias() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Sparkles size={16} className="text-orange-600" />
-            <span className="font-bold text-orange-800 text-sm">Alertas Proactivas — CAPA 4</span>
+            <span className="font-bold text-orange-800 text-sm">Proactive Alerts — LAYER 4</span>
           </div>
           <p className="text-xs text-orange-600">{t('hub.iaAlertaAntes')}</p>
           {meta && (
             <p className="text-[11px] text-orange-500 mt-1">
-              {meta.pacientes_analizados} pacientes analizados · {meta.urgentes} alertas urgentes
+              {meta.pacientes_analizados} patients analyzed · {meta.urgentes} urgent alerts
             </p>
           )}
         </div>
@@ -929,7 +929,7 @@ function TabSugerencias() {
       {!loading && sugerencias.length === 0 && (
         <div className=" rounded-2xl border border-slate-100 p-10 text-center" style={{ background: "var(--card)" }}>
           <CheckCircle size={32} className="text-emerald-400 mx-auto mb-3" />
-          <p className="font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>Sin alertas activas</p>
+          <p className="font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>No active alerts</p>
           <p className="text-xs text-slate-400 mt-1">{t('hub.todosPacientesOk')}</p>
         </div>
       )}
@@ -1099,7 +1099,7 @@ export default function InteligenciaHubView() {
         </div>
         <div>
           <h1 className="text-xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{t('hub.hubInteligencia')}</h1>
-          <p className="text-xs text-slate-400">6 agentes IA · Predicciones · Patrones · Objetivos · Reportes · Seguridad</p>
+          <p className="text-xs text-slate-400">6 AI agents · Predictions · Patterns · Goals · Reports · Security</p>
         </div>
       </div>
 

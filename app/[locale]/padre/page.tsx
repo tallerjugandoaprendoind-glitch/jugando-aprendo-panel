@@ -547,7 +547,7 @@ export default function ParentDashboard() {
                     <div>
                         <p className="font-bold text-slate-800 text-sm leading-tight">{profile?.full_name?.split(' ')[0]}</p>
                         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide flex items-center gap-1">
-                            <Sparkles size={10}/> Portal Padres
+                            <Sparkles size={10}/> Parent Portal
                         </p>
                     </div>
                 </div>
@@ -1103,7 +1103,7 @@ export default function ParentDashboard() {
                                 <Lock size={24}/>
                             </div>
                             <div>
-                                <h3 className="font-bold text-lg">Privacidad y Seguridad</h3>
+                                <h3 className="font-bold text-lg">Privacy & Security</h3>
                                 <p className="text-xs text-purple-100">{"Your data is protected"}</p>
                             </div>
                         </div>

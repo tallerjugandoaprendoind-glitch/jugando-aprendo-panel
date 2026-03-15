@@ -436,7 +436,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
           </div>
           <div>
             <p className="font-black text-base">{t('dashboard.analisisIA')}</p>
-            <p className="text-violet-200 text-sm">{stats.analisisIA} registros procesados por IA</p>
+            <p className="text-violet-200 text-sm">{stats.analisisIA} records processed by AI</p>
           </div>
         </div>
         <button onClick={() => navigateTo('reportes')}

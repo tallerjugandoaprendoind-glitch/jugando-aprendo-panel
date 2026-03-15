@@ -414,7 +414,7 @@ export default function StoreManagementView() {
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {[
           { label: 'Productos', value: stats.totalProductos, icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Activos', value: stats.activos, icon: ToggleRight, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Active', value: stats.activos, icon: ToggleRight, color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: 'Stock bajo (≤3)', value: stats.stockBajo, icon: AlertTriangle, color: stats.stockBajo > 0 ? 'text-red-600' : 'text-slate-400', bg: stats.stockBajo > 0 ? 'bg-red-50' : 'bg-slate-50' },
           { label: 'Pedidos pendientes', value: stats.pedidosPendientes, icon: Clock, color: stats.pedidosPendientes > 0 ? 'text-amber-600' : 'text-slate-400', bg: stats.pedidosPendientes > 0 ? 'bg-amber-50' : 'bg-slate-50' },
           { label: 'Total vendido', value: `S/ ${stats.totalVendido.toFixed(2)}`, icon: DollarSign, color: 'text-violet-600', bg: 'bg-violet-50' },

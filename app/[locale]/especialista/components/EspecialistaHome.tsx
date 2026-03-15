@@ -320,7 +320,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             {[
               { step: '1', label: 'Tú creas', desc: 'Registra evaluación o nota de sesión', color: 'bg-amber-100 text-amber-800' },
               { step: '2', label: 'Jefe revisa', desc: 'El admin valida y aprueba o da feedback', color: 'bg-orange-100 text-orange-800' },
-              { step: '3', label: 'Padres ven', desc: 'Al aprobarse, llega a la familia', color: 'bg-green-100 text-green-800' },
+              { step: '3', label: 'Parents see', desc: 'Once approved, it reaches the family', color: 'bg-green-100 text-green-800' },
             ].map(({ step, label, desc, color }) => (
               <div key={step} className={`${color} rounded-xl p-3 text-center`}>
                 <div className="text-lg font-black mb-1">{step}</div>

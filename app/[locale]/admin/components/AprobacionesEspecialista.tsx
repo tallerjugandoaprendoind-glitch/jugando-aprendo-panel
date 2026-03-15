@@ -116,7 +116,7 @@ export default function AprobacionesEspecialista() {
           </div>
           <div>
             <h3 style={{ color: '#f1f5f9' }} className="font-black text-xl flex items-center gap-2">
-              Evaluaciones de Especialistas
+              Specialist Evaluations
               {filtro === 'pending_approval' && pendientesCount > 0 && (
                 <span style={{ background: '#f59e0b', color: '#fff' }}
                   className="text-xs font-black px-2 py-0.5 rounded-full">{pendientesCount}</span>

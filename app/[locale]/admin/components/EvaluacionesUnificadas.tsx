@@ -1180,7 +1180,7 @@ function FormCard({ form, onStart, onSend, catInfo }: any) {
           <div className="flex items-center gap-1.5">
             {form.targetRole === 'parent' || form.targetRole === 'both' ? (
               <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[9px] font-black uppercase tracking-wider border border-blue-100 flex items-center gap-1">
-                <Send size={8} /> Padres
+                <Send size={8} /> Parents
               </span>
             ) : null}
             {(form as any).externalPlatform ? (

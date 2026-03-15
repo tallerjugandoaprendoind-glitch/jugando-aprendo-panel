@@ -336,7 +336,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 {child?.diagnosis || ('Under evaluation')}
               </span>
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
-                <Activity size={11} /> {stats.sessions} sesiones
+                <Activity size={11} /> {stats.sessions} sessions
               </span>
             </div>
           </div>

@@ -382,7 +382,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
           <div className="p-2 bg-purple-50 rounded-xl">
             <Brain size={24} className="text-purple-600"/>
           </div>
-          Analizador Inteligente
+          Intelligent Analyzer
         </h3>
         <select 
           className="p-3 md:p-4 bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-xl md:rounded-2xl outline-none font-bold text-slate-700 dark:text-slate-200 text-sm w-full md:w-[400px] focus:bg-white dark:focus:bg-slate-600 focus:ring-4 focus:ring-purple-50 focus:border-purple-500 transition-all" 
@@ -487,7 +487,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
             id="historial"
             title={t('ui.clinical_record')}
             icon={<History size={16} className="text-orange-400"/>}
-            badge={<span className="text-[10px] px-2 py-0.5 rounded-full font-black" style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)' }}>{historyData.aba.length + historyData.entorno.length} registros</span>}
+            badge={<span className="text-[10px] px-2 py-0.5 rounded-full font-black" style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)' }}>{historyData.aba.length + historyData.entorno.length} records</span>}
             defaultOpen={false}
           >
             <div className="p-4 space-y-3" style={{ background: 'var(--background)' }}>
@@ -519,7 +519,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
                           <DetailBox title={t('ui.barriers')} content={d.barreras_identificadas} icon={<ShieldAlert size={13}/>} color="bg-red-500/10 border-red-500/20 text-red-300"/>
                           <DetailBox title={t('ui.facilitators')} content={d.facilitadores} icon={<CheckCircle2 size={13}/>} color="bg-green-500/10 border-green-500/20 text-green-300"/>
                         </div>
-                        <DetailBox title="Mensaje Padres" content={d.mensaje_padres_entorno} icon={<MessageCircle size={13}/>} color="bg-green-500/10 border-green-500/20 text-green-300" full/>
+                        <DetailBox title="Parent Message" content={d.mensaje_padres_entorno} icon={<MessageCircle size={13}/>} color="bg-green-500/10 border-green-500/20 text-green-300" full/>
                       </div>
                     )}
                   </div>
@@ -565,7 +565,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
               {(historyData.aba.length === 0 && historyData.entorno.length === 0) && (
                 <div className="py-16 text-center" style={{ color: 'var(--text-muted)' }}>
                   <History size={48} className="mx-auto mb-3 opacity-20"/>
-                  <p className="font-black uppercase tracking-widest text-sm">Sin registros</p>
+                  <p className="font-black uppercase tracking-widest text-sm">No records</p>
                 </div>
               )}
             </div>
@@ -596,7 +596,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
           {/* ══ SECCIÓN 4: REPORTES WORD (cerrado por defecto) ══ */}
           <AccordionSection
             id="reportes"
-            title="Reportes Word Generados"
+            title="Generated Word Reports"
             icon={<FileText size={16} className="text-blue-400"/>}
             badge={reportesHistorial.length > 0 ? <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full font-black">{reportesHistorial.length}</span> : undefined}
             defaultOpen={false}
