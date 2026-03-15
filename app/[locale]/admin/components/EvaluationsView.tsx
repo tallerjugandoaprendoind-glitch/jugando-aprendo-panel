@@ -13,12 +13,13 @@ import ReportGenerator from '@/components/ReportGenerator'
 import { calcularEdad, calcularEdadNumerica } from '../utils/helpers'
 import { 
   FORM_TABLE_MAPPING, EVALUATION_COLORS,
-  ANAMNESIS_DATA, ABA_DATA, ENTORNO_HOGAR_DATA, BRIEF2_DATA,
-  ADOS2_DATA, VINELAND3_DATA, WISCV_DATA, BASC3_DATA
+  getAnamnesisData, getAbaData, getEntornoHogarData, getBrief2Data,
+  getAdos2Data, getVineland3Data, getWiscvData, getBasc3Data
 } from '../data/formConstants'
 
 function DynamicEvaluationsView() {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [activeForm, setActiveForm] = useState<'aba' | 'anamnesis' | 'entorno_hogar' | 'brief2' | 'ados2' | 'vineland3' | 'wiscv' | 'basc3' | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedChild, setSelectedChild] = useState('');
@@ -33,14 +34,14 @@ function DynamicEvaluationsView() {
     supabase.from('children').select('id, name').then(({ data }) => data && setListaNinos(data));
   }, []);
 
-  const formConfig = activeForm === 'anamnesis' ? ANAMNESIS_DATA : 
-                      activeForm === 'aba' ? ABA_DATA : 
-                      activeForm === 'entorno_hogar' ? ENTORNO_HOGAR_DATA :
-                      activeForm === 'brief2' ? BRIEF2_DATA :
-                      activeForm === 'ados2' ? ADOS2_DATA :
-                      activeForm === 'vineland3' ? VINELAND3_DATA :
-                      activeForm === 'wiscv' ? WISCV_DATA :
-                      activeForm === 'basc3' ? BASC3_DATA : null;
+  const formConfig = activeForm === 'anamnesis' ? getAnamnesisData(isEN) : 
+                      activeForm === 'aba' ? getAbaData(isEN) : 
+                      activeForm === 'entorno_hogar' ? getEntornoHogarData(isEN) :
+                      activeForm === 'brief2' ? getBrief2Data(isEN) :
+                      activeForm === 'ados2' ? getAdos2Data(isEN) :
+                      activeForm === 'vineland3' ? getVineland3Data(isEN) :
+                      activeForm === 'wiscv' ? getWiscvData(isEN) :
+                      activeForm === 'basc3' ? getBasc3Data(isEN) : null;
   const currentSection = formConfig ? formConfig[currentStep] : null;
   const totalSteps = formConfig ? formConfig.length : 0;
   const progress = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;

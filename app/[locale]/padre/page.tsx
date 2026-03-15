@@ -791,7 +791,7 @@ export default function ParentDashboard() {
                                     type="submit" 
                                     className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 flex items-center justify-center gap-2"
                                 >
-                                    <CheckCircle2 size={18}/> Guardar
+                                    <CheckCircle2 size={18}/> {isEN ? 'Save' : 'Guardar'}
                                 </button>
                             </div>
                         </form>

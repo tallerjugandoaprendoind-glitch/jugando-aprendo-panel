@@ -11,8 +11,8 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { ALL_FORMS } from '@/app/admin/data/neurodivergentForms'
 import {
-  ANAMNESIS_DATA, ABA_DATA, ENTORNO_HOGAR_DATA, BRIEF2_DATA,
-  ADOS2_DATA, VINELAND3_DATA, WISCV_DATA, BASC3_DATA
+  getAnamnesisData, getAbaData, getEntornoHogarData, getBrief2Data,
+  getAdos2Data, getVineland3Data, getWiscvData, getBasc3Data
 } from '@/app/admin/data/formConstants'
 import { calcularEdadNumerica } from '@/app/admin/utils/helpers'
 
@@ -32,14 +32,14 @@ const defaultS = { pill: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'bg-b
 
 // ─── FORMULARIOS CLÍNICOS PROFESIONALES ─────────────────────────────────────
 const getClinicalForms = (isEN: boolean): any[] => [
-  { id: 'anamnesis',    formKey: 'anamnesis',    title: isEN?'Clinical History':'Historia Clínica',              subtitle: isEN?'Comprehensive patient clinical history':'Historia clínica integral del paciente',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: ANAMNESIS_DATA },
-  { id: 'aba',          formKey: 'aba',          title: isEN?'ABA Record':'Registro ABA',                    subtitle: isEN?'Applied Behavior Analysis':'Análisis Aplicado de la Conducta',               category: 'conductual',icon: '🎯', estimatedMinutes: 20, sections: ABA_DATA },
-  { id: 'entorno_hogar',formKey: 'entorno_hogar',title: isEN?'Home Environment Assessment':'Evaluación del Entorno del Hogar',subtitle: isEN?'Home visit and family environment':'Visita domiciliaria y entorno familiar',          category: 'familia',   icon: '🏠', estimatedMinutes: 25, sections: ENTORNO_HOGAR_DATA },
-  { id: 'brief2',       formKey: 'brief2',       title: 'BRIEF-2',                         subtitle: isEN?'Executive Functions Assessment':'Evaluación de Funciones Ejecutivas',             category: 'cognitivo', icon: '🧠', estimatedMinutes: 25, sections: BRIEF2_DATA, evalType: 'BRIEF2' },
-  { id: 'ados2',        formKey: 'ados2',        title: 'ADOS-2',                          subtitle: isEN?'Autism Spectrum Diagnosis':'Diagnóstico del Espectro Autista',               category: 'tea',       icon: '🧩', estimatedMinutes: 30, sections: ADOS2_DATA,  evalType: 'ADOS2' },
-  { id: 'vineland3',    formKey: 'vineland3',    title: 'Vineland-3',                      subtitle: isEN?'Adaptive Behavior':'Conducta Adaptativa',                           category: 'habilidades',icon: '🤝', estimatedMinutes: 25, sections: VINELAND3_DATA, evalType: 'VINELAND3' },
-  { id: 'wiscv',        formKey: 'wiscv',        title: 'WISC-V',                          subtitle: isEN?'Intelligence Scale for Children':'Escala de Inteligencia para Niños',             category: 'cognitivo', icon: '📊', estimatedMinutes: 35, sections: WISCV_DATA,  evalType: 'WISCV' },
-  { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                          subtitle: isEN?'Behavioral Assessment System':'Sistema de Evaluación Conductual',              category: 'conductual',icon: '📈', estimatedMinutes: 30, sections: BASC3_DATA,  evalType: 'BASC3' },
+  { id: 'anamnesis',    formKey: 'anamnesis',    title: isEN?'Clinical History':'Historia Clínica',              subtitle: isEN?'Comprehensive patient clinical history':'Historia clínica integral del paciente',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: getAnamnesisData(isEN) },
+  { id: 'aba',          formKey: 'aba',          title: isEN?'ABA Record':'Registro ABA',                    subtitle: isEN?'Applied Behavior Analysis':'Análisis Aplicado de la Conducta',               category: 'conductual',icon: '🎯', estimatedMinutes: 20, sections: getAbaData(isEN) },
+  { id: 'entorno_hogar',formKey: 'entorno_hogar',title: isEN?'Home Environment Assessment':'Evaluación del Entorno del Hogar',subtitle: isEN?'Home visit and family environment':'Visita domiciliaria y entorno familiar',          category: 'familia',   icon: '🏠', estimatedMinutes: 25, sections: getEntornoHogarData(isEN) },
+  { id: 'brief2',       formKey: 'brief2',       title: 'BRIEF-2',                         subtitle: isEN?'Executive Functions Assessment':'Evaluación de Funciones Ejecutivas',             category: 'cognitivo', icon: '🧠', estimatedMinutes: 25, sections: getBrief2Data(isEN),  evalType: 'BRIEF2' },
+  { id: 'ados2',        formKey: 'ados2',        title: 'ADOS-2',                          subtitle: isEN?'Autism Spectrum Diagnosis':'Diagnóstico del Espectro Autista',               category: 'tea',       icon: '🧩', estimatedMinutes: 30, sections: getAdos2Data(isEN),   evalType: 'ADOS2' },
+  { id: 'vineland3',    formKey: 'vineland3',    title: 'Vineland-3',                      subtitle: isEN?'Adaptive Behavior':'Conducta Adaptativa',                           category: 'habilidades',icon: '🤝', estimatedMinutes: 25, sections: getVineland3Data(isEN), evalType: 'VINELAND3' },
+  { id: 'wiscv',        formKey: 'wiscv',        title: 'WISC-V',                          subtitle: isEN?'Intelligence Scale for Children':'Escala de Inteligencia para Niños',             category: 'cognitivo', icon: '📊', estimatedMinutes: 35, sections: getWiscvData(isEN),   evalType: 'WISCV' },
+  { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                          subtitle: isEN?'Behavioral Assessment System':'Sistema de Evaluación Conductual',              category: 'conductual',icon: '📈', estimatedMinutes: 30, sections: getBasc3Data(isEN),   evalType: 'BASC3' },
 ]
 
 const getAllSpecialistForms = (isEN: boolean) => [

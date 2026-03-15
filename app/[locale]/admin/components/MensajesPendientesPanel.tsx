@@ -167,7 +167,7 @@ export default function MensajesPendientesPanel() {
       {/* Tabs */}
       <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
         {([
-          { key: 'pending_approval', label: '⏳ Pendientes' },
+          { key: 'pending_approval', label: isEN ? '⏳ Pending' : '⏳ Pendientes' },
           { key: 'approved',         label: '✅ Enviados' },
           { key: 'rejected',         label: '🗑️ Descartados' },
         ] as const).map(({ key, label }) => (
@@ -235,7 +235,7 @@ export default function MensajesPendientesPanel() {
                           msg.status === 'pending_approval' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                           msg.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                           'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                          {msg.status === 'pending_approval' ? '⏳ Pendiente' : msg.status === 'approved' ? '✅ Enviado' : '🗑️ Descartado'}
+                          {msg.status === 'pending_approval' ? isEN ? '⏳ Pending' : '⏳ Pendiente' : msg.status === 'approved' ? isEN ? '✅ Sent' : '✅ Enviado' : isEN ? '🗑️ Discarded' : '🗑️ Descartado'}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 flex-wrap text-xs text-slate-400">

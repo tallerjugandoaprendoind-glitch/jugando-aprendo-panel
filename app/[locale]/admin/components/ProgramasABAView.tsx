@@ -39,7 +39,7 @@ const getAreaConfig = (isEN: boolean): Record<string, any> => ({
   social:       { color: 'text-emerald-700',bg: 'bg-emerald-50 border-emerald-200',label: 'Social',      emoji: '👥' },
   autonomia:    { color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-200', label: isEN ? 'Autonomy' : 'Autonomía',      emoji: '🌟' },
   academico:    { color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200',label: isEN ? 'Academic' : 'Académico',     emoji: '📚' },
-  sensorial:    { color: 'text-pink-700',   bg: 'bg-pink-50 border-pink-200',   label: 'Sensorial',      emoji: '✋' },
+  sensorial:    { color: 'text-pink-700',   bg: 'bg-pink-50 border-pink-200',   label: isEN ? 'Sensory' : 'Sensorial',      emoji: '✋' },
 })
 
 const FASE_COLORS: Record<string, string> = {
@@ -887,7 +887,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Programa creado')
+      toast.success(isEN ? '✅ Program created' : '✅ Programa creado')
       onCreated()
     } catch (e: any) { toast.error(e.message) }
     finally { setSaving(false) }

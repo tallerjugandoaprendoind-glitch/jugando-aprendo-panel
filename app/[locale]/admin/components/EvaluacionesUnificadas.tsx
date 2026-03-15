@@ -27,8 +27,8 @@ import {
   ALL_FORMS, FORM_CATEGORIES, type FormDefinition, type FormCategory
 } from '../data/neurodivergentForms'
 import {
-  ANAMNESIS_DATA, ABA_DATA, ENTORNO_HOGAR_DATA, BRIEF2_DATA,
-  ADOS2_DATA, VINELAND3_DATA, WISCV_DATA, BASC3_DATA
+  getAnamnesisData, getAbaData, getEntornoHogarData, getBrief2Data,
+  getAdos2Data, getVineland3Data, getWiscvData, getBasc3Data
 } from '../data/formConstants'
 import { calcularEdadNumerica } from '../utils/helpers'
 
@@ -576,7 +576,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         mime_type:        json.mimeType,
         tamano_bytes:     Math.round((json.fileData.length * 3) / 4),
         fecha_generacion: new Date().toISOString(),
-        generado_por:     'IA + Psicólogo',
+        generado_por:     locale === 'en' ? 'AI + Psychologist' : 'IA + Psicólogo',
         source_id:        sf.id,
       }])
       if (insertError) {
@@ -740,9 +740,9 @@ function FormFillView({ form, children, onBack, toast }: any) {
 
     if (isClinicalForm) return form.sections
     const formDataMap: Record<string, any> = {
-      anamnesis: ANAMNESIS_DATA, aba: ABA_DATA, entorno_hogar: ENTORNO_HOGAR_DATA,
-      brief2: BRIEF2_DATA, ados2: ADOS2_DATA, vineland3: VINELAND3_DATA,
-      wiscv: WISCV_DATA, basc3: BASC3_DATA
+      anamnesis: getAnamnesisData(isEN), aba: getAbaData(isEN), entorno_hogar: getEntornoHogarData(isEN),
+      brief2: getBrief2Data(isEN), ados2: getAdos2Data(isEN), vineland3: getVineland3Data(isEN),
+      wiscv: getWiscvData(isEN), basc3: getBasc3Data(isEN)
     }
     return formDataMap[form.formKey] || []
   }
@@ -989,7 +989,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
           mime_type:        json.mimeType,
           tamano_bytes:     Math.round((json.fileData.length * 3) / 4),
           fecha_generacion: new Date().toISOString(),
-          generado_por:     'IA + Psicólogo',
+          generado_por:     locale === 'en' ? 'AI + Psychologist' : 'IA + Psicólogo',
           source_id:        savedRecordId,
         }])
 
@@ -1004,7 +1004,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         document.body.appendChild(a); a.click()
         URL.revokeObjectURL(url); document.body.removeChild(a)
 
-        toast.success('✅ Reporte Word descargado')
+        toast.success(locale === 'en' ? '✅ Word report downloaded' : '✅ Reporte Word descargado')
       } catch (err: any) {
         toast.error((isEN ? 'Error generating report: ' : 'Error generando reporte: ') + (err.message || (isEN ? 'Try again' : 'Intenta de nuevo')))
       } finally {

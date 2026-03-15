@@ -95,7 +95,7 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
         <div className="p-5 space-y-3">
           <div className="bg-green-50 rounded-2xl p-4 space-y-2">
             {[
-              '📅 Nueva cita agendada',
+              isEN ? '📅 New appointment scheduled' : '📅 Nueva cita agendada',
               '❌ Cita cancelada o modificada',
               '📊 Informe de progreso disponible',
               '💬 Mensaje nuevo del terapeuta',

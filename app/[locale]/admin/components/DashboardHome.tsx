@@ -398,7 +398,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-slate-700 truncate">{a.children?.name}</p>
-                    <p className="text-xs text-slate-400 truncate">{a.datos?.objetivo || 'Sesión registrada'}</p>
+                    <p className="text-xs text-slate-400 truncate">{a.datos?.objetivo || isEN ? 'Session recorded' : 'Sesión registrada'}</p>
                   </div>
                   <p className="text-[10px] text-slate-400 font-medium flex-shrink-0">
                     {new Date(a.created_at).toLocaleDateString(toBCP47(locale), { day: '2-digit', month: 'short' })}

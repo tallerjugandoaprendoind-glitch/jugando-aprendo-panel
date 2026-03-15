@@ -123,19 +123,17 @@ function detectsEmotion(t: string) {
   return EMOTIONAL_KEYWORDS.some(kw => l.includes(kw))
 }
 
-function getEmotionalPrefix(text: string): string {
-  const { t } = useI18n()
-
+function getEmotionalPrefix(text: string, isEN: boolean): string {
   const l = text.toLowerCase()
   if (l.includes('cansad') || l.includes('agotad'))
-    return '💙 Entiendo que estás cansado/a, y eso es completamente válido. Acompañar a un hijo en este proceso requiere muchísima energía.\n\n'
+    return isEN ? '💙 I understand you are tired, and that is completely valid. Accompanying a child in this process requires enormous energy.\n\n' : '💙 Entiendo que estás cansado/a, y eso es completamente válido. Acompañar a un hijo en este proceso requiere muchísima energía.\n\n'
   if (l.includes('culpa'))
-    return '💙 No hay culpa aquí. Eres un papá/mamá que busca lo mejor para su hijo/a — eso ya dice todo de ti.\n\n'
+    return isEN ? '💙 There is no blame here. You are a parent who seeks the best for their child — that says everything about you.\n\n' : '💙 No hay culpa aquí. Eres un papá/mamá que busca lo mejor para su hijo/a — eso ya dice todo de ti.\n\n'
   if (l.includes('no avanza') || l.includes('no mejora'))
-    return '💙 El progreso en terapia ABA no siempre es lineal, pero sí real. Hay avances que se acumulan aunque no los veamos cada día.\n\n'
+    return isEN ? '💙 Progress in ABA therapy is not always linear, but it is real. There are gains that accumulate even when we don\'t see them every day.\n\n' : '💙 El progreso en terapia ABA no siempre es lineal, pero sí real. Hay avances que se acumulan aunque no los veamos cada día.\n\n'
   if (l.includes('solo') || l.includes('sola') || l.includes('nadie entiende'))
-    return '💙 No estás solo/a. Todo el equipo de Jugando Aprendo está aquí para acompañarte — a ti y a tu familia.\n\n'
-  return '💙 Escucho cómo te sientes, y es completamente válido. Estoy aquí.\n\n'
+    return isEN ? '💙 You are not alone. The entire Jugando Aprendo team is here for you — and your family.\n\n' : '💙 No estás solo/a. Todo el equipo de Jugando Aprendo está aquí para acompañarte — a ti y a tu familia.\n\n'
+  return isEN ? '💙 I hear how you feel, and it is completely valid. I am here.\n\n' : '💙 Escucho cómo te sientes, y es completamente válido. Estoy aquí.\n\n'
 }
 
 // ── Robot SVG mascota ─────────────────────────────────────────────────────────
@@ -220,7 +218,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
             </p>
           </div>
           <div className="px-4 pb-4 flex flex-col gap-2">
-            {['😊 Bien, con energía', '😐 Regular, algo cansado/a', '😔 Difícil, necesito apoyo'].map(opt => (
+            {(isEN ? ['😊 Good, with energy', '😐 OK, a bit tired', '😔 Difficult, I need support'] : ['😊 Bien, con energía', '😐 Regular, algo cansado/a', '😔 Difícil, necesito apoyo']).map(opt => (
               <button key={opt}
                 className="text-left px-4 py-3 text-sm font-semibold text-slate-700 rounded-2xl border-2 border-purple-100 transition-all hover:border-purple-400 hover:bg-purple-50 bg-white">
                 {opt}
@@ -323,10 +321,10 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
   const isEN = locale === 'en'
 
   const quick = [
-    { icon: '📋', text: '¿Cómo le fue en la última sesión?', color: '#eef2ff', border: '#c7d2fe' },
-    { icon: '🏠', text: 'Dame consejos para casa', color: '#f0fdf4', border: '#bbf7d0' },
-    { icon: '🎯', text: '¿Qué objetivos está trabajando?', color: '#fff7ed', border: '#fed7aa' },
-    { icon: '💙', text: 'Necesito apoyo emocional', color: '#fdf2f8', border: '#f9a8d4' },
+    { icon: '📋', text: isEN ? 'How did the last session go?' : '¿Cómo le fue en la última sesión?', color: '#eef2ff', border: '#c7d2fe' },
+    { icon: '🏠', text: isEN ? 'Give me tips for home' : 'Dame consejos para casa', color: '#f0fdf4', border: '#bbf7d0' },
+    { icon: '🎯', text: isEN ? 'What objectives are being worked on?' : '¿Qué objetivos está trabajando?', color: '#fff7ed', border: '#fed7aa' },
+    { icon: '💙', text: isEN ? 'I need emotional support' : 'Necesito apoyo emocional', color: '#fdf2f8', border: '#f9a8d4' },
   ]
   return (
     <div className="flex flex-col items-center px-6 py-8 text-center" style={{ animation: 'fadeUp .5s ease' }}>
@@ -430,7 +428,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
     stopSpeaking()
 
     if (!childId) {
-      const errMsg = '⚠️ Cargando perfil del paciente, intenta de nuevo en un momento.'
+      const errMsg = isEN ? '⚠️ Loading patient profile, please try again in a moment.' : '⚠️ Cargando perfil del paciente, intenta de nuevo en un momento.'
       setMessages(p => [...p, { role: 'user', text: txt }, { role: 'ai', text: errMsg }])
       speak(errMsg)
       return
@@ -442,9 +440,9 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
 
     let emotionalPrefix = ''
     if (isEmotional) {
-      emotionalPrefix = getEmotionalPrefix(txt)
+      emotionalPrefix = getEmotionalPrefix(txt, isEN)
       await new Promise(r => setTimeout(r, 700))
-      const tempMsg = emotionalPrefix + 'Déjame revisar el historial clínico para darte información más precisa...'
+      const tempMsg = emotionalPrefix + isEN ? 'Let me review the clinical history to give you more accurate information...' : 'Déjame revisar el historial clínico para darte información más precisa...'
       setMessages(p => [...p, { role: 'ai', text: tempMsg, type: 'emotional' }])
       await new Promise(r => setTimeout(r, 900))
     }
@@ -493,7 +491,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
         }, 2200)
       }
     } catch {
-      const errMsg = '❌ Problema de conexión. Intenta nuevamente.'
+      const errMsg = isEN ? '❌ Connection problem. Please try again.' : '❌ Problema de conexión. Intenta nuevamente.'
       setMessages(p => [...p, { role: 'ai', text: errMsg }])
       speak(errMsg)
     } finally {
@@ -640,7 +638,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
           <div className="shrink-0 px-4 pb-2">
             <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
               {[t('aria.pregSugerida_sesion'), t('aria.pregSugerida_casa'), t('aria.pregSugerida_objetivos'), t('aria.pregSugerida_apoyo')].map((q, i) => {
-                const texts = ['¿Cómo le fue en la última sesión?', 'Dame consejos para actividades en casa', '¿Qué objetivos está trabajando?', 'Necesito apoyo emocional']
+                const texts = isEN ? ['How did the last session go?', 'Give me tips for home activities', 'What objectives are being worked on?', 'I need emotional support'] : ['¿Cómo le fue en la última sesión?', 'Dame consejos para actividades en casa', '¿Qué objetivos está trabajando?', 'Necesito apoyo emocional']
                 return (
                   <button key={i} onClick={() => send(texts[i])}
                     className="shrink-0 px-3.5 py-2 bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-2xl text-xs font-semibold transition-all whitespace-nowrap shadow-sm">
@@ -662,7 +660,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
                 value={input}
                 onChange={e => setInput(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-                placeholder={listening ? '🎤 Escuchando...' : childName ? `Pregúntame sobre ${childName}...` : 'Escribe tu pregunta...'}
+                placeholder={listening ? (isEN ? '🎤 Listening...' : '🎤 Escuchando...') : childName ? (isEN ? `Ask me about ${childName}...` : `Pregúntame sobre ${childName}...`) : (isEN ? 'Type your question...' : 'Escribe tu pregunta...')}
                 disabled={typing || listening}
                 className="w-full text-sm font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none transition-all"
                 style={{
@@ -694,7 +692,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
               <button
                 onClick={handleMicClick}
                 disabled={typing}
-                title={listening ? 'Detener grabación' : 'Hablar con ARIA'}
+                title={listening ? (isEN ? 'Stop recording' : 'Detener grabación') : (isEN ? 'Talk to ARIA' : 'Hablar con ARIA')}
                 className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all disabled:opacity-40 hover:scale-105 active:scale-95"
                 style={{
                   background: listening
@@ -739,7 +737,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
           {/* Hint de voz */}
           {micSupported && (
             <p className="text-center text-[10px] text-slate-400 mt-2 font-medium">
-              {listening ? '🔴 Grabando · Habla claro cerca del micrófono' : '🎤 Toca el micrófono para hablar · ⌨️ O escribe tu mensaje'}
+              {listening ? isEN ? '🔴 Recording · Speak clearly near the microphone' : '🔴 Grabando · Habla claro cerca del micrófono' : isEN ? '🎤 Tap the microphone to speak · ⌨️ Or type your message' : '🎤 Toca el micrófono para hablar · ⌨️ O escribe tu mensaje'}
             </p>
           )}
           <p className="text-center text-[10px] text-slate-300 mt-1 font-medium">

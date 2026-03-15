@@ -36,7 +36,7 @@ export default function WhatsAppConfigView() {
       setTestResult({
         ok: d.sent,
         msg: d.sent
-          ? '✅ Mensaje enviado correctamente'
+          ? isEN ? '✅ Message sent successfully' : '✅ Mensaje enviado correctamente'
           : (isEN?'❌ Could not send. Check your environment variables in Vercel.':'❌ No se pudo enviar. Verificá las variables de entorno en Vercel.'),
       })
     } finally { setSending(false) }
@@ -239,10 +239,10 @@ export default function WhatsAppConfigView() {
         <p className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>{t('ui.queDisparaNotif')}</p>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { icon: '📅', label: 'Cita agendada',      active: true },
+            { icon: '📅', label: isEN ? 'Appointment scheduled' : 'Cita agendada',      active: true },
             { icon: '❌', label: 'Cita cancelada',     active: true },
-            { icon: '📋', label: 'Formulario subido',  active: true },
-            { icon: '📊', label: 'Informe generado',   active: true },
+            { icon: '📋', label: isEN ? 'Form submitted' : 'Formulario subido',  active: true },
+            { icon: '📊', label: isEN ? 'Report generated' : 'Informe generado',   active: true },
             { icon: '⚠️', label: isEN?'AI clinical alert':'Alerta clínica IA',  active: false },
             { icon: '💬', label: 'Mensaje terapeuta',  active: false },
           ].map((item, i) => (

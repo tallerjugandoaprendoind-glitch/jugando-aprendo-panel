@@ -187,7 +187,7 @@ export default function ResourcesManagementView() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           { label: 'Total', value: resources.length, color: 'violet' },
-          { label: 'Para todos', value: globalCount, color: 'blue' },
+          { label: isEN ? 'For everyone' : 'Para todos', value: globalCount, color: 'blue' },
           { label: isEN?'Specific':'Específicos', value: specificCount, color: 'indigo' },
           { label: 'Tipos', value: new Set(resources.map(r => r.resource_type)).size, color: 'emerald' },
         ].map(({ label, value, color }) => (
@@ -239,7 +239,7 @@ export default function ResourcesManagementView() {
                       <div className="flex items-center gap-1 mt-0.5">
                         {resource.is_global ? (
                           <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500">
-                            <Globe size={9}/> Para todos
+                            <Globe size={9}/> {isEN ? 'For everyone' : 'Para todos'}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-[9px] font-bold text-indigo-600">

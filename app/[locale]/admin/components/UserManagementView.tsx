@@ -290,7 +290,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(json.is_active ? '✅ Usuario activado' : '⏸ Usuario desactivado')
+      toast.success(json.is_active ? isEN ? '✅ User activated' : '✅ Usuario activado' : isEN ? '⏸ User deactivated' : '⏸ Usuario desactivado')
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, profile: { ...u.profile, is_active: json.is_active } } : u))
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -327,7 +327,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Tokens actualizados')
+      toast.success(isEN ? '✅ Tokens updated' : '✅ Tokens actualizados')
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, profile: { ...u.profile, tokens: newTokens } } : u))
       setEditingTokensFor(null)
     } catch (err: any) {
@@ -404,7 +404,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Usuario creado')
+      toast.success(isEN ? '✅ User created' : '✅ Usuario creado')
       setShowCreateModal(false)
       setCreateForm({ email: '', password: '', full_name: '', role: 'especialista', specialty: '' })
       cargarUsuarios()
@@ -630,7 +630,7 @@ export default function UserManagementView() {
                             const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' }, body: JSON.stringify({ action: 'confirm_email', userId: user.id }) })
                             const json = await res.json()
                             if (json.error) throw new Error(json.error)
-                            toast.success('✅ Email confirmado')
+                            toast.success(isEN ? '✅ Email confirmed' : '✅ Email confirmado')
                             cargarUsuarios()
                           } catch (err: any) { toast.error('Error: ' + err.message) }
                         }}
@@ -760,7 +760,7 @@ export default function UserManagementView() {
               <option value="">{t('usuarios.selPaciente2')}</option>
               {children.map(c => (
                 <option key={c.id} value={c.id}>
-                  {c.name}{c.parent_id && c.parent_id !== linkingParent.id ? ' ⚠️ ya tiene tutor' : ''}
+                  {c.name}{c.parent_id && c.parent_id !== linkingParent.id ? isEN ? ' ⚠️ already has guardian' : ' ⚠️ ya tiene tutor' : ''}
                 </option>
               ))}
             </select>

@@ -450,7 +450,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             </div>
             <p className="font-bold text-slate-700 text-base mb-2">{t('familias.momentoAgendar')}</p>
             <p className="text-sm text-slate-400 mb-5 max-w-xs mx-auto leading-relaxed">
-              La constancia en las sesiones es clave para el progreso. Agenda tu próxima cita y mantén el avance de {child?.name?.split(' ')[0] || 'tu hijo/a'}.
+              {isEN ? 'Consistency in sessions is key to progress. Schedule your next appointment and maintain the progress of' : 'La constancia en las sesiones es clave para el progreso. Agenda tu próxima cita y mantén el avance de'} {child?.name?.split(' ')[0] || 'tu hijo/a'}.
             </p>
             <button onClick={() => onChangeView('agenda')}
               className="bg-gradient-to-r from-violet-600 to-purple-600 text-white px-8 py-3 rounded-xl font-bold text-sm shadow-lg shadow-purple-200 hover:opacity-90 transition-all flex items-center gap-2 mx-auto">
@@ -548,7 +548,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             </div>
             <p className="text-base font-bold text-slate-600 mb-2">{t('ui.progress_here')}</p>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto mb-5">
-              Después de las primeras sesiones de terapia, verás gráficos de avance, objetivos logrados y mucho más.
+              {isEN ? 'After the first therapy sessions, you will see progress charts, achieved goals and much more.' : 'Después de las primeras sesiones de terapia, verás gráficos de avance, objetivos logrados y mucho más.'}
             </p>
             <button onClick={() => onChangeView('agenda')}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white rounded-xl font-bold text-sm hover:bg-violet-700 transition-all">

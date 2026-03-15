@@ -234,7 +234,7 @@ function PatientsView() {
             if (error) {
                 alert(`❌ ERROR: ${error.message}`);
             } else if (!data || data.length === 0) {
-                alert("⚠️ No se actualizó ningún registro. Verifica los permisos.");
+                alert(isEN ? "⚠️ No records updated. Check permissions." : "⚠️ No se actualizó ningún registro. Verifica los permisos.");
             } else {
                 alert(isEN ? `✅ Saved successfully. Age: ${edad} years.` : `✅ Guardado correctamente. Edad: ${edad} años.`);
                 await cargarPacientes();
@@ -371,7 +371,7 @@ function PatientsView() {
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-black">{isEditing ? 'Editar Paciente' : selectedPatient.name}</h3>
-                                        <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || "Diagnóstico pendiente"}</p>
+                                        <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || isEN ? "Pending diagnosis" : "Diagnóstico pendiente"}</p>
                                         {!isEditing && selectedPatient.age && (
                                           <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} {isEN ? "years" : "años"}</p>
                                         )}
@@ -397,8 +397,8 @@ function PatientsView() {
                               <div className="flex gap-2 mb-4 border-b border-slate-100 pb-4">
                                 {[
                                   { id: 'info', label: '📋 Info', icon: User },
-                                  { id: 'programas', label: '📈 Programas ABA', icon: Activity },
-                                  { id: 'evaluaciones', label: '📝 Evaluaciones', icon: ClipboardList },
+                                  { id: 'programas', label: isEN ? '📈 ABA Programs' : '📈 Programas ABA', icon: Activity },
+                                  { id: 'evaluaciones', label: isEN ? '📝 Assessments' : '📝 Evaluaciones', icon: ClipboardList },
                                   { id: 'vadi', label: '🤖 ARIA', icon: Brain },
                                 ].map(tab => (
                                   <button key={tab.id} onClick={() => setPatientTab(tab.id as any)}

@@ -42,7 +42,8 @@ function SidebarLink({ icon: Icon, label, active, onClick }: any) {
 export default function EspecialistaDashboard() {
   const router = useRouter()
   const toast = useToast()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const NAV_ITEMS = [
     { id: 'inicio',        icon: LayoutDashboard, label: t('nav.inicio') },
     { id: 'pacientes',     icon: Users,           label: t('nav.mispacientes') },
@@ -110,9 +111,9 @@ export default function EspecialistaDashboard() {
   }
 
   const PAGE_TITLES: Record<string, string> = {
-    inicio: 'Panel Principal', pacientes: 'Mis Pacientes',
-    formularios: 'Formularios Clínicos', evaluaciones: 'Mis Evaluaciones',
-    agenda: 'Mi Agenda', perfil: 'Mi Perfil',
+    inicio: isEN ? 'Main Panel' : 'Panel Principal', pacientes: isEN ? 'My Patients' : 'Mis Pacientes',
+    formularios: isEN ? 'Clinical Forms' : 'Formularios Clínicos', evaluaciones: isEN ? 'My Assessments' : 'Mis Evaluaciones',
+    agenda: isEN ? 'My Schedule' : 'Mi Agenda', perfil: isEN ? 'My Profile' : 'Mi Perfil',
   }
 
   if (loading) return (

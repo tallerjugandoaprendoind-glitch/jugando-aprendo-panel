@@ -142,7 +142,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
         )
       ) : (
         <div className="h-12 flex items-center justify-center text-[10px] text-slate-300 gap-1">
-          <BarChart3 size={12} /> {data.length === 0 ? 'Sin sesiones aún' : 'Se necesitan 2+ sesiones para la gráfica'}
+          <BarChart3 size={12} /> {data.length === 0 ? isEN ? 'No sessions yet' : 'Sin sesiones aún' : isEN ? '2+ sessions needed for the chart' : 'Se necesitan 2+ sesiones para la gráfica'}
         </div>
       )}
       <div className="mt-2 text-[10px] text-slate-400 text-right">{sesiones.length} {sesiones.length !== 1 ? t('programas.sesionesPlural') : t('programas.sesionPlural')}</div>
@@ -152,6 +152,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
 
 export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPacientes: () => void }) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [pacientes, setPacientes] = useState<any[]>([])
   const [programasPorPaciente, setProgramasPorPaciente] = useState<Record<string, any[]>>({})
   const [loading, setLoading] = useState(true)
@@ -261,7 +262,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
           <BarChart3 size={36} className="text-slate-200 mx-auto mb-3" />
           <p className="font-bold text-slate-500 mb-1">
-            {soloConDatos ? 'Ningún paciente tiene sesiones registradas aún' : 'No se encontraron pacientes'}
+            {soloConDatos ? isEN ? 'No patient has sessions recorded yet' : 'Ningún paciente tiene sesiones registradas aún' : isEN ? 'No patients found' : 'No se encontraron pacientes'}
           </p>
           <p className="text-xs text-slate-400 mb-4">
             {soloConDatos

@@ -285,7 +285,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           {[
             { key: 'all', label: 'Todas' },
             { key: 'confirmed', label: '✅ Confirmadas' },
-            { key: 'pending', label: '⏳ Pendientes' },
+            { key: 'pending', label: isEN ? '⏳ Pending' : '⏳ Pendientes' },
             { key: 'completed', label: '🏆 Completadas' },
             { key: 'cancelled', label: '❌ Canceladas' },
           ].map(({ key, label }) => (
@@ -384,9 +384,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                                   {cfg.label}
                                 </span>
                                 {apt.is_group && (
-                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-200">
-                                    👥 Grupal
-                                  </span>
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-xs font-bold border border-blue-200">{isEN ? '👥 Group' : '👥 Grupal'}</span>
                                 )}
                               </div>
                               

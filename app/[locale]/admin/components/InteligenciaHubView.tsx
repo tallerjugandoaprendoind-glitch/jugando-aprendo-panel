@@ -226,7 +226,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{p.name}</p>
-                <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>{p.diagnosis || 'Sin diagnóstico'}</p>
+                <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>{p.diagnosis || isEN ? 'No diagnosis' : 'Sin diagnóstico'}</p>
               </div>
               <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
             </button>
@@ -331,7 +331,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                               <div className="flex items-center gap-3 shrink-0 ml-2">
                                 <span className="text-xs" style={{ color: "var(--text-muted)" }}>media {set.media}%</span>
                                 <span className={`text-xs font-black ${set.criterio_logrado ? "text-emerald-400" : "text-amber-400"}`}>
-                                  {set.criterio_logrado ? "✅ Logrado" : `${set.ultimo_pct}%`}
+                                  {set.criterio_logrado ? isEN ? "✅ Mastered" : "✅ Logrado" : `${set.ultimo_pct}%`}
                                 </span>
                               </div>
                             </div>

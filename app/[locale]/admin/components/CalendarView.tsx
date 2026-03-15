@@ -435,7 +435,7 @@ function MonthlyCalendarView() {
                             }
                             {a.is_group && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-purple-50 text-purple-600 border border-purple-100 uppercase">{t('ui.grupal')}</span>}
                           </div>
-                          <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{a.children?.name||'Paciente'}</p>
+                          <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{a.children?.name||( isEN ? 'Patient' : 'Paciente')}</p>
                           <p className="text-xs font-medium mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{a.service_type}</p>
                           <div className="flex items-center gap-3 mt-1.5 text-xs font-bold" style={{ color: "var(--text-muted)" }}>
                             <span className="flex items-center gap-1"><Calendar size={11}/>{a.appointment_date}</span>
@@ -490,7 +490,7 @@ function MonthlyCalendarView() {
                     {(['individual','grupal'] as const).map(tipo => (
                       <button key={tipo} onClick={()=>{setTipoSesion(tipo);setSelectedParticipants([]);setNewApt(p=>({...p,child_id:''}))}}
                         className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all flex items-center justify-center gap-2 ${tipoSesion===tipo?(tipo==='individual'?'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200':'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-200'):'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
-                        {tipo==='individual'?<><User size={16}/> Individual</>:<><Users size={16}/> Grupal</>}
+                        {tipo==='individual'?<><User size={16}/>{isEN ? 'Individual' : 'Individual'}</>:<><Users size={16}/>{isEN ? 'Group' : 'Grupal'}</>}
                       </button>
                     ))}
                   </div>
@@ -551,7 +551,7 @@ function MonthlyCalendarView() {
 
                 {/* Servicio, fecha, hora, estado */}
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Servicio</label>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{isEN ? 'Service' : 'Servicio'}</label>
                   <select className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.service} onChange={e=>setNewApt(p=>({...p,service:e.target.value}))}>
                     {getServices(isEN).map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -576,14 +576,14 @@ function MonthlyCalendarView() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Notas (opcional)</label>
-                  <textarea rows={2} placeholder="Observaciones..." className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all resize-none" value={newApt.notes} onChange={e=>setNewApt(p=>({...p,notes:e.target.value}))}/>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>{isEN ? 'Notes (optional)' : 'Notas (opcional)'}</label>
+                  <textarea rows={2} placeholder={isEN ? "Observations..." : "Observaciones..."} className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all resize-none" value={newApt.notes} onChange={e=>setNewApt(p=>({...p,notes:e.target.value}))}/>
                 </div>
 
                 {/* Recurrencia */}
                 <div className="rounded-xl border-2 p-4" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
                   <label className="text-xs font-black uppercase tracking-widest block mb-3" style={{ color: "var(--text-muted)" }}>
-                    🔄 Repetir cita
+                    {isEN ? '🔄 Repeat appointment' : '🔄 Repetir cita'}
                   </label>
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     {([
