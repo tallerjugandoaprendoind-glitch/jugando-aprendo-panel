@@ -317,6 +317,7 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
 // ─── MAIN COMPONENT ─────────────────────────────────────────────────────────
 export default function NeuroFormsView() {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const toast = useToast()
   const [activeTab, setActiveTab] = useState<'biblioteca' | 'respuestas'>('biblioteca')
   const [activeCategory, setActiveCategory] = useState<string>('all')
@@ -354,9 +355,6 @@ export default function NeuroFormsView() {
   })
 
   const handleStartForm = (form: FormDefinition) => {
-    const { t, locale } = useI18n()
-    const isEN = locale === 'en'
-
     setSelectedForm(form)
     setCurrentStep(0)
     setResponses({})

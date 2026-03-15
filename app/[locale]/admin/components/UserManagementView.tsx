@@ -243,8 +243,6 @@ export default function UserManagementView() {
   // Protección: director no puede cambiar rol de otro director
   // Solo un "super director" (el primero registrado / admin) puede hacerlo
   const canChangeRole = (targetUser: UserData) => {
-    const { t, locale } = useI18n()
-    const isEN = locale === 'en'
 
     if (!currentUserId) return false
     if (targetUser.id === currentUserId) return false // no puede cambiarse a sí mismo

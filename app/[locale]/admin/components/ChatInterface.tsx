@@ -420,7 +420,6 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
   }, [messages, typing])
 
   const sendText = async (txt: string) => {
-    const { t } = useI18n()
     if (!txt.trim() || typing) return
 
     setShowWelcome(false)

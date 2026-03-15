@@ -109,8 +109,6 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
   ]
 
   const handleAnswer = (opt: string) => {
-    const { t } = useI18n()
-
     setAnswer(opt)
     setAnswered(true)
     // En producción: guardar en BD para el especialista
