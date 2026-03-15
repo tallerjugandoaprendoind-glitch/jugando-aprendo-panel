@@ -187,6 +187,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
 
 export default function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppointment }: Props) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const supabase = supabaseClient
   const [nextAppt, setNextAppt] = useState<any>(null)
   const [stats, setStats] = useState({ sessions: 0, goalsAchieved: 0, hoursTotal: 0, level: 'Inicial', monthSessions: 0, masteryRate: 0 })
