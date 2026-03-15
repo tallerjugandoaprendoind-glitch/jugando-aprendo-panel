@@ -167,8 +167,8 @@ export default function ResourcesView({ profile }: Props) {
           </h3>
           <p className="text-slate-400 text-sm">
             {resources.length === 0 
-              ? 'El equipo terapéutico compartirá materiales pronto'
-              : 'Prueba con otro término de búsqueda'}
+              ? (isEN?'The therapy team will share materials soon':'El equipo terapéutico compartirá materiales pronto')
+              : (isEN?'Try a different search term':'Prueba con otro término de búsqueda')}
           </p>
         </div>
       ) : (

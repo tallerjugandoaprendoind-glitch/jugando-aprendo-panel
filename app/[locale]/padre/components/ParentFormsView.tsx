@@ -401,7 +401,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
       }
       
       setActiveForm(null)
-      setSuccessMsg('¡Formulario completado! El equipo terapéutico lo revisará pronto 💙')
+      setSuccessMsg(isEN?'Form completed! The therapy team will review it soon':'¡Formulario completado! El equipo terapéutico lo revisará pronto 💙')
       setTimeout(() => setSuccessMsg(''), 5000)
       loadData()
     } catch (err) {

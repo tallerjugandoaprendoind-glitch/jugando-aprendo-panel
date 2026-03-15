@@ -35,9 +35,9 @@ interface Order {
 }
 
 const ESTADO_CFG: Record<string, any> = {
-  pendiente:  { label: 'Pendiente de confirmación', icon: Clock,       color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200' },
+  pendiente:  { label: isEN?'Pending confirmation':'Pendiente de confirmación', icon: Clock,       color: 'text-amber-600',   bg: 'bg-amber-50',   border: 'border-amber-200' },
   confirmado: { label: 'Confirmado',                icon: CheckCircle, color: 'text-blue-600',    bg: 'bg-blue-50',    border: 'border-blue-200'  },
-  listo:      { label: '¡Listo para recoger!',      icon: Package,     color: 'text-violet-600',  bg: 'bg-violet-50',  border: 'border-violet-200'},
+  listo:      { label: isEN?'Ready to pick up!':'¡Listo para recoger!',      icon: Package,     color: 'text-violet-600',  bg: 'bg-violet-50',  border: 'border-violet-200'},
   entregado:  { label: 'Entregado',                 icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200'},
   cancelado:  { label: 'Cancelado',                 icon: XCircle,     color: 'text-red-500',     bg: 'bg-red-50',     border: 'border-red-200'   },
 }
@@ -326,7 +326,7 @@ export default function StoreView({ profile }: { profile: any }) {
               {['todos', 'fisico', 'digital'].map(f => (
                 <button key={f} onClick={() => setFilterTipo(f)}
                   className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition-all ${filterTipo === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'}`}>
-                  {f === 'todos' ? 'Todo' : f === 'fisico' ? '📦 Físicos' : '📄 Digitales'}
+                  {f === 'todos' ? (isEN?'All':'Todo') : f === 'fisico' ? (isEN?'📦 Physical':'📦 Físicos') : (isEN?'📄 Digital':'📄 Digitales')}
                 </button>
               ))}
               <div className="w-px bg-slate-200 self-stretch mx-1" />
@@ -524,7 +524,7 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
           </button>
           <div className="absolute top-4 left-4 flex gap-2">
             <span className={`text-xs font-black px-3 py-1 rounded-full text-white ${p.tipo === 'digital' ? 'bg-violet-600' : 'bg-slate-700'}`}>
-              {p.tipo === 'digital' ? '📄 Digital' : '📦 Físico'}
+              {p.tipo === 'digital' ? '📄 Digital' : (isEN?'📦 Physical':'📦 Físico')}
             </span>
             {p.destacado && <span className="text-xs font-black px-3 py-1 rounded-full bg-amber-400 text-white">⭐ Destacado</span>}
           </div>
@@ -549,7 +549,7 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
           {p.tipo === 'digital' && (
             <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 mb-4">
               <p className="text-xs font-black text-violet-700 mb-1">{t('tienda.articuloDigital')}</p>
-              <p className="text-xs text-violet-600">Al confirmar tu pedido y pagar, recibirás el archivo por WhatsApp en menos de 24 horas.</p>
+              <p className="text-xs text-violet-600">{isEN ? "When you confirm your order and pay, you will receive" : "Al confirmar tu pedido y pagar, recibirás"} el archivo por WhatsApp en menos de 24 horas.</p>
             </div>
           )}
 

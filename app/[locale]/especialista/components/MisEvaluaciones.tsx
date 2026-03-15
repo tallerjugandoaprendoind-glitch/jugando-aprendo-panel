@@ -26,20 +26,20 @@ const getTipos = (isEN: boolean): Record<string, any>[] => [
 const getTemplates = (isEN: boolean): Record<string, any> => ({
   conducta: {
     titulo: isEN?'Behavior analysis - [Name]':'Análisis de conducta - [Nombre]',
-    contenido: 'Antecedente: [Describir qué ocurrió antes]\n\nConducta: [Describir exactamente la conducta, duración e intensidad]\n\nConsecuencia: [Qué ocurrió después]',
-    observaciones: 'La conducta ocurrió [X] veces. El niño mostró [describir estado emocional].',
+    contenido: isEN?'Antecedent: [Describe what happened before]\n\nBehavior: [Describe the behavior exactly, duration and intensity]\n\nConsequence: [What happened after]':'Antecedente: [Describir qué ocurrió antes]\n\nConducta: [Describir exactamente la conducta, duración e intensidad]\n\nConsecuencia: [Qué ocurrió después]',
+    observaciones: isEN?'The behavior occurred [X] times. The child showed [describe emotional state].':'La conducta ocurrió [X] veces. El niño mostró [describir estado emocional].',
     recomendaciones: '1. [Estrategia para casa]\n2. [Reforzadores recomendados]\n3. [Situaciones a evitar]',
   },
   progreso: {
     titulo: isEN?'Progress report - [Name] - [Month]':'Reporte de progreso - [Nombre] - [Mes]',
     contenido: 'Objetivo trabajado: [Nombre]\n\nLogros esta semana:\n- [Logro 1]\n- [Logro 2]\n\nNivel de dominio: [X]%',
-    observaciones: 'El niño mostró [descripción]. Se observó mayor respuesta a [estímulo].',
+    observaciones: isEN?'The child showed [description]. Greater response to [stimulus] was observed.':'El niño mostró [descripción]. Se observó mayor respuesta a [estímulo].',
     recomendaciones: 'Para casa:\n1. [Actividad 1]\n2. [Actividad 2]',
   },
   sesion: {
     titulo: isEN?'Session note - [Name] - [Date]':'Nota de sesión - [Nombre] - [Fecha]',
     contenido: 'Duración: [X] minutos\n\nActividades:\n1. [Actividad 1] - [resultado]\n2. [Actividad 2] - [resultado]\n\nRespuesta: [descripción]',
-    observaciones: 'Llegó a la sesión [estado]. Durante la sesión [momentos clave].',
+    observaciones: isEN?'Arrived at session [state]. During the session [key moments].':'Llegó a la sesión [estado]. Durante la sesión [momentos clave].',
     recomendaciones: 'Para la próxima sesión: [actividades/temas]',
   },
   familia: {

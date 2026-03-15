@@ -254,34 +254,34 @@ Usa terminología clínica apropiada. Sin bullets.`
 
   const sections: DocChild[] = [
     new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: 'JUGANDO APRENDO — Centro de Terapia ABA', bold: true, size: 28, font: 'Arial', color: '1E293B' })] }),
-    new Paragraph({ spacing: { before: 0, after: 80 }, children: [new TextRun({ text: 'REPORTE CLÍNICO PARA ASEGURADORAS / IMSS', bold: true, size: 32, font: 'Arial', color: '1E40AF' })] }),
-    subtitle(`Fecha de emisión: ${hoy}  ·  Documento Confidencial`),
+    new Paragraph({ spacing: { before: 0, after: 80 }, children: [new TextRun({ text: userLocale === 'en' ? 'CLINICAL REPORT FOR INSURANCE / IMSS' : 'REPORTE CLÍNICO PARA ASEGURADORAS / IMSS', bold: true, size: 32, font: 'Arial', color: '1E40AF' })] }),
+    subtitle(userLocale === 'en' ? `Issue date: ${hoy}  ·  Confidential Document` : `Fecha de emisión: ${hoy}  ·  Documento Confidencial`),
 
     h2(userLocale === 'en' ? 'I. PATIENT DATA' : 'I. DATOS DEL PACIENTE'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-      kv('Nombre completo', nombre),
-      kv('Edad', `${edad} años`),
-      kv('Diagnóstico principal', diagnostico),
-      kv('Código CIE-10', cie),
-      kv('Fecha del reporte', hoy),
+      kv(userLocale === 'en' ? 'Full name' : 'Nombre completo', nombre),
+      kv(userLocale === 'en' ? 'Age' : 'Edad', `${edad} ${userLocale === 'en' ? 'years old' : 'años'}`),
+      kv(userLocale === 'en' ? 'Primary diagnosis' : 'Diagnóstico principal', diagnostico),
+      kv('ICD-10 Code', cie),
+      kv(userLocale === 'en' ? 'Report date' : 'Fecha del reporte', hoy),
     ]}),
 
     h2(userLocale === 'en' ? 'II. TREATMENT DESCRIPTION' : 'II. DESCRIPCIÓN DEL TRATAMIENTO'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-      kv('Modalidad', 'Análisis Aplicado de la Conducta (ABA)'),
-      kv('Sesiones realizadas', String(totalSesiones)),
-      kv('Promedio de logro', `${promedioLogro}%`),
-      kv('Áreas de intervención', programas?.map((p: any) => p.area).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i).join(', ') || 'N/A'),
+      kv(userLocale === 'en' ? 'Modality' : 'Modalidad', 'Applied Behavior Analysis (ABA)'),
+      kv(userLocale === 'en' ? 'Sessions completed' : 'Sesiones realizadas', String(totalSesiones)),
+      kv(userLocale === 'en' ? 'Achievement average' : 'Promedio de logro', `${promedioLogro}%`),
+      kv(userLocale === 'en' ? 'Intervention areas' : 'Áreas de intervención', programas?.map((p: any) => p.area).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i).join(', ') || 'N/A'),
     ]}),
 
     h2(userLocale === 'en' ? 'III. INTERVENTION PROGRAMS' : 'III. PROGRAMAS DE INTERVENCIÓN'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3800, 2000, 1800, 1760],
       rows: [
         new TableRow({ children: [
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: 'Programa', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Área', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Fase', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Estado', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: userLocale === 'en' ? 'Program' : 'Programa', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: userLocale === 'en' ? 'Area' : 'Área', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: userLocale === 'en' ? 'Phase' : 'Fase', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: userLocale === 'en' ? 'Status' : 'Estado', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
         ]}),
         ...(programas || []).map((p: any) => new TableRow({ children: [
           new TableCell({ borders: BDR, margins: { top: 60, bottom: 60, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: p.titulo, size: 18, font: 'Arial' })] })] }),
@@ -290,7 +290,7 @@ Usa terminología clínica apropiada. Sin bullets.`
           new TableCell({ borders: BDR, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.estado, size: 18, font: 'Arial' })] })] }),
         ]})),
         ...(!programas || programas.length === 0 ? [new TableRow({ children: [
-          new TableCell({ borders: BDR, columnSpan: 4, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Sin programas registrados', size: 18, font: 'Arial', color: '9CA3AF' })] })] }),
+          new TableCell({ borders: BDR, columnSpan: 4, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: userLocale === 'en' ? 'No programs registered' : 'Sin programas registrados', size: 18, font: 'Arial', color: '9CA3AF' })] })] }),
         ]})] : []),
       ]
     }),
@@ -300,14 +300,14 @@ Usa terminología clínica apropiada. Sin bullets.`
 
     h2(userLocale === 'en' ? 'V. SIGNATURE AND ACCREDITATION' : 'V. FIRMA Y ACREDITACIÓN'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-      kv('Centro terapéutico', 'Jugando Aprendo'),
-      kv('Especialidad', 'Análisis Aplicado de la Conducta (ABA)'),
-      kv('Fecha de emisión', hoy),
-      kv('Documento válido para', 'Aseguradoras, IMSS, ISSSTE, Seguro privado'),
+      kv(userLocale === 'en' ? 'Therapeutic center' : 'Centro terapéutico', 'Jugando Aprendo'),
+      kv(userLocale === 'en' ? 'Specialty' : 'Especialidad', 'Applied Behavior Analysis (ABA)'),
+      kv(userLocale === 'en' ? 'Issue date' : 'Fecha de emisión', hoy),
+      kv(userLocale === 'en' ? 'Document valid for' : 'Documento válido para', userLocale === 'en' ? 'Insurance companies, private coverage' : 'Aseguradoras, IMSS, ISSSTE, Seguro privado'),
     ]}),
 
     new Paragraph({ spacing: { before: 400 }, children: [new TextRun({ text: '─'.repeat(60), size: 18, font: 'Arial', color: 'E2E8F0' })] }),
-    pp('DOCUMENTO CONFIDENCIAL — Para uso exclusivo con aseguradoras autorizadas', 'DC2626'),
+    pp(userLocale === 'en' ? 'CONFIDENTIAL DOCUMENT — For exclusive use with authorized insurers' : 'DOCUMENTO CONFIDENCIAL — Para uso exclusivo con aseguradoras autorizadas', 'DC2626'),
     pp(`Jugando Aprendo · ${hoy}`, '9CA3AF'),
   ]
 

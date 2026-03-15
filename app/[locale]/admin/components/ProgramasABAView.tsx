@@ -471,7 +471,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
-                            formatter={(value: any) => [`${value}%`, 'Éxito']}
+                            formatter={(value: any) => [`${value}%`, isEN?'Achievement':'Éxito']}
                             labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           {cambiosFase.map(x => <ReferenceLine key={x} x={x} stroke="#a5b4fc" strokeDasharray="4 2" strokeWidth={1.5} />)}
@@ -512,7 +512,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <XAxis dataKey="sesion" tick={{ fontSize: 10 }} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
-                            formatter={(value: any) => [`${value}%`, 'Éxito']}
+                            formatter={(value: any) => [`${value}%`, isEN?'Achievement':'Éxito']}
                             labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
@@ -735,7 +735,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Sesión registrada')
+      toast.success(isEN?'✅ Session recorded':'✅ Sesión registrada')
       onSaved()
     } catch (e: any) {
       toast.error(e.message)

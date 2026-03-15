@@ -386,7 +386,7 @@ export default function NeuroFormsView() {
       if (json.error) throw new Error(json.error)
       setAiAnalysis(json.analysis)
       setEditedMessage(json.analysis?.mensaje_padres || '')
-      toast.success('✨ Análisis generado')
+      toast.success(isEN?'✨ Analysis generated':'✨ Análisis generado')
     } catch (err: any) {
       toast.error((isEN?'Analysis error: ':'Error en análisis: ') + err.message)
     } finally {
@@ -667,7 +667,7 @@ export default function NeuroFormsView() {
                           <Clock size={10}/>{form.estimatedMinutes} min
                         </p>
                         <p className="text-[9px] font-bold opacity-70 mt-1">
-                          {form.targetRole === 'parent' ? '👨‍👩 Para padres' : form.targetRole === 'both' ? '🔄 Ambos' : '🩺 Clínico'}
+                          {form.targetRole === 'parent' ? (isEN?'👨‍👩 For parents':'👨‍👩 Para padres') : form.targetRole === 'both' ? '🔄 Ambos' : '🩺 Clínico'}
                         </p>
                       </div>
                     </div>

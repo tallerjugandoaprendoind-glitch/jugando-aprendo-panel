@@ -13,15 +13,15 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-const AREA_CONFIG: Record<string, { color: string; bg: string; label: string; emoji: string }> = {
-  comunicacion: { color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',     label: 'Comunicación', emoji: '💬' },
-  conducta:     { color: 'text-red-700',     bg: 'bg-red-50 border-red-200',       label: 'Conducta',     emoji: '🎯' },
-  cognitivo:    { color: 'text-violet-700',  bg: 'bg-violet-50 border-violet-200', label: 'Cognitivo',    emoji: '🧠' },
+const getAreaConfig = (isEN: boolean): Record<string, any> => ({
+  comunicacion: { color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',     label: isEN?'Communication':'Comunicación', emoji: '💬' },
+  conducta:     { color: 'text-red-700',     bg: 'bg-red-50 border-red-200',       label: isEN?'Behavior':'Conducta',     emoji: '🎯' },
+  cognitivo:    { color: 'text-violet-700',  bg: 'bg-violet-50 border-violet-200', label: isEN?'Cognitive':'Cognitivo',    emoji: '🧠' },
   social:       { color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200',label: 'Social',      emoji: '👥' },
-  autonomia:    { color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',   label: 'Autonomía',    emoji: '🌟' },
-  academico:    { color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-200', label: 'Académico',    emoji: '📚' },
-  sensorial:    { color: 'text-pink-700',    bg: 'bg-pink-50 border-pink-200',     label: 'Sensorial',    emoji: '✋' },
-}
+  autonomia:    { color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',   label: isEN?'Autonomy':'Autonomía',    emoji: '🌟' },
+  academico:    { color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-200', label: isEN?'Academic':'Académico',    emoji: '📚' },
+  sensorial:    { color: 'text-pink-700',    bg: 'bg-pink-50 border-pink-200',     label: 'Sensory',    emoji: '✋' },
+})
 
 const FASE_COLORS: Record<string, string> = {
   linea_base: '#94a3b8', intervencion: '#6366f1',
@@ -39,7 +39,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
     if (data[i].fase !== data[i - 1].fase) cambiosFase.push(i + 0.5)
   }
   const faseLabel: Record<string, string> = {
-    linea_base: 'Línea Base', intervencion: 'Intervención',
+    linea_base: isEN?'Baseline':'Línea Base', intervencion: isEN?'Intervention':'Intervención',
     mantenimiento: 'Mantenimiento', seguimiento: 'Seguimiento',
   }
   const ultimoPct = data.length > 0 ? data[data.length - 1].pct : null
@@ -55,7 +55,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
     data[data.length - 1].pct >= 90 &&
     data[data.length - 2].pct >= 90
 
-  const area = AREA_CONFIG[programa.area] || { color: 'text-slate-600', bg: 'bg-slate-50 border-slate-200', label: programa.area, emoji: '📋' }
+  const area = getAreaConfig(isEN)[programa.area] || { color: 'text-slate-600', bg: 'bg-slate-50 border-slate-200', label: programa.area, emoji: '📋' }
 
   return (
     <div className="bg-white rounded-xl border border-slate-100 p-4">
@@ -115,7 +115,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
                 <XAxis dataKey="sesion" tick={{ fontSize: 9 }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 9 }} />
                 <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} tickFormatter={v => `${v}%`} />
                 <Tooltip
-                  formatter={(v: any) => [`${v}%`, 'Éxito']}
+                  formatter={(v: any) => [`${v}%`, isEN?'Achievement':'Éxito']}
                   labelFormatter={(l) => {
                     const d = data[l - 1]
                     return d ? `Sesión ${l} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}` : `Sesión ${l}`

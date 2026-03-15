@@ -410,7 +410,7 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
               <button onClick={toggleVoice} className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg transition-all hover:opacity-80"
                 style={{ background: voiceEnabled ? 'rgba(134,239,172,0.15)' : 'var(--muted-bg)', color: voiceEnabled ? '#86efac' : 'var(--text-muted)', border: '1px solid var(--card-border)' }}>
                 {voiceEnabled ? <Volume2 size={13}/> : <VolumeX size={13}/>}
-                {voiceEnabled ? (isEN ? 'Voice ON' : 'Voz ON') : (isEN ? 'Voice OFF' : 'Voz OFF')}
+                {isEN ? (voiceEnabled ? 'Voice ON' : 'Voice OFF') : (voiceEnabled ? 'Voz ON' : 'Voz OFF')}
               </button>
             </div>
 

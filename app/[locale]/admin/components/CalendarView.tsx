@@ -91,9 +91,13 @@ function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) =>
 }
 
 const SERVICES = [
-  'Terapia ABA','Evaluación Inicial','Seguimiento BRIEF-2','Evaluación ADOS-2',
-  'Evaluación Vineland-3','Evaluación WISC-V','Evaluación BASC-3',
-  'Sesión Familiar','Sesión de Orientación','Visita Domiciliaria',
+  isEN
+  ?['ABA Therapy','Initial Assessment','BRIEF-2 Follow-up','ADOS-2 Assessment',
+   'Vineland-3 Assessment','WISC-V Assessment','BASC-3 Assessment',
+   'Family Session','Orientation Session','Home Visit']
+  :['Terapia ABA','Evaluación Inicial','Seguimiento BRIEF-2','Evaluación ADOS-2',
+   'Evaluación Vineland-3','Evaluación WISC-V','Evaluación BASC-3',
+   'Sesión Familiar','Sesión de Orientación','Visita Domiciliaria'],
 ]
 const getStatusConfig = (isEN: boolean): Record<string, any> => ({
   confirmed: { label: isEN ? 'Confirmed' : 'Confirmada', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
@@ -179,7 +183,7 @@ function MonthlyCalendarView() {
         body: JSON.stringify({ id, status: 'completed' , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       setApts(prev => prev.map(a => a.id === id ? { ...a, status: 'completed' } : a))
-      toast.success('✅ Sesión finalizada · Cita movida al historial')
+      toast.success(isEN?'✅ Session ended · Appointment moved to history':'✅ Sesión finalizada · Cita movida al historial')
     } catch {
       cargarCitas()
     }
@@ -197,7 +201,7 @@ function MonthlyCalendarView() {
 
   const eliminarCita = async (id:string, e:React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm('¿Eliminar esta cita?')) return
+    if (!confirm(isEN?'Delete this appointment?':'¿Eliminar esta cita?')) return
     try {
       const res = await fetch('/api/admin/appointments', { method:'DELETE', headers:{'Content-Type':'application/json', 'x-locale': localStorage.getItem('vanty_locale') || 'es'}, body: JSON.stringify({ id }) })
       const json = await res.json()
@@ -322,9 +326,9 @@ function MonthlyCalendarView() {
           <div>
             <h2 className="font-black text-2xl md:text-3xl tracking-tight flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
               <div className="p-2.5 rounded-2xl" style={{ background: "rgba(37,99,235,0.15)" }}><Calendar className="text-blue-500" size={28}/></div>
-              Calendario de Citas
+              {isEN ? 'Appointment Calendar' : 'Calendario de Citas'}
             </h2>
-            <p className="text-slate-400 text-sm font-medium mt-1 ml-1">{apts.length} citas · {todayApts.length} hoy · {virtualApts.length} virtuales</p>
+            <p className="text-slate-400 text-sm font-medium mt-1 ml-1">{apts.length} {isEN ? "appointments" : "citas"} · {todayApts.length} {isEN ? "today" : "hoy"} · {virtualApts.length} {isEN ? "virtual" : "virtuales"}</p>
           </div>
           <div className="flex gap-3">
             <button onClick={cargarCitas} className="p-3 rounded-xl border-2 border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-600 transition-all"><RefreshCw size={18}/></button>
@@ -510,7 +514,7 @@ function MonthlyCalendarView() {
                   {modalidadCita==='virtual' && (
                     <div className="mt-2 flex items-start gap-2 px-3 py-2.5 bg-indigo-50 rounded-xl border border-indigo-100">
                       <Video size={13} className="text-indigo-500 shrink-0 mt-0.5"/>
-                      <p className="text-xs text-indigo-600 font-semibold leading-relaxed">Al iniciar la sesión se genera el link automáticamente y el padre recibe una notificación para unirse.</p>
+                      <p className="text-xs text-indigo-600 font-semibold leading-relaxed">{isEN ? "The session link is generated automatically and the parent receives a notification to join." : "Al iniciar la sesión se genera el link automáticamente y el padre recibe una notificación para unirse."}</p>
                     </div>
                   )}
                 </div>
@@ -600,10 +604,10 @@ function MonthlyCalendarView() {
                       <label className="text-[11px] font-bold mb-1 block" style={{ color: "var(--text-muted)" }}>{t('agenda.cantRepeticiones')}</label>
                       <select value={recurrenciaSemanas} onChange={e => setRecurrenciaSemanas(Number(e.target.value))}
                         className="w-full p-3 rounded-xl text-sm font-bold outline-none border-2" style={{ background: "var(--input-bg)", borderColor: "var(--input-border)", color: "var(--text-primary)" }}>
-                        {[2,3,4,6,8,12].map(n => <option key={n} value={n}>{n} citas ({recurrencia === 'weekly' ? `${n} semanas` : `${n*2} semanas`})</option>)}
+                        {[2,3,4,6,8,12].map(n => <option key={n} value={n}>{n} {isEN ? 'appointments' : 'citas'} ({recurrencia === 'weekly' ? `${n} ${isEN ? 'weeks' : 'semanas'}` : `${n*2} ${isEN ? 'weeks' : 'semanas'}`})</option>)}
                       </select>
                       <p className="text-[10px] mt-1.5 font-medium text-blue-500">
-                        Se crearán {recurrenciaSemanas} citas {recurrencia === 'weekly' ? 'cada semana' : 'cada 2 semanas'} a partir de la fecha seleccionada.
+                        {isEN ? `${recurrenciaSemanas} appointments will be created ${recurrencia === 'weekly' ? 'every week' : 'every 2 weeks'} from the selected date.` : `Se crearán ${recurrenciaSemanas} citas ${recurrencia === 'weekly' ? 'cada semana' : 'cada 2 semanas'} a partir de la fecha seleccionada.`}
                       </p>
                     </div>
                   )}

@@ -14,11 +14,12 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
-function calcularEdad(fecha: string) {
+function calcularEdad(fecha: string, isEN = false) {
   if (!fecha) return 'N/D'
   const hoy = new Date(), nac = new Date(fecha)
   const anos = hoy.getFullYear() - nac.getFullYear()
-  return `${hoy.getMonth() < nac.getMonth() || (hoy.getMonth() === nac.getMonth() && hoy.getDate() < nac.getDate()) ? anos - 1 : anos} años`
+  const age = hoy.getMonth() < nac.getMonth() || (hoy.getMonth() === nac.getMonth() && hoy.getDate() < nac.getDate()) ? anos - 1 : anos
+  return isEN ? `${age} years` : `${age} años`
 }
 
 function formatDate(d: string) {
@@ -34,7 +35,7 @@ const AVATAR_COLORS = [
 ]
 
 const TYPE_CONFIG: Record<string, { bg: string; text: string; border: string; icon: any }> = {
-  'Sesión ABA':          { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200',    icon: Target },
+  'ABA Session':         { bg: 'bg-blue-50',    text: 'text-blue-700',    border: 'border-blue-200',    icon: Target },
   'Anamnesis':           { bg: 'bg-violet-50',  text: 'text-violet-700',  border: 'border-violet-200',  icon: ClipboardList },
   'Visita Domiciliaria': { bg: 'bg-amber-50',   text: 'text-amber-700',   border: 'border-amber-200',   icon: Home },
   'BRIEF-2':             { bg: 'bg-indigo-50',  text: 'text-indigo-700',  border: 'border-indigo-200',  icon: Brain },
@@ -83,10 +84,10 @@ function AIBlock({ analysis }: { analysis: any }) {
 
   if (!analysis) return null
   const fields = [
-    { k: 'analisis_clinico', l: 'Análisis Clínico' },
-    { k: 'analisis_ia', l: 'Análisis IA' },
-    { k: 'analisis_vineland_ia', l: 'Análisis Adaptativo' },
-    { k: 'analisis_diagnostico_ia', l: 'Análisis Diagnóstico' },
+    { k: 'analisis_clinico', l: isEN?'Clinical Analysis':'Análisis Clínico' },
+    { k: 'analisis_ia', l: isEN?'AI Analysis':'Análisis IA' },
+    { k: 'analisis_vineland_ia', l: isEN?'Adaptive Analysis':'Análisis Adaptativo' },
+    { k: 'analisis_diagnostico_ia', l: isEN?'Diagnostic Analysis':'Análisis Diagnóstico' },
     { k: 'analisis_basc_ia', l: 'Análisis Conductual' },
     { k: 'perfil_cognitivo_ia', l: 'Perfil Cognitivo' },
     { k: 'nivel_alerta', l: 'Nivel de Alerta' },
@@ -772,7 +773,7 @@ export default function MisPacientes() {
               <h3 className="font-black text-xl mb-1">{seleccionado.name}</h3>
               <div className="flex flex-wrap gap-2 mb-3">
                 <span className="text-xs font-bold text-white/70 bg-white/10 px-2.5 py-1 rounded-full">
-                  <Baby size={11} className="inline mr-1" />{calcularEdad(seleccionado.birth_date)}
+                  <Baby size={11} className="inline mr-1" />{calcularEdad(seleccionado.birth_date, isEN)}
                 </span>
                 {seleccionado.diagnosis && (
                   <span className="text-xs font-bold text-amber-300 bg-amber-900/40 px-2.5 py-1 rounded-full">
@@ -955,7 +956,7 @@ export default function MisPacientes() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-sm text-slate-800">{n.name}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{calcularEdad(n.birth_date)} · {n.diagnosis || 'Sin diagnóstico'}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{calcularEdad(n.birth_date, isEN)} · {n.diagnosis || 'Sin diagnóstico'}</p>
                 <p className="text-xs text-slate-400 truncate">{n.profiles?.full_name || 'Sin tutor'}</p>
               </div>
               <div className="flex items-center gap-2">

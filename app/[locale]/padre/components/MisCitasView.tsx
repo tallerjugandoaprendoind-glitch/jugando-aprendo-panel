@@ -66,7 +66,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; i
 }
 
 const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+const DAYS_ES = isEN ? ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'] : ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
 function formatDate(dateStr: string) {
   const { t } = useI18n()
@@ -260,7 +260,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         {/* Time filter */}
         <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
           {[
-            { key: 'upcoming', label: '📅 Próximas' },
+            { key: 'upcoming', label: isEN?'📅 Upcoming':'📅 Próximas' },
             { key: 'past', label: '📋 Historial' },
             { key: 'all', label: '🗓️ Todas' },
           ].map(({ key, label }) => (
@@ -316,7 +316,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           <h3 className="font-bold text-slate-800 text-lg mb-2">{t('ui.no_appointments_here')}</h3>
           <p className="text-slate-400 text-sm mb-6">
             {filter === 'upcoming' 
-              ? 'No tienes citas próximas agendadas.'
+              ? (isEN?'You have no upcoming appointments scheduled.':'No tienes citas próximas agendadas.')
               : 'No hay citas en el historial seleccionado.'}
           </p>
           {filter === 'upcoming' && (

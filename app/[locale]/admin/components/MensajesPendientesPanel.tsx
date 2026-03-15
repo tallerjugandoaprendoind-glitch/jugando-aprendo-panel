@@ -107,7 +107,7 @@ export default function MensajesPendientesPanel() {
   }
 
   const rejectMessage = async (id: string) => {
-    if (!confirm('¿Descartar este mensaje? No llegará al padre/madre.')) return
+    if (!confirm(isEN?'Discard this message? It will not reach the parent.':'¿Descartar este mensaje? No llegará al padre/madre.')) return
     setActionLoading(id + '_reject')
     try {
       const res = await fetch('/api/admin/parent-messages', {
@@ -127,8 +127,8 @@ export default function MensajesPendientesPanel() {
   }
 
   const sourceLabel: Record<string, string> = {
-    parent_form: '📝 Formulario de Padre', session_report: '📊 Reporte de Sesión',
-    neuroforma: '🧠 NeuroForma', evaluacion: '📋 Evaluación', entorno_hogar: '🏠 Entorno Hogar',
+    parent_form: isEN?'📝 Parent Form':'📝 Formulario de Padre', session_report: isEN?'📊 Session Report':'📊 Reporte de Sesión',
+    neuroforma: isEN?'🧠 NeuroForm':'🧠 NeuroForma', evaluacion: isEN?'📋 Assessment':'📋 Evaluación', entorno_hogar: isEN?'🏠 Home Envo Hogar',
   }
   const pendingCount = messages.filter(m => m.status === 'pending_approval').length
 

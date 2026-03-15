@@ -264,7 +264,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         analysis?.informe_padres || ''
       )
       setEditedActividades(analysis?.actividades_casa || analysis?.actividad_casa || '')
-      toast.success('✨ Análisis IA generado')
+      toast.success(isEN?'✨ AI analysis generated':'✨ Análisis IA generado')
     } catch (e: any) { toast.error((isEN?'Error: ':'Error: ') + e.message) }
     finally { setAnalyzing(false) }
   }
@@ -305,7 +305,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         }
       }
       setDone(true)
-      toast.success('✅ Enviado al jefe para aprobación')
+      toast.success(isEN?'✅ Sent for supervisor approval':'✅ Enviado al jefe para aprobación')
     } catch (e: any) { toast.error((isEN?'Error: ':'Error: ') + e.message) }
     finally { setSaving(false) }
   }
@@ -362,7 +362,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
           className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="">{t('ui.select_patient_option')}</option>
           {children.map((c: any) => (
-            <option key={c.id} value={c.id}>{c.name}{c.age ? ` · ${c.age} años` : ''}</option>
+            <option key={c.id} value={c.id}>{c.name}{c.age ? ` · ${c.age} ${isEN ? 'years' : 'años'}` : ''}</option>
           ))}
         </select>
       </div>
@@ -534,7 +534,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
           <button onClick={handleSave} disabled={saving}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm disabled:opacity-50 shadow-md transition-colors">
             {saving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-            {saving ? 'Guardando...' : '✅ Guardar y Enviar para Aprobación'}
+            {saving?(isEN?'Saving...':'Guardando...'):(isEN?'✅ Save & Send for Approval':'✅ Guardar y Enviar para Aprobación')}
           </button>
         </div>
         )
@@ -546,7 +546,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 const TABS = [
   { id: 'all',        label: 'All' },
-  { id: 'clinico',    label: '🏥 Clínico Pro' },
+  { id: 'clinico',    label: isEN?'🏥 Clinical Pro':'🏥 Clínico Pro' },
   { id: 'tea',        label: '🧩 TEA' },
   { id: 'tdah',       label: '⚡ TDAH' },
   { id: 'conductual', label: '🎯 Conductual' },
@@ -654,7 +654,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
                     </p>
                     <div className="flex items-center gap-2 mt-2.5">
                       <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${s.pill} uppercase tracking-wide`}>
-                        {form.category || 'clínico'}
+                        {form.category || (isEN?'clinical':'clínico')}
                       </span>
                       {form.estimatedMinutes && (
                         <span className="flex items-center gap-1 text-[10px] text-slate-400">

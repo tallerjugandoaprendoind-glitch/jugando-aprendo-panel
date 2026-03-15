@@ -119,7 +119,7 @@ export default function ResourcesManagementView() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar este recurso?')) return
+    if (!confirm(isEN?'Delete this resource?':'¿Eliminar este recurso?')) return
     try {
       await fetch('/api/admin/resources', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' }, body: JSON.stringify({ id }) })
       toast.success(isEN?'Resource deleted':'Recurso eliminado')
@@ -188,7 +188,7 @@ export default function ResourcesManagementView() {
         {[
           { label: 'Total', value: resources.length, color: 'violet' },
           { label: 'Para todos', value: globalCount, color: 'blue' },
-          { label: 'Específicos', value: specificCount, color: 'indigo' },
+          { label: isEN?'Specific':'Específicos', value: specificCount, color: 'indigo' },
           { label: 'Tipos', value: new Set(resources.map(r => r.resource_type)).size, color: 'emerald' },
         ].map(({ label, value, color }) => (
           <div key={label} className="rounded-2xl p-5 shadow-sm border" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>

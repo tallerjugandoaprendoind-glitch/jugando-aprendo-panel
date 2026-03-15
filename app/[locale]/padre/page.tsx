@@ -514,7 +514,7 @@ export default function ParentDashboard() {
                     <p className="text-xs font-bold text-blue-700 mb-1 flex items-center gap-1.5">
                         <Calendar size={12}/> Tus citas
                     </p>
-                    <p className="text-xs text-blue-500 leading-relaxed">Las citas son programadas por el equipo del centro. Para cambios, contactá a recepción.</p>
+                    <p className="text-xs text-blue-500 leading-relaxed">{isEN ? "Appointments are scheduled by the center team. For changes, contact reception." : "Las citas son programadas por el equipo del centro. Para cambios, contactá a recepción."}</p>
                 </div>
                 
                 {/* BOTÓN NOTIFICACIONES SIDEBAR MEJORADO */}
@@ -581,7 +581,7 @@ export default function ParentDashboard() {
                         <div className="text-left">
                             <span className="font-bold text-sm block">{child.name.split(' ')[0]}</span>
                             <span className={`text-[10px] font-semibold flex items-center gap-1 ${selectedChild?.id === child.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                                <Baby size={10}/> {calculateAge(child.birth_date)} años
+                                <Baby size={10}/> {calculateAge(child.birth_date)} {isEN ? "years" : "años"}
                             </span>
                         </div>
                     </button>
@@ -1103,7 +1103,7 @@ export default function ParentDashboard() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg">Privacidad y Seguridad</h3>
-                                <p className="text-xs text-purple-100">Tus datos están protegidos</p>
+                                <p className="text-xs text-purple-100">{isEN ? "Your data is protected" : "Tus datos están protegidos"}</p>
                             </div>
                         </div>
                         <button onClick={()=>setShowPrivacy(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
@@ -1169,7 +1169,7 @@ export default function ParentDashboard() {
                         <HelpItem 
                             icon={<Calendar className="text-blue-600"/>}
                             title="¿Cómo ver mis citas?"
-                            description="En la sección 'Mis Citas' podés ver todas las citas programadas por el centro. Para cambios o cancelaciones, contactá a recepción directamente."
+                            description={isEN ? "In the 'My Appointments' section you can see all appointments scheduled by the center. For changes or cancellations, contact reception directly." : "En la sección 'Mis Citas' podés ver todas las citas programadas por el centro. Para cambios o cancelaciones, contactá a recepción directamente."}
                         />
                         <HelpItem 
                             icon={<MessageCircle className="text-purple-600"/>}

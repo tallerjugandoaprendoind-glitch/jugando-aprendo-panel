@@ -236,7 +236,7 @@ function PatientsView() {
             } else if (!data || data.length === 0) {
                 alert("⚠️ No se actualizó ningún registro. Verifica los permisos.");
             } else {
-                alert(`✅ Guardado correctamente. Edad: ${edad} años.`);
+                alert(isEN ? `✅ Saved successfully. Age: ${edad} years.` : `✅ Guardado correctamente. Edad: ${edad} años.`);
                 await cargarPacientes();
                 setIsEditing(false);
                 setShowPatientModal(false);
@@ -255,12 +255,12 @@ function PatientsView() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <div>
                         <h3 className="font-bold text-xl md:text-2xl text-slate-800 flex items-center gap-3">
-                            <Users className="text-blue-600" size={28}/> Directorio de Pacientes
+                            <Users className="text-blue-600" size={28}/> {isEN ? 'Patient Directory' : 'Directorio de Pacientes'}
                         </h3>
-                        <p className="text-slate-400 text-xs md:text-sm mt-1">{listaNinosFiltrada.length} de {listaNinos.length} pacientes</p>
+                        <p className="text-slate-400 text-xs md:text-sm mt-1">{listaNinosFiltrada.length} {isEN ? "of" : "de"} {listaNinos.length} {isEN ? "patients" : "pacientes"}</p>
                     </div>
                     <button onClick={cargarPacientes} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm text-slate-600 transition-all flex items-center gap-2">
-                        <Activity size={16}/> Actualizar
+                        <Activity size={16}/> {isEN ? "Refresh" : "Actualizar"}
                     </button>
                 </div>
 
@@ -301,7 +301,7 @@ function PatientsView() {
                                         <ChevronRight size={20} className="text-slate-300"/>
                                     </div>
                                     <div className="flex items-center justify-between">
-                                        <span className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-600 font-bold text-xs border border-purple-100">{nino.diagnosis || t('pacientes.enEvaluacion')}</span>
+                                        <span className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-600 font-bold text-xs border border-purple-100">{(nino.diagnosis === 'En evaluación' ? t('pacientes.enEvaluacion') : nino.diagnosis) || t('pacientes.enEvaluacion')}</span>
                                         <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-black text-xs">
                                             {nino.age ? `${nino.age}a` : "N/A"}
                                         </span>
@@ -331,10 +331,10 @@ function PatientsView() {
                                         </td>
                                         <td className="p-4 lg:p-6">
                                             <span className="font-black text-slate-700" style={{ color: "var(--text-secondary)" }}>
-                                                {nino.age ? `${nino.age} años` : "N/A"}
+                                                {nino.age ? isEN ? `${nino.age} years` : `${nino.age} años` : "N/A"}
                                             </span>
                                         </td>
-                                        <td className="p-4 lg:p-6"><span className="px-4 py-2 rounded-xl text-xs font-black bg-purple-50 text-purple-600 border border-purple-100 inline-block">{nino.diagnosis || t('pacientes.enEvaluacion')}</span></td>
+                                        <td className="p-4 lg:p-6"><span className="px-4 py-2 rounded-xl text-xs font-black bg-purple-50 text-purple-600 border border-purple-100 inline-block">{(nino.diagnosis === 'En evaluación' ? t('pacientes.enEvaluacion') : nino.diagnosis) || t('pacientes.enEvaluacion')}</span></td>
                                         <td className="p-4 lg:p-6">
                                             {(() => {
                                                 const dias = diasSinSesion(nino.id)
@@ -373,7 +373,7 @@ function PatientsView() {
                                         <h3 className="text-2xl font-black">{isEditing ? 'Editar Paciente' : selectedPatient.name}</h3>
                                         <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || "Diagnóstico pendiente"}</p>
                                         {!isEditing && selectedPatient.age && (
-                                          <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} años</p>
+                                          <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} {isEN ? "years" : "años"}</p>
                                         )}
                                     </div>
                                 </div>
@@ -415,7 +415,7 @@ function PatientsView() {
                             {!isEditing && patientTab === 'info' && (
                                 <>
                                     <InfoRow label={t('pacientes.fechaNacimiento')} value={selectedPatient.birth_date ? new Date(selectedPatient.birth_date).toLocaleDateString(toBCP47(locale)) : t('pacientes.noRegistrada')} icon={<Calendar size={16}/>}/>
-                                    <InfoRow label="Edad" value={selectedPatient.age ? `${selectedPatient.age} años` : "No disponible"} icon={<Baby size={16}/>}/>
+                                    <InfoRow label="Edad" value={selectedPatient.age ? isEN ? `${selectedPatient.age} years` : `${selectedPatient.age} años` : "No disponible"} icon={<Baby size={16}/>}/>
                                     <InfoRow label={t('pacientes.diagnostico')} value={selectedPatient.diagnosis || t('pacientes.enEvaluacion')} icon={<Stethoscope size={16}/>}/>
                                 </>
                             )}

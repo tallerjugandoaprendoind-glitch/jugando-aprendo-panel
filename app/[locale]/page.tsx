@@ -21,7 +21,7 @@ const VIDEOS = [
   {
     url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
     title: '¿Qué es la terapia ABA?',
-    desc: 'Conoce la metodología que usamos en cada sesión',
+    desc: isEN ? 'Learn the methodology we use in each session' : 'Conoce la metodología que usamos en cada sesión',
   },
   {
     url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
@@ -170,7 +170,8 @@ function ARIAChatIllustration() {
 }
 
 export default function LandingPage() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [isScrolled, setIsScrolled] = useState(false)
   const [activeAccordion, setActiveAccordion] = useState<number | null>(null)
   const [count50, setCount50] = useState(0)
@@ -213,9 +214,9 @@ export default function LandingPage() {
   ]
 
   const testimonials = [
-    { name: 'María G.', desc: 'Mamá de Rodrigo, 6 años · TEA Nivel 2', a: 'M', color: '#f97316', text: 'En 3 meses mi hijo empezó a comunicarse con frases completas. Los reportes con IA nos ayudan a entender su progreso sin tecnicismos. ¡Los recomiendo al 100%!' },
-    { name: 'Carlos R.', desc: 'Papá de Valentina, 4 años · TDAH', a: 'C', color: '#10b981', text: 'Lo que más me sorprendió fue poder seguir el avance semana a semana desde mi celular. El asistente IA nos da consejos para trabajar en casa. Valentina ha mejorado muchísimo.' },
-    { name: 'Rosa T.', desc: 'Mamá de Mateo, 5 años · TEA Nivel 1', a: 'R', color: '#8b5cf6', text: 'Al principio tenía miedo de no entender los términos clínicos. La terapeuta y el sistema de reportes lo explican todo de manera muy sencilla. Me siento acompañada.' },
+    { name: 'María G.', desc: isEN ? 'Rodrigo\'s mom, 6 years · ASD Level 2' : 'Mamá de Rodrigo, 6 años · TEA Nivel 2', a: 'M', color: '#f97316', text: 'En 3 meses mi hijo empezó a comunicarse con frases completas. Los reportes con IA nos ayudan a entender su progreso sin tecnicismos. ¡Los recomiendo al 100%!' },
+    { name: 'Carlos R.', desc: isEN ? 'Valentina\'s dad, 4 years · ADHD' : 'Papá de Valentina, 4 años · TDAH', a: 'C', color: '#10b981', text: 'Lo que más me sorprendió fue poder seguir el avance semana a semana desde mi celular. El asistente IA nos da consejos para trabajar en casa. Valentina ha mejorado muchísimo.' },
+    { name: 'Rosa T.', desc: isEN ? 'Mateo\'s mom, 5 years · ASD Level 1' : 'Mamá de Mateo, 5 años · TEA Nivel 1', a: 'R', color: '#8b5cf6', text: 'Al principio tenía miedo de no entender los términos clínicos. La terapeuta y el sistema de reportes lo explican todo de manera muy sencilla. Me siento acompañada.' },
   ]
 
   const benefits = [
@@ -226,7 +227,7 @@ export default function LandingPage() {
     { icon: <Calendar size={20} color="#fff" />, bg: 'linear-gradient(135deg,#f43f5e,#fb7185)', title: 'Agenda de citas', desc: 'Reserva y confirma sesiones en un solo lugar, sin llamadas.' },
     { icon: <BookOpen size={20} color="#fff" />, bg: 'linear-gradient(135deg,#14b8a6,#2dd4bf)', title: 'Biblioteca de recursos', desc: 'Guías, videos y actividades ABA para reforzar en casa.' },
     { icon: <Bell size={20} color="#fff" />, bg: 'linear-gradient(135deg,#f59e0b,#fbbf24)', title: 'Notificaciones', desc: 'Alertas de progreso, citas y mensajes en tiempo real.' },
-    { icon: <Shield size={20} color="#fff" />, bg: 'linear-gradient(135deg,#059669,#10b981)', title: 'Datos protegidos', desc: 'Información 100% segura con estándares clínicos.' },
+    { icon: <Shield size={20} color="#fff" />, bg: 'linear-gradient(135deg,#059669,#10b981)', title: isEN ? 'Protected data' : 'Datos protegidos', desc: isEN ? '100% secure information with clinical standards.' : 'Información 100% segura con estándares clínicos.' },
   ]
 
   return (
@@ -525,7 +526,7 @@ export default function LandingPage() {
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
             <div className="lp-tag"><Heart size={12} /> Para las familias</div>
             <h2 className="lp-h2">Todo lo que brindamos<br/>a los padres</h2>
-            <p className="lp-sub" style={{ margin: '0 auto' }}>Acompañar a tu hijo es un camino compartido. Herramientas digitales y humanas para que siempre estés informado, empoderado y parte activa del proceso.</p>
+            <p className="lp-sub" style={{ margin: '0 auto' }}>{isEN ? "Accompanying your child is a shared journey. Digital and human tools so you are always informed, empowered and an active part of the process." : "Acompañar a tu hijo es un camino compartido. Herramientas digitales y humanas para que siempre estés informado, empoderado y parte activa del proceso."}</p>
           </div>
           <div className="lp-grid-4">
             {benefits.map(({ icon, bg, title, desc }) => (
@@ -549,7 +550,7 @@ export default function LandingPage() {
         <div className="lp-inner">
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
             <div className="lp-tag"><Quote size={12} /> Familias reales</div>
-            <h2 className="lp-h2">Resultados que hablan por sí solos</h2>
+            <h2 className="lp-h2">{isEN ? "Results that speak for themselves" : "Resultados que hablan por sí solos"}</h2>
           </div>
           <div className="lp-grid-3">
             {testimonials.map(({ name, desc, a, color, text }) => (
@@ -590,7 +591,7 @@ export default function LandingPage() {
               <Sparkles size={13} /> Inteligencia Artificial
             </div>
             <h2 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(26px,4vw,46px)', fontWeight: 800, color: '#1c1917', lineHeight: 1.15, marginBottom: 12 }}>
-              Conoce a <span style={{ color: '#f97316' }}>ARIA</span>
+              {isEN ? "Meet" : "Conoce a"} <span style={{ color: '#f97316' }}>ARIA</span>
             </h2>
             <p style={{ color: '#78716c', fontSize: 15, lineHeight: 1.75, maxWidth: 520, margin: '0 auto' }}>
               Tu asistente clínica inteligente. Aprende de los registros diarios de tu hijo y te acompaña 24/7 entre sesiones.
@@ -656,9 +657,9 @@ export default function LandingPage() {
       <section id="galeria" className="lp-section" style={{ background: '#fffbf5' }}>
         <div className="lp-inner">
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
-            <div className="lp-tag"><ImageIcon size={12} /> Galería de fotos</div>
-            <h2 className="lp-h2">Nuestro centro en imágenes</h2>
-            <p className="lp-sub" style={{ margin: '0 auto' }}>Conoce el ambiente seguro, cálido y estimulante donde los niños aprenden y crecen.</p>
+            <div className="lp-tag"><ImageIcon size={12} /> {isEN ? "Photo gallery" : "Galería de fotos"}</div>
+            <h2 className="lp-h2">{isEN ? "Our center in images" : "Nuestro centro en imágenes"}</h2>
+            <p className="lp-sub" style={{ margin: '0 auto' }}>{isEN ? "Discover the safe, warm and stimulating environment where children learn and grow." : "Conoce el ambiente seguro, cálido y estimulante donde los niños aprenden y crecen."}</p>
           </div>
           <div className="lp-gallery-main">
             <Image src={imgs[activeImg].src} alt={imgs[activeImg].caption} fill style={{ objectFit: 'cover' }} unoptimized />
@@ -684,8 +685,8 @@ export default function LandingPage() {
         <div className="lp-inner">
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
             <div className="lp-tag"><Video size={12} /> Videos</div>
-            <h2 className="lp-h2">Conoce cómo trabajamos</h2>
-            <p className="lp-sub" style={{ margin: '0 auto' }}>Mira nuestros métodos, conoce familias reales y entiende cómo ARIA potencia cada sesión.</p>
+            <h2 className="lp-h2">{isEN ? "Learn how we work" : "Conoce cómo trabajamos"}</h2>
+            <p className="lp-sub" style={{ margin: '0 auto' }}>{isEN ? "Watch our methods, meet real families and understand how ARIA enhances every session." : "Mira nuestros métodos, conoce familias reales y entiende cómo ARIA potencia cada sesión."}</p>
           </div>
 
           <div className="lp-grid-3">
@@ -731,14 +732,14 @@ export default function LandingPage() {
       <section id="servicios" className="lp-section" style={{ background: '#fffbf5' }}>
         <div className="lp-inner">
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
-            <div className="lp-tag"><Star size={12} /> Nuestros Servicios</div>
+            <div className="lp-tag"><Star size={12} /> {isEN ? "Our Services" : "Nuestros Servicios"}</div>
             <h2 className="lp-h2">Soluciones integrales para el desarrollo</h2>
           </div>
           <div className="lp-grid-3">
             <div className="lp-svc-card">
               <div style={{ width: 56, height: 56, background: '#dbeafe', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Brain size={26} color="#2563eb" /></div>
-              <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#1c1917', marginBottom: 10 }}>Terapia ABA</h3>
-              <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>Intervención basada en evidencia para mejorar habilidades sociales, comunicación y aprendizaje.</p>
+              <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#1c1917', marginBottom: 10 }}>{isEN ? "ABA Therapy" : "Terapia ABA"}</h3>
+              <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>{isEN ? "Evidence-based intervention to improve social skills, communication and learning." : "Intervención basada en evidencia para mejorar habilidades sociales, comunicación y aprendizaje."}</p>
               <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#f97316', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>{t('landing.contact_us')} <ArrowRight size={15} /></a>
             </div>
             <div className="lp-svc-card featured">
@@ -746,7 +747,7 @@ export default function LandingPage() {
               <div style={{ width: 56, height: 56, background: 'rgba(255,255,255,.2)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Users size={26} color="#fff" /></div>
               <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 10 }}>Habilidades Sociales</h3>
               <p style={{ color: 'rgba(255,255,255,.75)', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>{t('landing.group_workshops')}</p>
-              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#fff', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>Contáctanos <ArrowRight size={15} /></a>
+              <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#fff', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>{isEN ? "Contact us" : "Contáctanos"} <ArrowRight size={15} /></a>
             </div>
             <div className="lp-svc-card">
               <div style={{ width: 56, height: 56, background: '#dcfce7', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Calendar size={26} color="#16a34a" /></div>
@@ -762,7 +763,7 @@ export default function LandingPage() {
       {false && <section className="lp-section" style={{ background: '#fff7ed' }}>
         <div className="lp-inner">
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
-            <div className="lp-tag"><Heart size={12} /> Nuestro Equipo</div>
+            <div className="lp-tag"><Heart size={12} /> {isEN ? "Our Team" : "Nuestro Equipo"}</div>
             <h2 className="lp-h2">Profesionales que aman lo que hacen</h2>
           </div>
           <div className="lp-grid-3">
@@ -790,8 +791,8 @@ export default function LandingPage() {
             <h2 className="lp-h2">Resolvemos tus dudas</h2>
           </div>
           {[
-            { q: '¿A qué edad pueden empezar las terapias?', a: 'Atendemos niños desde los 1 año en adelante. La intervención temprana es clave. Nuestro equipo adapta las sesiones según la edad y necesidades de cada niño.' },
-            { q: '¿Cómo puedo empezar?', a: 'Es muy sencillo. Contáctanos por WhatsApp y nuestro equipo te orientará sobre el proceso de admisión y los servicios que mejor se adaptan a las necesidades de tu hijo/a.' },
+            { q: isEN ? 'What age can therapy start?' : '¿A qué edad pueden empezar las terapias?', a: isEN ? 'We work with children from 1 year old onwards. Early intervention is key. Our team adapts sessions to the age and needs of each child.' : 'Atendemos niños desde los 1 año en adelante. La intervención temprana es clave. Nuestro equipo adapta las sesiones según la edad y necesidades de cada niño.' },
+            { q: isEN ? 'How can I get started?' : '¿Cómo puedo empezar?', a: isEN ? 'Very simple. Contact us via WhatsApp and our team will guide you through the admission process and the services best suited to your child\'s needs.' : 'Es muy sencillo. Contáctanos por WhatsApp y nuestro equipo te orientará sobre el proceso de admisión y los servicios que mejor se adaptan a las necesidades de tu hijo/a.' },
             { q: '¿Cómo veo el progreso de mi hijo?', a: 'A través de nuestra plataforma verás reportes diarios, gráficos de avance y observaciones de cada sesión. ARIA genera resúmenes semanales en lenguaje sencillo.' },
             { q: '¿Qué metodología utilizan?', a: 'Trabajamos con la metodología ABA (Applied Behavior Analysis), reconocida como el enfoque más efectivo con respaldo científico para la neurodivergencia.' },
             { q: '¿Qué incluye la plataforma para padres?', a: 'Incluye: reportes diarios, gráficos de progreso, chat con el equipo, asistente ARIA 24/7, agenda de citas, biblioteca de recursos y notificaciones en tiempo real.' },

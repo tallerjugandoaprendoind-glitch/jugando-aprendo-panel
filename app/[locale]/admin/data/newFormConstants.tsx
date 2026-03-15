@@ -24,7 +24,7 @@ export const OBJETIVO_IEP_DATA = [
   {
     title: '2. Criterios de Evaluación y Estrategias',
     questions: [
-      { id: 'criterio_dominio', label: 'Criterio de Dominio', type: 'text', placeholder: 'Ej: 80% de ensayos correctos en 3 sesiones consecutivas' },
+      { id: 'criterio_dominio', label: 'Criterio de Dominio', type: 'text', placeholder: 'E.g.: 80% correct trials in 3 consecutive sessions' },
       { id: 'metodo_ensenanza', label: 'Método de Enseñanza Principal', type: 'select', options: ['DTT (Discrete Trial Training)', 'NET (Natural Environment Training)', 'PECS', 'Modelado', 'Encadenamiento hacia atrás', 'Encadenamiento hacia adelante', 'Incidental Teaching', 'PRT (Pivotal Response Training)'] },
       { id: 'tipo_ayuda', label: 'Tipo de Ayuda (Prompt) Inicial', type: 'select', options: ['Sin ayuda', 'Gestual', 'Verbal parcial', 'Verbal completo', 'Físico parcial', 'Físico completo', 'Visual/Pictograma'] },
       { id: 'materiales', label: 'Materiales y Recursos Necesarios', type: 'textarea', placeholder: 'Lista los materiales específicos para trabajar este objetivo...' },
@@ -131,7 +131,7 @@ export const REGISTRO_CONDUCTUAL_ABC_DATA = [
       { id: 'hora_inicio', label: 'Hora de Inicio', type: 'time' },
       { id: 'hora_fin', label: 'Hora de Fin', type: 'time' },
       { id: 'duracion_estimada', label: 'Duración Estimada', type: 'select', options: ['Menos de 1 minuto', '1-5 minutos', '5-10 minutos', '10-30 minutos', 'Más de 30 minutos'] },
-      { id: 'lugar', label: 'Lugar donde Ocurrió', type: 'select', options: ['Centro terapéutico', 'Hogar - sala', 'Hogar - habitación', 'Hogar - cocina', 'Colegio - aula', 'Colegio - recreo', 'Exterior/calle', 'Supermercado/tienda', 'Transporte', 'Otro lugar'] },
+      { id: 'lugar', label: 'Lugar donde Ocurrió', type: 'select', options: ['Therapy center', 'Home - living room', 'Home - bedroom', 'Home - kitchen', 'School - classroom', 'School - recess', 'Outdoors/street', 'Supermarket/store', 'Transport', 'Other location'] },
       { id: 'personas_presentes', label: 'Personas Presentes', type: 'multiselect', options: ['Terapeuta', 'Madre', 'Padre', 'Hermanos', 'Abuelos', 'Docente', 'Compañeros de clase', 'Personas desconocidas'] },
     ]
   },

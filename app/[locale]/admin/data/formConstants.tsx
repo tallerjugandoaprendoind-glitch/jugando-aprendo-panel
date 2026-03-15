@@ -52,7 +52,7 @@ export const ANAMNESIS_DATA = [
   {
     title: "1. Datos de Filiación",
     questions: [
-      { id: "informante", label: "Nombre del informante", type: "text", placeholder: "Nombre completo" },
+      { id: "informante", label: "Informant name", type: "text", placeholder: "Full name" },
       { id: "parentesco", label: "Parentesco con el niño", type: "select", options: ["Madre", "Padre", "Abuelo/a", "Tutor", "Otro"] },
       { id: "vive_con", label: "¿Con quién vive el niño?", type: "text", placeholder: "Ej: Padres y hermanos" },
       { id: "escolaridad", label: "Escolaridad actual", type: "select", options: ["No escolarizado", "Nido/Inicial", "Primaria", "CEBE"] },
@@ -359,7 +359,7 @@ export const BRIEF2_DATA = [
       { id: "fecha_evaluacion", label: "Fecha de evaluación", type: "date", required: true },
       { id: "evaluador", label: "Nombre del evaluador", type: "text", required: true },
       { id: "informante", label: "Informante", type: "select", options: ["Madre", "Padre", "Ambos padres", "Maestro/a", "Terapeuta", "Otro"] },
-      { id: "edad_evaluado", label: "Edad del niño (años)", type: "number", min: 2, max: 18 },
+      { id: "edad_evaluado", label: "Child's age (years)", type: "number", min: 2, max: 18 },
       { id: "motivo_evaluacion", label: "Motivo de la evaluación", type: "textarea", placeholder: "Por qué se realiza esta evaluación..." },
     ]
   },
@@ -612,7 +612,7 @@ export const WISCV_DATA = [
     questions: [
       { id: "fecha_eval_wisc", label: "Fecha de evaluación", type: "date", required: true },
       { id: "evaluador_wisc", label: "Psicólogo evaluador", type: "text", required: true },
-      { id: "edad_cronologica", label: "Edad cronológica (años, meses)", type: "text", placeholder: "Ej: 7 años, 3 meses" },
+      { id: "edad_cronologica", label: "Chronological age (years, months)", type: "text", placeholder: "E.g.: 7 years, 3 months" },
       { id: "motivo_eval_cognitiva", label: "Motivo de evaluación", type: "textarea" },
     ]
   },
@@ -704,7 +704,7 @@ export const BASC3_DATA = [
     questions: [
       { id: "fecha_eval_basc", label: "Fecha de evaluación", type: "date", required: true },
       { id: "informante_basc", label: "Informante", type: "select", options: ["Padre", "Madre", "Ambos", "Maestro", "Autoevaluación"] },
-      { id: "forma_basc", label: "Forma aplicada", type: "select", options: ["Preescolar (2-5 años)", "Niños (6-11 años)", "Adolescentes (12-21 años)"] },
+      { id: "forma_basc", label: "Forma aplicada", type: "select", options: ["Preschool (2-5 years)", "Children (6-11 years)", "Adolescents (12-21 years)"] },
     ]
   },
   {

@@ -37,7 +37,7 @@ export default function WhatsAppConfigView() {
         ok: d.sent,
         msg: d.sent
           ? '✅ Mensaje enviado correctamente'
-          : '❌ No se pudo enviar. Verificá las variables de entorno en Vercel.',
+          : (isEN?'❌ Could not send. Check your environment variables in Vercel.':'❌ No se pudo enviar. Verificá las variables de entorno en Vercel.'),
       })
     } finally { setSending(false) }
   }
@@ -170,7 +170,7 @@ export default function WhatsAppConfigView() {
                 n: '4', title: isEN?'Configure in Vercel':'Configurar en Vercel',
                 desc: 'Settings → Environment Variables → agregar:',
                 code: 'TELEGRAM_BOT_TOKEN = 7123456789:AAFxxxxxxxx\nTELEGRAM_CHAT_ID   = -1001234567890',
-                note: 'Después de guardar, hacé Redeploy en Vercel para que tome los cambios.',
+                note: isEN?'After saving, do a Redeploy in Vercel for the changes to take effect.':'Después de guardar, hacé Redeploy en Vercel para que tome los cambios.',
               },
             ].map(step => (
               <div key={step.n} className="flex gap-3">
@@ -243,7 +243,7 @@ export default function WhatsAppConfigView() {
             { icon: '❌', label: 'Cita cancelada',     active: true },
             { icon: '📋', label: 'Formulario subido',  active: true },
             { icon: '📊', label: 'Informe generado',   active: true },
-            { icon: '⚠️', label: 'Alerta clínica IA',  active: false },
+            { icon: '⚠️', label: isEN?'AI clinical alert':'Alerta clínica IA',  active: false },
             { icon: '💬', label: 'Mensaje terapeuta',  active: false },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">

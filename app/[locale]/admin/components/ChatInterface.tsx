@@ -17,6 +17,7 @@ declare global {
 // ── Hook de Text-to-Speech ────────────────────────────────────────────────────
 function useTextToSpeech() {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
@@ -343,21 +344,21 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
       </div>
 
       <h3 className="text-xl font-black text-slate-800 mb-1">
-        ¡Hola! Soy <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
+        {isEN ? "Hello! I'm" : "¡Hola! Soy"} <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
       </h3>
       <p className="text-sm text-slate-500 font-medium mb-1">
-        Tu asistente clínico de Jugando Aprendo
+        {isEN ? "Your clinical assistant at Jugando Aprendo" : "Tu asistente clínico de Jugando Aprendo"}
       </p>
       <p className="text-xs text-slate-400 mb-6 leading-relaxed max-w-xs">
-        {t('aria.revisadoHistorial')} <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> y estoy lista para ayudarte en lo que necesites.
+        {t('aria.revisadoHistorial')} <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> {isEN ? 'and I\'m ready to help you.' : 'y estoy lista para ayudarte en lo que necesites.'}
       </p>
 
       {/* Capacidades */}
       <div className="grid grid-cols-2 gap-2 w-full max-w-sm mb-6">
         {[
-          { icon: '📊', label: 'Explico reportes' },
-          { icon: '🏠', label: 'Actividades en casa' },
-          { icon: '💬', label: 'Respondo dudas' },
+          { icon: '📊', label: isEN ? 'Explain reports' : 'Explico reportes' },
+          { icon: '🏠', label: isEN ? 'Home activities' : 'Actividades en casa' },
+          { icon: '💬', label: isEN ? 'Answer questions' : 'Respondo dudas' },
           { icon: '💙', label: 'Apoyo emocional' },
         ].map(({ icon, label }) => (
           <div key={label} className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-3 py-2.5 shadow-sm">
@@ -386,6 +387,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
 // ── Componente principal ──────────────────────────────────────────────────────
 function ChatInterface({ childId, childName, onNavigateToStore }: any) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)

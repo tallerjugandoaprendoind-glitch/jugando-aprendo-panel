@@ -23,11 +23,11 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
   const hasPhone = !!profile?.phone
 
   const handleSave = async () => {
-    if (!phone.trim()) { setError('Ingresá tu número'); return }
+    if (!phone.trim()) { setError(isEN?'Enter your number':'Ingresá tu número'); return }
     // Validar formato básico con código país
     const clean = phone.replace(/\s/g, '')
     if (!clean.startsWith('+') || clean.length < 10) {
-      setError('Incluí el código de país, ej: +51 924 807 183')
+      setError(isEN?'Include country code, e.g.: +51 924 807 183':'Incluí el código de país, ej: +51 924 807 183')
       return
     }
     setSaving(true)
@@ -76,7 +76,7 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
           <p className="text-xs text-slate-400">
             {step === 'confirm'
               ? <span className="text-green-600 font-semibold">✅ Activo — {profile?.phone}</span>
-              : 'Recibí alertas de citas, informes y mensajes'}
+              : (isEN?'Receive appointment, report and message alerts':'Recibí alertas de citas, informes y mensajes')}
           </p>
         </div>
         {step === 'confirm' && (

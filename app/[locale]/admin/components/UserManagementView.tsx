@@ -310,7 +310,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Contraseña actualizada')
+      toast.success(isEN?'✅ Password updated':'✅ Contraseña actualizada')
       setChangingPasswordFor(null); setNewPassword(''); setConfirmPassword('')
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -366,7 +366,7 @@ export default function UserManagementView() {
           .update({ parent_id: linkingParent.id })
           .eq('id', selectedChildId)
         if (error) throw new Error(error.message)
-        toast.success(`✅ Paciente vinculado (reemplazó al tutor anterior). Para vincular 2 tutores simultáneamente, consultá al admin de DB.`)
+        toast.success(isEN?`✅ Patient linked (replaced previous guardian). To link`:`✅ Paciente vinculado (reemplazó al tutor anterior). Para vincular 2 tutores simultáneamente, consultá al admin de DB.`)
       } else {
         const { error } = await sb.from('children')
           .update({ parent_id: linkingParent.id })
@@ -394,7 +394,7 @@ export default function UserManagementView() {
   }
 
   const handleCreateUser = async () => {
-    if (!createForm.email || !createForm.password) { toast.error('Email y contraseña son requeridos'); return }
+    if (!createForm.email || !createForm.password) { toast.error(isEN?'Email and password':'Email y contraseña son requeridos'); return }
     setCreatingUser(true)
     try {
       const res = await fetch('/api/admin/users', {
@@ -560,7 +560,7 @@ export default function UserManagementView() {
                   <button
                     onClick={() => handleToggleActive(user)}
                     disabled={isSelf || isDirector}
-                    title={isSelf ? 'No podés desactivarte' : isDirector ? 'No podés desactivar directores' : isActive ? 'Desactivar' : 'Activar'}
+                    title={isSelf ? (isEN?'You cannot deactivate yourself':'No podés desactivarte') : isDirector ? (isEN?'Cannot deactivate directors':'No podés desactivar directores' : isActive ? 'Desactivar' : 'Activar'}
                     className="p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     style={{ color: isActive ? '#10b981' : 'var(--text-muted)' }}>
                     {isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
@@ -705,7 +705,7 @@ export default function UserManagementView() {
               <button onClick={() => setShowCreateModal(false)} className="p-1.5 rounded-lg hover:opacity-80" style={{ color: 'var(--text-muted)' }}><X size={16} /></button>
             </div>
             <div className="space-y-3">
-              {['Nombre completo', 'Email', 'Contraseña (mínimo 6 caracteres)'].map((ph, i) => (
+              {isEN?['Full name', 'Email', 'Password (minimum 6 characters)']:['Nombre completo', 'Email', 'Contraseña (mínimo 6 caracteres)'].map((ph, i) => (
                 <input key={i} placeholder={ph} type={i === 2 ? 'password' : i === 1 ? 'email' : 'text'}
                   value={i === 0 ? createForm.full_name : i === 1 ? createForm.email : createForm.password}
                   onChange={e => setCreateForm(f => ({ ...f, [i === 0 ? 'full_name' : i === 1 ? 'email' : 'password']: e.target.value }))}

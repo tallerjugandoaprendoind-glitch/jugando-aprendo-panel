@@ -348,7 +348,7 @@ export default function StoreManagementView() {
   }
 
   const deleteProduct = async (p: Product) => {
-    if (!confirm(`¿Eliminar "${p.nombre}"? Esta acción no se puede deshacer.`)) return
+    if (!confirm(isEN?`Delete "${p.nombre}"? This action cannot be undone.`:`¿Eliminar "${p.nombre}"? Esta acción no se puede deshacer.`)) return
     const { error } = await supabase.from('store_products').delete().eq('id', p.id)
     if (error) { toast.error('Error: ' + error.message); return }
     setProducts(prev => prev.filter(x => x.id !== p.id))
@@ -457,7 +457,7 @@ export default function StoreManagementView() {
             {['todos', 'fisico', 'digital'].map(f => (
               <button key={f} onClick={() => setFilterTipo(f)}
                 className={`px-4 py-2.5 rounded-xl border text-sm font-bold capitalize transition-all ${filterTipo === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-blue-300'}`}>
-                {f === 'todos' ? 'Todos' : f === 'fisico' ? '📦 Físicos' : '📄 Digitales'}
+                {f === 'todos' ? (isEN?'All':'Todos') : f === 'fisico' ? (isEN?'📦 Physical':'📦 Físicos') : (isEN?'📄 Digital':'📄 Digitales')}
               </button>
             ))}
           </div>
@@ -488,7 +488,7 @@ export default function StoreManagementView() {
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex gap-2">
                       <span className={`text-xs font-black px-2.5 py-1 rounded-full ${p.tipo === 'digital' ? 'bg-violet-600 text-white' : 'bg-slate-700 text-white'}`}>
-                        {p.tipo === 'digital' ? '📄 Digital' : '📦 Físico'}
+                        {p.tipo === 'digital' ? '📄 Digital' : (isEN?'📦 Physical':'📦 Físico')}
                       </span>
                       {p.destacado && <span className="text-xs font-black px-2.5 py-1 rounded-full bg-amber-400 text-white">⭐ Destacado</span>}
                     </div>

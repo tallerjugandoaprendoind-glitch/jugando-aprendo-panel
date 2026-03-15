@@ -18,6 +18,7 @@ declare global {
 // ── Hook de Text-to-Speech con ElevenLabs (Ivanna) ───────────────────────────
 function useTextToSpeech() {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
@@ -382,7 +383,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
       </div>
 
       <h3 className="text-xl font-black text-slate-800 mb-1">
-        ¡Hola! Soy <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
+        {isEN ? "Hello! I'm" : "¡Hola! Soy"} <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
       </h3>
       <p className="text-sm text-slate-500 font-medium mb-1">
         Tu asistente clínico de Jugando Aprendo
@@ -425,6 +426,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
 // ── Componente principal ──────────────────────────────────────────────────────
 function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)

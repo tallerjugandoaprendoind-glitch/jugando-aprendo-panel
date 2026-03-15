@@ -31,12 +31,12 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
 
   const cambiarPassword = async () => {
     if (pass.nueva.length < 6) { toast.error(t('especialista.min6Chars')); return }
-    if (pass.nueva !== pass.confirmar) { toast.error('Las contraseñas no coinciden'); return }
+    if (pass.nueva !== pass.confirmar) { toast.error(isEN?'Passwords do not match':'Las contraseñas no coinciden'); return }
     setGuardando(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: pass.nueva })
       if (error) throw error
-      toast.success('Contraseña actualizada ✓')
+      toast.success(isEN?'Password updated ✓':'Contraseña actualizada ✓')
       setCambioPass(false)
       setPass({ nueva: '', confirmar: '' })
     } catch (e: any) { toast.error('Error: ' + e.message) }
@@ -78,7 +78,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
             <>
               {[
                 { label: t('perfil.nombreCompleto'), icon: User, key: 'full_name', placeholder: 'Tu nombre' },
-                { label: 'Teléfono', icon: Phone, key: 'phone', placeholder: '+52 55 1234 5678' },
+                { label: isEN?'Phone':'Teléfono', icon: Phone, key: 'phone', placeholder: '+52 55 1234 5678' },
                 { label: t('perfil.especialidad'), icon: Stethoscope, key: 'specialty', placeholder: 'Ej: Terapeuta ABA' },
               ].map(f => (
                 <div key={f.key}>
@@ -106,7 +106,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
               {[
                 { label: 'Email', icon: Mail, value: profile?.email },
                 { label: t('common.nombre'), icon: User, value: profile?.full_name },
-                { label: 'Teléfono', icon: Phone, value: profile?.phone || 'No registrado' },
+                { label: isEN?'Phone':'Teléfono', icon: Phone, value: profile?.phone || (isEN?'Not registered':'No registrado') },
                 { label: t('perfil.especialidad'), icon: Stethoscope, value: profile?.specialty || 'No registrado' },
               ].map((item, idx) => (
                 <div key={item.label} className={`flex items-center gap-4 ${idx < 3 ? 'pb-4 border-b border-slate-50' : ''}`}>

@@ -32,9 +32,9 @@ export default function ARIAAgentChat({
   const [loading, setLoading] = useState(false)
   const [conversacionId, setConversacionId] = useState<string | null>(null)
   const [sugerencias] = useState([
-    childId ? `¿Cómo va el progreso general de ${childName || 'este paciente'}?` : '¿Cuáles son los mejores reforzadores para TEA no verbal?',
-    '¿Qué dice Malott sobre extinción de escape?',
-    childId ? `¿Qué programas recomiendas para ${childName || 'este paciente'}?` : '¿Cómo aplico el modelo ético IBAO ante un dilema?',
+    childId ? (isEN ? `How is ${childName || 'this patient'}'s general progress?` : `¿Cómo va el progreso general de ${childName || 'este paciente'}?`) : (isEN ? 'What are the best reinforcers for nonverbal ASD?' : '¿Cuáles son los mejores reforzadores para TEA no verbal?'),
+    isEN ? 'What does Malott say about escape extinction?' : '¿Qué dice Malott sobre extinción de escape?',
+    childId ? (isEN ? `What programs do you recommend for ${childName || 'this patient'}?` : `¿Qué programas recomiendas para ${childName || 'este paciente'}?`) : (isEN ? 'How do I apply the IBAO ethical model to a dilemma?' : '¿Cómo aplico el modelo ético IBAO ante un dilema?'),
   ])
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -47,8 +47,12 @@ export default function ARIAAgentChat({
     setMessages([{
       role: 'assistant',
       content: childId
-        ? `¡Hola! 👋 Soy **ARIA**. Estoy revisando el expediente de **${childName || 'tu paciente'}** y tengo acceso a todo su historial, programas ABA y evaluaciones previas.\n\n¿En qué te puedo ayudar hoy?`
-        : `¡Hola! 👋 Soy **ARIA**, tu asistente clínica de **Vanty**.\n\nEstoy entrenada en evaluación e intervención de población infantil, con base en **ABA**, ética clínica, neuropsicología y educación especial.\n\n¿En qué puedo ayudarte hoy? 🧠`,
+        ? (isEN
+            ? `Hello! 👋 I'm **ARIA**. I'm reviewing **${childName || 'your patient'}'s** clinical record and have access to their full history, ABA programs and previous assessments.\n\nHow can I help you today?`
+            : `¡Hola! 👋 Soy **ARIA**. Estoy revisando el expediente de **${childName || 'tu paciente'}** y tengo acceso a todo su historial, programas ABA y evaluaciones previas.\n\n¿En qué te puedo ayudar hoy?`)
+        : (isEN
+            ? `Hello! 👋 I'm **ARIA**, your clinical assistant for **Vanty**.\n\nI'm trained in assessment and intervention for pediatric populations, based on **ABA**, clinical ethics, neuropsychology and special education.\n\nHow can I help you today? 🧠`
+            : `¡Hola! 👋 Soy **ARIA**, tu asistente clínica de **Vanty**.\n\nEstoy entrenada en evaluación e intervención de población infantil, con base en **ABA**, ética clínica, neuropsicología y educación especial.\n\n¿En qué puedo ayudarte hoy? 🧠`),
       timestamp: new Date().toISOString(),
     }])
   }, [childId, childName])
@@ -115,7 +119,7 @@ export default function ARIAAgentChat({
         </div>
         <div>
           <h3 className="font-black text-white text-sm flex items-center gap-2">
-            ARIA — Asistente Clínico IA
+            {isEN ? "ARIA — Clinical AI Assistant" : "ARIA — Asistente Clínico IA"}
             <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-black">BETA</span>
           </h3>
           <p className="text-violet-200 text-[10px]">
@@ -214,7 +218,7 @@ export default function ARIAAgentChat({
           </button>
         </div>
         <p className="text-[10px] mt-1.5 text-center" style={{ color: 'var(--text-muted)' }}>
-          ARIA usa Malott, DSM-5 TR, IBAO Guidelines y el historial del paciente
+          {isEN ? "ARIA uses Malott, DSM-5 TR, IBAO Guidelines and the patient's history" : "ARIA usa Malott, DSM-5 TR, IBAO Guidelines y el historial del paciente"}
         </p>
       </div>
     </div>

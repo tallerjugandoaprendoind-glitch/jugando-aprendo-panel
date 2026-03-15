@@ -103,9 +103,9 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
   const [answer, setAnswer] = useState('')
 
   const options = [
-    { emoji: '😊', label: 'Bien, con energía para seguir', color: '#16a34a', bg: '#dcfce7', border: '#86efac' },
+    { emoji: '😊', label: isEN?'Good, with energy to keep going':' Bien, con energía para seguir', color: '#16a34a', bg: '#dcfce7', border: '#86efac' },
     { emoji: '😐', label: 'Regular, algo cansado/a', color: '#d97706', bg: '#fef3c7', border: '#fcd34d' },
-    { emoji: '😔', label: 'Difícil, necesito más apoyo', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5' },
+    { emoji: '😔', label: isEN?'Difficult, I need more support':'Difícil, necesito más apoyo', color: '#dc2626', bg: '#fee2e2', border: '#fca5a5' },
   ]
 
   const handleAnswer = (opt: string) => {
@@ -285,7 +285,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
     let level = 'Inicial'
     if (totalSess >= 50) level = 'Avanzado'
     else if (totalSess >= 20) level = 'Intermedio'
-    else if (totalSess >= 5) level = 'Básico'
+    else if (totalSess >= 5) level = isEN?'Basic':'Básico'
 
     if (prevGoals !== -1 && achieved > prevGoals && achieved > 0) {
       setShowCelebration(true)
@@ -328,10 +328,10 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             <h1 className="text-2xl font-black leading-tight mb-3">{child?.name || t('pacientes.sinPacienteSeleccionado')}</h1>
             <div className="flex flex-wrap gap-2">
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
-                <Baby size={11} /> {age} años
+                <Baby size={11} /> {age} {isEN ? "years" : "años"}
               </span>
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold">
-                {child?.diagnosis || 'En evaluación'}
+                {child?.diagnosis || (isEN ? 'Under evaluation' : 'En evaluación')}
               </span>
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
                 <Activity size={11} /> {stats.sessions} sesiones

@@ -259,13 +259,13 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                   <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">{t('hub.analisPorPrograma')}</p>
                   <h3 className="text-xl font-black">{selectedPaciente.name}</h3>
                   <p className="text-blue-200 text-sm mt-0.5">
-                    {(prediccion as any).programas_analizados || 0} programas · {(prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) || 0} sesiones totales
+                    {(prediccion as any).programas_analizados || 0} {isEN ? "programs" : "programas"} · {(prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) || 0} {isEN ? "total sessions" : "sesiones totales"}
                   </p>
                 </div>
                 <div className="bg-white/15 rounded-xl px-3 py-2 text-center">
                   <p className="text-white/70 text-[10px] uppercase tracking-wide">{t('ui.criteria')}</p>
                   <p className="text-white font-black text-sm">≥90% × 2</p>
-                  <p className="text-white/70 text-[10px]">sesiones consecutivas</p>
+                  <p className="text-white/70 text-[10px]">{isEN ? "consecutive sessions" : "sesiones consecutivas"}</p>
                 </div>
               </div>
             </div>
@@ -273,7 +273,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             {/* Sin programas */}
             {((prediccion as any).programas_analizados === 0) && (
               <div className="rounded-xl p-6 text-center border-2 border-dashed" style={{ borderColor: "var(--card-border)", background: "var(--muted-bg)" }}>
-                <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>Sin programas ABA activos</p>
+                <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>{isEN ? "No active ABA programs" : "Sin programas ABA activos"}</p>
                 <p className="text-xs" style={{ color: "var(--text-muted)" }}>{t('hub.creaProgramas')}el paciente para generar análisis por nivel.</p>
               </div>
             )}
@@ -785,7 +785,7 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
           <Target size={16} className="text-amber-600" />
           <span className="font-bold text-amber-800 text-sm">{t('hub.generadorObjetivos')}</span>
         </div>
-        <p className="text-xs text-amber-600">Genera o ajusta objetivos terapéuticos ABA automáticamente según el progreso real del paciente.</p>
+        <p className="text-xs text-amber-600">{isEN ? "Generate or adjust ABA therapeutic goals" : "Genera o ajusta objetivos terapéuticos ABA"} automáticamente según el progreso real del paciente.</p>
       </div>
       <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
         <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
@@ -1005,7 +1005,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
           <BookOpen size={16} className="text-teal-600" />
           <span className="font-bold text-teal-800 text-sm">Reportes Profesionales Word — CAPA 2</span>
         </div>
-        <p className="text-xs text-teal-600">Genera documentos .docx profesionales listos para imprimir o enviar: para padres, aseguradoras o análisis comparativo.</p>
+        <p className="text-xs text-teal-600">{isEN ? "Generate professional .docx documents ready" : "Genera documentos .docx profesionales listo"}s para imprimir o enviar: para padres, aseguradoras o análisis comparativo.</p>
       </div>
       <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
         <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{'Paciente'}</label>
