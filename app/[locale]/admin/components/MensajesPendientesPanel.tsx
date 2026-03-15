@@ -128,7 +128,7 @@ export default function MensajesPendientesPanel() {
 
   const sourceLabel: Record<string, string> = {
     parent_form: isEN?'📝 Parent Form':'📝 Formulario de Padre', session_report: isEN?'📊 Session Report':'📊 Reporte de Sesión',
-    neuroforma: isEN?'🧠 NeuroForm':'🧠 NeuroForma', evaluacion: isEN?'📋 Assessment':'📋 Evaluación', entorno_hogar: isEN?'🏠 Home Envo Hogar',
+    neuroforma: isEN?'🧠 NeuroForm':'🧠 NeuroForma', evaluacion: isEN?'📋 Assessment':'📋 Evaluación', entorno_hogar: isEN?'🏠 Home Environment':'🏠 Entorno del Hogar',
   }
   const pendingCount = messages.filter(m => m.status === 'pending_approval').length
 

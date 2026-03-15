@@ -560,7 +560,7 @@ export default function UserManagementView() {
                   <button
                     onClick={() => handleToggleActive(user)}
                     disabled={isSelf || isDirector}
-                    title={isSelf ? (isEN?'You cannot deactivate yourself':'No podés desactivarte') : isDirector ? (isEN?'Cannot deactivate directors':'No podés desactivar directores' : isActive ? 'Desactivar' : 'Activar'}
+                    title={isSelf ? (isEN?'You cannot deactivate yourself':'No podés desactivarte') : isDirector ? (isEN?'Cannot deactivate directors':'No podés desactivar directores') : isActive ? (isEN?'Deactivate':'Desactivar') : (isEN?'Activate':'Activar')}
                     className="p-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                     style={{ color: isActive ? '#10b981' : 'var(--text-muted)' }}>
                     {isActive ? <ToggleRight size={18} /> : <ToggleLeft size={18} />}
