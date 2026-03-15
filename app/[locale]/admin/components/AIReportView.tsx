@@ -700,6 +700,7 @@ const BADGE_REPORTE: Record<string, string> = {
 
 function ReporteHistorialCard({ reporte }: { reporte: any }) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const handleDownload = async () => {
     try {
       const { data, error } = await supabase

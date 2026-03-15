@@ -588,7 +588,7 @@ export default function UserManagementView() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Meta */}
                     <div className="space-y-1.5 text-xs" style={{ color: 'var(--text-muted)' }}>
-                      <p className="flex items-center gap-1.5"><Calendar size={11} /> {t('usuarios.creado')}: {new Date(user.created_at).toLocaleDateString(toBCP47 ? toBCP47(locale) : locale === 'en' ? 'en-US' : 'es-ES')}</p>
+                      <p className="flex items-center gap-1.5"><Calendar size={11} /> {t('usuarios.creado')}: {new Date(user.created_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-ES')}</p>
                       <p className="flex items-center gap-1.5"><Clock size={11} /> {t('usuarios.ultimoAcceso')}: {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString(locale === 'en' ? 'en-US' : 'es-ES') : t('common.nunca')}</p>
                       <p className="flex items-center gap-1.5"><Ticket size={11} /> {t('usuarios.tokens')}: <strong style={{ color: 'var(--text-primary)' }}>{user.profile?.tokens ?? 0}</strong></p>
                       {user.profile?.specialty && (

@@ -508,7 +508,8 @@ function TabSeguridad() {
 // TAB: COMPETITIVIDAD
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabCompetitividad() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const [datos, setDatos] = useState<Benchmark | null>(null)
   const [loading, setLoading] = useState(true)
@@ -864,7 +865,8 @@ function TabObjetivos({ pacientes }: { pacientes: Paciente[] }) {
 // TAB: ALERTAS PROACTIVAS (CAPA 4)
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabSugerencias() {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const [sugerencias, setSugerencias] = useState<any[]>([])
   const [insightGlobal, setInsightGlobal] = useState<string | null>(null)

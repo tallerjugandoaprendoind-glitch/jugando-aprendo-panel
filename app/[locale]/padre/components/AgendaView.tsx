@@ -14,7 +14,8 @@ const STATUS_CFG: Record<string, { label: string; color: string; bg: string; ico
 }
 
 export default function AgendaView({ selectedChild }: { selectedChild?: any }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [citas, setCitas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 

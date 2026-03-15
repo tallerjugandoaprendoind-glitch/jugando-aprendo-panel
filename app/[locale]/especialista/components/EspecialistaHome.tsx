@@ -43,6 +43,7 @@ function StatCard({ label, value, sub, color, bg, border, icon: Icon, onClick, l
 // ── Chip de productividad semanal ───────────────────────────────────────────
 function ProductividadSemanal({ aprobadas, pendientes, rechazadas }: any) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const total = aprobadas + pendientes + rechazadas
   if (total === 0) return null
