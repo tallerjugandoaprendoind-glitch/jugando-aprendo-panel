@@ -1,5 +1,5 @@
 'use client'
-import { useI18n } from '@/lib/i18n-context'
+
 import { useState, useEffect } from 'react'
 import { Bell, BellOff, X, Smartphone } from 'lucide-react'
 import { usePushNotifications } from '../lib/usePushNotifications'
@@ -10,8 +10,6 @@ interface Props {
 
 export default function PushNotificationBanner({ userId }: Props) {
   const { permission, isSubscribed, isLoading, requestPermission, unsubscribe } = usePushNotifications(userId)
-  const { t, locale } = useI18n()
-  const isEN = locale === 'en'
   const [dismissed, setDismissed] = useState(false)
   const [justEnabled, setJustEnabled] = useState(false)
 
@@ -49,8 +47,8 @@ export default function PushNotificationBanner({ userId }: Props) {
             <Bell size={18} className="text-white" />
           </div>
           <div className="flex-1">
-            <p className="font-black text-sm">{t('notificaciones.activadas')}</p>
-            <p className="text-xs text-emerald-100 mt-0.5">{t('notificaciones.teAvisaremos')}</p>
+            <p className="font-black text-sm">¡Notificaciones activadas! 🎉</p>
+            <p className="text-xs text-emerald-100 mt-0.5">Te avisaremos cuando el terapeuta te envíe un mensaje.</p>
           </div>
         </div>
       </div>
@@ -79,9 +77,9 @@ export default function PushNotificationBanner({ userId }: Props) {
               <Bell size={18} className="text-violet-600" />
             </div>
             <div>
-              <p className="font-black text-slate-800 text-sm">{t('notificaciones.activamos')}</p>
+              <p className="font-black text-slate-800 text-sm">¿Activamos las notificaciones?</p>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                {locale === 'en' ? "We'll notify you instantly when the therapist sends a message about your child — without opening the app." : 'Te avisaremos al instante cuando el terapeuta te envíe un mensaje sobre tu hijo/a — sin tener que abrir la app.'}
+                Te avisaremos al instante cuando el terapeuta te envíe un mensaje sobre tu hijo/a — sin tener que abrir la app.
               </p>
             </div>
           </div>

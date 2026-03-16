@@ -1,5 +1,4 @@
 'use client'
-import { useI18n } from '@/lib/i18n-context'
 // components/tareas/TareasHogar.tsx
 import { useState, useEffect } from 'react'
 
@@ -10,7 +9,6 @@ interface TareasHogarProps {
 }
 
 export default function TareasHogar({ childId, modoParent = false, parentUserId }: TareasHogarProps) {
-  const { t, locale } = useI18n()
   const [tareas, setTareas]       = useState<any[]>([])
   const [cargando, setCargando]   = useState(true)
   const [completando, setCompletando] = useState<string | null>(null)
@@ -34,8 +32,8 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
     try {
       await fetch('/api/tareas-hogar', {
         method: 'POST',
-        headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es', action: 'completar', id, nota_padre: notaPadre, dificultad_reportada: dificultad })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'completar', id, nota_padre: notaPadre, dificultad_reportada: dificultad })
       })
       setTareas(prev => prev.map(t => t.id === id ? { ...t, completada: true } : t))
       setModalAbierto(false)
@@ -95,7 +93,7 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
                     <button
                       onClick={() => { setTareaSeleccionada(t); setModalAbierto(true) }}
                       className="bg-green-600 text-white text-xs px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex-shrink-0">
-                      {locale === 'en' ? '✓ Done' : '✓ Listo'}
+                      ✓ Listo
                     </button>
                   )}
                 </div>
@@ -149,7 +147,7 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
       {tareas.length === 0 && (
         <div className="text-center py-12">
           <p className="text-4xl mb-3">🎉</p>
-          <p className="text-gray-500 font-medium">{t('familias.sinTareasPend')}</p>
+          <p className="text-gray-500 font-medium">¡Sin tareas pendientes!</p>
           <p className="text-gray-400 text-sm mt-1">El terapeuta asignará nuevas actividades después de la próxima sesión.</p>
         </div>
       )}
@@ -158,11 +156,11 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
       {modalAbierto && tareaSeleccionada && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-end justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-md p-6 space-y-4">
-            <h3 className="font-bold text-gray-800">{t('familias.completasteTarea')}</h3>
+            <h3 className="font-bold text-gray-800">¡Completaste la tarea!</h3>
             <p className="text-gray-600 text-sm">"{tareaSeleccionada.titulo}"</p>
 
             <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">{t('familias.comoDificultad')}</label>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">¿Cómo fue la dificultad?</label>
               <div className="grid grid-cols-3 gap-2">
                 {['facil', 'moderado', 'dificil'].map(d => (
                   <button key={d} onClick={() => completarTarea(tareaSeleccionada.id, d)}
@@ -172,7 +170,7 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
                       d === 'moderado' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' :
                                          'bg-red-100 text-red-700 hover:bg-red-200'
                     }`}>
-                    {d === 'facil' ? (locale === 'en' ? '😊 Easy' : '😊 Fácil') : d === 'moderado' ? (locale === 'en' ? '😐 Moderate' : '😐 Regular') : (locale === 'en' ? '😓 Hard' : '😓 Difícil')}
+                    {d === 'facil' ? '😊 Fácil' : d === 'moderado' ? '😐 Regular' : '😓 Difícil'}
                   </button>
                 ))}
               </div>
@@ -181,7 +179,7 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
             <textarea
               value={notaPadre}
               onChange={e => setNotaPadre(e.target.value)}
-              placeholder="{t('familias.notaOpcional')}"
+              placeholder="Nota opcional: ¿algo que quieras comentarle al terapeuta?"
               rows={3}
               className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-blue-400 resize-none"
             />

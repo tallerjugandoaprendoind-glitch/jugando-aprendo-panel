@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { notifyAsync } from '@/lib/notifications'
 
 // GET: List forms assigned to parents (optionally filter by parent_id or status)
 export async function GET(request: NextRequest) {
@@ -63,17 +62,6 @@ export async function POST(request: NextRequest) {
         }])
       } catch (_e) { /* best-effort */ }
     }
-
-    // WhatsApp al admin del centro — formulario subido/enviado
-    notifyAsync({
-      tipo: 'formulario_nuevo',
-      vars: {
-        tipo: form_title || form_type || 'Formulario',
-        paciente: child_id || '',
-        especialista: '',
-      },
-    })
-
 
     return NextResponse.json({ data })
   } catch (error: any) {

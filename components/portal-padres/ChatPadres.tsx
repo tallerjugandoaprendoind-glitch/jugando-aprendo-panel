@@ -1,5 +1,4 @@
 'use client'
-import { useI18n } from '@/lib/i18n-context'
 // components/portal-padres/ChatPadres.tsx
 import { useState, useEffect, useRef } from 'react'
 
@@ -16,25 +15,15 @@ interface ChatPadresProps {
   childName: string
 }
 
-const SUGERENCIAS_ES = [
+const SUGERENCIAS = [
   '¿Cómo va esta semana?',
   '¿Qué puedo practicar en casa?',
   '¿Qué fue lo mejor de la última sesión?',
   '¿Cuándo es la próxima cita?',
   '¿Qué tareas tenemos pendientes?',
 ]
-const SUGERENCIAS_EN = [
-  'How is this week going?',
-  'What can I practice at home?',
-  'What was the best part of the last session?',
-  'When is the next appointment?',
-  'What tasks are pending?',
-]
 
 export default function ChatPadres({ childId, parentUserId, childName }: ChatPadresProps) {
-  const { t, locale } = useI18n()
-  const isEN = locale === 'en'
-  const SUGERENCIAS = isEN ? SUGERENCIAS_EN : SUGERENCIAS_ES
   const [mensajes, setMensajes]   = useState<Mensaje[]>([])
   const [input, setInput]         = useState('')
   const [enviando, setEnviando]   = useState(false)
@@ -71,15 +60,15 @@ export default function ChatPadres({ childId, parentUserId, childName }: ChatPad
     try {
       const res = await fetch('/api/parent-chat', {
         method: 'POST',
-        headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es', mensaje: msg, childId, parentUserId })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mensaje: msg, childId, parentUserId })
       })
       const data = await res.json()
 
       const msgAsistente: Mensaje = { rol: 'assistant', mensaje: data.respuesta || 'Disculpa, hubo un error. Intenta nuevamente.' }
       setMensajes(prev => [...prev, msgAsistente])
     } catch {
-      setMensajes(prev => [...prev, { rol: 'assistant', mensaje: isEN ? 'There was a connection problem. Please try again.' : 'Hubo un problema de conexión. Por favor intenta de nuevo.' }])
+      setMensajes(prev => [...prev, { rol: 'assistant', mensaje: 'Hubo un problema de conexión. Por favor intenta de nuevo.' }])
     } finally {
       setEnviando(false)
     }
@@ -106,7 +95,7 @@ export default function ChatPadres({ childId, parentUserId, childName }: ChatPad
           </div>
           <div className="ml-auto flex items-center gap-1">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-            <span className="text-xs text-blue-100">{t('familias.enLinea')}</span>
+            <span className="text-xs text-blue-100">En línea</span>
           </div>
         </div>
       </div>
@@ -117,7 +106,7 @@ export default function ChatPadres({ childId, parentUserId, childName }: ChatPad
           <div className="text-center py-6">
             <p className="text-3xl mb-3">💬</p>
             <p className="text-gray-600 font-medium text-sm">¡Hola! Soy el asistente de {childName}.</p>
-            <p className="text-gray-400 text-xs mt-1">{t('familias.preguntarProgreso')}itas.</p>
+            <p className="text-gray-400 text-xs mt-1">Puedes preguntarme sobre el progreso, tareas y citas.</p>
           </div>
         )}
 

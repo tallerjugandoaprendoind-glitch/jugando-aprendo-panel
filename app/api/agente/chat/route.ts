@@ -12,9 +12,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'mensaje y userId son requeridos' }, { status: 400 })
     }
 
-    const locale = req.headers.get('x-locale') || 'es'
     const response = await vantyAgent.chat(mensaje, {
-      childId, userId, conversacionId, contexto, locale,
+      childId, userId, conversacionId, contexto,
     })
 
     return NextResponse.json(response)

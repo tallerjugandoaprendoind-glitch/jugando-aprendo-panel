@@ -1,5 +1,4 @@
 'use client'
-import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect, useRef } from 'react'
 import { supabase as supabasePublic } from '@/lib/supabase'
 import {
@@ -14,7 +13,6 @@ type Tab = 'aprender' | 'biblioteca'
 
 export default function KnowledgeBaseView() {
   const toast = useToast()
-  const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('aprender')
   const [documentos, setDocumentos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -217,7 +215,7 @@ export default function KnowledgeBaseView() {
           </div>
           <div className="flex-1">
             <h2 className="text-xl md:text-2xl font-black">Cerebro IA</h2>
-            <p className="text-violet-200 text-sm mt-1">{t('ui.baseConocimiento')}</p>
+            <p className="text-violet-200 text-sm mt-1">Base de conocimiento especializada en ABA, TEA y neurodivergencia</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-5">
@@ -256,7 +254,7 @@ export default function KnowledgeBaseView() {
           <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
             <div className="flex items-center gap-2 mb-3">
               <Cpu size={16} className="text-violet-600" />
-              <span className="font-bold text-violet-800 text-sm">{t('ui.comoFuncAuto')}</span>
+              <span className="font-bold text-violet-800 text-sm">¿Cómo funciona el aprendizaje automático?</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {[
@@ -298,7 +296,7 @@ export default function KnowledgeBaseView() {
                 <textarea
                   value={keywords}
                   onChange={e => setKeywords(e.target.value)}
-                  placeholder="{t('ui.ejemplosRefuerzo')}"
+                  placeholder="Ejemplos: reforzamiento positivo, comunicación AAC, habilidades sociales TEA..."
                   className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
                   rows={3}
                   disabled={aprendiendo}
@@ -342,10 +340,10 @@ export default function KnowledgeBaseView() {
                   disabled={aprendiendo}
                 />
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
-                  <p className="text-xs text-blue-700 font-bold mb-1">{t('ui.queTipoURLs')}</p>
-                  <p className="text-[11px] text-blue-600">{t('ui.urlsPublicas')}</p>
-                  <p className="text-[11px] text-blue-600">{t('ui.urlsOrg')}</p>
-                  <p className="text-[11px] text-slate-400">{t('ui.urlsNoFuncionan')}</p>
+                  <p className="text-xs text-blue-700 font-bold mb-1">¿Qué tipo de URLs funcionan?</p>
+                  <p className="text-[11px] text-blue-600">✅ Artículos y blogs públicos · Wikipedia · PDFs en internet</p>
+                  <p className="text-[11px] text-blue-600">✅ Páginas de organizaciones ABA (BACB, ABAI, etc.)</p>
+                  <p className="text-[11px] text-slate-400">❌ Páginas que requieren login · JavaScript dinámico</p>
                 </div>
               </div>
             )}
@@ -364,7 +362,7 @@ export default function KnowledgeBaseView() {
           {/* Log */}
           {logAprender.length > 0 && (
             <div className="bg-slate-900 rounded-2xl p-4 font-mono text-xs space-y-1.5">
-              <p className="text-slate-400 text-[10px] uppercase tracking-widest mb-2">{t('ui.progresoTiempoReal')}</p>
+              <p className="text-slate-400 text-[10px] uppercase tracking-widest mb-2">Progreso en tiempo real</p>
               {logAprender.map((line, i) => (
                 <p key={i} className={
                   line.startsWith('✅') ? 'text-emerald-400' :
@@ -383,7 +381,7 @@ export default function KnowledgeBaseView() {
             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 size={20} className="text-emerald-500" />
-                <span className="font-black text-emerald-800">{t('ui.aprendizajeComp')}</span>
+                <span className="font-black text-emerald-800">¡Aprendizaje completado!</span>
               </div>
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {[
@@ -402,7 +400,7 @@ export default function KnowledgeBaseView() {
               </p>
               {resultadoAprender.terminos?.length > 0 && (
                 <div className="mt-3">
-                  <p className="text-[11px] font-bold text-emerald-700 mb-1.5">{t('ui.terminosAprendidos')}</p>
+                  <p className="text-[11px] font-bold text-emerald-700 mb-1.5">Términos aprendidos:</p>
                   <div className="flex flex-wrap gap-1.5">
                     {resultadoAprender.terminos.map((t: string, i: number) => (
                       <span key={i} className="text-[11px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{t}</span>
@@ -448,7 +446,7 @@ export default function KnowledgeBaseView() {
         <div className="space-y-4">
           <button onClick={() => setShowForm(v => !v)}
             className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 text-sm transition">
-            {showForm ? <><X size={16} /> Cancelar</> : <><Plus size={16} /> {t('ui.agregarDocManual')}</>}
+            {showForm ? <><X size={16} /> Cancelar</> : <><Plus size={16} /> Agregar documento manualmente</>}
           </button>
 
           {showForm && (
@@ -468,7 +466,7 @@ export default function KnowledgeBaseView() {
               </div>
 
               <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                placeholder="{t('ui.tituloDoc')}"
+                placeholder="Título del documento *"
                 value={form.titulo} onChange={e => setForm(p => ({ ...p, titulo: e.target.value }))} />
 
               <div className="flex gap-2">
@@ -486,7 +484,7 @@ export default function KnowledgeBaseView() {
                   <Upload size={20} className="text-slate-400 mx-auto mb-2" />
                   {selectedFile
                     ? <p className="text-sm font-semibold text-slate-700">{selectedFile.name}</p>
-                    : <p className="text-sm text-slate-400">{t('ui.clickSelecPDF2')}</p>}
+                    : <p className="text-sm text-slate-400">Click para seleccionar PDF o TXT</p>}
                   <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt,.doc,.docx"
                     onChange={e => {
                       const f = e.target.files?.[0]
@@ -503,7 +501,7 @@ export default function KnowledgeBaseView() {
 
               {inputMode === 'texto' && (
                 <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"
-                  placeholder="{t('ui.pegaContenido')}"
+                  placeholder="Pega aquí el contenido del documento..."
                   rows={6} value={form.texto} onChange={e => setForm(p => ({ ...p, texto: e.target.value }))} />
               )}
 
@@ -511,7 +509,7 @@ export default function KnowledgeBaseView() {
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <input className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                      placeholder="{t('ui.buscarArchive')}" value={busqueda}
+                      placeholder="Buscar libro en Archive.org..." value={busqueda}
                       onChange={e => setBusqueda(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && buscarLibros()} />
                     <button onClick={buscarLibros} disabled={buscando}
@@ -533,7 +531,7 @@ export default function KnowledgeBaseView() {
               )}
 
               <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"
-                placeholder="{t('ui.descripcionOpcional')}" rows={2}
+                placeholder="Descripción (opcional)" rows={2}
                 value={form.descripcion} onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))} />
 
               <button onClick={handleUpload} disabled={uploading}
@@ -550,8 +548,8 @@ export default function KnowledgeBaseView() {
           ) : documentos.length === 0 ? (
             <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-10 text-center">
               <Brain size={32} className="text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-400 font-semibold">{t('ui.baseVacia')}</p>
-              <p className="text-slate-400 text-sm mt-1">{t('ui.usarAprender')}</p>
+              <p className="text-slate-400 font-semibold">Biblioteca vacía</p>
+              <p className="text-slate-400 text-sm mt-1">Usa "Aprender de Internet" para empezar</p>
             </div>
           ) : (
             <div className="space-y-2">

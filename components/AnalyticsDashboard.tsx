@@ -1,5 +1,4 @@
 'use client'
-import { useI18n } from '@/lib/i18n-context'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { 
@@ -46,8 +45,6 @@ interface Trend {
 // COMPONENTE PRINCIPAL
 // ==============================================================================
 export default function AnalyticsDashboard({ childId, childName, onClose }: AnalyticsDashboardProps) {
-  const { t, locale } = useI18n()
-  const isEN = locale === 'en'
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
@@ -107,7 +104,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
     try {
       const res = await fetch('/api/reporte-word', {
         method: 'POST',
-        headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ childId, tipo: 'padres' }),
       })
       if (!res.ok) {
@@ -139,7 +136,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
           <div className="flex flex-col items-center gap-4">
             <RefreshCw className="w-12 h-12 text-blue-600 animate-spin" />
             <p className="text-lg font-bold text-gray-800">Analizando datos...</p>
-            <p className="text-sm text-gray-500">{t('dashboard.generandoInsights')}</p>
+            <p className="text-sm text-gray-500">Generando insights con IA</p>
           </div>
         </div>
       </div>
@@ -167,7 +164,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
                 <BarChart3 className="w-8 h-8" />
               </div>
               <div>
-                <h2 className="text-3xl font-black">{t('dashboard.dashboardAnalytics')}</h2>
+                <h2 className="text-3xl font-black">Dashboard de Analytics</h2>
                 {childName && (
                   <p className="text-blue-100 text-lg font-medium mt-1">{childName}</p>
                 )}
@@ -177,7 +174,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
             <div className="flex items-center gap-3 text-sm">
               <Calendar className="w-4 h-4" />
               <span className="opacity-90">
-                {isEN ? `Last analysis: ${fechaAnalisis}` : `Último análisis: ${fechaAnalisis}`}
+                Último análisis: {fechaAnalisis}
               </span>
             </div>
           </div>
@@ -196,7 +193,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
                   color="blue"
                 />
                 <KPICard
-                  title={t("dashboard.progresoPromedio")}
+                  title="Progreso Promedio"
                   value={`${kpiData.avgProgress}%`}
                   change={kpiData.progressGrowth}
                   icon={<TrendingUp className="w-6 h-6" />}
@@ -223,10 +220,10 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
             {chartData.length > 0 && (
               <div className="bg-white rounded-2xl shadow-md border-2 border-gray-100 p-6">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-xl font-black text-gray-800">{t('dashboard.evolucionProgreso')}</h3>
+                  <h3 className="text-xl font-black text-gray-800">Evolución del Progreso</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Activity className="w-4 h-4" />
-                    <span>{isEN ? `Last ${chartData.length} sessions` : `Últimas ${chartData.length} sesiones`}</span>
+                    <span>Últimas {chartData.length} sesiones</span>
                   </div>
                 </div>
                 
@@ -237,7 +234,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
             {/* ÁREAS DE DESARROLLO */}
             {developmentAreas.length > 0 && (
               <div className="bg-white rounded-2xl shadow-md border-2 border-gray-100 p-6">
-                <h3 className="text-xl font-black text-gray-800 mb-6">{t('dashboard.areasDesarrollo')}</h3>
+                <h3 className="text-xl font-black text-gray-800 mb-6">Áreas de Desarrollo</h3>
                 
                 <div className="space-y-4">
                   {developmentAreas.map((area, idx) => (
@@ -257,7 +254,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
               <div className="bg-white rounded-2xl shadow-md border-2 border-gray-100 p-6">
                 <div className="flex items-center gap-3 mb-6">
                   <Brain className="w-6 h-6 text-purple-600" />
-                  <h3 className="text-xl font-black text-gray-800">{t('dashboard.insightsIA')}</h3>
+                  <h3 className="text-xl font-black text-gray-800">Insights con IA</h3>
                 </div>
 
                 <div className="space-y-3">
@@ -630,15 +627,13 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
 
 // BARRA DE ÁREA DE DESARROLLO — diseño premium con gradiente y badge
 function DevelopmentAreaBar({ area, score, maxScore }: any) {
-  const { locale } = useI18n()
-  const isEN = locale === 'en'
   const percentage = Math.min(100, Math.max(0, (score / maxScore) * 100))
 
   const getStyle = (pct: number) => {
     if (pct >= 75) return { gradient: 'from-emerald-400 to-emerald-600', label: 'Excelente', labelColor: 'text-emerald-600 bg-emerald-50' }
     if (pct >= 50) return { gradient: 'from-blue-400 to-indigo-500',    label: 'Bien',      labelColor: 'text-indigo-600 bg-indigo-50'  }
     if (pct >= 25) return { gradient: 'from-amber-400 to-orange-500',   label: 'Regular',   labelColor: 'text-amber-600 bg-amber-50'    }
-    return              { gradient: 'from-red-400 to-rose-600',         label: isEN ? 'Attention' : 'Atención', labelColor: 'text-rose-600 bg-rose-50'       }
+    return              { gradient: 'from-red-400 to-rose-600',         label: 'Atención',  labelColor: 'text-rose-600 bg-rose-50'       }
   }
 
   const style = getStyle(percentage)

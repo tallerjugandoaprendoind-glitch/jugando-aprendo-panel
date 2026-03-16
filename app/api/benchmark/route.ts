@@ -5,7 +5,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
-import { getLangInstruction, getLocaleFromRequest } from '@/lib/lang'
 
 // Estándares de la industria ABA (basados en literatura y Central Reach benchmarks)
 const BENCHMARKS_INDUSTRIA = {
@@ -146,9 +145,8 @@ export async function GET(req: NextRequest) {
 
     let analisisEstrategico: string | null = null
     try {
-      const locale = req.headers.get('x-locale') || 'es'
       analisisEstrategico = await callGroqSimple(
-        'Eres un consultor estratégico especializado en centros terapéuticos ABA y competitividad frente a plataformas como Central Reach.' + getLangInstruction(locale),
+        'Eres un consultor estratégico especializado en centros terapéuticos ABA y competitividad frente a plataformas como Central Reach.',
         `Centro Jugando Aprendo — Análisis de Competitividad
 Score Global: ${scoreGlobal}/100 vs Central Reach: ${centralReachScore}/100
 ${ventaja > 0 ? `✅ VENTAJA de ${ventaja} puntos sobre Central Reach` : `⚠️ BRECHA de ${Math.abs(ventaja)} puntos vs Central Reach`}

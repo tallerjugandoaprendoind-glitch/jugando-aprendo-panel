@@ -1,5 +1,4 @@
 'use client'
-import { useI18n } from '@/lib/i18n-context'
 // components/portal-padres/PortalPadres.tsx
 import { useState } from 'react'
 import ChatPadres from './ChatPadres'
@@ -13,15 +12,14 @@ interface PortalPadresProps {
 }
 
 export default function PortalPadres({ childId, parentUserId, childName }: PortalPadresProps) {
-  const { t, locale } = useI18n()
   const [tab, setTab] = useState<'inicio' | 'chat' | 'tareas' | 'progreso' | 'citas'>('inicio')
 
   const tabs = [
     { id: 'inicio',   label: 'Inicio',    icono: '🏠' },
     { id: 'chat',     label: 'Preguntas', icono: '💬' },
-    { id: 'tareas',   label: locale === 'en' ? 'Tasks' : 'Tareas', icono: '📋' },
-    { id: 'progreso', label: locale === 'en' ? 'Progress' : 'Progreso', icono: '📈' },
-    { id: 'citas',    label: locale === 'en' ? 'Appointments' : 'Citas', icono: '📅' },
+    { id: 'tareas',   label: 'Tareas',    icono: '📋' },
+    { id: 'progreso', label: 'Progreso',  icono: '📈' },
+    { id: 'citas',    label: 'Citas',     icono: '📅' },
   ]
 
   return (
@@ -69,14 +67,13 @@ export default function PortalPadres({ childId, parentUserId, childName }: Porta
 
 // ─── TAB INICIO ──────────────────────────────────────────────
 function InicioTab({ childId, childName }: { childId: string; childName: string }) {
-  const { t } = useI18n()
   const [datos, setDatos] = useState<any>(null)
   const [cargando, setCargando] = useState(true)
 
   useState(() => {
     Promise.all([
-      fetch(`/api/progreso-paciente?child_id=${childId}&semanas=4&locale=${localStorage.getItem('vanty_locale') || 'es'}`).then(r => r.json()),
-      fetch(`/api/tareas-hogar?child_id=${childId}&activas=true&locale=${localStorage.getItem('vanty_locale') || 'es'}`).then(r => r.json()),
+      fetch(`/api/progreso-paciente?child_id=${childId}&semanas=4`).then(r => r.json()),
+      fetch(`/api/tareas-hogar?child_id=${childId}&activas=true`).then(r => r.json()),
       fetch(`/api/agenda?child_id=${childId}`).then(r => r.json()),
     ]).then(([progreso, tareas, agenda]) => {
       setDatos({ progreso, tareas, agenda })
@@ -97,7 +94,7 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">🤖</span>
-            <p className="font-semibold text-blue-800 text-sm">{t('familias.actualizacionSemanal')}</p>
+            <p className="font-semibold text-blue-800 text-sm">Actualización semanal</p>
           </div>
           <p className="text-gray-700 text-sm leading-relaxed">{reporteSemanal}</p>
         </div>
@@ -108,7 +105,7 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
         <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-lg">📅</span>
-            <p className="font-semibold text-gray-700 text-sm">{t('common.proximaCita')}</p>
+            <p className="font-semibold text-gray-700 text-sm">Próxima cita</p>
           </div>
           <div className="flex items-center justify-between">
             <div>
@@ -147,12 +144,12 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
         <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">📊</span>
-            <p className="font-semibold text-gray-700 text-sm">{t('familias.resumen4Semanas')}</p>
+            <p className="font-semibold text-gray-700 text-sm">Resumen de las últimas 4 semanas</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <MiniStat icono="✅" valor={datos.progreso.asistencia.asistidas} label={t("ui.sesionesLabel2")} color="blue" />
-            <MiniStat icono="📋" valor={`${datos.progreso.tareas.adherencia}%`} label={t("ui.tareasLabel2")} color="orange" />
-            <MiniStat icono="📈" valor={`${datos.progreso.asistencia.tasa}%`} label={t("ui.asistenciaLabel2")} color="green" />
+            <MiniStat icono="✅" valor={datos.progreso.asistencia.asistidas} label="Sesiones" color="blue" />
+            <MiniStat icono="📋" valor={`${datos.progreso.tareas.adherencia}%`} label="Tareas" color="orange" />
+            <MiniStat icono="📈" valor={`${datos.progreso.asistencia.tasa}%`} label="Asistencia" color="green" />
           </div>
         </div>
       )}
@@ -162,7 +159,6 @@ function InicioTab({ childId, childName }: { childId: string; childName: string 
 
 // ─── TAB CITAS ────────────────────────────────────────────────
 function CitasTab({ childId }: { childId: string }) {
-  const { t } = useI18n()
   const [citas, setCitas] = useState<any[]>([])
   const [cargando, setCargando] = useState(true)
 
@@ -182,7 +178,7 @@ function CitasTab({ childId }: { childId: string }) {
     <div className="space-y-4">
       {citasFuturas.length > 0 && (
         <div>
-          <h3 className="font-semibold text-gray-700 text-sm mb-3">{t('familias.proximasCitas2')}</h3>
+          <h3 className="font-semibold text-gray-700 text-sm mb-3">Próximas citas</h3>
           <div className="space-y-2">
             {citasFuturas.map(c => (
               <CitaCard key={c.id} cita={c} futura />
@@ -193,7 +189,7 @@ function CitasTab({ childId }: { childId: string }) {
 
       {citasPasadas.length > 0 && (
         <div>
-          <h3 className="font-semibold text-gray-500 text-sm mb-3">{t('familias.historialReciente')}</h3>
+          <h3 className="font-semibold text-gray-500 text-sm mb-3">Historial reciente</h3>
           <div className="space-y-2">
             {citasPasadas.map(c => (
               <CitaCard key={c.id} cita={c} />
@@ -213,13 +209,12 @@ function CitasTab({ childId }: { childId: string }) {
 }
 
 function CitaCard({ cita, futura }: { cita: any; futura?: boolean }) {
-  const { locale } = useI18n()
   const estadoConfig: Record<string, { bg: string; text: string; label: string }> = {
     programada: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Programada' },
     confirmada: { bg: 'bg-green-100',  text: 'text-green-700',  label: 'Confirmada' },
     realizada:  { bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Realizada' },
     cancelada:  { bg: 'bg-red-100',    text: 'text-red-700',    label: 'Cancelada' },
-    no_asistio: { bg: 'bg-gray-100', text: 'text-gray-700', label: locale === 'en' ? 'Absent' : 'No asistió' },
+    no_asistio: { bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'No asistió' },
   }
   const cfg = estadoConfig[cita.estado] || estadoConfig.programada
 

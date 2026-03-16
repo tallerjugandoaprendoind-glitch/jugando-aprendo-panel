@@ -1,7 +1,7 @@
 'use client'
+
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { X, Video, PhoneOff, Loader2, Wifi, AlertTriangle, Clock } from 'lucide-react'
-import { useI18n } from '@/lib/i18n-context'
 
 interface VideoCallModalProps {
   roomUrl: string
@@ -22,8 +22,6 @@ export default function VideoCallModal({
   const autoEndRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const endingRef  = useRef(false)
 
-  const { locale } = useI18n()
-  const isEN = locale === 'en'
   const [connStatus, setConnStatus] = useState<'connecting' | 'connected'>('connecting')
   const [elapsed,    setElapsed]    = useState(0)
   const [saving,     setSaving]     = useState(false)
@@ -119,7 +117,7 @@ export default function VideoCallModal({
               ? <Loader2 size={12} className="animate-spin text-yellow-400"/>
               : <Wifi size={12} className="text-green-400"/>}
             <span className="text-xs font-bold" style={{ color: connStatus==='connected' ? '#4ade80' : '#fbbf24' }}>
-              {connStatus==='connecting' ? (isEN ? 'Connecting...' : 'Conectando...') : (isEN ? 'Online' : 'En línea')}
+              {connStatus==='connecting' ? 'Conectando...' : 'En línea'}
             </span>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl transition-all hover:scale-105"
@@ -138,8 +136,8 @@ export default function VideoCallModal({
           <AlertTriangle size={14} className={isLastMin ? 'text-red-400 animate-pulse' : 'text-yellow-400'}/>
           <p className={`text-xs font-bold ${isLastMin ? 'text-red-300' : 'text-yellow-300'}`}>
             {isLastMin
-              ? isEN ? `⚠️ Session ends in ${fmt(remaining)} — will be saved automatically` : `⚠️ La sesión finaliza en ${fmt(remaining)} — se guardará automáticamente`
-              : isEN ? `Time remaining: ${fmt(remaining)}. The appointment will be marked as completed when finished.` : `Tiempo restante: ${fmt(remaining)}. La cita se marcará como completada al terminar.`}
+              ? `⚠️ La sesión finaliza en ${fmt(remaining)} — se guardará automáticamente`
+              : `Tiempo restante: ${fmt(remaining)}. La cita se marcará como completada al terminar.`}
           </p>
         </div>
       )}
@@ -159,7 +157,7 @@ export default function VideoCallModal({
             <div className="text-center">
               <p className="text-white font-bold text-lg">Iniciando videollamada...</p>
               <p className="text-sm mt-1" style={{ color:'rgba(255,255,255,0.4)' }}>
-                {isEN ? 'Allow access to camera and microphone when the browser requests it' : 'Permite el acceso a cámara y micrófono cuando el navegador lo solicite'}
+                Permite el acceso a cámara y micrófono cuando el navegador lo solicite
               </p>
             </div>
             <div className="flex gap-2">
@@ -182,7 +180,7 @@ export default function VideoCallModal({
       <div className="shrink-0 flex items-center justify-center gap-4 py-4"
         style={{ background:'rgba(255,255,255,0.03)', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
         <p className="text-xs mr-2" style={{ color:'rgba(255,255,255,0.3)' }}>
-          {isEN ? 'Camera and microphone controls within the call' : 'Controles de cámara y micrófono dentro de la llamada'}
+          Controles de cámara y micrófono dentro de la llamada
         </p>
         <button onClick={() => handleEnd(false)} disabled={saving}
           className="flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-white transition-all hover:scale-105 active:scale-95 disabled:opacity-60"

@@ -5,7 +5,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
-import { getLangInstruction, getDocLabels } from '@/lib/lang'
 import {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
   AlignmentType, BorderStyle, WidthType, ShadingType, LevelFormat,
@@ -109,7 +108,7 @@ function makeDoc(sections: DocChild[], fileName: string) {
 }
 
 // ── Reporte Para Padres ───────────────────────────────────────────────────────
-async function generarReportePadres(childId: string, userLocale = 'es'): Promise<{ doc: Document; fileName: string }> {
+async function generarReportePadres(childId: string): Promise<{ doc: Document; fileName: string }> {
   const { data: child } = await supabaseAdmin.from('children').select('name, age, diagnosis').eq('id', childId).single()
   const nombre = (child as any)?.name || 'Paciente'
   const edad = (child as any)?.age || 'N/A'
@@ -162,7 +161,8 @@ INSTRUCCIONES:
 - Cierra con mensaje motivacional para la familia
 - Longitud: 4-6 párrafos fluidos
 - NO uses términos ABA técnicos, NO uses bullets, escribe en párrafos naturales`
-  const textoIA = await callGroqSimple('', prompt + getLangInstruction(userLocale), { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 1200 })
+
+  const textoIA = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 1200 })
 
   const hoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
   const fileName = `Reporte_${nombre.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.docx`
@@ -175,7 +175,7 @@ INSTRUCCIONES:
     h2('Información del Paciente'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Nombre', nombre),
-      kv(userLocale === 'en' ? 'Age' : 'Edad', `${edad} ${userLocale === 'en' ? 'years old' : 'años'}`),
+      kv('Edad', `${edad} años`),
       kv('Diagnóstico', diagnostico),
       kv('Sesiones realizadas', String(sesiones?.length || 0)),
       kv('Promedio de logro', `${promedioLogro}%`),
@@ -203,7 +203,7 @@ INSTRUCCIONES:
 }
 
 // ── Reporte Para Seguros ──────────────────────────────────────────────────────
-async function generarReporteSeguro(childId: string, userLocale = 'es'): Promise<{ doc: Document; fileName: string }> {
+async function generarReporteSeguro(childId: string): Promise<{ doc: Document; fileName: string }> {
   const { data: child } = await supabaseAdmin.from('children').select('name, age, diagnosis, birth_date').eq('id', childId).single()
   const nombre = (child as any)?.name || 'Paciente'
   const edad = (child as any)?.age || 'N/A'
@@ -250,38 +250,38 @@ Redacta en lenguaje técnico-clínico formal:
 3. Pronóstico y plan de tratamiento continuo (2-3 oraciones)
 Usa terminología clínica apropiada. Sin bullets.`
 
-  const textoTecnico = await callGroqSimple('', prompt + getLangInstruction(userLocale), { model: GROQ_MODELS.SMART, temperature: 0.2, maxTokens: 600 })
+  const textoTecnico = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.2, maxTokens: 600 })
 
   const sections: DocChild[] = [
     new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: 'JUGANDO APRENDO — Centro de Terapia ABA', bold: true, size: 28, font: 'Arial', color: '1E293B' })] }),
-    new Paragraph({ spacing: { before: 0, after: 80 }, children: [new TextRun({ text: userLocale === 'en' ? 'CLINICAL REPORT FOR INSURANCE / IMSS' : 'REPORTE CLÍNICO PARA ASEGURADORAS / IMSS', bold: true, size: 32, font: 'Arial', color: '1E40AF' })] }),
-    subtitle(userLocale === 'en' ? `Issue date: ${hoy}  ·  Confidential Document` : `Fecha de emisión: ${hoy}  ·  Documento Confidencial`),
+    new Paragraph({ spacing: { before: 0, after: 80 }, children: [new TextRun({ text: 'REPORTE CLÍNICO PARA ASEGURADORAS / IMSS', bold: true, size: 32, font: 'Arial', color: '1E40AF' })] }),
+    subtitle(`Fecha de emisión: ${hoy}  ·  Documento Confidencial`),
 
-    h2(userLocale === 'en' ? 'I. PATIENT DATA' : 'I. DATOS DEL PACIENTE'),
+    h2('I. DATOS DEL PACIENTE'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-      kv(userLocale === 'en' ? 'Full name' : 'Nombre completo', nombre),
-      kv(userLocale === 'en' ? 'Age' : 'Edad', `${edad} ${userLocale === 'en' ? 'years old' : 'años'}`),
-      kv(userLocale === 'en' ? 'Primary diagnosis' : 'Diagnóstico principal', diagnostico),
-      kv('ICD-10 Code', cie),
-      kv(userLocale === 'en' ? 'Report date' : 'Fecha del reporte', hoy),
+      kv('Nombre completo', nombre),
+      kv('Edad', `${edad} años`),
+      kv('Diagnóstico principal', diagnostico),
+      kv('Código CIE-10', cie),
+      kv('Fecha del reporte', hoy),
     ]}),
 
-    h2(userLocale === 'en' ? 'II. TREATMENT DESCRIPTION' : 'II. DESCRIPCIÓN DEL TRATAMIENTO'),
+    h2('II. DESCRIPCIÓN DEL TRATAMIENTO'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-      kv(userLocale === 'en' ? 'Modality' : 'Modalidad', 'Applied Behavior Analysis (ABA)'),
-      kv(userLocale === 'en' ? 'Sessions completed' : 'Sesiones realizadas', String(totalSesiones)),
-      kv(userLocale === 'en' ? 'Achievement average' : 'Promedio de logro', `${promedioLogro}%`),
-      kv(userLocale === 'en' ? 'Intervention areas' : 'Áreas de intervención', programas?.map((p: any) => p.area).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i).join(', ') || 'N/A'),
+      kv('Modalidad', 'Análisis Aplicado de la Conducta (ABA)'),
+      kv('Sesiones realizadas', String(totalSesiones)),
+      kv('Promedio de logro', `${promedioLogro}%`),
+      kv('Áreas de intervención', programas?.map((p: any) => p.area).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i).join(', ') || 'N/A'),
     ]}),
 
-    h2(userLocale === 'en' ? 'III. INTERVENTION PROGRAMS' : 'III. PROGRAMAS DE INTERVENCIÓN'),
+    h2('III. PROGRAMAS DE INTERVENCIÓN'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3800, 2000, 1800, 1760],
       rows: [
         new TableRow({ children: [
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: userLocale === 'en' ? 'Program' : 'Programa', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: userLocale === 'en' ? 'Area' : 'Área', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: userLocale === 'en' ? 'Phase' : 'Fase', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: userLocale === 'en' ? 'Status' : 'Estado', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: 'Programa', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Área', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Fase', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Estado', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
         ]}),
         ...(programas || []).map((p: any) => new TableRow({ children: [
           new TableCell({ borders: BDR, margins: { top: 60, bottom: 60, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: p.titulo, size: 18, font: 'Arial' })] })] }),
@@ -290,24 +290,24 @@ Usa terminología clínica apropiada. Sin bullets.`
           new TableCell({ borders: BDR, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.estado, size: 18, font: 'Arial' })] })] }),
         ]})),
         ...(!programas || programas.length === 0 ? [new TableRow({ children: [
-          new TableCell({ borders: BDR, columnSpan: 4, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: userLocale === 'en' ? 'No programs registered' : 'Sin programas registrados', size: 18, font: 'Arial', color: '9CA3AF' })] })] }),
+          new TableCell({ borders: BDR, columnSpan: 4, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Sin programas registrados', size: 18, font: 'Arial', color: '9CA3AF' })] })] }),
         ]})] : []),
       ]
     }),
 
-    h2(userLocale === 'en' ? 'IV. CLINICAL JUSTIFICATION AND PROGNOSIS' : 'IV. JUSTIFICACIÓN CLÍNICA Y PRONÓSTICO'),
+    h2('IV. JUSTIFICACIÓN CLÍNICA Y PRONÓSTICO'),
     ...textoTecnico.split('\n').filter((l: string) => l.trim()).map((line: string) => pp(line)),
 
-    h2(userLocale === 'en' ? 'V. SIGNATURE AND ACCREDITATION' : 'V. FIRMA Y ACREDITACIÓN'),
+    h2('V. FIRMA Y ACREDITACIÓN'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-      kv(userLocale === 'en' ? 'Therapeutic center' : 'Centro terapéutico', 'Jugando Aprendo'),
-      kv(userLocale === 'en' ? 'Specialty' : 'Especialidad', 'Applied Behavior Analysis (ABA)'),
-      kv(userLocale === 'en' ? 'Issue date' : 'Fecha de emisión', hoy),
-      kv(userLocale === 'en' ? 'Document valid for' : 'Documento válido para', userLocale === 'en' ? 'Insurance companies, private coverage' : 'Aseguradoras, IMSS, ISSSTE, Seguro privado'),
+      kv('Centro terapéutico', 'Jugando Aprendo'),
+      kv('Especialidad', 'Análisis Aplicado de la Conducta (ABA)'),
+      kv('Fecha de emisión', hoy),
+      kv('Documento válido para', 'Aseguradoras, IMSS, ISSSTE, Seguro privado'),
     ]}),
 
     new Paragraph({ spacing: { before: 400 }, children: [new TextRun({ text: '─'.repeat(60), size: 18, font: 'Arial', color: 'E2E8F0' })] }),
-    pp(userLocale === 'en' ? 'CONFIDENTIAL DOCUMENT — For exclusive use with authorized insurers' : 'DOCUMENTO CONFIDENCIAL — Para uso exclusivo con aseguradoras autorizadas', 'DC2626'),
+    pp('DOCUMENTO CONFIDENCIAL — Para uso exclusivo con aseguradoras autorizadas', 'DC2626'),
     pp(`Jugando Aprendo · ${hoy}`, '9CA3AF'),
   ]
 
@@ -315,7 +315,7 @@ Usa terminología clínica apropiada. Sin bullets.`
 }
 
 // ── Reporte Comparativo + Predicción ─────────────────────────────────────────
-async function generarReporteComparativo(childId: string, userLocale = 'es'): Promise<{ doc: Document; fileName: string }> {
+async function generarReporteComparativo(childId: string): Promise<{ doc: Document; fileName: string }> {
   const { data: child } = await supabaseAdmin.from('children').select('name, age, diagnosis').eq('id', childId).single()
   const nombre = (child as any)?.name || 'Paciente'
   const edad = (child as any)?.age || 'N/A'
@@ -365,7 +365,7 @@ Escribe EN PÁRRAFOS (sin bullets) interpretación clínica de:
 3. Recomendaciones concretas para el siguiente período (1 párrafo)
 Lenguaje técnico pero comprensible.`
 
-  const analisis = await callGroqSimple('', prompt + getLangInstruction(userLocale), { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 800 })
+  const analisis = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 800 })
 
   const sections: DocChild[] = [
     new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: '📊 Jugando Aprendo', bold: true, size: 28, font: 'Arial', color: '5B21B6' })] }),
@@ -427,21 +427,15 @@ Lenguaje técnico pero comprensible.`
 }
 
 // ── Handler principal ──────────────────────────────────────────────────────────
-
-// i18n: responder en el idioma del usuario
-// getLangInstruction moved to lib/lang.ts
-
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json()
-    const { childId, tipo } = body
-    const userLocale = body.locale || req.headers.get('x-locale') || 'es'
+    const { childId, tipo } = await req.json()
     if (!childId) return NextResponse.json({ error: 'childId requerido' }, { status: 400 })
 
     let result: { doc: Document; fileName: string }
-    if (tipo === 'seguro') result = await generarReporteSeguro(childId, userLocale)
-    else if (tipo === 'comparativo') result = await generarReporteComparativo(childId, userLocale)
-    else result = await generarReportePadres(childId, userLocale)
+    if (tipo === 'seguro') result = await generarReporteSeguro(childId)
+    else if (tipo === 'comparativo') result = await generarReporteComparativo(childId)
+    else result = await generarReportePadres(childId)
 
     const buffer = await Packer.toBuffer(result.doc)
     const uint8 = new Uint8Array(buffer)

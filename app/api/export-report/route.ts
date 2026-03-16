@@ -6,8 +6,7 @@ import { getChildHistory } from '@/lib/child-history'
 
 export async function POST(req: NextRequest) {
   try {
-    const { childId, analyticsData, locale } = await req.json()
-    const userLocale = locale || req.headers.get('x-locale') || 'es'
+    const { childId, analyticsData } = await req.json()
     if (!childId) return NextResponse.json({ error: 'childId requerido' }, { status: 400 })
 
     // Cargar datos completos del paciente
@@ -50,7 +49,7 @@ export async function POST(req: NextRequest) {
         nombre: (child as any)?.name || history.nombre,
         edad: history.edad,
         diagnostico: (child as any)?.diagnosis || history.diagnostico,
-        estado: (child as any)?.status || userLocale === 'en' ? 'In treatment' : 'En tratamiento',
+        estado: (child as any)?.status || 'En tratamiento',
       },
       programas: programas || [],
       sesiones: sesiones || [],

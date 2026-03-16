@@ -3,7 +3,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
-import { getLangInstruction } from '@/lib/lang'
 
 // ─── GET: ejecutar análisis proactivo de todos los pacientes ──
 export async function GET(req: NextRequest) {
@@ -269,9 +268,8 @@ Si ves algo importante, responde en 1-2 oraciones concretas.
 Si todo va bien, responde exactamente: "SIN_ALERTA"
 No uses markdown.`
 
-  const locale = 'es' // alertas internas siempre en español
   const response = await callGroqSimple(
-    'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.' + getLangInstruction(locale),
+    'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',
     prompt,
     { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 500 }
   )

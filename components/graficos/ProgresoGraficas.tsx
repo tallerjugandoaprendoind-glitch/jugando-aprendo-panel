@@ -1,6 +1,4 @@
 'use client'
-
-import { useI18n } from '@/lib/i18n-context'
 // components/graficos/ProgresoGraficas.tsx — Gráficos ABA profesionales
 
 import { useState, useEffect } from 'react'
@@ -18,7 +16,7 @@ const TIPOS: { id: TipoGrafico; label: string; emoji: string; desc: string }[] =
   { id: 'barras',     label: 'Barras',     emoji: '📊', desc: 'Comparación por sesión' },
   { id: 'combinado',  label: 'Combinado',  emoji: '📉', desc: 'Línea + área' },
   { id: 'histograma', label: 'Histograma', emoji: '🗂️', desc: 'Distribución de logros' },
-  { id: 'pie', label: 'Pie Chart', emoji: '🥧', desc: 'Proporción de niveles' },
+  { id: 'pie',        label: 'Pie Chart',  emoji: '🥧', desc: 'Proporción de niveles' },
   { id: 'radar',      label: 'Radar',      emoji: '🎯', desc: 'Perfil de habilidades' },
 ]
 
@@ -64,7 +62,6 @@ function TickY({ x, y, payload }: any) {
 }
 
 export default function ProgresoGraficas({ childId, modoParent = false }: ProgresoGraficasProps) {
-  const { t } = useI18n()
   const [datos, setDatos]     = useState<any>(null)
   const [cargando, setCargando] = useState(true)
   const [semanas, setSemanas] = useState(12)
@@ -76,14 +73,14 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
 
   async function cargar() {
     setCargando(true)
-    try { const r = await fetch(`/api/progreso-paciente?child_id=${childId}&semanas=${semanas}&locale=${localStorage.getItem('vanty_locale') || 'es'}`); setDatos(await r.json()) }
+    try { const r = await fetch(`/api/progreso-paciente?child_id=${childId}&semanas=${semanas}`); setDatos(await r.json()) }
     catch {} finally { setCargando(false) }
   }
 
   if (cargando) return (
     <div className="flex flex-col items-center justify-center py-16 gap-3">
       <div className="animate-spin rounded-full h-10 w-10 border-4 border-violet-200 border-t-violet-600" />
-      <p className="text-sm" style={{ color: "var(--text-muted)" }}>{t('common.cargandoClinico')}</p>
+      <p className="text-sm" style={{ color: "var(--text-muted)" }}>Cargando datos clínicos...</p>
     </div>
   )
   if (!datos) return <p className="text-center py-8" style={{ color: "var(--text-muted)" }}>Sin datos</p>
@@ -122,14 +119,6 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
   const tipoActual = TIPOS.find(t => t.id === tipo)
   const TICKS = [0, 25, 50, 75, 90, 100]
   const MARGINS = { top: 5, right: 12, left: 0, bottom: 5 }
-  const TIPO_LABELS: Record<string, string> = {
-    lineas:     t('reportes.lineas'),
-    barras:     t('reportes.barras'),
-    combinado:  t('reportes.combinado'),
-    histograma: t('reportes.histograma'),
-    pie:        t('reportes.pie'),
-    radar:      t('reportes.radar'),
-  }
 
   return (
     <div className="space-y-4">
@@ -140,7 +129,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {[4, 8, 12, 24].map(s => (
             <button key={s} onClick={() => setSemanas(s)}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${semanas === s ? "text-violet-600 shadow-sm" : ""}`} style={{ background: semanas === s ? "var(--card)" : "transparent", color: semanas === s ? undefined : "var(--text-secondary)" }}>
-              {s} {t('reportes.semanas').substring(0,3)}
+              {s} sem
             </button>
           ))}
         </div>
@@ -149,12 +138,12 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
             <button onClick={() => setSelector(!selector)}
               className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold hover:border-violet-400 shadow-sm transition-all"
               style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}>
-              {tipoActual?.emoji} {TIPO_LABELS[tipoActual?.id ?? 'lineas'] || tipoActual?.label}
+              {tipoActual?.emoji} {tipoActual?.label}
               <svg className={`w-3 h-3 text-slate-400 transition-transform ${selector ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7"/></svg>
             </button>
             {selector && (
               <div className="absolute right-0 top-11 z-30 rounded-2xl shadow-2xl p-2 w-52" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-                <p className="text-[10px] font-black uppercase tracking-wider px-2 py-1.5" style={{ color: "var(--text-muted)" }}>{t('ui.tipoGrafico')}</p>
+                <p className="text-[10px] font-black uppercase tracking-wider px-2 py-1.5" style={{ color: "var(--text-muted)" }}>Tipo de gráfico</p>
                 {TIPOS.map(t => (
                   <button key={t.id} onClick={() => { setTipo(t.id); setSelector(false) }}
                     className='w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all' style={{ background: tipo === t.id ? 'rgba(109,40,217,0.15)' : 'transparent', color: tipo === t.id ? '#a78bfa' : 'var(--text-secondary)' }}>
@@ -177,10 +166,10 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           </div>
           <div className="flex-1">
             <p className={`font-black text-sm`} style={{ color: cumplido ? '#059669' : consec > 0 ? '#d97706' : 'var(--text-primary)' }}>
-              {t('reportes.criterioDominio')}: {CRITERIO_PCT}% {t('common.en')} {CRITERIO_SESS} {t('reportes.sesionesConsecutivas')}
+              Criterio de dominio: {CRITERIO_PCT}% en {CRITERIO_SESS} sesiones consecutivas
             </p>
             <p className={`text-xs mt-0.5 ${cumplido ? 'text-emerald-600' : consec > 0 ? 'text-amber-600' : 'text-slate-500'}`}>
-              {cumplido ? `✅ ${t('reportes.criterioCumplido')} ${nConsec} ${t('reportes.sesiones')} ≥ ${CRITERIO_PCT}%` : consec > 0 ? `⚡ ${consec}/${CRITERIO_SESS} ${t('reportes.sesiones')} — ${t('reportes.cerca')}` : `${t('reportes.promedio')}: ${promedio}% — ${t('reportes.meta')}: ${CRITERIO_PCT}%`}
+              {cumplido ? `✅ ¡Criterio cumplido! ${nConsec} sesiones ≥ ${CRITERIO_PCT}%` : consec > 0 ? `⚡ ${consec}/${CRITERIO_SESS} sesiones — ¡cerca!` : `Promedio: ${promedio}% — Meta: ${CRITERIO_PCT}%`}
             </p>
             <div className="mt-2 bg-white rounded-full h-2 overflow-hidden border border-slate-200">
               <div className={`h-full rounded-full transition-all duration-700 ${cumplido ? 'bg-emerald-500' : consec > 0 ? 'bg-amber-500' : 'bg-violet-500'}`} style={{ width: `${Math.min(100, promedio)}%` }} />
@@ -188,7 +177,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           </div>
           <div className="text-right shrink-0">
             <p className='font-black text-3xl tabular-nums' style={{ color: cumplido ? '#059669' : consec > 0 ? '#d97706' : 'var(--text-primary)' }}>{promedio}%</p>
-            <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{t('reportes.promedio')}</p>
+            <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>promedio</p>
           </div>
         </div>
       </div>
@@ -196,8 +185,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
       {/* Stats */}
       <div className="grid grid-cols-2 gap-3">
         {[
-          { label: t('reportes.asistencia'), val: asistencia?.tasa ?? 0, sub: `${asistencia?.asistidas ?? 0} de ${asistencia?.total ?? 0} sesiones`, color: 'text-violet-700', bar: 'bg-violet-500' },
-          { label: t('reportes.tareasEnCasa'), val: tareas?.adherencia ?? 0, sub: `${tareas?.completadas ?? 0} de ${tareas?.total ?? 0} tareas`, color: 'text-emerald-600', bar: 'bg-emerald-500' },
+          { label: 'Asistencia', val: asistencia?.tasa ?? 0, sub: `${asistencia?.asistidas ?? 0} de ${asistencia?.total ?? 0} sesiones`, color: 'text-violet-700', bar: 'bg-violet-500' },
+          { label: 'Tareas en casa', val: tareas?.adherencia ?? 0, sub: `${tareas?.completadas ?? 0} de ${tareas?.total ?? 0} tareas`, color: 'text-emerald-600', bar: 'bg-emerald-500' },
         ].map(stat => (
           <div key={stat.label} className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
             <p className="text-[10px] font-black uppercase tracking-wider mb-1" style={{ color: "var(--text-muted)" }}>{stat.label}</p>
@@ -215,8 +204,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
         <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="font-black text-sm" style={{ color: "var(--text-primary)" }}>{tipoActual?.emoji} {t('reportes.progreso')} — {TIPO_LABELS[tipoActual?.id ?? 'lineas'] || tipoActual?.label}</h3>
-              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{graficaABA.length} {t('reportes.sesiones')} · {semanas} {t('reportes.semanas')}</p>
+              <h3 className="font-black text-sm" style={{ color: "var(--text-primary)" }}>{tipoActual?.emoji} Progreso ABA — {tipoActual?.label}</h3>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{graficaABA.length} sesiones · {semanas} semanas</p>
             </div>
             {['lineas','barras','combinado'].includes(tipo) && (
               <div className="flex items-center gap-1 text-[10px] text-red-400 font-bold bg-red-50 px-2 py-1 rounded-lg border border-red-100">
@@ -236,7 +225,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                 <Tooltip content={<TooltipABA />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
                 <ReferenceLine y={CRITERIO_PCT} stroke={C.criterio} strokeDasharray="6 3" strokeWidth={2}
-                  label={{ value: `${t('reportes.meta')} ${CRITERIO_PCT}%`, position: 'insideTopRight', fontSize: 9, fill: C.criterio, fontWeight: 700 }} />
+                  label={{ value: `Meta ${CRITERIO_PCT}%`, position: 'insideTopRight', fontSize: 9, fill: C.criterio, fontWeight: 700 }} />
                 <Line type="linear" dataKey="logro" stroke={C.logro} strokeWidth={3} dot={{ r: 5, fill: C.logro, stroke: '#fff', strokeWidth: 2 }} activeDot={{ r: 7 }} name="Logro obj." />
                 {!modoParent && <>
                   <Line type="linear" dataKey="atencion"     stroke={C.atencion}     strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Atención" />
@@ -256,7 +245,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <ReferenceLine y={CRITERIO_PCT} stroke={C.criterio} strokeDasharray="6 3" strokeWidth={2}
-                  label={{ value: t('reportes.meta'), position: 'right', fontSize: 9, fill: C.criterio, fontWeight: 700 }} />
+                  label={{ value: `Meta`, position: 'right', fontSize: 9, fill: C.criterio, fontWeight: 700 }} />
                 <Bar dataKey="logro" name="Logro obj." radius={[6, 6, 0, 0]} maxBarSize={44}>
                   {conColor.map((e: any, i: number) => <Cell key={i} fill={e.fill} />)}
                   <LabelList dataKey="logro" position="top" formatter={(v: any) => `${v}%`} style={{ fontSize: 9, fontWeight: 700, fill: '#64748b' }} />
@@ -320,7 +309,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* PIE CHART */}
           {tipo === 'pie' && (
             pieData.length === 0
-              ? <p className="text-center text-slate-400 py-8 text-sm">{t('ui.sinDatosMostrar')}</p>
+              ? <p className="text-center text-slate-400 py-8 text-sm">Sin datos para mostrar</p>
               : <div className="flex items-center gap-4">
                   <ResponsiveContainer width="55%" height={200}>
                     <PieChart>
@@ -331,7 +320,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                     </PieChart>
                   </ResponsiveContainer>
                   <div className="flex-1 space-y-2">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">{t('ui.distribucion')}</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider mb-2">Distribución</p>
                     {histo.map(h => (
                       <div key={h.rango} className="flex items-center gap-2">
                         <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: h.color }} />
@@ -354,7 +343,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* RADAR */}
           {tipo === 'radar' && (
             radarData.length === 0
-              ? <p className="text-center text-slate-400 py-8 text-sm">{t('common.necesitasSesiones')}</p>
+              ? <p className="text-center text-slate-400 py-8 text-sm">Necesitas al menos 1 sesión</p>
               : <div>
                   <p className="text-xs text-slate-400 mb-1 text-center">Promedio últimas {ult3.length} sesiones</p>
                   <ResponsiveContainer width="100%" height={220}>
@@ -379,7 +368,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* Detalle de sesiones (click) */}
           {['lineas','barras','combinado'].includes(tipo) && (
             <div className="mt-4 border-t border-slate-100 pt-3">
-              <p className="text-[10px] font-black uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>{t('ui.sesionesClic')}</p>
+              <p className="text-[10px] font-black uppercase tracking-wider mb-2" style={{ color: "var(--text-muted)" }}>Sesiones — clic para ver detalle</p>
               <div className="flex gap-2 flex-wrap">
                 {graficaABA.map((s: any, i: number) => (
                   <button key={i} onClick={() => setDetalle(detalle?.fecha === s.fecha ? null : s)}
@@ -414,8 +403,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
       ) : (
         <div className="text-center py-16 rounded-2xl" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <p className="text-5xl mb-3">📊</p>
-          <p className="text-sm font-bold" style={{ color: "var(--text-secondary)" }}>{t('ui.sinSesiones2')}</p>
-          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{t('ui.registraSesiones')}</p>
+          <p className="text-sm font-bold" style={{ color: "var(--text-secondary)" }}>Sin sesiones en este período</p>
+          <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>Registrá sesiones ABA para ver el progreso</p>
         </div>
       )}
 
@@ -424,8 +413,8 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
         <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <span>🧠</span>
-            <p className="font-black text-violet-800 text-sm">{t('reportes.analisisARIA')}</p>
-            <span className="ml-auto text-[10px] bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full font-bold">{t('reportes.iaClinica')}</span>
+            <p className="font-black text-violet-800 text-sm">Análisis ARIA del período</p>
+            <span className="ml-auto text-[10px] bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full font-bold">IA Clínica</span>
           </div>
           <p className="text-xs text-violet-700 leading-relaxed">{reporteSemanal}</p>
         </div>
@@ -434,7 +423,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
       {/* Evaluaciones */}
       {!modoParent && evaluaciones && Object.keys(evaluaciones).length > 0 && (
         <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-          <h3 className="font-black text-slate-700 text-sm mb-3">{t('ui.evalsNeurop')}</h3>
+          <h3 className="font-black text-slate-700 text-sm mb-3">🧪 Evaluaciones neuropsicológicas</h3>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(evaluaciones).map(([nombre, d]: [string, any]) => (
               <div key={nombre} className="flex items-center gap-2 p-2.5 bg-violet-50 rounded-xl border border-violet-100">

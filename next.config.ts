@@ -1,11 +1,8 @@
-import type { NextConfig } from "next"
-import createNextIntlPlugin from 'next-intl/plugin'
-
-const withNextIntl = createNextIntlPlugin('./i18n/request.ts')
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   turbopack: {},
   serverExternalPackages: ['pdf-parse'],
 }
 
-export default withNextIntl(nextConfig)
+export default nextConfig;

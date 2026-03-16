@@ -3,13 +3,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
-
-// i18n: responder en el idioma del usuario
-function getLangInstruction(locale?: string | null): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
-  return ''
-}
-
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const childId      = searchParams.get('child_id')
@@ -51,7 +44,6 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const userLocale = body.locale || req.headers.get('x-locale') || 'es'
     const { action } = body
 
     // ── CREAR TAREA CON IA ────────────────────────────────────
@@ -62,7 +54,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'child_id y titulo son requeridos' }, { status: 400 })
       }
 
-      const instrucciones = await generarInstruccionesIA(child_id, titulo, objetivo, userLocale)
+      const instrucciones = await generarInstruccionesIA(child_id, titulo, objetivo)
 
       const { data, error } = await supabaseAdmin
         .from('tareas_hogar')
@@ -141,7 +133,7 @@ export async function POST(req: NextRequest) {
 }
 
 // ─── GENERAR INSTRUCCIONES CON GROQ ──────────────────────────
-async function generarInstruccionesIA(childId: string, titulo: string, objetivo?: string, userLocale = 'es'): Promise<string> {
+async function generarInstruccionesIA(childId: string, titulo: string, objetivo?: string): Promise<string> {
   try {
     const { data: child } = await supabaseAdmin
       .from('children')
@@ -180,7 +172,8 @@ COMO HACERLO:
 (maximo 5 pasos)
 CONSEJO PARA PADRES: [1 consejo practico]
 QUE OBSERVAR: [que registrar o notar]
-Usa lenguaje simple, sin tecnicismos. Maximo 150 palabras total.${getLangInstruction(userLocale)}`
+
+Usa lenguaje simple, sin tecnicismos. Maximo 150 palabras total.`
 
     const response = await callGroqSimple(
       'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',

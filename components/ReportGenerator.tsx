@@ -5,7 +5,8 @@
 // Ubicación: components/ReportGenerator.tsx
 // ==============================================================================
 
-import { useI18n } from '@/lib/i18n-context'
+'use client'
+
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
@@ -77,7 +78,6 @@ export default function ReportGenerator({
   compact = false,
 }: ReportGeneratorProps) {
 
-  const { t, locale } = useI18n()
   const [isGenerating, setIsGenerating]     = useState(false)
   const [reportes, setReportes]             = useState<Reporte[]>([])
   const [isLoadingReportes, setIsLoadingReportes] = useState(true)
@@ -120,8 +120,8 @@ export default function ReportGenerator({
       // 1. Llamar a la API
       const response = await fetch('/api/generate-report', {
         method: 'POST',
-        headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           reportType:   evaluationType,
           childName,
           childAge,
@@ -164,7 +164,7 @@ export default function ReportGenerator({
 
     } catch (err: any) {
       console.error('Error generando reporte:', err)
-      setError(err.message || locale === 'en' ? 'Error generating report. Please try again.' : 'Error al generar el reporte. Inténtalo de nuevo.')
+      setError(err.message || 'Error al generar el reporte. Inténtalo de nuevo.')
     } finally {
       setIsGenerating(false)
     }
@@ -183,7 +183,7 @@ export default function ReportGenerator({
       downloadFile(data.file_data, reporte.nombre_archivo)
     } catch (err: any) {
       console.error('Error descargando:', err)
-      alert(t('ui.errorDescargar'))
+      alert('Error al descargar el reporte')
     }
   }
 
@@ -207,7 +207,7 @@ export default function ReportGenerator({
 
   // ─── Eliminar reporte ─────────────────────────────────────────────────────
   const handleDeleteReport = async (reporteId: string) => {
-    if (!confirm(locale === 'en' ? 'Permanently delete this report? This action cannot be undone.' : '¿Eliminar este reporte permanentemente? Esta acción no se puede deshacer.')) return
+    if (!confirm('¿Eliminar este reporte permanentemente? Esta acción no se puede deshacer.')) return
     try {
       const { error } = await supabase
         .from('reportes_generados')
@@ -219,7 +219,7 @@ export default function ReportGenerator({
       await loadReportes()
     } catch (err: any) {
       console.error('Error eliminando:', err)
-      alert(t('ui.errorEliminar'))
+      alert('Error al eliminar el reporte')
     }
   }
 
@@ -298,7 +298,7 @@ export default function ReportGenerator({
           <div className="bg-red-50 border-2 border-red-100 rounded-2xl p-4 flex items-start gap-3 animate-fade-in">
             <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
             <div>
-              <p className="text-red-800 font-black text-sm">{t('reportes.errorGenerar')}</p>
+              <p className="text-red-800 font-black text-sm">Error al generar</p>
               <p className="text-red-600 text-xs mt-1">{error}</p>
             </div>
             <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">
@@ -334,19 +334,19 @@ export default function ReportGenerator({
             {isGenerating ? (
               <>
                 <Loader2 className="animate-spin" size={22} />
-                <span>{t('reportes.generandoReporte')}</span>
+                <span>Generando reporte profesional...</span>
               </>
             ) : (
               <>
                 <FileDown size={22} />
-                <span>{t('reportes.generarReporte')}</span>
+                <span>Generar Nuevo Reporte Word</span>
                 <Sparkles size={16} className="opacity-70" />
               </>
             )}
           </button>
 
           <p className="text-xs text-slate-400 text-center mt-3 font-medium">
-            {locale === 'en' ? 'Professional format, cover page and complete sections · Saved automatically' : 'Se generará con formato profesional, portada y secciones completas · Se guardará automáticamente'}
+            Se generará con formato profesional, portada y secciones completas · Se guardará automáticamente
           </p>
         </div>
 
@@ -362,7 +362,7 @@ export default function ReportGenerator({
           {isLoadingReportes ? (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-slate-400">
               <Loader2 className="animate-spin" size={32} />
-              <p className="text-sm font-bold">{t('common.cargandoReportes')}</p>
+              <p className="text-sm font-bold">Cargando reportes...</p>
             </div>
 
           ) : reportes.length === 0 ? (
@@ -372,7 +372,7 @@ export default function ReportGenerator({
               </div>
               <p className="text-slate-500 font-black text-sm">Sin reportes generados</p>
               <p className="text-xs text-slate-400 mt-1.5 text-center max-w-xs px-4 font-medium">
-                {locale === 'en' ? 'Generate your first report using the button above. It will be saved here with date and time.' : 'Genera tu primer reporte usando el botón de arriba. Quedará guardado aquí con fecha y hora.'}
+                Genera tu primer reporte usando el botón de arriba. Quedará guardado aquí con fecha y hora.
               </p>
             </div>
 
@@ -481,17 +481,16 @@ export default function ReportGenerator({
 // HELPER
 // ==============================================================================
 
-export function getTituloReporte(tipo: string, loc?: string): string {
-  const isEN = loc === 'en'
+export function getTituloReporte(tipo: string): string {
   const titulos: Record<string, string> = {
-    aba:           isEN ? 'ABA Session Report' : 'Reporte de Sesión ABA',
-    anamnesis:     isEN ? 'Clinical History (Anamnesis)' : 'Historia Clínica (Anamnesis)',
-    entorno_hogar: isEN ? 'Home Environment Assessment' : 'Evaluación del Entorno del Hogar',
-    brief2:        isEN ? 'BRIEF-2 Assessment (Executive Functions)' : 'Evaluación BRIEF-2 (Funciones Ejecutivas)',
-    ados2:         isEN ? 'ADOS-2 Assessment (Autism Diagnosis)' : 'Evaluación ADOS-2 (Diagnóstico Autismo)',
-    vineland3:     isEN ? 'Vineland-3 Assessment (Adaptive Behavior)' : 'Evaluación Vineland-3 (Conducta Adaptativa)',
-    wiscv:         isEN ? 'WISC-V Assessment (Cognitive)' : 'Evaluación WISC-V (Cognitiva)',
-    basc3:         isEN ? 'BASC-3 Assessment (Behavioral)' : 'Evaluación BASC-3 (Conductual)',
+    aba:           'Reporte de Sesión ABA',
+    anamnesis:     'Historia Clínica (Anamnesis)',
+    entorno_hogar: 'Evaluación del Entorno del Hogar',
+    brief2:        'Evaluación BRIEF-2 (Funciones Ejecutivas)',
+    ados2:         'Evaluación ADOS-2 (Diagnóstico Autismo)',
+    vineland3:     'Evaluación Vineland-3 (Conducta Adaptativa)',
+    wiscv:         'Evaluación WISC-V (Cognitiva)',
+    basc3:         'Evaluación BASC-3 (Conductual)',
   }
   return titulos[tipo] || tipo.toUpperCase()
 }

@@ -170,8 +170,8 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({ 
-  title = 'Something went wrong',
-  message = 'Could not load information. Please try again.',
+  title = 'Algo salió mal',
+  message = 'No pudimos cargar la información. Por favor intenta nuevamente.',
   retry 
 }: ErrorStateProps) {
   return (
