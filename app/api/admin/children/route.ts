@@ -4,14 +4,25 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 // GET /api/admin/children — lista todos los pacientes usando service role (bypassa RLS)
 export async function GET() {
   try {
-    const { data, error } = await supabaseAdmin
+    // Try full select first
+    let { data, error } = await supabaseAdmin
       .from('children')
-      .select('id, name, diagnosis, age, birth_date, is_active, parent_id, parent_id2, tutor_id, guardian_id, created_at')
+      .select('id, name, diagnosis, age, birth_date, parent_id, created_at')
       .order('name')
-    if (error) throw error
+
+    // If error due to missing columns, fallback to minimal select
+    if (error) {
+      const fallback = await supabaseAdmin
+        .from('children')
+        .select('id, name, parent_id')
+        .order('name')
+      if (fallback.error) throw fallback.error
+      data = fallback.data
+    }
+
     return NextResponse.json({ data: data || [] })
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    return NextResponse.json({ error: e.message, data: [] }, { status: 200 })
   }
 }
 

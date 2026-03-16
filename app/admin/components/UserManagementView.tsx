@@ -224,15 +224,7 @@ export default function UserManagementView() {
       try {
         const kidsRes = await fetch('/api/admin/children')
         const kidsJson = await kidsRes.json()
-        if (kidsJson.data && kidsJson.data.length >= 0) {
-          setChildren(kidsJson.data)
-        } else {
-          // Fallback: query directa si la API admin falla
-          const { createClient: cc2 } = await import('@supabase/supabase-js')
-          const sb2 = cc2(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-          const { data: kidsData } = await sb2.from('children').select('id, name, parent_id, diagnosis, age').order('name')
-          if (kidsData) setChildren(kidsData)
-        }
+        if (kidsJson.data) setChildren(kidsJson.data)
       } catch (e) { console.error('[UserMgmt] children fetch failed:', e) }
     } catch (err: any) {
       toast.error('Error cargando usuarios: ' + err.message)
@@ -644,16 +636,7 @@ export default function UserManagementView() {
                         <button onClick={() => { setLinkingParent(user)
       // Recargar niños al abrir modal
       fetch('/api/admin/children').then(r=>r.json()).then(j=>{
-        if(j.data && j.data.length >= 0) {
-          setChildren(j.data)
-        } else {
-          // fallback directo
-          import('@supabase/supabase-js').then(({createClient:cc})=>{
-            const sb = cc(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-            sb.from('children').select('id, name, parent_id, diagnosis, age').order('name')
-              .then(({data})=>{ if(data) setChildren(data) })
-          })
-        }
+        if(j.data) setChildren(j.data)
       }).catch(()=>{}); setSelectedChildId('') }}
                           className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
                           style={{ background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.3)', color: '#be185d' }}>
