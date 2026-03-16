@@ -63,14 +63,14 @@ export default function KnowledgeBaseView() {
       const res = await fetch('/api/knowledge/ingest')
       const json = await res.json()
       setDocumentos(json.data || [])
-    } catch { toast.error('Error loading documents') }
+    } catch { toast.error(isEN ? 'Error loading documents' : 'Error cargando documentos') }
     finally { setLoading(false) }
   }
 
   useEffect(() => { loadDocs() }, [])
 
   const handleAprender = async () => {
-    if (!keywords.trim()) { toast.error('Enter keywords'); return }
+    if (!keywords.trim()) { toast.error(isEN ? 'Enter keywords' : 'Escribe palabras clave'); return }
     setAprendiendo(true)
     setLogAprender([`🚀 ${t('whatsapp.aprenderInternet')}: "${keywords}"...`])
     setResultadoAprender(null)
@@ -191,11 +191,11 @@ export default function KnowledgeBaseView() {
   }
 
   const handleUpload = async () => {
-    if (!form.titulo) { toast.error('Title is required'); return }
-    if (inputMode === 'archivo' && !selectedFile) { toast.error('Select a file'); return }
+    if (!form.titulo) { toast.error(isEN ? 'Title is required' : t('ui.nombreObligatorio').replace('❌ El nombre', 'El título')); return }
+    if (inputMode === 'archivo' && !selectedFile) { toast.error(isEN ? 'Select a file' : 'Selecciona un archivo'); return }
     if (inputMode === 'url' && !form.url.trim()) { toast.error('Enter a valid URL'); return }
     if (inputMode === 'texto' && !form.texto.trim()) { toast.error('Paste content'); return }
-    if (inputMode === 'buscar' && !libroSeleccionado) { toast.error('Select a book'); return }
+    if (inputMode === 'buscar' && !libroSeleccionado) { toast.error(isEN ? 'Select a book' : 'Selecciona un libro'); return }
     setUploading(true)
     try {
       const body: Record<string, any> = { titulo: form.titulo, tipo: form.tipo, descripcion: form.descripcion }
@@ -455,7 +455,7 @@ export default function KnowledgeBaseView() {
             {modoFuente === 'url' && (
               <div className="space-y-3">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
-                  {'Web page URL to learn from'}
+                  {isEN ? 'Web page URL to learn from' : 'URL de página web para aprender'}
                 </label>
                 <input
                   value={urlAprender}
@@ -479,7 +479,7 @@ export default function KnowledgeBaseView() {
               disabled={aprendiendo || (modoFuente === 'keywords' ? !keywords.trim() : !urlAprender.trim())}
               className="w-full py-3.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl font-black flex items-center justify-center gap-2 text-sm transition shadow-md">
               {aprendiendo
-                ? <><Loader2 size={16} className="animate-spin" /> {'Learning from internet...'}</>
+                ? <><Loader2 size={16} className="animate-spin" /> {isEN ? 'Learning from internet...' : 'Aprendiendo de internet...'}</>
                 : <><Sparkles size={16} /> {'Learn now'}</>}
             </button>
           </div>
@@ -521,7 +521,7 @@ export default function KnowledgeBaseView() {
                 ))}
               </div>
               <p className="text-xs text-emerald-700 bg-white rounded-xl px-3 py-2.5 border border-emerald-100">
-                🤖 {'ARIA now knows about'} <strong>"{resultadoAprender.keywords}"</strong>. {'Try asking now.'}
+                🤖 {isEN ? 'ARIA now knows about' : 'ARIA ahora sabe sobre'} <strong>"{resultadoAprender.keywords}"</strong>. {isEN ? 'Try asking now.' : 'Prueba preguntando ahora.'}
               </p>
               {resultadoAprender.terminos?.length > 0 && (
                 <div className="mt-3">

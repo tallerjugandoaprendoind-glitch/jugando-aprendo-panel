@@ -68,7 +68,7 @@ export default function ResourcesManagementView() {
   const handleSave = async () => {
     if (!newResource.title.trim()) { toast.error(isEN ? 'Title is required' : t('ui.nombreObligatorio')); return }
     if (!newResource.url.trim()) { toast.error('URL is required'); return }
-    if (!newResource.is_global && !newResource.child_id) { toast.error('Select a patient'); return }
+    if (!newResource.is_global && !newResource.child_id) { toast.error(isEN ? 'Select a patient' : t('common.seleccionarPaciente')); return }
     setIsSaving(true)
     try {
       // Get parent_id from child if specific patient selected

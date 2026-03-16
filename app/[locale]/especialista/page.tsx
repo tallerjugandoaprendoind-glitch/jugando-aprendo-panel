@@ -91,7 +91,7 @@ export default function EspecialistaDashboard() {
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword })
       if (error) throw error
-      toast.success('Password updated')
+      toast.success(isEN ? 'Password updated' : t('common.exitoGuardado'))
       setShowChangePassword(false)
     } catch (e: any) { toast.error(e.message) }
     finally { setChangingPassword(false) }

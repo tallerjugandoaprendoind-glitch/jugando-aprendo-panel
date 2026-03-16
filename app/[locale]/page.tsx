@@ -528,7 +528,7 @@ export default function LandingPage() {
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
             <div className="lp-tag"><Heart size={12} /> Para las familias</div>
             <h2 className="lp-h2">Todo lo que brindamos<br/>a los padres</h2>
-            <p className="lp-sub" style={{ margin: '0 auto' }}>{"Accompanying your child is a shared journey. Digital and human tools so you are always informed, empowered and an active part of the process."}</p>
+            <p className="lp-sub" style={{ margin: '0 auto' }}>{isEN ? "Accompanying your child is a shared journey. Digital and human tools so you are always informed, empowered and an active part of the process." : t("landing.family_training") ?? "Acompañar a tu hijo es un camino compartido. Herramientas digitales y humanas para que siempre estés informado, empoderado y parte activa del proceso."}</p>
           </div>
           <div className="lp-grid-4">
             {benefits.map(({ icon, bg, title, desc }) => (
@@ -552,7 +552,7 @@ export default function LandingPage() {
         <div className="lp-inner">
           <div style={{ textAlign: 'center', marginBottom: 52 }}>
             <div className="lp-tag"><Quote size={12} /> Familias reales</div>
-            <h2 className="lp-h2">{"Results that speak for themselves"}</h2>
+            <h2 className="lp-h2">{isEN ? "Results that speak for themselves" : t("ui.results_speak")}</h2>
           </div>
           <div className="lp-grid-3">
             {testimonials.map(({ name, desc, a, color, text }) => (
@@ -661,7 +661,7 @@ export default function LandingPage() {
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
             <div className="lp-tag"><ImageIcon size={12} /> {"Photo gallery"}</div>
             <h2 className="lp-h2">{"Our center in images"}</h2>
-            <p className="lp-sub" style={{ margin: '0 auto' }}>{"Discover the safe, warm and stimulating environment where children learn and grow."}</p>
+            <p className="lp-sub" style={{ margin: '0 auto' }}>{isEN ? "Discover the safe, warm and stimulating environment where children learn and grow." : t("ui.our_center") ?? "Conoce el ambiente seguro, cálido y estimulante donde los niños aprenden y crecen."}</p>
           </div>
           <div className="lp-gallery-main">
             <Image src={imgs[activeImg].src} alt={imgs[activeImg].caption} fill style={{ objectFit: 'cover' }} unoptimized />
@@ -687,7 +687,7 @@ export default function LandingPage() {
         <div className="lp-inner">
           <div style={{ textAlign: 'center', marginBottom: 44 }}>
             <div className="lp-tag"><Video size={12} /> Videos</div>
-            <h2 className="lp-h2">{"Learn how we work"}</h2>
+            <h2 className="lp-h2">{isEN ? "Learn how we work" : t("ui.how_we_work")}</h2>
             <p className="lp-sub" style={{ margin: '0 auto' }}>{"Watch our methods, meet real families and understand how ARIA enhances every session."}</p>
           </div>
 
@@ -741,7 +741,7 @@ export default function LandingPage() {
             <div className="lp-svc-card">
               <div style={{ width: 56, height: 56, background: '#dbeafe', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}><Brain size={26} color="#2563eb" /></div>
               <h3 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 20, fontWeight: 800, color: '#1c1917', marginBottom: 10 }}>{"ABA Therapy"}</h3>
-              <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>{"Evidence-based intervention to improve social skills, communication and learning."}</p>
+              <p style={{ color: '#78716c', fontSize: 14, lineHeight: 1.85, marginBottom: 20 }}>{isEN ? "Evidence-based intervention to improve social skills, communication and learning." : t("landing.evidence_based")}</p>
               <a href={waUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, color: '#f97316', fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 14, textDecoration: 'none' }}>{t('landing.contact_us')} <ArrowRight size={15} /></a>
             </div>
             <div className="lp-svc-card featured">

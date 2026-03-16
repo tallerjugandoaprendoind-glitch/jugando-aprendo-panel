@@ -201,13 +201,13 @@ function MonthlyCalendarView() {
       const res = await fetch('/api/admin/appointments', { method:'DELETE', headers:{'Content-Type':'application/json', 'x-locale': localStorage.getItem('vanty_locale') || 'es'}, body: JSON.stringify({ id }) })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('Appointment deleted'); cargarCitas()
+      toast.success(isEN ? 'Appointment deleted' : t('agenda.citaEliminada')); cargarCitas()
     } catch (err:any) { toast.error('Error: ' + err.message) }
   }
 
   const handleSave = async () => {
-    if (tipoSesion==='individual' && !newApt.child_id) { toast.error('Select a patient'); return }
-    if (tipoSesion==='grupal' && selectedParticipants.length===0) { toast.error('Select participants'); return }
+    if (tipoSesion==='individual' && !newApt.child_id) { toast.error(isEN ? 'Select a patient' : t('common.seleccionarPaciente')); return }
+    if (tipoSesion==='grupal' && selectedParticipants.length===0) { toast.error(isEN ? 'Select participants' : t('common.seleccionar')); return }
     setIsSaving(true)
     try {
       let payload: any[]
@@ -509,7 +509,7 @@ function MonthlyCalendarView() {
                   {modalidadCita==='virtual' && (
                     <div className="mt-2 flex items-start gap-2 px-3 py-2.5 bg-indigo-50 rounded-xl border border-indigo-100">
                       <Video size={13} className="text-indigo-500 shrink-0 mt-0.5"/>
-                      <p className="text-xs text-indigo-600 font-semibold leading-relaxed">{"The session link is generated automatically and the parent receives a notification to join."}</p>
+                      <p className="text-xs text-indigo-600 font-semibold leading-relaxed">{isEN ? "The session link is generated automatically and the parent receives a notification to join." : "El enlace de sesión se genera automáticamente y el padre recibe una notificación para unirse."}</p>
                     </div>
                   )}
                 </div>

@@ -549,7 +549,7 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
           {p.tipo === 'digital' && (
             <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 mb-4">
               <p className="text-xs font-black text-violet-700 mb-1">{t('tienda.articuloDigital')}</p>
-              <p className="text-xs text-violet-600">{"When you confirm your order and pay, you will receive"} el archivo por WhatsApp en menos de 24 horas.</p>
+              <p className="text-xs text-violet-600">{isEN ? "When you confirm your order and pay, you will receive the file via WhatsApp within 24 hours." : "Cuando confirmes tu pedido y pagues, recibirás el archivo por WhatsApp en menos de 24 horas."}</p>
             </div>
           )}
 

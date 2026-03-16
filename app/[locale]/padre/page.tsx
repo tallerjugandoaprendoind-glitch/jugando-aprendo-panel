@@ -515,7 +515,7 @@ export default function ParentDashboard() {
                     <p className="text-xs font-bold text-blue-700 mb-1 flex items-center gap-1.5">
                         <Calendar size={12}/> Tus citas
                     </p>
-                    <p className="text-xs text-blue-500 leading-relaxed">{"Appointments are scheduled by the center team. For changes, contact reception."}</p>
+                    <p className="text-xs text-blue-500 leading-relaxed">{isEN ? "Appointments are scheduled by the center team. For changes, contact reception." : t("agenda.programadasEquipo")}</p>
                 </div>
                 
                 {/* BOTÓN NOTIFICACIONES SIDEBAR MEJORADO */}
@@ -1104,7 +1104,7 @@ export default function ParentDashboard() {
                             </div>
                             <div>
                                 <h3 className="font-bold text-lg">Privacy & Security</h3>
-                                <p className="text-xs text-purple-100">{"Your data is protected"}</p>
+                                <p className="text-xs text-purple-100">{isEN ? "Your data is protected" : t("familias.tusDatosProteg")}</p>
                             </div>
                         </div>
                         <button onClick={()=>setShowPrivacy(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">

@@ -726,7 +726,7 @@ export default function MisPacientes() {
       combined.sort((a, b) => (b._date || '').localeCompare(a._date || ''))
       setRegistros(combined)
     } catch (e: any) {
-      toast.error('Error cargando expediente: ' + e.message)
+      toast.error((isEN ? 'Error loading record: ' : 'Error cargando expediente: ') + e.message)
     } finally { setLoadingRegistros(false) }
   }
 
@@ -840,7 +840,7 @@ export default function MisPacientes() {
                 {filtered.length === 0 ? (
                   <div className="py-16 text-center bg-white rounded-2xl border border-slate-100">
                     <FileText size={22} className="text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-400 text-sm font-semibold">No records</p>
+                    <p className="text-slate-400 text-sm font-semibold">{isEN ? "No records" : t("common.sinDatos")}</p>
                   </div>
                 ) : (
                   <div className="space-y-2">

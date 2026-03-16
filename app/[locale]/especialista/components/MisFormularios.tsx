@@ -202,7 +202,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
   const answer = (id: string, val: any) => setResponses(p => ({ ...p, [id]: val }))
 
   const handleAnalyze = async () => {
-    if (!childId) { toast.error('Select a patient'); return }
+    if (!childId) { toast.error(isEN ? 'Select a patient' : t('common.seleccionarPaciente')); return }
     setAnalyzing(true)
     try {
       const child = children.find((c: any) => c.id === childId)
@@ -273,7 +273,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
   }
 
   const handleSave = async () => {
-    if (!childId) { toast.error('Select a patient'); return }
+    if (!childId) { toast.error(isEN ? 'Select a patient' : t('common.seleccionarPaciente')); return }
     setSaving(true)
     try {
       const table = form.isSoft ? 'form_responses' :

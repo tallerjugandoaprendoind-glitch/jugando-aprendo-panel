@@ -523,6 +523,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
 // ==============================================================================
 function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerated: () => void }) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [generating, setGenerating] = useState(false)
   const toast = useToast()
 
@@ -583,7 +584,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
       }])
       if (insertError) {
         console.error('❌ Error guardando reporte en BD:', insertError)
-        toast.error('Report downloaded but could not save to history: ' + insertError.message)
+        toast.error((isEN ? 'Report downloaded but could not save to history: ' : 'Reporte descargado pero no se pudo guardar en historial: ') + insertError.message)
       }
 
       // Auto-download
@@ -601,7 +602,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
       onReportGenerated()
     } catch (err: any) {
       console.error('Error generando reporte:', err)
-      toast.error('Error generating report: ' + (err.message || 'Try again'))
+      toast.error((isEN ? 'Error generating report: ' : 'Error generando reporte: ') + (err.message || (isEN ? 'Try again' : 'Intenta nuevamente')))
     } finally {
       setGenerating(false)
     }
@@ -873,7 +874,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
   }
 
   const handleSave = async () => {
-    if (!selectedChild) { toast.error('Select a patient'); return }
+    if (!selectedChild) { toast.error(isEN ? 'Select a patient' : t('common.seleccionarPaciente')); return }
     if (answeredCount < 2) { toast.error('Answer at least 2 questions'); return }
     setIsSaving(true)
     try {

@@ -84,7 +84,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
     try {
       const { error } = await supabase.from('specialist_submissions').insert({ specialist_id: userId, ...form, status: 'pending_approval' })
       if (error) throw error
-      toast.success('Sent for approval!')
+      toast.success(isEN ? 'Sent for approval!' : t('especialista.aprobaciones'))
       setMostrarForm(false)
       setForm({ child_id: '', tipo: 'conducta', titulo: '', contenido: '', observaciones: '', recomendaciones: '' })
       cargar()

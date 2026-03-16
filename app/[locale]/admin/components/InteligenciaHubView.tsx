@@ -931,7 +931,7 @@ function TabSugerencias() {
       {!loading && sugerencias.length === 0 && (
         <div className=" rounded-2xl border border-slate-100 p-10 text-center" style={{ background: "var(--card)" }}>
           <CheckCircle size={32} className="text-emerald-400 mx-auto mb-3" />
-          <p className="font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>No active alerts</p>
+          <p className="font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>{isEN ? "No active alerts" : t("dashboard.sinAlertas")}</p>
           <p className="text-xs text-slate-400 mt-1">{t('hub.todosPacientesOk')}</p>
         </div>
       )}

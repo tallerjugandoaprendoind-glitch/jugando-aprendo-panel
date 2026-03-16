@@ -261,7 +261,7 @@ export default function UserManagementView() {
 
   const handleChangeRole = async (user: UserData, newRole: string) => {
     if (!canChangeRole(user)) {
-      toast.error("You can't change a Director's role. Contact the system administrator.")
+      toast.error(isEN ? "You can't change a Director's role. Contact the system administrator." : "No puedes cambiar el rol de un Director. Contacta al administrador.")
       return
     }
     setSavingRole(user.id)
@@ -286,7 +286,7 @@ export default function UserManagementView() {
     if (user.id === currentUserId) return
     const targetRole = user.profile?.role || ''
     if (targetRole === 'jefe' || targetRole === 'admin') {
-      toast.error("You can't deactivate a Director.")
+      toast.error(isEN ? "You can't deactivate a Director." : "No puedes desactivar un Director.")
       return
     }
     try {
@@ -396,12 +396,12 @@ export default function UserManagementView() {
       const { error } = await sb.from('children').update({ parent_id: null }).eq('id', childId)
       if (error) throw new Error(error.message)
       setChildren(prev => prev.map(c => c.id === childId ? { ...c, parent_id: null } : c))
-      toast.success('Patient unlinked')
+      toast.success(isEN ? 'Patient unlinked' : t('usuarios.vincularPaciente').replace('Vincular', 'Desvinculado'))
     } catch (err: any) { toast.error('Error: ' + err.message) }
   }
 
   const handleCreateUser = async () => {
-    if (!createForm.email || !createForm.password) { toast.error('Email and password'); return }
+    if (!createForm.email || !createForm.password) { toast.error(isEN ? 'Email and password are required' : t('common.requerido')); return }
     setCreatingUser(true)
     try {
       const res = await fetch('/api/admin/users', {
@@ -772,7 +772,7 @@ export default function UserManagementView() {
               ))}
             </select>
             {children.length === 0 && (
-              <p className="text-xs text-amber-500 font-medium mb-3">No patients registered.</p>
+              <p className="text-xs text-amber-500 font-medium mb-3">{isEN ? "No patients registered." : t("ui.no_patients_registered")}</p>
             )}
             <button onClick={handleLinkParentChild} disabled={savingLink || !selectedChildId}
               className="w-full py-2.5 rounded-xl font-semibold text-sm transition-colors disabled:opacity-50 flex items-center justify-center gap-2 text-white"

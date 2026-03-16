@@ -396,7 +396,7 @@ export default function NeuroFormsView() {
   }
 
   const handleSaveForm = async () => {
-    if (!selectedForm || !selectedChild) { toast.error('Select a patient'); return }
+    if (!selectedForm || !selectedChild) { toast.error(isEN ? 'Select a patient' : t('common.seleccionarPaciente')); return }
     setIsSaving(true)
     try {
       await supabase.from('form_responses').insert([{
