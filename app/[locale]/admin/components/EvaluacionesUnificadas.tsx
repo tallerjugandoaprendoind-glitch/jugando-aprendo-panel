@@ -597,7 +597,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
       document.body.appendChild(a); a.click()
       URL.revokeObjectURL(url); document.body.removeChild(a)
 
-      toast.success('✅ Word report generated and downloaded')
+      toast.success(t('evaluaciones.genDescarga'))
       onReportGenerated()
     } catch (err: any) {
       console.error('Error generando reporte:', err)
@@ -630,7 +630,7 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         <div className="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
           {sf.ai_analysis && (
             <span className="px-2 py-1 bg-violet-50 text-violet-600 rounded-full text-[10px] font-bold border border-violet-200 flex items-center gap-1">
-              <Sparkles size={9} /> {'With AI'}
+              <Sparkles size={9} /> {t('evaluaciones.analizarIA')}
             </span>
           )}
           <button
@@ -860,11 +860,11 @@ function FormFillView({ form, children, onBack, toast }: any) {
         setEditedMessage(analysis?.mensaje_padres || analysis?.informe_padres_vineland || analysis?.informe_padres_wisc || analysis?.informe_padres_basc || analysis?.informe_familia_ados || analysis?.informe_padres_entorno || analysis?.mensaje_padres_entorno || analysis?.informe_padres || '')
         setEditedActividades(analysis?.actividades_casa || analysis?.actividad_casa || '')
       }
-      toast.success('✨ AI analysis generated')
+      toast.success(t('evaluaciones.analisisListo'))
     } catch (err: any) {
       const isQuota = err.message?.includes('Cuota') || err.message?.includes('429') || err.message?.includes('RESOURCE_EXHAUSTED')
       toast.error(isQuota
-        ? ('⏳ AI quota exhausted. Wait 1-2 min and try again.')
+        ? (t('common.procesando'))
         : ('Analysis error: ') + err.message
       )
     } finally {
@@ -926,7 +926,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
       setSavedRecordId((savedRecord as any)?.id || null)
       setSavedChildId(selectedChild)
       setShowSuccessScreen(true)
-      toast.success('✅ Form saved successfully')
+      toast.success(t('evaluaciones.formGuardado'))
 
       // Queue AI-generated parent message for admin approval (if it exists)
       if (aiAnalysis?.mensaje_padres) {
@@ -1006,7 +1006,7 @@ function FormFillView({ form, children, onBack, toast }: any) {
         document.body.appendChild(a); a.click()
         URL.revokeObjectURL(url); document.body.removeChild(a)
 
-        toast.success('✅ Word report downloaded')
+        toast.success(t('evaluaciones.genDescarga'))
       } catch (err: any) {
         toast.error(('Error generating report: ') + (err.message || ('Try again')))
       } finally {
@@ -1300,7 +1300,7 @@ export default function EvaluacionesUnificadas() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('📤 Form sent')
+      toast.success(t('evaluaciones.formularioEnviado'))
       loadData()
     } catch (err: any) {
       toast.error(('Error sending: ') + err.message)
@@ -1339,10 +1339,10 @@ export default function EvaluacionesUnificadas() {
       {/* ── HEADER STATS ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Forms', value: stats.total, icon: '📋', color: 'from-violet-600 to-indigo-600', bg: 'bg-violet-50' },
+          { label: t('evaluaciones.formularios'), value: stats.total, icon: '📋', color: 'from-violet-600 to-indigo-600', bg: 'bg-violet-50' },
           { label: t('evaluaciones.enviados_stat'), value: stats.sent, icon: '📤', color: 'from-blue-600 to-cyan-600', bg: 'bg-blue-50' },
-          { label: 'Pending', value: stats.pending, icon: '⏳', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
-          { label: 'Completed', value: stats.completed, icon: '✅', color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-50' },
+          { label: t('common.pendiente'), value: stats.pending, icon: '⏳', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
+          { label: t('common.completado'), value: stats.completed, icon: '✅', color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-50' },
         ].map(({ label, value, icon, color, bg }) => (
           <div key={label} className={`${bg} rounded-2xl p-4 border border-white shadow-sm`}>
             <div className="flex items-center justify-between mb-2">

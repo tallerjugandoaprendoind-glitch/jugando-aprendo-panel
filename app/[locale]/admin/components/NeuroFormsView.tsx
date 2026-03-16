@@ -387,7 +387,7 @@ export default function NeuroFormsView() {
       if (json.error) throw new Error(json.error)
       setAiAnalysis(json.analysis)
       setEditedMessage(json.analysis?.mensaje_padres || '')
-      toast.success('✨ Analysis generated')
+      toast.success(t('evaluaciones.analisisListo'))
     } catch (err: any) {
       toast.error(('Analysis error: ') + err.message)
     } finally {
@@ -465,7 +465,7 @@ export default function NeuroFormsView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(`📤 Formulario enviado correctamente`)
+      toast.success(t('evaluaciones.formularioEnviado'))
       loadSentForms()
     } catch (err: any) {
       toast.error(('Error sending: ') + err.message)
@@ -598,7 +598,7 @@ export default function NeuroFormsView() {
             Clinical NeuroForms
           </h2>
           <p className="text-slate-400 text-sm font-medium mt-1 ml-1">
-            Specialized forms · Real-time AI analysis · ADHD, ASD, Sensory and more
+            {isEN ? 'Specialized forms · Real-time AI analysis · ADHD, ASD, Sensory and more' : 'Formularios especializados · Análisis IA en tiempo real · TDAH, TEA, Sensorial y más'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -668,7 +668,7 @@ export default function NeuroFormsView() {
                           <Clock size={10}/>{form.estimatedMinutes} min
                         </p>
                         <p className="text-[9px] font-bold opacity-70 mt-1">
-                          {form.targetRole === 'parent' ? (isEN ? '👨‍👩 For parents' : '👨‍👩 Para padres') : form.targetRole === 'both' ? (isEN ? '🔄 Both' : '🔄 Ambos') : '🩺 Clínico'}
+                          {form.targetRole === 'parent' ? `👨‍👩 ${isEN ? 'For parents' : t('usuarios.padre')}` : form.targetRole === 'both' ? `🔄 ${isEN ? 'Both' : t('common.todos')}` : `🩺 ${isEN ? 'Clinical' : 'Clínico'}`}
                         </p>
                       </div>
                     </div>

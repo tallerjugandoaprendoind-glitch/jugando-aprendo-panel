@@ -36,7 +36,7 @@ export default function WhatsAppConfigView() {
       setTestResult({
         ok: d.sent,
         msg: d.sent
-          ? '✅ Message sent successfully'
+          ? t('common.exitoGuardado')
           : ('❌ Could not send. Check your environment variables in Vercel.'),
       })
     } finally { setSending(false) }
@@ -81,7 +81,7 @@ export default function WhatsAppConfigView() {
         }
         <div className="flex-1">
           <p className={`text-sm font-bold ${configured ? 'text-green-800' : 'text-amber-800'}`}>
-            {'Active channel'}: {status?.label || ('Not configured')}
+            {t('common.activo')}: {status?.label || t('common.sinAsignar')}
           </p>
           {!configured && (
             <p className="text-xs text-amber-700 mt-0.5">
@@ -110,7 +110,7 @@ export default function WhatsAppConfigView() {
       {/* Tabs */}
       <div className="flex gap-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
         {([
-          { id: 'telegram',  label: '✈️ Telegram', badge: 'Recommended' },
+          { id: 'telegram',  label: '✈️ Telegram', badge: t('common.verificado') },
           { id: 'whatsapp',  label: '💬 WhatsApp',  badge: 'Meta Cloud API' },
         ] as const).map(t => (
           <button
@@ -145,7 +145,7 @@ export default function WhatsAppConfigView() {
 
           <div className="rounded-xl border p-5 space-y-4" style={{ borderColor: 'var(--card-border)', background: 'var(--card)' }}>
             <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-              ⚙️ Step-by-step configuration
+              
             </p>
 
             {[
@@ -239,11 +239,11 @@ export default function WhatsAppConfigView() {
         <p className="text-sm font-bold mb-3" style={{ color: 'var(--text-primary)' }}>{t('ui.queDisparaNotif')}</p>
         <div className="grid grid-cols-2 gap-2">
           {[
-            { icon: '📅', label: 'Appointment scheduled',      active: true },
+            { icon: '📅', label: t('agenda.citaGuardada'),  active: true },
             { icon: '❌', label: 'Cita cancelada',     active: true },
-            { icon: '📋', label: 'Form submitted',  active: true },
-            { icon: '📊', label: 'Report generated',   active: true },
-            { icon: '⚠️', label: 'AI clinical alert',  active: false },
+            { icon: '📋', label: t('evaluaciones.formularioEnviado').replace('!',''), active: true },
+            { icon: '📊', label: t('reportes.reporteListo'), active: true },
+            { icon: '⚠️', label: t('dashboard.alertasClinicas'), active: false },
             { icon: '💬', label: 'Mensaje terapeuta',  active: false },
           ].map((item, i) => (
             <div key={i} className="flex items-center gap-2">

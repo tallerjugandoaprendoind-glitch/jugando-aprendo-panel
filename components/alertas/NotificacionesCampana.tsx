@@ -1,8 +1,10 @@
 'use client'
 // components/alertas/NotificacionesCampana.tsx
 import { useState, useEffect } from 'react'
+import { useI18n } from '@/lib/i18n-context'
 
 export default function NotificacionesCampana({ userId }: { userId: string }) {
+  const { locale } = useI18n()
   const [notifs, setNotifs]     = useState<any[]>([])
   const [abierto, setAbierto]   = useState(false)
   const [noLeidas, setNoLeidas] = useState(0)
@@ -78,7 +80,7 @@ export default function NotificacionesCampana({ userId }: { userId: string }) {
               <h3 className="font-semibold text-gray-800">Notificaciones</h3>
               {noLeidas > 0 && (
                 <button onClick={marcarTodasLeidas} className="text-xs text-blue-600 hover:underline">
-                  Marcar todas leídas
+                  {locale === 'en' ? 'Mark all as read' : 'Marcar todas leídas'}
                 </button>
               )}
             </div>

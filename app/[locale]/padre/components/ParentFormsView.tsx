@@ -218,7 +218,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
 
               {q.type === 'boolean' && (
                 <div className="flex gap-3">
-                  {(['Yes ✅','No ❌']).map(opt => (
+                  {(isEN ? ['Yes ✅','No ❌'] : ['Sí ✅','No ❌']).map(opt => (
                     <button key={opt} type="button" onClick={() => answer(q.id, opt)}
                       className={`flex-1 py-4 rounded-xl border-2 font-bold text-sm transition-all ${responses[q.id] === opt ? (opt.includes('Sí') ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-600 text-white border-slate-600') : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'}`}>
                       {opt}
@@ -244,7 +244,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
           ) : (
             <button onClick={handleSubmit} disabled={submitting} className="flex-1 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl font-bold text-sm shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2">
               {submitting ? <Loader2 size={18} className="animate-spin"/> : <CheckCircle2 size={18}/>}
-              {submitting?('Sending...'):('✅ Submit Responses')}
+              {submitting?t('common.enviando'):`✅ ${t('evaluaciones.enviarForm')}`}
             </button>
           )}
         </div>
@@ -518,7 +518,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
                       </p>
                     </div>
                     <span className="text-[9px] font-black px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full uppercase">
-                      ✓ Listo
+                      {isEN ? '✓ Done' : '✓ Listo'}
                     </span>
                   </div>
                 ))}

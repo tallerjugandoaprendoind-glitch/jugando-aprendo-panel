@@ -36,9 +36,9 @@ const DIAGNOSTICOS = [
   { cie11: '6B44',   dsm5: '313.89', nombre: 'Reactive Attachment Disorder',                 area: 'Trauma', desc: 'Patrón de comportamiento inhibido, emocionalmente retraído ante cuidadores.' },
   { cie11: '6B43',   dsm5: '313.89', nombre: 'Disinhibited Social Engagement Disorder',   area: 'Trauma', desc: 'Comportamiento de acercamiento excesivo a extraños.' },
   // Neurológico
-  { cie11: '8A60',   dsm5: '345.x',  nombre: 'Epilepsy (Epileptic Disorders)',          area: 'Neurological', desc: 'Predisposición del cerebro a generar crisis epilépticas de forma recurrente.' },
+  { cie11: '8A60',   dsm5: '345.x',  nombre: 'Epilepsy (Epileptic Disorders)',          area: 'Neurológico', desc: 'Predisposición del cerebro a generar crisis epilépticas de forma recurrente.' },
   // Comunicación
-  { cie11: '6A80',   dsm5: '315.35', nombre: 'Stuttering (Childhood-onset fluency disorder)', area: 'Communication', desc: 'Alteraciones de la fluidez normal del habla con sonidos/sílabas repetidos.' },
+  { cie11: '6A80',   dsm5: '315.35', nombre: 'Stuttering (Childhood-onset fluency disorder)', area: 'Comunicación', desc: 'Alteraciones de la fluidez normal del habla con sonidos/sílabas repetidos.' },
 ]
 
 const getAreas = (isEN: boolean) => ['All', 'Neurodevelopment', 'Anxiety', 'OCD', 'Trauma', 'Neurological', 'Communication']
@@ -151,7 +151,7 @@ export default function DiagnosticoBuscador() {
         ))}
       </div>
       <p className="text-[10px] text-center" style={{ color: 'var(--text-muted)' }}>
-        {filtrado.length} of {DIAGNOSTICOS.length} diagnoses · ICD-11 (OMS, 2022) + DSM-5-TR (APA, 2022)
+        {filtrado.length} de {DIAGNOSTICOS.length} diagnósticos · ICD-11 (OMS, 2022) + DSM-5-TR (APA, 2022)
       </p>
     </div>
   )

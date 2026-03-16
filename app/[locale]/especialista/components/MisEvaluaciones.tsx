@@ -38,13 +38,13 @@ const getTemplates = (isEN: boolean): Record<string, any> => ({
   },
   sesion: {
     titulo: 'Session note - [Name] - [Date]',
-    contenido: 'Duration: [X] minutes\n\nActivities:\n1. [Activity 1] - [result]\n2. [Activity 2] - [result]\n\nResponsesta: [descripción]',
+    contenido: isEN ? 'Duration: [X] minutes\n\nActivities:\n1. [Activity 1] - [result]' : 'Duración: [X] minutos\n\nActividades:\n1. [Actividad 1] - [resultado]',
     observaciones: 'Arrived at session [state]. During the session [key moments].',
     recomendaciones: 'For the next session: [activities/topics]',
   },
   familia: {
     titulo: 'Family guide - [Name]',
-    contenido: 'Dear families,\n\nThis week we worked on [goal]. Home activities:\n\n🌟 Activity 1: [Description]\n🌟 Actividad 2: [Descripción]',
+    contenido: isEN ? 'Dear families,\n\nThis week we worked on [goal]. Home activities:\n\n🌟 Activity 1: [Description]' : 'Estimadas familias,\n\nEsta semana trabajamos en [objetivo]. Actividades en casa:\n\n🌟 Actividad 1: [Descripción]',
     observaciones: 'Practice at least [X] times per day.',
     recomendaciones: 'If you notice anything different at home, share it at the next session.',
   },
@@ -187,7 +187,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                     {ev.admin_comment && (
                       <div className={`mt-3 px-4 py-3 rounded-xl text-xs border-l-4 ${ev.status === 'rejected' ? 'bg-red-50 border-red-400' : 'bg-blue-50 border-blue-400'}`}>
                         <p className={`text-[10px] font-black uppercase tracking-wide mb-1 ${ev.status === 'rejected' ? 'text-red-600' : 'text-blue-500'}`}>
-                          {ev.status === 'rejected' ? '🚨 Rejection reason — please correct it' : '💬 Supervisor comment'}
+                          {ev.status === 'rejected' ? `🚨 ${isEN ? 'Rejection reason' : t('especialista.motivoRechazo')}` : `💬 ${isEN ? 'Supervisor comment' : t('especialista.aprobaciones')}`}
                         </p>
                         <p className="text-slate-700 leading-relaxed">{ev.admin_comment}</p>
                         {ev.status === 'rejected' && (
@@ -198,7 +198,7 @@ export default function MisEvaluaciones({ userId }: { userId: string }) {
                             }}
                             className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-black text-red-700 bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg hover:bg-red-200 transition-all"
                           >
-                            ✏️ Create corrected version
+                            {isEN ? '✏️ Create corrected version' : '✏️ Crear versión corregida'}
                           </button>
                         )}
                       </div>

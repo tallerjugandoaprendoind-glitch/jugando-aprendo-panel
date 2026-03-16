@@ -23,7 +23,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
     try {
       const { error } = await supabase.from('profiles').update({ ...datos, updated_at: new Date().toISOString() }).eq('id', profile.id)
       if (error) throw error
-      toast.success('Perfil actualizado ✓')
+      toast.success(t('common.exitoGuardado'))
       setEditando(false)
       onUpdate()
     } catch (e: any) { toast.error('Error: ' + e.message) }
@@ -37,7 +37,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
     try {
       const { error } = await supabase.auth.updateUser({ password: pass.nueva })
       if (error) throw error
-      toast.success('Password updated ✓')
+      toast.success(t('common.exitoGuardado'))
       setCambioPass(false)
       setPass({ nueva: '', confirmar: '' })
     } catch (e: any) { toast.error('Error: ' + e.message) }

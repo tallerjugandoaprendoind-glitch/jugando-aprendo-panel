@@ -64,7 +64,7 @@ function DynamicEvaluationsView() {
      if (isGenerating) return // Guard contra doble click
      const hasEnoughData = Object.keys(respuestas).length > 2;
      if (!hasEnoughData) {
-         return alert("⚠️ Por favor responde algunas preguntas antes de generar con IA.");
+         return alert(t("ui.responderPrimero"));
      }
 
      console.log('🤖 Generando IA para formulario:', activeForm);
@@ -163,12 +163,12 @@ function DynamicEvaluationsView() {
           return newState
         })
         
-        alert("✨ AI Analysis complete!");
+        alert(t("evaluaciones.analisisListo"));
 
      } catch (e: any) {
         console.error('💥 Error completo:', e);
         const msg = e.message?.includes('Cuota') || e.message?.includes('429') || e.message?.includes('RESOURCE_EXHAUSTED')
-        ? '⏳ Cuota de IA agotada. Espera 1-2 minutos e intenta nuevamente.'
+        ? t('common.procesando')
         : 'Error IA: ' + e.message
       alert(msg)
      } finally {
@@ -213,7 +213,7 @@ function DynamicEvaluationsView() {
       let message = '';
 
       if (formType === 'aba') {
-        title = `📋 New session report - ${childName}`;
+        title = `📋 ${t('evaluaciones.sesionAba')} - ${childName}`;
         const mensajePadres = datos.mensaje_padres || datos.destacar_positivo || datos.proximos_pasos;
         const objetivo = datos.objetivo_principal || datos.conducta || '';
         const tarea = datos.actividad_casa || datos.instrucciones_padres || datos.tarea_hogar || '';
@@ -223,9 +223,9 @@ function DynamicEvaluationsView() {
           message = `Session on ${fecha} recorded.${objetivo ? ` Trabajamos en: ${objetivo}.` : ''}${tarea ? ` Actividad para casa: ${tarea}` : ''}`;
         }
       } else if (formType === 'anamnesis') {
-        title = `📝 Ficha de ingreso completada - ${childName}`;
+        title = `📝 ${t('ui.fichaIngreso')} - ${childName}`;
         const motivo = datos.motivo_principal || datos.expectativas || '';
-        message = `We have completed the intake form for ${childName} on ${fecha}.${motivo ? ` Reason: ${motivo}` : ' onto comenzaremos con el proceso de evaluación.'}`;
+        message = `We have completed the intake form for ${childName} on ${fecha}.${motivo ? ` Reason: ${motivo}` : ''}`;
       } else if (formType === 'entorno_hogar') {
         title = `🏠 Reporte de visita al hogar - ${childName}`;
         const obs = datos.mensaje_padres_entorno || datos.impresion_general || datos.recomendaciones_espacio || '';
@@ -239,7 +239,7 @@ function DynamicEvaluationsView() {
         const informe = datos.informe_familia_ados || datos.recomendaciones_intervencion || '';
         message = informe || `The ADOS-2 assessment for ${childName} was completed on ${fecha}. We willcontactaremos para explicar los resultados en detalle.`;
       } else if (formType === 'vineland3') {
-        title = `📊 Vineland-3 Assessment completed - ${childName}`;
+        title = `📊 Vineland-3 - ${childName}`;
         const informe = datos.informe_padres_vineland || datos.analisis_vineland_ia || '';
         message = informe || `The Vineland-3 adaptive behavior assessment for ${childName} was complcompletada el ${fecha}.`;
       } else if (formType === 'wiscv') {
@@ -247,11 +247,11 @@ function DynamicEvaluationsView() {
         const informe = datos.informe_padres_wisc || datos.perfil_cognitivo_ia || '';
         message = informe || `The WISC-V cognitive assessment for ${childName} was completed on ${fecha}.`;
       } else if (formType === 'basc3') {
-        title = `📈 BASC-3 Assessment completed - ${childName}`;
+        title = `📈 BASC-3 - ${childName}`;
         const informe = datos.informe_padres_basc || datos.analisis_basc_ia || '';
         message = informe || `The BASC-3 behavioral assessment for ${childName} was completed on ${fecha}.`;
       } else {
-        title = `📄 New clinical record - ${childName}`;
+        title = `📄 ${t('ui.fichaIngreso')} - ${childName}`;
         message = `A new clinical record was created for ${childName} on ${fecha}.`;
       }
 
@@ -646,7 +646,7 @@ function DynamicEvaluationsView() {
                          </div>
                          {(respuestas[q.id] || []).length > 0 && (
                            <p className="text-xs text-slate-500 font-bold">
-                             ✓ {(respuestas[q.id] || []).length} seleccionada(s)
+                             {(respuestas[q.id] || []).length} {t('common.completado')}
                            </p>
                          )}
                        </div>

@@ -16,16 +16,25 @@ interface ChatPadresProps {
   childName: string
 }
 
-const SUGERENCIAS = [
+const SUGERENCIAS_ES = [
   '¿Cómo va esta semana?',
   '¿Qué puedo practicar en casa?',
   '¿Qué fue lo mejor de la última sesión?',
   '¿Cuándo es la próxima cita?',
   '¿Qué tareas tenemos pendientes?',
 ]
+const SUGERENCIAS_EN = [
+  'How is this week going?',
+  'What can I practice at home?',
+  'What was the best part of the last session?',
+  'When is the next appointment?',
+  'What tasks are pending?',
+]
 
 export default function ChatPadres({ childId, parentUserId, childName }: ChatPadresProps) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
+  const SUGERENCIAS = isEN ? SUGERENCIAS_EN : SUGERENCIAS_ES
   const [mensajes, setMensajes]   = useState<Mensaje[]>([])
   const [input, setInput]         = useState('')
   const [enviando, setEnviando]   = useState(false)
@@ -70,7 +79,7 @@ export default function ChatPadres({ childId, parentUserId, childName }: ChatPad
       const msgAsistente: Mensaje = { rol: 'assistant', mensaje: data.respuesta || 'Disculpa, hubo un error. Intenta nuevamente.' }
       setMensajes(prev => [...prev, msgAsistente])
     } catch {
-      setMensajes(prev => [...prev, { rol: 'assistant', mensaje: 'Hubo un problema de conexión. Por favor intenta de nuevo.' }])
+      setMensajes(prev => [...prev, { rol: 'assistant', mensaje: isEN ? 'There was a connection problem. Please try again.' : 'Hubo un problema de conexión. Por favor intenta de nuevo.' }])
     } finally {
       setEnviando(false)
     }

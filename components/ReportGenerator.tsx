@@ -164,7 +164,7 @@ export default function ReportGenerator({
 
     } catch (err: any) {
       console.error('Error generando reporte:', err)
-      setError(err.message || 'Error al generar el reporte. Inténtalo de nuevo.')
+      setError(err.message || locale === 'en' ? 'Error generating report. Please try again.' : 'Error al generar el reporte. Inténtalo de nuevo.')
     } finally {
       setIsGenerating(false)
     }
@@ -207,7 +207,7 @@ export default function ReportGenerator({
 
   // ─── Eliminar reporte ─────────────────────────────────────────────────────
   const handleDeleteReport = async (reporteId: string) => {
-    if (!confirm('¿Eliminar este reporte permanentemente? Esta acción no se puede deshacer.')) return
+    if (!confirm(locale === 'en' ? 'Permanently delete this report? This action cannot be undone.' : '¿Eliminar este reporte permanentemente? Esta acción no se puede deshacer.')) return
     try {
       const { error } = await supabase
         .from('reportes_generados')
@@ -346,7 +346,7 @@ export default function ReportGenerator({
           </button>
 
           <p className="text-xs text-slate-400 text-center mt-3 font-medium">
-            Se generará con formato profesional, portada y secciones completas · Se guardará automáticamente
+            {locale === 'en' ? 'Professional format, cover page and complete sections · Saved automatically' : 'Se generará con formato profesional, portada y secciones completas · Se guardará automáticamente'}
           </p>
         </div>
 
@@ -372,7 +372,7 @@ export default function ReportGenerator({
               </div>
               <p className="text-slate-500 font-black text-sm">Sin reportes generados</p>
               <p className="text-xs text-slate-400 mt-1.5 text-center max-w-xs px-4 font-medium">
-                Genera tu primer reporte usando el botón de arriba. Quedará guardado aquí con fecha y hora.
+                {locale === 'en' ? 'Generate your first report using the button above. It will be saved here with date and time.' : 'Genera tu primer reporte usando el botón de arriba. Quedará guardado aquí con fecha y hora.'}
               </p>
             </div>
 
@@ -481,16 +481,17 @@ export default function ReportGenerator({
 // HELPER
 // ==============================================================================
 
-export function getTituloReporte(tipo: string): string {
+export function getTituloReporte(tipo: string, loc?: string): string {
+  const isEN = loc === 'en'
   const titulos: Record<string, string> = {
-    aba:           'Reporte de Sesión ABA',
-    anamnesis:     'Historia Clínica (Anamnesis)',
-    entorno_hogar: 'Evaluación del Entorno del Hogar',
-    brief2:        'Evaluación BRIEF-2 (Funciones Ejecutivas)',
-    ados2:         'Evaluación ADOS-2 (Diagnóstico Autismo)',
-    vineland3:     'Evaluación Vineland-3 (Conducta Adaptativa)',
-    wiscv:         'Evaluación WISC-V (Cognitiva)',
-    basc3:         'Evaluación BASC-3 (Conductual)',
+    aba:           isEN ? 'ABA Session Report' : 'Reporte de Sesión ABA',
+    anamnesis:     isEN ? 'Clinical History (Anamnesis)' : 'Historia Clínica (Anamnesis)',
+    entorno_hogar: isEN ? 'Home Environment Assessment' : 'Evaluación del Entorno del Hogar',
+    brief2:        isEN ? 'BRIEF-2 Assessment (Executive Functions)' : 'Evaluación BRIEF-2 (Funciones Ejecutivas)',
+    ados2:         isEN ? 'ADOS-2 Assessment (Autism Diagnosis)' : 'Evaluación ADOS-2 (Diagnóstico Autismo)',
+    vineland3:     isEN ? 'Vineland-3 Assessment (Adaptive Behavior)' : 'Evaluación Vineland-3 (Conducta Adaptativa)',
+    wiscv:         isEN ? 'WISC-V Assessment (Cognitive)' : 'Evaluación WISC-V (Cognitiva)',
+    basc3:         isEN ? 'BASC-3 Assessment (Behavioral)' : 'Evaluación BASC-3 (Conductual)',
   }
   return titulos[tipo] || tipo.toUpperCase()
 }

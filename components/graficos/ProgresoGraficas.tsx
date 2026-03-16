@@ -18,7 +18,7 @@ const TIPOS: { id: TipoGrafico; label: string; emoji: string; desc: string }[] =
   { id: 'barras',     label: 'Barras',     emoji: '📊', desc: 'Comparación por sesión' },
   { id: 'combinado',  label: 'Combinado',  emoji: '📉', desc: 'Línea + área' },
   { id: 'histograma', label: 'Histograma', emoji: '🗂️', desc: 'Distribución de logros' },
-  { id: 'pie',        label: 'Pie Chart',  emoji: '🥧', desc: 'Proporción de niveles' },
+  { id: 'pie', label: 'Pie Chart', emoji: '🥧', desc: 'Proporción de niveles' },
   { id: 'radar',      label: 'Radar',      emoji: '🎯', desc: 'Perfil de habilidades' },
 ]
 

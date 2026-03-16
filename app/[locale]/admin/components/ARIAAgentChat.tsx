@@ -119,7 +119,7 @@ export default function ARIAAgentChat({
             <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-black">BETA</span>
           </h3>
           <p className="text-violet-200 text-[10px]">
-            {childId ? `${'Active case'}: ${childName || ('Patient')}` : 'Knowledge: Malott · DSM-5 · IBAO · LuTr'}
+            {childId ? `${isEN ? 'Active case' : t('ui.viendo')} ${childName || (isEN ? 'Patient' : t('ui.seleccionarPaciente2'))}` : 'Knowledge: Malott · DSM-5 · IBAO · LuTr'}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">

@@ -15,7 +15,8 @@ interface PageProps {
 export default function LoginPage(props: PageProps) {
   const searchParams = use(props.searchParams)
   const router = useRouter()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [isSignUp, setIsSignUp] = useState(searchParams.mode === 'signup')
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
@@ -165,9 +166,9 @@ export default function LoginPage(props: PageProps) {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
-                { icon: '🧩', title: 'ASD and ADHD Forms', desc: 'BRIEF-2, ADOS-2, WISC-V and more' },
+                { icon: '🧩', title: isEN ? 'ASD and ADHD Forms' : 'Formularios TEA y TDAH', desc: 'BRIEF-2, ADOS-2, WISC-V...' },
                 { icon: '🤖', title: 'AI Analysis with Gemini', desc: 'Automatic clinical reports' },
-                { icon: '📊', title: 'Real-time progress', desc: 'Charts and visual tracking' },
+                { icon: '📊', title: isEN ? 'Real-time progress' : t('ui.progresoTiempoReal'), desc: isEN ? 'Charts and visual tracking' : 'Gráficas y seguimiento visual' },
                 { icon: '💙', title: 'Portal para familias', desc: 'Citas, formularios y asistente IA' },
               ].map(({ icon, title, desc }) => (
                 <div key={title} className="lp-card">

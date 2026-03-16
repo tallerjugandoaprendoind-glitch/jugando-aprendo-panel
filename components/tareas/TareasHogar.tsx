@@ -95,7 +95,7 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
                     <button
                       onClick={() => { setTareaSeleccionada(t); setModalAbierto(true) }}
                       className="bg-green-600 text-white text-xs px-3 py-2 rounded-lg hover:bg-green-700 transition-colors flex-shrink-0">
-                      ✓ Listo
+                      {locale === 'en' ? '✓ Done' : '✓ Listo'}
                     </button>
                   )}
                 </div>
@@ -172,7 +172,7 @@ export default function TareasHogar({ childId, modoParent = false, parentUserId 
                       d === 'moderado' ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' :
                                          'bg-red-100 text-red-700 hover:bg-red-200'
                     }`}>
-                    {d === 'facil' ? '😊 Fácil' : d === 'moderado' ? '😐 Regular' : '😓 Difícil'}
+                    {d === 'facil' ? (locale === 'en' ? '😊 Easy' : '😊 Fácil') : d === 'moderado' ? (locale === 'en' ? '😐 Moderate' : '😐 Regular') : (locale === 'en' ? '😓 Hard' : '😓 Difícil')}
                   </button>
                 ))}
               </div>

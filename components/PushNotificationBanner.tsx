@@ -10,7 +10,8 @@ interface Props {
 
 export default function PushNotificationBanner({ userId }: Props) {
   const { permission, isSubscribed, isLoading, requestPermission, unsubscribe } = usePushNotifications(userId)
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [dismissed, setDismissed] = useState(false)
   const [justEnabled, setJustEnabled] = useState(false)
 
@@ -80,7 +81,7 @@ export default function PushNotificationBanner({ userId }: Props) {
             <div>
               <p className="font-black text-slate-800 text-sm">{t('notificaciones.activamos')}</p>
               <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                Te avisaremos al instante cuando el terapeuta te envíe un mensaje sobre tu hijo/a — sin tener que abrir la app.
+                {locale === 'en' ? "We'll notify you instantly when the therapist sends a message about your child — without opening the app." : 'Te avisaremos al instante cuando el terapeuta te envíe un mensaje sobre tu hijo/a — sin tener que abrir la app.'}
               </p>
             </div>
           </div>

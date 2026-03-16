@@ -260,7 +260,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                   <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">{t('hub.analisPorPrograma')}</p>
                   <h3 className="text-xl font-black">{selectedPaciente.name}</h3>
                   <p className="text-blue-200 text-sm mt-0.5">
-                    {(prediccion as any).programas_analizados || 0} {"programs"} · {(prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) || 0} {"total sessions"}
+                    {(prediccion as any).programas_analizados || 0} {t('reportes.sesiones')} · {(prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) || 0} {t('programas.sesiones')}
                   </p>
                 </div>
                 <div className="bg-white/15 rounded-xl px-3 py-2 text-center">
@@ -331,7 +331,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                               <div className="flex items-center gap-3 shrink-0 ml-2">
                                 <span className="text-xs" style={{ color: "var(--text-muted)" }}>media {set.media}%</span>
                                 <span className={`text-xs font-black ${set.criterio_logrado ? "text-emerald-400" : "text-amber-400"}`}>
-                                  {set.criterio_logrado ? "✅ Mastered" : `${set.ultimo_pct}%`}
+                                  {set.criterio_logrado ? t('programas.dominado') : `${set.ultimo_pct}%`}
                                 </span>
                               </div>
                             </div>
@@ -344,7 +344,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                         Tendencia: <span className={`font-bold ${prog.tendencia_slope > 0 ? "text-emerald-400" : prog.tendencia_slope < 0 ? "text-red-400" : ""}`}>
                           {prog.tendencia_descripcion}
                         </span>
-                        {" · "}{prog.total_sesiones} sesiones
+                        {" · "}{prog.total_sesiones} {t('programas.sesiones')}
                       </p>
                     </>
                   ) : (
@@ -907,7 +907,7 @@ function TabSugerencias() {
           <p className="text-xs text-orange-600">{t('hub.iaAlertaAntes')}</p>
           {meta && (
             <p className="text-[11px] text-orange-500 mt-1">
-              {meta.pacientes_analizados} patients analyzed · {meta.urgentes} urgent alerts
+              {meta.pacientes_analizados} {t('hub.sesionesAnalizadas')} · {meta.urgentes} {t('dashboard.alertasClinicas')}
             </p>
           )}
         </div>

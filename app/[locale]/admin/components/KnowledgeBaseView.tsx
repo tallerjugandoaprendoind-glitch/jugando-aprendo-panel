@@ -72,7 +72,7 @@ export default function KnowledgeBaseView() {
   const handleAprender = async () => {
     if (!keywords.trim()) { toast.error('Enter keywords'); return }
     setAprendiendo(true)
-    setLogAprender([`🚀 ${'Starting learning'}: "${keywords}"...`])
+    setLogAprender([`🚀 ${t('whatsapp.aprenderInternet')}: "${keywords}"...`])
     setResultadoAprender(null)
     try {
       const res = await fetch('/api/knowledge/aprender', {
@@ -84,7 +84,7 @@ export default function KnowledgeBaseView() {
       if (json.error) throw new Error(json.error)
       setLogAprender(json.log || [])
       setResultadoAprender(json)
-      toast.success(`✅ ${json.totalChunks} ${'fragments learned'}`)
+      toast.success(`✅ ${json.totalChunks} ${t('ui.terminosAprendidos').replace(':', '')}`)
       await loadDocs()
     } catch (e: any) {
       toast.error(e.message)
@@ -100,7 +100,7 @@ export default function KnowledgeBaseView() {
         body: JSON.stringify({ id, locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
-      if (json.ok) { toast.success(`✅ ${'Re-indexed'}: ${json.chunks} ${'fragments'}`); await loadDocs() }
+      if (json.ok) { toast.success(`✅ ${t('ui.reindex')}: ${json.chunks} ${t('ui.fragmentos')}`); await loadDocs() }
       else toast.error(json.error || ('Error re-indexing'))
     } catch (e: any) { toast.error(e.message) }
   }
@@ -117,7 +117,7 @@ export default function KnowledgeBaseView() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
-          titulo: `${'Web page'}: ${hostname}`,
+          titulo: `${t('ui.webPublica')}: ${hostname}`,
           tipo: 'articulo',
           sourceUrl: urlAprender,
         }),
@@ -125,10 +125,10 @@ export default function KnowledgeBaseView() {
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || ('Error reading URL'))
       setLogAprender([
-        `✅ ${'URL read'}: ${json.chars?.toLocaleString() || 0} ${'characters'}`,
-        `✅ ${'Method'}: ${json.method || 'scraping'}`,
-        `✅ ${'Indexed'}: ${json.chunks || 0} ${'fragments'}`,
-        `🎉 ${'AI has learned the content from that page'}`,
+        `✅ ${t('ui.indexarCerebro')}: ${json.chars?.toLocaleString() || 0} ${'characters'}`,
+        `✅ ${t('ui.fuenteDoc')}: ${json.method || 'scraping'}`,
+        `✅ ${t('ui.reindex')}: ${json.chunks || 0} ${t('ui.fragmentos')}`,
+        `🎉 ${t('whatsapp.aprendizajeCompleto')}`,
       ])
       setResultadoAprender({ keywords: urlAprender, terminos: [urlAprender], fuentes: 1, documentos: 1, totalChunks: json.chunks || 0 })
       toast.success(`✅ ${json.chunks} ${'fragments learned from URL'}`)
@@ -168,12 +168,12 @@ export default function KnowledgeBaseView() {
     const pdf = await loadingTask.promise
 
     const totalPages = pdf.numPages
-    onProgress(`${'Reading'} ${totalPages} ${'pages...'}`)
+    onProgress(`${t('common.procesando')}`)
 
     const textos: string[] = []
     for (let i = 1; i <= totalPages; i++) {
       if (i % 30 === 0 || i === totalPages) {
-        onProgress(`${'Reading page'} ${i} ${'of'} ${totalPages}...`)
+        onProgress(`${t('common.procesando')}`)
       }
       const page = await pdf.getPage(i)
       const textContent = await page.getTextContent()
@@ -186,7 +186,7 @@ export default function KnowledgeBaseView() {
     }
 
     const fullText = textos.join('\n\n')
-    onProgress(`✅ ${totalPages} ${'pages read'} — ${Math.round(fullText.length / 1000)}k ${'characters'}`)
+    onProgress(`✅ ${totalPages} ${t('ui.fragmentos')}`)
     return fullText
   }
 
@@ -206,7 +206,7 @@ export default function KnowledgeBaseView() {
 
         if (isPdf && isBig) {
           // ── Archivos grandes: extraer texto en el navegador ──────────────
-          setUploadProgress(`${'Large file'} (${Math.round(selectedFile.size / 1024 / 1024)}MB) — ${'extracting text locally...'}`)
+          setUploadProgress(`${t('common.procesando')} (${Math.round(selectedFile.size / 1024 / 1024)}MB) — ${t('ui.extractaLocal').replace('⚡ ', '')}`)
           try {
             const texto = await extractPdfTextInBrowser(selectedFile, setUploadProgress)
             if (!texto || texto.trim().length < 100) {
@@ -221,7 +221,7 @@ export default function KnowledgeBaseView() {
             const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
             const { data: up, error: upErr } = await supabasePublic.storage
               .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
-            if (upErr) throw new Error(`${'Upload error'}: ${upErr.message}`)
+            if (upErr) throw new Error(`${t('common.error')}: ${upErr.message}`)
             const { data: signed } = await supabasePublic.storage
               .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
             body.storageUrl = signed?.signedUrl
@@ -233,7 +233,7 @@ export default function KnowledgeBaseView() {
           const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
           const { data: up, error: upErr } = await supabasePublic.storage
             .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
-          if (upErr) throw new Error(`${'Upload error'}: ${upErr.message}`)
+          if (upErr) throw new Error(`${t('common.error')}: ${upErr.message}`)
           const { data: signed } = await supabasePublic.storage
             .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
           body.storageUrl = signed?.signedUrl
@@ -270,7 +270,7 @@ export default function KnowledgeBaseView() {
 
         let totalChunksIndexados = 0
         for (let i = 0; i < partes.length; i++) {
-          setUploadProgress(`${'Indexing part'} ${i + 1} ${'of'} ${partes.length}...`)
+          setUploadProgress(`${t('common.procesando')}`)
           const partBody = {
             ...body,
             titulo: partes.length > 1 ? `${body.titulo} (${'Part'} ${i + 1}/${partes.length})` : body.titulo,
@@ -283,10 +283,10 @@ export default function KnowledgeBaseView() {
           let json: any
           try { json = await res.json() }
           catch { throw new Error(await res.text() || `Error HTTP ${res.status}`) }
-          if (!res.ok) throw new Error(json.error || `${'Error in part'} ${i + 1}`)
+          if (!res.ok) throw new Error(json.error || `${t('common.error')}`)
           totalChunksIndexados += json.chunks || 0
         }
-        toast.success(`✅ ${totalChunksIndexados} ${'fragments indexed in'} ${partes.length} ${'parts'}`)
+        toast.success(`✅ ${totalChunksIndexados} ${t('ui.fragmentos')}`)
       } else {
         // Texto pequeño o no es texto → request único normal
         setUploadProgress('Indexing to AI Brain... (may take 1-3 min)')
@@ -299,7 +299,7 @@ export default function KnowledgeBaseView() {
         catch { throw new Error(await res.text() || `Error HTTP ${res.status}`) }
         if (!res.ok) throw new Error(json.error || ('Error indexing'))
         if (!json.success) throw new Error(json.error || ('Indexing failed'))
-        toast.success(`✅ ${json.chunks} ${'fragments indexed successfully'}`)
+        toast.success(`✅ ${json.chunks} ${t('ui.fragmentos')}`)
       }
 
       setShowForm(false)
@@ -311,7 +311,7 @@ export default function KnowledgeBaseView() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Eliminar este documento?')) return
+    if (!confirm(t('common.confirmEliminar'))) return
     await fetch('/api/knowledge/ingest', {
       method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
       body: JSON.stringify({ id, locale: localStorage.getItem('vanty_locale') || 'es' }),
@@ -367,7 +367,7 @@ export default function KnowledgeBaseView() {
         </button>
         <button onClick={() => setTab('biblioteca')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'biblioteca' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
-          <BookMarked size={15} /> {'Library'} ({documentos.length})
+          <BookMarked size={15} /> {t('recursos.biblioteca')} ({documentos.length})
         </button>
       </div>
 
@@ -383,7 +383,7 @@ export default function KnowledgeBaseView() {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {([
-                { icon: '🔍', t: 'Expands keywords', d: 'AI generates 8-12 related technical terms' },
+                { icon: '🔍', t: t('ui.comoFuncAuto'), d: 'AI generates 8-12 related technical terms' },
                 { icon: '🌐', t: 'Searches the internet', d: 'Wikipedia ES/EN + scientific PubMed articles' },
                 { icon: '🤖', t: 'Synthesizes with AI', d: 'Generates structured clinical summary for ABA' },
                 { icon: '🧠', t: 'Indexes to the Brain', d: 'ARIA and all agents already know the topic' },
@@ -404,7 +404,7 @@ export default function KnowledgeBaseView() {
             <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
               <button onClick={() => setModoFuente('keywords')}
                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'keywords' ? 'bg-white shadow text-violet-700' : 'text-slate-500'}`}>
-                🔍 {'Keywords'}
+                🔍 {t('hub.buscarDiagnostico') ?? 'Keywords'}
               </button>
               <button onClick={() => setModoFuente('url')}
                 className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'url' ? 'bg-white shadow text-violet-700' : 'text-slate-500'}`}>
@@ -416,7 +416,7 @@ export default function KnowledgeBaseView() {
             {modoFuente === 'keywords' && (
               <div className="space-y-4">
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wide block">
-                  {'What topic do you want the AI to learn?'}
+                  {t('ui.baseConocimiento')}
                 </label>
                 <textarea
                   value={keywords}

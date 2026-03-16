@@ -95,11 +95,11 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
         <div className="p-5 space-y-3">
           <div className="bg-green-50 rounded-2xl p-4 space-y-2">
             {[
-              '📅 New appointment scheduled',
+              isEN ? '📅 New appointment scheduled' : `📅 ${t('notificaciones.nuevaCita')}`,
               '❌ Cita cancelada o modificada',
-              '📊 Progress report available',
+              isEN ? '📊 Progress report available' : `📊 ${t('notificaciones.informeDisponible')}`,
               '💬 Mensaje nuevo del terapeuta',
-              '📋 Formulario para completar',
+              isEN ? '📋 Form to complete' : `📋 ${t('evaluaciones.completarFormulario')}`,
             ].map((item, i) => (
               <p key={i} className="text-xs text-green-700 font-medium flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400 shrink-0" />
@@ -143,7 +143,7 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
 
           {saved && (
             <div className="bg-green-50 border border-green-200 rounded-2xl p-3 text-xs text-green-700 font-semibold text-center">
-              ✅ Number saved. You are now subscribed to notifications.
+              {isEN ? '✅ Number saved. You are now subscribed to notifications.' : t('notificaciones.activadas')}
             </div>
           )}
 

@@ -198,7 +198,7 @@ export default function ParentDashboard() {
         const { error: delError } = await supabase.from('appointments').delete().eq('id', appointmentId)
         if(delError) throw delError
         setRefreshTrigger(prev => prev + 1) 
-        triggerCelebration('✅ Solicitud enviada al centro')
+        triggerCelebration(t('common.exitoGuardado'))
     } catch (error: any) {
         alert("Error al cancelar: " + error.message)
     } finally {
@@ -277,7 +277,7 @@ export default function ParentDashboard() {
       if (error) throw error
       
       setProfile({...profile, full_name: fullName, phone: phone})
-      triggerCelebration('✨ Perfil actualizado')
+      triggerCelebration(t('common.exitoGuardado'))
       setShowEditProfile(false)
       setRefreshTrigger(prev => prev + 1)
     } catch (error: any) {
@@ -358,9 +358,9 @@ export default function ParentDashboard() {
             {/* Features preview */}
             <div className="grid grid-cols-3 gap-4 mb-8">
               {[
-                { icon: '📊', label: 'Progreso en tiempo real' },
+                { icon: '📊', label: t('ui.progresoTiempoReal') },
                 { icon: '🤖', label: 'Asistente IA 24/7' },
-                { icon: '📅', label: 'Citas con 1 click' },
+                { icon: '📅', label: t('nav.miscitas') },
               ].map(({ icon, label }) => (
                 <div key={label} className="bg-violet-50 rounded-2xl p-4 border border-violet-100">
                   <div className="text-2xl mb-2">{icon}</div>
@@ -582,7 +582,7 @@ export default function ParentDashboard() {
                         <div className="text-left">
                             <span className="font-bold text-sm block">{child.name.split(' ')[0]}</span>
                             <span className={`text-[10px] font-semibold flex items-center gap-1 ${selectedChild?.id === child.id ? 'text-blue-100' : 'text-slate-400'}`}>
-                                <Baby size={10}/> {calculateAge(child.birth_date)} {"years"}
+                                <Baby size={10}/> {calculateAge(child.birth_date)} {t('common.anos')}
                             </span>
                         </div>
                     </button>
@@ -764,7 +764,7 @@ export default function ParentDashboard() {
                             
                             <div>
                                 <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
-                                    <Stethoscope size={14}/> Diagnóstico (Opcional)
+                                    <Stethoscope size={14}/> {t('familias.diagOpcional')}
                                 </label>
                                 <input 
                                     name="diagnosis" 
@@ -901,7 +901,7 @@ export default function ParentDashboard() {
                                   <span>📱</span> {isEN ? 'WhatsApp Number' : 'Número WhatsApp'}
                                 </span>
                                 <span className="text-[10px] font-normal text-green-600 mt-0.5 block">
-                                  Recibirás alertas de citas, informes y mensajes del terapeuta
+                                  {t('notificaciones.pushMsg')}
                                 </span>
                             </label>
                             <input 
@@ -973,13 +973,13 @@ export default function ParentDashboard() {
                                     ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-700', border:'border-indigo-200', label:'ABA Session'} :
                                     ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Clinical History'} :
                                     ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-700',  border:'border-green-200',  label:'Home Environment'} :
-                                    ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-700', border:'border-purple-200', label:'Evaluación Clínica'} :
+                                    ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-700', border:'border-purple-200', label:isEN?'Clinical Assessment':t('evaluaciones.titulo')+' Clínica'} :
                                     selectedNoti.type==='video_call'      ? {icon:<Video size={20}/>,         bg:'bg-indigo-100', text:'text-indigo-700', border:'border-indigo-200', label:'Videollamada'} :
                                     selectedNoti.type==='form_request'    ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-700', border:'border-orange-200', label:'New form'} :
                                     selectedNoti.type==='parent_message'  ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
-                                    selectedNoti.type==='success'         ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-700', border:'border-yellow-200', label:'¡Buenas noticias!'} :
+                                    selectedNoti.type==='success'         ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-700', border:'border-yellow-200', label:isEN?'Good news!':'¡Buenas noticias!'} :
                                     selectedNoti.type==='warning'         ? {icon:<AlertCircle size={20}/>,   bg:'bg-red-100',    text:'text-red-700',    border:'border-red-200',    label:'Aviso'} :
-                                                                             {icon:<Bell size={20}/>,           bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:'Notificación'}
+                                                                             {icon:<Bell size={20}/>,           bg:'bg-blue-100',   text:'text-blue-700',   border:'border-blue-200',   label:isEN?'Notification':t('notificaciones.titulo')}
                                 return (
                                     <div className="space-y-4">
                                         <div className={`flex items-center gap-3 p-4 rounded-2xl border ${cfg.border}`}>
@@ -1056,13 +1056,13 @@ export default function ParentDashboard() {
                                     ft==='aba'            ? {icon:<Activity size={20}/>,      bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-200', label:'ABA Session'} :
                                     ft==='anamnesis'      ? {icon:<FileText size={20}/>,      bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Clinical History'} :
                                     ft==='entorno_hogar'  ? {icon:<Home size={20}/>,          bg:'bg-green-100',  text:'text-green-600',  border:'border-green-200',  label:'Home Environment'} :
-                                    ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-600', border:'border-purple-200', label:'Evaluación Clínica'} :
+                                    ['brief2','ados2','vineland3','wiscv','basc3'].includes(ft) ? {icon:<Brain size={20}/>, bg:'bg-purple-100', text:'text-purple-600', border:'border-purple-200', label:isEN?'Clinical Assessment':t('evaluaciones.titulo')+' Clínica'} :
                                     noti.type==='video_call'     ? {icon:<Video size={20}/>,         bg:'bg-indigo-100', text:'text-indigo-600', border:'border-indigo-200', label:'Videollamada'} :
                                     noti.type==='form_request'   ? {icon:<FileText size={20}/>,      bg:'bg-orange-100', text:'text-orange-600', border:'border-orange-200', label:'New form'} :
                                     noti.type==='parent_message' ? {icon:<MessageCircle size={20}/>, bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Mensaje del terapeuta'} :
-                                    noti.type==='success'        ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-600', border:'border-yellow-200', label:'¡Buenas noticias!'} :
+                                    noti.type==='success'        ? {icon:<Star size={20}/>,          bg:'bg-yellow-100', text:'text-yellow-600', border:'border-yellow-200', label:isEN?'Good news!':'¡Buenas noticias!'} :
                                     noti.type==='warning'        ? {icon:<AlertCircle size={20}/>,   bg:'bg-red-100',    text:'text-red-600',    border:'border-red-200',    label:'Aviso'} :
-                                                                   {icon:<Bell size={20}/>,           bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:'Notificación'}
+                                                                   {icon:<Bell size={20}/>,           bg:'bg-blue-100',   text:'text-blue-600',   border:'border-blue-200',   label:isEN?'Notification':t('notificaciones.titulo')}
                                 return (
                                     <button key={noti.id} onClick={()=>setSelectedNoti(noti)}
                                         className={`w-full text-left bg-slate-50 rounded-2xl border ${iconConfig.border} overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all`}>
@@ -1114,10 +1114,10 @@ export default function ParentDashboard() {
                     <div className="p-6 space-y-4 overflow-y-auto">
                         <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100">
                             <h4 className="font-bold text-purple-900 mb-2 flex items-center gap-2">
-                                <Lock size={16}/> Protección de Datos
+                                <Lock size={16}/> {isEN ? 'Data Protection' : 'Protección de Datos'}
                             </h4>
                             <p className="text-sm text-purple-700 leading-relaxed">
-                                Toda la información de tu familia está cifrada y protegida según estándares internacionales. Solo tú y los profesionales autorizados pueden acceder a los datos clínicos.
+                                {isEN ? 'All your family information is encrypted and protected according to international standards. Only you and authorized professionals can access clinical data.' : 'Toda la información de tu familia está cifrada y protegida según estándares internacionales.'}
                             </p>
                         </div>
                         
@@ -1136,7 +1136,7 @@ export default function ParentDashboard() {
                         <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
                             <h4 className="font-bold text-green-900 mb-2">Control Total</h4>
                             <p className="text-sm text-green-700 leading-relaxed">
-                                Puedes exportar, eliminar o modificar cualquier información en cualquier momento. Tienes control absoluto sobre tus datos.
+                                {isEN ? 'You can export, delete or modify any information at any time. You have full control over your data.' : 'Puedes exportar, eliminar o modificar cualquier información en cualquier momento.'}
                             </p>
                         </div>
 
@@ -1169,17 +1169,17 @@ export default function ParentDashboard() {
                     <div className="p-6 space-y-3 overflow-y-auto">
                         <HelpItem 
                             icon={<Calendar className="text-blue-600"/>}
-                            title="¿Cómo ver mis citas?"
-                            description={"In the 'My Appointments' section you can see all appointments scheduled by the center. For changes or cancellations, contact reception directly."}
+                            title={isEN ? "How do I view my appointments?" : "¿Cómo ver mis citas?"}
+                            description={isEN ? "In the 'My Appointments' section you can see all appointments scheduled by the center." : "En la sección 'Mis Citas' puedes ver todas las citas agendadas por el centro."}
                         />
                         <HelpItem 
                             icon={<MessageCircle className="text-purple-600"/>}
-                            title="¿Cómo usar el Asistente IA?"
+                            title={isEN ? "How do I use the AI Assistant?" : "¿Cómo usar el Asistente IA?"}
                             description="El asistente puede responder dudas sobre el progreso de tu hijo/a, dar consejos y explicar los reportes de las sesiones."
                         />
                         <HelpItem 
                             icon={<Book className="text-green-600"/>}
-                            title="¿Dónde encuentro recursos?"
+                            title={isEN ? "Where do I find resources?" : "¿Dónde encuentro recursos?"}
                             description="En la sección 'Biblioteca' encontrarás guías, videos y artículos sobre terapia ABA y desarrollo infantil."
                         />
                         

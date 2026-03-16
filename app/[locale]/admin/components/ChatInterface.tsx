@@ -355,7 +355,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
       {/* Capacidades */}
       <div className="grid grid-cols-2 gap-2 w-full max-w-sm mb-6">
         {[
-          { icon: '📊', label: 'Explain reports' },
+          { icon: '📊', label: isEN ? 'Explain reports' : 'Explicar reportes' },
           { icon: '🏠', label: 'Home activities' },
           { icon: '💬', label: 'Answer questions' },
           { icon: '💙', label: 'Apoyo emocional' },
@@ -453,7 +453,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
         headers: { 'Content-Type': 'application/json', 'x-locale': locale || 'es' },
         body: JSON.stringify({
           question: isEmotional
-            ? `${txt}\n\n[INSTRUCTION: The parent is experiencing emotional burden. Validate first with warmth and genuinentes de información clínica.]`
+            ? `${txt}\n\n[INSTRUCTION: The parent is experiencing emotional burden. Validate first with warmth and genuine warmth before sharing clinical information.]`
             : txt,
           childId,
           childName,

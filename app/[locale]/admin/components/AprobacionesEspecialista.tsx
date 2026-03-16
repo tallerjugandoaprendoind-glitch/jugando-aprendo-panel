@@ -96,7 +96,7 @@ export default function AprobacionesEspecialista() {
         })
         .eq('id', id)
       if (error) throw error
-      toast.success(tipo === 'approved' ? ('✅ Evaluation approved') : ('❌ Evaluation rejected'))
+      toast.success(tipo === 'approved' ? t('especialista.aprobado') : t('especialista.rechazado'))
       setExpandido(null)
       cargar()
     } catch (e: any) {

@@ -19,8 +19,8 @@ const getAreaConfig = (isEN: boolean): Record<string, any> => ({
   cognitivo:    { color: 'text-violet-700',  bg: 'bg-violet-50 border-violet-200', label: 'Cognitive',    emoji: '🧠' },
   social:       { color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200',label: 'Social',      emoji: '👥' },
   autonomia:    { color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',   label: 'Autonomy',    emoji: '🌟' },
-  academico:    { color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-200', label: 'Academic',    emoji: '📚' },
-  sensorial:    { color: 'text-pink-700',    bg: 'bg-pink-50 border-pink-200',     label: 'Sensory',    emoji: '✋' },
+  academico:    { color: 'text-indigo-700',  bg: 'bg-indigo-50 border-indigo-200', label: isEN ? 'Academic' : 'Académico', emoji: '📚' },
+  sensorial:    { color: 'text-pink-700',    bg: 'bg-pink-50 border-pink-200',     label: isEN ? 'Sensory' : 'Sensorial', emoji: '✋' },
 })
 
 const FASE_COLORS: Record<string, string> = {
@@ -119,7 +119,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
                   formatter={(v: any) => [`${v}%`, 'Achievement']}
                   labelFormatter={(l) => {
                     const d = data[l - 1]
-                    return d ? `Session ${l} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}` : `Session ${l}`
+                    return d ? `${isEN ? 'Session' : 'Sesión'} ${l} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}` : `${isEN ? 'Session' : 'Sesión'} ${l}`
                   }}
                 />
                 {cambiosFase.map(x => (

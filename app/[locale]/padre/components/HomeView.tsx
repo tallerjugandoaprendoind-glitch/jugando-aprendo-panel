@@ -47,7 +47,8 @@ function formatDate(dateStr: string) {
 
 // ── Componente de Celebración de Objetivos ─────────────────────────────────
 function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: string; goalsAchieved: number; onClose: () => void }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   useEffect(() => {
     const t = setTimeout(onClose, 6000)
@@ -70,7 +71,7 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
         </button>
         <div style={{ fontSize: 56, marginBottom: 16, animation: 'bounce 1s ease infinite' }}>🏆</div>
         <h2 style={{ fontWeight: 800, fontSize: 28, color: '#fff', marginBottom: 8 }}>
-          ¡Gran logro!
+          {isEN ? '🎉 Great achievement!' : '¡Gran logro!'}
         </h2>
         <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 16, lineHeight: 1.6, marginBottom: 20 }}>
           <strong style={{ color: '#fbbf24' }}>{childName}</strong> achieved{' '}
@@ -82,7 +83,7 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
           ))}
         </div>
         <p style={{ color: 'rgba(255,255,255,.6)', fontSize: 13 }}>
-          ¡Este logro es el resultado del esfuerzo diario de toda la familia! 💙
+          {isEN ? 'This achievement is the result of the daily effort of the whole family! 💙' : '¡Este logro es el resultado del esfuerzo diario de toda la familia! 💙'}
         </p>
       </div>
       <style>{`
@@ -330,10 +331,10 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             <h1 className="text-2xl font-black leading-tight mb-3">{child?.name || t('pacientes.sinPacienteSeleccionado')}</h1>
             <div className="flex flex-wrap gap-2">
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
-                <Baby size={11} /> {age} {"years"}
+                <Baby size={11} /> {age} {t('common.anos')}
               </span>
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold">
-                {child?.diagnosis || ('Under evaluation')}
+                {child?.diagnosis || t('pacientes.enEvaluacion')}
               </span>
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
                 <Activity size={11} /> {stats.sessions} sessions
@@ -548,7 +549,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             </div>
             <p className="text-base font-bold text-slate-600 mb-2">{t('ui.progress_here')}</p>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto mb-5">
-              {'After the first therapy sessions, you will see progress charts, achieved goals and much more.'}
+              {isEN ? 'After the first therapy sessions, you will see progress charts, achieved goals and much more.' : t('familias.sinProgreso')}
             </p>
             <button onClick={() => onChangeView('agenda')}
               className="inline-flex items-center gap-2 px-5 py-2.5 bg-violet-600 text-white rounded-xl font-bold text-sm hover:bg-violet-700 transition-all">

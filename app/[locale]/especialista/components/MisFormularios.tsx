@@ -267,7 +267,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         analysis?.informe_padres || ''
       )
       setEditedActividades(analysis?.actividades_casa || analysis?.actividad_casa || '')
-      toast.success('✨ AI analysis generated')
+      toast.success(t('evaluaciones.analisisListo'))
     } catch (e: any) { toast.error(('Error: ') + e.message) }
     finally { setAnalyzing(false) }
   }
@@ -308,7 +308,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         }
       }
       setDone(true)
-      toast.success('✅ Sent for supervisor approval')
+      toast.success(t('especialista.aprobaciones'))
     } catch (e: any) { toast.error(('Error: ') + e.message) }
     finally { setSaving(false) }
   }

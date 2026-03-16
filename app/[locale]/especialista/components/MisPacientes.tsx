@@ -263,7 +263,7 @@ function EvalDetail({ r, tipo }: { r: any; tipo: string }) {
     ],
     'Vineland-3': [
       { k: 'puntuacion_comunicacion', l: 'Communication' }, { k: 'puntuacion_socializacion', l: 'Socialization' },
-      { k: 'puntuacion_vida_diaria', l: 'Daily Living' }, { k: 'indice_conducta_adaptativa', l: 'Índice Global' },
+      { k: 'puntuacion_vida_diaria', l: 'Daily Living' }, { k: 'indice_conducta_adaptativa', l: 'Global Index' },
     ],
     'WISC-V': [
       { k: 'icv_total', l: 'ICV' }, { k: 'icv_percentil', l: 'Percentil ICV' },

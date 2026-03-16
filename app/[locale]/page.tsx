@@ -107,6 +107,8 @@ function getPlatformLabel(url: string) {
 
 // ── Chat IA illustration ───────────────────────────────────────────────────────
 function ARIAChatIllustration() {
+  const { locale } = useI18n()
+  const isEN = locale === 'en'
   return (
     <div style={{ position: 'relative', width: 340, maxWidth: '100%' }}>
       {/* ARIA avatar circle */}
@@ -139,7 +141,7 @@ function ARIAChatIllustration() {
           {/* Parent reply */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <div style={{ background: 'linear-gradient(135deg,#f97316,#ea580c)', borderRadius: '18px 18px 4px 18px', padding: '12px 16px', fontSize: 13, color: '#fff', lineHeight: 1.6, maxWidth: 200 }}>
-              Sí, ¡qué emoción! ¿Cómo lo refuerzo en casa?
+              {locale === 'en' ? 'Yes, how exciting! How can I reinforce it at home?' : 'Sí, ¡qué emoción! ¿Cómo lo refuerzo en casa?'}
             </div>
           </div>
           {/* ARIA response */}
@@ -451,7 +453,7 @@ export default function LandingPage() {
         <div className="lp-hero-inner">
           <div style={{ animation: 'lp-up .6s ease both' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff7ed', border: '2px solid #fed7aa', borderRadius: 99, padding: '6px 16px', fontFamily: "'Baloo 2',cursive", fontSize: 13, fontWeight: 700, color: '#c2410c', marginBottom: 18 }}>
-              <Heart size={13} style={{ fill: 'currentColor' }} /> Terapia · Tecnología · Amor
+              <Heart size={13} style={{ fill: 'currentColor' }} /> {isEN ? 'Therapy · Technology · Love' : 'Terapia · Tecnología · Amor'}
             </div>
             <h1 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(34px,5vw,58px)', fontWeight: 800, lineHeight: 1.15, color: '#1c1917', marginBottom: 18 }}>
               Impulsando el potencial de{' '}
@@ -639,7 +641,7 @@ export default function LandingPage() {
                   <div>
                     <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 15, color: '#1c1917' }}>ARIA</p>
                     <p style={{ fontSize: 11, color: '#22c55e', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} /> En línea · 24/7
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} /> {isEN ? 'Online · 24/7' : 'En línea · 24/7'}
                     </p>
                   </div>
                   <div style={{ marginLeft: 'auto', display: 'flex', gap: 5 }}>
@@ -828,7 +830,7 @@ export default function LandingPage() {
         </div>
         <div className="lp-map-card">
           <h3 style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 20, color: '#1c1917', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 7 }}>
-            <MapPin color="#ef4444" size={20} /> Visítanos
+            <MapPin color="#ef4444" size={20} /> {isEN ? 'Visit us' : 'Visítanos'}
           </h3>
           <p style={{ color: '#78716c', fontSize: 13, lineHeight: 1.75, marginBottom: 18 }}>Independencia, Pisco. Un ambiente seguro y adaptado para tus hijos.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 20 }}>

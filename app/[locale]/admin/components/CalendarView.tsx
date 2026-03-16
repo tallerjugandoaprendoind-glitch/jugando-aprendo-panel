@@ -70,7 +70,7 @@ function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) =>
         <div className="flex items-center justify-between mb-0.5">
           <span className={`text-[10px] font-black uppercase tracking-wider
             ${urgent ? 'text-red-600' : warning ? 'text-amber-600' : 'text-emerald-700'}`}>
-            {urgent ? '⚠️ Ending' : ('Session in progress')}
+            {urgent ? `⚠️ ${t('agenda.terminando') ?? 'Ending'}` : t('agenda.sesionEnCurso') ?? 'Session in progress'}
           </span>
           <span className={`text-xs font-black tabular-nums
             ${urgent ? 'text-red-600' : warning ? 'text-amber-600' : 'text-emerald-700'}`}>
@@ -213,7 +213,7 @@ function MonthlyCalendarView() {
       let payload: any[]
       const extra = { modalidad: modalidadCita }
       if (tipoSesion==='grupal') {
-        payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (${'Group'}: ${newApt.group_name||('No name')})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, ...extra }))
+        payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (${t('ui.grupal')}: ${newApt.group_name||t('common.sinNombre')})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, ...extra }))
       } else {
         payload = [{ child_id:newApt.child_id, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:newApt.service, is_group:false, notes:newApt.notes, status:newApt.status, ...extra }]
       }
@@ -246,7 +246,7 @@ function MonthlyCalendarView() {
         }
         toast.success(`✅ ${recurrenciaSemanas} ${t('agenda.citasRecurrenciaMensaje').replace('{tipo}', recurrencia === 'weekly' ? t('agenda.semanales') : t('agenda.quincenales'))}`)
       } else {
-        toast.success(`✅ Cita ${modalidadCita} agendada`)
+        toast.success(t('agenda.citaGuardada'))
       }
       resetForm(); cargarCitas()
     } catch (err:any) { toast.error('Error: ' + err.message) }
@@ -262,7 +262,7 @@ function MonthlyCalendarView() {
         body: JSON.stringify({ appointment_id: apt.id, child_id: apt.child_id, initiated_by: 'admin' , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const data = await res.json()
-      if (data.limitReached) { toast.error('⚠️ Monthly limit of 10,000 min reached. It resets neximo mes.'); return }
+      if (data.limitReached) { toast.error(`⚠️ ${t('agenda.limiteAlcanzado') ?? 'Monthly limit reached'}`); return }
       if (data.error) throw new Error(data.error)
       setVideoSession({ roomUrl: data.room_url, sessionId: data.session_id, appointmentId: apt.id })
       toast.success('📹 Sala creada · Padre notificado')
@@ -321,7 +321,7 @@ function MonthlyCalendarView() {
           <div>
             <h2 className="font-black text-2xl md:text-3xl tracking-tight flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
               <div className="p-2.5 rounded-2xl" style={{ background: "rgba(37,99,235,0.15)" }}><Calendar className="text-blue-500" size={28}/></div>
-              {'Appointment Calendar'}
+              {t('agenda.calendarioCitas')}
             </h2>
             <p className="text-slate-400 text-sm font-medium mt-1 ml-1">{apts.length} {"appointments"} · {todayApts.length} {"today"} · {virtualApts.length} {"virtual"}</p>
           </div>
@@ -486,7 +486,7 @@ function MonthlyCalendarView() {
                     {(['individual','grupal'] as const).map(tipo => (
                       <button key={tipo} onClick={()=>{setTipoSesion(tipo);setSelectedParticipants([]);setNewApt(p=>({...p,child_id:''}))}}
                         className={`p-4 rounded-2xl border-2 font-bold text-sm transition-all flex items-center justify-center gap-2 ${tipoSesion===tipo?(tipo==='individual'?'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-200':'bg-purple-600 text-white border-purple-600 shadow-lg shadow-purple-200'):'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
-                        {tipo==='individual'?<><User size={16}/>{'Individual'}</>:<><Users size={16}/>{'Group'}</>}
+                        {tipo==='individual'?<><User size={16}/>{t('ui.individual')}</>:<><Users size={16}/>{t('ui.grupal')}</>}
                       </button>
                     ))}
                   </div>
@@ -613,7 +613,7 @@ function MonthlyCalendarView() {
                   <button onClick={handleSave} disabled={isSaving}
                     className={`flex-[2] py-4 rounded-xl font-black text-sm uppercase tracking-widest shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 text-white ${modalidadCita==='virtual'?'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-indigo-200':tipoSesion==='grupal'?'bg-gradient-to-r from-purple-600 to-violet-600 shadow-purple-200':'bg-gradient-to-r from-blue-600 to-indigo-600 shadow-blue-200'}`}>
                     {isSaving?<Loader2 size={18} className="animate-spin"/>:modalidadCita==='virtual'?<Video size={18}/>:<Plus size={18}/>}
-                    {isSaving?('Saving...'):modalidadCita==='virtual'?('Schedule Virtual'):tipoSesion==='grupal'?('Schedule Group'):('Confirm Appointment')}
+                    {isSaving?t('common.guardando'):modalidadCita==='virtual'?t('agenda.agendarAhora'):tipoSesion==='grupal'?t('agenda.agendarAhora'):t('agenda.nuevaCita')}
                   </button>
                 </div>
               </div>

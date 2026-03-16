@@ -262,9 +262,9 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         {/* Time filter */}
         <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
           {[
-            { key: 'upcoming', label: '📅 Upcoming' },
-            { key: 'past', label: '📋 Historial' },
-            { key: 'all', label: '🗓️ Todas' },
+            { key: 'upcoming', label: `📅 ${t('familias.proximasCitas2')}` },
+            { key: 'past', label: `📋 ${t('ui.history')}` },
+            { key: 'all', label: `🗓️ ${t('common.todos')}` },
           ].map(({ key, label }) => (
             <button
               key={key}
@@ -284,8 +284,8 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         <div className="flex gap-2 overflow-x-auto pb-1">
           {[
             { key: 'all', label: 'Todas' },
-            { key: 'confirmed', label: '✅ Confirmadas' },
-            { key: 'pending', label: '⏳ Pending' },
+            { key: 'confirmed', label: `✅ ${t('agenda.confirmada')}` },
+            { key: 'pending', label: `⏳ ${t('common.pendiente')}` },
             { key: 'completed', label: '🏆 Completadas' },
             { key: 'cancelled', label: '❌ Canceladas' },
           ].map(({ key, label }) => (

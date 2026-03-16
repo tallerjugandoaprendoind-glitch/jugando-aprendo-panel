@@ -18,8 +18,8 @@ import { useToast } from '@/components/Toast'
 type TipoGrafico = 'lineas' | 'barras' | 'histograma' | 'pie'
 
 const getTiposGrafico = (isEN: boolean) => [
-  { id: 'lineas'    as TipoGrafico, emoji: '📈', label: 'Lines' },
-  { id: 'barras'    as TipoGrafico, emoji: '📊', label: 'Bars' },
+  { id: 'lineas' as TipoGrafico, emoji: '📈', label: 'Líneas / Lines' },
+  { id: 'barras' as TipoGrafico, emoji: '📊', label: 'Barras / Bars' },
   { id: 'histograma'as TipoGrafico, emoji: '🗂️', label: 'Histogram' },
   { id: 'pie'       as TipoGrafico, emoji: '🥧', label: 'Pie' },
 ]
@@ -36,7 +36,7 @@ const getAreaConfig = (isEN: boolean): Record<string, any> => ({
   comunicacion: { color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200',   label: 'Communication',   emoji: '💬' },
   conducta:     { color: 'text-red-700',    bg: 'bg-red-50 border-red-200',     label: 'Behavior',       emoji: '🎯' },
   cognitivo:    { color: 'text-violet-700', bg: 'bg-violet-50 border-violet-200',label: 'Cognitive',     emoji: '🧠' },
-  social:       { color: 'text-emerald-700',bg: 'bg-emerald-50 border-emerald-200',label: 'Social',      emoji: '👥' },
+  social:       { color: 'text-emerald-700',bg: 'bg-emerald-50 border-emerald-200',label: isEN ? 'Social' : 'Social', emoji: '👥' },
   autonomia:    { color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-200', label: 'Autonomy',      emoji: '🌟' },
   academico:    { color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200',label: 'Academic',     emoji: '📚' },
   sensorial:    { color: 'text-pink-700',   bg: 'bg-pink-50 border-pink-200',   label: 'Sensory',      emoji: '✋' },
@@ -389,7 +389,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                   {/* Header con selector de tipo */}
                   <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
-                      📈 Progress chart
+                      {t('programas.graficaProgreso')}
                     </p>
                     {/* Selector de tipo — solo analista */}
                     <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
@@ -735,7 +735,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Session recorded')
+      toast.success(t('common.exitoGuardado'))
       onSaved()
     } catch (e: any) {
       toast.error(e.message)
@@ -887,7 +887,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Program created')
+      toast.success(t('common.exitoGuardado'))
       onCreated()
     } catch (e: any) { toast.error(e.message) }
     finally { setSaving(false) }
@@ -995,13 +995,13 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
             <div className="space-y-3">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 3 · Procedimiento</p>
               {[
-                { key: 'materiales',       label: '📚 Materials',                   placeholder: 'Materials needed for the session' },
-                { key: 'sd_estimulo',      label: '📍 Sd / Discriminative stimulus',  placeholder: 'Verbal instruction or gesture that initiates behavior' },
-                { key: 'unidad_positiva',  label: '✅ Positive unit',              placeholder: 'Expected correct response' },
+                { key: 'materiales', label: `📚 ${t('programas.materiales')}`,                   placeholder: 'Materials needed for the session' },
+                { key: 'sd_estimulo', label: `📍 ${t('programas.sd')}`,  placeholder: 'Verbal instruction or gesture that initiates behavior' },
+                { key: 'unidad_positiva', label: `✅ ${t('programas.unidadPositiva')}`,              placeholder: 'Expected correct response' },
                 { key: 'unidad_negativa',  label: '❎ Negative unit',             placeholder: 'Incorrect response / error' },
-                { key: 'reforzadores',     label: '🤝🏼 Prompts',                      placeholder: 'As indicated in the set. E.g.: Gesture + verbal' },
-                { key: 'correccion_error', label: '📍 Error correction',         placeholder: 'How to correct an incorrect response' },
-                { key: 'generalizacion',   label: '➡️ Generalization',              placeholder: 'Encourage the family to practice at home.' },
+                { key: 'reforzadores', label: `🤝🏼 ${t('programas.ayudas')}`,                      placeholder: 'As indicated in the set. E.g.: Gesture + verbal' },
+                { key: 'correccion_error', label: `📍 ${t('programas.correccionError')}`,         placeholder: 'How to correct an incorrect response' },
+                { key: 'generalizacion', label: `➡️ ${t('programas.generalizacion')}`,              placeholder: 'Encourage the family to practice at home.' },
                 { key: 'notas_programa',   label: '🙈 Notes',                        placeholder: 'General program observations...' },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>

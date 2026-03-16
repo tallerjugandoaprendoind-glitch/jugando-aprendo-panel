@@ -12,7 +12,8 @@ const ESTADOS: Record<string, { label: string; color: string; bg: string }> = {
 }
 
 export default function AgendaSesiones({ childId }: { childId?: string }) {
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [sesiones, setSesiones]   = useState<any[]>([])
   const [cargando, setCargando]   = useState(true)
   const [vista, setVista]         = useState<'semana' | 'mes'>('semana')
@@ -112,8 +113,8 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
             className="bg-blue-600 text-white px-3 py-1 rounded-lg hover:bg-blue-500 transition-colors text-sm">◀</button>
           <div className="flex-1 text-center">
             <p className="font-semibold text-sm">
-              {new Date(inicio + 'T00:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })} –
-              {new Date(fin + 'T00:00:00').toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}
+              {new Date(inicio + 'T00:00:00').toLocaleDateString(locale === 'en' ? 'en-US' : 'es-PE', { day: 'numeric', month: 'short' })} –
+              {new Date(fin + 'T00:00:00').toLocaleDateString(locale === 'en' ? 'en-US' : 'es-PE', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           </div>
           <button onClick={() => { const d = new Date(fechaBase); d.setDate(d.getDate() + (vista === 'semana' ? 7 : 30)); setFechaBase(d) }}
@@ -145,7 +146,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
               <div className={`w-2 h-2 rounded-full ${fecha === hoy ? 'bg-blue-600' : 'bg-gray-300'}`} />
               <p className="text-xs font-semibold uppercase tracking-wide">
                 {fecha === hoy ? 'HOY - ' : ''}
-                {new Date(fecha + 'T00:00:00').toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' })}
+                {new Date(fecha + 'T00:00:00').toLocaleDateString(locale === 'en' ? 'en-US' : 'es-PE', { weekday: 'long', day: 'numeric', month: 'long' })}
               </p>
             </div>
             <div className="space-y-2 ml-4">
@@ -263,7 +264,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
             </div>
             <button onClick={crearSesion} disabled={guardando || !formNueva.fecha || !formNueva.hora_inicio}
               className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold text-sm hover:bg-blue-700 disabled:opacity-40 transition-colors">
-              {guardando ? 'Guardando...' : 'Crear sesión'}
+              {guardando ? (locale === 'en' ? 'Saving...' : 'Guardando...') : (locale === 'en' ? 'Create session' : 'Crear sesión')}
             </button>
           </div>
         </div>

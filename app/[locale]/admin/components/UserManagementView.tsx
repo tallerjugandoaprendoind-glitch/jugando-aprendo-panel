@@ -273,7 +273,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(`✅ Rol actualizado → ${newRole}`)
+      toast.success(t('usuarios.usuarioActualizado'))
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, profile: { ...u.profile, role: newRole } } : u))
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -297,7 +297,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(json.is_active ? '✅ User activated' : '⏸ User deactivated')
+      toast.success(json.is_active ? t('usuarios.activar') : t('usuarios.desactivar'))
       setUsers(prev => prev.map(u => u.id === user.id ? { ...u, profile: { ...u.profile, is_active: json.is_active } } : u))
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -317,7 +317,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Password updated')
+      toast.success(t('common.exitoGuardado'))
       setChangingPasswordFor(null); setNewPassword(''); setConfirmPassword('')
     } catch (err: any) {
       toast.error('Error: ' + err.message)
@@ -334,7 +334,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Tokens updated')
+      toast.success(t('common.exitoGuardado'))
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, profile: { ...u.profile, tokens: newTokens } } : u))
       setEditingTokensFor(null)
     } catch (err: any) {
@@ -351,7 +351,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success(`📧 Email enviado a ${user.email}`)
+      toast.success(t('common.enviando'))
     } catch (err: any) { toast.error('Error: ' + err.message) }
   }
 
@@ -373,13 +373,13 @@ export default function UserManagementView() {
           .update({ parent_id: linkingParent.id })
           .eq('id', selectedChildId)
         if (error) throw new Error(error.message)
-        toast.success(`✅ Patient linked (replaced previous guardian). To link`)
+        toast.success(t('usuarios.vincularPaciente'))
       } else {
         const { error } = await sb.from('children')
           .update({ parent_id: linkingParent.id })
           .eq('id', selectedChildId)
         if (error) throw new Error(error.message)
-        toast.success(`✅ ${child.name} linked to ${linkingParent.profile?.full_name || linkingParent.email}`)
+        toast.success(t('usuarios.vincularPaciente'))
       }
 
       setChildren(prev => prev.map(c => c.id === selectedChildId ? { ...c, parent_id: linkingParent.id } : c))
@@ -411,7 +411,7 @@ export default function UserManagementView() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ User created')
+      toast.success(t('common.exitoGuardado'))
       setShowCreateModal(false)
       setCreateForm({ email: '', password: '', full_name: '', role: 'especialista', specialty: '' })
       cargarUsuarios()
@@ -637,7 +637,7 @@ export default function UserManagementView() {
                             const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' }, body: JSON.stringify({ action: 'confirm_email', userId: user.id }) })
                             const json = await res.json()
                             if (json.error) throw new Error(json.error)
-                            toast.success('✅ Email confirmed')
+                            toast.success(t('common.exitoGuardado'))
                             cargarUsuarios()
                           } catch (err: any) { toast.error('Error: ' + err.message) }
                         }}
@@ -722,7 +722,7 @@ export default function UserManagementView() {
               <select value={createForm.role} onChange={e => setCreateForm(f => ({ ...f, role: e.target.value }))}
                 className="w-full px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 style={{ background: 'var(--input-bg)', border: '1px solid var(--input-border)', color: 'var(--text-primary)' }}>
-                <option value="jefe">👑 Director — Acceso total</option>
+                <option value="jefe">👑 {isEN ? 'Director — Full access' : 'Director — Acceso total'}</option>
                 <option value="especialista">{t('ui.specialist_role')}</option>
                 <option value="padre">{t('usuarios.rolPadre')}</option>
               </select>

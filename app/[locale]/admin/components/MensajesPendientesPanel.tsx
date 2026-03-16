@@ -96,7 +96,7 @@ export default function MensajesPendientesPanel() {
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
-      toast.success('✅ Mensaje aprobado y enviado al padre/madre')
+      toast.success(t('common.exitoGuardado'))
       setEditingId(null)
       loadMessages()
     } catch (err: any) {
@@ -127,8 +127,8 @@ export default function MensajesPendientesPanel() {
   }
 
   const sourceLabel: Record<string, string> = {
-    parent_form: '📝 Parent Form', session_report: '📊 Session Report',
-    neuroforma: '🧠 NeuroForm', evaluacion: '📋 Assessment', entorno_hogar: '🏠 Home Environment',
+    parent_form: `📝 ${t('evaluaciones.formularioClinico')}`, session_report: `📊 ${t('especialista.resumenClinico2')}`,
+    neuroforma: `🧠 ${t('evaluaciones.titulo')}`, evaluacion: `📋 ${t('evaluaciones.nuevo')}`, entorno_hogar: `🏠 ${t('evaluaciones.entornoHogar')}`,
   }
   const pendingCount = messages.filter(m => m.status === 'pending_approval').length
 
@@ -167,9 +167,9 @@ export default function MensajesPendientesPanel() {
       {/* Tabs */}
       <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
         {([
-          { key: 'pending_approval', label: '⏳ Pending' },
-          { key: 'approved',         label: '✅ Enviados' },
-          { key: 'rejected',         label: '🗑️ Descartados' },
+          { key: 'pending_approval', label: `⏳ ${t('common.pendiente')}` },
+          { key: 'approved',         label: `✅ ${t('evaluaciones.enviados')}` },
+          { key: 'rejected',         label: `🗑️ ${t('especialista.rechazado')}` },
         ] as const).map(({ key, label }) => (
           <button key={key} onClick={() => setStatusFilter(key)}
             className={`flex-1 py-2.5 px-2 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-1.5 ${statusFilter === key ? 'bg-white text-slate-800 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
@@ -235,7 +235,7 @@ export default function MensajesPendientesPanel() {
                           msg.status === 'pending_approval' ? 'bg-amber-50 text-amber-700 border-amber-200' :
                           msg.status === 'approved' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                           'bg-slate-100 text-slate-500 border-slate-200'}`}>
-                          {msg.status === 'pending_approval' ? '⏳ Pending' : msg.status === 'approved' ? '✅ Sent' : '🗑️ Discarded'}
+                          {msg.status === 'pending_approval' ? `⏳ ${t('common.pendiente')}` : msg.status === 'approved' ? `✅ ${t('evaluaciones.enviados')}` : `🗑️ ${t('especialista.rechazado')}`}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 flex-wrap text-xs text-slate-400">
@@ -371,7 +371,7 @@ export default function MensajesPendientesPanel() {
                           <button onClick={() => approveMessage(msg.id)} disabled={!!isLoadingApprove}
                             className="flex-[2] py-3 px-4 bg-gradient-to-r from-emerald-500 to-green-600 text-white rounded-xl font-black text-sm hover:opacity-90 transition-all shadow-lg shadow-emerald-200 disabled:opacity-50 flex items-center justify-center gap-2">
                             {isLoadingApprove ? <Loader2 size={16} className="animate-spin"/> : <Send size={16}/>}
-                            {isLoadingApprove ? ('Sending...') : ('✅ Approve & Send to Parent')}
+                            {isLoadingApprove ? t('common.enviando') : `✅ ${t('evaluaciones.enviarPadres')}`}
                           </button>
                         </div>
                       </div>

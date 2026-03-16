@@ -40,7 +40,7 @@ function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string
         ])
         const all = [
           ...(r1.data || []).map((e: any) => ({ ...e, tipo: e.form_type || 'evaluacion', fuente: '📋' })),
-          ...(r2.data || []).map((e: any) => ({ ...e, form_title: e.form_title || ('Anamnesis'), tipo: 'anamnesis', fuente: '📄' })),
+          ...(r2.data || []).map((e: any) => ({ ...e, form_title: e.form_title || t('ui.anamnesis'), tipo: 'anamnesis', fuente: '📄' })),
           ...(r3.data || []).map((e: any) => ({ ...e, created_at: e.fecha_sesion || e.created_at, form_title: e.form_title || ('ABA Session'), tipo: 'aba', fuente: '🎯' })),
           ...(r4.data || []).map((e: any) => ({ ...e, form_title: e.form_title || ('Home Environment'), tipo: 'entorno', fuente: '🏠' })),
         ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -153,9 +153,9 @@ function PatientsView() {
 
     const alertaColor = (dias: number | null) => {
         if (dias === null) return { bg: 'bg-slate-100', text: 'text-slate-500', label: t('pacientes.sinSesiones') }
-        if (dias <= 14) return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: `${dias}d ago` }
-        if (dias <= 30) return { bg: 'bg-amber-100', text: 'text-amber-700', label: `${dias}d ago ⚠️` }
-        return { bg: 'bg-red-100', text: 'text-red-700', label: `${dias}d ago 🚨` }
+        if (dias <= 14) return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: `${dias} ${t('common.dias')}` }
+        if (dias <= 30) return { bg: 'bg-amber-100', text: 'text-amber-700', label: `${dias} ${t('common.dias')} ⚠️` }
+        return { bg: 'bg-red-100', text: 'text-red-700', label: `${dias} ${t('common.dias')} 🚨` }
     }
 
     const calcularEdadDesdeString = (birthDate: string): number => {
@@ -244,9 +244,9 @@ function PatientsView() {
             if (error) {
                 alert(`❌ ERROR: ${error.message}`);
             } else if (!data || data.length === 0) {
-                alert("⚠️ No records updated. Check permissions.");
+                alert(t('ui.noActualizo'));
             } else {
-                alert(`✅ Saved successfully. Age: ${edad} years.`);
+                alert(`✅ ${t('common.exitoGuardado')} · ${t('pacientes.edad')}: ${edad} ${t('common.anos')}.`);
                 await cargarPacientes();
                 setIsEditing(false);
                 setShowPatientModal(false);
@@ -282,7 +282,7 @@ function PatientsView() {
                     </div>
                     <div className="md:col-span-4">
                         <select value={filterDiagnosis} onChange={(e) => setFilterDiagnosis(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-purple-500 focus:bg-white transition-all font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>
-                            {diagnosticosUnicos.map(diag => <option key={diag} value={diag}>{diag === 'todos' ? '🔍 All' : `📋 ${diag}`}</option>)}
+                            {diagnosticosUnicos.map(diag => <option key={diag} value={diag}>{diag === 'todos' ? `🔍 ${t('common.todos')}` : `📋 ${diag}`}</option>)}
                         </select>
                     </div>
                     <div className="md:col-span-3">
@@ -313,7 +313,7 @@ function PatientsView() {
                                     <div className="flex items-center justify-between">
                                         <span className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-600 font-bold text-xs border border-purple-100">{(nino.diagnosis === 'En evaluación' ? t('pacientes.enEvaluacion') : nino.diagnosis) || t('pacientes.enEvaluacion')}</span>
                                         <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-black text-xs">
-                                            {nino.age ? `${nino.age}a` : "N/A"}
+                                            {nino.age ? `${nino.age} ${t('common.anos')}` : t('common.sinDatos')}
                                         </span>
                                     </div>
                                 </div>
@@ -341,7 +341,7 @@ function PatientsView() {
                                         </td>
                                         <td className="p-4 lg:p-6">
                                             <span className="font-black text-slate-700" style={{ color: "var(--text-secondary)" }}>
-                                                {nino.age ? `${nino.age} years` : "N/A"}
+                                                {nino.age ? `${nino.age} ${t('common.anos')}` : t('common.sinDatos')}
                                             </span>
                                         </td>
                                         <td className="p-4 lg:p-6"><span className="px-4 py-2 rounded-xl text-xs font-black bg-purple-50 text-purple-600 border border-purple-100 inline-block">{(nino.diagnosis === 'En evaluación' ? t('pacientes.enEvaluacion') : nino.diagnosis) || t('pacientes.enEvaluacion')}</span></td>
@@ -381,9 +381,9 @@ function PatientsView() {
                                     </div>
                                     <div>
                                         <h3 className="text-2xl font-black">{isEditing ? t('pacientes.titulo') : selectedPatient.name}</h3>
-                                        <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || "Pending diagnosis"}</p>
+                                        <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || t('pacientes.enEvaluacion')}</p>
                                         {!isEditing && selectedPatient.age && (
-                                          <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} {"years"}</p>
+                                          <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} {t('common.anos')}</p>
                                         )}
                                     </div>
                                 </div>
@@ -406,9 +406,9 @@ function PatientsView() {
                             {!isEditing && (
                               <div className="flex gap-2 mb-4 border-b border-slate-100 pb-4">
                                 {[
-                                  { id: 'info', label: '📋 Info', icon: User },
+                                  { id: 'info', label: `📋 ${t('pacientes.informacion')}`, icon: User },
                                   { id: 'programas', label: '📈 ABA Programs', icon: Activity },
-                                  { id: 'evaluaciones', label: '📝 Assessments', icon: ClipboardList },
+                                  { id: 'evaluaciones', label: `📝 ${t('pacientes.evaluaciones')}`, icon: ClipboardList },
                                   { id: 'vadi', label: '🤖 ARIA', icon: Brain },
                                 ].map(tab => (
                                   <button key={tab.id} onClick={() => setPatientTab(tab.id as any)}
@@ -425,7 +425,7 @@ function PatientsView() {
                             {!isEditing && patientTab === 'info' && (
                                 <>
                                     <InfoRow label={t('pacientes.fechaNacimiento')} value={selectedPatient.birth_date ? new Date(selectedPatient.birth_date).toLocaleDateString(toBCP47(locale)) : t('pacientes.noRegistrada')} icon={<Calendar size={16}/>}/>
-                                    <InfoRow label="Edad" value={selectedPatient.age ? `${selectedPatient.age} years` : "No disponible"} icon={<Baby size={16}/>}/>
+                                    <InfoRow label={t('pacientes.edad')} value={selectedPatient.age ? `${selectedPatient.age} ${t('common.anos')}` : t('common.sinDatos')} icon={<Baby size={16}/>}/>
                                     <InfoRow label={t('pacientes.diagnostico')} value={selectedPatient.diagnosis || t('pacientes.enEvaluacion')} icon={<Stethoscope size={16}/>}/>
                                 </>
                             )}

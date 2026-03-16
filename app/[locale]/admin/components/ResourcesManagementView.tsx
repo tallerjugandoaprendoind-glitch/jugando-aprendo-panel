@@ -92,7 +92,7 @@ export default function ResourcesManagementView() {
           tags: newResource.tags,
         }).eq('id', editingId)
         if (error) throw new Error(error.message)
-        toast.success('✅ Recurso actualizado correctamente')
+        toast.success(t('common.exitoGuardado'))
       } else {
         const res = await fetch('/api/admin/resources', {
           method: 'POST',
@@ -105,7 +105,7 @@ export default function ResourcesManagementView() {
         })
         const json = await res.json()
         if (json.error) throw new Error(json.error)
-        toast.success('✅ Recurso compartido correctamente')
+        toast.success(t('common.exitoGuardado'))
       }
       setShowForm(false)
       setEditingId(null)
@@ -239,7 +239,7 @@ export default function ResourcesManagementView() {
                       <div className="flex items-center gap-1 mt-0.5">
                         {resource.is_global ? (
                           <span className="flex items-center gap-1 text-[9px] font-bold text-slate-500">
-                            <Globe size={9}/> {'For everyone'}
+                            <Globe size={9}/> {t('recursos.paraFamilias')}
                           </span>
                         ) : (
                           <span className="flex items-center gap-1 text-[9px] font-bold text-indigo-600">

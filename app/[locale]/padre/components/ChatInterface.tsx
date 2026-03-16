@@ -397,7 +397,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
       {/* Capacidades */}
       <div className="grid grid-cols-2 gap-2 w-full max-w-sm mb-6">
         {[
-          { icon: '📊', label: 'Explico reportes' },
+          { icon: '📊', label: isEN ? 'Explain reports' : 'Explico reportes' },
           { icon: '🏠', label: 'Actividades en casa' },
           { icon: '💬', label: 'Respondo dudas' },
           { icon: '💙', label: 'Apoyo emocional' },
@@ -477,7 +477,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
     }
     setMessages(p => [...p,
       { role: 'user', text: opt },
-      { role: 'ai', text: 'Thank you for sharing how you feel! 💜 Your wellbeing also mattersa mucho para el progreso de tu hijo/a.' }
+      { role: 'ai', text: isEN ? 'Thank you for sharing how you feel! 💜 Your wellbeing also matters a lot for your child\'s progress.' : '¡Gracias por compartir cómo te sientes! 💜 Tu bienestar también importa mucho para el progreso de tu hijo/a.' }
     ])
   }, [parentId, childId])
 
@@ -514,7 +514,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         headers: { 'Content-Type': 'application/json', 'x-locale': locale || 'es' },
         body: JSON.stringify({
           question: isEmotional
-            ? `${txt}\n\n[INSTRUCTION: The parent is experiencing emotional burden. Validate first with genuine warmth antes de información clínica.]`
+            ? `${txt}\n\n[INSTRUCTION: The parent is experiencing emotional burden. Validate first with genuine warmth before sharing clinical information.]`
             : txt,
           childId,
           childName,
@@ -798,7 +798,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
           {/* Hint de voz */}
           {micSupported && (
             <p className="text-center text-[10px] text-slate-400 mt-2 font-medium">
-              {listening ? '🔴 Recording · Speak clearly near the microphone' : '🎤 Tap the microphone to spblar · ⌨️ O escribe tu mensaje'}
+              {listening ? (isEN ? '🔴 Recording · Speak clearly near the microphone' : '🔴 Grabando · Habla claro cerca del micrófono') : (isEN ? '🎤 Tap the microphone or type your message' : '🎤 Toca el micrófono · ⌨️ O escribe tu mensaje')}
             </p>
           )}
           <p className="text-center text-[10px] text-slate-300 mt-1 font-medium">

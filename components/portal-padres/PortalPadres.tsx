@@ -19,9 +19,9 @@ export default function PortalPadres({ childId, parentUserId, childName }: Porta
   const tabs = [
     { id: 'inicio',   label: 'Inicio',    icono: '🏠' },
     { id: 'chat',     label: 'Preguntas', icono: '💬' },
-    { id: 'tareas',   label: 'Tareas',    icono: '📋' },
-    { id: 'progreso', label: 'Progreso',  icono: '📈' },
-    { id: 'citas',    label: 'Citas',     icono: '📅' },
+    { id: 'tareas',   label: locale === 'en' ? 'Tasks' : 'Tareas', icono: '📋' },
+    { id: 'progreso', label: locale === 'en' ? 'Progress' : 'Progreso', icono: '📈' },
+    { id: 'citas',    label: locale === 'en' ? 'Appointments' : 'Citas', icono: '📅' },
   ]
 
   return (
@@ -213,12 +213,13 @@ function CitasTab({ childId }: { childId: string }) {
 }
 
 function CitaCard({ cita, futura }: { cita: any; futura?: boolean }) {
+  const { locale } = useI18n()
   const estadoConfig: Record<string, { bg: string; text: string; label: string }> = {
     programada: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Programada' },
     confirmada: { bg: 'bg-green-100',  text: 'text-green-700',  label: 'Confirmada' },
     realizada:  { bg: 'bg-blue-100',   text: 'text-blue-700',   label: 'Realizada' },
     cancelada:  { bg: 'bg-red-100',    text: 'text-red-700',    label: 'Cancelada' },
-    no_asistio: { bg: 'bg-gray-100',   text: 'text-gray-700',   label: 'No asistió' },
+    no_asistio: { bg: 'bg-gray-100', text: 'text-gray-700', label: locale === 'en' ? 'Absent' : 'No asistió' },
   }
   const cfg = estadoConfig[cita.estado] || estadoConfig.programada
 

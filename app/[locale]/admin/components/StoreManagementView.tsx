@@ -129,11 +129,11 @@ function ProductModal({
       if (product) {
         const { error } = await supabase.from('store_products').update(payload).eq('id', product.id)
         if (error) throw error
-        toast.success('Product updated ✅')
+        toast.success(t('common.exitoGuardado'))
       } else {
         const { error } = await supabase.from('store_products').insert(payload)
         if (error) throw error
-        toast.success('Product created ✅')
+        toast.success(t('common.exitoGuardado'))
       }
       onSaved()
     } catch (e: any) {
@@ -217,7 +217,7 @@ function ProductModal({
           <div>
             <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">{t('tienda.tipoProd')}</label>
             <div className="grid grid-cols-2 gap-3">
-              {([['fisico', '📦', 'Physical', 'Picked up at center'], ['digital', '📄', 'Digital', 'PDF or downloadable file']] as const).map(([val, emoji, lbl, desc]) => (
+              {([['fisico', '📦', isEN ? 'Physical' : t('tienda.titulo'), isEN ? 'Picked up at center' : t('ui.physical_items_note') ?? ''], ['digital', '📄', isEN ? 'Digital' : t('ui.digitales'), isEN ? 'PDF or downloadable file' : t('tienda.articuloDigital')]] as const).map(([val, emoji, lbl, desc]) => (
                 <button key={val} type="button" onClick={() => setForm((f: any) => ({ ...f, tipo: val }))}
                   className={`p-4 rounded-2xl border-2 text-left transition-all ${form.tipo === val ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-300'}`}>
                   <div className="text-2xl mb-1">{emoji}</div>
@@ -272,7 +272,7 @@ function ProductModal({
           <div className="grid grid-cols-2 gap-4">
             {[
               { key: 'activo', label: 'Visible in store', desc: 'Parents can see it', color: 'text-emerald-600' },
-              { key: 'destacado', label: 'Featured product', desc: 'Appears first with ⭐', color: 'text-amber-600' },
+              { key: 'destacado', label: isEN ? 'Featured product' : t('common.activo'), desc: isEN ? 'Appears first with ⭐' : '', color: 'text-amber-600' },
             ].map(({ key, label, desc, color }) => (
               <button key={key} type="button" onClick={() => setForm((f: any) => ({ ...f, [key]: !f[key] }))}
                 className={`flex items-center gap-3 p-4 rounded-2xl border-2 text-left transition-all ${form[key] ? `border-current bg-opacity-5 ${color}` : 'border-slate-200 text-slate-400'}`}>
@@ -415,7 +415,7 @@ export default function StoreManagementView() {
         {[
           { label: 'Productos', value: stats.totalProductos, icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'Active', value: stats.activos, icon: ToggleRight, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'Stock bajo (≤3)', value: stats.stockBajo, icon: AlertTriangle, color: stats.stockBajo > 0 ? 'text-red-600' : 'text-slate-400', bg: stats.stockBajo > 0 ? 'bg-red-50' : 'bg-slate-50' },
+          { label: isEN ? 'Low stock (≤3)' : 'Stock bajo (≤3)', value: stats.stockBajo, icon: AlertTriangle, color: stats.stockBajo > 0 ? 'text-red-600' : 'text-slate-400', bg: stats.stockBajo > 0 ? 'bg-red-50' : 'bg-slate-50' },
           { label: 'Pedidos pendientes', value: stats.pedidosPendientes, icon: Clock, color: stats.pedidosPendientes > 0 ? 'text-amber-600' : 'text-slate-400', bg: stats.pedidosPendientes > 0 ? 'bg-amber-50' : 'bg-slate-50' },
           { label: 'Total vendido', value: `S/ ${stats.totalVendido.toFixed(2)}`, icon: DollarSign, color: 'text-violet-600', bg: 'bg-violet-50' },
         ].map(({ label, value, icon: Icon, color, bg }) => (
@@ -457,7 +457,7 @@ export default function StoreManagementView() {
             {['todos', 'fisico', 'digital'].map(f => (
               <button key={f} onClick={() => setFilterTipo(f)}
                 className={`px-4 py-2.5 rounded-xl border text-sm font-bold capitalize transition-all ${filterTipo === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-600 hover:border-blue-300'}`}>
-                {f === 'todos' ? ('All') : f === 'fisico' ? ('📦 Physical') : ('📄 Digital')}
+                {f === 'todos' ? t('common.todos') : f === 'fisico' ? `📦 ${isEN ? 'Physical' : t('ui.physical_items_note')?.split(' ')[0] ?? ''}` : `📄 ${t('ui.digitales')}`}
               </button>
             ))}
           </div>
@@ -488,7 +488,7 @@ export default function StoreManagementView() {
                     {/* Badges */}
                     <div className="absolute top-3 left-3 flex gap-2">
                       <span className={`text-xs font-black px-2.5 py-1 rounded-full ${p.tipo === 'digital' ? 'bg-violet-600 text-white' : 'bg-slate-700 text-white'}`}>
-                        {p.tipo === 'digital' ? '📄 Digital' : ('📦 Physical')}
+                        {p.tipo === 'digital' ? `📄 ${t('ui.digitales')}` : `📦 ${isEN ? 'Physical' : ''}`}
                       </span>
                       {p.destacado && <span className="text-xs font-black px-2.5 py-1 rounded-full bg-amber-400 text-white">⭐ Featured</span>}
                     </div>

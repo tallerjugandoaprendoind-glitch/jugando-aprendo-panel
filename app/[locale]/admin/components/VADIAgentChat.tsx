@@ -35,7 +35,7 @@ export default function VADIAgentChat({
   const [sugerencias] = useState([
     childId ? (`How is ${childName||'this patient'}'s overall progress?`) : ('What are the best reinforcers for nonverbal ASD?'),
     'What does Malott say about escape extinction?',
-    childId ? `What programs do you recommend for ${childName || 'this patient'}?` : 'How to applco el modelo ético IBAO ante un dilema?',
+    childId ? `What programs do you recommend for ${childName || 'this patient'}?` : isEN ? 'How to apply the IBAO ethical model to a dilemma?' : '¿Cómo aplicar el modelo ético IBAO ante un dilema?',
     'What are the DSM-5 criteria for ASD level 2?',
   ])
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -122,7 +122,7 @@ export default function VADIAgentChat({
             <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-black">BETA</span>
           </h3>
           <p className="text-violet-200 text-[10px]">
-            {childId ? `${'Active case'}: ${childName || ('Patient')}` : 'Knowledge: Malott · DSM-5 · IBAO · LuTr'}
+            {childId ? `${isEN ? 'Active case' : t('ui.viendo')} ${childName || (isEN ? 'Patient' : t('ui.seleccionarPaciente2'))}` : 'Knowledge: Malott · DSM-5 · IBAO · LuTr'}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">

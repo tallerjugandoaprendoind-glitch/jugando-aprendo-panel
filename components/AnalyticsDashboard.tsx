@@ -47,6 +47,7 @@ interface Trend {
 // ==============================================================================
 export default function AnalyticsDashboard({ childId, childName, onClose }: AnalyticsDashboardProps) {
   const { t, locale } = useI18n()
+  const isEN = locale === 'en'
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
   const [kpiData, setKpiData] = useState<KPIData | null>(null);
@@ -176,7 +177,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
             <div className="flex items-center gap-3 text-sm">
               <Calendar className="w-4 h-4" />
               <span className="opacity-90">
-                Último análisis: {fechaAnalisis}
+                {isEN ? `Last analysis: ${fechaAnalisis}` : `Último análisis: ${fechaAnalisis}`}
               </span>
             </div>
           </div>
@@ -225,7 +226,7 @@ export default function AnalyticsDashboard({ childId, childName, onClose }: Anal
                   <h3 className="text-xl font-black text-gray-800">{t('dashboard.evolucionProgreso')}</h3>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
                     <Activity className="w-4 h-4" />
-                    <span>Últimas {chartData.length} sesiones</span>
+                    <span>{isEN ? `Last ${chartData.length} sessions` : `Últimas ${chartData.length} sesiones`}</span>
                   </div>
                 </div>
                 
@@ -629,13 +630,15 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
 
 // BARRA DE ÁREA DE DESARROLLO — diseño premium con gradiente y badge
 function DevelopmentAreaBar({ area, score, maxScore }: any) {
+  const { locale } = useI18n()
+  const isEN = locale === 'en'
   const percentage = Math.min(100, Math.max(0, (score / maxScore) * 100))
 
   const getStyle = (pct: number) => {
     if (pct >= 75) return { gradient: 'from-emerald-400 to-emerald-600', label: 'Excelente', labelColor: 'text-emerald-600 bg-emerald-50' }
     if (pct >= 50) return { gradient: 'from-blue-400 to-indigo-500',    label: 'Bien',      labelColor: 'text-indigo-600 bg-indigo-50'  }
     if (pct >= 25) return { gradient: 'from-amber-400 to-orange-500',   label: 'Regular',   labelColor: 'text-amber-600 bg-amber-50'    }
-    return              { gradient: 'from-red-400 to-rose-600',         label: 'Atención',  labelColor: 'text-rose-600 bg-rose-50'       }
+    return              { gradient: 'from-red-400 to-rose-600',         label: isEN ? 'Attention' : 'Atención', labelColor: 'text-rose-600 bg-rose-50'       }
   }
 
   const style = getStyle(percentage)
