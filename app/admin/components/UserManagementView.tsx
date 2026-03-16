@@ -220,10 +220,11 @@ export default function UserManagementView() {
       if (json.error) throw new Error(json.error)
       setUsers(json.data || [])
 
-      // Cargar niños con soporte para múltiples padres
+      // Cargar niños usando API admin (bypassa RLS)
       try {
-        const { data: kids } = await sb.from('children').select('id, name, parent_id').order('name')
-        if (kids) setChildren(kids)
+        const kidsRes = await fetch('/api/admin/children')
+        const kidsJson = await kidsRes.json()
+        if (kidsJson.data) setChildren(kidsJson.data)
       } catch {}
     } catch (err: any) {
       toast.error('Error cargando usuarios: ' + err.message)
@@ -354,21 +355,14 @@ export default function UserManagementView() {
       const child = children.find(c => c.id === selectedChildId)
       if (!child) throw new Error('Paciente no encontrado')
 
-      // Si ya tiene un parent_id, verificar si es diferente (2do padre)
-      if (child.parent_id && child.parent_id !== linkingParent.id) {
-        // Guardar el 2do padre en parent_id2 si existe la columna, o sobreescribir
-        const { error } = await sb.from('children')
-          .update({ parent_id: linkingParent.id })
-          .eq('id', selectedChildId)
-        if (error) throw new Error(error.message)
-        toast.success(`✅ Paciente vinculado (reemplazó al tutor anterior). Para vincular 2 tutores simultáneamente, consultá al admin de DB.`)
-      } else {
-        const { error } = await sb.from('children')
-          .update({ parent_id: linkingParent.id })
-          .eq('id', selectedChildId)
-        if (error) throw new Error(error.message)
-        toast.success(`✅ ${child.name} vinculado a ${linkingParent.profile?.full_name || linkingParent.email}`)
-      }
+      const linkRes = await fetch('/api/admin/children', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId: selectedChildId, parentId: linkingParent.id })
+      })
+      const linkJson = await linkRes.json()
+      if (linkJson.error) throw new Error(linkJson.error)
+      toast.success(`✅ ${child.name} vinculado a ${linkingParent.profile?.full_name || linkingParent.email}`)
 
       setChildren(prev => prev.map(c => c.id === selectedChildId ? { ...c, parent_id: linkingParent.id } : c))
       setLinkingParent(null); setSelectedChildId('')
@@ -379,10 +373,13 @@ export default function UserManagementView() {
 
   const handleUnlinkChild = async (childId: string) => {
     try {
-      const { createClient } = await import('@supabase/supabase-js')
-      const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-      const { error } = await sb.from('children').update({ parent_id: null }).eq('id', childId)
-      if (error) throw new Error(error.message)
+      const res = await fetch('/api/admin/children', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId, parentId: null })
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
       setChildren(prev => prev.map(c => c.id === childId ? { ...c, parent_id: null } : c))
       toast.success('Paciente desvinculado')
     } catch (err: any) { toast.error('Error: ' + err.message) }
