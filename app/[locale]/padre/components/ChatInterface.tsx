@@ -363,9 +363,9 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
   const isEN = locale === 'en'
 
   const quick = [
-    { icon: '📋', text: 'How did the last session go?', color: '#eef2ff', border: '#c7d2fe' },
-    { icon: '🏠', text: 'Give me tips for home', color: '#f0fdf4', border: '#bbf7d0' },
-    { icon: '🎯', text: 'What objectives are being worked on?', color: '#fff7ed', border: '#fed7aa' },
+    { icon: '📋', text: isEN ? 'How did the last session go?' : '¿Cómo fue la última sesión?', color: '#eef2ff', border: '#c7d2fe' },
+    { icon: '🏠', text: isEN ? 'Give me tips for home' : 'Dame consejos para casa', color: '#f0fdf4', border: '#bbf7d0' },
+    { icon: '🎯', text: isEN ? 'What objectives are being worked on?' : '¿Qué objetivos se trabajan?', color: '#fff7ed', border: '#fed7aa' },
     { icon: '💙', text: 'I need emotional support', color: '#fdf2f8', border: '#f9a8d4' },
   ]
   return (
@@ -398,7 +398,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
       <div className="grid grid-cols-2 gap-2 w-full max-w-sm mb-6">
         {[
           { icon: '📊', label: isEN ? 'Explain reports' : 'Explico reportes' },
-          { icon: '🏠', label: 'Actividades en casa' },
+          { icon: '🏠', label: isEN ? 'Home activities' : 'Actividades en casa' },
           { icon: '💬', label: 'Respondo dudas' },
           { icon: '💙', label: 'Apoyo emocional' },
         ].map(({ icon, label }) => (

@@ -318,8 +318,8 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           <h3 className="font-bold text-slate-800 text-lg mb-2">{t('ui.no_appointments_here')}</h3>
           <p className="text-slate-400 text-sm mb-6">
             {filter === 'upcoming' 
-              ? ('You have no upcoming appointments scheduled.')
-              : 'No hay citas en el historial seleccionado.'}
+              ? (isEN ? 'You have no upcoming appointments scheduled.' : t('familias.sinCitas'))
+              : (isEN ? 'No appointments in selected history' : 'No hay citas en el historial seleccionado.')}
           </p>
           {filter === 'upcoming' && (
             <button

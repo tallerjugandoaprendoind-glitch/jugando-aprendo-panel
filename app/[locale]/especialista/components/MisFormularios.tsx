@@ -569,9 +569,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
   const [selectedForm, setSelectedForm] = useState<any>(null)
 
   useEffect(() => {
-    supabase.from('children').select('id, name, age, birth_date, diagnosis')
-      .eq('is_active', true).order('name')
-      .then(({ data }) => setChildren(data || []))
+    fetch('/api/admin/children').then(r=>r.json()).then(j=> setChildren(j.data || []))
   }, [])
 
   if (selectedForm) return (

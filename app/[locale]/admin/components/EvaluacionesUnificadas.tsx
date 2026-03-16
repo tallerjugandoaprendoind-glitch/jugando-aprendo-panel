@@ -1254,8 +1254,8 @@ export default function EvaluacionesUnificadas() {
 
   const loadData = async () => {
     setLoading(true)
-    const [childrenRes, parentsRes, sentRes, formResponsesRes, anamnesisRes, abaRes, entornoRes] = await Promise.all([
-      supabase.from('children').select('id, name, age, birth_date, diagnosis').order('name'),
+    const childrenAdminRes = await fetch('/api/admin/children').then(r=>r.json())
+    const [parentsRes, sentRes, formResponsesRes, anamnesisRes, abaRes, entornoRes] = await Promise.all([
       supabase.from('profiles').select('id, full_name, email').eq('role', 'padre'),
       supabase.from('parent_forms').select('*, profiles(full_name, email)').order('created_at', { ascending: false }),
       supabase.from('form_responses').select('id, form_type, form_title, ai_analysis, created_at, child_id, children(name)').order('created_at', { ascending: false }).limit(30),
@@ -1263,7 +1263,7 @@ export default function EvaluacionesUnificadas() {
       supabase.from('registro_aba').select('id, form_title, datos, child_id, fecha_sesion, children(name)').order('fecha_sesion', { ascending: false }).limit(10),
       supabase.from('registro_entorno_hogar').select('id, form_title, datos, child_id, fecha_visita, created_at, children(name)').order('fecha_visita', { ascending: false }).limit(10),
     ])
-    if (childrenRes.data) setChildren(childrenRes.data)
+    if (childrenAdminRes.data) setChildren(childrenAdminRes.data)
     if (parentsRes.data) setParents(parentsRes.data)
     if (sentRes.data) setSentForms(sentRes.data)
 

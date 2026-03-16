@@ -320,7 +320,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           <div className="grid grid-cols-3 gap-3">
             {[
               { step: '1', label: 'You create', desc: 'Record evaluation or session note', color: 'bg-amber-100 text-amber-800' },
-              { step: '2', label: 'Jefe revisa', desc: 'El admin valida y aprueba o da feedback', color: 'bg-orange-100 text-orange-800' },
+              { step: '2', label: isEN ? 'Supervisor reviews' : 'Jefe revisa', desc: isEN ? 'Admin validates and approves or gives feedback' : 'El admin valida y aprueba o da feedback', color: 'bg-orange-100 text-orange-800' },
               { step: '3', label: 'Parents see', desc: 'Once approved, it reaches the family', color: 'bg-green-100 text-green-800' },
             ].map(({ step, label, desc, color }) => (
               <div key={step} className={`${color} rounded-xl p-3 text-center`}>

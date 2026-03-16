@@ -168,7 +168,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
   const cargarTodo = async () => {
     setLoading(true)
     try {
-      const { data: ninos } = await supabase.from('children').select('*').order('name')
+      const ninos_res = await fetch('/api/admin/children'); const ninos_json = await ninos_res.json(); const ninos = ninos_json.data || []
       if (!ninos) return
 
       const programasPorPac: Record<string, any[]> = {}
@@ -262,7 +262,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
         <div className="text-center py-16 bg-white rounded-2xl border border-slate-100">
           <BarChart3 size={36} className="text-slate-200 mx-auto mb-3" />
           <p className="font-bold text-slate-500 mb-1">
-            {soloConDatos ? 'No patient has sessions recorded yet' : 'No patients found'}
+            {soloConDatos ? (isEN ? 'No patient has sessions recorded yet' : t('ui.no_sessions')) : (isEN ? 'No patients found' : t('ui.no_patients'))}
           </p>
           <p className="text-xs text-slate-400 mb-4">
             {soloConDatos
@@ -337,7 +337,7 @@ export default function DashboardGraficasABA({ onIrAPacientes }: { onIrAPaciente
                             >
                               <div className="flex items-center justify-between mb-1 px-1">
                                 <span className="text-[10px] text-slate-400 font-medium">
-                                  {graficasExpandidas[`${paciente.id}-${prog.id}`] ? 'View less' : 'View full chart'}
+                                  {graficasExpandidas[`${paciente.id}-${prog.id}`] ? (isEN ? 'View less' : t('common.verMenos')) : (isEN ? 'View full chart' : t('programas.verGrafico'))}
                                 </span>
                                 {graficasExpandidas[`${paciente.id}-${prog.id}`]
                                   ? <ChevronUp size={12} className="text-slate-300" />

@@ -159,7 +159,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   }, [isEN]) // eslint-disable-line
 
   useEffect(() => {
-    supabase.from('children').select('id, name').then(({ data }) => data && setListaNinos(data))
+    fetch('/api/admin/children').then(r=>r.json()).then(j=> j.data && setListaNinos(j.data))
   }, [])
 
   useEffect(() => {
@@ -176,7 +176,7 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
     }
     setHistoryData({ anamnesis: null, aba: [], entorno: [] }) 
     
-    setMessages([{ role: 'ai', text: 'Loading patient history...' }])
+    setMessages([{ role: 'ai', text: isEN ? 'Loading patient history...' : 'Cargando historial del paciente...' }])
     
     console.log('🔍 Buscando datos para child_id:', childId)
     

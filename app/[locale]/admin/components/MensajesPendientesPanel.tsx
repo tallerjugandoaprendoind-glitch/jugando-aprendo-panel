@@ -50,7 +50,7 @@ export default function MensajesPendientesPanel() {
       if (json.error) throw new Error(json.error)
       setMessages(json.data || [])
     } catch (err: any) {
-      toast.error(('Error loading messages: ') + err.message)
+      toast.error((isEN ? 'Error loading messages: ' : 'Error cargando mensajes: ') + err.message)
     } finally {
       setLoading(false)
     }
@@ -107,7 +107,7 @@ export default function MensajesPendientesPanel() {
   }
 
   const rejectMessage = async (id: string) => {
-    if (!confirm('Discard this message? It will not reach the parent.')) return
+    if (!confirm(isEN ? 'Discard this message? It will not reach the parent.' : '¿Descartar este mensaje? No llegará al padre/madre.')) return
     setActionLoading(id + '_reject')
     try {
       const res = await fetch('/api/admin/parent-messages', {

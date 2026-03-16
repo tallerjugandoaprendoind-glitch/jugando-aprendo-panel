@@ -32,12 +32,17 @@ export default function VADIAgentChat({
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [conversacionId, setConversacionId] = useState<string | null>(null)
-  const [sugerencias] = useState([
-    childId ? (`How is ${childName||'this patient'}'s overall progress?`) : ('What are the best reinforcers for nonverbal ASD?'),
+  const sugerencias = isEN ? [
+    childId ? `How is ${childName || 'this patient'}'s overall progress?` : 'What are the best reinforcers for nonverbal ASD?',
     'What does Malott say about escape extinction?',
-    childId ? `What programs do you recommend for ${childName || 'this patient'}?` : isEN ? 'How to apply the IBAO ethical model to a dilemma?' : '¿Cómo aplicar el modelo ético IBAO ante un dilema?',
+    childId ? `What programs do you recommend for ${childName || 'this patient'}?` : 'How to apply the IBAO ethical model to a dilemma?',
     'What are the DSM-5 criteria for ASD level 2?',
-  ])
+  ] : [
+    childId ? `¿Cómo va el progreso general de ${childName || 'este paciente'}?` : '¿Cuáles son los mejores reforzadores para TEA no verbal?',
+    '¿Qué dice Malott sobre la extinción de escape?',
+    childId ? `¿Qué programas recomiendas para ${childName || 'este paciente'}?` : '¿Cómo aplicar el modelo ético IBAO ante un dilema?',
+    '¿Cuáles son los criterios DSM-5 para TEA nivel 2?',
+  ]
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -47,11 +52,16 @@ export default function VADIAgentChat({
 
   // Mensaje de bienvenida
   useEffect(() => {
+    const welcomeMsg = isEN
+      ? (childId
+          ? `Hello! I'm **VADI**, your clinical assistant. I'm reviewing **${childName || 'your patient'}'s** record and have access to their full history, ABA programs and previous assessments.\n\nHow can I help you today? I can analyze progress trends, suggest strategies based on Malott, or answer clinical questions about the case.`
+          : `Hello! I'm **VADI**, Vanty's clinical brain. I have access to ABA books, DSM-5, IBAO ethical guidelines and all system records.\n\nHow can I help you today?`)
+      : (childId
+          ? `¡Hola! Soy **VADI**, tu asistente clínico. Estoy revisando el expediente de **${childName || 'tu paciente'}** y tengo acceso a su historial completo, programas ABA y evaluaciones previas.\n\n¿En qué te puedo ayudar hoy? Puedo analizar tendencias de progreso, sugerir estrategias basadas en Malott o responder preguntas clínicas sobre el caso.`
+          : `¡Hola! Soy **VADI**, el cerebro clínico de Vanty. Tengo acceso a libros de ABA, DSM-5, guías éticas IBAO y todos los registros del sistema.\n\n¿En qué te puedo ayudar hoy?`)
     setMessages([{
       role: 'assistant',
-      content: childId
-        ? (`Hello! I'm **VADI**, your clinical assistant. I'm reviewing **${childName || 'your patient'}'s** record and have access to their full history, ABA programs and previous assessments.\n\nHow can I help you today? I can analyze progress trends, suggest strategies based on Malott, or answer clinical questions about the case.`)
-        : (`Hello! I'm **VADI**, Vanty's clinical brain. I have access to ABA books, DSM-5, IBAO ethical guidelines and all system records.\n\nHow can I help you today?`),
+      content: welcomeMsg,
       timestamp: new Date().toISOString(),
     }])
   }, [childId, childName])
@@ -96,7 +106,7 @@ export default function VADIAgentChat({
     } catch (err: any) {
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'An error occurred processing your query. Please try again.',
+        content: isEN ? 'An error occurred processing your query. Please try again.' : 'Ocurrió un error procesando tu consulta. Intenta nuevamente.',
         timestamp: new Date().toISOString(),
       }])
     } finally {
@@ -118,11 +128,11 @@ export default function VADIAgentChat({
         </div>
         <div>
           <h3 className="font-black text-white text-sm flex items-center gap-2">
-            {"VADI — Clinical AI Assistant"}
+            {isEN ? "VADI — Clinical AI Assistant" : "VADI — Asistente Clínico IA"}
             <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-black">BETA</span>
           </h3>
           <p className="text-violet-200 text-[10px]">
-            {childId ? `${isEN ? 'Active case' : t('ui.viendo')} ${childName || (isEN ? 'Patient' : t('ui.seleccionarPaciente2'))}` : 'Knowledge: Malott · DSM-5 · IBAO · LuTr'}
+            {childId ? `${isEN ? 'Active case' : t('ui.viendo')} ${childName || (isEN ? 'Patient' : t('ui.seleccionarPaciente2'))}` : (isEN ? 'Knowledge: Malott · DSM-5 · IBAO · LuTr' : 'Conocimiento: Malott · DSM-5 · IBAO · LuTr')}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
@@ -184,7 +194,7 @@ export default function VADIAgentChat({
           </button>
         </div>
         <p className="text-[10px] text-slate-300 mt-1.5 text-center">
-          {"VADI uses Malott, DSM-5 TR, IBAO Guidelines and the patient's history"}
+          {isEN ? "VADI uses Malott, DSM-5 TR, IBAO Guidelines and the patient's history" : 'VADI usa Malott, DSM-5 TR, Guías IBAO e historial del paciente'}
         </p>
       </div>
     </div>

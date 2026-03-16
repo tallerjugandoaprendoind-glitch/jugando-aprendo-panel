@@ -55,8 +55,7 @@ export default function ResourcesManagementView() {
       const res = await fetch('/api/admin/resources')
       const json = await res.json()
       if (!json.error) setResources(json.data || [])
-      const { data: kids } = await supabase.from('children').select('id, name, age, diagnosis').order('name')
-      if (kids) setPatients(kids)
+      const kidsRes = await fetch('/api/admin/children'); const kidsJson = await kidsRes.json(); if (kidsJson.data) setPatients(kidsJson.data)
     } catch (err) {
       console.error(err)
     } finally {
@@ -67,7 +66,7 @@ export default function ResourcesManagementView() {
   useEffect(() => { load() }, [load])
 
   const handleSave = async () => {
-    if (!newResource.title.trim()) { toast.error('Title is required'); return }
+    if (!newResource.title.trim()) { toast.error(isEN ? 'Title is required' : t('ui.nombreObligatorio')); return }
     if (!newResource.url.trim()) { toast.error('URL is required'); return }
     if (!newResource.is_global && !newResource.child_id) { toast.error('Select a patient'); return }
     setIsSaving(true)
@@ -119,7 +118,7 @@ export default function ResourcesManagementView() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this resource?')) return
+    if (!confirm(isEN ? 'Delete this resource?' : t('common.confirmEliminar'))) return
     try {
       await fetch('/api/admin/resources', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' }, body: JSON.stringify({ id }) })
       toast.success('Resource deleted')

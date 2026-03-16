@@ -239,7 +239,7 @@ export default function UserManagementView() {
         }
       } catch {}
     } catch (err: any) {
-      toast.error(('Error loading users: ') + err.message)
+      toast.error((isEN ? 'Error loading users: ' : 'Error cargando usuarios: ') + err.message)
     } finally {
       setIsLoading(false)
     }
@@ -307,7 +307,7 @@ export default function UserManagementView() {
   const handleChangePassword = async () => {
     if (!changingPasswordFor) return
     if (!newPassword || newPassword.length < 6) { toast.error('Minimum 6 characters'); return }
-    if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return }
+    if (newPassword !== confirmPassword) { toast.error(isEN ? 'Passwords do not match' : t('ui.passNoCoinciden').replace('❌ ', '')); return }
     setSavingPassword(true)
     try {
       const res = await fetch('/api/admin/users', {
@@ -364,7 +364,7 @@ export default function UserManagementView() {
       const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
 
       const child = children.find(c => c.id === selectedChildId)
-      if (!child) throw new Error('Patient not found')
+      if (!child) throw new Error(isEN ? 'Patient not found' : 'Paciente no encontrado')
 
       // Si ya tiene un parent_id, verificar si es diferente (2do padre)
       if (child.parent_id && child.parent_id !== linkingParent.id) {

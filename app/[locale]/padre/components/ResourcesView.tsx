@@ -164,11 +164,11 @@ export default function ResourcesView({ profile }: Props) {
             <Book size={28} className="text-violet-300"/>
           </div>
           <h3 className="font-bold text-slate-700 mb-1">
-            {resources.length === 0 ? 'No resources yet' : 'No results found'}
+            {resources.length === 0 ? (isEN ? 'No resources yet' : t('recursos.sinRecursos')) : (isEN ? 'No results found' : t('common.sinResultados'))}
           </h3>
           <p className="text-slate-400 text-sm">
             {resources.length === 0 
-              ? ('The therapy team will share materials soon')
+              ? (isEN ? 'The therapy team will share materials soon' : 'El equipo terapéutico compartirá materiales pronto')
               : ('Try a different search term')}
           </p>
         </div>

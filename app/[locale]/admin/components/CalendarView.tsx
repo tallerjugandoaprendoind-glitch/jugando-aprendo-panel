@@ -187,7 +187,7 @@ function MonthlyCalendarView() {
   useEffect(() => {
     cargarCitas()
     import('@/lib/supabase').then(({ supabase }) => {
-      supabase.from('children').select('id, name').order('name').then(({ data }) => { if (data) setNinos(data) })
+      fetch('/api/admin/children').then(r=>r.json()).then(j=>{ if(j.data) setNinos(j.data) })
     })
     // Auto-refresh cada minuto para detectar sesiones vencidas
     const interval = setInterval(() => { cargarCitas() }, 60 * 1000)
@@ -196,7 +196,7 @@ function MonthlyCalendarView() {
 
   const eliminarCita = async (id:string, e:React.MouseEvent) => {
     e.stopPropagation()
-    if (!confirm('Delete this appointment?')) return
+    if (!confirm(isEN ? 'Delete this appointment?' : '¿Eliminar esta cita?')) return
     try {
       const res = await fetch('/api/admin/appointments', { method:'DELETE', headers:{'Content-Type':'application/json', 'x-locale': localStorage.getItem('vanty_locale') || 'es'}, body: JSON.stringify({ id }) })
       const json = await res.json()

@@ -978,7 +978,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       })
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || ('Error generating report'))
+        throw new Error(err.error || (isEN ? 'Error generating report' : 'Error generando reporte'))
       }
       // Descargar el .docx directamente
       const blob = await res.blob()
@@ -996,7 +996,7 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
   }
 
   const tipoInfo = {
-    padres:      { label: 'For parents',         desc: 'Emotional and accessible language',    emoji: '👨‍👩‍👧' },
+    padres:      { label: isEN ? 'For parents' : t('reportes.paraFamilia'), desc: isEN ? 'Emotional and accessible language' : 'Lenguaje emocional y accesible',    emoji: '👨‍👩‍👧' },
     seguro:      { label: 'For insurance', desc: 'Technical-legal format with ICD-10',  emoji: '🏥' },
     comparativo: { label: 'Comparative + pred.', desc: '"In 3 months they will achieve X"', emoji: '📊' },
   }
@@ -1044,9 +1044,9 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
       {/* Info cards */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { emoji: '👨‍👩‍👧', title: 'Parents', desc: 'Emotional letter with achievements, home activities and prediction. No jargon.' },
+          { emoji: '👨‍👩‍👧', title: isEN ? 'Parents' : t('usuarios.padre'), desc: isEN ? 'Emotional letter with achievements, home activities and prediction.' : 'Carta emocional con logros, actividades en casa y predicción.' },
           { emoji: '🏥', title: 'Insurance', desc: 'ICD-10, medical justification, program table, professional signature.' },
-          { emoji: '📊', title: 'Comparative', desc: 'Progress between periods with 30 and 90-day prediction charts.' },
+          { emoji: '📊', title: isEN ? 'Comparative' : t('reportes.analisisEstrategico'), desc: isEN ? 'Progress between periods with 30 and 90-day prediction charts.' : 'Comparativa entre períodos con proyección a 30 y 90 días.' },
         ].map((c, i) => (
           <div key={i} className=" border border-slate-100 rounded-xl p-3" style={{ background: "var(--card)" }}>
             <p className="text-xl mb-1">{c.emoji}</p>

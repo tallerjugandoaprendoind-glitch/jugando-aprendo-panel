@@ -338,7 +338,7 @@ export default function NeuroFormsView() {
   const [expandedResponse, setExpandedResponse] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.from('children').select('id, name, age, diagnosis').order('name').then(({ data }) => data && setChildren(data))
+    fetch('/api/admin/children').then(r=>r.json()).then(j=> j.data && setChildren(j.data))
     supabase.from('profiles').select('id, full_name, email').eq('role', 'padre').then(({ data }) => data && setParents(data))
     loadSentForms()
   }, [])
@@ -428,7 +428,7 @@ export default function NeuroFormsView() {
         }
       }
 
-      toast.success('Form saved successfully')
+      toast.success(t('evaluaciones.formGuardado'))
       setSelectedForm(null)
       setAiAnalysis(null)
     } catch (err: any) {

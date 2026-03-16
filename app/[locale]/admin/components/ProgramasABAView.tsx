@@ -97,7 +97,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       const res = await fetch(`/api/programas-aba?child_id=${childId}`)
       const json = await res.json()
       setProgramas(json.data || [])
-    } catch { toast.error('Error loading programs') }
+    } catch { toast.error(isEN ? 'Error loading programs' : 'Error cargando programas') }
     finally { setLoading(false) }
   }, [childId])
 
@@ -710,7 +710,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
 
   const handleSave = async () => {
     if (!form.oportunidades_totales) {
-      toast.error('Enter total opportunities')
+      toast.error(isEN ? 'Enter total opportunities' : t('programas.oportunidades'))
       return
     }
     setSaving(true)
@@ -871,7 +871,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
 
   const handleSave = async () => {
-    if (!form.titulo || !form.objetivo_lp) { toast.error('Title and objective are required'); return }
+    if (!form.titulo || !form.objetivo_lp) { toast.error(isEN ? 'Title and objective are required' : t('ui.nombreObligatorio')); return }
     setSaving(true)
     try {
       const res = await fetch('/api/programas-aba', {

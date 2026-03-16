@@ -24,11 +24,11 @@ export default function NotifWhatsAppPanel({ profile, onUpdated }: Props) {
   const hasPhone = !!profile?.phone
 
   const handleSave = async () => {
-    if (!phone.trim()) { setError('Enter your number'); return }
+    if (!phone.trim()) { setError(isEN ? 'Enter your number' : 'Ingresa tu número'); return }
     // Validar formato básico con código país
     const clean = phone.replace(/\s/g, '')
     if (!clean.startsWith('+') || clean.length < 10) {
-      setError('Include country code, e.g.: +51 924 807 183')
+      setError(isEN ? 'Include country code, e.g.: +51 924 807 183' : 'Incluye el código de país, ej: +51 924 807 183')
       return
     }
     setSaving(true)

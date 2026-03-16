@@ -321,9 +321,9 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
   const isEN = locale === 'en'
 
   const quick = [
-    { icon: '📋', text: 'How did the last session go?', color: '#eef2ff', border: '#c7d2fe' },
-    { icon: '🏠', text: 'Give me tips for home', color: '#f0fdf4', border: '#bbf7d0' },
-    { icon: '🎯', text: 'What objectives are being worked on?', color: '#fff7ed', border: '#fed7aa' },
+    { icon: '📋', text: isEN ? 'How did the last session go?' : '¿Cómo fue la última sesión?', color: '#eef2ff', border: '#c7d2fe' },
+    { icon: '🏠', text: isEN ? 'Give me tips for home' : 'Dame consejos para casa', color: '#f0fdf4', border: '#bbf7d0' },
+    { icon: '🎯', text: isEN ? 'What objectives are being worked on?' : '¿Qué objetivos se trabajan?', color: '#fff7ed', border: '#fed7aa' },
     { icon: '💙', text: 'I need emotional support', color: '#fdf2f8', border: '#f9a8d4' },
   ]
   return (
@@ -346,7 +346,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
         {"Hello! I'm"} <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
       </h3>
       <p className="text-sm text-slate-500 font-medium mb-1">
-        {"Your clinical assistant at Jugando Aprendo"}
+        {isEN ? "Your clinical assistant at Jugando Aprendo" : "Tu asistente clínica en Jugando Aprendo"}
       </p>
       <p className="text-xs text-slate-400 mb-6 leading-relaxed max-w-xs">
         {t('aria.revisadoHistorial')} <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> {'and I\'m ready to help you.'}
@@ -442,7 +442,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
     if (isEmotional) {
       emotionalPrefix = getEmotionalPrefix(txt, isEN)
       await new Promise(r => setTimeout(r, 700))
-      const tempMsg = emotionalPrefix + 'Let me review the clinical history to give you more accurate information...'
+      const tempMsg = emotionalPrefix + (isEN ? 'Let me review the clinical history to give you more accurate information...' : 'Déjame revisar el historial clínico para darte información más precisa...')
       setMessages(p => [...p, { role: 'ai', text: tempMsg, type: 'emotional' }])
       await new Promise(r => setTimeout(r, 900))
     }

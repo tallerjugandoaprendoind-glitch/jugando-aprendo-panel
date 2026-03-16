@@ -74,7 +74,8 @@ export default function AdminDashboard() {
   const router = useRouter()
   const toast = useToast()
   const { isDark } = useTheme()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
+  const isEN = locale === 'en'
 
   const NAV_ITEMS = [
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio'),          roles: ['jefe','admin','especialista','terapeuta'] },
@@ -176,12 +177,12 @@ export default function AdminDashboard() {
     try {
       await supabase.auth.signOut()
       router.push('/login')
-    } catch { toast.error('Error signing out') }
+    } catch { toast.error(isEN ? 'Error signing out' : 'Error al cerrar sesión') }
   }
 
   const handleChangePassword = async () => {
     if (newPassword.length < 6) { toast.warning('Minimum 6 characters'); return }
-    if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return }
+    if (newPassword !== confirmPassword) { toast.error(isEN ? 'Passwords do not match' : t('ui.passNoCoinciden').replace('❌ ', '')); return }
     setChangingPassword(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword })

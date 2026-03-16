@@ -167,26 +167,28 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
     const hace30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
     const mesActual = hoy.slice(0, 7) + '-01'
 
+    // Load all children via admin API to bypass RLS
+    const todosNinosRes = await fetch('/api/admin/children').then(r=>r.json())
+    const todosNinos = todosNinosRes.data || []
+    const pacientes = todosNinos.length
+
     const [
-      { count: pacientes },
       { data: citasHoy },
       { data: profiles },
       { data: analisis },
       { data: citas },
       { data: actividad },
       { data: sesionesRecientes },
-      { data: todosNinos },
       { count: mensajesPendientes },
       { data: bienestar },
     ] = await Promise.all([
-      supabase.from('children').select('*', { count: 'exact', head: true }),
       supabase.from('appointments').select('*').eq('appointment_date', hoy).in('status', ['confirmed', 'pending']),
       supabase.from('profiles').select('tokens').gt('tokens', 0),
       supabase.from('registro_aba').select('*').gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(50),
       supabase.from('appointments').select('*, children(name)').gte('appointment_date', hoy).neq('status', 'cancelled').neq('status', 'completed').order('appointment_date').order('appointment_time').limit(6),
       supabase.from('registro_aba').select('*, children:child_id(name)').order('fecha_sesion', { ascending: false }).limit(5),
       supabase.from('aba_sessions_v2').select('child_id').gte('session_date', hace30),
-      supabase.from('children').select('id, name'),
+
       supabase.from('parent_message_approvals').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
       supabase.from('parent_forms').select('*').eq('status','completed').eq('form_type','wellbeing').gte('created_at', mesActual).order('created_at', { ascending: false }),
     ])

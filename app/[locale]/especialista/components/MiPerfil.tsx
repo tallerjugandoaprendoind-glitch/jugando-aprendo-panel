@@ -32,7 +32,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
 
   const cambiarPassword = async () => {
     if (pass.nueva.length < 6) { toast.error(t('especialista.min6Chars')); return }
-    if (pass.nueva !== pass.confirmar) { toast.error('Passwords do not match'); return }
+    if (pass.nueva !== pass.confirmar) { toast.error(isEN ? 'Passwords do not match' : t('ui.passNoCoinciden').replace('❌ ', '')); return }
     setGuardando(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: pass.nueva })

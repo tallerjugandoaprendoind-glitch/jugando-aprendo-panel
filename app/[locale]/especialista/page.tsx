@@ -86,7 +86,7 @@ export default function EspecialistaDashboard() {
 
   const handleChangePassword = async () => {
     if (newPassword.length < 6) { toast.warning('Minimum 6 characters'); return }
-    if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return }
+    if (newPassword !== confirmPassword) { toast.error(isEN ? 'Passwords do not match' : t('ui.passNoCoinciden').replace('❌ ', '')); return }
     setChangingPassword(true)
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword })

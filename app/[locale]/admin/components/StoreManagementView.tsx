@@ -107,7 +107,7 @@ function ProductModal({
   }
 
   const handleSave = async () => {
-    if (!form.nombre.trim()) { toast.error('Name is required'); return }
+    if (!form.nombre.trim()) { toast.error(isEN ? 'Name is required' : t('ui.nombreObligatorio')); return }
     if (!form.precio_soles || Number(form.precio_soles) < 0) { toast.error('Invalid price'); return }
     if (form.tipo === 'fisico' && (form.stock === '' || Number(form.stock) < 0)) { toast.error('Invalid stock'); return }
 
