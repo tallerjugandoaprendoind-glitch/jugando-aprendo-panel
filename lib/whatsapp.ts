@@ -42,70 +42,18 @@ export function wspTemplate(tipo: WspTipo, vars: Record<string, string> = {}, lo
   const v = vars
   const centro = process.env.CENTRO_NOMBRE || 'Jugando Aprendo'
 
-  const T: Record<WspTipo, Record<WspLocale, string>> = {
-    cita_confirmada: {
-      es: `✅ *Cita confirmada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n📍 ${v.tipo || 'Presencial'}\n\n_Vanty · ${centro}_ 💜`,
-      en: `✅ *Appointment confirmed — ${centro}*\n📅 ${v.fecha} at ${v.hora}\n👤 Patient: ${v.paciente}\n📍 ${v.tipo || 'In-person'}\n\n_Vanty · ${centro}_ 💜`,
-      pt: `✅ *Consulta confirmada — ${centro}*\n📅 ${v.fecha} às ${v.hora}\n👤 Paciente: ${v.paciente}\n📍 ${v.tipo || 'Presencial'}\n\n_Vanty · ${centro}_ 💜`,
-      fr: `✅ *Rendez-vous confirmé — ${centro}*\n📅 ${v.fecha} à ${v.hora}\n👤 Patient : ${v.paciente}\n📍 ${v.tipo || 'En personne'}\n\n_Vanty · ${centro}_ 💜`,
-      de: `✅ *Termin bestätigt — ${centro}*\n📅 ${v.fecha} um ${v.hora}\n👤 Patient: ${v.paciente}\n📍 ${v.tipo || 'Vor Ort'}\n\n_Vanty · ${centro}_ 💜`,
-      it: `✅ *Appuntamento confermato — ${centro}*\n📅 ${v.fecha} alle ${v.hora}\n👤 Paziente: ${v.paciente}\n📍 ${v.tipo || 'In presenza'}\n\n_Vanty · ${centro}_ 💜`,
-    },
-    cita_cancelada: {
-      es: `❌ *Cita cancelada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n\nContactá a recepción para reagendar.\n_Vanty · ${centro}_ 💜`,
-      en: `❌ *Appointment cancelled — ${centro}*\n📅 ${v.fecha} at ${v.hora}\n👤 Patient: ${v.paciente}\n\nContact reception to reschedule.\n_Vanty · ${centro}_ 💜`,
-      pt: `❌ *Consulta cancelada — ${centro}*\n📅 ${v.fecha} às ${v.hora}\n👤 Paciente: ${v.paciente}\n\nContate a recepção para reagendar.\n_Vanty · ${centro}_ 💜`,
-      fr: `❌ *Rendez-vous annulé — ${centro}*\n📅 ${v.fecha} à ${v.hora}\n👤 Patient : ${v.paciente}\n\nContactez l'accueil pour reprogrammer.\n_Vanty · ${centro}_ 💜`,
-      de: `❌ *Termin abgesagt — ${centro}*\n📅 ${v.fecha} um ${v.hora}\n👤 Patient: ${v.paciente}\n\nBitte Rezeption kontaktieren.\n_Vanty · ${centro}_ 💜`,
-      it: `❌ *Appuntamento annullato — ${centro}*\n📅 ${v.fecha} alle ${v.hora}\n👤 Paziente: ${v.paciente}\n\nContatta la reception per riprogrammare.\n_Vanty · ${centro}_ 💜`,
-    },
-    formulario_nuevo: {
-      es: `📋 *Formulario subido — ${centro}*\nTipo: ${v.tipo}\nPaciente: ${v.paciente}${v.especialista ? `\nEspecialista: ${v.especialista}` : ''}\n\nRevisalo en tu portal 👆\n_Vanty_ 💜`,
-      en: `📋 *Form submitted — ${centro}*\nType: ${v.tipo}\nPatient: ${v.paciente}${v.especialista ? `\nSpecialist: ${v.especialista}` : ''}\n\nReview it in your portal 👆\n_Vanty_ 💜`,
-      pt: `📋 *Formulário enviado — ${centro}*\nTipo: ${v.tipo}\nPaciente: ${v.paciente}${v.especialista ? `\nEspecialista: ${v.especialista}` : ''}\n\nRevise no seu portal 👆\n_Vanty_ 💜`,
-      fr: `📋 *Formulaire soumis — ${centro}*\nType : ${v.tipo}\nPatient : ${v.paciente}${v.especialista ? `\nSpécialiste : ${v.especialista}` : ''}\n\nConsultez votre portail 👆\n_Vanty_ 💜`,
-      de: `📋 *Formular eingereicht — ${centro}*\nTyp: ${v.tipo}\nPatient: ${v.paciente}${v.especialista ? `\nTherapeut: ${v.especialista}` : ''}\n\nPortal aufrufen 👆\n_Vanty_ 💜`,
-      it: `📋 *Modulo inviato — ${centro}*\nTipo: ${v.tipo}\nPaziente: ${v.paciente}${v.especialista ? `\nSpecialista: ${v.especialista}` : ''}\n\nConsulta il portale 👆\n_Vanty_ 💜`,
-    },
-    informe_nuevo: {
-      es: `📊 *Nuevo informe disponible — ${centro}*\nPaciente: ${v.paciente}${v.periodo ? `\nPeríodo: ${v.periodo}` : ''}\n\nYa podés verlo en Vanty 👆\n_${centro}_ 💜`,
-      en: `📊 *New report available — ${centro}*\nPatient: ${v.paciente}${v.periodo ? `\nPeriod: ${v.periodo}` : ''}\n\nView it on Vanty 👆\n_${centro}_ 💜`,
-      pt: `📊 *Novo relatório disponível — ${centro}*\nPaciente: ${v.paciente}${v.periodo ? `\nPeríodo: ${v.periodo}` : ''}\n\nVisualize no Vanty 👆\n_${centro}_ 💜`,
-      fr: `📊 *Nouveau rapport disponible — ${centro}*\nPatient : ${v.paciente}${v.periodo ? `\nPériode : ${v.periodo}` : ''}\n\nConsultez-le sur Vanty 👆\n_${centro}_ 💜`,
-      de: `📊 *Neuer Bericht verfügbar — ${centro}*\nPatient: ${v.paciente}${v.periodo ? `\nZeitraum: ${v.periodo}` : ''}\n\nJetzt auf Vanty abrufen 👆\n_${centro}_ 💜`,
-      it: `📊 *Nuovo rapporto disponibile — ${centro}*\nPaziente: ${v.paciente}${v.periodo ? `\nPeriodo: ${v.periodo}` : ''}\n\nConsulta Vanty 👆\n_${centro}_ 💜`,
-    },
-    alerta_clinica: {
-      es: `⚠️ *Alerta clínica — ${centro}*\nPaciente: ${v.paciente}\n${v.descripcion}\n\nRevisá el Hub IA 🤖\n_Vanty_ 💜`,
-      en: `⚠️ *Clinical alert — ${centro}*\nPatient: ${v.paciente}\n${v.descripcion}\n\nCheck the AI Hub 🤖\n_Vanty_ 💜`,
-      pt: `⚠️ *Alerta clínico — ${centro}*\nPaciente: ${v.paciente}\n${v.descripcion}\n\nVerifique o Hub IA 🤖\n_Vanty_ 💜`,
-      fr: `⚠️ *Alerte clinique — ${centro}*\nPatient : ${v.paciente}\n${v.descripcion}\n\nVérifiez le Hub IA 🤖\n_Vanty_ 💜`,
-      de: `⚠️ *Klinischer Alarm — ${centro}*\nPatient: ${v.paciente}\n${v.descripcion}\n\nKI-Hub prüfen 🤖\n_Vanty_ 💜`,
-      it: `⚠️ *Allerta clinica — ${centro}*\nPaziente: ${v.paciente}\n${v.descripcion}\n\nControlla l'Hub IA 🤖\n_Vanty_ 💜`,
-    },
-    mensaje_terapeuta: {
-      es: `💬 *Mensaje de tu terapeuta — ${centro}*\n👤 ${v.terapeuta}\n\n"${v.preview}"\n\nRespondé en Vanty 👆\n_${centro}_ 💜`,
-      en: `💬 *Message from your therapist — ${centro}*\n👤 ${v.terapeuta}\n\n"${v.preview}"\n\nReply on Vanty 👆\n_${centro}_ 💜`,
-      pt: `💬 *Mensagem do seu terapeuta — ${centro}*\n👤 ${v.terapeuta}\n\n"${v.preview}"\n\nResponda no Vanty 👆\n_${centro}_ 💜`,
-      fr: `💬 *Message de votre thérapeute — ${centro}*\n👤 ${v.terapeuta}\n\n« ${v.preview} »\n\nRépondez sur Vanty 👆\n_${centro}_ 💜`,
-      de: `💬 *Nachricht Ihres Therapeuten — ${centro}*\n👤 ${v.terapeuta}\n\n„${v.preview}"\n\nAntworten auf Vanty 👆\n_${centro}_ 💜`,
-      it: `💬 *Messaggio dal tuo terapeuta — ${centro}*\n👤 ${v.terapeuta}\n\n"${v.preview}"\n\nRispondi su Vanty 👆\n_${centro}_ 💜`,
-    },
-    recurso_nuevo: {
-      es: `📚 *Nuevo recurso — ${centro}*\n${v.titulo}${v.descripcion ? `\n${v.descripcion}` : ''}\n\nEncontralo en la Biblioteca 📖\n_Vanty_ 💜`,
-      en: `📚 *New resource — ${centro}*\n${v.titulo}${v.descripcion ? `\n${v.descripcion}` : ''}\n\nFind it in the Library 📖\n_Vanty_ 💜`,
-      pt: `📚 *Novo recurso — ${centro}*\n${v.titulo}${v.descripcion ? `\n${v.descripcion}` : ''}\n\nEncontre na Biblioteca 📖\n_Vanty_ 💜`,
-      fr: `📚 *Nouvelle ressource — ${centro}*\n${v.titulo}${v.descripcion ? `\n${v.descripcion}` : ''}\n\nTrouvez-la dans la Bibliothèque 📖\n_Vanty_ 💜`,
-      de: `📚 *Neue Ressource — ${centro}*\n${v.titulo}${v.descripcion ? `\n${v.descripcion}` : ''}\n\nIn der Bibliothek verfügbar 📖\n_Vanty_ 💜`,
-      it: `📚 *Nuova risorsa — ${centro}*\n${v.titulo}${v.descripcion ? `\n${v.descripcion}` : ''}\n\nTrovala nella Biblioteca 📖\n_Vanty_ 💜`,
-    },
-    custom: {
-      es: v.mensaje || '', en: v.mensaje || '', pt: v.mensaje || '',
-      fr: v.mensaje || '', de: v.mensaje || '', it: v.mensaje || '',
-    },
+  const T: Record<WspTipo, string> = {
+    cita_confirmada:   `✅ *Cita confirmada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n📍 ${v.tipo || 'Presencial'}\n\n_Vanty · ${centro}_ 💜`,
+    cita_cancelada:    `❌ *Cita cancelada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n\nContactá a recepción para reagendar.\n_Vanty · ${centro}_ 💜`,
+    formulario_nuevo:  `📋 *Formulario subido — ${centro}*\nTipo: ${v.tipo}\nPaciente: ${v.paciente}${v.especialista ? `\nEspecialista: ${v.especialista}` : ''}\n\nRevisalo en tu portal 👆\n_Vanty_ 💜`,
+    informe_nuevo:     `📊 *Nuevo informe disponible — ${centro}*\nPaciente: ${v.paciente}${v.periodo ? `\nPeríodo: ${v.periodo}` : ''}\n\nYa podés verlo en Vanty 👆\n_${centro}_ 💜`,
+    alerta_clinica:    `⚠️ *Alerta clínica — ${centro}*\nPaciente: ${v.paciente}\n${v.descripcion}\n\nRevisá el Hub IA 🤖\n_Vanty_ 💜`,
+    mensaje_terapeuta: `💬 *Mensaje de tu terapeuta — ${centro}*\n👤 ${v.terapeuta}\n\n"${v.preview}"\n\nRespondé en Vanty 👆\n_${centro}_ 💜`,
+    recurso_nuevo:     `📚 *Nuevo recurso — ${centro}*\n${v.titulo}${v.descripcion ? `\n${v.descripcion}` : ''}\n\nEncontralo en la Biblioteca 📖\n_Vanty_ 💜`,
+    custom:            v.mensaje || '',
   }
 
-  return T[tipo]?.[locale] ?? T[tipo]?.['es'] ?? v.mensaje ?? ''
+  return T[tipo] ?? v.mensaje ?? ''
 }
 
 // ── CallMeBot ─────────────────────────────────────────────────────────────────
