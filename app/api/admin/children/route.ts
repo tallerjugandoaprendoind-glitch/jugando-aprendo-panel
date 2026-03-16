@@ -17,7 +17,7 @@ export async function GET() {
         .select('id, name, parent_id')
         .order('name')
       if (fallback.error) throw fallback.error
-      data = fallback.data
+      data = fallback.data as any[]
     }
 
     return NextResponse.json({ data: data || [] })
