@@ -57,7 +57,6 @@ function parseGeminiJSON(text: string): any {
 
 // i18n: responder en el idioma del usuario
 function getLangInstruction(locale: string): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
   return ''
 }
 

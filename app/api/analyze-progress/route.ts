@@ -6,7 +6,6 @@ import { supabaseAdmin as supabase } from '@/lib/supabase-admin';
 
 // i18n: responder en el idioma del usuario
 function getLangInstruction(locale: string): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
   return ''
 }
 
@@ -43,9 +42,7 @@ export async function POST(req: Request) {
       CONTEXTO: ${JSON.stringify(sessions)}
       TAREA: Calcula progreso (0-100) en: verbal, emocional, social.
       Responde SOLAMENTE este JSON exacto:
-      { "verbal": number, "emocional": number, "social": number }
-
-${getLangInstruction(userLocale)}`;
+      { "verbal": number, "emocional": number, "social": number }`;
 
     // 5. Generar Análisis - Se asegura que el modelo sea un string fijo
 

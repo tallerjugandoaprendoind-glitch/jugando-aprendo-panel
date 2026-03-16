@@ -2,9 +2,8 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo, type ReactNode } from 'react'
 import { createTranslator, type Locale, DEFAULT_LOCALE, LOCALES } from './i18n'
 import ES from '../messages/es.json'
-import EN from '../messages/en.json'
 
-const MESSAGES: Record<Locale, Record<string, any>> = { es: ES, en: EN }
+const MESSAGES: Record<Locale, Record<string, any>> = { es: ES }
 
 export type T = (key: string, vars?: Record<string, string>) => string
 interface I18nCtx { t: T; locale: Locale; changeLocale: (l: Locale) => void }
@@ -19,13 +18,12 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocale] = useState<Locale>(DEFAULT_LOCALE)
 
   useEffect(() => {
-    const stored = localStorage.getItem('vanty_locale') as Locale
-    if (stored && LOCALES.includes(stored)) setLocale(stored)
+    // Idioma fijo: español
+    localStorage.setItem('vanty_locale', 'es')
   }, [])
 
-  const changeLocale = useCallback((loc: Locale) => {
-    localStorage.setItem('vanty_locale', loc)
-    setLocale(loc)
+  const changeLocale = useCallback((_loc: Locale) => {
+    // Idioma fijo: no se cambia
   }, [])
 
   // useMemo: solo recalcula t cuando locale cambia

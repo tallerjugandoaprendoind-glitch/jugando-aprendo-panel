@@ -22,7 +22,6 @@ function calcularEdad(birthDate: string | null | undefined, ageFallback: number 
 
 // i18n: responder en el idioma del usuario
 function getLangInstruction(locale: string): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
   return ''
 }
 
@@ -257,8 +256,6 @@ REGLAS CRITICAS:
 10. Si hay tareas pendientes, recuérdalas con entusiasmo y explica cómo ayudan.
 11. Cuando pregunten "como le fue" usa el resumen de sesiones para dar datos reales.
 CONFIDENCIALIDAD: Comparte avances, logros, actividades y citas. NO compartas notas clínicas detalladas ni comparaciones con otros pacientes.
-
-${getLangInstruction(userLocale)}
 ${knowledgeCtx ? `
 ━━━ CONOCIMIENTO CLÍNICO DE RESPALDO (Cerebro IA) ━━━
 ${knowledgeCtx}
@@ -267,7 +264,7 @@ Cuando sea útil, usa este conocimiento para dar consejos basados en evidencia, 
 
   // Build chat messages for Groq
   const groqMessages = [
-    { role: 'system' as const, content: systemPrompt + langNote },
+    { role: 'system' as const, content: systemPrompt },
     ...historial.map(h => ({
       role: h.rol as 'user' | 'assistant',
       content: h.mensaje,
@@ -285,7 +282,7 @@ Cuando sea útil, usa este conocimiento para dar consejos basados en evidencia, 
     if (respuesta && respuesta.trim().length > 10) return respuesta
 
     // FIX: Fallback a callGroqSimple si callGroq falla o retorna vacío
-    const fallback = await callGroqSimple(systemPrompt + langNote, mensaje, {
+    const fallback = await callGroqSimple(systemPrompt, mensaje, {
       model: GROQ_MODELS.SMART,
       temperature: 0.5,
       maxTokens: 600,

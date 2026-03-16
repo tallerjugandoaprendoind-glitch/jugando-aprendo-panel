@@ -6,7 +6,6 @@ import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
 // i18n: responder en el idioma del usuario
 function getLangInstruction(locale?: string | null): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
   return ''
 }
 
@@ -180,7 +179,7 @@ COMO HACERLO:
 (maximo 5 pasos)
 CONSEJO PARA PADRES: [1 consejo practico]
 QUE OBSERVAR: [que registrar o notar]
-Usa lenguaje simple, sin tecnicismos. Maximo 150 palabras total.${getLangInstruction(userLocale)}`
+Usa lenguaje simple, sin tecnicismos. Maximo 150 palabras total.`
 
     const response = await callGroqSimple(
       'Eres un asistente clínico especializado en ABA, TEA, TDAH y neurodesarrollo.',

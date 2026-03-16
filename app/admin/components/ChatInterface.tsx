@@ -40,7 +40,7 @@ function useTextToSpeech() {
     utter.volume = 0.95
     // Preferir voz en español si está disponible
     const voices = window.speechSynthesis.getVoices()
-    const langPrefix = locale === 'en' ? 'en' : 'es'
+    const langPrefix = 'es'
     const esVoice = voices.find(v => v.lang.startsWith(langPrefix) && v.localService) ||
                     voices.find(v => v.lang.startsWith(langPrefix))
     if (esVoice) utter.voice = esVoice

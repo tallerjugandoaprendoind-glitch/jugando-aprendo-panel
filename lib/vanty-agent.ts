@@ -259,7 +259,6 @@ Al citar diagnósticos, SIEMPRE incluye el código CIE-11 y DSM-5 cuando corresp
 
 // i18n: responder en el idioma del usuario
 function getLangInstruction(locale: string): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
   return ''
 }
 

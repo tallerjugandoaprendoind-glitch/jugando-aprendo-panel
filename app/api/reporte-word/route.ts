@@ -175,7 +175,7 @@ INSTRUCCIONES:
     h2('Información del Paciente'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Nombre', nombre),
-      kv(userLocale === 'en' ? 'Age' : 'Edad', `${edad} ${userLocale === 'en' ? 'years old' : 'años'}`),
+      kv('Edad', `${edad} ${'años'}`),
       kv('Diagnóstico', diagnostico),
       kv('Sesiones realizadas', String(sesiones?.length || 0)),
       kv('Promedio de logro', `${promedioLogro}%`),
@@ -257,7 +257,7 @@ Usa terminología clínica apropiada. Sin bullets.`
     new Paragraph({ spacing: { before: 0, after: 80 }, children: [new TextRun({ text: 'REPORTE CLÍNICO PARA ASEGURADORAS / IMSS', bold: true, size: 32, font: 'Arial', color: '1E40AF' })] }),
     subtitle(`Fecha de emisión: ${hoy}  ·  Documento Confidencial`),
 
-    h2(userLocale === 'en' ? 'I. PATIENT DATA' : 'I. DATOS DEL PACIENTE'),
+    h2('I. DATOS DEL PACIENTE'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Nombre completo', nombre),
       kv('Edad', `${edad} años`),
@@ -266,7 +266,7 @@ Usa terminología clínica apropiada. Sin bullets.`
       kv('Fecha del reporte', hoy),
     ]}),
 
-    h2(userLocale === 'en' ? 'II. TREATMENT DESCRIPTION' : 'II. DESCRIPCIÓN DEL TRATAMIENTO'),
+    h2('II. DESCRIPCIÓN DEL TRATAMIENTO'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Modalidad', 'Análisis Aplicado de la Conducta (ABA)'),
       kv('Sesiones realizadas', String(totalSesiones)),
@@ -274,7 +274,7 @@ Usa terminología clínica apropiada. Sin bullets.`
       kv('Áreas de intervención', programas?.map((p: any) => p.area).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i).join(', ') || 'N/A'),
     ]}),
 
-    h2(userLocale === 'en' ? 'III. INTERVENTION PROGRAMS' : 'III. PROGRAMAS DE INTERVENCIÓN'),
+    h2('III. PROGRAMAS DE INTERVENCIÓN'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3800, 2000, 1800, 1760],
       rows: [
         new TableRow({ children: [
@@ -295,10 +295,10 @@ Usa terminología clínica apropiada. Sin bullets.`
       ]
     }),
 
-    h2(userLocale === 'en' ? 'IV. CLINICAL JUSTIFICATION AND PROGNOSIS' : 'IV. JUSTIFICACIÓN CLÍNICA Y PRONÓSTICO'),
+    h2('IV. JUSTIFICACIÓN CLÍNICA Y PRONÓSTICO'),
     ...textoTecnico.split('\n').filter((l: string) => l.trim()).map((line: string) => pp(line)),
 
-    h2(userLocale === 'en' ? 'V. SIGNATURE AND ACCREDITATION' : 'V. FIRMA Y ACREDITACIÓN'),
+    h2('V. FIRMA Y ACREDITACIÓN'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Centro terapéutico', 'Jugando Aprendo'),
       kv('Especialidad', 'Análisis Aplicado de la Conducta (ABA)'),

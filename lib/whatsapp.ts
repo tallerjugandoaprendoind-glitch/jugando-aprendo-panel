@@ -21,7 +21,7 @@ export type WspTipo =
   | 'alerta_clinica'  | 'mensaje_terapeuta'
   | 'recurso_nuevo'   | 'custom'
 
-export type WspLocale = 'es' | 'en' | 'pt' | 'fr' | 'de' | 'it'
+export type WspLocale = 'es'
 
 export interface WspNotification {
   to?: string

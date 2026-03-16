@@ -10,7 +10,6 @@ import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 
 // i18n: responder en el idioma del usuario
 function getLangInstruction(locale?: string | null): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
   return ''
 }
 
@@ -130,7 +129,7 @@ Responde ÚNICAMENTE con JSON válido, sin markdown, sin explicaciones:
   ]
 }`
 
-    const respuestaRaw = await callGroqSimple('', prompt + langInstruction, { model: GROQ_MODELS.SMART, temperature: 0.6, maxTokens: 2000 })
+    const respuestaRaw = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.6, maxTokens: 2000 })
 
     let plan: any
     try {

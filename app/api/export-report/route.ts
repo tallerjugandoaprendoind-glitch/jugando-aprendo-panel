@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         nombre: (child as any)?.name || history.nombre,
         edad: history.edad,
         diagnostico: (child as any)?.diagnosis || history.diagnostico,
-        estado: (child as any)?.status || userLocale === 'en' ? 'In treatment' : 'En tratamiento',
+        estado: (child as any)?.status || 'En tratamiento',
       },
       programas: programas || [],
       sesiones: sesiones || [],

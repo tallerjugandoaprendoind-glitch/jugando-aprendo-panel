@@ -38,7 +38,6 @@ function calcularPendiente(valores: number[]): number {
 
 // i18n: responder en el idioma del usuario
 function getLangInstruction(locale?: string | null): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
   return ''
 }
 

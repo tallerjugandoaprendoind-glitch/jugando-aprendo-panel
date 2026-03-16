@@ -298,7 +298,6 @@ const CONTENT = {
   },
 } as const
 
-type Lang = 'es' | 'en'
 
 // ── Helpers ───────────────────────────────────────────────────
 function detectPlatform(url: string): 'youtube' | 'tiktok' | 'drive' | 'vimeo' | 'other' {
@@ -391,39 +390,10 @@ function ARIAChatIllustration({ chat }: { chat: { from: string; text: string }[]
   )
 }
 
-// ── Language toggle ───────────────────────────────────────────
-function LangToggle({ lang, onToggle }: { lang: Lang; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      aria-label="Toggle language"
-      title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}
-      style={{
-        display: 'flex', alignItems: 'center', gap: 6,
-        padding: '7px 14px',
-        background: lang === 'en' ? 'linear-gradient(135deg,#f97316,#ea580c)' : '#fff',
-        border: lang === 'en' ? 'none' : '2px solid #fed7aa',
-        borderRadius: 99,
-        fontFamily: "'Baloo 2',cursive",
-        fontSize: 13, fontWeight: 700,
-        color: lang === 'en' ? '#fff' : '#78350f',
-        cursor: 'pointer',
-        transition: 'all .25s',
-        boxShadow: lang === 'en' ? '0 4px 14px rgba(249,115,22,.3)' : 'none',
-        letterSpacing: '0.04em',
-      }}
-    >
-      <Globe size={14} />
-      {lang === 'es' ? 'EN' : 'ES'}
-    </button>
-  )
-}
-
 // ── Main page ─────────────────────────────────────────────────
 export default function LandingPage() {
-  const { locale, changeLocale } = useI18n()
-  const lang = locale as Lang
-  const setLang = changeLocale
+  const { locale } = useI18n()
+  const lang = 'es'
   const [isScrolled, setIsScrolled] = useState(false)
   const [activeAccordion, setActiveAccordion] = useState<number | null>(null)
   const [count50, setCount50] = useState(0)
@@ -634,7 +604,7 @@ export default function LandingPage() {
             <div>
               <p style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 800, fontSize: 16, color: '#1c1917', lineHeight: 1.1 }}>Jugando Aprendo</p>
               <p style={{ fontSize: 10, color: '#a8a29e', fontWeight: 600 }}>
-                {lang === 'es' ? 'Centro de Desarrollo Infantil · Pisco' : 'Child Development Center · Pisco'}
+                {'Centro de Desarrollo Infantil · Pisco'}
               </p>
             </div>
           </div>
@@ -646,7 +616,6 @@ export default function LandingPage() {
             <a href="#faq">{t.nav.faq}</a>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <LangToggle lang={lang} onToggle={() => changeLocale(lang === 'es' ? 'en' : 'es')} />
             <Link href="/login" className="lp-btn-fill">{t.nav.login}</Link>
           </div>
         </div>
@@ -698,7 +667,7 @@ export default function LandingPage() {
 
           <div style={{ position: 'relative', animation: 'lp-up .7s .15s ease both' }}>
             <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 28px 72px rgba(0,0,0,.14)', aspectRatio: '4/3', position: 'relative', border: '5px solid #fff' }}>
-              <Image src="/images/hero-image.jpg?v=2" alt={lang === 'es' ? 'Niños en terapia ABA' : 'Children in ABA therapy'} fill style={{ objectFit: 'cover' }} priority unoptimized />
+              <Image src="/images/hero-image.jpg?v=2" alt={'Niños en terapia ABA'} fill style={{ objectFit: 'cover' }} priority unoptimized />
             </div>
             <div style={{ position: 'absolute', top: 18, left: 10, background: '#fff', borderRadius: 14, padding: '10px 14px', boxShadow: '0 8px 28px rgba(0,0,0,.1)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#1c1917', border: '2px solid #fef3c7' }}>
               <div style={{ width: 30, height: 30, background: '#fef9c3', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Brain size={15} color="#d97706" /></div>

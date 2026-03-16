@@ -329,7 +329,7 @@ async function generarDocx(
 ): Promise<string> {
   const config = REPORTE_CONFIG[tipo] || REPORTE_CONFIG.aba
   const fechaHoy = formatearFechaHoy()
-  const labels = getDocLabels(locale as 'es' | 'en')
+  const labels = getDocLabels('es')
 
   // Importar docx dinámicamente
   const docx = await import('docx')

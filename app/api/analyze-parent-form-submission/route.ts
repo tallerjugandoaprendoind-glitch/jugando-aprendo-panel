@@ -18,7 +18,6 @@ const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
 
 // i18n: responder en el idioma del usuario
 function getLangInstruction(locale: string): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
   return ''
 }
 
@@ -49,7 +48,7 @@ export async function POST(request: NextRequest) {
 CONTEXTO CLÍNICO COMPLETO:
 ${historialTexto}
 
-PACIENTE: ${childName}${childAge ? ` (${childAge} años)` : ''}${getLangInstruction(userLocale)}
+PACIENTE: ${childName}${childAge ? ` (${childAge} años)` : ''}
 DIAGNÓSTICO: ${diagnosis}
 FORMULARIO: ${formTitle}
 

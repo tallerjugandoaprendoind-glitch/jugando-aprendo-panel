@@ -29,7 +29,7 @@ export type NotifTipo =
   | 'alerta_clinica'  | 'mensaje_terapeuta'
   | 'recurso_nuevo'   | 'custom'
 
-export type NotifLocale = 'es' | 'en' | 'pt' | 'fr' | 'de' | 'it'
+export type NotifLocale = 'es'
 
 export interface TelegramNotif {
   tipo: NotifTipo

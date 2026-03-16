@@ -42,7 +42,6 @@ function getSpecializedInstructions(formType: string): string {
 
 // i18n: responder en el idioma del usuario
 function getLangInstruction(locale: string): string {
-  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
   return ''
 }
 
@@ -66,7 +65,7 @@ ${ctx.fullContext}
 PACIENTE: ${ctx.childName}, ${ctx.childAge}
 DIAGNÓSTICO: ${ctx.diagnosis || diagnosis || 'En evaluación'}
 FORMULARIO: ${FORM_LABELS[formType] || formType}
-${sessionContext ? `CONTEXTO EXTRA: ${sessionContext}` : ''}${getLangInstruction(userLocale)}
+${sessionContext ? `CONTEXTO EXTRA: ${sessionContext}` : ''}
 
 DATOS DEL FORMULARIO:
 ${JSON.stringify(formData, null, 2)}
