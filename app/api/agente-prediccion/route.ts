@@ -1,27 +1,11 @@
 // app/api/agente-prediccion/route.ts
-// 🧠 Agente Predicción IA — predice progreso futuro por paciente
-// Analiza patrones de las últimas sesiones y genera predicciones con Groq
+// 🧠 Agente Predicción IA — predice progreso por PROGRAMA y NIVEL DE OBJETIVO específico
+// Criterio de logro: ≥90% en 2 sesiones consecutivas por nivel de objetivo = LOGRADO
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { buildAIContext } from '@/lib/ai-context-builder'
-
-function parseNivelLogro(val: any): number | null {
-  if (val === null || val === undefined || val === '') return null
-  if (typeof val === 'number' && !isNaN(val)) return Math.min(100, Math.max(0, val))
-  const s = String(val).trim()
-  const rangeMatch = s.match(/^(\d+)\s*[-–]\s*(\d+)/)
-  if (rangeMatch) return Math.round((parseInt(rangeMatch[1]) + parseInt(rangeMatch[2])) / 2)
-  const numMatch = s.match(/^(\d+)/)
-  if (numMatch) return Math.min(100, parseInt(numMatch[1]))
-  const lower = s.toLowerCase()
-  if (lower.includes('completamente') || lower.includes('76')) return 88
-  if (lower.includes('mayormente') || lower.includes('51')) return 63
-  if (lower.includes('parcialmente') || lower.includes('26')) return 38
-  if (lower.includes('mínimo') || lower.includes('0')) return 13
-  return null
-}
 
 function calcularTendencia(valores: number[]): { slope: number; r2: number } {
   if (valores.length < 2) return { slope: 0, r2: 0 }
@@ -31,7 +15,8 @@ function calcularTendencia(valores: number[]): { slope: number; r2: number } {
   const sumY = valores.reduce((a, b) => a + b, 0)
   const sumXY = x.reduce((a, xi, i) => a + xi * valores[i], 0)
   const sumX2 = x.reduce((a, xi) => a + xi * xi, 0)
-  const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX)
+  const denom = n * sumX2 - sumX * sumX
+  const slope = denom === 0 ? 0 : (n * sumXY - sumX * sumY) / denom
   const meanY = sumY / n
   const ssTot = valores.reduce((a, y) => a + (y - meanY) ** 2, 0)
   const ssRes = valores.reduce((a, y, i) => a + (y - (meanY + slope * (i - (n - 1) / 2))) ** 2, 0)
@@ -39,148 +24,209 @@ function calcularTendencia(valores: number[]): { slope: number; r2: number } {
   return { slope, r2 }
 }
 
+function calcularMediana(valores: number[]): number {
+  if (valores.length === 0) return 0
+  const sorted = [...valores].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2
+}
+
+function calcularMedia(valores: number[]): number {
+  if (valores.length === 0) return 0
+  return valores.reduce((a, b) => a + b, 0) / valores.length
+}
+
+// Verificar criterio de logro: 90% en 2 sesiones consecutivas
+function verificarCriterioLogro(porcentajes: number[], criterio = 90): { logrado: boolean; sesionesConsecutivas: number } {
+  let consecutivas = 0
+  let maxConsecutivas = 0
+  for (const p of porcentajes) {
+    if (p >= criterio) {
+      consecutivas++
+      maxConsecutivas = Math.max(maxConsecutivas, consecutivas)
+    } else {
+      consecutivas = 0
+    }
+  }
+  return { logrado: maxConsecutivas >= 2, sesionesConsecutivas: maxConsecutivas }
+}
+
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale?: string | null): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
+  return ''
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { childId, childName, semanas = 12 } = await req.json()
+    const { childId, childName } = await req.json()
     if (!childId) return NextResponse.json({ error: 'childId requerido' }, { status: 400 })
 
-    const fechaInicio = new Date()
-    fechaInicio.setDate(fechaInicio.getDate() - semanas * 7)
-
-    // Cargar sesiones ABA recientes
-    const { data: sesiones } = await supabaseAdmin
-      .from('registro_aba')
-      .select('fecha_sesion, datos')
+    // Cargar programas ABA del paciente
+    const { data: programas } = await supabaseAdmin
+      .from('programas_aba')
+      .select('id, nombre, objetivo, fase_actual, criterio_dominio_pct, tipo_medicion, created_at')
       .eq('child_id', childId)
-      .gte('fecha_sesion', fechaInicio.toISOString().split('T')[0])
-      .order('fecha_sesion', { ascending: true })
+      .eq('activo', true)
+      .order('created_at', { ascending: true })
 
-    if (!sesiones || sesiones.length < 3) {
+    if (!programas || programas.length === 0) {
       return NextResponse.json({
-        prediccion_30d: null,
-        prediccion_90d: null,
-        confianza: 0,
-        mensaje: 'Se necesitan al menos 3 sesiones para generar predicciones.',
-        areas_riesgo: [],
-        areas_fortaleza: [],
-        recomendaciones: [],
-        analisis_ia: null
+        programas_analizados: 0,
+        analisis_por_programa: [],
+        resumen_general: null,
+        mensaje: 'No hay programas ABA activos para este paciente.',
       })
     }
 
-    // Extraer métricas
-    const logroValues = sesiones.map(s => parseNivelLogro(s.datos?.nivel_logro_objetivos)).filter((v): v is number => v !== null)
-    const atencionValues = sesiones.map(s => Number(s.datos?.nivel_atencion || 0)).filter(v => v > 0).map(v => (v / 5) * 100)
-    const toleranciaValues = sesiones.map(s => Number(s.datos?.tolerancia_frustracion || 0)).filter(v => v > 0).map(v => (v / 5) * 100)
-    const comunicacionValues = sesiones.map(s => Number(s.datos?.iniciativa_comunicativa || 0)).filter(v => v > 0).map(v => (v / 5) * 100)
+    const analisis_por_programa = []
 
-    // Calcular tendencias
-    const tendenciaLogro = calcularTendencia(logroValues)
-    const tendenciaAtencion = calcularTendencia(atencionValues)
+    for (const prog of programas) {
+      // Cargar sesiones de este programa específico
+      const { data: sesiones } = await supabaseAdmin
+        .from('sesiones_programa')
+        .select('fecha, porcentaje_exito, fase, set_nombre, oportunidades_totales, respuestas_correctas, notas')
+        .eq('programa_id', prog.id)
+        .order('fecha', { ascending: true })
 
-    // Predicción (regresión lineal proyectada)
-    const ultimoLogro = logroValues[logroValues.length - 1] || 50
-    const prediccion30 = Math.min(100, Math.max(0, Math.round(ultimoLogro + tendenciaLogro.slope * 4)))
-    const prediccion90 = Math.min(100, Math.max(0, Math.round(ultimoLogro + tendenciaLogro.slope * 12)))
+      if (!sesiones || sesiones.length === 0) {
+        analisis_por_programa.push({
+          programa_id: prog.id,
+          nombre: prog.nombre,
+          objetivo: prog.objetivo,
+          fase_actual: prog.fase_actual,
+          criterio_dominio: prog.criterio_dominio_pct || 90,
+          total_sesiones: 0,
+          ultimo_porcentaje: null,
+          media: null,
+          mediana: null,
+          tendencia: null,
+          criterio_logrado: false,
+          sets: [],
+          mensaje: 'Sin sesiones registradas',
+        })
+        continue
+      }
 
-    // Confianza basada en R² y cantidad de sesiones
-    const confianza = Math.round(Math.min(95, (tendenciaLogro.r2 * 60) + Math.min(35, sesiones.length * 3)))
+      const porcentajes = sesiones.map(s => s.porcentaje_exito || 0)
+      const ultimoPct = porcentajes[porcentajes.length - 1]
+      const media = calcularMedia(porcentajes)
+      const mediana = calcularMediana(porcentajes)
+      const tendencia = calcularTendencia(porcentajes)
+      const criterio = prog.criterio_dominio_pct || 90
+      const { logrado, sesionesConsecutivas } = verificarCriterioLogro(porcentajes, criterio)
 
-    // Identificar áreas de riesgo y fortaleza
-    const areas: { nombre: string; valor: number; tendencia: number }[] = []
-    if (logroValues.length > 0) areas.push({ nombre: 'Logro de Objetivos', valor: ultimoLogro, tendencia: tendenciaLogro.slope })
-    if (atencionValues.length > 0) areas.push({ nombre: 'Atención', valor: atencionValues[atencionValues.length - 1], tendencia: tendenciaAtencion.slope })
-    if (toleranciaValues.length > 0) areas.push({ nombre: 'Tolerancia a la Frustración', valor: toleranciaValues[toleranciaValues.length - 1], tendencia: calcularTendencia(toleranciaValues).slope })
-    if (comunicacionValues.length > 0) areas.push({ nombre: 'Comunicación', valor: comunicacionValues[comunicacionValues.length - 1], tendencia: calcularTendencia(comunicacionValues).slope })
+      // Agrupar por SET
+      const setsMap: Record<string, number[]> = {}
+      for (const s of sesiones) {
+        const setKey = s.set_nombre || s.fase || 'Set 1'
+        if (!setsMap[setKey]) setsMap[setKey] = []
+        setsMap[setKey].push(s.porcentaje_exito || 0)
+      }
 
-    const areas_riesgo = areas.filter(a => a.valor < 50 || a.tendencia < -2).map(a => a.nombre)
-    const areas_fortaleza = areas.filter(a => a.valor >= 70 && a.tendencia >= 0).map(a => a.nombre)
+      const sets = Object.entries(setsMap).map(([nombre, pcts]) => {
+        const { logrado: setLogrado, sesionesConsecutivas: cons } = verificarCriterioLogro(pcts, criterio)
+        return {
+          nombre,
+          sesiones: pcts.length,
+          ultimo_pct: pcts[pcts.length - 1],
+          media: Math.round(calcularMedia(pcts)),
+          mediana: Math.round(calcularMediana(pcts)),
+          criterio_logrado: setLogrado,
+          sesiones_consecutivas_sobre_criterio: cons,
+          estado: setLogrado ? 'LOGRADO ✅' : pcts[pcts.length - 1] >= criterio ? 'En criterio (seguir monitoreando)' : 'En progreso',
+        }
+      })
 
-    // Datos para el análisis IA
-    const contextoSesiones = sesiones.slice(-8).map((s, i) => ({
-      sesion: i + 1,
-      fecha: s.datos?.fecha_sesion || 'N/A',
-      logro: parseNivelLogro(s.datos?.nivel_logro_objetivos),
-      atencion: s.datos?.nivel_atencion,
-      objetivo: s.datos?.objetivo_principal || 'N/A',
-      avances: s.datos?.avances_observados || ''
-    }))
-
-    // Llamar a Groq para análisis predictivo
-    const promptIA = `Eres un BCBA (Board Certified Behavior Analyst) especializado en análisis de datos ABA. Tu informe va dirigido al TERAPEUTA o SUPERVISORA clínica, NO al paciente ni a los padres. Usa terminología técnica ABA apropiada para profesionales.
-
-PACIENTE: ${childName}
-SESIONES ANALIZADAS: ${sesiones.length} (últimas ${semanas} semanas)
-
-MÉTRICAS ACTUALES:
-- Logro promedio de objetivos: ${Math.round(logroValues.reduce((a, b) => a + b, 0) / Math.max(1, logroValues.length))}%
-- Tendencia de logro: ${tendenciaLogro.slope > 0 ? '+' : ''}${tendenciaLogro.slope.toFixed(1)} puntos/sesión
-- Predicción a 30 días: ${prediccion30}%
-- Predicción a 90 días: ${prediccion90}%
-- Confianza estadística: ${confianza}%
-
-ÚLTIMAS SESIONES:
-${JSON.stringify(contextoSesiones, null, 2)}
-
-ÁREAS EN RIESGO: ${areas_riesgo.join(', ') || 'Ninguna identificada'}
-ÁREAS DE FORTALEZA: ${areas_fortaleza.join(', ') || 'En desarrollo'}
-
-Genera un análisis predictivo clínico con:
-1. INTERPRETACIÓN DEL PATRÓN (2-3 oraciones): qué dice la tendencia sobre el desarrollo del paciente
-2. FACTORES PREDICTIVOS CLAVE (3 puntos): qué variables están impulsando o frenando el progreso  
-3. RIESGO DE ESTANCAMIENTO: bajo/moderado/alto + explicación breve
-4. AJUSTES CLÍNICOS SUGERIDOS AL TERAPEUTA (3-4 puntos técnicos: cambios en procedimientos, fases, sets, antecedentes, consecuencias)
-5. HITO ESPERADO A 90 DÍAS: qué habilidad o nivel debería lograr si continúa la tendencia
-
-Usa terminología ABA clínica. Sé específico, no genérico. Máximo 400 palabras.`
-
-    
-    // ━━━ CEREBRO IA ━━━
-    let _cerebroCtx = ''
-    try {
-      const _kb = await buildAIContext(undefined, undefined, undefined, 'predicción pronóstico ABA TEA neurodesarrollo')
-      _cerebroCtx = _kb.knowledgeContext
-    } catch { /* fallback */ }
-    // ━━━ FIN CEREBRO IA ━━━
-    let analisis_ia: string | null = null
-    try {
-      analisis_ia = await callGroqSimple(
-        'Eres un BCBA experto en análisis de datos ABA. Tu audiencia es el terapeuta/supervisora, no el paciente. Usa terminología técnica ABA. Fundamenta con JABA, Cooper, Malott.',
-        promptIA + (_cerebroCtx ? '\n\n━━━ CEREBRO IA ━━━\n' + _cerebroCtx : ''),
-        { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 800 }
-      )
-    } catch (err) {
-      console.error('Error Groq predicción:', err)
+      analisis_por_programa.push({
+        programa_id: prog.id,
+        nombre: prog.nombre,
+        objetivo: prog.objetivo,
+        fase_actual: prog.fase_actual,
+        criterio_dominio: criterio,
+        total_sesiones: sesiones.length,
+        ultimo_porcentaje: Math.round(ultimoPct),
+        media: Math.round(media),
+        mediana: Math.round(mediana),
+        tendencia_slope: Math.round(tendencia.slope * 10) / 10,
+        tendencia_descripcion: tendencia.slope > 1 ? 'Progreso positivo' : tendencia.slope < -1 ? 'Tendencia negativa ⚠️' : 'Estable',
+        criterio_logrado: logrado,
+        sesiones_consecutivas_sobre_criterio: sesionesConsecutivas,
+        estado_general: logrado ? 'LOGRADO ✅' : ultimoPct >= criterio ? 'En criterio — verificar 2 sesiones consecutivas' : ultimoPct >= criterio * 0.7 ? 'Cerca del criterio' : 'En progreso',
+        sets,
+      })
     }
 
-    // Guardar predicción en Supabase
+    // Contexto para análisis IA
+    let cerebroCtx = ''
     try {
+      const kb = await buildAIContext(undefined, undefined, undefined, 'análisis ABA progreso criterio logro sets')
+      cerebroCtx = kb.knowledgeContext
+    } catch { /* fallback */ }
+
+    const resumenParaIA = analisis_por_programa.map(p => ({
+      programa: p.nombre,
+      objetivo: p.objetivo,
+      sesiones: p.total_sesiones,
+      ultimo_pct: p.ultimo_porcentaje,
+      media: p.media,
+      mediana: p.mediana,
+      tendencia: p.tendencia_descripcion,
+      criterio: p.criterio_dominio,
+      logrado: p.criterio_logrado,
+      sets: p.sets?.map(s => `${s.nombre}: ${s.ultimo_pct}% (media: ${s.media}%, ${s.criterio_logrado ? 'LOGRADO' : 'en progreso'})`).join(' | '),
+    }))
+
+    const prompt = `Eres BCBA supervisora. Analiza el progreso de ${childName} por programa y nivel de objetivo. Tu audiencia son terapeutas y supervisoras clínicas.
+
+CRITERIO DE LOGRO: ≥${analisis_por_programa[0]?.criterio_dominio || 90}% en 2 sesiones CONSECUTIVAS por nivel de objetivo.
+
+DATOS POR PROGRAMA:
+${JSON.stringify(resumenParaIA, null, 2)}
+
+Genera un análisis clínico ABA con:
+1. ESTADO GENERAL (2 oraciones): resumen del progreso del paciente
+2. POR PROGRAMA (para cada uno): estado del nivel de objetivo actual, si está en criterio o no, qué ajuste recomendar al terapeuta
+3. PRIORIDADES: qué programa necesita atención inmediata y por qué
+4. PRÓXIMOS PASOS CLÍNICOS (3 puntos concretos): cambios de set, revisión de antecedentes, ajustes de consecuencias
+
+Sé específico y técnico. Sin perogrulladas. Máximo 350 palabras.`
+
+    let resumen_general: string | null = null
+    try {
+      resumen_general = await callGroqSimple(
+        'Eres BCBA supervisora experta en análisis de datos ABA. Usa terminología técnica. Fundamenta en JABA y Cooper.',
+        prompt + (cerebroCtx ? '\n\n━━━ CEREBRO IA ━━━\n' + cerebroCtx : ''),
+        { model: GROQ_MODELS.SMART, temperature: 0.35, maxTokens: 700 }
+      )
+    } catch (err) {
+      console.error('Error Groq predicción por SET:', err)
+    }
+
+    // Guardar en predicciones_ia (resumen general)
+    try {
+      const logrados = analisis_por_programa.filter(p => p.criterio_logrado).length
+      const enProgreso = analisis_por_programa.filter(p => !p.criterio_logrado).length
       await supabaseAdmin.from('predicciones_ia').upsert({
         child_id: childId,
         fecha_prediccion: new Date().toISOString().split('T')[0],
-        prediccion_30d: prediccion30,
-        prediccion_90d: prediccion90,
-        confianza,
-        areas_riesgo,
-        areas_fortaleza,
-        analisis_ia,
-        sesiones_analizadas: sesiones.length,
-        tendencia_slope: tendenciaLogro.slope,
-        updated_at: new Date().toISOString()
+        prediccion_30d: null,
+        prediccion_90d: null,
+        confianza: Math.min(95, analisis_por_programa.reduce((a, p) => a + p.total_sesiones, 0) * 2),
+        areas_riesgo: analisis_por_programa.filter(p => (p.tendencia_slope ?? 0) < -1).map(p => p.nombre),
+        areas_fortaleza: analisis_por_programa.filter(p => p.criterio_logrado).map(p => p.nombre),
+        analisis_ia: resumen_general,
+        sesiones_analizadas: analisis_por_programa.reduce((a, p) => a + p.total_sesiones, 0),
+        updated_at: new Date().toISOString(),
       }, { onConflict: 'child_id' })
-    } catch { /* no bloquear si falla guardado */ }
+    } catch { /* no bloquear */ }
 
     return NextResponse.json({
-      prediccion_30d: prediccion30,
-      prediccion_90d: prediccion90,
-      confianza,
-      tendencia: tendenciaLogro.slope > 1 ? 'positiva' : tendenciaLogro.slope < -1 ? 'negativa' : 'estable',
-      areas_riesgo,
-      areas_fortaleza,
-      sesiones_analizadas: sesiones.length,
-      ultimo_logro: ultimoLogro,
-      analisis_ia,
-      data_points: logroValues.map((v, i) => ({ sesion: i + 1, logro: v }))
+      programas_analizados: analisis_por_programa.length,
+      analisis_por_programa,
+      resumen_general,
+      criterio_nota: '≥90% en 2 sesiones consecutivas por nivel de objetivo = LOGRADO',
     })
 
   } catch (e: any) {
@@ -190,18 +236,14 @@ Usa terminología ABA clínica. Sé específico, no genérico. Máximo 400 palab
 }
 
 export async function GET(req: NextRequest) {
-  // Retorna predicciones guardadas de todos los pacientes (para dashboard)
   const { searchParams } = new URL(req.url)
   const childId = searchParams.get('child_id')
-
   try {
     let query = supabaseAdmin
       .from('predicciones_ia')
       .select('*, children(name, diagnosis)')
       .order('updated_at', { ascending: false })
-
     if (childId) query = query.eq('child_id', childId)
-
     const { data } = await query.limit(50)
     return NextResponse.json({ data: data || [] })
   } catch (e: any) {

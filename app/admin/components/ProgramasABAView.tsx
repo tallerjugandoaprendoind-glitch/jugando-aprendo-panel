@@ -1,4 +1,6 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect, useCallback } from 'react'
 import GraficoProgramaABA from '@/components/graficos/GraficoProgramaABA'
 import {
@@ -47,6 +49,32 @@ const FASE_COLORS: Record<string, string> = {
 
 export default function ProgramasABAView({ childId, childName }: { childId: string; childName: string }) {
   const toast = useToast()
+  const { t } = useI18n()
+
+
+  const FASE_LABELS: Record<string, string> = {
+    linea_base:    t('programas.lineaBase'),
+    intervencion:  t('programas.intervencion'),
+    mantenimiento: t('programas.mantenimiento'),
+    seguimiento:   t('programas.seguimiento'),
+  }
+  const CHART_TIPO_LABELS: Record<string, string> = {
+    lineas:     t('reportes.lineas'),
+    barras:     t('reportes.barras'),
+    histograma: t('reportes.histograma'),
+    pie:        t('reportes.pie'),
+  }
+
+  const AREA_LABELS: Record<string, string> = {
+    comunicacion: t('programas.areaComunicacion') || 'Communication',
+    conducta:     t('programas.areaConducca') || 'Behavior',
+    cognitivo:    t('programas.areaCognitivo') || 'Cognitive',
+    social:       t('programas.areaSocial') || 'Social',
+    autonomia:    t('programas.areaAutonomia') || 'Autonomy',
+    academico:    t('programas.areaAcademico') || 'Academic',
+    sensorial:    t('programas.areaSensorial') || 'Sensory',
+  }
+
   const [programas, setProgramas] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showCrear, setShowCrear] = useState(false)
@@ -106,23 +134,23 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
             <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">
               <Activity size={16} className="text-indigo-600" />
             </div>
-            Programas ABA
+            {t('programas.titulo')}
           </h2>
           <p className="text-slate-400 text-xs mt-0.5 ml-1">Registro de datos conductuales · {childName}</p>
         </div>
         <button onClick={() => setShowCrear(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
-          <Plus size={16} /> Nuevo Programa
+          <Plus size={16} /> {t('programas.nuevo')}
         </button>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: 'Activos', value: stats.activos, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-          { label: 'Dominados', value: stats.dominados, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: 'En intervención', value: stats.enIntervencion, color: 'text-violet-600', bg: 'bg-violet-50' },
-          { label: 'Alertas IA', value: stats.alertas, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: t('programas.activos'), value: stats.activos, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+          { label: t('programas.dominados'), value: stats.dominados, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: t('programas.enIntervencion'), value: stats.enIntervencion, color: 'text-violet-600', bg: 'bg-violet-50' },
+          { label: t('programas.alertasIA'), value: stats.alertas, color: 'text-amber-600', bg: 'bg-amber-50' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} rounded-2xl p-3 text-center`}>
             <p className={`font-black text-2xl ${s.color}`}>{s.value}</p>
@@ -135,7 +163,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       {loadingAI && (
         <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 flex items-center gap-3">
           <Loader2 size={16} className="animate-spin text-violet-500" />
-          <p className="text-sm text-violet-700 font-medium">ARIA analizando progreso...</p>
+          <p className="text-sm text-violet-700 font-medium">{t('dashboard.ariAnalizando')}</p>
         </div>
       )}
       {aiAnalysis && aiAnalysis.alertas?.length > 0 && (
@@ -163,7 +191,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
                 ? 'bg-indigo-600 text-white border-indigo-600'
                 : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
             }`}>
-            {area === 'todos' ? '📋 Todos' : `${AREA_CONFIG[area]?.emoji} ${AREA_CONFIG[area]?.label}`}
+            {area === 'todos' ? `📋 ${t('programas.todos')}` : `${AREA_CONFIG[area]?.emoji} ${AREA_LABELS[area] || AREA_CONFIG[area]?.label}`}
           </button>
         ))}
       </div>
@@ -172,15 +200,15 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       {loading ? (
         <div className="flex flex-col items-center py-16 gap-3">
           <Loader2 className="animate-spin text-indigo-400" size={28} />
-          <p className="text-slate-400 text-sm">Cargando programas...</p>
+          <p className="text-slate-400 text-sm">{t('programas.sinProgramas')}</p>
         </div>
       ) : programasFiltrados.length === 0 ? (
         <div className="bg-white dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-3xl p-14 text-center">
           <div className="w-14 h-14 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
             <BarChart3 size={26} className="text-indigo-300" />
           </div>
-          <p className="font-bold text-slate-500 mb-1">Sin programas {filtroArea !== 'todos' ? `en ${AREA_CONFIG[filtroArea]?.label}` : ''}</p>
-          <p className="text-xs text-slate-300">Crea el primer programa ABA para {childName}</p>
+          <p className="font-bold text-slate-500 mb-1">{t('programas.sinProgramas')}{filtroArea !== 'todos' ? ` ${t('programas.enArea').replace('{area}', AREA_CONFIG[filtroArea]?.label || '')}` : ''}</p>
+          <p className="text-xs text-slate-300">{t('programas.creaElPrimero').replace('{nombre}', childName)}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -233,6 +261,7 @@ function AlertaCard({ alerta }: { alerta: any }) {
 
 // ── Tarjeta de programa con gráfica ─────────────────────────────────────────
 function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'lineas', onChangeTipoGrafico }: any) {
+  const { t } = useI18n()
   const [expanded, setExpanded] = useState(false)
   const [loadingDetalle, setLoadingDetalle] = useState(false)
   const [detalle, setDetalle] = useState<any>(null)
@@ -257,8 +286,12 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
     try {
       const res = await fetch(`/api/programas-aba?id=${programa.id}`)
       const json = await res.json()
-      setDetalle(json.data)
-    } catch { toast.error('Error cargando detalle') }
+      // Usar el programa actual como fallback si la API no retorna detalle
+      setDetalle(json.data || programa)
+    } catch {
+      // En caso de error, usar el programa ya cargado como detalle
+      setDetalle(programa)
+    }
     finally { setLoadingDetalle(false) }
   }
 
@@ -277,8 +310,8 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
   }
 
   const faseLabel: Record<string, string> = {
-    linea_base: 'Línea Base', intervencion: 'Intervención',
-    mantenimiento: 'Mantenimiento', seguimiento: 'Seguimiento',
+    linea_base: t('programas.lineaBase'), intervencion: t('programas.intervencion'),
+    mantenimiento: t('programas.mantenimiento'), seguimiento: t('programas.seguimiento'),
   }
 
   return (
@@ -300,7 +333,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
             <p className="text-xs text-slate-400 mt-1 line-clamp-1">{programa.objetivo_lp}</p>
             <div className="flex items-center gap-4 mt-2">
               <span className="text-xs text-slate-500 flex items-center gap-1">
-                <BarChart3 size={10} /> {sesiones.length} sesiones
+                <BarChart3 size={10} /> {sesiones.length} {t('programas.sesiones') || 'sesiones'}
               </span>
               {ultimoPct !== null && (
                 <span className="text-xs font-bold flex items-center gap-1">
@@ -313,14 +346,14 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                 </span>
               )}
               <span className="text-xs text-slate-400">
-                Criterio: {programa.criterio_dominio_pct}%
+                {t('programas.criterio')}: {programa.criterio_dominio_pct}%
               </span>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={e => { e.stopPropagation(); onRegistrarSesion() }}
               className="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all">
-              + Sesión
+              {t('programas.agregarSesion')}
             </button>
             {expanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
           </div>
@@ -359,10 +392,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     {/* Selector de tipo — solo analista */}
                     <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
                       {([
-                        { id: 'lineas'     as const, label: 'Líneas',     emoji: '📈' },
-                        { id: 'barras'     as const, label: 'Barras',     emoji: '📊' },
-                        { id: 'histograma' as const, label: 'Histograma', emoji: '🗂️' },
-                        { id: 'pie'        as const, label: 'Pie',        emoji: '🥧' },
+                        { id: 'lineas'     as const, label: t('reportes.lineas'),     emoji: '📈' },
+                        { id: 'barras'     as const, label: t('reportes.barras'),     emoji: '📊' },
+                        { id: 'histograma' as const, label: t('reportes.histograma'), emoji: '🗂️' },
+                        { id: 'pie'        as const, label: t('reportes.pie'),        emoji: '🥧' },
                       ] as const).map(t => (
                         <button key={t.id} onClick={() => onChangeTipoGrafico(t.id)}
                           title={t.label}
@@ -403,10 +436,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       type Band = { set: string; start: number; end: number; label: string }
                       const bands: Band[] = []
                       let bandStart = 0
-                      let currentSet = chartData[0]?.set || 'SET 1'
+                      let currentSet = chartData[0]?.set || 'Nivel 1'
                       chartData.forEach((d: any, i: number) => {
                         if (d.set !== currentSet || i === chartData.length - 1) {
-                          bands.push({ set: currentSet, start: bandStart, end: i === chartData.length - 1 ? i : i - 1, label: currentSet || `SET ${bands.length + 1}` })
+                          bands.push({ set: currentSet, start: bandStart, end: i === chartData.length - 1 ? i : i - 1, label: currentSet || `Nivel ${bands.length + 1}` })
                           currentSet = d.set
                           bandStart = i
                         }
@@ -433,11 +466,11 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       <ResponsiveContainer width="100%" height={200}>
                         <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                          <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: 'Sesión', position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
+                          <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `Sesión ${label}` }}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           {cambiosFase.map(x => <ReferenceLine key={x} x={x} stroke="#a5b4fc" strokeDasharray="4 2" strokeWidth={1.5} />)}
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
@@ -452,7 +485,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     {tipoGrafico === 'barras' && chartData.length > 0 && (() => {
                       type Band = { set: string; start: number; end: number }
                       const bands: Band[] = []
-                      let bStart = 0; let cSet = chartData[0]?.set || 'SET 1'
+                      let bStart = 0; let cSet = chartData[0]?.set || 'Nivel 1'
                       chartData.forEach((d: any, i: number) => {
                         if (d.set !== cSet || i === chartData.length - 1) {
                           bands.push({ set: cSet, start: bStart, end: i === chartData.length - 1 ? i : i - 1 })
@@ -478,7 +511,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${d.set || ''}` : `Sesión ${label}` }}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
                             label={{ value: `🏆 ${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
@@ -511,7 +544,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                             <XAxis dataKey="rango" tick={{ fontSize: 10 }} />
                             <YAxis tick={{ fontSize: 10 }} label={{ value: 'Sesiones', angle: -90, position: 'insideLeft', fontSize: 10 }} />
-                            <Tooltip formatter={(v: any) => [`${v} sesiones`, 'Cantidad']} />
+                            <Tooltip formatter={(v: any) => [`${v} ${t('programas.sesiones') || 'sesiones'}`, t('programas.cantidad')]} />
                             <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                               {histData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
                             </Bar>
@@ -536,7 +569,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                               <Pie data={pieRaw} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} paddingAngle={3}>
                                 {pieRaw.map((entry, i) => <Cell key={i} fill={entry.color} />)}
                               </Pie>
-                              <Tooltip formatter={(v: any) => [`${v} sesiones`, '']} />
+                              <Tooltip formatter={(v: any) => [`${v} ${t('programas.sesiones') || 'sesiones'}`, '']} />
                             </PieChart>
                           </ResponsiveContainer>
                           <div className="flex-1 space-y-2">
@@ -548,7 +581,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                               </div>
                             ))}
                             <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
-                              Total: {chartData.length} sesiones
+                              {t('programas.totalSesiones')}: {chartData.length} {t('programas.sesiones') || 'sesiones'}
                             </p>
                           </div>
                         </div>
@@ -578,7 +611,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           obj.estado === 'en_progreso' ? 'bg-indigo-100 text-indigo-700' :
                           'bg-slate-100 text-slate-500'
                         }`}>
-                          {obj.estado === 'dominado' ? '✅ Dominado' : obj.estado === 'en_progreso' ? '▶ En progreso' : '⏳ Pendiente'}
+                          {obj.estado === 'dominado' ? t('programas.dominado') : obj.estado === 'en_progreso' ? t('programas.enProgreso') : t('programas.pendiente')}
                         </span>
                       </div>
                     ))}
@@ -589,7 +622,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
               {/* Últimas sesiones */}
               {detalle.sesiones_datos_aba?.length > 0 && (
                 <div>
-                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📋 Últimas sesiones</p>
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📋 {t('programas.ultimasSesiones')}</p>
                   <div className="space-y-1.5">
                     {detalle.sesiones_datos_aba.slice(-6).reverse().map((s: any) => (
                       <div key={s.id} className="flex items-center gap-3 bg-white rounded-xl p-3 border border-slate-100 text-xs">
@@ -617,8 +650,11 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📌 Procedimiento</p>
                   <div className="bg-white dark:bg-slate-700 rounded-xl p-4 border border-slate-100 dark:border-slate-600 space-y-2 text-xs text-slate-600 dark:text-slate-300">
-                    {detalle.sd_estimulo && <p><span className="font-bold">Sd:</span> {detalle.sd_estimulo}</p>}
-                    {detalle.correccion_error && <p><span className="font-bold">Corrección:</span> {detalle.correccion_error}</p>}
+                    {detalle.sd_estimulo && <p><span className="font-bold">📍 Sd:</span> {detalle.sd_estimulo}</p>}
+                    {detalle.unidad_positiva && <p><span className="font-bold">✅ Unidad +:</span> {detalle.unidad_positiva}</p>}
+                    {detalle.unidad_negativa && <p><span className="font-bold">❎ Unidad -:</span> {detalle.unidad_negativa}</p>}
+                    {(detalle.reforzadores || detalle.ayudas) && <p><span className="font-bold">🤝🏼 Ayudas:</span> {detalle.reforzadores || detalle.ayudas}</p>}
+                    {detalle.correccion_error && <p><span className="font-bold">{t('programas.correccion')}</span> {detalle.correccion_error}</p>}
                     {detalle.reforzadores && <p><span className="font-bold">Reforzadores:</span> {detalle.reforzadores}</p>}
                     {detalle.materiales && <p><span className="font-bold">Materiales:</span> {detalle.materiales}</p>}
                   </div>
@@ -633,12 +669,13 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 }
 
 function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
+  const { t } = useI18n()
   const labels: Record<string, { label: string; color: string }> = {
-    linea_base:    { label: 'Línea Base',    color: 'bg-slate-100 text-slate-600' },
+    linea_base:    { label: t('programas.lineaBase'),    color: 'bg-slate-100 text-slate-600' },
     intervencion:  { label: 'Intervención',  color: 'bg-indigo-100 text-indigo-700' },
-    mantenimiento: { label: 'Mantenimiento', color: 'bg-emerald-100 text-emerald-700' },
+    mantenimiento: { label: t('programas.mantenimiento'), color: 'bg-emerald-100 text-emerald-700' },
     seguimiento:   { label: 'Seguimiento',   color: 'bg-amber-100 text-amber-700' },
-    dominado:      { label: '✅ Dominado',   color: 'bg-emerald-100 text-emerald-700' },
+    dominado:      { label: t('programas.dominado'),   color: 'bg-emerald-100 text-emerald-700' },
   }
   const cfg = labels[fase] || { label: fase, color: 'bg-slate-100 text-slate-500' }
   return (
@@ -650,15 +687,15 @@ function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
 
 // ── Modal: Registrar Sesión ──────────────────────────────────────────────────
 function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
+  const { t } = useI18n()
   const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [form, setForm] = useState({
     fase: programa.fase_actual || 'intervencion',
     oportunidades_totales: '',
     respuestas_correctas: '',
-    frecuencia_valor: '',
-    duracion_segundos: '',
-    nivel_ayuda: 'independiente',
+    nivel_ayuda: '',
+    nivel_ayuda_custom: '',
     notas: '',
     fecha: new Date().toISOString().split('T')[0],
   })
@@ -668,15 +705,15 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
     : null
 
   const handleSave = async () => {
-    if (!form.oportunidades_totales && !form.frecuencia_valor && !form.duracion_segundos) {
-      toast.error('Ingresa al menos un tipo de medición')
+    if (!form.oportunidades_totales) {
+      toast.error('Ingresa oportunidades totales')
       return
     }
     setSaving(true)
     try {
       const res = await fetch('/api/programas-aba', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           action: 'registrar_sesion',
           sesion: {
@@ -687,9 +724,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
             oportunidades_totales: Number(form.oportunidades_totales) || 0,
             respuestas_correctas: Number(form.respuestas_correctas) || 0,
             respuestas_incorrectas: Math.max(0, Number(form.oportunidades_totales) - Number(form.respuestas_correctas)),
-            frecuencia_valor: form.frecuencia_valor ? Number(form.frecuencia_valor) : null,
-            duracion_segundos: form.duracion_segundos ? Number(form.duracion_segundos) : null,
-            nivel_ayuda: form.nivel_ayuda,
+            nivel_ayuda: form.nivel_ayuda_custom || form.nivel_ayuda,
             notas: form.notas,
           },
         }),
@@ -709,7 +744,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
         <div className="p-6">
           <div className="flex justify-between items-center mb-5">
             <div>
-              <h3 className="font-black text-lg text-slate-800">Registrar Sesión</h3>
+              <h3 className="font-black text-lg text-slate-800">{t('programas.registrarSesion')}</h3>
               <p className="text-sm text-slate-400 mt-0.5">{programa.titulo}</p>
             </div>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
@@ -718,35 +753,35 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">Fecha</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('common.fecha')}</label>
                 <input type="date" value={form.fecha}
                   onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
                   className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
               </div>
               <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">Fase</label>
+                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('ui.phase')}</label>
                 <select value={form.fase} onChange={e => setForm(f => ({ ...f, fase: e.target.value }))}
                   className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400">
-                  <option value="linea_base">Línea Base</option>
-                  <option value="intervencion">Intervención</option>
-                  <option value="mantenimiento">Mantenimiento</option>
-                  <option value="seguimiento">Seguimiento</option>
+                  <option value="linea_base">{t('ui.baseline')}</option>
+                  <option value="intervencion">{t('ui.intervention')}</option>
+                  <option value="mantenimiento">{t('programas.mantenimiento')}</option>
+                  <option value="seguimiento">{t('ui.follow_up')}</option>
                 </select>
               </div>
             </div>
 
             {/* % de éxito */}
             <div className="bg-indigo-50 rounded-2xl p-4 border border-indigo-100">
-              <p className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-3">📊 Porcentaje de éxito</p>
+              <p className="text-xs font-black text-indigo-600 uppercase tracking-widest mb-3">{t('programas.pctExito')}</p>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-slate-500 font-bold block mb-1">Oportunidades totales</label>
+                  <label className="text-xs text-slate-500 font-bold block mb-1">{t('ui.total_opportunities')}</label>
                   <input type="number" min="0" value={form.oportunidades_totales}
                     onChange={e => setForm(f => ({ ...f, oportunidades_totales: e.target.value }))}
                     placeholder="10" className="w-full p-3 bg-white border-2 border-indigo-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 text-center text-lg" />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-500 font-bold block mb-1">Respuestas correctas</label>
+                  <label className="text-xs text-slate-500 font-bold block mb-1">{t('ui.correct_responses')}</label>
                   <input type="number" min="0" value={form.respuestas_correctas}
                     onChange={e => setForm(f => ({ ...f, respuestas_correctas: e.target.value }))}
                     placeholder="8" className="w-full p-3 bg-white border-2 border-indigo-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-500 text-center text-lg" />
@@ -763,42 +798,36 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
               )}
             </div>
 
-            {/* Frecuencia y duración */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">⚡ Frecuencia</label>
-                <input type="number" min="0" value={form.frecuencia_valor}
-                  onChange={e => setForm(f => ({ ...f, frecuencia_valor: e.target.value }))}
-                  placeholder="Nº veces" className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
-              </div>
-              <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">⏱ Duración (seg)</label>
-                <input type="number" min="0" value={form.duracion_segundos}
-                  onChange={e => setForm(f => ({ ...f, duracion_segundos: e.target.value }))}
-                  placeholder="Segundos" className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
-              </div>
-            </div>
 
-            {/* Nivel de ayuda */}
+
+            {/* Nivel de ayuda — texto libre con sugerencias */}
             <div>
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">🤝 Nivel de ayuda</label>
-              <div className="flex flex-wrap gap-2">
-                {['independiente', 'gesto', 'verbal', 'modelado', 'fisico_parcial', 'fisico_total'].map(nivel => (
-                  <button key={nivel} onClick={() => setForm(f => ({ ...f, nivel_ayuda: nivel }))}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-                      form.nivel_ayuda === nivel ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200'
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">🤝🏼 {t('programas.nivelAyuda')}</label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {['Independiente', 'Gesto', 'Verbal', 'Modelado', 'Físico parcial', 'Físico total'].map(nivel => (
+                  <button key={nivel}
+                    onClick={() => setForm(f => ({ ...f, nivel_ayuda: nivel, nivel_ayuda_custom: nivel }))}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                      form.nivel_ayuda_custom === nivel
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-indigo-300'
                     }`}>
-                    {nivel.replace('_', ' ')}
+                    {nivel}
                   </button>
                 ))}
               </div>
+              <input
+                value={form.nivel_ayuda_custom}
+                onChange={e => setForm(f => ({ ...f, nivel_ayuda: e.target.value, nivel_ayuda_custom: e.target.value }))}
+                {...{placeholder: t('ui.observations_session')}}
+                className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
             </div>
 
             {/* Notas */}
             <div>
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">📝 Notas</label>
               <textarea value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
-                rows={2} placeholder="Observaciones de la sesión..."
+                rows={2} {...{placeholder: t('ui.session_observations')}}
                 className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
             </div>
           </div>
@@ -821,12 +850,15 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
 
 // ── Modal: Crear Programa ────────────────────────────────────────────────────
 function CrearProgramaModal({ childId, onClose, onCreated }: any) {
+  const { t } = useI18n()
   const toast = useToast()
   const [saving, setSaving] = useState(false)
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({
     titulo: '', area: 'comunicacion', objetivo_lp: '',
     sd_estimulo: '', correccion_error: '', reforzadores: '', materiales: '',
+    unidad_positiva: '', unidad_negativa: '', generalizacion: 'Promover con la familia que realicen este ejercicio en casa.',
+    total_unidades: '10u.', notas_programa: '', drive_url: '',
     tipo_medicion: 'porcentaje', criterio_dominio_pct: 90, criterio_sesiones_consecutivas: 2,
   })
   const [objetivos, setObjetivos] = useState([{ descripcion: '' }])
@@ -839,10 +871,12 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
     try {
       const res = await fetch('/api/programas-aba', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           action: 'crear_programa',
-          programa: { ...form, child_id: childId },
+          programa: { ...form, child_id: childId,
+            ayudas: form.reforzadores, // backward compat
+          },
           objetivos: objetivos.filter(o => o.descripcion.trim()),
         }),
       })
@@ -859,7 +893,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
       <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-black text-lg text-slate-800">Nuevo Programa ABA</h3>
+            <h3 className="font-black text-lg text-slate-800">{t('programas.nuevoPrograma')}</h3>
             <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
           </div>
 
@@ -872,15 +906,15 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
 
           {step === 1 && (
             <div className="space-y-4">
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 1 · Información básica</p>
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('programas.paso1Info')}</p>
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1.5">Nombre del programa *</label>
+                <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.nombrePrograma')} *</label>
                 <input value={form.titulo} onChange={e => set('titulo', e.target.value)}
-                  placeholder="ej: Imitación motora con objetos"
+                  placeholder={t('programas.placeholderNombre')}
                   className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-2">Área *</label>
+                <label className="text-xs font-bold text-slate-500 block mb-2">{t('programas.area')} *</label>
                 <div className="grid grid-cols-3 gap-2">
                   {Object.entries(AREA_CONFIG).map(([k, v]) => (
                     <button key={k} onClick={() => set('area', k)}
@@ -893,9 +927,9 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 </div>
               </div>
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1.5">Objetivo a largo plazo *</label>
+                <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.objetivoLargoPlazo')} *</label>
                 <textarea value={form.objetivo_lp} onChange={e => set('objetivo_lp', e.target.value)}
-                  rows={3} placeholder="Con un criterio de éxito de 90% en 2 sesiones consecutivas, el estudiante..."
+                  rows={3} placeholder={t('ui.mastery_criterion_placeholder')}
                   className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
               </div>
             </div>
@@ -904,7 +938,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
           {step === 2 && (
             <div className="space-y-4">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 2 · Sets / Objetivos CP</p>
-              <p className="text-xs text-slate-400">Define los pasos progresivos del programa (como en LuTr)</p>
+              <p className="text-xs text-slate-400">{t('programas.definePasos')}</p>
               {objetivos.map((obj, i) => (
                 <div key={i} className="flex gap-2">
                   <span className="w-7 h-7 bg-indigo-600 text-white rounded-full text-xs font-black flex items-center justify-center shrink-0 mt-2.5">{i + 1}</span>
@@ -926,9 +960,18 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 className="w-full py-2.5 border-2 border-dashed border-slate-200 rounded-xl text-sm font-bold text-slate-400 hover:border-indigo-300 hover:text-indigo-500">
                 + Agregar set
               </button>
+              {/* Enlace Google Drive / Sheets opcional */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 block mb-1">
+                  📄 Google Sheet / Drive <span className="text-slate-300 font-normal">(opcional)</span>
+                </label>
+                <input value={(form as any).drive_url ?? ''} onChange={e => set('drive_url', e.target.value)}
+                  placeholder="https://docs.google.com/spreadsheets/..."
+                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-400" />
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-bold text-slate-500 block mb-1.5">Criterio de dominio %</label>
+                  <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.criterioDominio')}</label>
                   <input type="number" min="0" max="100" value={form.criterio_dominio_pct}
                     onChange={e => set('criterio_dominio_pct', Number(e.target.value))}
                     className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-center" />
@@ -944,21 +987,32 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
           )}
 
           {step === 3 && (
-            <div className="space-y-4">
+            <div className="space-y-3">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 3 · Procedimiento</p>
               {[
-                { key: 'sd_estimulo', label: '📌 Sd / Estímulo discriminativo', placeholder: 'Instrucción verbal o gesto que inicia la conducta' },
-                { key: 'correccion_error', label: '❌ Corrección del error', placeholder: 'Cómo se corrige si la respuesta es incorrecta' },
-                { key: 'reforzadores', label: '✅ Reforzadores', placeholder: 'Qué reforzadores se usarán (fichas, elogios, tangibles...)' },
-                { key: 'materiales', label: '📚 Materiales', placeholder: 'Materiales necesarios para la sesión' },
+                { key: 'materiales',       label: '📚 Materiales',                    placeholder: 'Materiales necesarios para la sesión' },
+                { key: 'sd_estimulo',      label: '📍 Sd / Estímulo discriminativo',  placeholder: 'Instrucción verbal o gesto que inicia la conducta' },
+                { key: 'unidad_positiva',  label: '✅ Unidad positiva',               placeholder: 'Respuesta correcta esperada' },
+                { key: 'unidad_negativa',  label: '❎ Unidad negativa',              placeholder: 'Respuesta incorrecta / error' },
+                { key: 'reforzadores',     label: '🤝🏼 Ayudas',                       placeholder: 'Las indicadas en el set. Ej: Gesto + verbal' },
+                { key: 'correccion_error', label: '📍 Corrección del error',          placeholder: 'Cómo se corrige si la respuesta es incorrecta' },
+                { key: 'generalizacion',   label: '➡️ Generalización',               placeholder: 'Promover con la familia que realicen este ejercicio en casa.' },
+                { key: 'notas_programa',   label: '🙈 Notas',                         placeholder: 'Observaciones generales del programa...' },
               ].map(({ key, label, placeholder }) => (
                 <div key={key}>
-                  <label className="text-xs font-bold text-slate-500 block mb-1.5">{label}</label>
-                  <textarea value={(form as any)[key]} onChange={e => set(key, e.target.value)}
-                    rows={2} placeholder={placeholder}
+                  <label className="text-xs font-bold text-slate-500 block mb-1">{label}</label>
+                  <textarea value={(form as any)[key] ?? ''} onChange={e => set(key, e.target.value)}
+                    rows={key === 'generalizacion' || key === 'notas_programa' ? 2 : 1} placeholder={placeholder}
                     className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
                 </div>
               ))}
+              {/* Total unidades — fijo en 10 pero editable */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 block mb-1">📍 Total</label>
+                <input value={(form as any).total_unidades ?? '10u.'} onChange={e => set('total_unidades', e.target.value)}
+                  placeholder="10u."
+                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
+              </div>
             </div>
           )}
 
@@ -972,7 +1026,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
             {step < 3 ? (
               <button onClick={() => setStep(s => s + 1)} disabled={!form.titulo || !form.objetivo_lp}
                 className="flex-[2] py-3 bg-indigo-600 text-white rounded-xl font-black text-sm hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2">
-                Siguiente <ArrowRight size={16} />
+                {t('programas.siguiente')} <ArrowRight size={16} />
               </button>
             ) : (
               <button onClick={handleSave} disabled={saving}

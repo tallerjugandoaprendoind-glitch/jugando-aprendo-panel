@@ -1,5 +1,8 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
+
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
@@ -35,10 +38,11 @@ const SOURCE_LABELS: Record<string, { label: string; icon: string; color: string
 
 function formatDate(dateStr: string) {
   const d = new Date(dateStr)
-  return d.toLocaleDateString('es-PE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  const loc = typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es'; return d.toLocaleDateString(loc === 'en' ? 'en-US' : 'es-PE', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 function AnalysisCard({ analysis }: { analysis: any }) {
+  const { t } = useI18n()
   if (!analysis) return null
   const { resumen_ejecutivo, areas_fortaleza, areas_trabajo, actividades_en_casa, recomendaciones } = analysis
   if (!resumen_ejecutivo && !areas_fortaleza?.length) return null
@@ -93,7 +97,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
       {actividades_en_casa?.length > 0 && (
         <div className="bg-blue-50 rounded-2xl border border-blue-100 p-4">
           <p className="text-xs font-black text-blue-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <Home size={13} /> Actividades para practicar en casa
+            <Home size={13} /> {t('familias.actividadesCasa')}
           </p>
           <ul className="space-y-2">
             {actividades_en_casa.map((a: string, i: number) => (
@@ -111,7 +115,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
       {recomendaciones?.length > 0 && (
         <div className="bg-violet-50 rounded-2xl border border-violet-100 p-4">
           <p className="text-xs font-black text-violet-700 uppercase tracking-widest mb-3 flex items-center gap-2">
-            <BookOpen size={13} /> Recomendaciones del terapeuta
+            <BookOpen size={13} /> {t('mensajes.recomendacionesTerapeuta')}
           </p>
           <ul className="space-y-2">
             {recomendaciones.slice(0, 3).map((r: string, i: number) => (
@@ -128,6 +132,7 @@ function AnalysisCard({ analysis }: { analysis: any }) {
 }
 
 export default function MensajesView({ profile }: { profile: any }) {
+  const { t, locale } = useI18n()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -167,7 +172,7 @@ export default function MensajesView({ profile }: { profile: any }) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
         <div className="w-10 h-10 rounded-full border-4 border-violet-200 border-t-violet-500 animate-spin" />
-        <p className="text-slate-400 text-sm font-medium">Cargando mensajes...</p>
+        <p className="text-slate-400 text-sm font-medium">{t('common.cargandoMensajes')}</p>
       </div>
     )
   }
@@ -208,7 +213,7 @@ export default function MensajesView({ profile }: { profile: any }) {
           <div className="w-16 h-16 bg-violet-50 rounded-3xl flex items-center justify-center mx-auto mb-5">
             <MessageCircle size={28} className="text-violet-300" />
           </div>
-          <p className="font-black text-slate-500 text-lg mb-2">Aún no hay mensajes</p>
+          <p className="font-black text-slate-500 text-lg mb-2">{t('ui.no_messages')}</p>
           <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto">
             Cuando el terapeuta te envíe un mensaje o análisis sobre tu hijo/a, aparecerá aquí con toda la información detallada.
           </p>
@@ -290,7 +295,7 @@ export default function MensajesView({ profile }: { profile: any }) {
                       style={{ background: 'linear-gradient(135deg, #5b21b6, #6d28d9, #7c3aed)' }}
                     >
                       <p className="text-xs font-black text-purple-300 uppercase tracking-widest mb-4 flex items-center gap-2">
-                        <MessageCircle size={12} /> Mensaje de tu terapeuta
+                        <MessageCircle size={12} /> {t('mensajes.mensajeDeTuTerapeuta')}
                       </p>
                       <p className="text-white text-base md:text-lg leading-relaxed whitespace-pre-wrap font-medium">
                         {noti.message}
@@ -304,7 +309,7 @@ export default function MensajesView({ profile }: { profile: any }) {
                     <div className="mt-5 flex items-start gap-3 text-sm text-slate-500 bg-white rounded-2xl p-4 border border-slate-100 leading-relaxed">
                       <CheckCircle2 size={16} className="text-emerald-500 shrink-0 mt-0.5" />
                       <span>
-                        Este mensaje fue revisado y aprobado por tu terapeuta antes de enviártelo. Si tienes preguntas, puedes contactar al equipo de <strong>Jugando Aprendo</strong> directamente.
+                        {t('ui.message_reviewed')}
                       </span>
                     </div>
                   </div>

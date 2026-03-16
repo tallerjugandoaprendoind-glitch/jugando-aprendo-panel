@@ -1,5 +1,5 @@
 // ==============================================================================
-// FORMULARIOS CLÍNICOS PARA NIÑOS NEURODIVERGENTES
+// FORMULARIOS CLÍNICOS ABA — Jugando Aprendo
 // Organizados por categoría diagnóstica con análisis IA
 // ==============================================================================
 

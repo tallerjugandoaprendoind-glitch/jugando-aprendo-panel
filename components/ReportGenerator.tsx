@@ -5,8 +5,7 @@
 // Ubicación: components/ReportGenerator.tsx
 // ==============================================================================
 
-'use client'
-
+import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import {
@@ -78,6 +77,7 @@ export default function ReportGenerator({
   compact = false,
 }: ReportGeneratorProps) {
 
+  const { t, locale } = useI18n()
   const [isGenerating, setIsGenerating]     = useState(false)
   const [reportes, setReportes]             = useState<Reporte[]>([])
   const [isLoadingReportes, setIsLoadingReportes] = useState(true)
@@ -120,8 +120,8 @@ export default function ReportGenerator({
       // 1. Llamar a la API
       const response = await fetch('/api/generate-report', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+        headers: { 'x-locale': locale || 'es', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locale: localStorage.getItem('vanty_locale') || 'es',
           reportType:   evaluationType,
           childName,
           childAge,
@@ -183,7 +183,7 @@ export default function ReportGenerator({
       downloadFile(data.file_data, reporte.nombre_archivo)
     } catch (err: any) {
       console.error('Error descargando:', err)
-      alert('Error al descargar el reporte')
+      alert(t('ui.errorDescargar'))
     }
   }
 
@@ -219,7 +219,7 @@ export default function ReportGenerator({
       await loadReportes()
     } catch (err: any) {
       console.error('Error eliminando:', err)
-      alert('Error al eliminar el reporte')
+      alert(t('ui.errorEliminar'))
     }
   }
 
@@ -298,7 +298,7 @@ export default function ReportGenerator({
           <div className="bg-red-50 border-2 border-red-100 rounded-2xl p-4 flex items-start gap-3 animate-fade-in">
             <AlertCircle className="text-red-500 flex-shrink-0 mt-0.5" size={20} />
             <div>
-              <p className="text-red-800 font-black text-sm">Error al generar</p>
+              <p className="text-red-800 font-black text-sm">{t('reportes.errorGenerar')}</p>
               <p className="text-red-600 text-xs mt-1">{error}</p>
             </div>
             <button onClick={() => setError(null)} className="ml-auto text-red-400 hover:text-red-600">
@@ -334,12 +334,12 @@ export default function ReportGenerator({
             {isGenerating ? (
               <>
                 <Loader2 className="animate-spin" size={22} />
-                <span>Generando reporte profesional...</span>
+                <span>{t('reportes.generandoReporte')}</span>
               </>
             ) : (
               <>
                 <FileDown size={22} />
-                <span>Generar Nuevo Reporte Word</span>
+                <span>{t('reportes.generarReporte')}</span>
                 <Sparkles size={16} className="opacity-70" />
               </>
             )}
@@ -362,7 +362,7 @@ export default function ReportGenerator({
           {isLoadingReportes ? (
             <div className="flex flex-col items-center justify-center py-10 gap-3 text-slate-400">
               <Loader2 className="animate-spin" size={32} />
-              <p className="text-sm font-bold">Cargando reportes...</p>
+              <p className="text-sm font-bold">{t('common.cargandoReportes')}</p>
             </div>
 
           ) : reportes.length === 0 ? (

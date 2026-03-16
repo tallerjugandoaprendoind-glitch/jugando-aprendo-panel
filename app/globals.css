@@ -20,7 +20,7 @@
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --text-muted: #94a3b8;
+  --text-muted: #64748b;  /* dark gray — más visible */
 }
 
 .dark {
@@ -39,7 +39,7 @@
   --shadow-lg: 0 10px 30px rgba(0,0,0,0.6);
   --text-primary: #e2e8f0;
   --text-secondary: #94a3b8;
-  --text-muted: #6b7280;
+  --text-muted: #9ca3af;  /* dark mode — más visible */
 }
 
 body {
@@ -353,3 +353,102 @@ body {
   input[type="password"], input[type="number"], input[type="search"],
   textarea, select { font-size: 16px !important; }
 }
+
+/* ── CalendarView ───────────────────────────────────────────────────────── */
+.dark .admin-content .bg-gradient-to-br.from-slate-50,
+.dark .admin-content .from-slate-50.via-white {
+  background: var(--background) !important;
+}
+.dark .admin-content .bg-blue-50 {
+  background-color: rgba(37,99,235,0.1) !important;
+}
+.dark .admin-content .hover\:bg-blue-50\/50:hover {
+  background-color: rgba(37,99,235,0.06) !important;
+}
+.dark .admin-content .bg-slate-50\/30 {
+  background-color: var(--muted-bg) !important;
+}
+.dark .admin-content .divide-slate-50 > * + * {
+  border-color: var(--card-border) !important;
+}
+.dark .admin-content input[type="date"],
+.dark .admin-content input[type="time"],
+.dark .admin-content select {
+  background: var(--input-bg) !important;
+  border-color: var(--input-border) !important;
+  color: var(--text-primary) !important;
+  color-scheme: dark;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE IMPROVEMENTS — Vanty v4
+   ══════════════════════════════════════════════════════════════ */
+
+/* Touch targets más grandes en mobile */
+@media (max-width: 768px) {
+  button, [role="button"] {
+    min-height: 40px;
+  }
+
+  /* Admin sidebar colapsado en mobile — más compacto */
+  .admin-content {
+    padding: 12px !important;
+  }
+
+  /* Modales ocupan toda la pantalla en mobile */
+  .modal-fullscreen-mobile {
+    max-height: 100dvh !important;
+    border-radius: 24px 24px 0 0 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* Cards más compactas */
+  .card-mobile-compact {
+    padding: 12px !important;
+    border-radius: 16px !important;
+  }
+
+  /* Tabs scrollables horizontalmente */
+  .tabs-scroll-mobile {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .tabs-scroll-mobile::-webkit-scrollbar { display: none; }
+  .tabs-scroll-mobile > * { white-space: nowrap; }
+
+  /* Gráficos en mobile — altura reducida */
+  .recharts-wrapper {
+    font-size: 11px !important;
+  }
+
+  /* Texto de la ficha del paciente en mobile */
+  .patient-card-mobile h2 {
+    font-size: 1rem !important;
+  }
+
+  /* Form steps más compactos */
+  .form-step-mobile {
+    padding: 16px !important;
+  }
+
+  /* Botones de acción fijos en bottom en mobile */
+  .sticky-bottom-mobile {
+    position: sticky;
+    bottom: 0;
+    background: var(--card);
+    padding: 12px;
+    border-top: 1px solid var(--card-border);
+    z-index: 10;
+  }
+}
+
+/* Smooth scroll global */
+* { scroll-behavior: smooth; }
+
+/* Better tap highlight */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Prevent text selection on buttons */
+button { user-select: none; -webkit-user-select: none; }

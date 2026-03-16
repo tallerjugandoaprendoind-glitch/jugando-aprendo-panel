@@ -1,5 +1,8 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
+
 import { useState, useEffect, useCallback } from 'react'
 import {
   Search, ChevronRight, Baby, Loader2, Eye, FileText, Activity,
@@ -20,7 +23,7 @@ function calcularEdad(fecha: string) {
 
 function formatDate(d: string) {
   if (!d) return '—'
-  try { return new Date(d).toLocaleDateString('es-PE', { day: 'numeric', month: 'short', year: 'numeric' }) }
+  try { const loc = typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es'; return new Date(d).toLocaleDateString(loc === 'en' ? 'en-US' : 'es-PE', { day: 'numeric', month: 'short', year: 'numeric' }) }
   catch { return d }
 }
 
@@ -44,7 +47,10 @@ const TYPE_CONFIG: Record<string, { bg: string; text: string; border: string; ic
 }
 function getTypeCfg(type: string) { return TYPE_CONFIG[type] || TYPE_CONFIG['default'] }
 
+
 function Field({ label, value }: { label: string; value: any }) {
+  const { t, locale } = useI18n()
+
   if (value === null || value === undefined || value === '') return null
   const display = Array.isArray(value) ? value.join(', ') : String(value)
   if (!display || display === 'undefined' || display === 'null') return null
@@ -57,6 +63,8 @@ function Field({ label, value }: { label: string; value: any }) {
 }
 
 function Bloque({ title, icon: Icon, color, children }: any) {
+  const { t } = useI18n()
+
   const hasChildren = Array.isArray(children) ? children.some(Boolean) : !!children
   if (!hasChildren) return null
   return (
@@ -71,6 +79,8 @@ function Bloque({ title, icon: Icon, color, children }: any) {
 }
 
 function AIBlock({ analysis }: { analysis: any }) {
+  const { t } = useI18n()
+
   if (!analysis) return null
   const fields = [
     { k: 'analisis_clinico', l: 'Análisis Clínico' },
@@ -101,7 +111,7 @@ function AIBlock({ analysis }: { analysis: any }) {
     <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-xl overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-violet-100">
         <Sparkles size={13} className="text-violet-600" />
-        <p className="text-xs font-black text-violet-700 uppercase tracking-widest">Análisis de IA</p>
+        <p className="text-xs font-black text-violet-700 uppercase tracking-widest">{t('especialista.analisisDeIA')}</p>
       </div>
       <div className="p-4 space-y-3">
         {visible.map(({ k, l }) => {
@@ -120,6 +130,8 @@ function AIBlock({ analysis }: { analysis: any }) {
 }
 
 function WordBtn({ report }: { report: any }) {
+  const { t } = useI18n()
+
   const dl = () => {
     const blob = new Blob([Uint8Array.from(atob(report.file_data), c => c.charCodeAt(0))],
       { type: report.mime_type || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
@@ -128,37 +140,39 @@ function WordBtn({ report }: { report: any }) {
   }
   return (
     <button onClick={dl} className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
-      <Download size={13} /> Descargar reporte Word
+      <Download size={13} /> {t('pacientes.descargarReporte')}
     </button>
   )
 }
 
 function ABADetail({ r }: { r: any }) {
+  const { t } = useI18n()
+
   const d = r.datos || r
   return (
     <div className="space-y-3">
-      <Bloque title="Sesión" icon={Calendar} color="bg-blue-50">
+      <Bloque title={t('ui.session')} icon={Calendar} color="bg-blue-50">
         <Field label="Objetivo principal" value={d.objetivo_principal} />
-        <Field label="Tipo de sesión" value={d.tipo_sesion} />
-        <Field label="Duración" value={d.duracion_minutos ? `${d.duracion_minutos} min` : null} />
+        <Field label={t("pacientes.tipoSesion")} value={d.tipo_sesion} />
+        <Field label={t("ui.duracion")} value={d.duracion_minutos ? `${d.duracion_minutos} min` : null} />
       </Bloque>
-      <Bloque title="Registro ABC" icon={Activity} color="bg-blue-50">
+      <Bloque title={t('ui.abc_record')} icon={Activity} color="bg-blue-50">
         <Field label="Antecedente (A)" value={d.antecedente} />
         <Field label="Conducta (B)" value={d.conducta} />
         <Field label="Consecuencia (C)" value={d.consecuencia} />
-        <Field label="Función estimada" value={d.funcion_estimada} />
+        <Field label={t("ui.funcionEstimada")} value={d.funcion_estimada} />
       </Bloque>
-      <Bloque title="Desempeño" icon={BarChart3} color="bg-blue-50">
-        <Field label="Atención" value={d.nivel_atencion} />
+      <Bloque title={t('ui.performance')} icon={BarChart3} color="bg-blue-50">
+        <Field label={t("ui.atencion")} value={d.nivel_atencion} />
         <Field label="Respuesta a instrucciones" value={d.respuesta_instrucciones} />
-        <Field label="Tolerancia frustración" value={d.tolerancia_frustracion} />
-        <Field label="Interacción social" value={d.interaccion_social} />
-        <Field label="Nivel de logro" value={d.nivel_logro_objetivos} />
+        <Field label={t("ui.toleranciaFrustrac")} value={d.tolerancia_frustracion} />
+        <Field label={t("ui.interaccionSocial")} value={d.interaccion_social} />
+        <Field label={t("ui.nivelLogro")} value={d.nivel_logro_objetivos} />
       </Bloque>
-      <Bloque title="Observaciones" icon={ClipboardList} color="bg-blue-50">
-        <div className="col-span-2"><Field label="Clínicas" value={d.observaciones_clinicas} /></div>
-        <Field label="Tarea para casa" value={d.tarea_casa} />
-        <div className="col-span-2"><Field label="Mensaje familia" value={d.mensaje_familia} /></div>
+      <Bloque title={t('ui.observations')} icon={ClipboardList} color="bg-blue-50">
+        <div className="col-span-2"><Field label={t("ui.clinicas")} value={d.observaciones_clinicas} /></div>
+        <Field label={t("ui.tareaParaCasa")} value={d.tarea_casa} />
+        <div className="col-span-2"><Field label={t("pacientes.mensajeFamilia")} value={d.mensaje_familia} /></div>
       </Bloque>
       <AIBlock analysis={r.ai_analysis} />
     </div>
@@ -166,37 +180,39 @@ function ABADetail({ r }: { r: any }) {
 }
 
 function AnamnesisDetail({ r }: { r: any }) {
+  const { t } = useI18n()
+
   const d = r.datos || r
   return (
     <div className="space-y-3">
-      <Bloque title="Datos generales" icon={User} color="bg-violet-50">
+      <Bloque title={t('ui.general_data')} icon={User} color="bg-violet-50">
         <Field label="Informante" value={d.informante} />
         <Field label="Parentesco" value={d.parentesco} />
-        <Field label="Vive con" value={d.vive_con} />
+        <Field label={t("ui.viveCon")} value={d.vive_con} />
         <Field label="Escolaridad" value={d.escolaridad} />
       </Bloque>
-      <Bloque title="Motivo de consulta" icon={AlertCircle} color="bg-violet-50">
+      <Bloque title={t('ui.reason_consult')} icon={AlertCircle} color="bg-violet-50">
         <div className="col-span-2"><Field label="Motivo principal" value={d.motivo_principal} /></div>
         <Field label="Derivado por" value={d.derivado_por} />
         <div className="col-span-2"><Field label="Expectativas" value={d.expectativas} /></div>
       </Bloque>
-      <Bloque title="Historia prenatal/perinatal" icon={Heart} color="bg-violet-50">
-        <Field label="Tipo de embarazo" value={d.tipo_embarazo} />
-        <Field label="Tipo de parto" value={d.tipo_parto} />
+      <Bloque title={t('ui.prenatal_history')} icon={Heart} color="bg-violet-50">
+        <Field label={t("ui.tipoEmbarazo")} value={d.tipo_embarazo} />
+        <Field label={t("ui.tipoParto")} value={d.tipo_parto} />
         <Field label="Complicaciones" value={d.complicaciones_emb} />
         <Field label="Incubadora" value={d.incubadora} />
       </Bloque>
-      <Bloque title="Desarrollo del lenguaje" icon={MessageSquare} color="bg-violet-50">
+      <Bloque title={t('ui.language_dev')} icon={MessageSquare} color="bg-violet-50">
         <Field label="Primeras palabras" value={d.primeras_palabras} />
         <Field label="Frases" value={d.frases} />
-        <Field label="Comprensión" value={d.comprension} />
-        <Field label="Intención comunicativa" value={d.intencion_comunicativa} />
+        <Field label={t("ui.comprension")} value={d.comprension} />
+        <Field label={t("ui.intencionComun")} value={d.intencion_comunicativa} />
       </Bloque>
-      <Bloque title="Conducta y socialización" icon={Brain} color="bg-violet-50">
+      <Bloque title={t("ui.conductaSocial")} icon={Brain} color="bg-violet-50">
         <Field label="Contacto visual" value={d.contacto_visual} />
-        <Field label="Tipo de juego" value={d.juego} />
+        <Field label={t("ui.tipoJuego")} value={d.juego} />
         <Field label="Rabietas" value={d.rabietas} />
-        <Field label="Relación con pares" value={d.pares} />
+        <Field label={t("ui.relacionPares")} value={d.pares} />
       </Bloque>
       <AIBlock analysis={r.ai_analysis} />
     </div>
@@ -204,22 +220,23 @@ function AnamnesisDetail({ r }: { r: any }) {
 }
 
 function EntornoDetail({ r }: { r: any }) {
+  const { t } = useI18n()
   const d = r.datos || r
   return (
     <div className="space-y-3">
       <Bloque title="Visita" icon={Home} color="bg-amber-50">
         <Field label="Personas presentes" value={d.personas_presentes} />
-        <Field label="Tipo de vivienda" value={d.tipo_vivienda} />
+        <Field label={t("ui.tipoVivienda")} value={d.tipo_vivienda} />
         <div className="col-span-2"><Field label="Comportamiento observado" value={d.comportamiento_observado} /></div>
-        <div className="col-span-2"><Field label="Diferencias con consultorio" value={d.diferencias_consultorio} /></div>
+        <div className="col-span-2"><Field label={t("ui.difConsultorio")} value={d.diferencias_consultorio} /></div>
       </Bloque>
-      <Bloque title="Análisis del entorno" icon={ClipboardList} color="bg-amber-50">
-        <div className="col-span-2"><Field label="Impresión general" value={d.impresion_general} /></div>
+      <Bloque title={t("ui.analisisEntorno")} icon={ClipboardList} color="bg-amber-50">
+        <div className="col-span-2"><Field label={t("ui.impresionGeneral")} value={d.impresion_general} /></div>
         <div className="col-span-2"><Field label="Barreras identificadas" value={d.barreras_identificadas} /></div>
       </Bloque>
-      <Bloque title="Recomendaciones para el hogar" icon={Home} color="bg-green-50">
+      <Bloque title={t("ui.recomendacionesHogar")} icon={Home} color="bg-green-50">
         <div className="col-span-2"><Field label="Mensaje a padres" value={d.mensaje_padres_entorno} /></div>
-        <div className="col-span-2"><Field label="Actividades en casa" value={d.actividades_casa || d.actividades_sugeridas} /></div>
+        <div className="col-span-2"><Field label={t("especialista.activCasa")} value={d.actividades_casa || d.actividades_sugeridas} /></div>
         <Field label="Espacio físico" value={d.recomendaciones_espacio} />
         <Field label="Rutinas" value={d.recomendaciones_rutinas} />
       </Bloque>
@@ -275,13 +292,14 @@ function EvalDetail({ r, tipo }: { r: any; tipo: string }) {
 }
 
 function GenericDetail({ r }: { r: any }) {
+  const { t } = useI18n()
   const d = r.responses || r.datos || r
   const skip = new Set(['id','child_id','created_at','updated_at','ai_analysis','responses','datos','form_type','form_title'])
   const entries = Object.entries(d || {}).filter(([k, v]) => !skip.has(k) && v !== null && v !== undefined && v !== '')
   return (
     <div className="space-y-3">
       {entries.length > 0 && (
-        <Bloque title="Respuestas del formulario" icon={FileText}>
+        <Bloque title={t("pacientes.respuestasFormulario")} icon={FileText}>
           {entries.map(([k, v]) => (
             <Field key={k} label={k.replace(/_/g, ' ')}
               value={Array.isArray(v) ? (v as any[]).join(', ') : String(v)} />
@@ -294,13 +312,14 @@ function GenericDetail({ r }: { r: any }) {
 }
 
 function RecordCard({ item }: { item: any }) {
+  const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const cfg = getTypeCfg(item._type || 'default')
   const Icon = cfg.icon
   const hasFull = !!item._fullData
 
   const renderDetail = () => {
-    if (item._type === 'Sesión ABA') return <ABADetail r={item._fullData} />
+    if (item._type === 'Sesión ABA' || item._type === 'ABA Session') return <ABADetail r={item._fullData} />
     if (item._type === 'Anamnesis') return <AnamnesisDetail r={item._fullData} />
     if (item._type === 'Visita Domiciliaria') return <EntornoDetail r={item._fullData} />
     if (['BRIEF-2','ADOS-2','Vineland-3','WISC-V','BASC-3'].includes(item._type)) return <EvalDetail r={item._fullData} tipo={item._type} />
@@ -339,6 +358,7 @@ function RecordCard({ item }: { item: any }) {
 
 // ── AI Summary Tab ─────────────────────────────────────────────────────────────
 function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
+  const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [summary, setSummary] = useState<any>(null)
   const [error, setError] = useState('')
@@ -350,7 +370,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
     try {
       const resp = await fetch('/api/patient-summary', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           childName: paciente.name,
           childAge: calcularEdad(paciente.birth_date),
@@ -402,12 +422,12 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
         <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <Sparkles size={28} className="text-white" />
         </div>
-        <h3 className="font-black text-slate-800 text-lg mb-2">Resumen Clínico con IA</h3>
+        <h3 className="font-black text-slate-800 text-lg mb-2">{t('especialista.resumenClinico')}</h3>
         <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">
           Genera un análisis completo del paciente con perfil clínico, áreas prioritarias, plan de tratamiento personalizado y estrategias para el hogar.
         </p>
         {records.length === 0 ? (
-          <p className="text-sm text-slate-400 italic">No hay registros suficientes para generar un resumen.</p>
+          <p className="text-sm text-slate-400 italic">{t('pacientes.sinRegistros').split('para')[0]} resumen.</p>
         ) : (
           <button onClick={generarResumen}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-bold text-sm shadow-md transition-all">
@@ -438,7 +458,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
           <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
             <Sparkles size={14} className="text-white" />
           </div>
-          <p className="font-black text-slate-800 text-sm">Resumen Clínico IA</p>
+          <p className="font-black text-slate-800 text-sm">{t('especialista.resumenClinico2')}</p>
         </div>
         <button onClick={generarResumen}
           className="flex items-center gap-1.5 text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-xl hover:bg-violet-100 transition-colors">
@@ -499,7 +519,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-100">
             <Target size={13} className="text-slate-600" />
-            <p className="text-xs font-black text-slate-700 uppercase tracking-widest">Áreas Prioritarias de Intervención</p>
+            <p className="text-xs font-black text-slate-700 uppercase tracking-widest">{t('especialista.areasPrioritarias')}</p>
           </div>
           <div className="p-4 space-y-3">
             {summary.areas_prioridad.map((a: any, i: number) => (
@@ -521,7 +541,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
         <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 bg-violet-50 border-b border-violet-100">
             <Lightbulb size={13} className="text-violet-600" />
-            <p className="text-xs font-black text-violet-700 uppercase tracking-widest">Plan de Tratamiento</p>
+            <p className="text-xs font-black text-violet-700 uppercase tracking-widest">{t('especialista.planTratamiento')}</p>
           </div>
           <div className="p-4 space-y-3">
             {summary.recomendaciones_terapeuticas.map((r: any, i: number) => (
@@ -592,6 +612,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function MisPacientes() {
   const toast = useToast()
+  const { t } = useI18n()
   const [ninos, setNinos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [busqueda, setBusqueda] = useState('')
@@ -724,8 +745,8 @@ export default function MisPacientes() {
     const tabs = [
       { id: 'resumen', label: 'Resumen IA', icon: Sparkles, count: null },
       { id: 'historial', label: 'Historial', icon: Activity, count: registros.length },
-      { id: 'evaluaciones', label: 'Evaluaciones', icon: Brain, count: evalItems.length },
-      { id: 'reportes', label: 'Reportes', icon: Download, count: wordReports.length },
+      { id: 'evaluaciones', label: t('nav.evaluaciones'), icon: Brain, count: evalItems.length },
+      { id: 'reportes', label: t('nav.reportes'), icon: Download, count: wordReports.length },
     ]
 
     return (
@@ -736,7 +757,7 @@ export default function MisPacientes() {
             <ChevronRight size={18} className="rotate-180 text-slate-600" />
           </button>
           <div>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">Expediente clínico · Solo lectura</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t('especialista.expediente')}</p>
             <h2 className="text-xl font-black text-slate-800">{seleccionado.name}</h2>
           </div>
         </div>
@@ -788,7 +809,7 @@ export default function MisPacientes() {
         {loadingRegistros ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3">
             <Loader2 size={28} className="animate-spin text-blue-600" />
-            <p className="text-sm text-slate-400">Cargando expediente completo...</p>
+            <p className="text-sm text-slate-400">{t('especialista.cargandoExpediente')}</p>
           </div>
         ) : (
           <>
@@ -844,7 +865,7 @@ export default function MisPacientes() {
                         </div>
                         {item
                           ? <CheckCircle2 size={18} className="text-emerald-500" />
-                          : <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full font-bold">Pendiente</span>}
+                          : <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full font-bold">{t('common.pendiente')}</span>}
                       </div>
                       {item && (
                         <div className="px-5 py-4 space-y-3">
@@ -899,7 +920,7 @@ export default function MisPacientes() {
     <div className="space-y-5 pb-20 md:pb-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Mis Pacientes</h2>
+          <h2 className="text-2xl font-black text-slate-800">{t('nav.mispacientes')}</h2>
           <p className="text-sm text-slate-500 mt-1">Expedientes clínicos completos · Solo lectura</p>
         </div>
         <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full flex-shrink-0">
@@ -950,7 +971,7 @@ export default function MisPacientes() {
           {filtrados.length === 0 && (
             <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
               <Baby size={22} className="text-slate-300 mx-auto mb-2" />
-              <p className="text-slate-400 text-sm font-semibold">Sin resultados</p>
+              <p className="text-slate-400 text-sm font-semibold">{t('common.sinResultados')}</p>
             </div>
           )}
         </div>

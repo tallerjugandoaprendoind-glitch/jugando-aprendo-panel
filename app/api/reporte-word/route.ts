@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { getLangInstruction, getDocLabels } from '@/lib/lang'
 import {
   Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
   AlignmentType, BorderStyle, WidthType, ShadingType, LevelFormat,
@@ -108,7 +109,7 @@ function makeDoc(sections: DocChild[], fileName: string) {
 }
 
 // ── Reporte Para Padres ───────────────────────────────────────────────────────
-async function generarReportePadres(childId: string): Promise<{ doc: Document; fileName: string }> {
+async function generarReportePadres(childId: string, userLocale = 'es'): Promise<{ doc: Document; fileName: string }> {
   const { data: child } = await supabaseAdmin.from('children').select('name, age, diagnosis').eq('id', childId).single()
   const nombre = (child as any)?.name || 'Paciente'
   const edad = (child as any)?.age || 'N/A'
@@ -161,8 +162,7 @@ INSTRUCCIONES:
 - Cierra con mensaje motivacional para la familia
 - Longitud: 4-6 párrafos fluidos
 - NO uses términos ABA técnicos, NO uses bullets, escribe en párrafos naturales`
-
-  const textoIA = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 1200 })
+  const textoIA = await callGroqSimple('', prompt + getLangInstruction(userLocale), { model: GROQ_MODELS.SMART, temperature: 0.7, maxTokens: 1200 })
 
   const hoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
   const fileName = `Reporte_${nombre.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.docx`
@@ -175,7 +175,7 @@ INSTRUCCIONES:
     h2('Información del Paciente'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Nombre', nombre),
-      kv('Edad', `${edad} años`),
+      kv(userLocale === 'en' ? 'Age' : 'Edad', `${edad} ${userLocale === 'en' ? 'years old' : 'años'}`),
       kv('Diagnóstico', diagnostico),
       kv('Sesiones realizadas', String(sesiones?.length || 0)),
       kv('Promedio de logro', `${promedioLogro}%`),
@@ -203,7 +203,7 @@ INSTRUCCIONES:
 }
 
 // ── Reporte Para Seguros ──────────────────────────────────────────────────────
-async function generarReporteSeguro(childId: string): Promise<{ doc: Document; fileName: string }> {
+async function generarReporteSeguro(childId: string, userLocale = 'es'): Promise<{ doc: Document; fileName: string }> {
   const { data: child } = await supabaseAdmin.from('children').select('name, age, diagnosis, birth_date').eq('id', childId).single()
   const nombre = (child as any)?.name || 'Paciente'
   const edad = (child as any)?.age || 'N/A'
@@ -250,14 +250,14 @@ Redacta en lenguaje técnico-clínico formal:
 3. Pronóstico y plan de tratamiento continuo (2-3 oraciones)
 Usa terminología clínica apropiada. Sin bullets.`
 
-  const textoTecnico = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.2, maxTokens: 600 })
+  const textoTecnico = await callGroqSimple('', prompt + getLangInstruction(userLocale), { model: GROQ_MODELS.SMART, temperature: 0.2, maxTokens: 600 })
 
   const sections: DocChild[] = [
     new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: 'JUGANDO APRENDO — Centro de Terapia ABA', bold: true, size: 28, font: 'Arial', color: '1E293B' })] }),
     new Paragraph({ spacing: { before: 0, after: 80 }, children: [new TextRun({ text: 'REPORTE CLÍNICO PARA ASEGURADORAS / IMSS', bold: true, size: 32, font: 'Arial', color: '1E40AF' })] }),
     subtitle(`Fecha de emisión: ${hoy}  ·  Documento Confidencial`),
 
-    h2('I. DATOS DEL PACIENTE'),
+    h2(userLocale === 'en' ? 'I. PATIENT DATA' : 'I. DATOS DEL PACIENTE'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Nombre completo', nombre),
       kv('Edad', `${edad} años`),
@@ -266,7 +266,7 @@ Usa terminología clínica apropiada. Sin bullets.`
       kv('Fecha del reporte', hoy),
     ]}),
 
-    h2('II. DESCRIPCIÓN DEL TRATAMIENTO'),
+    h2(userLocale === 'en' ? 'II. TREATMENT DESCRIPTION' : 'II. DESCRIPCIÓN DEL TRATAMIENTO'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Modalidad', 'Análisis Aplicado de la Conducta (ABA)'),
       kv('Sesiones realizadas', String(totalSesiones)),
@@ -274,7 +274,7 @@ Usa terminología clínica apropiada. Sin bullets.`
       kv('Áreas de intervención', programas?.map((p: any) => p.area).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i).join(', ') || 'N/A'),
     ]}),
 
-    h2('III. PROGRAMAS DE INTERVENCIÓN'),
+    h2(userLocale === 'en' ? 'III. INTERVENTION PROGRAMS' : 'III. PROGRAMAS DE INTERVENCIÓN'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3800, 2000, 1800, 1760],
       rows: [
         new TableRow({ children: [
@@ -295,10 +295,10 @@ Usa terminología clínica apropiada. Sin bullets.`
       ]
     }),
 
-    h2('IV. JUSTIFICACIÓN CLÍNICA Y PRONÓSTICO'),
+    h2(userLocale === 'en' ? 'IV. CLINICAL JUSTIFICATION AND PROGNOSIS' : 'IV. JUSTIFICACIÓN CLÍNICA Y PRONÓSTICO'),
     ...textoTecnico.split('\n').filter((l: string) => l.trim()).map((line: string) => pp(line)),
 
-    h2('V. FIRMA Y ACREDITACIÓN'),
+    h2(userLocale === 'en' ? 'V. SIGNATURE AND ACCREDITATION' : 'V. FIRMA Y ACREDITACIÓN'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Centro terapéutico', 'Jugando Aprendo'),
       kv('Especialidad', 'Análisis Aplicado de la Conducta (ABA)'),
@@ -315,7 +315,7 @@ Usa terminología clínica apropiada. Sin bullets.`
 }
 
 // ── Reporte Comparativo + Predicción ─────────────────────────────────────────
-async function generarReporteComparativo(childId: string): Promise<{ doc: Document; fileName: string }> {
+async function generarReporteComparativo(childId: string, userLocale = 'es'): Promise<{ doc: Document; fileName: string }> {
   const { data: child } = await supabaseAdmin.from('children').select('name, age, diagnosis').eq('id', childId).single()
   const nombre = (child as any)?.name || 'Paciente'
   const edad = (child as any)?.age || 'N/A'
@@ -365,7 +365,7 @@ Escribe EN PÁRRAFOS (sin bullets) interpretación clínica de:
 3. Recomendaciones concretas para el siguiente período (1 párrafo)
 Lenguaje técnico pero comprensible.`
 
-  const analisis = await callGroqSimple('', prompt, { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 800 })
+  const analisis = await callGroqSimple('', prompt + getLangInstruction(userLocale), { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 800 })
 
   const sections: DocChild[] = [
     new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: '📊 Jugando Aprendo', bold: true, size: 28, font: 'Arial', color: '5B21B6' })] }),
@@ -427,15 +427,21 @@ Lenguaje técnico pero comprensible.`
 }
 
 // ── Handler principal ──────────────────────────────────────────────────────────
+
+// i18n: responder en el idioma del usuario
+// getLangInstruction moved to lib/lang.ts
+
 export async function POST(req: NextRequest) {
   try {
-    const { childId, tipo } = await req.json()
+    const body = await req.json()
+    const { childId, tipo } = body
+    const userLocale = body.locale || req.headers.get('x-locale') || 'es'
     if (!childId) return NextResponse.json({ error: 'childId requerido' }, { status: 400 })
 
     let result: { doc: Document; fileName: string }
-    if (tipo === 'seguro') result = await generarReporteSeguro(childId)
-    else if (tipo === 'comparativo') result = await generarReporteComparativo(childId)
-    else result = await generarReportePadres(childId)
+    if (tipo === 'seguro') result = await generarReporteSeguro(childId, userLocale)
+    else if (tipo === 'comparativo') result = await generarReporteComparativo(childId, userLocale)
+    else result = await generarReportePadres(childId, userLocale)
 
     const buffer = await Packer.toBuffer(result.doc)
     const uint8 = new Uint8Array(buffer)

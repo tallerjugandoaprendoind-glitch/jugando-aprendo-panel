@@ -1,4 +1,7 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 import { useEffect, useState } from 'react'
 import { supabase as supabaseClient } from '@/lib/supabase'
 import {
@@ -19,12 +22,15 @@ const MONTHS_ES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','
 const MONTHS_FULL = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 
 function formatTime(t: string) {
+
   if (!t) return ''
   const [h, m] = t.split(':').map(Number)
   return `${h % 12 || 12}:${m.toString().padStart(2,'0')} ${h >= 12 ? 'PM' : 'AM'}`
 }
 
 function calcAge(birthDate: string) {
+  const { t, locale } = useI18n()
+
   if (!birthDate) return 0
   const today = new Date(), birth = new Date(birthDate)
   let age = today.getFullYear() - birth.getFullYear()
@@ -33,12 +39,16 @@ function calcAge(birthDate: string) {
 }
 
 function formatDate(dateStr: string) {
+  const { t, locale } = useI18n()
+
   const [y, m, d] = dateStr.split('-').map(Number)
   return { day: d, month: MONTHS_ES[m-1], monthFull: MONTHS_FULL[m-1], year: y }
 }
 
 // ── Componente de Celebración de Objetivos ─────────────────────────────────
 function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: string; goalsAchieved: number; onClose: () => void }) {
+  const { t } = useI18n()
+
   useEffect(() => {
     const t = setTimeout(onClose, 6000)
     return () => clearTimeout(t)
@@ -87,6 +97,8 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
 
 // ── Wellbeing Mini-Survey ──────────────────────────────────────────────────
 function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: () => void }) {
+  const { t } = useI18n()
+
   const [answered, setAnswered] = useState(false)
   const [answer, setAnswer] = useState('')
 
@@ -97,6 +109,8 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
   ]
 
   const handleAnswer = (opt: string) => {
+    const { t } = useI18n()
+
     setAnswer(opt)
     setAnswered(true)
     // En producción: guardar en BD para el especialista
@@ -120,8 +134,8 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
                   <Heart size={18} color="#be185d" />
                 </div>
                 <div>
-                  <p style={{ fontWeight: 800, fontSize: 15, color: '#111827' }}>¿Cómo estás tú?</p>
-                  <p style={{ fontSize: 11, color: '#9ca3af' }}>Check mensual de bienestar familiar</p>
+                  <p style={{ fontWeight: 800, fontSize: 15, color: '#111827' }}>{t('familias.comoEstasTu')}</p>
+                  <p style={{ fontSize: 11, color: '#9ca3af' }}>{t('ui.wellbeing_check')}</p>
                 </div>
               </div>
               <button onClick={onClose} style={{ background: '#f3f4f6', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#6b7280' }}>
@@ -157,7 +171,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
         ) : (
           <div style={{ textAlign: 'center', padding: '16px 0' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>💙</div>
-            <h3 style={{ fontWeight: 800, fontSize: 18, color: '#111827', marginBottom: 8 }}>Gracias por compartirlo</h3>
+            <h3 style={{ fontWeight: 800, fontSize: 18, color: '#111827', marginBottom: 8 }}>{t('ui.thanks_sharing')}</h3>
             <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.6 }}>
               Tu terapeuta tomará esto en cuenta. Recuerda que cuidarte a ti también es parte del proceso.
             </p>
@@ -173,6 +187,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
 }
 
 export default function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppointment }: Props) {
+  const { t, locale } = useI18n()
   const supabase = supabaseClient
   const [nextAppt, setNextAppt] = useState<any>(null)
   const [stats, setStats] = useState({ sessions: 0, goalsAchieved: 0, hoursTotal: 0, level: 'Inicial', monthSessions: 0, masteryRate: 0 })
@@ -311,8 +326,8 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-400/20 rounded-full blur-2xl translate-y-8" />
         <div className="relative z-10 flex items-start justify-between gap-4">
           <div className="flex-1">
-            <p className="text-purple-200 text-xs font-semibold uppercase tracking-widest mb-1">Paciente Activo</p>
-            <h1 className="text-2xl font-black leading-tight mb-3">{child?.name || 'Sin paciente seleccionado'}</h1>
+            <p className="text-purple-200 text-xs font-semibold uppercase tracking-widest mb-1">{t('pacientes.pacienteActivo')}</p>
+            <h1 className="text-2xl font-black leading-tight mb-3">{child?.name || t('pacientes.sinPacienteSeleccionado')}</h1>
             <div className="flex flex-wrap gap-2">
               <span className="px-3 py-1 bg-white/15 backdrop-blur-sm rounded-full text-xs font-bold flex items-center gap-1">
                 <Baby size={11} /> {age} años
@@ -342,14 +357,14 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           },
           {
             value: stats.goalsAchieved, label: 'OBJETIVOS LOGRADOS',
-            sub: stats.masteryRate > 0 ? `${stats.masteryRate}% dominio` : 'En progreso',
+            sub: stats.masteryRate > 0 ? `${stats.masteryRate}% ${t('familias.dominio')}` : t('familias.enProgreso'),
             icon: <Target size={18} className="text-emerald-600" />,
             bg: 'bg-emerald-50', border: 'border-emerald-100', subColor: 'text-emerald-600',
             celebrate: stats.goalsAchieved > 0,
           },
           {
             value: `${stats.hoursTotal}h`, label: 'HORAS ACUMULADAS',
-            sub: stats.sessions > 0 ? `~${Math.round(stats.hoursTotal/stats.sessions*10)/10}h/sesión` : 'Sin sesiones',
+            sub: stats.sessions > 0 ? `~${Math.round(stats.hoursTotal/stats.sessions*10)/10}${t('familias.porHoraSesion')}` : 'Sin sesiones',
             icon: <Clock size={18} className="text-violet-600" />,
             bg: 'bg-violet-50', border: 'border-violet-100', subColor: 'text-violet-600'
           },
@@ -380,7 +395,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-slate-50">
           <CalendarDays size={16} className="text-violet-600" />
-          <h2 className="font-black text-slate-700 text-sm uppercase tracking-wide">Próxima Sesión</h2>
+          <h2 className="font-black text-slate-700 text-sm uppercase tracking-wide">{t('agenda.proximaSesion')}</h2>
         </div>
 
         {loading ? (
@@ -433,7 +448,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             <div className="w-20 h-20 bg-gradient-to-br from-violet-50 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <CalendarDays size={32} className="text-violet-400" />
             </div>
-            <p className="font-bold text-slate-700 text-base mb-2">¡Es momento de agendar!</p>
+            <p className="font-bold text-slate-700 text-base mb-2">{t('familias.momentoAgendar')}</p>
             <p className="text-sm text-slate-400 mb-5 max-w-xs mx-auto leading-relaxed">
               La constancia en las sesiones es clave para el progreso. Agenda tu próxima cita y mantén el avance de {child?.name?.split(' ')[0] || 'tu hijo/a'}.
             </p>
@@ -450,32 +465,32 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         <button onClick={() => onChangeView('miscitas')}
           className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-violet-200 hover:shadow-md transition-all text-left group">
           <CalendarCheck size={22} className="text-violet-500 mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-black text-slate-800 text-sm">Mis Citas</p>
-          <p className="text-xs text-slate-400 mt-0.5">Ver historial completo</p>
+          <p className="font-black text-slate-800 text-sm">{t('nav.miscitas')}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{t('ui.full_history')}</p>
         </button>
         <button onClick={() => onChangeView('resources')}
           className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-blue-200 hover:shadow-md transition-all text-left group">
           <BookOpen size={22} className="text-blue-500 mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-black text-slate-800 text-sm">Materiales</p>
-          <p className="text-xs text-slate-400 mt-0.5">Recursos del centro</p>
+          <p className="font-black text-slate-800 text-sm">{t('programas.materiales')}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{t('ui.center_resources')}</p>
         </button>
         <button onClick={() => onChangeView('misformularios')}
           className="bg-white border border-slate-100 rounded-2xl p-4 hover:border-emerald-200 hover:shadow-md transition-all text-left group">
           <Sparkles size={22} className="text-emerald-500 mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-black text-slate-800 text-sm">Mis Formularios</p>
-          <p className="text-xs text-slate-400 mt-0.5">Evaluaciones enviadas</p>
+          <p className="font-black text-slate-800 text-sm">{t('nav.misformularios')}</p>
+          <p className="text-xs text-slate-400 mt-0.5">{t('ui.sent_evals')}</p>
         </button>
         <button onClick={() => onChangeView('chat')}
           className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-4 hover:border-indigo-300 hover:shadow-md transition-all text-left group">
           <Zap size={22} className="text-indigo-500 mb-2 group-hover:scale-110 transition-transform" />
           <p className="font-black text-slate-800 text-sm">Asistente IA</p>
-          <p className="text-xs text-indigo-400 mt-0.5">Consulta al instante</p>
+          <p className="text-xs text-indigo-400 mt-0.5">{t('ui.instant_chat')}</p>
         </button>
         <button onClick={() => onChangeView('mensajes')}
           className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 rounded-2xl p-4 hover:border-violet-300 hover:shadow-md transition-all text-left group">
           <MessageCircle size={22} className="text-violet-500 mb-2 group-hover:scale-110 transition-transform" />
-          <p className="font-black text-slate-800 text-sm">Mensajes</p>
-          <p className="text-xs text-violet-400 mt-0.5">Del terapeuta</p>
+          <p className="font-black text-slate-800 text-sm">{t('nav.mensajes')}</p>
+          <p className="text-xs text-violet-400 mt-0.5">{t('ui.from_therapist')}</p>
         </button>
       </div>
 
@@ -484,7 +499,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         <div className="bg-white rounded-3xl border border-violet-100 shadow-sm overflow-hidden">
           <div className="flex items-center gap-2 px-5 pt-5 pb-3 border-b border-slate-50">
             <MessageCircle size={16} className="text-violet-600" />
-            <h2 className="font-black text-slate-700 text-sm uppercase tracking-wide">Mensajes del Terapeuta</h2>
+            <h2 className="font-black text-slate-700 text-sm uppercase tracking-wide">{t('familias.mensajesTerapeuta2')}</h2>
             <span className="ml-auto text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-full">
               {parentMessages.length} nuevo{parentMessages.length !== 1 ? 's' : ''}
             </span>
@@ -493,7 +508,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             {parentMessages.map((msg: any, idx: number) => (
               <div key={idx} className="px-5 py-4">
                 <p className="text-xs font-bold text-slate-400 mb-1">
-                  {msg.created_at ? new Date(msg.created_at).toLocaleDateString('es-PE', { dateStyle: 'medium' }) : ''}
+                  {msg.created_at ? new Date(msg.created_at).toLocaleDateString(toBCP47(locale), { dateStyle: 'medium' }) : ''}
                 </p>
                 <p className="text-sm font-bold text-slate-800 mb-1">{msg.title || msg.subject || 'Mensaje del terapeuta'}</p>
                 <p className="text-sm text-slate-600 leading-relaxed line-clamp-3">{msg.body || msg.message || msg.content || ''}</p>
@@ -531,7 +546,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             <div className="w-20 h-20 bg-gradient-to-br from-slate-50 to-violet-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
               <BarChart3 size={32} className="text-violet-300" />
             </div>
-            <p className="text-base font-bold text-slate-600 mb-2">Tu progreso aparecerá aquí</p>
+            <p className="text-base font-bold text-slate-600 mb-2">{t('ui.progress_here')}</p>
             <p className="text-sm text-slate-400 leading-relaxed max-w-xs mx-auto mb-5">
               Después de las primeras sesiones de terapia, verás gráficos de avance, objetivos logrados y mucho más.
             </p>
@@ -563,7 +578,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
               <div className="mt-4 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl p-4 flex items-start gap-3">
                 <PartyPopper size={20} className="text-emerald-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-emerald-800 text-sm">¡Rendimiento excepcional!</p>
+                  <p className="font-bold text-emerald-800 text-sm">{t('familias.rendimientoExcep')}</p>
                   <p className="text-xs text-emerald-600 mt-0.5 leading-relaxed">
                     {child?.name?.split(' ')[0] || 'Tu hijo/a'} está dominando sus objetivos con un {stats.masteryRate}% de éxito. ¡El esfuerzo de toda la familia está dando frutos!
                   </p>
@@ -575,7 +590,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
               <div className="mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
                 <Star size={20} className="text-blue-600 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold text-blue-800 text-sm">¡Cada sesión cuenta!</p>
+                  <p className="font-bold text-blue-800 text-sm">{t('familias.cadaSesionCuenta')}</p>
                   <p className="text-xs text-blue-600 mt-0.5 leading-relaxed">
                     El proceso ABA es gradual y acumulativo. La constancia es la clave del progreso. ¡Están en el camino correcto!
                   </p>

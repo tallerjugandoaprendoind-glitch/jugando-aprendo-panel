@@ -101,6 +101,13 @@ async function getCentroContext(): Promise<string> {
 }
 
 // ── Builder principal ─────────────────────────────────────────────────────────
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale: string): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
+  return ''
+}
+
 export interface AIContextResult {
   childName:       string
   childAge:        string

@@ -26,9 +26,17 @@ function toArr(val: any): string[] {
   return [String(val)]
 }
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale?: string | null): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
+  return ''
+}
+
 export async function POST(req: Request) {
   try {
     const { question, childId } = await req.json();
+    const userLocale: string = req.headers.get('x-locale') || 'es'
 
     // Validaciones iniciales
     if (!childId) return NextResponse.json({ text: "⚠️ Selecciona un paciente primero." });

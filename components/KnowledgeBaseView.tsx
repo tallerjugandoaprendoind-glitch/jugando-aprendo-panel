@@ -1,4 +1,5 @@
 'use client'
+import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@supabase/supabase-js'
 
@@ -17,6 +18,7 @@ type InputMode = 'archivo' | 'url' | 'texto'
 
 export default function KnowledgeBaseView() {
   const toast = useToast()
+  const { t } = useI18n()
   const [documentos, setDocumentos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState(false)
@@ -388,7 +390,7 @@ export default function KnowledgeBaseView() {
               </div>
               <div className="flex gap-3 mt-5">
                 <button onClick={() => setShowForm(false)}
-                  className="flex-1 py-3 text-slate-400 font-bold border-2 border-slate-100 rounded-xl">Cancelar</button>
+                  className="flex-1 py-3 text-slate-400 font-bold border-2 border-slate-100 rounded-xl">{t('common.cancelar')}</button>
                 <button onClick={handleUpload} disabled={uploading}
                   className="flex-[2] py-3 bg-violet-600 text-white rounded-xl font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2">
                   {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}

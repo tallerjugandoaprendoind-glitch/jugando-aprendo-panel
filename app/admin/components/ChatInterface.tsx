@@ -1,5 +1,8 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
+
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Send, Sparkles, Heart, ShoppingBag, Mic, MicOff, Volume2, VolumeX, RefreshCw, StopCircle } from 'lucide-react'
 
@@ -13,6 +16,7 @@ declare global {
 
 // ── Hook de Text-to-Speech ────────────────────────────────────────────────────
 function useTextToSpeech() {
+  const { t, locale } = useI18n()
   const [speaking, setSpeaking] = useState(false)
   const [voiceEnabled, setVoiceEnabled] = useState(true)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
@@ -30,14 +34,15 @@ function useTextToSpeech() {
       .replace(/\n{2,}/g, '. ')
       .trim()
     const utter = new SpeechSynthesisUtterance(clean)
-    utter.lang = 'es-PE'
+    utter.lang = toBCP47(locale)
     utter.rate = 1.05
     utter.pitch = 1.1
     utter.volume = 0.95
     // Preferir voz en español si está disponible
     const voices = window.speechSynthesis.getVoices()
-    const esVoice = voices.find(v => v.lang.startsWith('es') && v.localService) ||
-                    voices.find(v => v.lang.startsWith('es'))
+    const langPrefix = locale === 'en' ? 'en' : 'es'
+    const esVoice = voices.find(v => v.lang.startsWith(langPrefix) && v.localService) ||
+                    voices.find(v => v.lang.startsWith(langPrefix))
     if (esVoice) utter.voice = esVoice
     utter.onstart = () => setSpeaking(true)
     utter.onend = () => setSpeaking(false)
@@ -61,6 +66,8 @@ function useTextToSpeech() {
 
 // ── Hook de Speech-to-Text ────────────────────────────────────────────────────
 function useSpeechToText(onResult: (text: string) => void) {
+  const { t, locale } = useI18n()
+
   const [listening, setListening] = useState(false)
   const [supported, setSupported] = useState(false)
   const recognitionRef = useRef<any>(null)
@@ -70,7 +77,7 @@ function useSpeechToText(onResult: (text: string) => void) {
     if (SpeechRecognition) {
       setSupported(true)
       const rec = new SpeechRecognition()
-      rec.lang = 'es-PE'
+      rec.lang = toBCP47(locale)
       rec.continuous = false
       rec.interimResults = false
       rec.maxAlternatives = 1
@@ -110,11 +117,14 @@ const EMOTIONAL_KEYWORDS = [
 ]
 
 function detectsEmotion(t: string) {
+
   const l = t.toLowerCase()
   return EMOTIONAL_KEYWORDS.some(kw => l.includes(kw))
 }
 
 function getEmotionalPrefix(text: string): string {
+  const { t } = useI18n()
+
   const l = text.toLowerCase()
   if (l.includes('cansad') || l.includes('agotad'))
     return '💙 Entiendo que estás cansado/a, y eso es completamente válido. Acompañar a un hijo en este proceso requiere muchísima energía.\n\n'
@@ -129,6 +139,8 @@ function getEmotionalPrefix(text: string): string {
 
 // ── Robot SVG mascota ─────────────────────────────────────────────────────────
 function RobotAvatar({ size = 36, animated = false }: { size?: number; animated?: boolean }) {
+  const { t } = useI18n()
+
   return (
     <svg width={size} height={size} viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg"
       style={animated ? { animation: 'robotBob 2s ease-in-out infinite' } : {}}>
@@ -175,6 +187,8 @@ function RobotAvatar({ size = 36, animated = false }: { size?: number; animated?
 
 // ── Burbuja de mensaje ────────────────────────────────────────────────────────
 function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: () => void }) {
+  const { t } = useI18n()
+
   const isUser = m.role === 'user'
 
   if (isUser) {
@@ -189,6 +203,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
   }
 
   if (m.type === 'wellbeing') {
+    const { t } = useI18n()
     return (
       <div className="flex gap-3 mb-4 items-start">
         <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center"
@@ -198,7 +213,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
         <div className="max-w-[82%] rounded-3xl rounded-tl-lg overflow-hidden shadow-sm border border-pink-100"
           style={{ background: 'linear-gradient(135deg,#fdf2f8,#faf5ff)' }}>
           <div className="px-5 pt-4 pb-2">
-            <p className="text-xs font-black text-pink-500 uppercase tracking-widest mb-2">Check de bienestar 💜</p>
+            <p className="text-xs font-black text-pink-500 uppercase tracking-widest mb-2">{t('ui.checkBienestar')}</p>
             <p className="text-sm text-slate-700 font-medium leading-relaxed">
               ¿Cómo te has sentido tú esta semana acompañando el proceso de tu hijo/a?
             </p>
@@ -235,7 +250,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
           {m.type === 'emotional' && (
             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-100">
               <Heart size={13} className="text-blue-500 fill-blue-500" />
-              <span className="text-xs font-black text-blue-500 uppercase tracking-widest">Con todo mi apoyo</span>
+              <span className="text-xs font-black text-blue-500 uppercase tracking-widest">{t('ui.from_therapist')}</span>
             </div>
           )}
           <p className="whitespace-pre-wrap">{m.text}</p>
@@ -248,7 +263,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
             <div className="flex items-center gap-2 px-4 py-2.5"
               style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)' }}>
               <ShoppingBag size={14} className="text-white" />
-              <span className="text-xs font-black text-white uppercase tracking-wider">Disponible en nuestra tienda</span>
+              <span className="text-xs font-black text-white uppercase tracking-wider">{t('ui.disponibleTienda')}</span>
             </div>
             <div className="flex gap-3 p-4 items-center">
               <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-amber-100 flex items-center justify-center text-3xl border border-amber-200">
@@ -283,6 +298,7 @@ function MessageBubble({ m, onNavigateToStore }: { m: any; onNavigateToStore?: (
 
 // ── Indicador de escritura ────────────────────────────────────────────────────
 function TypingIndicator() {
+  const { t, locale } = useI18n()
   return (
     <div className="flex gap-3 mb-4 items-center">
       <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center shadow-md"
@@ -294,7 +310,7 @@ function TypingIndicator() {
           <div key={d} className="w-2 h-2 rounded-full bg-indigo-400"
             style={{ animation: `typingDot 1.2s ease-in-out infinite`, animationDelay: `${d}s` }} />
         ))}
-        <span className="text-xs text-slate-400 font-medium ml-2">Analizando...</span>
+        <span className="text-xs text-slate-400 font-medium ml-2">{t('common.analizando')}</span>
       </div>
     </div>
   )
@@ -302,6 +318,8 @@ function TypingIndicator() {
 
 // ── Pantalla de bienvenida ────────────────────────────────────────────────────
 function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickSend: (q: string) => void }) {
+  const { t } = useI18n()
+
   const quick = [
     { icon: '📋', text: '¿Cómo le fue en la última sesión?', color: '#eef2ff', border: '#c7d2fe' },
     { icon: '🏠', text: 'Dame consejos para casa', color: '#f0fdf4', border: '#bbf7d0' },
@@ -331,7 +349,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
         Tu asistente clínico de Jugando Aprendo
       </p>
       <p className="text-xs text-slate-400 mb-6 leading-relaxed max-w-xs">
-        He revisado el historial completo de <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> y estoy lista para ayudarte en lo que necesites.
+        {t('aria.revisadoHistorial')} <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> y estoy lista para ayudarte en lo que necesites.
       </p>
 
       {/* Capacidades */}
@@ -350,7 +368,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
       </div>
 
       {/* Preguntas rápidas */}
-      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">¿Por dónde empezamos?</p>
+      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('aria.dondeEmpezamos')}</p>
       <div className="flex flex-col gap-2 w-full max-w-sm">
         {quick.map(({ icon, text, color, border }) => (
           <button key={text} onClick={() => onQuickSend(text)}
@@ -367,6 +385,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
 
 // ── Componente principal ──────────────────────────────────────────────────────
 function ChatInterface({ childId, childName, onNavigateToStore }: any) {
+  const { t, locale } = useI18n()
   const [messages, setMessages] = useState<any[]>([])
   const [input, setInput] = useState('')
   const [typing, setTyping] = useState(false)
@@ -401,6 +420,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
   }, [messages, typing])
 
   const sendText = async (txt: string) => {
+    const { t } = useI18n()
     if (!txt.trim() || typing) return
 
     setShowWelcome(false)
@@ -430,7 +450,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
     try {
       const res = await fetch('/api/parent-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': locale || 'es' },
         body: JSON.stringify({
           question: isEmotional
             ? `${txt}\n\n[INSTRUCCIÓN: El padre/madre experimenta carga emocional. Valida primero con calidez genuina antes de información clínica.]`
@@ -585,7 +605,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
             </div>
             <div className="flex-1">
               <p className="text-sm font-black text-red-700">Escuchando...</p>
-              <p className="text-xs text-red-500 font-medium">Habla ahora, enviaré tu mensaje automáticamente</p>
+              <p className="text-xs text-red-500 font-medium">{t('aria.hablaAhora')}</p>
             </div>
             <button onClick={stopListening}
               className="p-1.5 rounded-xl bg-red-100 hover:bg-red-200 transition-all">
@@ -617,7 +637,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
         {!showWelcome && messages.length > 0 && !typing && (
           <div className="shrink-0 px-4 pb-2">
             <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {['📋 Última sesión', '🏠 Tips para casa', '🎯 Objetivos', '💙 Apoyo'].map((q, i) => {
+              {[t('aria.pregSugerida_sesion'), t('aria.pregSugerida_casa'), t('aria.pregSugerida_objetivos'), t('aria.pregSugerida_apoyo')].map((q, i) => {
                 const texts = ['¿Cómo le fue en la última sesión?', 'Dame consejos para actividades en casa', '¿Qué objetivos está trabajando?', 'Necesito apoyo emocional']
                 return (
                   <button key={i} onClick={() => send(texts[i])}
@@ -694,7 +714,7 @@ function ChatInterface({ childId, childName, onNavigateToStore }: any) {
             {speaking ? (
               <button
                 onClick={stopSpeaking}
-                title="Detener voz de ARIA"
+                title={t('aria.detenerVoz')}
                 className="shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all hover:scale-105 active:scale-95"
                 style={{
                   background: 'linear-gradient(135deg,#6366f1,#7c3aed)',

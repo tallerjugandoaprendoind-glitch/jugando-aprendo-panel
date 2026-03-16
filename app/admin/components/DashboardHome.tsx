@@ -1,5 +1,8 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
+
 import { useState, useEffect } from 'react'
 import {
   Activity, Brain, Calendar, ChevronRight, Clock,
@@ -12,6 +15,7 @@ import { useToast } from '@/components/Toast'
 
 // ── Tarjeta de estadística principal ───────────────────────────────────────
 function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any) {
+  const { t } = useI18n()
   return (
     <div
       onClick={onClick}
@@ -23,7 +27,7 @@ function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any
           <Icon size={18} className={accent.icon} />
         </div>
         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${alert ? 'bg-red-100 text-red-600' : accent.badge}`}>
-          {alert ? '⚠️ Atención' : sub}
+          {alert ? t('dashboard.atencion') : sub}
         </span>
       </div>
       <p className="text-3xl font-black mb-1" style={{ color: alert ? '#dc2626' : 'var(--text-primary)' }}>{value}</p>
@@ -34,6 +38,7 @@ function StatCard({ title, value, sub, icon: Icon, accent, onClick, alert }: any
 
 // ── Fila de cita próxima ────────────────────────────────────────────────────
 function CitaRow({ cita }: { cita: any }) {
+  const { t } = useI18n()
   if (!cita.appointment_date) return null
   const fecha = new Date(cita.appointment_date + 'T00:00:00')
   const mesCorto = fecha.toLocaleString('es', { month: 'short' }).toUpperCase()
@@ -46,10 +51,10 @@ function CitaRow({ cita }: { cita: any }) {
         <span className="text-sm font-black leading-none">{dia}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold truncate" style={{ color: "var(--text-primary)" }}>{cita.children?.name || 'Sin nombre'}</p>
+        <p className="text-sm font-bold truncate" style={{ color: "var(--text-primary)" }}>{cita.children?.name || t('common.sinNombre')}</p>
         <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color: "var(--text-muted)" }}>
           <Clock size={10} /> {cita.appointment_time?.slice(0, 5)}
-          {esHoy && <span className="ml-1 text-blue-600 font-bold">• HOY</span>}
+          {esHoy && <span className="ml-1 text-blue-600 font-bold">• {t('common.hoy2')}</span>}
         </p>
       </div>
       <ChevronRight size={15} className="text-slate-300 group-hover:text-blue-500 transition-colors flex-shrink-0" />
@@ -59,10 +64,11 @@ function CitaRow({ cita }: { cita: any }) {
 
 // ── Alerta clínica ──────────────────────────────────────────────────────────
 function AlertaClinica({ tipo, paciente, mensaje, onClick }: any) {
+  const { t } = useI18n()
   const cfg: Record<string, any> = {
-    sin_sesion: { icon: '😴', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', label: 'Sin sesión' },
-    bienestar_bajo: { icon: '💙', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', label: 'Padre necesita apoyo' },
-    sin_cita: { icon: '📅', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', label: 'Sin citas' },
+    sin_sesion: { icon: '😴', bg: 'bg-amber-50', border: 'border-amber-200', text: 'text-amber-800', label: t('dashboard.sinSesion') },
+    bienestar_bajo: { icon: '💙', bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-800', label: t('dashboard.bienestar') },
+    sin_cita: { icon: '📅', bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-800', label: t('agenda.sinCitas') },
   }
   const c = cfg[tipo] || cfg.sin_sesion
   return (
@@ -82,6 +88,7 @@ function AlertaClinica({ tipo, paciente, mensaje, onClick }: any) {
 // ── Panel de respuestas de bienestar de padres ──────────────────────────────
 function BienestarPanel({ data }: { data: any[] }) {
   if (data.length === 0) return null
+  const { t } = useI18n()
   const counts = {
     bien:    data.filter(d => (d.responses?.answer || d.form_title || '').includes('Bien')).length,
     regular: data.filter(d => (d.responses?.answer || d.form_title || '').includes('Regular')).length,
@@ -93,7 +100,7 @@ function BienestarPanel({ data }: { data: any[] }) {
         <div className="w-7 h-7 bg-pink-50 rounded-lg flex items-center justify-center">
           <Heart size={14} className="text-pink-600" />
         </div>
-        <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Bienestar de padres este mes</p>
+        <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('dashboard.bienestarPadres')}</p>
         <span className="ml-auto text-xs bg-pink-50 text-pink-600 font-bold px-2 py-0.5 rounded-full">{data.length} respuestas</span>
       </div>
       <div className="grid grid-cols-3 gap-3 mb-3">
@@ -113,7 +120,7 @@ function BienestarPanel({ data }: { data: any[] }) {
         <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
           <AlertTriangle size={14} className="text-red-600 shrink-0 mt-0.5" />
           <p className="text-xs text-red-700 font-bold">
-            {counts.dificil} familia{counts.dificil > 1 ? 's' : ''} necesita{counts.dificil === 1 ? '' : 'n'} apoyo emocional adicional esta semana.
+            {counts.dificil} {t('dashboard.familiasNecesitan')} emocional adicional esta semana.
           </p>
         </div>
       )}
@@ -124,6 +131,7 @@ function BienestarPanel({ data }: { data: any[] }) {
 // ── Dashboard principal ─────────────────────────────────────────────────────
 function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   const toast = useToast()
+  const { t, locale } = useI18n()
   const [loading, setLoading] = useState(false)
   const [emailCredito, setEmailCredito] = useState('')
   const [stats, setStats] = useState({ pacientes: 0, sesionesHoy: 0, creditosActivos: 0, analisisIA: 0, sinSesion30d: 0, mensajesPendientes: 0 })
@@ -139,8 +147,8 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
     const update = () => {
       const now = new Date()
       setHoraActual(now)
-      setSaludo(now.getHours() < 12 ? 'Buenos días' : now.getHours() < 19 ? 'Buenas tardes' : 'Buenas noches')
-      setDiaStr(now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
+      setSaludo(now.getHours() < 12 ? t('dashboard.saludoManana') : now.getHours() < 19 ? t('dashboard.saludoTarde') : t('dashboard.saludoNoche'))
+      setDiaStr(now.toLocaleDateString(toBCP47(locale), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }))
     }
     update()
     const iv = setInterval(update, 1000)
@@ -184,13 +192,13 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
 
     const alertas: any[] = []
     sinSesion.slice(0, 3).forEach((n: any) => {
-      alertas.push({ tipo: 'sin_sesion', paciente: n.name, mensaje: 'Sin sesión en los últimos 30 días. Revisa si hubo cancelaciones.' })
+      alertas.push({ tipo: 'sin_sesion', paciente: n.name, mensaje: t('dashboard.sinSesionMensaje') })
     })
 
     // Alertas de bienestar bajo
     const bienestarBajo = (bienestar || []).filter((b: any) => (b.responses?.answer || b.form_title || '').includes('Difícil'))
     bienestarBajo.slice(0, 2).forEach((b: any) => {
-      alertas.push({ tipo: 'bienestar_bajo', paciente: `Padre/Madre (${b.created_at?.slice(0, 10)})`, mensaje: 'Reportó dificultad esta semana. Considera contactarlos.' })
+      alertas.push({ tipo: 'bienestar_bajo', paciente: `${t('dashboard.padresMadre')} (${b.created_at?.slice(0, 10)})`, mensaje: t('dashboard.bienestarBajoMsg') })
     })
 
     const creditos = profiles?.reduce((s: number, p: any) => s + (p.tokens || 0), 0) || 0
@@ -202,26 +210,26 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   }
 
   const handleCargarCredito = async (cantidad: number) => {
-    if (!emailCredito.trim()) { toast.warning('Ingresa un email'); return }
+    if (!emailCredito.trim()) { toast.warning(t('dashboard.emailRequerido')); return }
     setLoading(true)
     try {
       const { data: profile } = await supabase.from('profiles').select('id, tokens').eq('email', emailCredito.trim()).single()
-      if (!profile) { toast.error('Email no encontrado'); return }
+      if (!profile) { toast.error(t('dashboard.emailNoEncontrado')); return }
       await supabase.from('profiles').update({ tokens: (profile.tokens || 0) + cantidad }).eq('id', profile.id)
-      toast.success(`✅ ${cantidad} crédito${cantidad > 1 ? 's' : ''} añadido${cantidad > 1 ? 's' : ''}`)
+      toast.success(`✅ ${cantidad} ${t('dashboard.creditosCargados')}`)
       setEmailCredito('')
       cargarDatos()
-    } catch { toast.error('Error al cargar crédito') }
+    } catch { toast.error(t('dashboard.errorCargarCredito')) }
     finally { setLoading(false) }
   }
 
 
 
   const STAT_CARDS = [
-    { title: 'Pacientes activos', value: stats.pacientes, sub: 'Total', icon: Users, accent: { bg: 'bg-blue-50', icon: 'text-blue-600', badge: 'bg-blue-50 text-blue-600' }, onClick: () => navigateTo('ninos') },
-    { title: 'Sesiones pendientes hoy', value: stats.sesionesHoy, sub: 'Por realizar', icon: Calendar, accent: { bg: 'bg-indigo-50', icon: 'text-indigo-600', badge: 'bg-indigo-50 text-indigo-600' }, onClick: () => navigateTo('agenda') },
-    { title: 'Sin sesión 30 días', value: stats.sinSesion30d, sub: 'Revisar', icon: AlertTriangle, accent: { bg: 'bg-amber-50', icon: 'text-amber-600', badge: 'bg-amber-50 text-amber-600' }, alert: stats.sinSesion30d > 0, onClick: () => navigateTo('ninos') },
-    { title: 'Mensajes sin leer', value: stats.mensajesPendientes, sub: 'Padres', icon: MessageCircle, accent: { bg: 'bg-violet-50', icon: 'text-violet-600', badge: 'bg-violet-50 text-violet-600' }, alert: stats.mensajesPendientes > 3, onClick: () => navigateTo('mensajes') },
+    { title: t('dashboard.pacientesActivos'), value: stats.pacientes, sub: t('common.total'), icon: Users, accent: { bg: 'bg-blue-50', icon: 'text-blue-600', badge: 'bg-blue-50 text-blue-600' }, onClick: () => navigateTo('ninos') },
+    { title: t('dashboard.sesionesHoy'), value: stats.sesionesHoy, sub: t('dashboard.porRealizar'), icon: Calendar, accent: { bg: 'bg-indigo-50', icon: 'text-indigo-600', badge: 'bg-indigo-50 text-indigo-600' }, onClick: () => navigateTo('agenda') },
+    { title: t('dashboard.sinSesion30d'), value: stats.sinSesion30d, sub: t('dashboard.revisar'), icon: AlertTriangle, accent: { bg: 'bg-amber-50', icon: 'text-amber-600', badge: 'bg-amber-50 text-amber-600' }, alert: stats.sinSesion30d > 0, onClick: () => navigateTo('ninos') },
+    { title: t('dashboard.mensajesSinLeer'), value: stats.mensajesPendientes, sub: t('nav.pacientes'), icon: MessageCircle, accent: { bg: 'bg-violet-50', icon: 'text-violet-600', badge: 'bg-violet-50 text-violet-600' }, alert: stats.mensajesPendientes > 3, onClick: () => navigateTo('mensajes') },
   ]
 
   return (
@@ -233,18 +241,18 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-12 -translate-x-8" />
         <div className="relative">
           <p className="text-blue-200 text-sm font-medium capitalize">{diaStr}</p>
-          <h2 className="text-2xl font-black mt-1">{saludo}, Directora 👋</h2>
+          <h2 className="text-2xl font-black mt-1">{saludo}, {t('dashboard.directora')} 👋</h2>
           <p className="text-blue-200 text-sm mt-1">
-            Tienes <span className="text-white font-bold">{stats.sesionesHoy} citas</span> hoy
+            {t('dashboard.citasHoyBanner').replace('{n}', String(stats.sesionesHoy))}
             {stats.sinSesion30d > 0 && (
-              <span className="ml-2 text-yellow-300 font-bold">· {stats.sinSesion30d} paciente{stats.sinSesion30d > 1 ? 's' : ''} sin sesión reciente</span>
+              <span className="ml-2 text-yellow-300 font-bold">· {t('dashboard.sinSesionRecienteBanner').replace('{n}', String(stats.sinSesion30d))}</span>
             )}
           </p>
         </div>
         <div className="text-right hidden sm:block relative">
-          <p className="text-blue-300 text-xs font-medium">Hora actual</p>
+          <p className="text-blue-300 text-xs font-medium">{t('dashboard.horaActual')}</p>
           <p className="text-3xl font-black tabular-nums">
-            {horaActual ? horaActual.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+            {horaActual ? horaActual.toLocaleTimeString(toBCP47(locale), { hour: '2-digit', minute: '2-digit' }) : '--:--'}
           </p>
           <p className="text-blue-300 text-xs">{horaActual ? horaActual.getSeconds() + 's' : ''}</p>
         </div>
@@ -262,9 +270,9 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
             <div className="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center">
               <Bell size={14} className="text-amber-600" />
             </div>
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Alertas clínicas</p>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('dashboard.alertasClinicas')}</p>
             <span className="ml-auto text-xs bg-amber-100 text-amber-700 font-black px-2 py-0.5 rounded-full animate-pulse">
-              {alertasClinicas.length} nueva{alertasClinicas.length > 1 ? 's' : ''}
+              {t('dashboard.nuevasAlertas').replace('{n}', String(alertasClinicas.length))}
             </span>
           </div>
           <div className="space-y-2">
@@ -285,14 +293,14 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         <div className="space-y-4">
           {/* Acciones */}
           <div className="rounded-2xl border shadow-sm p-5" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
-            <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Acciones rápidas</p>
+            <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>{t('dashboard.quickActions')}</p>
             <div className="space-y-2">
               {[
-                { label: 'Nueva Evaluación',  icon: FileText,      view: 'evaluaciones', bg: '#2563eb', fg: '#ffffff' },
-                { label: 'Agendar Cita',      icon: Calendar,      view: 'agenda',       bg: '#1e293b', fg: '#ffffff' },
-                { label: 'Historial & IA',    icon: Brain,         view: 'reportes',     bg: '#7c3aed', fg: '#ffffff' },
+                { label: t('evaluaciones.nuevo'),  icon: FileText,      view: 'evaluaciones', bg: '#2563eb', fg: '#ffffff' },
+                { label: t('agenda.nuevaCita'),      icon: Calendar,      view: 'agenda',       bg: '#1e293b', fg: '#ffffff' },
+                { label: t('nav.historial'),    icon: Brain,         view: 'reportes',     bg: '#7c3aed', fg: '#ffffff' },
                 { label: 'Ver Pacientes',     icon: Users,         view: 'ninos',        bg: '#334155', fg: '#ffffff' },
-                { label: 'Mensajes padres',   icon: MessageCircle, view: 'mensajes',     bg: '#d1fae5', fg: '#065f46', badge: stats.mensajesPendientes },
+                { label: t('mensajes.titulo'),   icon: MessageCircle, view: 'mensajes',     bg: '#d1fae5', fg: '#065f46', badge: stats.mensajesPendientes },
               ].map(({ label, icon: Icon, view, bg, fg, badge }: any) => (
                 <button key={view} onClick={() => navigateTo(view)}
                   className="w-full flex items-center justify-between px-4 py-3 rounded-xl font-semibold text-sm transition-all hover:opacity-90 active:scale-[0.98]"
@@ -315,8 +323,8 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
           {/* Créditos - Administrar desde el módulo de Usuarios */}
           {false && (
           <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">Cargar créditos</p>
-            <p className="text-xs text-slate-400 mb-3">Total en circulación: <strong className="text-slate-700">{stats.creditosActivos}</strong></p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{t('dashboard.cargarCreditos')}</p>
+            <p className="text-xs text-slate-400 mb-3">{t('dashboard.totalCirculacion')} <strong className="text-slate-700">{stats.creditosActivos}</strong></p>
             <input
               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 mb-3 font-medium"
               placeholder="email@familia.com"
@@ -340,9 +348,9 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         {/* Próximas citas */}
         <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>Próximas citas</p>
+            <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>{t('dashboard.proximasCitas')}</p>
             <span className="text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-full">
-              {proximasCitas.length} agendadas
+              {t('dashboard.citasAgendadas').replace('{n}', String(proximasCitas.length))}
             </span>
           </div>
           <div className="space-y-1">
@@ -353,7 +361,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                   <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-3">
                     <Calendar size={28} className="text-slate-300" />
                   </div>
-                  <p className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>Sin citas próximas</p>
+                  <p className="text-sm font-bold" style={{ color: "var(--text-muted)" }}>{t('dashboard.sinCitas')}</p>
                   <button onClick={() => navigateTo('agenda')}
                     className="mt-3 text-xs font-bold text-blue-600 hover:underline">
                     Agendar ahora →
@@ -373,7 +381,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
         {/* Actividad reciente */}
         <div className="rounded-2xl shadow-sm p-5" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Actividad reciente</p>
+            <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('dashboard.actividadReciente')}</p>
             <Activity size={14} className="text-slate-300" />
           </div>
           <div className="space-y-1">
@@ -388,7 +396,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                     <p className="text-xs text-slate-400 truncate">{a.datos?.objetivo || 'Sesión registrada'}</p>
                   </div>
                   <p className="text-[10px] text-slate-400 font-medium flex-shrink-0">
-                    {new Date(a.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: 'short' })}
+                    {new Date(a.created_at).toLocaleDateString(toBCP47(locale), { day: '2-digit', month: 'short' })}
                   </p>
                 </div>
               ))
@@ -397,7 +405,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
                   <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mb-3">
                     <Activity size={28} className="text-slate-300" />
                   </div>
-                  <p className="text-sm font-bold text-slate-400">Sin actividad reciente</p>
+                  <p className="text-sm font-bold text-slate-400">{t('dashboard.sinActividad')}</p>
                   <button onClick={() => navigateTo('evaluaciones')}
                     className="mt-3 text-xs font-bold text-orange-500 hover:underline">
                     Registrar sesión →
@@ -422,7 +430,7 @@ function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
             <Sparkles size={22} className="text-white" />
           </div>
           <div>
-            <p className="font-black text-base">Análisis IA esta semana</p>
+            <p className="font-black text-base">{t('dashboard.analisisIA')}</p>
             <p className="text-violet-200 text-sm">{stats.analisisIA} registros procesados por IA</p>
           </div>
         </div>

@@ -82,15 +82,22 @@ export default function GraficoProgramaABA({
   compact = false,
 }: GraficoProgramaABAProps) {
 
-  // Construir datos del gráfico
-  const data = useMemo(() =>
-    sesiones.map((s, i) => ({
+  // Construir datos del gráfico — siempre en base a 10 sesiones (proporcional)
+  const data = useMemo(() => {
+    const mapped = sesiones.map((s, i) => ({
       index: i,
       fecha: fmtFecha(s.fecha),
       fechaRaw: s.fecha,
       pct: s.porcentaje_exito ?? 0,
-    })),
-  [sesiones])
+    }))
+    // Si hay menos de 10 sesiones, completar con slots vacíos para mantener escala
+    const total = Math.max(10, Math.ceil(mapped.length / 10) * 10)
+    const padded = [...mapped]
+    while (padded.length < total) {
+      padded.push({ index: padded.length, fecha: '', fechaRaw: '', pct: null as any })
+    }
+    return padded
+  }, [sesiones])
 
   // Calcular en qué índice del array cae cada cambio de set
   // Un "cambio de set" ocurre cuando la sesión cambia de objetivo_cp_id o cuando hay un cambio de fase

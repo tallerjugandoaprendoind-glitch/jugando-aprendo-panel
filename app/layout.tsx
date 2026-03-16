@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { I18nProvider } from '@/lib/i18n-context'
 import { ToastProvider } from '@/components/Toast'
 import { ThemeProvider } from '@/components/ThemeContext'
 import "./globals.css";
@@ -24,6 +25,9 @@ export const metadata: Metadata = {
     startupImage: "/icons/apple-touch-icon.png",
   },
   formatDetection: { telephone: false },
+  verification: {
+    google: 'TasBD1QvgPC7uYxtTQFVg-vl4WV2uVmGHgnb_yAZrE0',
+  },
   openGraph: {
     title: "Vanty | Terapia ABA en Pisco, Ica",
     description: "Centro especializado en neurodivergencia. Terapia ABA con IA para niños en Pisco, Ica, Perú.",
@@ -67,7 +71,7 @@ export default function RootLayout({
       <body className="antialiased">
         <ThemeProvider>
           <ToastProvider>
-            {children}
+            <I18nProvider>{children}</I18nProvider>
           </ToastProvider>
         </ThemeProvider>
         <script dangerouslySetInnerHTML={{

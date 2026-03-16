@@ -59,7 +59,8 @@ Extrae exactamente esto en JSON (SIN nombres, SIN datos que identifiquen al paci
   "nivel_complejidad": "bajo/medio/alto",
   "tags": ["lista", "de", "tags", "clínicos"]
 }
-SOLO JSON, sin texto adicional.`
+SOLO JSON, sin texto adicional.
+`
 
 
   // ━━━ CEREBRO IA: buscar conocimiento clínico relevante ━━━
@@ -176,6 +177,13 @@ Tono: colega experto, directo, práctico. Máximo 250 palabras.`,
 }
 
 // ── GET: Estadísticas de la Knowledge Base ───────────────────────────────────
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale?: string | null): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
+  return ''
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const accion = searchParams.get('accion') || 'estadisticas'
@@ -227,6 +235,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json()
+    const userLocale = body.locale || req.headers.get('x-locale') || 'es'
 
     if (accion === 'aprender') {
       const { sesionId, childId } = body

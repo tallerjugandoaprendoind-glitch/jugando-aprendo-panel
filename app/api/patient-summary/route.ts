@@ -3,9 +3,17 @@ import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { buildAIContext } from '@/lib/ai-context-builder'
 
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale: string): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write ALL content in English. Clinical, professional English. Do not use Spanish anywhere.]'
+  return ''
+}
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json()
+    const userLocale = body.locale || req.headers.get('x-locale') || 'es';
     const { childName, childAge, diagnosis, records } = body;
 
 
@@ -68,7 +76,7 @@ Genera un JSON con la siguiente estructura EXACTA (sin markdown, solo JSON puro)
   "objetivos_proximas_sesiones": ["objetivo 1", "objetivo 2", "objetivo 3"],
   "nivel_progreso_general": "excelente|bueno|moderado|requiere_atencion",
   "mensaje_equipo": "Mensaje motivador de 2-3 oraciones para el equipo terapéutico"
-}`;
+}${getLangInstruction(userLocale)}`;
 
 
     // ━━━ CEREBRO IA: buscar conocimiento clínico relevante ━━━

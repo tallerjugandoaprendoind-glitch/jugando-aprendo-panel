@@ -1,4 +1,7 @@
 'use client'
+
+import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
 import { useState, useEffect, useRef, useCallback } from 'react'
 import {
   Send, Loader2, Bot, User, Sparkles, BookOpen, Brain,
@@ -23,6 +26,7 @@ interface VADIAgentChatProps {
 export default function VADIAgentChat({
   userId, childId, childName, contexto = 'general', compact = false
 }: VADIAgentChatProps) {
+  const { t, locale } = useI18n()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -68,13 +72,14 @@ export default function VADIAgentChat({
     try {
       const res = await fetch('/api/agente/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': locale || 'es' },
         body: JSON.stringify({
           mensaje: msg,
           childId,
           userId,
           conversacionId,
           contexto,
+          locale: typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es',
         }),
       })
       const data = await res.json()
@@ -121,7 +126,7 @@ export default function VADIAgentChat({
         </div>
         <div className="ml-auto flex items-center gap-1.5">
           <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-          <span className="text-white/70 text-[10px] font-bold">Activo</span>
+          <span className="text-white/70 text-[10px] font-bold">{t('common.activo')}</span>
         </div>
       </div>
 
@@ -137,7 +142,7 @@ export default function VADIAgentChat({
             </div>
             <div className="bg-slate-100 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2">
               <Loader2 size={14} className="animate-spin text-violet-500" />
-              <span className="text-sm text-slate-500">VADI está pensando...</span>
+              <span className="text-sm text-slate-500">{t('ui.vadiPensando')}</span>
             </div>
           </div>
         )}
@@ -147,7 +152,7 @@ export default function VADIAgentChat({
       {/* Sugerencias rápidas (solo si no hay conversación) */}
       {messages.length <= 1 && (
         <div className="px-4 pb-2">
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2">Preguntas sugeridas</p>
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mb-2">{t('ui.suggested_questions')}</p>
           <div className="flex flex-wrap gap-2">
             {sugerencias.slice(0, 3).map((s, i) => (
               <button key={i} onClick={() => sendMessage(s)}
@@ -168,7 +173,7 @@ export default function VADIAgentChat({
             onChange={e => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
             rows={1}
-            placeholder="Pregúntale a VADI sobre el caso, protocolos ABA, DSM-5..."
+            {...{placeholder: t('ui.ask_vadi')}}
             className="flex-1 p-3 bg-slate-50 border-2 border-slate-200 rounded-2xl text-sm resize-none outline-none focus:border-violet-400 transition-all leading-relaxed max-h-28"
             style={{ minHeight: '44px' }}
           />
@@ -186,6 +191,7 @@ export default function VADIAgentChat({
 }
 
 function MessageBubble({ message }: { message: Message }) {
+  const { t, locale } = useI18n()
   const isUser = message.role === 'user'
 
   // Convertir **negrita** y saltos de línea
@@ -218,7 +224,7 @@ function MessageBubble({ message }: { message: Message }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] text-slate-300">
-            {new Date(message.timestamp).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' })}
+            {new Date(message.timestamp).toLocaleTimeString(toBCP47(locale), { hour: '2-digit', minute: '2-digit' })}
           </span>
           {message.fuentes && message.fuentes.length > 0 && (
             <div className="flex gap-1">

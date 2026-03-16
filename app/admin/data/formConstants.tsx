@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 // ==============================================================================
 // ARCHIVO: app/admin/data/formConstants.tsx
 // Datos de configuración para todos los formularios de evaluación

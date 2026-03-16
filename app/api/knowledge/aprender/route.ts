@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { indexDocument } from '@/lib/knowledge-base'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
+import { getLangInstruction } from '@/lib/lang'
 
 // ─── Fuentes de conocimiento ABA especializadas ───────────────────────────────
 // Wikipedia fue removida por no ser fuente clínica confiable.
@@ -56,7 +57,7 @@ Sin texto adicional, sin markdown.`
 
   try {
     const raw = await callGroqSimple(
-      'BCBA experto en ABA. Siempre respondes con JSON válido. Usas terminología clínica precisa.',
+      'BCBA expert in ABA. Always respond with valid JSON. Use precise clinical terminology.',
       prompt,
       { model: GROQ_MODELS.FAST, temperature: 0.3, maxTokens: 400 }
     )
@@ -145,7 +146,7 @@ async function extraerPubMed(termino: string): Promise<{ titulo: string; texto: 
 }
 
 // ─── Generar resumen estructurado con IA ──────────────────────────────────────
-async function generarResumenEstructurado(tema: string, textos: string[]): Promise<string> {
+async function generarResumenEstructurado(tema: string, textos: string[], locale = 'es'): Promise<string> {
   if (textos.length === 0) return ''
   
   const contexto = textos.join('\n\n---\n\n').slice(0, 12000)
@@ -173,7 +174,7 @@ Escribe en español técnico-clínico. NO cites Wikipedia.`
 
   try {
     return await callGroqSimple(
-      'BCBA experto en síntesis de conocimiento clínico basado en evidencia ABA. NO usas Wikipedia.',
+      'BCBA experto en síntesis de conocimiento clínico basado en evidencia ABA. NO usas Wikipedia.' + getLangInstruction(locale),
       prompt,
       { model: GROQ_MODELS.SMART, temperature: 0.3, maxTokens: 1500 }
     )
@@ -185,7 +186,9 @@ Escribe en español técnico-clínico. NO cites Wikipedia.`
 // ─── Handler POST principal ────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
-    const { keywords, modo = 'completo' } = await req.json()
+    const body = await req.json()
+    const { keywords, modo = 'completo' } = body
+    const locale = body.locale || req.headers.get('x-locale') || 'es'
     if (!keywords?.trim()) {
       return NextResponse.json({ error: 'keywords requerido' }, { status: 400 })
     }
@@ -243,7 +246,7 @@ export async function POST(req: NextRequest) {
 
     // ── 2. Generar resumen estructurado con IA (el conocimiento real) ─────────
     const todosLosTextos = textosRecopilados.map(t => `=== ${t.titulo} ===\n${t.texto}`)
-    const resumenIA = await generarResumenEstructurado(keywords, todosLosTextos)
+    const resumenIA = await generarResumenEstructurado(keywords, todosLosTextos, locale)
     log.push(`🤖 Síntesis IA generada (${resumenIA.length} chars)`)
 
     // ── 3. Indexar el resumen IA como documento principal ─────────────────────

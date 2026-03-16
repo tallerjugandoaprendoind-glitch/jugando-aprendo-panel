@@ -1,4 +1,5 @@
 'use client'
+import { useI18n } from '@/lib/i18n-context'
 // components/agenda/AgendaSesiones.tsx
 import { useState, useEffect } from 'react'
 
@@ -11,6 +12,7 @@ const ESTADOS: Record<string, { label: string; color: string; bg: string }> = {
 }
 
 export default function AgendaSesiones({ childId }: { childId?: string }) {
+  const { t } = useI18n()
   const [sesiones, setSesiones]   = useState<any[]>([])
   const [cargando, setCargando]   = useState(true)
   const [vista, setVista]         = useState<'semana' | 'mes'>('semana')
@@ -99,7 +101,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
       {/* Header */}
       <div className="bg-blue-700 text-white p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold">Agenda de Sesiones</h2>
+          <h2 className="text-lg font-bold">{t('agenda.sesiones')}</h2>
           <button onClick={() => setModalNueva(true)}
             className="bg-white text-blue-700 text-sm font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition-colors">
             + Nueva
@@ -135,7 +137,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
         ) : Object.keys(porFecha).length === 0 ? (
           <div className="text-center py-12">
             <p className="text-3xl mb-3">📅</p>
-            <p className="text-gray-500">Sin sesiones en este período</p>
+            <p className="text-gray-500">{t('agenda.sinSesiones2')}</p>
           </div>
         ) : Object.entries(porFecha).sort().map(([fecha, ses]) => (
           <div key={fecha}>
@@ -184,7 +186,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
             </div>
             {modal.notas && <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 italic">{modal.notas}</p>}
             <div>
-              <p className="text-xs text-gray-500 font-medium mb-2">Cambiar estado:</p>
+              <p className="text-xs text-gray-500 font-medium mb-2">{t('agenda.cambiarEstado')}</p>
               <div className="grid grid-cols-2 gap-2">
                 {Object.entries(ESTADOS).map(([estado, cfg]) => (
                   <button key={estado} onClick={() => actualizarEstado(modal.id, estado)}
@@ -203,7 +205,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl w-full max-w-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-gray-800">Nueva sesión</h3>
+              <h3 className="font-bold text-gray-800">{t('agenda.nuevaSesion')}</h3>
               <button onClick={() => setModalNueva(false)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
             </div>
             <div className="space-y-3">
@@ -211,37 +213,37 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
                 <div>
                   <label className="text-xs font-medium text-gray-600 mb-1 block">Child ID del paciente</label>
                   <input value={formNueva.child_id} onChange={e => setFormNueva(f => ({ ...f, child_id: e.target.value }))}
-                    placeholder="UUID del paciente"
+                    placeholder={t('agenda.uuidPaciente')}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
                 </div>
               )}
               <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">Terapeuta ID</label>
+                <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.terapeutaIdLabel')}</label>
                 <input value={formNueva.terapeuta_id} onChange={e => setFormNueva(f => ({ ...f, terapeuta_id: e.target.value }))}
                   placeholder="UUID del terapeuta"
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">Fecha</label>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.fechaLabel')}</label>
                   <input type="date" value={formNueva.fecha} onChange={e => setFormNueva(f => ({ ...f, fecha: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
                 </div>
                 <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">Hora inicio</label>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.horaInicioLabel')}</label>
                   <input type="time" value={formNueva.hora_inicio} onChange={e => setFormNueva(f => ({ ...f, hora_inicio: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1 block">Tipo</label>
+                  <label className="text-xs font-medium text-gray-600 mb-1 block">{t('agenda.tipoLabel')}</label>
                   <select value={formNueva.tipo} onChange={e => setFormNueva(f => ({ ...f, tipo: e.target.value }))}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-400">
                     <option value="individual">Individual</option>
                     <option value="grupal">Grupal</option>
                     <option value="domiciliaria">Domiciliaria</option>
-                    <option value="evaluacion">Evaluación</option>
+                    <option value="evaluacion">{t('agenda.evaluacionOpt')}</option>
                   </select>
                 </div>
                 <div>

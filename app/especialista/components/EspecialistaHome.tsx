@@ -1,5 +1,8 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+import { toBCP47 } from '@/lib/i18n'
+
 import { useState, useEffect } from 'react'
 import {
   FileText, Clock, CheckCircle2, XCircle, Calendar, Baby,
@@ -17,6 +20,8 @@ interface Props {
 
 // ── Tarjeta de estadística clicable ────────────────────────────────────────
 function StatCard({ label, value, sub, color, bg, border, icon: Icon, onClick, loading, pulse }: any) {
+  const { t, locale } = useI18n()
+
   return (
     <button onClick={onClick}
       className={`bg-white rounded-2xl p-5 text-left group hover:shadow-lg transition-all duration-200 border ${border} hover:scale-[1.02] active:scale-[.98] relative overflow-hidden`}>
@@ -37,6 +42,8 @@ function StatCard({ label, value, sub, color, bg, border, icon: Icon, onClick, l
 
 // ── Chip de productividad semanal ───────────────────────────────────────────
 function ProductividadSemanal({ aprobadas, pendientes, rechazadas }: any) {
+  const { t, locale } = useI18n()
+
   const total = aprobadas + pendientes + rechazadas
   if (total === 0) return null
   const tasa = total > 0 ? Math.round((aprobadas / total) * 100) : 0
@@ -46,12 +53,12 @@ function ProductividadSemanal({ aprobadas, pendientes, rechazadas }: any) {
         <div className="w-7 h-7 bg-violet-50 rounded-lg flex items-center justify-center">
           <TrendingUp size={14} className="text-violet-600" />
         </div>
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Tu productividad</p>
+        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('ui.your_productivity')}</p>
         <span className="ml-auto text-xs bg-violet-50 text-violet-700 font-black px-2 py-0.5 rounded-full">{total} total</span>
       </div>
       <div className="flex items-end gap-3 mb-3">
         <p className="text-4xl font-black text-slate-800">{tasa}%</p>
-        <p className="text-sm text-slate-400 mb-1.5">tasa de aprobación</p>
+        <p className="text-sm text-slate-400 mb-1.5">{t('especialista.tasaAprobacion')}</p>
       </div>
       {/* Barra de progreso compuesta */}
       <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden flex mb-3">
@@ -78,6 +85,7 @@ const TIPS_CLINICOS = [
 ]
 
 export default function EspecialistaHome({ userId, profile, setActiveView }: Props) {
+  const { t, locale } = useI18n()
   const [stats, setStats] = useState({ pendientes: 0, aprobadas: 0, rechazadas: 0, citasHoy: 0, totalPacientes: 0, citasProximas: 0, sesionesEstaSemana: 0 })
   const [recientes, setRecientes] = useState<any[]>([])
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
@@ -90,7 +98,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
     const now = new Date()
     const h = now.getHours()
     setSaludo(h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches')
-    setFechaStr(now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }))
+    setFechaStr(now.toLocaleDateString(toBCP47(locale), { weekday: 'long', day: 'numeric', month: 'long' }))
   }, [])
 
   useEffect(() => {
@@ -134,7 +142,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
   const tip = TIPS_CLINICOS[tipIndex]
 
   const STAT_CARDS = [
-    { label: 'Pacientes', value: stats.totalPacientes, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', view: 'pacientes', icon: Baby, sub: 'Total activos' },
+    { label: t('nav.pacientes'), value: stats.totalPacientes, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', view: 'pacientes', icon: Baby, sub: 'Total activos' },
     { label: 'Sesiones esta semana', value: stats.sesionesEstaSemana, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', view: 'agenda', icon: Activity, sub: 'Últimos 7 días' },
     { label: 'En revisión', value: stats.pendientes, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', view: 'evaluaciones', icon: Clock, sub: 'Esperando aprobación', pulse: stats.pendientes > 0 },
     { label: 'Aprobadas', value: stats.aprobadas, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', view: 'evaluaciones', icon: CheckCircle2, sub: 'Confirmadas' },
@@ -142,8 +150,8 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
 
   const STATUS_CFG: Record<string, any> = {
     pending_approval: { label: 'En revisión', color: 'text-amber-700', bg: 'bg-amber-50 border border-amber-200' },
-    approved: { label: 'Aprobado', color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-200' },
-    rejected: { label: 'Rechazado', color: 'text-red-700', bg: 'bg-red-50 border border-red-200' },
+    approved: { label: t('especialista.aprobado'), color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-200' },
+    rejected: { label: t('especialista.rechazado'), color: 'text-red-700', bg: 'bg-red-50 border border-red-200' },
   }
 
   return (
@@ -188,7 +196,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             )}
             <button onClick={() => setActiveView('evaluaciones')}
               className="flex items-center gap-2 px-4 py-2 bg-white/15 hover:bg-white/25 rounded-xl text-sm font-semibold transition-all border border-white/20">
-              <Plus size={14} /> Nueva evaluación
+              <Plus size={14} /> {t('especialista.nuevaEvaluacion')}
             </button>
           </div>
         </div>
@@ -217,7 +225,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           <div className="bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 rounded-2xl p-5">
             <div className="flex items-center gap-2 mb-3">
               <Brain size={15} className="text-indigo-600" />
-              <p className="text-xs font-black text-indigo-600 uppercase tracking-widest">Tip clínico del día</p>
+              <p className="text-xs font-black text-indigo-600 uppercase tracking-widest">{t('ui.clinical_tip')}</p>
             </div>
             <div className="text-2xl mb-2">{tip.emoji}</div>
             <p className="text-sm text-indigo-800 leading-relaxed font-medium">{tip.texto}</p>
@@ -231,16 +239,16 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
                 <Activity size={14} className="text-blue-600" />
               </div>
-              <h3 className="font-bold text-slate-800 text-sm">Mis evaluaciones recientes</h3>
+              <h3 className="font-bold text-slate-800 text-sm">{t('ui.recent_evaluations')}</h3>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => setActiveView('evaluaciones')}
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-all">
-                <Plus size={12} /> Nueva
+                <Plus size={12} /> {t('especialista.nueva2')}
               </button>
               <button onClick={() => setActiveView('evaluaciones')}
                 className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline">
-                Ver todo <ChevronRight size={13} />
+                {t('especialista.verTodo')} <ChevronRight size={13} />
               </button>
             </div>
           </div>
@@ -250,11 +258,11 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               <div className="w-16 h-16 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <FileText size={28} className="text-slate-300" />
               </div>
-              <p className="text-slate-400 text-sm font-bold mb-1">Sin evaluaciones aún</p>
-              <p className="text-slate-300 text-xs mb-4 max-w-xs mx-auto">Crea tu primera evaluación. Pasará por revisión antes de llegar a los padres.</p>
+              <p className="text-slate-400 text-sm font-bold mb-1">{t('ui.no_recent_evals')}</p>
+              <p className="text-slate-300 text-xs mb-4 max-w-xs mx-auto">{t('especialista.primeraEvaluacion').split('.')[0]}. Pasará por revisión antes de llegar a los padres.</p>
               <button onClick={() => setActiveView('evaluaciones')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all">
-                <Plus size={14} /> Crear evaluación
+                <Plus size={14} /> {t('especialista.nuevaEvaluacion')}
               </button>
             </div>
           ) : (
@@ -275,7 +283,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
                       <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
                         <Baby size={10} /> {r.children?.name}
                         <span className="mx-1">·</span>
-                        {new Date(r.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'short' })}
+                        {new Date(r.created_at).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'short' })}
                       </p>
                     </div>
                     <span className={`flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.color}`}>
@@ -293,7 +301,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             <div className="px-6 py-4 border-t border-slate-50">
               <button onClick={() => setActiveView('evaluaciones')}
                 className="w-full py-2.5 border-2 border-dashed border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
-                <Plus size={14} /> Nueva evaluación
+                <Plus size={14} /> {t('especialista.nuevaEvaluacion')}
               </button>
             </div>
           )}
@@ -306,7 +314,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           <AlertTriangle size={17} className="text-amber-600" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold text-amber-800 mb-2">¿Cómo funciona el flujo de aprobación?</p>
+          <p className="text-sm font-bold text-amber-800 mb-2">{t('especialista.flujoAprobacion')}</p>
           <div className="grid grid-cols-3 gap-3">
             {[
               { step: '1', label: 'Tú creas', desc: 'Registra evaluación o nota de sesión', color: 'bg-amber-100 text-amber-800' },

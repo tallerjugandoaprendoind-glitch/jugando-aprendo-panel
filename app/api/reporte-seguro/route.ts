@@ -46,6 +46,13 @@ function parseLogro(val: any): number | null {
   return null
 }
 
+
+// i18n: responder en el idioma del usuario
+function getLangInstruction(locale?: string | null): string {
+  if (locale === 'en') return '\n\n[MANDATORY: Write the entire response in English. Professional clinical English only. No Spanish.]'
+  return ''
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { childId, terapeuta = 'Terapeuta del Centro', periodoMeses = 3 } = await req.json()

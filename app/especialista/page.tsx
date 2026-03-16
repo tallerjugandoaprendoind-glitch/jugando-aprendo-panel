@@ -1,5 +1,7 @@
 'use client'
 
+import { useI18n } from '@/lib/i18n-context'
+
 import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -16,15 +18,10 @@ import MisEvaluaciones from './components/MisEvaluaciones'
 import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
 import MisFormularios from './components/MisFormularios'
+import LocaleSelector from '@/app/components/LocaleSelector'
+import { ThemeToggleButton } from '@/components/ThemeContext'
 
-const NAV_ITEMS = [
-  { id: 'inicio',       icon: LayoutDashboard, label: 'Inicio' },
-  { id: 'pacientes',    icon: Users,           label: 'Pacientes' },
-  { id: 'formularios',  icon: FileText,        label: 'Formularios' },
-  { id: 'evaluaciones', icon: Activity,        label: 'Evaluaciones' },
-  { id: 'agenda',       icon: Calendar,        label: 'Mi Agenda' },
-  { id: 'perfil',       icon: User,            label: 'Mi Perfil' },
-]
+
 
 function SidebarLink({ icon: Icon, label, active, onClick }: any) {
   return (
@@ -45,6 +42,15 @@ function SidebarLink({ icon: Icon, label, active, onClick }: any) {
 export default function EspecialistaDashboard() {
   const router = useRouter()
   const toast = useToast()
+  const { t } = useI18n()
+  const NAV_ITEMS = [
+    { id: 'inicio',        icon: LayoutDashboard, label: t('nav.inicio') },
+    { id: 'pacientes',     icon: Users,           label: t('nav.mispacientes') },
+    { id: 'formularios',   icon: FileText,        label: t('nav.misformularios') },
+    { id: 'evaluaciones',  icon: Activity,        label: t('nav.misevaluaciones') },
+    { id: 'agenda',        icon: Calendar,        label: t('nav.miagenda') },
+    { id: 'perfil',        icon: User,            label: t('nav.miperfil') },
+  ]
   const [activeView, setActiveView] = useState('inicio')
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -116,7 +122,7 @@ export default function EspecialistaDashboard() {
           <Stethoscope size={28} className="text-white" />
         </div>
         <Loader2 size={20} className="animate-spin text-blue-600" />
-        <p className="text-sm font-medium text-slate-500">Cargando panel clínico...</p>
+        <p className="text-sm font-medium text-slate-500">{t('especialista.cargandoPanel')}</p>
       </div>
     </div>
   )
@@ -174,7 +180,7 @@ export default function EspecialistaDashboard() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold truncate text-slate-700">{userName}</p>
-              <p className="text-[10px] truncate text-slate-400">{profile?.specialty || 'Especialista Clínico'}</p>
+              <p className="text-[10px] truncate text-slate-400">{profile?.specialty || t('especialista.especialistaClinico')}</p>
             </div>
             <Settings size={14} className="text-slate-400 flex-shrink-0" />
           </div>
@@ -190,7 +196,7 @@ export default function EspecialistaDashboard() {
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
               >
-                <LogOut size={14} /> Cerrar sesión
+                <LogOut size={14} /> { t('common.cerrarSesion') }
               </button>
             </div>
           )}
@@ -218,12 +224,14 @@ export default function EspecialistaDashboard() {
                 {PAGE_TITLES[activeView] || 'Panel'}
               </h1>
               <p className="text-xs hidden sm:block text-slate-400">
-                Jugando Aprendo · Panel Especialista
+                Jugando Aprendo · {t('especialista.titulo')}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            <LocaleSelector compact={true} />
+            <ThemeToggleButton />
             <button
               onClick={() => setActiveView('perfil')}
               className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition-colors"
@@ -270,7 +278,7 @@ export default function EspecialistaDashboard() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-200">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-black text-slate-800">Cambiar Contraseña</h3>
+              <h3 className="font-black text-slate-800">{t('especialista.cambiarPass')}</h3>
               <button onClick={() => setShowChangePassword(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
@@ -278,14 +286,14 @@ export default function EspecialistaDashboard() {
             <div className="space-y-3">
               <input
                 type="password"
-                placeholder="Nueva contraseña"
+                {...{placeholder: t('ui.new_password')}}
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <input
                 type="password"
-                placeholder="Confirmar contraseña"
+                {...{placeholder: t('ui.confirm_password')}}
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
