@@ -264,17 +264,20 @@ export default function UserManagementView() {
   // Protección: director no puede cambiar rol de otro director
   // Solo un "super director" (el primero registrado / admin) puede hacerlo
   const canChangeRole = (targetUser: UserData) => {
-    if (!currentUserId) return false
-    if (targetUser.id === currentUserId) return false // no puede cambiarse a sí mismo
     const targetRole = targetUser.profile?.role || ''
     const isTargetDirector = targetRole === 'jefe' || targetRole === 'admin'
-    if (isTargetDirector) return false // nadie puede degradar a un director excepto superadmin en DB
+    if (isTargetDirector) return false
+    // Don't block if currentUserId not loaded yet — let the server handle self-change protection
+    if (currentUserId && targetUser.id === currentUserId) return false
     return true
   }
 
   const handleChangeRole = async (user: UserData, newRole: string) => {
     if (!canChangeRole(user)) {
-      toast.error('No podés cambiar el rol de un Director. Contactá al administrador del sistema.')
+      const targetRole = user.profile?.role || ''
+      const isDirector = targetRole === 'jefe' || targetRole === 'admin'
+      if (isDirector) toast.error('No podés cambiar el rol de un Director.')
+      else toast.warning('No podés cambiarte el rol a ti mismo.')
       return
     }
     setSavingRole(user.id)
