@@ -45,26 +45,29 @@ function RoleSelector({ currentRole, onSelect, disabled }: {
 }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
-  const [pos, setPos] = useState({ top: 0, right: 0 })
+  const [pos, setPos] = useState({ top: 0, left: 0 })
   const btnRef = useRef<HTMLButtonElement>(null)
   const current = getRoleInfo(currentRole)
 
   const handleOpen = () => {
     if (disabled) return
-    if (!open && btnRef.current) {
+    if (btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
+      const dropdownW = 260
       const dropdownH = ROLES.length * 68 + 8
+      // Position below button, aligned to right edge
+      let left = rect.right - dropdownW
+      if (left < 8) left = 8
+      // Flip up if not enough space below
       const spaceBelow = window.innerHeight - rect.bottom
       const top = spaceBelow < dropdownH ? rect.top - dropdownH - 4 : rect.bottom + 4
-      // align right edge of dropdown with right edge of button
-      const right = window.innerWidth - rect.right
-      setPos({ top, right })
+      setPos({ top, left })
     }
     setOpen(o => !o)
   }
 
   return (
-    <div className="relative" style={{ zIndex: 20 }}>
+    <div className="relative">
       <button
         ref={btnRef}
         onClick={handleOpen}
@@ -80,14 +83,14 @@ function RoleSelector({ currentRole, onSelect, disabled }: {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
-            className="fixed z-50 rounded-xl shadow-2xl overflow-hidden"
+            className="fixed z-50 rounded-xl overflow-hidden"
             style={{
               background: 'var(--card)',
               border: '1px solid var(--card-border)',
-              top: pos.top,
-              right: pos.right,
-              width: '260px',
               boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
+              top: pos.top,
+              left: pos.left,
+              width: '260px',
             }}
           >
             {ROLES.map(r => {
