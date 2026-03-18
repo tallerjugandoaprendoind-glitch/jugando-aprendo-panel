@@ -93,10 +93,14 @@ export default function SecretariaAgenda() {
     setIsSaving(true)
     try {
       const payload = {
-        child_id: form.child_id, appointment_date: form.date,
-        appointment_time: form.time + ':00', service_type: form.service,
-        status: form.status, notes: form.notes, modalidad: form.modality,
-        session_type: form.session_type, is_group: form.session_type === 'grupal'
+        child_id: form.child_id,
+        appointment_date: form.date,
+        appointment_time: form.time + ':00',
+        service_type: form.service,
+        status: form.status,
+        notes: form.notes,
+        modalidad: form.modality,
+        is_group: form.session_type === 'grupal',
       }
       if (editingApt) {
         const { error } = await supabase.from('appointments').update(payload).eq('id', editingApt.id)
