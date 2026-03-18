@@ -93,7 +93,8 @@ export default function ParentDashboard() {
 
         if (!parentEmail) { 
             console.log("No se encontró sesión ni email guardado")
-            router.push('/login')
+            if (prof?.role === 'secretaria') { router.push('/secretaria'); return }
+        router.push('/login')
             return 
         }
 

@@ -1,56 +1,66 @@
 'use client'
 
-import { useI18n } from '@/lib/i18n-context'
-
-import { supabase } from '@/lib/supabase'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
-  LayoutDashboard, Users, LogOut, Calendar, FileText,
-  User, Loader2, Menu, X, Stethoscope, Activity,
-  Shield, Settings, Key, ChevronRight
+  LayoutDashboard, Calendar, CalendarDays, BarChart3,
+  User, LogOut, Menu, X, Loader2, Settings, Key,
+  ClipboardList
 } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
-import EspecialistaHome from './components/EspecialistaHome'
-import MisPacientes from './components/MisPacientes'
-import MisEvaluaciones from './components/MisEvaluaciones'
-import MiAgenda from './components/MiAgenda'
-import MiPerfil from './components/MiPerfil'
-import MisFormularios from './components/MisFormularios'
+import { useI18n } from '@/lib/i18n-context'
 import LocaleSelector from '@/app/components/LocaleSelector'
 import { ThemeToggleButton } from '@/components/ThemeContext'
+import SecretariaHome from './components/SecretariaHome'
+import SecretariaAgenda from './components/SecretariaAgenda'
+import SecretariaCronograma from './components/SecretariaCronograma'
+import SecretariaReportes from './components/SecretariaReportes'
+import SecretariaPerfil from './components/SecretariaPerfil'
 
-
-
-function SidebarLink({ icon: Icon, label, active, onClick }: any) {
+function SidebarLink({ icon: Icon, label, active, onClick, badge }: any) {
   return (
     <button
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group text-left text-sm
         ${active
-          ? 'bg-blue-600 text-white shadow-md shadow-blue-200'
+          ? 'bg-violet-600 text-white shadow-md shadow-violet-200'
           : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
         }`}
     >
       <Icon size={18} className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
       <span className="font-semibold truncate flex-1">{label}</span>
+      {badge && (
+        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${active ? 'bg-white/20 text-white' : 'bg-violet-100 text-violet-700'}`}>
+          {badge}
+        </span>
+      )}
     </button>
   )
 }
 
-export default function EspecialistaDashboard() {
+export default function SecretariaDashboard() {
   const router = useRouter()
   const toast = useToast()
   const { t } = useI18n()
+
   const NAV_ITEMS = [
-    { id: 'inicio',        icon: LayoutDashboard, label: t('nav.inicio') },
-    { id: 'pacientes',     icon: Users,           label: t('nav.mispacientes') },
-    { id: 'formularios',   icon: FileText,        label: t('nav.misformularios') },
-    { id: 'evaluaciones',  icon: Activity,        label: t('nav.misevaluaciones') },
-    { id: 'agenda',        icon: Calendar,        label: t('nav.miagenda') },
-    { id: 'perfil',        icon: User,            label: t('nav.miperfil') },
+    { id: 'inicio',     icon: LayoutDashboard, label: 'Panel' },
+    { id: 'agenda',     icon: Calendar,        label: 'Agenda de Citas' },
+    { id: 'cronograma', icon: CalendarDays,    label: 'Cronograma' },
+    { id: 'reportes',   icon: BarChart3,       label: 'Reportes' },
+    { id: 'perfil',     icon: User,            label: 'Mi Perfil' },
   ]
+
+  const PAGE_TITLES: Record<string, string> = {
+    inicio:     'Panel Administrativo',
+    agenda:     'Agenda de Citas',
+    cronograma: 'Cronograma de Sesiones',
+    reportes:   'Reportes de Asistencia',
+    perfil:     'Mi Perfil',
+  }
+
   const [activeView, setActiveView] = useState('inicio')
   const [profile, setProfile] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -65,14 +75,26 @@ export default function EspecialistaDashboard() {
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) { router.push('/login'); return }
-      const { data: prof } = await supabase.from('profiles').select('*').eq('id', session.user.id).single()
-      if (!prof || (prof.role !== 'especialista' && prof.role !== 'admin')) {
-        if (prof?.role === 'jefe') { router.push('/admin'); return }
-        if (prof?.role === 'padre') { router.push('/padre'); return }
-        if (prof?.role === 'secretaria') { router.push('/secretaria'); return }
+      const { data: prof } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', session.user.id)
+        .single()
+
+      if (!prof) { router.push('/login'); return }
+
+      // Role check — secretaria role OR redirect to correct panel
+      if (prof.role === 'secretaria') {
+        setProfile(prof)
+      } else if (prof.role === 'jefe' || prof.role === 'admin') {
+        router.push('/admin'); return
+      } else if (prof.role === 'padre') {
+        router.push('/padre'); return
+      } else if (prof.role === 'especialista') {
+        router.push('/especialista'); return
+      } else {
         router.push('/login'); return
       }
-      setProfile(prof)
     } catch {
       router.push('/login')
     } finally {
@@ -82,7 +104,10 @@ export default function EspecialistaDashboard() {
 
   useEffect(() => { loadProfile() }, [])
 
-  const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+  }
 
   const handleChangePassword = async () => {
     if (newPassword.length < 6) { toast.warning('Mínimo 6 caracteres'); return }
@@ -93,42 +118,40 @@ export default function EspecialistaDashboard() {
       if (error) throw error
       toast.success('Contraseña actualizada')
       setShowChangePassword(false)
-    } catch (e: any) { toast.error(e.message) }
-    finally { setChangingPassword(false) }
+      setNewPassword('')
+      setConfirmPassword('')
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setChangingPassword(false)
+    }
   }
 
   const renderView = () => {
     if (!profile) return null
     switch (activeView) {
-      case 'inicio':       return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
-      case 'pacientes':    return <MisPacientes />
-      case 'formularios':  return <MisFormularios userId={profile.id} />
-      case 'evaluaciones': return <MisEvaluaciones userId={profile.id} />
-      case 'agenda':       return <MiAgenda />
-      case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} />
-      default:             return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
+      case 'inicio':     return <SecretariaHome onNavigate={setActiveView} />
+      case 'agenda':     return <SecretariaAgenda />
+      case 'cronograma': return <SecretariaCronograma />
+      case 'reportes':   return <SecretariaReportes />
+      case 'perfil':     return <SecretariaPerfil profile={profile} onUpdate={loadProfile} />
+      default:           return <SecretariaHome onNavigate={setActiveView} />
     }
-  }
-
-  const PAGE_TITLES: Record<string, string> = {
-    inicio: 'Panel Principal', pacientes: 'Mis Pacientes',
-    formularios: 'Formularios Clínicos', evaluaciones: 'Mis Evaluaciones',
-    agenda: 'Mi Agenda', perfil: 'Mi Perfil',
   }
 
   if (loading) return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 flex items-center justify-center shadow-xl">
-          <Stethoscope size={28} className="text-white" />
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-600 to-purple-700 flex items-center justify-center shadow-xl">
+          <ClipboardList size={28} className="text-white" />
         </div>
-        <Loader2 size={20} className="animate-spin text-blue-600" />
-        <p className="text-sm font-medium text-slate-500">{t('especialista.cargandoPanel')}</p>
+        <Loader2 size={20} className="animate-spin text-violet-600" />
+        <p className="text-sm font-medium text-slate-500">Cargando panel administrativo...</p>
       </div>
     </div>
   )
 
-  const userName = profile?.full_name || 'Especialista'
+  const userName = profile?.full_name || 'Secretaria'
   const userInitial = userName.charAt(0).toUpperCase()
 
   return (
@@ -149,12 +172,20 @@ export default function EspecialistaDashboard() {
           <div className="flex-1 min-w-0">
             <p className="font-black text-sm leading-tight truncate text-slate-800">Jugando Aprendo</p>
             <p className="text-[10px] font-medium text-slate-400 flex items-center gap-1">
-              <Stethoscope size={9} /> Panel Clínico
+              <ClipboardList size={9} /> Panel Administrativo
             </p>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="ml-auto md:hidden text-slate-400 hover:text-slate-600">
             <X size={18} />
           </button>
+        </div>
+
+        {/* Role badge */}
+        <div className="px-4 pt-4 pb-2">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-violet-50 border border-violet-100">
+            <div className="w-2 h-2 rounded-full bg-violet-500" />
+            <span className="text-[10px] font-black text-violet-700 uppercase tracking-widest">Secretaria(o)</span>
+          </div>
         </div>
 
         {/* Nav */}
@@ -176,12 +207,12 @@ export default function EspecialistaDashboard() {
             className="flex items-center gap-3 p-2 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors"
             onClick={() => setShowProfileMenu(!showProfileMenu)}
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+            <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-purple-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0">
               {userInitial}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold truncate text-slate-700">{userName}</p>
-              <p className="text-[10px] truncate text-slate-400">{profile?.specialty || t('especialista.especialistaClinico')}</p>
+              <p className="text-[10px] truncate text-slate-400">Secretaria(o)</p>
             </div>
             <Settings size={14} className="text-slate-400 flex-shrink-0" />
           </div>
@@ -197,14 +228,14 @@ export default function EspecialistaDashboard() {
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
               >
-                <LogOut size={14} /> { t('common.cerrarSesion') }
+                <LogOut size={14} /> Cerrar sesión
               </button>
             </div>
           )}
         </div>
       </aside>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile overlay */}
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/40 z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
       )}
@@ -225,7 +256,7 @@ export default function EspecialistaDashboard() {
                 {PAGE_TITLES[activeView] || 'Panel'}
               </h1>
               <p className="text-xs hidden sm:block text-slate-400">
-                Jugando Aprendo · {t('especialista.titulo')}
+                Jugando Aprendo · Panel Administrativo
               </p>
             </div>
           </div>
@@ -238,7 +269,7 @@ export default function EspecialistaDashboard() {
               className="flex items-center gap-2 hover:bg-slate-50 px-3 py-1.5 rounded-xl transition-colors"
             >
               <span className="text-xs font-medium text-slate-500 hidden sm:block">{userName.split(' ')[0]}</span>
-              <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-sm font-black shadow">
+              <div className="w-9 h-9 bg-gradient-to-br from-violet-500 to-purple-700 rounded-full flex items-center justify-center text-white text-sm font-black shadow">
                 {userInitial}
               </div>
             </button>
@@ -261,13 +292,13 @@ export default function EspecialistaDashboard() {
             <button key={item.id} onClick={() => setActiveView(item.id)}
               className="flex flex-col items-center gap-0.5 py-2 flex-1 min-w-0 transition-all">
               <div className={`w-9 h-7 rounded-lg flex items-center justify-center transition-all
-                ${isActive ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>
+                ${isActive ? 'bg-violet-600 text-white' : 'text-slate-400'}`}>
                 <item.icon size={17} />
               </div>
               <span className={`font-bold transition-colors truncate w-full text-center px-0.5
-                ${isActive ? 'text-blue-600' : 'text-slate-400'}`}
+                ${isActive ? 'text-violet-600' : 'text-slate-400'}`}
                 style={{ fontSize: 9 }}>
-                {item.label.replace('Mi ', '').replace('Mis ', '')}
+                {item.label.replace('de Citas','').replace('de Sesiones','').replace('de Asistencia','')}
               </span>
             </button>
           )
@@ -279,7 +310,7 @@ export default function EspecialistaDashboard() {
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-200">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-black text-slate-800">{t('especialista.cambiarPass')}</h3>
+              <h3 className="font-black text-slate-800">Cambiar contraseña</h3>
               <button onClick={() => setShowChangePassword(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
@@ -287,22 +318,22 @@ export default function EspecialistaDashboard() {
             <div className="space-y-3">
               <input
                 type="password"
-                {...{placeholder: t('ui.new_password')}}
+                placeholder="Nueva contraseña (mín. 6 caracteres)"
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500"
               />
               <input
                 type="password"
-                {...{placeholder: t('ui.confirm_password')}}
+                placeholder="Confirmar contraseña"
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500"
               />
               <button
                 onClick={handleChangePassword}
                 disabled={changingPassword}
-                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
               >
                 {changingPassword ? <Loader2 size={16} className="animate-spin" /> : null}
                 {changingPassword ? 'Actualizando...' : 'Actualizar Contraseña'}

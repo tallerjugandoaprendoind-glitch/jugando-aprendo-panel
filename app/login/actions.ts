@@ -78,6 +78,8 @@ export async function login(formData: FormData) {
   
   if (profile?.role === 'jefe' || profile?.role === 'admin' || profile?.role === 'especialista' || email === 'admin@jugandoaprendo.com') {
     redirect('/admin')
+  } else if (profile?.role === 'secretaria') {
+    redirect('/secretaria')
   } else {
     redirect('/padre')
   }
@@ -203,5 +205,6 @@ export async function isAdmin() {
   return user.profile?.role === 'jefe' || 
          user.profile?.role === 'admin' || 
          user.profile?.role === 'especialista' ||
+         user.profile?.role === 'secretaria' ||
          user.email === 'admin@jugandoaprendo.com'
 }

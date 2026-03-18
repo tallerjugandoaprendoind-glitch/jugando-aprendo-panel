@@ -8,14 +8,15 @@ import {
   CheckCircle2, X, Eye, EyeOff, Ticket, AlertCircle, User,
   Clock, Calendar, ChevronDown, ChevronUp, Send, Lock,
   Crown, Stethoscope, Heart, Plus, ToggleLeft, ToggleRight,
-  Edit2, Briefcase, UserCheck, UserX, Filter, Link2, Unlink
-} from 'lucide-react'
+  Edit2, Briefcase, UserCheck, UserX, Filter, Link2, Unlink,
+  ClipboardList} from 'lucide-react'
 import { useToast } from '@/components/Toast'
 
 const ROLES = [
-  { value: 'jefe',        label: 'Director',     description: 'Acceso total al sistema', icon: Crown,       dotColor: 'bg-purple-500', badgeClass: 'role-director'    },
-  { value: 'especialista',label: 'Especialista',  description: 'Terapeuta / Clínico',     icon: Stethoscope, dotColor: 'bg-blue-500',   badgeClass: 'role-especialista' },
-  { value: 'padre',       label: 'Padre / Tutor', description: 'Portal de familias',      icon: Heart,       dotColor: 'bg-pink-500',   badgeClass: 'role-padre'       },
+  { value: 'jefe',        label: 'Director',      description: 'Acceso total al sistema',  icon: Crown,         dotColor: 'bg-purple-500', badgeClass: 'role-director'    },
+  { value: 'especialista',label: 'Especialista',  description: 'Terapeuta / Clínico',      icon: Stethoscope,   dotColor: 'bg-blue-500',   badgeClass: 'role-especialista' },
+  { value: 'padre',       label: 'Padre / Tutor', description: 'Portal de familias',       icon: Heart,         dotColor: 'bg-pink-500',   badgeClass: 'role-padre'       },
+  { value: 'secretaria',  label: 'Secretaria(o)', description: 'Apoyo administrativo',     icon: ClipboardList, dotColor: 'bg-violet-500', badgeClass: 'role-secretaria'  },
 ]
 
 function getRoleInfo(role: string) {
@@ -174,7 +175,7 @@ export default function UserManagementView() {
   const [isLoading, setIsLoading] = useState(true)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [currentUserRole, setCurrentUserRole] = useState<string>('')
-  const [activeTab, setActiveTab] = useState<'jefe' | 'especialista' | 'padre' | 'todos'>('todos')
+  const [activeTab, setActiveTab] = useState<'jefe' | 'especialista' | 'padre' | 'secretaria' | 'todos'>('todos')
   const [searchTerm, setSearchTerm] = useState('')
   const [expandedUser, setExpandedUser] = useState<string | null>(null)
   const [savingRole, setSavingRole] = useState<string | null>(null)
@@ -416,6 +417,7 @@ export default function UserManagementView() {
   const totalJefes = users.filter(u => u.profile?.role === 'jefe' || u.profile?.role === 'admin').length
   const totalEspecialistas = users.filter(u => u.profile?.role === 'especialista').length
   const totalPadres = users.filter(u => u.profile?.role === 'padre').length
+  const totalSecretarias = users.filter(u => u.profile?.role === 'secretaria').length
   const totalActivos = users.filter(u => u.profile?.is_active !== false).length
 
   if (isLoading) return (
@@ -452,6 +454,7 @@ export default function UserManagementView() {
           { id: 'jefe',        label: 'Directores',   count: totalJefes,          icon: Crown,       color: 'text-purple-600' },
           { id: 'especialista',label: 'Especialistas', count: totalEspecialistas,  icon: Stethoscope, color: 'text-blue-600' },
           { id: 'padre',       label: 'Padres',       count: totalPadres,         icon: Heart,       color: 'text-pink-600' },
+          { id: 'secretaria',  label: 'Secretarias', count: totalSecretarias,    icon: ClipboardList, color: 'text-violet-600' },
         ].map(tab => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -478,6 +481,7 @@ export default function UserManagementView() {
         <StatCard value={totalJefes}         label="Directores"    icon={Crown}        color="bg-purple-500" />
         <StatCard value={totalEspecialistas} label="Especialistas" icon={Stethoscope}  color="bg-blue-500" />
         <StatCard value={totalPadres}        label="Padres"        icon={Heart}        color="bg-pink-500" />
+        <StatCard value={totalSecretarias}   label="Secretarias"  icon={ClipboardList}color="bg-violet-500" />
       </div>
 
       {/* Buscador */}
@@ -714,6 +718,7 @@ export default function UserManagementView() {
                 <option value="jefe">👑 Director — Acceso total</option>
                 <option value="especialista">{t('ui.specialist_role')}</option>
                 <option value="padre">{t('usuarios.rolPadre')}</option>
+                <option value="secretaria">📋 Secretaria(o) — Apoyo administrativo</option>
               </select>
               {createForm.role === 'especialista' && (
                 <input {...{placeholder: t('ui.specialty')}} value={createForm.specialty}
