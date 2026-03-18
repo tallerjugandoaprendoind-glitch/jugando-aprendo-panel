@@ -53,10 +53,12 @@ function RoleSelector({ currentRole, onSelect, disabled }: {
     if (disabled) return
     if (!open && btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
-      const dropdownH = ROLES.length * 64 + 8 // approx height
+      const dropdownH = ROLES.length * 68 + 8
       const spaceBelow = window.innerHeight - rect.bottom
       const top = spaceBelow < dropdownH ? rect.top - dropdownH - 4 : rect.bottom + 4
-      setPos({ top, right: window.innerWidth - rect.right })
+      // align right edge of dropdown with right edge of button
+      const right = window.innerWidth - rect.right
+      setPos({ top, right })
     }
     setOpen(o => !o)
   }
@@ -78,12 +80,14 @@ function RoleSelector({ currentRole, onSelect, disabled }: {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
-            className="fixed z-50 rounded-xl shadow-2xl min-w-[240px] overflow-hidden"
+            className="fixed z-50 rounded-xl shadow-2xl overflow-hidden"
             style={{
               background: 'var(--card)',
               border: '1px solid var(--card-border)',
               top: pos.top,
               right: pos.right,
+              width: '260px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
             }}
           >
             {ROLES.map(r => {
