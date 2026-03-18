@@ -2,7 +2,7 @@
 
 import { useI18n } from '@/lib/i18n-context'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   Users, Key, Mail, Loader2, Search, Shield, RefreshCw,
   CheckCircle2, X, Eye, EyeOff, Ticket, AlertCircle, User,
@@ -39,19 +39,33 @@ function RoleBadge({ role }: { role: string }) {
 }
 
 function RoleSelector({ currentRole, onSelect, disabled }: {
-
   currentRole: string
   onSelect: (role: string) => void
   disabled?: boolean
 }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
+  const [pos, setPos] = useState({ top: 0, right: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
   const current = getRoleInfo(currentRole)
+
+  const handleOpen = () => {
+    if (disabled) return
+    if (!open && btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      const dropdownH = ROLES.length * 64 + 8 // approx height
+      const spaceBelow = window.innerHeight - rect.bottom
+      const top = spaceBelow < dropdownH ? rect.top - dropdownH - 4 : rect.bottom + 4
+      setPos({ top, right: window.innerWidth - rect.right })
+    }
+    setOpen(o => !o)
+  }
 
   return (
     <div className="relative" style={{ zIndex: 20 }}>
       <button
-        onClick={() => !disabled && setOpen(o => !o)}
+        ref={btnRef}
+        onClick={handleOpen}
         disabled={disabled}
         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)', color: 'var(--text-secondary)' }}
@@ -62,16 +76,14 @@ function RoleSelector({ currentRole, onSelect, disabled }: {
       </button>
       {open && (
         <>
-          {/* overlay para cerrar */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
-            className="absolute left-0 z-50 rounded-xl shadow-2xl min-w-[240px] overflow-y-auto"
+            className="fixed z-50 rounded-xl shadow-2xl min-w-[240px] overflow-hidden"
             style={{
               background: 'var(--card)',
               border: '1px solid var(--card-border)',
-              top: 'calc(100% + 4px)',
-              maxHeight: '320px',
-              overflowY: 'auto'
+              top: pos.top,
+              right: pos.right,
             }}
           >
             {ROLES.map(r => {
