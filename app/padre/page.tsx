@@ -93,7 +93,6 @@ export default function ParentDashboard() {
 
         if (!parentEmail) { 
             console.log("No se encontró sesión ni email guardado")
-            if (prof?.role === 'secretaria') { router.push('/secretaria'); return }
         router.push('/login')
             return 
         }
@@ -105,6 +104,10 @@ export default function ParentDashboard() {
             .single()
         
         if (error || !parent) throw new Error("Perfil no encontrado")
+
+        // Redirect if wrong role
+        if (parent?.role === 'secretaria') { router.push('/secretaria'); return }
+        if (parent?.role === 'jefe' || parent?.role === 'admin' || parent?.role === 'especialista') { router.push('/admin'); return }
 
         setProfile(parent)
 
