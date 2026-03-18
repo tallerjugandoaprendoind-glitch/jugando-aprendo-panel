@@ -65,8 +65,14 @@ function RoleSelector({ currentRole, onSelect, disabled }: {
           {/* overlay para cerrar */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
-            className="absolute left-0 z-50 rounded-xl shadow-2xl min-w-[220px] overflow-hidden"
-            style={{ background: 'var(--card)', border: '1px solid var(--card-border)', top: 'calc(100% + 4px)' }}
+            className="absolute left-0 z-50 rounded-xl shadow-2xl min-w-[240px] overflow-y-auto"
+            style={{
+              background: 'var(--card)',
+              border: '1px solid var(--card-border)',
+              top: 'calc(100% + 4px)',
+              maxHeight: '320px',
+              overflowY: 'auto'
+            }}
           >
             {ROLES.map(r => {
               const RIcon = r.icon
@@ -510,7 +516,7 @@ export default function UserManagementView() {
           const isSelf = user.id === currentUserId
 
           return (
-            <div key={user.id} className={`rounded-2xl overflow-hidden transition-all duration-200 ${!isActive ? 'opacity-60' : ''}`}
+            <div key={user.id} className={`rounded-2xl transition-all duration-200 ${!isActive ? 'opacity-60' : ''}`}
               style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
 
               {/* Fila principal */}
