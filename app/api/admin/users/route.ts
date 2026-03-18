@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (action === 'update_role') {
-      const validRoles = ['jefe', 'especialista', 'padre', 'admin']
+      const validRoles = ['jefe', 'especialista', 'padre', 'admin', 'secretaria']
       if (!validRoles.includes(role)) {
         return NextResponse.json({ error: 'Rol no válido' }, { status: 400 })
       }
