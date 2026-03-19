@@ -11,6 +11,7 @@ import {
 import { useToast } from '@/components/Toast'
 import VideoCallModal from '@/components/VideoCallModal'
 import { supabase } from '@/lib/supabase'
+import GoogleCalendarSync from './GoogleCalendarSync'
 
 // ── Cronómetro de 45 min por cita ──────────────────────────────────────────
 function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) => void }) {
@@ -219,6 +220,36 @@ function MonthlyCalendarView() {
       const res = await fetch('/api/admin/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
+
+      // Auto-sync to Google Calendar if connected (silent, non-blocking)
+      supabase.auth.getSession().then(async ({ data: { session } }) => {
+        if (!session?.user?.id) return
+        const gcalRes = await fetch(`/api/google-calendar?action=status&userId=${session.user.id}`)
+        const gcalData = await gcalRes.json()
+        if (!gcalData.connected) return
+        const savedApts = Array.isArray(json) ? json : (json.data || [])
+        const firstApt = savedApts[0]
+        await fetch('/api/google-calendar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'sync-appointment',
+            userId: session.user.id,
+            appointmentId: firstApt?.id,
+            appointment: {
+              date:        newApt.date,
+              time:        newApt.time,
+              childId:     newApt.child_id,
+              patientName: tipoSesion === 'grupal'
+                ? (newApt.group_name || 'Grupo')
+                : ninos.find((n: any) => n.id === newApt.child_id)?.name || 'Paciente',
+              serviceType: newApt.service,
+              notes:       newApt.notes,
+              modality:    modalidadCita,
+            },
+          }),
+        }).catch(() => {}) // silent fail
+      }).catch(() => {})
       // Crear citas recurrentes si aplica
       if (recurrencia !== 'none' && newApt.date) {
         const diasSalto = recurrencia === 'weekly' ? 7 : 14
@@ -324,7 +355,8 @@ function MonthlyCalendarView() {
             </h2>
             <p className="text-slate-400 text-sm font-medium mt-1 ml-1">{apts.length} citas · {todayApts.length} hoy · {virtualApts.length} virtuales</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap items-center">
+            <GoogleCalendarSync />
             <button onClick={cargarCitas} className="p-3 rounded-xl border-2 border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-600 transition-all"><RefreshCw size={18}/></button>
             <button onClick={() => setShow(true)} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-blue-700 shadow-lg shadow-blue-200/50 transition-all flex items-center gap-2">
               <Plus size={18}/> {t('agenda.nuevaCita2')}

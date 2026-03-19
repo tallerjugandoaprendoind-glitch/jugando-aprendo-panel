@@ -49,8 +49,8 @@ export default function VADIAgentChat({
     setMessages([{
       role: 'assistant',
       content: childId
-        ? `¡Hola! Soy **VADI**, tu asistente clínico. Estoy revisando el expediente de **${childName || 'tu paciente'}** y tengo acceso a todo su historial, programas ABA y evaluaciones previas.\n\n¿En qué te puedo ayudar hoy? Puedo analizar tendencias de progreso, sugerirte estrategias basadas en Malott, o responder dudas clínicas sobre el caso.`
-        : `¡Hola! Soy **VADI**, el cerebro clínico de Vanty. Tengo acceso a los libros de ABA, DSM-5, guías éticas IBAO y todos los expedientes del sistema.\n\n¿Cómo puedo ayudarte hoy?`,
+        ? `¡Hola! Soy **VADI**, tu asistente clínico. Estoy revisando el expediente de **${childName || 'tu paciente'}** y tengo acceso a todo su historial, programas ABA y evaluaciones previas.\n\n¿En qué te puedo ayudar hoy? Puedo analizar tendencias de progreso, sugerirte estrategias clínicas, o responder dudas sobre el caso.`
+        : `¡Hola! Soy **VADI**, el cerebro clínico de Vanty. Tengo acceso a todos los expedientes del sistema.\n\n¿Cómo puedo ayudarte hoy?`,
       timestamp: new Date().toISOString(),
     }])
   }, [childId, childName])
@@ -121,7 +121,7 @@ export default function VADIAgentChat({
             <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-black">BETA</span>
           </h3>
           <p className="text-violet-200 text-[10px]">
-            {childId ? `Caso activo: ${childName || 'Paciente'}` : 'Conocimiento: Malott · DSM-5 · IBAO · LuTr'}
+            {childId ? `Caso activo: ${childName || 'Paciente'}` : 'Asistente clínico especializado'}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
@@ -183,7 +183,7 @@ export default function VADIAgentChat({
           </button>
         </div>
         <p className="text-[10px] text-slate-300 mt-1.5 text-center">
-          VADI usa Malott, DSM-5 TR, IBAO Guidelines y el historial del paciente
+          
         </p>
       </div>
     </div>

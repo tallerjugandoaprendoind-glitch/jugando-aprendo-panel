@@ -32,8 +32,8 @@ export default function ARIAAgentChat({
   const [conversacionId, setConversacionId] = useState<string | null>(null)
   const [sugerencias] = useState([
     childId ? `¿Cómo va el progreso general de ${childName || 'este paciente'}?` : '¿Cuáles son los mejores reforzadores para TEA no verbal?',
-    '¿Qué dice Malott sobre extinción de escape?',
-    childId ? `¿Qué programas recomiendas para ${childName || 'este paciente'}?` : '¿Cómo aplico el modelo ético IBAO ante un dilema?',
+    '¿Cómo aplicar extinción de escape en sesión?',
+    childId ? `¿Qué programas recomiendas para ${childName || 'este paciente'}?` : '¿Cómo manejar un dilema ético en terapia?',
   ])
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -118,7 +118,7 @@ export default function ARIAAgentChat({
             <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-black">BETA</span>
           </h3>
           <p className="text-violet-200 text-[10px]">
-            {childId ? `Caso activo: ${childName || 'Paciente'}` : 'Conocimiento: Malott · DSM-5 · IBAO · LuTr'}
+            {childId ? `Caso activo: ${childName || 'Paciente'}` : 'Asistente clínico especializado'}
           </p>
         </div>
         <div className="ml-auto flex items-center gap-1.5">
@@ -212,9 +212,6 @@ export default function ARIAAgentChat({
             <Send size={16} />
           </button>
         </div>
-        <p className="text-[10px] mt-1.5 text-center" style={{ color: 'var(--text-muted)' }}>
-          ARIA usa Malott, DSM-5 TR, IBAO Guidelines y el historial del paciente
-        </p>
       </div>
     </div>
   )

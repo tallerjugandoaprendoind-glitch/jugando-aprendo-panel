@@ -1,18 +1,122 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-
+import { useState, useEffect } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useToast } from '@/components/Toast'
 import {
-  ChevronRight, HelpCircle, Lock, LogOut, Mail, Phone, Settings, User
+  ChevronRight, HelpCircle, Lock, LogOut, Mail, Phone, Settings, User,
+  Check, Unlink, Loader2, CalendarDays
 } from 'lucide-react'
 import { InfoRow, HelpItem } from './shared'
 
+function GoogleCalendarButton({ profile }: { profile: any }) {
+  const toast = useToast()
+  const [gcalStatus, setGcalStatus] = useState<'loading'|'connected'|'disconnected'>('loading')
+  const [gcalEmail, setGcalEmail] = useState<string|null>(null)
+  const [connecting, setConnecting] = useState(false)
+
+  const checkStatus = async () => {
+    if (!profile?.id) return
+    try {
+      const res  = await fetch(`/api/google-calendar?action=status&userId=${profile.id}`)
+      const data = await res.json()
+      setGcalStatus(data.connected ? 'connected' : 'disconnected')
+      setGcalEmail(data.email)
+    } catch { setGcalStatus('disconnected') }
+  }
+
+  useEffect(() => {
+    checkStatus()
+    // Handle redirect back
+    const params = new URLSearchParams(window.location.search)
+    const gcal = params.get('gcal')
+    if (gcal === 'connected') {
+      toast.success('✅ Google Calendar conectado. Recibirás tus citas automáticamente.')
+      checkStatus()
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (gcal === 'error') {
+      toast.error('Error al conectar Google Calendar')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [profile?.id])
+
+  const handleConnect = async () => {
+    if (!profile?.id) return
+    setConnecting(true)
+    try {
+      const res  = await fetch(`/api/google-calendar?action=auth-url&userId=${profile.id}`)
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch {
+      toast.error('Error iniciando conexión')
+      setConnecting(false)
+    }
+  }
+
+  const handleDisconnect = async () => {
+    if (!profile?.id || !confirm('¿Desconectar Google Calendar?')) return
+    await fetch(`/api/google-calendar?action=disconnect&userId=${profile.id}`)
+    setGcalStatus('disconnected')
+    setGcalEmail(null)
+    toast.success('Google Calendar desconectado')
+  }
+
+  if (gcalStatus === 'loading') return null
+
+  if (gcalStatus === 'connected') {
+    return (
+      <div className="w-full p-6 flex items-center justify-between border-b border-slate-100">
+        <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
+          <div className="p-3 bg-emerald-100 rounded-2xl">
+            <CalendarDays size={22} className="text-emerald-600"/>
+          </div>
+          <div>
+            <p>Google Calendar</p>
+            <p className="text-xs font-normal text-emerald-600 flex items-center gap-1 mt-0.5">
+              <Check size={11}/> Conectado · {gcalEmail}
+            </p>
+          </div>
+        </span>
+        <button
+          onClick={handleDisconnect}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-400 hover:bg-red-50 border border-red-100 transition-all"
+        >
+          <Unlink size={13}/> Desconectar
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      onClick={handleConnect}
+      disabled={connecting}
+      className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group disabled:opacity-50"
+    >
+      <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
+        <div className="p-3 bg-blue-100 rounded-2xl group-hover:bg-blue-200 transition-colors">
+          {connecting
+            ? <Loader2 size={22} className="text-blue-600 animate-spin"/>
+            : <CalendarDays size={22} className="text-blue-600"/>
+          }
+        </div>
+        <div>
+          <p>{connecting ? 'Conectando...' : 'Vincular Google Calendar'}</p>
+          <p className="text-xs font-normal text-slate-400 mt-0.5">Recibí tus citas automáticamente</p>
+        </div>
+      </span>
+      {!connecting && <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>}
+    </button>
+  )
+}
+
 function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy, onHelp }: any) {
   const { t } = useI18n()
-    const initial = profile?.full_name ? profile.full_name.charAt(0) : 'U';
-    const name = profile?.full_name || 'Usuario';
-    const email = profile?.email || 'Correo no disponible';
-    const phone = profile?.phone || 'No registrado';
+    const initial = profile?.full_name ? profile.full_name.charAt(0) : 'U'
+    const name = profile?.full_name || 'Usuario'
+    const email = profile?.email || 'Correo no disponible'
+    const phone = profile?.phone || 'No registrado'
 
     return (
         <div className="max-w-2xl mx-auto animate-fade-in space-y-6">
@@ -54,7 +158,10 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
                     </span>
                     <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>
                 </button>
-                
+
+                {/* Google Calendar */}
+                <GoogleCalendarButton profile={profile} />
+
                 <button onClick={onPrivacy} className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group">
                     <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
                         <div className="p-3 bg-purple-100 rounded-2xl group-hover:bg-purple-200 transition-colors">
@@ -93,9 +200,5 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
         </div>
     )
 }
-
-// ====================================================================================
-// COMPONENTES AUXILIARES
-// ====================================================================================
 
 export default ProfileView
