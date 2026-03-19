@@ -12,6 +12,7 @@ import { useToast } from '@/components/Toast'
 import VideoCallModal from '@/components/VideoCallModal'
 import { supabase } from '@/lib/supabase'
 import GoogleCalendarSync from './GoogleCalendarSync'
+import MicrosoftCalendarSync from './MicrosoftCalendarSync'
 
 // ── Cronómetro de 45 min por cita ──────────────────────────────────────────
 function SessionTimer({ apt, onExpired }: { apt: any; onExpired: (id: string) => void }) {
@@ -357,6 +358,7 @@ function MonthlyCalendarView() {
           </div>
           <div className="flex gap-3 flex-wrap items-center">
             <GoogleCalendarSync />
+            <MicrosoftCalendarSync />
             <button onClick={cargarCitas} className="p-3 rounded-xl border-2 border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-600 transition-all"><RefreshCw size={18}/></button>
             <button onClick={() => setShow(true)} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-blue-700 shadow-lg shadow-blue-200/50 transition-all flex items-center gap-2">
               <Plus size={18}/> {t('agenda.nuevaCita2')}

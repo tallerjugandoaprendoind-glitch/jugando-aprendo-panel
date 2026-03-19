@@ -39,6 +39,24 @@ export default function LoginPage(props: PageProps) {
     }
   }
 
+  async function handleMicrosoftLogin() {
+    setIsLoading(true)
+    setErrorMessage('')
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'azure',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'email profile openid offline_access Calendars.ReadWrite',
+        },
+      })
+      if (error) throw error
+    } catch (err: any) {
+      setErrorMessage('Error al conectar con Microsoft. Intenta de nuevo.')
+      setIsLoading(false)
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setIsLoading(true)
@@ -269,7 +287,7 @@ export default function LoginPage(props: PageProps) {
                 width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
                 gap: 10, padding: '12px 20px', borderRadius: 12, border: '2px solid #e5e7eb',
                 background: '#fff', color: '#374151', fontSize: 14, fontWeight: 700,
-                cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12, transition: 'all .2s',
+                cursor: 'pointer', fontFamily: 'inherit', marginBottom: 10, transition: 'all .2s',
               }}
               onMouseEnter={e => (e.currentTarget.style.borderColor = '#4f46e5')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}
@@ -281,6 +299,29 @@ export default function LoginPage(props: PageProps) {
                 <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 00.957 4.962L3.964 6.294C4.672 4.167 6.656 3.58 9 3.58z"/>
               </svg>
               Continuar con Google
+            </button>
+
+            {/* Microsoft OAuth */}
+            <button
+              type="button"
+              onClick={handleMicrosoftLogin}
+              disabled={isLoading}
+              style={{
+                width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                gap: 10, padding: '12px 20px', borderRadius: 12, border: '2px solid #e5e7eb',
+                background: '#fff', color: '#374151', fontSize: 14, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit', marginBottom: 12, transition: 'all .2s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#0078d4')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '#e5e7eb')}
+            >
+              <svg width="18" height="18" viewBox="0 0 21 21">
+                <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+                <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+                <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+                <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+              </svg>
+              Continuar con Microsoft
             </button>
 
             <div style={{ textAlign: 'center' }}>

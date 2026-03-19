@@ -8,6 +8,100 @@ import {
   ChevronRight, HelpCircle, Lock, LogOut, Mail, Phone, Settings, User,
   Check, Unlink, Loader2, CalendarDays
 } from 'lucide-react'
+
+function MicrosoftCalendarButton({ profile }: { profile: any }) {
+  const toast = useToast()
+  const [status, setStatus] = useState<'loading'|'connected'|'disconnected'>('loading')
+  const [msEmail, setMsEmail] = useState<string|null>(null)
+  const [connecting, setConnecting] = useState(false)
+
+  const checkStatus = async () => {
+    if (!profile?.id) return
+    try {
+      const res  = await fetch(`/api/microsoft-calendar?action=status&userId=${profile.id}`)
+      const data = await res.json()
+      setStatus(data.connected ? 'connected' : 'disconnected')
+      setMsEmail(data.email)
+    } catch { setStatus('disconnected') }
+  }
+
+  useEffect(() => {
+    checkStatus()
+    const params = new URLSearchParams(window.location.search)
+    const mscal = params.get('mscal')
+    if (mscal === 'connected') {
+      toast.success('✅ Outlook Calendar conectado. Recibirás tus citas automáticamente.')
+      checkStatus()
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (mscal === 'error') {
+      toast.error('Error al conectar Outlook Calendar')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [profile?.id])
+
+  const handleConnect = async () => {
+    if (!profile?.id) return
+    setConnecting(true)
+    try {
+      const res  = await fetch(`/api/microsoft-calendar?action=auth-url&userId=${profile.id}`)
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch {
+      toast.error('Error iniciando conexión')
+      setConnecting(false)
+    }
+  }
+
+  const handleDisconnect = async () => {
+    if (!profile?.id || !confirm('¿Desconectar Outlook Calendar?')) return
+    await fetch(`/api/microsoft-calendar?action=disconnect&userId=${profile.id}`)
+    setStatus('disconnected'); setMsEmail(null)
+    toast.success('Outlook Calendar desconectado')
+  }
+
+  if (status === 'loading') return null
+
+  if (status === 'connected') {
+    return (
+      <div className="w-full p-6 flex items-center justify-between border-b border-slate-100">
+        <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
+          <div className="p-3 bg-blue-100 rounded-2xl">
+            <svg width="22" height="22" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+          </div>
+          <div>
+            <p>Outlook Calendar</p>
+            <p className="text-xs font-normal text-blue-600 flex items-center gap-1 mt-0.5">
+              <Check size={11}/> Conectado · {msEmail}
+            </p>
+          </div>
+        </span>
+        <button onClick={handleDisconnect}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-400 hover:bg-red-50 border border-red-100 transition-all">
+          <Unlink size={13}/> Desconectar
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <button onClick={handleConnect} disabled={connecting}
+      className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group disabled:opacity-50">
+      <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
+        <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
+          {connecting
+            ? <Loader2 size={22} className="text-blue-600 animate-spin"/>
+            : <svg width="22" height="22" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+          }
+        </div>
+        <div>
+          <p>{connecting ? 'Conectando...' : 'Vincular Outlook Calendar'}</p>
+          <p className="text-xs font-normal text-slate-400 mt-0.5">Recibí tus citas en Outlook automáticamente</p>
+        </div>
+      </span>
+      {!connecting && <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>}
+    </button>
+  )
+}
 import { InfoRow, HelpItem } from './shared'
 
 function GoogleCalendarButton({ profile }: { profile: any }) {
@@ -161,6 +255,9 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
 
                 {/* Google Calendar */}
                 <GoogleCalendarButton profile={profile} />
+
+                {/* Microsoft / Outlook Calendar */}
+                <MicrosoftCalendarButton profile={profile} />
 
                 <button onClick={onPrivacy} className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group">
                     <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
