@@ -362,6 +362,9 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
   const iW = W - PAD.left - PAD.right
   const iH = H - PAD.top - PAD.bottom
 
+  // Fixed domain: always multiples of 10, so 4 sessions shows in 40% of chart
+  const domainMax = Math.max(10, Math.ceil(data.length / 10) * 10)
+
   const norm = (v: any): number => {
     if (v === null || v === undefined) return 0
     const n = Number(v)
@@ -369,7 +372,8 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
     return n <= 5 && n > 0 ? Math.round((n / 5) * 100) : Math.min(100, Math.max(0, n))
   }
 
-  const xOf = (i: number) => PAD.left + (i / Math.max(data.length - 1, 1)) * iW
+  // xOf uses domainMax so 4 pts span only 4/10 of the chart width
+  const xOf = (i: number) => PAD.left + (i / (domainMax - 1)) * iW
   const yOf = (v: number) => PAD.top + iH - (v / 100) * iH
 
   const series = [
@@ -557,22 +561,22 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
             )
           })}
 
-          {/* Etiquetas eje X — cada 10 sesiones */}
-          {data.map((d, i) => {
-            const isFirst = i === 0
-            const isLast = i === data.length - 1
-            const isTenth = i > 0 && (i + 1) % 10 === 0
-            if (!isFirst && !isLast && !isTenth) return null
+          {/* Etiquetas eje X — cada 10 slots del dominio */}
+          {Array.from({ length: domainMax / 10 + 1 }, (_, i) => i * 10).map(slot => {
+            const x = PAD.left + (slot / (domainMax - 1)) * iW
+            const hasData = slot < data.length
             return (
-              <text
-                key={i}
-                x={xOf(i)} y={H - 8}
-                textAnchor="middle"
-                fontSize={11}
-                fill="#94A3B8"
-                fontFamily="system-ui, sans-serif"
-                fontWeight="600"
-              >{isFirst || isLast ? d.date : `S${i + 1}`}</text>
+              <g key={slot}>
+                <line x1={x} y1={PAD.top + iH} x2={x} y2={PAD.top + iH + 4} stroke="#CBD5E1" strokeWidth={1} />
+                <text
+                  x={x} y={H - 8}
+                  textAnchor="middle"
+                  fontSize={11}
+                  fill={hasData ? '#94A3B8' : '#CBD5E1'}
+                  fontFamily="system-ui, sans-serif"
+                  fontWeight="600"
+                >{slot === 0 ? 'S1' : `S${slot}`}</text>
+              </g>
             )
           })}
         </svg>

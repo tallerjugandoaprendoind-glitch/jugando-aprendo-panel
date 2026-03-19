@@ -99,6 +99,14 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
   const promedio = graficaABA.length > 0 ? Math.round(graficaABA.reduce((a: number, s: any) => a + s.logro, 0) / graficaABA.length) : 0
   const conColor = graficaABA.map((s: any) => ({ ...s, fill: colorLogro(s.logro) }))
 
+  // Fixed X domain: always at least 10 slots, padded to next multiple of 10
+  const xDomainMax = Math.max(10, Math.ceil(graficaABA.length / 10) * 10)
+  // Number each session for a clean numeric X axis
+  const graficaNum   = graficaABA.map((s: any, i: number) => ({ ...s, n: i + 1 }))
+  const conColorNum  = conColor.map((s: any, i: number) => ({ ...s, n: i + 1 }))
+  const xTicks = Array.from({ length: xDomainMax / 10 }, (_, i) => (i + 1) * 10)
+  if (!xTicks.includes(1)) xTicks.unshift(1)
+
   const histo = [
     { rango: '0-25%',   label: 'Emergente', count: graficaABA.filter((s: any) => s.logro < 26).length,                  color: '#DC2626' },
     { rango: '26-50%',  label: 'Parcial',   count: graficaABA.filter((s: any) => s.logro >= 26 && s.logro < 51).length, color: '#D97706' },
@@ -122,7 +130,6 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
   const tipoActual = TIPOS.find(t => t.id === tipo)
   const TICKS = [0, 25, 50, 75, 90, 100]
   const MARGINS = { top: 5, right: 12, left: 0, bottom: 20 }
-  const xInterval = Math.max(0, Math.ceil(graficaABA.length / 10) - 1)
   const TIPO_LABELS: Record<string, string> = {
     lineas:     t('reportes.lineas'),
     barras:     t('reportes.barras'),
@@ -230,9 +237,9 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* LÍNEAS */}
           {tipo === 'lineas' && (
             <ResponsiveContainer width="100%" height={190}>
-              <LineChart data={graficaABA} margin={MARGINS}>
+              <LineChart data={graficaNum} margin={MARGINS}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={fmtFecha} interval={xInterval} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
+                <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: number) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
@@ -251,9 +258,9 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* BARRAS */}
           {tipo === 'barras' && (
             <ResponsiveContainer width="100%" height={190}>
-              <BarChart data={conColor} margin={MARGINS}>
+              <BarChart data={conColorNum} margin={MARGINS}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={fmtFecha} interval={xInterval} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
+                <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: number) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <ReferenceLine y={CRITERIO_PCT} stroke={C.criterio} strokeDasharray="6 3" strokeWidth={2}
@@ -269,7 +276,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* COMBINADO */}
           {tipo === 'combinado' && (
             <ResponsiveContainer width="100%" height={190}>
-              <ComposedChart data={graficaABA} margin={MARGINS}>
+              <ComposedChart data={graficaNum} margin={MARGINS}>
                 <defs>
                   <linearGradient id="gLogro" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%"  stopColor={C.logro} stopOpacity={0.2} />
@@ -277,7 +284,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={fmtFecha} interval={xInterval} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
+                <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: number) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
