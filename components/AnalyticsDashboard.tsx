@@ -406,8 +406,9 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
     return d
   }
 
-  const gridLines = [100, 75, 50, 25, 0]
-  const labelStep = Math.max(1, Math.ceil(data.length / 7))
+  const gridLines = [100, 90, 75, 50, 25, 0]
+  // Show label every 10 sessions, always show first and last
+  const labelStep = data.length <= 10 ? 1 : 10
   const activeD = tooltip !== null ? data[tooltip.idx] : null
 
   return (
@@ -456,18 +457,18 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
               <line
                 x1={PAD.left} y1={yOf(v)}
                 x2={W - PAD.right} y2={yOf(v)}
-                stroke={v === 0 ? '#CBD5E1' : '#E2E8F0'}
-                strokeWidth={v === 0 ? 1.5 : 1}
-                strokeDasharray={v > 0 && v < 100 ? '4 4' : ''}
+                stroke={v === 90 ? '#ef444440' : v === 0 ? '#CBD5E1' : '#E2E8F0'}
+                strokeWidth={v === 90 ? 2 : v === 0 ? 1.5 : 1}
+                strokeDasharray={v === 90 ? '8 4' : v > 0 && v < 100 ? '4 4' : ''}
               />
               <text
                 x={PAD.left - 8} y={yOf(v) + 4}
                 textAnchor="end"
                 fontSize={11}
-                fill="#94A3B8"
+                fill={v === 90 ? '#ef4444' : '#94A3B8'}
                 fontFamily="system-ui, sans-serif"
-                fontWeight="600"
-              >{v}%</text>
+                fontWeight={v === 90 ? '700' : '600'}
+              >{v === 90 ? '90% ✓' : `${v}%`}</text>
             </g>
           ))}
 
@@ -556,9 +557,12 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
             )
           })}
 
-          {/* Etiquetas eje X */}
+          {/* Etiquetas eje X — cada 10 sesiones */}
           {data.map((d, i) => {
-            if (i % labelStep !== 0 && i !== data.length - 1) return null
+            const isFirst = i === 0
+            const isLast = i === data.length - 1
+            const isTenth = i > 0 && (i + 1) % 10 === 0
+            if (!isFirst && !isLast && !isTenth) return null
             return (
               <text
                 key={i}
@@ -568,7 +572,7 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
                 fill="#94A3B8"
                 fontFamily="system-ui, sans-serif"
                 fontWeight="600"
-              >{d.date}</text>
+              >{isFirst || isLast ? d.date : `S${i + 1}`}</text>
             )
           })}
         </svg>
