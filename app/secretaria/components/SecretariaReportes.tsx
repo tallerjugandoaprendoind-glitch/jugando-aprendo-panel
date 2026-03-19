@@ -162,10 +162,10 @@ export default function SecretariaReportes() {
               <h3 className="font-black text-sm text-slate-800 mb-4 flex items-center gap-2">
                 <BarChart3 size={16} className="text-violet-500" /> Sesiones por día
               </h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={stats.porDia} barSize={14} barGap={2}>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={stats.porDia} barSize={12} barGap={2}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="dia" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 700 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="dia" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 700 }} axisLine={false} tickLine={false} interval={Math.ceil(stats.porDia.length / 10) - 1} />
                   <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }} />
                   <Bar dataKey="confirmadas" name="Confirmadas" fill="#10b981" radius={[4,4,0,0]} />
@@ -182,7 +182,7 @@ export default function SecretariaReportes() {
             {pieData.length > 0 && (
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
                 <h3 className="font-black text-sm text-slate-800 mb-4">Distribución por estado</h3>
-                <ResponsiveContainer width="100%" height={220}>
+                <ResponsiveContainer width="100%" height={200}>
                   <PieChart>
                     <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }: any) => `${name ?? ''} ${(((percent as number) ?? 0) * 100).toFixed(0)}%`} labelLine={false}>
                       {pieData.map((entry, index) => <Cell key={index} fill={entry.color} />)}

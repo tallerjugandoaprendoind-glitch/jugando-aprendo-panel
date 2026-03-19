@@ -463,11 +463,11 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 
                     {/* ── Líneas ── */}
                     {tipoGrafico === 'lineas' && (
-                      <ResponsiveContainer width="100%" height={200}>
-                        <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
+                      <ResponsiveContainer width="100%" height={180}>
+                        <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 18, left: -15 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                          <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 10, fill: "var(--text-muted)" }} />
-                          <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
+                          <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} ticks={Array.from({length: Math.ceil(chartData.length / 10) + 1}, (_, i) => (i + 1) * 10).filter(t => t <= chartData.length + 10).concat([1]).sort((a, b) => a - b)} interval={0} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -6, fontSize: 10, fill: "var(--text-muted)" }} />
+                          <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 90, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
                             labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
@@ -504,11 +504,11 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     })()}
 
                     {tipoGrafico === 'barras' && (
-                      <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={chartData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
+                      <ResponsiveContainer width="100%" height={180}>
+                        <BarChart data={chartData} margin={{ top: 5, right: 10, bottom: 18, left: -15 }}>
                           <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                          <XAxis dataKey="sesion" tick={{ fontSize: 10 }} />
-                          <YAxis domain={[0, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
+                          <XAxis dataKey="sesion" tick={{ fontSize: 10 }} ticks={Array.from({length: Math.ceil(chartData.length / 10) + 1}, (_, i) => (i + 1) * 10).filter((t: number) => t <= chartData.length + 10).concat([1]).sort((a: number, b: number) => a - b)} interval={0} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -6, fontSize: 10 }} />
+                          <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 90, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: any) => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
                             labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}

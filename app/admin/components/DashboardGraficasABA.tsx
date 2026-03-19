@@ -109,11 +109,11 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
                 Criterio {programa.criterio_dominio_pct}%
               </span>
             </div>
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={data} margin={{ top: 4, right: 8, bottom: 4, left: -20 }}>
+            <ResponsiveContainer width="100%" height={160}>
+              <LineChart data={data} margin={{ top: 4, right: 8, bottom: 14, left: -20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="sesion" tick={{ fontSize: 9 }} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -2, fontSize: 9 }} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} tickFormatter={v => `${v}%`} />
+                <XAxis dataKey="sesion" tick={{ fontSize: 9 }} ticks={Array.from({length: Math.ceil((data.length || 1) / 10) * 10 + 1}, (_, i) => i).filter(i => i % 10 === 0 || i === 1 || i <= data.length).slice(0, 20)} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -4, fontSize: 9 }} interval={0} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} tickFormatter={v => `${v}%`} ticks={[0, 25, 50, 75, 90, 100]} />
                 <Tooltip
                   formatter={(v: any) => [`${v}%`, 'Éxito']}
                   labelFormatter={(l) => {

@@ -148,11 +148,15 @@ function LineChartProgreso({ sesiones, criterio = 90, color = '#7c3aed', titulo 
   return (
     <div className="w-full">
       {titulo && <p className="text-xs font-bold mb-1" style={{ color: 'var(--text-secondary)' }}>{titulo}</p>}
-      <ResponsiveContainer width="100%" height={120}>
-        <ComposedChart data={data} margin={{ top: 4, right: 4, bottom: 4, left: -20 }}>
+      <ResponsiveContainer width="100%" height={130}>
+        <ComposedChart data={data} margin={{ top: 4, right: 4, bottom: 18, left: -20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-          <XAxis dataKey="n" tick={{ fontSize: 9, fill: 'var(--text-muted)' }} />
-          <YAxis domain={[0, 100]} tick={{ fontSize: 9, fill: 'var(--text-muted)' }} />
+          <XAxis dataKey="n" tick={{ fontSize: 9, fill: 'var(--text-muted)' }}
+            ticks={Array.from({length: Math.ceil(data.length / 10) + 1}, (_, i) => (i + 1) * 10).filter((t: number) => t <= data.length + 10).concat([1]).sort((a: number, b: number) => a - b)}
+            interval={0}
+            label={{ value: 'Sesión', position: 'insideBottom', offset: -6, fontSize: 9, fill: 'var(--text-muted)' }}
+          />
+          <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 90, 100]} tick={{ fontSize: 9, fill: 'var(--text-muted)' }} tickFormatter={(v: any) => `${v}%`} />
           <Tooltip
             contentStyle={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 10, fontSize: 11 }}
             formatter={(v: any) => [`${v}%`, 'Logro']}
