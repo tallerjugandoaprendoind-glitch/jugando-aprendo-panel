@@ -126,18 +126,38 @@ export async function POST(req: NextRequest) {
       }
 
       // Build event
-      const { date, time, patientName, serviceType, notes, modality } = appointment
-      
-      // Construir hora como string local sin conversión UTC (evita desfase Vercel)
+      const {
+        date, time, patientName, serviceType, notes, modality,
+        groupName, sessionType, recurrencia, recurrenciaSemanas, videoLink,
+      } = appointment
+
+      // Hora local Lima — sin conversión UTC
       const timeClean = (time || '00:00').slice(0, 5)
       const [hh, mm] = timeClean.split(':').map(Number)
       const endHH = String(Math.floor((hh * 60 + mm + 60) / 60) % 24).padStart(2, '0')
       const endMM = String((mm + 60) % 60).padStart(2, '0')
       const startISO = `${date}T${timeClean}:00`
       const endISO   = `${date}T${endHH}:${endMM}:00`
-      
+
       const nombrePaciente = (patientName || '').trim() || 'Paciente'
-      const tituloEvento   = `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`
+      const esGrupal       = sessionType === 'grupal'
+      const esVirtual      = modality === 'virtual'
+
+      const tituloEvento = esGrupal
+        ? `🧩 Sesión Grupal: ${groupName || nombrePaciente}`
+        : `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`
+
+      const lineas = [
+        esVirtual ? '📹 Sesión Virtual' : '📍 Sesión Presencial',
+        `👤 Paciente: ${nombrePaciente}`,
+        esGrupal && groupName ? `👥 Grupo: ${groupName}` : null,
+        `🏥 Servicio: ${serviceType || 'Sesión ABA'}`,
+        `📋 Modalidad: ${esVirtual ? 'Virtual' : 'Presencial'}`,
+        recurrencia ? `🔁 Cita recurrente (${recurrencia === 'weekly' ? 'Semanal' : 'Quincenal'}, ${recurrenciaSemanas} semanas)` : null,
+        notes ? `📝 Notas: ${notes}` : null,
+        esVirtual && videoLink ? `<br/>🔗 <a href="${videoLink}">Unirse a la videollamada</a>` : null,
+        '<br/>🏫 Centro Jugando Aprendo',
+      ].filter(Boolean).join('<br/>')
 
       const attendees = []
       if (parentEmail) {
@@ -236,14 +256,14 @@ export async function POST(req: NextRequest) {
 
               const parentEvent: any = {
                 subject: tituloEvento,
-                body: {
-                  contentType: 'HTML',
-                  content: `<b>${modality === 'virtual' ? '📹 Sesión Virtual' : '📍 Sesión Presencial'}</b><br/>Centro: Jugando Aprendo<br/>Paciente: ${nombrePaciente}${notes ? `<br/>📝 ${notes}` : ''}`,
-                },
+                body: { contentType: 'HTML', content: lineas },
                 start: { dateTime: startISO, timeZone: 'SA Pacific Standard Time' },
                 end:   { dateTime: endISO,   timeZone: 'SA Pacific Standard Time' },
                 isReminderOn: true,
                 reminderMinutesBeforeStart: 60,
+                ...(esVirtual && videoLink ? {
+                  location: { displayName: '📹 Videollamada Vanty', uniqueId: videoLink, uniqueIdType: 'locationStore' },
+                } : {}),
               }
 
               const parentRes = await fetch(

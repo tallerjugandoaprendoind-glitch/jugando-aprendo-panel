@@ -127,20 +127,40 @@ export async function POST(req: NextRequest) {
       }
 
       // Build event
-      const { date, time, patientName, serviceType, notes, modality } = appointment
+      const {
+        date, time, patientName, serviceType, notes, modality,
+        groupName, sessionType, recurrencia, recurrenciaSemanas, videoLink,
+      } = appointment
       
-      // Construir la hora como string local (Lima UTC-5) sin conversiones de Date
-      // Esto evita que el servidor Vercel (UTC) desplace la hora
-      const timeClean = (time || '00:00').slice(0, 5) // "13:00"
+      // Hora local Lima — sin conversión UTC
+      const timeClean = (time || '00:00').slice(0, 5)
       const [hh, mm] = timeClean.split(':').map(Number)
       const endHH = String(Math.floor((hh * 60 + mm + 60) / 60) % 24).padStart(2, '0')
       const endMM = String((mm + 60) % 60).padStart(2, '0')
       const startISO = `${date}T${timeClean}:00`
       const endISO   = `${date}T${endHH}:${endMM}:00`
       
-      // Nombre del paciente: fallback robusto
       const nombrePaciente = (patientName || '').trim() || 'Paciente'
-      const tituloEvento   = `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`
+      const esGrupal       = sessionType === 'grupal'
+      const esVirtual      = modality === 'virtual'
+
+      // Título del evento
+      const tituloEvento = esGrupal
+        ? `🧩 Sesión Grupal: ${groupName || nombrePaciente}`
+        : `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`
+
+      // Descripción enriquecida
+      const lineas = [
+        esVirtual ? '📹 Sesión Virtual' : '📍 Sesión Presencial',
+        `👤 Paciente: ${nombrePaciente}`,
+        esGrupal && groupName ? `👥 Grupo: ${groupName}` : null,
+        `🏥 Servicio: ${serviceType || 'Sesión ABA'}`,
+        `📋 Modalidad: ${esVirtual ? 'Virtual' : 'Presencial'}`,
+        recurrencia ? `🔁 Cita recurrente (${recurrencia === 'weekly' ? 'Semanal' : 'Quincenal'}, ${recurrenciaSemanas} semanas)` : null,
+        notes ? `📝 Notas: ${notes}` : null,
+        esVirtual && videoLink ? `\n🔗 Link videollamada: ${videoLink}` : null,
+        '\n🏫 Centro Jugando Aprendo',
+      ].filter(Boolean).join('\n')
 
       // Attendees: always include admin's Google email + parent email if available
       const attendees: { email: string; displayName?: string }[] = []
@@ -153,9 +173,15 @@ export async function POST(req: NextRequest) {
 
       const event: any = {
         summary:     tituloEvento,
-        description: `${modality === 'virtual' ? '📹 Sesión Virtual' : '📍 Sesión Presencial'}\nPaciente: ${nombrePaciente}\nCentro: Jugando Aprendo${notes ? `\n📝 ${notes}` : ''}`,
-        start: { dateTime: startISO + ':00', timeZone: 'America/Lima' },
-        end:   { dateTime: endISO   + ':00', timeZone: 'America/Lima' },
+        description: lineas,
+        start: { dateTime: startISO, timeZone: 'America/Lima' },
+        end:   { dateTime: endISO,   timeZone: 'America/Lima' },
+        ...(esVirtual && videoLink ? {
+          location: videoLink,
+          conferenceData: {
+            createRequest: { requestId: `vanty-${appointmentId || Date.now()}`, conferenceSolutionKey: { type: 'hangoutsMeet' } }
+          },
+        } : {}),
         reminders: {
           useDefault: false,
           overrides: [
@@ -237,13 +263,14 @@ export async function POST(req: NextRequest) {
               } catch { /* use existing */ }
 
               // Crear evento en el calendario del padre (sin attendees extra)
-              const parentEvent = {
-                summary:     `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`,
-                description: `${modality === 'virtual' ? '📹 Sesión Virtual' : '📍 Sesión Presencial'}\nCentro: Jugando Aprendo${notes ? `\n📝 ${notes}` : ''}`,
+              const parentEvent: any = {
+                summary:     tituloEvento,
+                description: lineas,
                 start: { dateTime: startISO, timeZone: 'America/Lima' },
                 end:   { dateTime: endISO,   timeZone: 'America/Lima' },
                 reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 60 }] },
                 colorId: '9',
+                ...(esVirtual && videoLink ? { location: videoLink } : {}),
               }
               const parentRes = await fetch(
                 'https://www.googleapis.com/calendar/v3/calendars/primary/events',

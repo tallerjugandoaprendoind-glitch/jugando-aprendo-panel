@@ -234,6 +234,29 @@ function MonthlyCalendarView() {
         if (!gcalData.connected) return
         const savedApts = Array.isArray(json) ? json : (json.data || [])
         const firstApt = savedApts[0]
+        // Generar link de videollamada permanente para sesiones virtuales
+        const roomLink = modalidadCita === 'virtual'
+          ? `https://meet.jit.si/JugandoAprendo-${firstApt?.id || Date.now()}`
+          : null
+
+        const aptData = {
+          date:        newApt.date,
+          time:        newApt.time,
+          childId:     newApt.child_id,
+          patientName: tipoSesion === 'grupal'
+            ? (newApt.group_name || 'Grupo')
+            : ninos.find((n: any) => n.id === newApt.child_id)?.name || 'Paciente',
+          serviceType: newApt.service,
+          notes:       newApt.notes,
+          modality:    modalidadCita,
+          // Datos adicionales para el calendario
+          groupName:   tipoSesion === 'grupal' ? (newApt.group_name || '') : null,
+          sessionType: tipoSesion,
+          recurrencia: recurrencia !== 'none' ? recurrencia : null,
+          recurrenciaSemanas: recurrencia !== 'none' ? recurrenciaSemanas : null,
+          videoLink:   roomLink,
+        }
+
         await fetch('/api/google-calendar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -241,19 +264,25 @@ function MonthlyCalendarView() {
             action: 'sync-appointment',
             userId: session.user.id,
             appointmentId: firstApt?.id,
-            appointment: {
-              date:        newApt.date,
-              time:        newApt.time,
-              childId:     newApt.child_id,
-              patientName: tipoSesion === 'grupal'
-                ? (newApt.group_name || 'Grupo')
-                : ninos.find((n: any) => n.id === newApt.child_id)?.name || 'Paciente',
-              serviceType: newApt.service,
-              notes:       newApt.notes,
-              modality:    modalidadCita,
-            },
+            appointment: aptData,
           }),
-        }).catch(() => {}) // silent fail
+        }).catch(() => {})
+
+        // También sync a Microsoft Calendar si está conectado
+        const msCalRes = await fetch(`/api/microsoft-calendar?action=status&userId=${session.user.id}`)
+        const msCalData = await msCalRes.json().catch(() => ({ connected: false }))
+        if (msCalData.connected) {
+          await fetch('/api/microsoft-calendar', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'sync-appointment',
+              userId: session.user.id,
+              appointmentId: firstApt?.id,
+              appointment: aptData,
+            }),
+          }).catch(() => {})
+        }
       }).catch(() => {})
       // Crear citas recurrentes si aplica
       if (recurrencia !== 'none' && newApt.date) {
