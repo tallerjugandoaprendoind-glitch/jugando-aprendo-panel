@@ -1,7 +1,6 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -13,55 +12,46 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Handle OAuth code in URL (Google, Microsoft, etc.)
-        const params = new URLSearchParams(window.location.search)
-        const hashParams = new URLSearchParams(window.location.hash.replace('#', ''))
-        const code = params.get('code')
+        // Give Supabase time to process the OAuth tokens from the URL hash/params
+        await new Promise(r => setTimeout(r, 800))
 
-        if (code) {
-          // Exchange OAuth code for session
-          const { error } = await supabase.auth.exchangeCodeForSession(code)
-          if (error) {
-            console.error('Code exchange error:', error.message)
-            router.replace('/login?error=no_session')
-            return
+        let session = (await supabase.auth.getSession()).data.session
+
+        // If no session, try manual code exchange
+        if (!session) {
+          const code = new URLSearchParams(window.location.search).get('code')
+          if (code) {
+            const { data } = await supabase.auth.exchangeCodeForSession(code)
+            session = data.session
           }
         }
 
-        // Small delay to let Supabase set the session cookie
-        await new Promise(r => setTimeout(r, 500))
+        // One more retry with longer wait
+        if (!session) {
+          await new Promise(r => setTimeout(r, 1500))
+          session = (await supabase.auth.getSession()).data.session
+        }
 
-        const { data, error } = await supabase.auth.getSession()
-
-        if (error || !data.session) {
-          console.error('No session after callback:', error?.message)
+        if (!session) {
           router.replace('/login?error=no_session')
           return
         }
 
-        const user = data.session.user
-
-        // Check if profile exists, create if not (for new OAuth users)
-        // Extract name from OAuth metadata (Google, Microsoft, GitHub all use different fields)
-        const oauthName = 
+        const user = session.user
+        const oauthName =
           user.user_metadata?.full_name ||
           user.user_metadata?.name ||
           user.user_metadata?.display_name ||
           user.user_metadata?.preferred_username ||
-          user.user_metadata?.given_name ||
           null
 
         const { data: profile } = await supabase
-          .from('profiles')
-          .select('role, full_name')
-          .eq('id', user.id)
-          .single()
+          .from('profiles').select('role, full_name').eq('id', user.id).single()
 
         if (!profile) {
-          // New user via OAuth — create profile as padre by default
           await supabase.from('profiles').insert({
             id: user.id,
-            email: user.email,
+            email: user.email || user.user_metadata?.email,
             full_name: oauthName || user.email?.split('@')[0] || 'Usuario',
             role: 'padre',
           })
@@ -69,15 +59,10 @@ export default function AuthCallbackPage() {
           return
         }
 
-        // Existing user — update name if it was empty or missing
         if (!profile.full_name && oauthName) {
-          await supabase
-            .from('profiles')
-            .update({ full_name: oauthName })
-            .eq('id', user.id)
+          await supabase.from('profiles').update({ full_name: oauthName }).eq('id', user.id)
         }
 
-        // Redirect based on role
         const adminRoles = ['admin', 'jefe', 'especialista', 'terapeuta']
         if (adminRoles.includes(profile.role)) router.replace('/admin')
         else if (profile.role === 'secretaria') router.replace('/secretaria')
@@ -85,6 +70,10 @@ export default function AuthCallbackPage() {
 
       } catch (e: any) {
         console.error('Callback error:', e.message)
+        try {
+          const { data } = await supabase.auth.getSession()
+          if (data.session) { router.replace('/padre'); return }
+        } catch {}
         router.replace('/login?error=callback')
       }
     }
@@ -105,9 +94,7 @@ export default function AuthCallbackPage() {
         animation: 'spin 1s linear infinite'
       }} />
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-      <p style={{ fontSize: 16, opacity: .8 }}>
-        {t ? t('common.iniciandoGoogle') : 'Iniciando sesión…'}
-      </p>
+      <p style={{ fontSize: 16, opacity: .8 }}>Iniciando sesión…</p>
     </div>
   )
 }
