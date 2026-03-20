@@ -229,9 +229,10 @@ export async function POST(req: NextRequest) {
       }
 
       // ── También crear evento en el Google Calendar del PADRE si está conectado ──
-      // Para sesiones grupales evitar duplicados: solo crear si no hay ya un parent_google_calendar_event_id
+      // Evitar duplicados: verificar si ya existe parent_google_calendar_event_id en esta cita
       let parentGcalEventId: string | null = null
       let skipParentSync = false
+
       if (appointmentId) {
         const { data: existingApt } = await supabaseAdmin
           .from('appointments')
@@ -241,9 +242,49 @@ export async function POST(req: NextRequest) {
         if (existingApt?.parent_google_calendar_event_id) {
           skipParentSync = true
           parentGcalEventId = existingApt.parent_google_calendar_event_id
-          console.log('[GCal] ⏭️ Padre ya tiene evento, saltando duplicado:', parentGcalEventId)
+          console.log('[GCal] ⏭️ Esta cita ya tiene evento del padre, saltando:', parentGcalEventId)
         }
       }
+
+      // También verificar si este padre ya recibió un evento en OTRA cita del mismo grupo/fecha/hora
+      if (!skipParentSync && appointment.childId) {
+        const { data: childCheck } = await supabaseAdmin
+          .from('children')
+          .select('parent_id')
+          .eq('id', appointment.childId)
+          .single()
+
+        if (childCheck?.parent_id) {
+          // Buscar si el padre ya tiene evento en otra cita de la misma fecha/hora
+          const { data: existingParentApt } = await supabaseAdmin
+            .from('appointments')
+            .select('id, parent_google_calendar_event_id')
+            .eq('appointment_date', appointment.date)
+            .eq('appointment_time', (appointment.time || '00:00') + ':00')
+            .not('parent_google_calendar_event_id', 'is', null)
+            .neq('id', appointmentId || '')
+            .limit(10)
+
+          if (existingParentApt && existingParentApt.length > 0) {
+            // Ver si alguna de esas citas es del mismo padre
+            for (const otherApt of existingParentApt) {
+              const { data: otherChild } = await supabaseAdmin
+                .from('appointments')
+                .select('child_id, children(parent_id)')
+                .eq('id', otherApt.id)
+                .single()
+              const otherParentId = (otherChild?.children as any)?.parent_id
+              if (otherParentId === childCheck.parent_id) {
+                skipParentSync = true
+                parentGcalEventId = otherApt.parent_google_calendar_event_id
+                console.log('[GCal] ⏭️ Padre ya tiene evento en otra cita del mismo grupo, saltando duplicado')
+                break
+              }
+            }
+          }
+        }
+      }
+
       if (appointment.childId && !skipParentSync) {
         try {
           // Buscar el parent_id del niño

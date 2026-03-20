@@ -215,7 +215,60 @@ export async function POST(req: NextRequest) {
 
       // ── También crear evento en el Microsoft Calendar del PADRE ──
       let parentMsEventId: string | null = null
-      if (appointment.childId) {
+      let skipParentMsSync = false
+
+      // Evitar duplicados: verificar si ya existe parent_microsoft_calendar_event_id en esta cita
+      if (appointmentId) {
+        const { data: existingApt } = await supabaseAdmin
+          .from('appointments')
+          .select('parent_microsoft_calendar_event_id')
+          .eq('id', appointmentId)
+          .single()
+        if (existingApt?.parent_microsoft_calendar_event_id) {
+          skipParentMsSync = true
+          parentMsEventId = existingApt.parent_microsoft_calendar_event_id
+          console.log('[MSCal] ⏭️ Esta cita ya tiene evento del padre, saltando:', parentMsEventId)
+        }
+      }
+
+      // Verificar si este padre ya recibió evento en otra cita del mismo grupo/fecha/hora
+      if (!skipParentMsSync && appointment.childId) {
+        const { data: childCheck } = await supabaseAdmin
+          .from('children')
+          .select('parent_id')
+          .eq('id', appointment.childId)
+          .single()
+
+        if (childCheck?.parent_id) {
+          const { data: existingParentApts } = await supabaseAdmin
+            .from('appointments')
+            .select('id, parent_microsoft_calendar_event_id')
+            .eq('appointment_date', appointment.date)
+            .eq('appointment_time', (appointment.time || '00:00') + ':00')
+            .not('parent_microsoft_calendar_event_id', 'is', null)
+            .neq('id', appointmentId || '')
+            .limit(10)
+
+          if (existingParentApts && existingParentApts.length > 0) {
+            for (const otherApt of existingParentApts) {
+              const { data: otherChild } = await supabaseAdmin
+                .from('appointments')
+                .select('child_id, children(parent_id)')
+                .eq('id', otherApt.id)
+                .single()
+              const otherParentId = (otherChild?.children as any)?.parent_id
+              if (otherParentId === childCheck.parent_id) {
+                skipParentMsSync = true
+                parentMsEventId = otherApt.parent_microsoft_calendar_event_id
+                console.log('[MSCal] ⏭️ Padre ya tiene evento en otra cita del mismo grupo, saltando duplicado')
+                break
+              }
+            }
+          }
+        }
+      }
+
+      if (appointment.childId && !skipParentMsSync) {
         try {
           const { data: child } = await supabaseAdmin
             .from('children')
