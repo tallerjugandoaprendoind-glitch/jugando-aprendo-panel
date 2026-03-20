@@ -116,6 +116,7 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
       const res   = await fetch(`/api/cie11?action=detail&code=${encodeURIComponent(param)}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data  = await res.json()
+      console.log('[CIE-11] detail response:', data)
       if (data.fallback || data.error) throw new Error(data.error || 'fallback')
       setSelected({
         code:       data.code       || r.code,

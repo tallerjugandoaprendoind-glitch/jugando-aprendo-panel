@@ -115,9 +115,29 @@ export async function GET(req: NextRequest) {
     if (!token) return NextResponse.json({ fallback: true }, { status: 503 })
 
     try {
-      const entityUrl = code.startsWith('http')
-        ? code
-        : `https://id.who.int/icd/release/11/2024-01/mms/${code}`
+      let entityUrl = code
+      if (!code.startsWith('http')) {
+        // El código alfanumérico (ej: 6A02) necesita resolverse a ID numérico via search
+        const searchUrl = new URL('https://id.who.int/icd/release/11/2024-01/mms/search')
+        searchUrl.searchParams.set('q', code)
+        searchUrl.searchParams.set('useFlexisearch', 'false')
+        searchUrl.searchParams.set('flatResults', 'true')
+        searchUrl.searchParams.set('highlightingEnabled', 'false')
+        const sr = await fetch(searchUrl.toString(), { headers: WHO_HEADERS(token) })
+        if (sr.ok) {
+          const sd = await sr.json()
+          const match = (sd.destinationEntities || []).find((e: any) => e.theCode === code)
+          entityUrl = match?.id || `https://id.who.int/icd/release/11/2024-01/mms/search?q=${code}`
+          if (match?.id) {
+            entityUrl = match.id
+          } else {
+            // Intentar directamente con el código como path (algunos funcionan)
+            entityUrl = `https://id.who.int/icd/release/11/2024-01/mms/${code}`
+          }
+        } else {
+          entityUrl = `https://id.who.int/icd/release/11/2024-01/mms/${code}`
+        }
+      }
 
       const res = await fetch(entityUrl, { headers: WHO_HEADERS(token) })
       if (!res.ok) return NextResponse.json({ error: `WHO ${res.status}`, fallback: true }, { status: res.status })
