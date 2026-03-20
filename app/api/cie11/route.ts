@@ -124,28 +124,22 @@ export async function GET(req: NextRequest) {
 
       const d = await res.json()
 
-      // Extraer hijos (subcategorías)
-      const children: { id: string; code: string; title: string }[] = []
-      for (const childUrl of (d.child || []).slice(0, 20)) {
-        try {
-          const cr = await fetch(childUrl, { headers: WHO_HEADERS(token) })
-          if (cr.ok) {
-            const cd = await cr.json()
-            children.push({ id: childUrl, code: cd.code || '', title: extractText(cd.title) })
-          }
-        } catch { /* silencioso */ }
-      }
+      // NO hacer fetch de hijos/padre aquí — demasiadas peticiones causan 401
+      // Devolver las URLs y dejar que el frontend las pida de a una si el usuario navega
 
-      // Extraer padre
+      // Parsear hijos: la API devuelve URLs completas, extraer el código del path
+      const children = (d.child || []).slice(0, 20).map((url: string) => {
+        const parts = url.split('/')
+        const rawCode = parts[parts.length - 1]
+        const childCode = rawCode === 'other' ? 'Y' : rawCode === 'unspecified' ? 'Z' : rawCode
+        return { id: url, code: childCode, title: '' }
+      })
+
+      // Parsear padre
       let parent: { id: string; code: string; title: string } | null = null
       if (d.parent?.[0]) {
-        try {
-          const pr = await fetch(d.parent[0], { headers: WHO_HEADERS(token) })
-          if (pr.ok) {
-            const pd = await pr.json()
-            parent = { id: d.parent[0], code: pd.code || '', title: extractText(pd.title) }
-          }
-        } catch { /* silencioso */ }
+        const parts = (d.parent[0] as string).split('/')
+        parent = { id: d.parent[0], code: parts[parts.length - 1] || '', title: '' }
       }
 
       return NextResponse.json({

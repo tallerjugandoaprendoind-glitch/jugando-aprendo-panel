@@ -108,7 +108,18 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
       const param = r.id || r.code
       const res   = await fetch(`/api/cie11?action=detail&code=${encodeURIComponent(param)}`)
       const data  = await res.json()
-      setSelected(data)
+      // Sanitizar arrays para evitar crashes si la API devuelve undefined
+      const safe = {
+        ...data,
+        inclusions: Array.isArray(data.inclusions) ? data.inclusions : [],
+        exclusions: Array.isArray(data.exclusions) ? data.exclusions : [],
+        indexTerms: Array.isArray(data.indexTerms) ? data.indexTerms : [],
+        children:   Array.isArray(data.children)   ? data.children   : [],
+        codingNote: data.codingNote || '',
+        definition: data.definition || '',
+        parent:     data.parent     || null,
+      }
+      setSelected(safe)
       setTimeout(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
     } catch { /* silencioso */ } finally {
       setDL(false)
@@ -314,7 +325,9 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
                         className="w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-all hover:border-teal-400 hover:bg-teal-50 group"
                         style={{ borderColor:'var(--card-border)', background:'var(--muted-bg)' }}>
                         <span className="px-2.5 py-1 rounded-lg text-xs font-black bg-teal-500 text-white flex-shrink-0">{child.code}</span>
-                        <span className="text-sm font-semibold flex-1" style={{ color:'var(--text-primary)' }}>{child.title}</span>
+                        <span className="text-sm font-semibold flex-1" style={{ color:'var(--text-primary)' }}>
+                          {child.title || `Ver subcategoría ${child.code}`}
+                        </span>
                         <ChevronRight size={14} className="text-slate-300 group-hover:text-teal-500 transition-colors flex-shrink-0"/>
                       </button>
                     ))}
