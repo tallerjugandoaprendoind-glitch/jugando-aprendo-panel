@@ -15,67 +15,83 @@ const PADRE_ROLES = ['padre']
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) { return request.cookies.get(name)?.value },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({ request: { headers: request.headers } })
-          response.cookies.set({ name, value, ...options })
+  try {
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            try { return request.cookies.get(name)?.value } catch { return undefined }
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            request.cookies.set({ name, value, ...options })
+            response = NextResponse.next({ request: { headers: request.headers } })
+            response.cookies.set({ name, value, ...options })
+          },
+          remove(name: string, options: CookieOptions) {
+            request.cookies.set({ name, value: '', ...options })
+            response = NextResponse.next({ request: { headers: request.headers } })
+            response.cookies.set({ name, value: '', ...options })
+          },
         },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({ request: { headers: request.headers } })
-          response.cookies.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
+      }
+    )
 
-  const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await supabase.auth.getUser()
 
-  const isAdminRoute        = request.nextUrl.pathname.startsWith('/admin')
-  const isPadreRoute        = request.nextUrl.pathname.startsWith('/padre')
-  const isEspecialistaRoute = request.nextUrl.pathname.startsWith('/especialista')
-  const isProtectedRoute    = isAdminRoute || isPadreRoute || isEspecialistaRoute
+    const isAdminRoute        = request.nextUrl.pathname.startsWith('/admin')
+    const isPadreRoute        = request.nextUrl.pathname.startsWith('/padre')
+    const isEspecialistaRoute = request.nextUrl.pathname.startsWith('/especialista')
+    const isSecretariaRoute   = request.nextUrl.pathname.startsWith('/secretaria')
+    const isProtectedRoute    = isAdminRoute || isPadreRoute || isEspecialistaRoute || isSecretariaRoute
 
-  // Sin sesión → Login
-  if (!user && isProtectedRoute) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // Con sesión → Verificar rol y redirigir según corresponda
-  if (user && isProtectedRoute) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single()
-
-    const role = profile?.role || ''
-
-    // Proteger /admin: solo jefes/admins
-    if (isAdminRoute) {
-      if (PADRE_ROLES.includes(role))        return NextResponse.redirect(new URL('/padre', request.url))
-      if (ESPECIALISTA_ROLES.includes(role)) return NextResponse.redirect(new URL('/especialista', request.url))
+    if (!user && isProtectedRoute) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('redirectTo', request.nextUrl.pathname)
+      return NextResponse.redirect(loginUrl)
     }
 
-    // Proteger /especialista: solo especialistas
-    if (isEspecialistaRoute) {
-      if (PADRE_ROLES.includes(role)) return NextResponse.redirect(new URL('/padre', request.url))
-      if (JEFE_ROLES.includes(role))  return NextResponse.redirect(new URL('/admin', request.url))
-    }
+    if (user && isProtectedRoute) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
 
-    // Proteger /padre: solo padres
-    if (isPadreRoute) {
-      if (JEFE_ROLES.includes(role))         return NextResponse.redirect(new URL('/admin', request.url))
-      if (ESPECIALISTA_ROLES.includes(role)) return NextResponse.redirect(new URL('/especialista', request.url))
+      const role = profile?.role || ''
+
+      if (isAdminRoute) {
+        if (PADRE_ROLES.includes(role))        return NextResponse.redirect(new URL('/padre', request.url))
+        if (ESPECIALISTA_ROLES.includes(role)) return NextResponse.redirect(new URL('/especialista', request.url))
+        if (role === 'secretaria')             return NextResponse.redirect(new URL('/secretaria', request.url))
+      }
+      if (isEspecialistaRoute) {
+        if (PADRE_ROLES.includes(role)) return NextResponse.redirect(new URL('/padre', request.url))
+        if (JEFE_ROLES.includes(role))  return NextResponse.redirect(new URL('/admin', request.url))
+      }
+      if (isPadreRoute) {
+        if (JEFE_ROLES.includes(role))         return NextResponse.redirect(new URL('/admin', request.url))
+        if (ESPECIALISTA_ROLES.includes(role)) return NextResponse.redirect(new URL('/especialista', request.url))
+        if (role === 'secretaria')             return NextResponse.redirect(new URL('/secretaria', request.url))
+      }
+      if (isSecretariaRoute && role !== 'secretaria') {
+        if (JEFE_ROLES.includes(role))         return NextResponse.redirect(new URL('/admin', request.url))
+        if (ESPECIALISTA_ROLES.includes(role)) return NextResponse.redirect(new URL('/especialista', request.url))
+        if (PADRE_ROLES.includes(role))        return NextResponse.redirect(new URL('/padre', request.url))
+      }
     }
+  } catch (e) {
+    // On any error (e.g. corrupted cookies), clear cookies and redirect to login
+    console.error('Middleware error:', e)
+    const res = NextResponse.redirect(new URL('/login', request.url))
+    // Clear potentially corrupted auth cookies
+    request.cookies.getAll().forEach(cookie => {
+      if (cookie.name.includes('supabase') || cookie.name.includes('sb-')) {
+        res.cookies.delete(cookie.name)
+      }
+    })
+    return res
   }
 
   return response
