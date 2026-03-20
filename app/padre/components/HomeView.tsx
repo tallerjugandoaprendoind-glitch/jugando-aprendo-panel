@@ -198,6 +198,31 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
   const [showWellbeing, setShowWellbeing] = useState(false)
   const wellbeingShown = useState(false)
 
+  // ── Banner Google Calendar ──────────────────────────────────────────────
+  const [gcalConnected, setGcalConnected] = useState<boolean | null>(null)
+  const [gcalBannerDismissed, setGcalBannerDismissed] = useState(false)
+
+  useEffect(() => {
+    if (gcalBannerDismissed) return
+    const dismissed = sessionStorage.getItem('gcal_banner_dismissed')
+    if (dismissed) { setGcalBannerDismissed(true); return }
+    const checkGcal = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (!session?.user?.id) return
+        const res = await fetch(`/api/google-calendar?action=status&userId=${session.user.id}`)
+        const data = await res.json()
+        setGcalConnected(!!data.connected)
+      } catch { /* silencioso */ }
+    }
+    checkGcal()
+  }, [gcalBannerDismissed])
+
+  const dismissGcalBanner = () => {
+    sessionStorage.setItem('gcal_banner_dismissed', '1')
+    setGcalBannerDismissed(true)
+  }
+
   useEffect(() => {
     if (!child?.id) return
     loadData()
@@ -318,6 +343,47 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           childName={child?.name}
           onClose={() => setShowWellbeing(false)}
         />
+      )}
+
+      {/* ── BANNER GOOGLE CALENDAR ── */}
+      {gcalConnected === false && !gcalBannerDismissed && (
+        <div style={{
+          background: 'linear-gradient(135deg, #4285f4 0%, #1a73e8 100%)',
+          borderRadius: 20, padding: '16px 20px',
+          display: 'flex', alignItems: 'center', gap: 14,
+          boxShadow: '0 4px 20px rgba(66,133,244,0.35)',
+          animation: 'fadeIn .4s ease',
+        }}>
+          <div style={{ fontSize: 28, flexShrink: 0 }}>📅</div>
+          <div style={{ flex: 1 }}>
+            <p style={{ color: '#fff', fontWeight: 700, fontSize: 14, margin: 0 }}>
+              Recibí tus citas en Google Calendar
+            </p>
+            <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, margin: '2px 0 0' }}>
+              Conectá tu cuenta y las citas aparecerán automáticamente.
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button
+              onClick={() => onChangeView('profile')}
+              style={{
+                background: '#fff', color: '#1a73e8', border: 'none',
+                borderRadius: 10, padding: '7px 14px', fontSize: 12,
+                fontWeight: 700, cursor: 'pointer',
+              }}>
+              Conectar
+            </button>
+            <button
+              onClick={dismissGcalBanner}
+              style={{
+                background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none',
+                borderRadius: 10, padding: '7px 10px', fontSize: 12,
+                fontWeight: 600, cursor: 'pointer',
+              }}>
+              ✕
+            </button>
+          </div>
+        </div>
       )}
 
       {/* ── HERO CARD ── */}

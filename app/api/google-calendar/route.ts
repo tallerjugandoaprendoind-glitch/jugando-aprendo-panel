@@ -282,6 +282,9 @@ export async function POST(req: NextRequest) {
                 colorId: '9',
                 ...(esVirtual && videoLink ? { location: videoLink } : {}),
               }
+
+              console.log('[GCal] 🔄 Intentando crear evento en calendario del padre:', child.parent_id)
+
               const parentRes = await fetch(
                 'https://www.googleapis.com/calendar/v3/calendars/primary/events',
                 {
@@ -290,9 +293,11 @@ export async function POST(req: NextRequest) {
                   body: JSON.stringify(parentEvent),
                 }
               )
+
               if (parentRes.ok) {
                 const parentData = await parentRes.json()
                 parentGcalEventId = parentData.id
+                console.log('[GCal] ✅ Evento creado en calendario del PADRE:', parentData.id)
                 // Guardar event_id del padre en la cita
                 if (appointmentId) {
                   await supabaseAdmin
@@ -300,10 +305,23 @@ export async function POST(req: NextRequest) {
                     .update({ parent_google_calendar_event_id: parentData.id })
                     .eq('id', appointmentId)
                 }
+              } else {
+                const errText = await parentRes.text()
+                console.error('[GCal] ❌ Error creando evento en calendario del PADRE:', parentRes.status, errText)
+
+                // Si el token expiró (401), limpiar token para que el padre reconecte
+                if (parentRes.status === 401) {
+                  console.log('[GCal] 🔑 Token del padre expirado — limpiando para que reconecte')
+                  await supabaseAdmin.from('profiles')
+                    .update({ google_calendar_token: null, google_calendar_refresh_token: null })
+                    .eq('id', child.parent_id)
+                }
               }
             }
           }
-        } catch { /* no bloquear si falla el calendario del padre */ }
+        } catch (parentErr) {
+          console.error('[GCal] ❌ Excepción al crear evento del padre:', parentErr)
+        }
       }
 
       return NextResponse.json({

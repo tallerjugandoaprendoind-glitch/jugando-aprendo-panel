@@ -270,6 +270,8 @@ export async function POST(req: NextRequest) {
                 } : {}),
               }
 
+              console.log('[MSCal] 🔄 Intentando crear evento en calendario del padre:', child.parent_id)
+
               const parentRes = await fetch(
                 'https://graph.microsoft.com/v1.0/me/events',
                 {
@@ -281,16 +283,28 @@ export async function POST(req: NextRequest) {
               if (parentRes.ok) {
                 const parentData = await parentRes.json()
                 parentMsEventId = parentData.id
+                console.log('[MSCal] ✅ Evento creado en calendario del PADRE:', parentData.id)
                 if (appointmentId) {
                   await supabaseAdmin
                     .from('appointments')
                     .update({ parent_microsoft_calendar_event_id: parentData.id })
                     .eq('id', appointmentId)
                 }
+              } else {
+                const errText = await parentRes.text()
+                console.error('[MSCal] ❌ Error creando evento en calendario del PADRE:', parentRes.status, errText)
+                if (parentRes.status === 401) {
+                  console.log('[MSCal] 🔑 Token del padre expirado — limpiando para que reconecte')
+                  await supabaseAdmin.from('profiles')
+                    .update({ microsoft_calendar_token: null, microsoft_calendar_refresh_token: null })
+                    .eq('id', child.parent_id)
+                }
               }
             }
           }
-        } catch { /* no bloquear */ }
+        } catch (parentErr) {
+          console.error('[MSCal] ❌ Excepción al crear evento del padre:', parentErr)
+        }
       }
 
       return NextResponse.json({
