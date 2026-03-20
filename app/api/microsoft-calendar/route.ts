@@ -5,7 +5,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 
 const MS_CLIENT_ID     = process.env.MICROSOFT_CALENDAR_CLIENT_ID     || ''
 const MS_CLIENT_SECRET = process.env.MICROSOFT_CALENDAR_CLIENT_SECRET || ''
-const MS_TENANT        = process.env.MICROSOFT_TENANT_ID || 'common'
+const MS_TENANT        = process.env.MICROSOFT_TENANT_ID || '3e32a281-36d9-4099-8105-e9460f1ab7a7'
 const REDIRECT_URI     = process.env.NEXT_PUBLIC_APP_URL
   ? `${process.env.NEXT_PUBLIC_APP_URL}/api/microsoft-calendar/callback`
   : 'http://localhost:3000/api/microsoft-calendar/callback'
@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
 
   if (action === 'auth-url') {
     const userId = searchParams.get('userId') || ''
+    const role   = searchParams.get('role')   || 'admin'
     const scopes = [
       'openid', 'profile', 'email', 'offline_access',
       'Calendars.ReadWrite',
@@ -28,7 +29,7 @@ export async function GET(req: NextRequest) {
       redirect_uri:  REDIRECT_URI,
       scope:         scopes,
       response_mode: 'query',
-      state:         userId,
+      state:         `${userId}:${role}`,
     })
 
     const url = `https://login.microsoftonline.com/${MS_TENANT}/oauth2/v2.0/authorize?${params}`
@@ -126,10 +127,38 @@ export async function POST(req: NextRequest) {
       }
 
       // Build event
-      const { date, time, patientName, serviceType, notes, modality } = appointment
-      const startISO = `${date}T${time}:00`
-      const endDate  = new Date(new Date(startISO).getTime() + 60 * 60000)
-      const endISO   = endDate.toISOString().slice(0, 19)
+      const {
+        date, time, patientName, serviceType, notes, modality,
+        groupName, sessionType, recurrencia, recurrenciaSemanas, videoLink,
+      } = appointment
+
+      // Hora local Lima — sin conversión UTC
+      const timeClean = (time || '00:00').slice(0, 5)
+      const [hh, mm] = timeClean.split(':').map(Number)
+      const endHH = String(Math.floor((hh * 60 + mm + 60) / 60) % 24).padStart(2, '0')
+      const endMM = String((mm + 60) % 60).padStart(2, '0')
+      const startISO = `${date}T${timeClean}:00`
+      const endISO   = `${date}T${endHH}:${endMM}:00`
+
+      const nombrePaciente = (patientName || '').trim() || 'Paciente'
+      const esGrupal       = sessionType === 'grupal'
+      const esVirtual      = modality === 'virtual'
+
+      const tituloEvento = esGrupal
+        ? `🧩 Sesión Grupal: ${groupName || nombrePaciente}`
+        : `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`
+
+      const lineas = [
+        esVirtual ? '📹 Sesión Virtual' : '📍 Sesión Presencial',
+        `👤 Paciente: ${nombrePaciente}`,
+        esGrupal && groupName ? `👥 Grupo: ${groupName}` : null,
+        `🏥 Servicio: ${serviceType || 'Sesión ABA'}`,
+        `📋 Modalidad: ${esVirtual ? 'Virtual' : 'Presencial'}`,
+        recurrencia ? `🔁 Cita recurrente (${recurrencia === 'weekly' ? 'Semanal' : 'Quincenal'}, ${recurrenciaSemanas} semanas)` : null,
+        notes ? `📝 Notas: ${notes}` : null,
+        esVirtual && videoLink ? `<br/>🔗 <a href="${videoLink}">Unirse a la videollamada</a>` : null,
+        '<br/>🏫 Centro Jugando Aprendo',
+      ].filter(Boolean).join('<br/>')
 
       const attendees = []
       if (parentEmail) {
@@ -140,7 +169,7 @@ export async function POST(req: NextRequest) {
       }
 
       const event: any = {
-        subject: `🧩 ${patientName} — ${serviceType || 'Sesión ABA'}`,
+        subject: tituloEvento,
         body: {
           contentType: 'HTML',
           content: `
@@ -183,12 +212,145 @@ export async function POST(req: NextRequest) {
           .eq('id', appointmentId)
       }
 
+      // ── También crear evento en el Microsoft Calendar del PADRE ──
+      let parentMsEventId: string | null = null
+      if (appointment.childId) {
+        try {
+          const { data: child } = await supabaseAdmin
+            .from('children')
+            .select('parent_id')
+            .eq('id', appointment.childId)
+            .single()
+
+          if (child?.parent_id) {
+            const { data: parentProfile } = await supabaseAdmin
+              .from('profiles')
+              .select('microsoft_calendar_token, microsoft_calendar_refresh_token')
+              .eq('id', child.parent_id)
+              .single()
+
+            if (!parentProfile?.microsoft_calendar_token) {
+              console.log('[MSCal] ⚠️ Padre no tiene Microsoft Calendar conectado. parent_id:', child.parent_id)
+            }
+            if (parentProfile?.microsoft_calendar_token) {
+              let parentToken = parentProfile.microsoft_calendar_token
+              try {
+                const rr = await fetch(
+                  `https://login.microsoftonline.com/${MS_TENANT}/oauth2/v2.0/token`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                      client_id:     MS_CLIENT_ID,
+                      client_secret: MS_CLIENT_SECRET,
+                      refresh_token: parentProfile.microsoft_calendar_refresh_token || '',
+                      grant_type:    'refresh_token',
+                      scope:         'Calendars.ReadWrite offline_access',
+                    }),
+                  }
+                )
+                if (rr.ok) {
+                  const rd = await rr.json()
+                  parentToken = rd.access_token
+                  await supabaseAdmin.from('profiles')
+                    .update({ microsoft_calendar_token: parentToken })
+                    .eq('id', child.parent_id)
+                }
+              } catch { /* use existing */ }
+
+              const parentEvent: any = {
+                subject: tituloEvento,
+                body: { contentType: 'HTML', content: lineas },
+                start: { dateTime: startISO, timeZone: 'SA Pacific Standard Time' },
+                end:   { dateTime: endISO,   timeZone: 'SA Pacific Standard Time' },
+                isReminderOn: true,
+                reminderMinutesBeforeStart: 60,
+                ...(esVirtual && videoLink ? {
+                  location: { displayName: '📹 Videollamada Vanty', uniqueId: videoLink, uniqueIdType: 'locationStore' },
+                } : {}),
+              }
+
+              const parentRes = await fetch(
+                'https://graph.microsoft.com/v1.0/me/events',
+                {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${parentToken}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify(parentEvent),
+                }
+              )
+              if (parentRes.ok) {
+                const parentData = await parentRes.json()
+                parentMsEventId = parentData.id
+                if (appointmentId) {
+                  await supabaseAdmin
+                    .from('appointments')
+                    .update({ parent_microsoft_calendar_event_id: parentData.id })
+                    .eq('id', appointmentId)
+                }
+              }
+            }
+          }
+        } catch { /* no bloquear */ }
+      }
+
       return NextResponse.json({
         ok: true,
         eventId: msData.id,
         eventUrl: msData.webLink,
         parentNotified: !!parentEmail,
+        parentMsEventId,
       })
+    }
+
+    // ── Borrar evento del calendario Outlook ───────────────────────────
+    if (action === 'delete-event') {
+      const { eventId } = body
+      if (!eventId) return NextResponse.json({ ok: true, skipped: 'no eventId' })
+
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('microsoft_calendar_token, microsoft_calendar_refresh_token')
+        .eq('id', userId)
+        .single()
+
+      if (!profile?.microsoft_calendar_token) {
+        return NextResponse.json({ ok: true, skipped: 'not connected' })
+      }
+
+      let accessToken = profile.microsoft_calendar_token
+      try {
+        const refreshRes = await fetch(
+          `https://login.microsoftonline.com/${MS_TENANT}/oauth2/v2.0/token`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id:     MS_CLIENT_ID,
+              client_secret: MS_CLIENT_SECRET,
+              refresh_token: profile.microsoft_calendar_refresh_token || '',
+              grant_type:    'refresh_token',
+              scope:         'Calendars.ReadWrite offline_access',
+            }),
+          }
+        )
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json()
+          accessToken = refreshData.access_token
+          await supabaseAdmin.from('profiles').update({ microsoft_calendar_token: accessToken }).eq('id', userId)
+        }
+      } catch { /* use existing token */ }
+
+      const delRes = await fetch(
+        `https://graph.microsoft.com/v1.0/me/events/${eventId}`,
+        { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } }
+      )
+
+      if (!delRes.ok && delRes.status !== 404) {
+        const err = await delRes.text()
+        return NextResponse.json({ ok: false, error: err })
+      }
+
+      return NextResponse.json({ ok: true, deleted: eventId })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

@@ -43,7 +43,7 @@ function MicrosoftCalendarButton({ profile }: { profile: any }) {
     if (!profile?.id) return
     setConnecting(true)
     try {
-      const res  = await fetch(`/api/microsoft-calendar?action=auth-url&userId=${profile.id}`)
+      const res  = await fetch(`/api/microsoft-calendar?action=auth-url&userId=${profile.id}&role=padre`)
       const data = await res.json()
       if (data.url) window.location.href = data.url
     } catch {
@@ -139,7 +139,7 @@ function GoogleCalendarButton({ profile }: { profile: any }) {
     if (!profile?.id) return
     setConnecting(true)
     try {
-      const res  = await fetch(`/api/google-calendar?action=auth-url&userId=${profile.id}`)
+      const res  = await fetch(`/api/google-calendar?action=auth-url&userId=${profile.id}&role=padre`)
       const data = await res.json()
       if (data.url) window.location.href = data.url
     } catch {

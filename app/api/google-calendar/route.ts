@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
     ].join(' ')
 
     const userId = searchParams.get('userId') || ''
+    const role   = searchParams.get('role')   || 'admin'   // 'padre' | 'admin'
 
     const params = new URLSearchParams({
       client_id:     GOOGLE_CLIENT_ID,
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
       scope:         scopes,
       access_type:   'offline',
       prompt:        'consent',
-      state:         userId, // pass userId through OAuth flow
+      state:         `${userId}:${role}`, // pass userId + role through OAuth flow
     })
 
     const url = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
@@ -84,6 +85,7 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (!profile?.google_calendar_token) {
+        console.error('[GCal] No token for userId:', userId)
         return NextResponse.json({ ok: false, error: 'Google Calendar not connected' })
       }
 
@@ -105,7 +107,10 @@ export async function POST(req: NextRequest) {
           accessToken = refreshData.access_token
           await supabaseAdmin.from('profiles').update({ google_calendar_token: accessToken }).eq('id', userId)
         }
-      } catch { /* use existing token */ }
+      } catch (refreshErr) {
+        console.error('[GCal] Token refresh failed:', refreshErr)
+        /* use existing token */
+      }
 
       // Fetch parent email from the appointment's child record
       let parentEmail: string | null = appointment.parentEmail || null
@@ -127,10 +132,40 @@ export async function POST(req: NextRequest) {
       }
 
       // Build event
-      const { date, time, patientName, serviceType, notes, modality } = appointment
-      const startISO = `${date}T${time}`
-      const endDate  = new Date(new Date(startISO).getTime() + 60 * 60000)
-      const endISO   = `${endDate.toISOString().slice(0, 16)}`
+      const {
+        date, time, patientName, serviceType, notes, modality,
+        groupName, sessionType, recurrencia, recurrenciaSemanas, videoLink,
+      } = appointment
+      
+      // Hora local Lima — sin conversión UTC
+      const timeClean = (time || '00:00').slice(0, 5)
+      const [hh, mm] = timeClean.split(':').map(Number)
+      const endHH = String(Math.floor((hh * 60 + mm + 60) / 60) % 24).padStart(2, '0')
+      const endMM = String((mm + 60) % 60).padStart(2, '0')
+      const startISO = `${date}T${timeClean}:00`
+      const endISO   = `${date}T${endHH}:${endMM}:00`
+      
+      const nombrePaciente = (patientName || '').trim() || 'Paciente'
+      const esGrupal       = sessionType === 'grupal'
+      const esVirtual      = modality === 'virtual'
+
+      // Título del evento
+      const tituloEvento = esGrupal
+        ? `🧩 Sesión Grupal: ${groupName || nombrePaciente}`
+        : `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`
+
+      // Descripción enriquecida
+      const lineas = [
+        esVirtual ? '📹 Sesión Virtual' : '📍 Sesión Presencial',
+        `👤 Paciente: ${nombrePaciente}`,
+        esGrupal && groupName ? `👥 Grupo: ${groupName}` : null,
+        `🏥 Servicio: ${serviceType || 'Sesión ABA'}`,
+        `📋 Modalidad: ${esVirtual ? 'Virtual' : 'Presencial'}`,
+        recurrencia ? `🔁 Cita recurrente (${recurrencia === 'weekly' ? 'Semanal' : 'Quincenal'}, ${recurrenciaSemanas} semanas)` : null,
+        notes ? `📝 Notas: ${notes}` : null,
+        esVirtual && videoLink ? `\n🔗 Link videollamada: ${videoLink}` : null,
+        '\n🏫 Centro Jugando Aprendo',
+      ].filter(Boolean).join('\n')
 
       // Attendees: always include admin's Google email + parent email if available
       const attendees: { email: string; displayName?: string }[] = []
@@ -142,10 +177,16 @@ export async function POST(req: NextRequest) {
       }
 
       const event: any = {
-        summary:     `🧩 ${patientName} — ${serviceType || 'Sesión ABA'}`,
-        description: `${modality === 'virtual' ? '📹 Sesión Virtual' : '📍 Sesión Presencial'}\nCentro: Jugando Aprendo${notes ? `\n📝 ${notes}` : ''}`,
-        start: { dateTime: startISO + ':00', timeZone: 'America/Lima' },
-        end:   { dateTime: endISO   + ':00', timeZone: 'America/Lima' },
+        summary:     tituloEvento,
+        description: lineas,
+        start: { dateTime: startISO, timeZone: 'America/Lima' },
+        end:   { dateTime: endISO,   timeZone: 'America/Lima' },
+        ...(esVirtual && videoLink ? {
+          location: videoLink,
+          conferenceData: {
+            createRequest: { requestId: `vanty-${appointmentId || Date.now()}`, conferenceSolutionKey: { type: 'hangoutsMeet' } }
+          },
+        } : {}),
         reminders: {
           useDefault: false,
           overrides: [
@@ -171,11 +212,13 @@ export async function POST(req: NextRequest) {
       )
 
       if (!gcalRes.ok) {
-        const err = await gcalRes.json()
-        return NextResponse.json({ ok: false, error: err.error?.message || 'Google Calendar error' })
+        const errText = await gcalRes.text()
+        console.error('[GCal] Event creation failed:', gcalRes.status, errText)
+        return NextResponse.json({ ok: false, error: `Google Calendar error ${gcalRes.status}: ${errText}` })
       }
 
       const gcalData = await gcalRes.json()
+      console.log('[GCal] ✅ Event created:', gcalData.id, gcalData.htmlLink)
 
       if (appointmentId) {
         await supabaseAdmin
@@ -184,12 +227,92 @@ export async function POST(req: NextRequest) {
           .eq('id', appointmentId)
       }
 
+      // ── También crear evento en el Google Calendar del PADRE si está conectado ──
+      let parentGcalEventId: string | null = null
+      if (appointment.childId) {
+        try {
+          // Buscar el parent_id del niño
+          const { data: child } = await supabaseAdmin
+            .from('children')
+            .select('parent_id')
+            .eq('id', appointment.childId)
+            .single()
+
+          if (child?.parent_id) {
+            // Ver si el padre tiene Google Calendar conectado
+            const { data: parentProfile } = await supabaseAdmin
+              .from('profiles')
+              .select('google_calendar_token, google_calendar_refresh_token, google_calendar_email')
+              .eq('id', child.parent_id)
+              .single()
+
+            if (!parentProfile?.google_calendar_token) {
+              console.log('[GCal] ⚠️ Padre no tiene Google Calendar conectado. parent_id:', child.parent_id)
+            }
+            if (parentProfile?.google_calendar_token) {
+              // Refresh token del padre si es necesario
+              let parentToken = parentProfile.google_calendar_token
+              try {
+                const rr = await fetch('https://oauth2.googleapis.com/token', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: new URLSearchParams({
+                    client_id:     process.env.GOOGLE_CALENDAR_CLIENT_ID || '',
+                    client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET || '',
+                    refresh_token: parentProfile.google_calendar_refresh_token || '',
+                    grant_type:    'refresh_token',
+                  }),
+                })
+                if (rr.ok) {
+                  const rd = await rr.json()
+                  parentToken = rd.access_token
+                  await supabaseAdmin.from('profiles')
+                    .update({ google_calendar_token: parentToken })
+                    .eq('id', child.parent_id)
+                }
+              } catch { /* use existing */ }
+
+              // Crear evento en el calendario del padre (sin attendees extra)
+              const parentEvent: any = {
+                summary:     tituloEvento,
+                description: lineas,
+                start: { dateTime: startISO, timeZone: 'America/Lima' },
+                end:   { dateTime: endISO,   timeZone: 'America/Lima' },
+                reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 60 }] },
+                colorId: '9',
+                ...(esVirtual && videoLink ? { location: videoLink } : {}),
+              }
+              const parentRes = await fetch(
+                'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+                {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${parentToken}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify(parentEvent),
+                }
+              )
+              if (parentRes.ok) {
+                const parentData = await parentRes.json()
+                parentGcalEventId = parentData.id
+                // Guardar event_id del padre en la cita
+                if (appointmentId) {
+                  await supabaseAdmin
+                    .from('appointments')
+                    .update({ parent_google_calendar_event_id: parentData.id })
+                    .eq('id', appointmentId)
+                }
+              }
+            }
+          }
+        } catch { /* no bloquear si falla el calendario del padre */ }
+      }
+
       return NextResponse.json({
         ok: true,
         eventId: gcalData.id,
         eventUrl: gcalData.htmlLink,
         parentNotified: !!parentEmail,
         parentEmail,
+        parentGcalEventId,
       })
     }
 
@@ -202,6 +325,7 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (!profile?.google_calendar_token) {
+        console.error('[GCal] No token for userId:', userId)
         return NextResponse.json({ ok: false, error: 'Google Calendar not connected' })
       }
 
@@ -237,6 +361,54 @@ export async function POST(req: NextRequest) {
       }
 
       return NextResponse.json({ ok: true, synced })
+    }
+
+    // ── Borrar evento del calendario ────────────────────────────────────
+    if (action === 'delete-event') {
+      const { eventId } = body
+      if (!eventId) return NextResponse.json({ ok: true, skipped: 'no eventId' })
+
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('google_calendar_token, google_calendar_refresh_token')
+        .eq('id', userId)
+        .single()
+
+      if (!profile?.google_calendar_token) {
+        return NextResponse.json({ ok: true, skipped: 'not connected' })
+      }
+
+      let accessToken = profile.google_calendar_token
+      try {
+        const refreshRes = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id:     process.env.GOOGLE_CALENDAR_CLIENT_ID || '',
+            client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET || '',
+            refresh_token: profile.google_calendar_refresh_token || '',
+            grant_type:    'refresh_token',
+          }),
+        })
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json()
+          accessToken = refreshData.access_token
+          await supabaseAdmin.from('profiles').update({ google_calendar_token: accessToken }).eq('id', userId)
+        }
+      } catch { /* use existing token */ }
+
+      const delRes = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
+        { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } }
+      )
+
+      // 404 = ya fue borrado, igual es OK
+      if (!delRes.ok && delRes.status !== 404 && delRes.status !== 410) {
+        const err = await delRes.text()
+        return NextResponse.json({ ok: false, error: err })
+      }
+
+      return NextResponse.json({ ok: true, deleted: eventId })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

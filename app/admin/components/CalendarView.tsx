@@ -211,8 +211,12 @@ function MonthlyCalendarView() {
     if (tipoSesion==='grupal' && selectedParticipants.length===0) { toast.error('Selecciona participantes'); return }
     setIsSaving(true)
     try {
+      // Obtener userId del admin para guardarlo en la cita (necesario para borrar del calendar)
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const createdBy = currentSession?.user?.id || null
+
       let payload: any[]
-      const extra = { modalidad: modalidadCita }
+      const extra = { modalidad: modalidadCita, created_by: createdBy }
       if (tipoSesion==='grupal') {
         payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (Grupal: ${newApt.group_name||'Sin nombre'})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, ...extra }))
       } else {
@@ -222,35 +226,86 @@ function MonthlyCalendarView() {
       const json = await res.json()
       if (json.error) throw new Error(json.error)
 
-      // Auto-sync to Google Calendar if connected (silent, non-blocking)
-      supabase.auth.getSession().then(async ({ data: { session } }) => {
-        if (!session?.user?.id) return
-        const gcalRes = await fetch(`/api/google-calendar?action=status&userId=${session.user.id}`)
-        const gcalData = await gcalRes.json()
-        if (!gcalData.connected) return
-        const savedApts = Array.isArray(json) ? json : (json.data || [])
-        const firstApt = savedApts[0]
-        await fetch('/api/google-calendar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'sync-appointment',
-            userId: session.user.id,
-            appointmentId: firstApt?.id,
-            appointment: {
-              date:        newApt.date,
-              time:        newApt.time,
-              childId:     newApt.child_id,
-              patientName: tipoSesion === 'grupal'
-                ? (newApt.group_name || 'Grupo')
-                : ninos.find((n: any) => n.id === newApt.child_id)?.name || 'Paciente',
-              serviceType: newApt.service,
-              notes:       newApt.notes,
-              modality:    modalidadCita,
-            },
-          }),
-        }).catch(() => {}) // silent fail
-      }).catch(() => {})
+      // ── Sync a Google Calendar y Microsoft Calendar ──────────────────────
+      try {
+        const { data: { session: calSession } } = await supabase.auth.getSession()
+        if (calSession?.user?.id) {
+          const savedApts = Array.isArray(json) ? json : (json.data || [])
+          const firstApt  = savedApts[0]
+
+          const roomLink = modalidadCita === 'virtual'
+            ? `https://meet.jit.si/JugandoAprendo-${firstApt?.id || Date.now()}`
+            : null
+
+          // Para sesión grupal, usar el primer participante para el sync del calendario del padre
+          const childIdParaCalendario = tipoSesion === 'grupal'
+            ? (selectedParticipants[0] || null)
+            : newApt.child_id || null
+
+          const aptData = {
+            date:              newApt.date,
+            time:              newApt.time,
+            childId:           childIdParaCalendario,
+            patientName:       tipoSesion === 'grupal'
+              ? (newApt.group_name || 'Grupo')
+              : ninos.find((n: any) => n.id === newApt.child_id)?.name || 'Paciente',
+            serviceType:       newApt.service,
+            notes:             newApt.notes,
+            modality:          modalidadCita,
+            groupName:         tipoSesion === 'grupal' ? (newApt.group_name || '') : null,
+            sessionType:       tipoSesion,
+            recurrencia:       recurrencia !== 'none' ? recurrencia : null,
+            recurrenciaSemanas: recurrencia !== 'none' ? recurrenciaSemanas : null,
+            videoLink:         roomLink,
+          }
+
+          // Google Calendar
+          const gcalStatus = await fetch(`/api/google-calendar?action=status&userId=${calSession.user.id}`)
+          const gcalData   = await gcalStatus.json()
+          if (gcalData.connected) {
+            const gcalRes = await fetch('/api/google-calendar', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action:        'sync-appointment',
+                userId:        calSession.user.id,
+                appointmentId: firstApt?.id,
+                appointment:   aptData,
+              }),
+            })
+            const gcalResult = await gcalRes.json()
+            if (gcalResult.ok) {
+              toast.success('📅 Cita añadida a Google Calendar')
+            } else {
+              console.error('Google Calendar sync error:', gcalResult.error)
+            }
+          }
+
+          // Microsoft Calendar
+          const msStatus = await fetch(`/api/microsoft-calendar?action=status&userId=${calSession.user.id}`)
+          const msData   = await msStatus.json()
+          if (msData.connected) {
+            const msRes = await fetch('/api/microsoft-calendar', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action:        'sync-appointment',
+                userId:        calSession.user.id,
+                appointmentId: firstApt?.id,
+                appointment:   aptData,
+              }),
+            })
+            const msResult = await msRes.json()
+            if (msResult.ok) {
+              toast.success('📅 Cita añadida a Microsoft Calendar')
+            } else {
+              console.error('Microsoft Calendar sync error:', msResult.error)
+            }
+          }
+        }
+      } catch (calError) {
+        console.error('Calendar sync error:', calError)
+      }
       // Crear citas recurrentes si aplica
       if (recurrencia !== 'none' && newApt.date) {
         const diasSalto = recurrencia === 'weekly' ? 7 : 14

@@ -11,14 +11,22 @@ const REDIRECT_URI         = process.env.NEXT_PUBLIC_APP_URL
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const code   = searchParams.get('code')
-  const userId = searchParams.get('state') // we passed userId as state
-  const error  = searchParams.get('error')
+  const code      = searchParams.get('code')
+  const stateRaw  = searchParams.get('state') || ''
+  const error     = searchParams.get('error')
+
+  // state puede ser "userId:role" (nuevo) o solo "userId" (legacy)
+  const [userId, stateRole] = stateRaw.includes(':')
+    ? stateRaw.split(':')
+    : [stateRaw, null]
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
+  // Determinar destino de error basado en el role del state
+  const errorDest = stateRole === 'padre' ? '/padre' : '/admin'
+
   if (error || !code || !userId) {
-    return NextResponse.redirect(`${appUrl}/admin?gcal=error`)
+    return NextResponse.redirect(`${appUrl}${errorDest}?gcal=error`)
   }
 
   try {
@@ -37,7 +45,7 @@ export async function GET(req: NextRequest) {
 
     if (!tokenRes.ok) {
       console.error('Token exchange failed:', await tokenRes.text())
-      return NextResponse.redirect(`${appUrl}/admin?gcal=error`)
+      return NextResponse.redirect(`${appUrl}${errorDest}?gcal=error`)
     }
 
     const tokens = await tokenRes.json()
@@ -64,15 +72,15 @@ export async function GET(req: NextRequest) {
 
     if (updateError) {
       console.error('Supabase update error:', updateError)
-      return NextResponse.redirect(`${appUrl}/admin?gcal=error`)
+      return NextResponse.redirect(`${appUrl}${errorDest}?gcal=error`)
     }
 
-    // Redirect to correct panel based on role
-    const role = updatedProfile?.role || 'admin'
+    // Redirect to correct panel based on role (state tiene prioridad sobre DB)
+    const role = stateRole || updatedProfile?.role || 'admin'
     const destination = role === 'padre' ? '/padre' : '/admin'
     return NextResponse.redirect(`${appUrl}${destination}?gcal=connected&email=${encodeURIComponent(googleEmail || '')}`)
   } catch (e: any) {
     console.error('Google Calendar callback error:', e)
-    return NextResponse.redirect(`${appUrl}/admin?gcal=error`)
+    return NextResponse.redirect(`${appUrl}${errorDest}?gcal=error`)
   }
 }

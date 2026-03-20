@@ -61,6 +61,15 @@ export default function ParentDashboard() {
     { id: 'perfil',      icon: User,      label: t('nav.miperfil') },
   ]
   const [activeView, setActiveView] = useState('home') 
+  
+  // Auto-navegar a perfil si el padre regresa del OAuth de calendario
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('gcal') || params.get('mscal')) {
+      setActiveView('profile')
+    }
+  }, [])
    
   const [selectedDate, setSelectedDate] = useState('')
   const [takenSlots, setTakenSlots] = useState<string[]>([])
