@@ -128,9 +128,19 @@ export async function POST(req: NextRequest) {
 
       // Build event
       const { date, time, patientName, serviceType, notes, modality } = appointment
-      const startISO = `${date}T${time}`
-      const endDate  = new Date(new Date(startISO).getTime() + 60 * 60000)
-      const endISO   = `${endDate.toISOString().slice(0, 16)}`
+      
+      // Construir la hora como string local (Lima UTC-5) sin conversiones de Date
+      // Esto evita que el servidor Vercel (UTC) desplace la hora
+      const timeClean = (time || '00:00').slice(0, 5) // "13:00"
+      const [hh, mm] = timeClean.split(':').map(Number)
+      const endHH = String(Math.floor((hh * 60 + mm + 60) / 60) % 24).padStart(2, '0')
+      const endMM = String((mm + 60) % 60).padStart(2, '0')
+      const startISO = `${date}T${timeClean}:00`
+      const endISO   = `${date}T${endHH}:${endMM}:00`
+      
+      // Nombre del paciente: fallback robusto
+      const nombrePaciente = (patientName || '').trim() || 'Paciente'
+      const tituloEvento   = `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`
 
       // Attendees: always include admin's Google email + parent email if available
       const attendees: { email: string; displayName?: string }[] = []
@@ -142,8 +152,8 @@ export async function POST(req: NextRequest) {
       }
 
       const event: any = {
-        summary:     `🧩 ${patientName} — ${serviceType || 'Sesión ABA'}`,
-        description: `${modality === 'virtual' ? '📹 Sesión Virtual' : '📍 Sesión Presencial'}\nCentro: Jugando Aprendo${notes ? `\n📝 ${notes}` : ''}`,
+        summary:     tituloEvento,
+        description: `${modality === 'virtual' ? '📹 Sesión Virtual' : '📍 Sesión Presencial'}\nPaciente: ${nombrePaciente}\nCentro: Jugando Aprendo${notes ? `\n📝 ${notes}` : ''}`,
         start: { dateTime: startISO + ':00', timeZone: 'America/Lima' },
         end:   { dateTime: endISO   + ':00', timeZone: 'America/Lima' },
         reminders: {

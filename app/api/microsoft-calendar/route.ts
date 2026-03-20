@@ -127,9 +127,17 @@ export async function POST(req: NextRequest) {
 
       // Build event
       const { date, time, patientName, serviceType, notes, modality } = appointment
-      const startISO = `${date}T${time}:00`
-      const endDate  = new Date(new Date(startISO).getTime() + 60 * 60000)
-      const endISO   = endDate.toISOString().slice(0, 19)
+      
+      // Construir hora como string local sin conversión UTC (evita desfase Vercel)
+      const timeClean = (time || '00:00').slice(0, 5)
+      const [hh, mm] = timeClean.split(':').map(Number)
+      const endHH = String(Math.floor((hh * 60 + mm + 60) / 60) % 24).padStart(2, '0')
+      const endMM = String((mm + 60) % 60).padStart(2, '0')
+      const startISO = `${date}T${timeClean}:00`
+      const endISO   = `${date}T${endHH}:${endMM}:00`
+      
+      const nombrePaciente = (patientName || '').trim() || 'Paciente'
+      const tituloEvento   = `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`
 
       const attendees = []
       if (parentEmail) {
@@ -140,7 +148,7 @@ export async function POST(req: NextRequest) {
       }
 
       const event: any = {
-        subject: `🧩 ${patientName} — ${serviceType || 'Sesión ABA'}`,
+        subject: tituloEvento,
         body: {
           contentType: 'HTML',
           content: `
