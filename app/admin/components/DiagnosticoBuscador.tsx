@@ -104,24 +104,35 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
     if (addBreadcrumb && selected) {
       setBreadcrumb(bc => [...bc, { code: selected.code, title: selected.title }])
     }
+    // Mostrar panel inmediatamente con lo que ya sabemos
+    setSelected({
+      code: r.code, title: r.title || r.code,
+      definition: '', inclusions: [], exclusions: [],
+      indexTerms: [], codingNote: '', children: [], parent: null,
+      browserUrl: `https://icd.who.int/browse/2024-01/mms/es#${r.code}`,
+    })
     try {
       const param = r.id || r.code
       const res   = await fetch(`/api/cie11?action=detail&code=${encodeURIComponent(param)}`)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
       const data  = await res.json()
-      // Sanitizar arrays para evitar crashes si la API devuelve undefined
-      const safe = {
-        ...data,
+      if (data.fallback || data.error) throw new Error(data.error || 'fallback')
+      setSelected({
+        code:       data.code       || r.code,
+        title:      data.title      || r.title || r.code,
+        definition: data.definition || '',
         inclusions: Array.isArray(data.inclusions) ? data.inclusions : [],
         exclusions: Array.isArray(data.exclusions) ? data.exclusions : [],
         indexTerms: Array.isArray(data.indexTerms) ? data.indexTerms : [],
         children:   Array.isArray(data.children)   ? data.children   : [],
         codingNote: data.codingNote || '',
-        definition: data.definition || '',
         parent:     data.parent     || null,
-      }
-      setSelected(safe)
-      setTimeout(() => detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100)
-    } catch { /* silencioso */ } finally {
+        browserUrl: data.browserUrl || `https://icd.who.int/browse/2024-01/mms/es#${data.code || r.code}`,
+      })
+    } catch (e) {
+      console.warn('[CIE-11] Detail load failed:', e)
+      // Mantener el panel con lo básico ya mostrado
+    } finally {
       setDL(false)
     }
   }
@@ -228,11 +239,12 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
 
           <div className="p-5 space-y-4">
 
-            {detailLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 size={28} className="animate-spin text-violet-400"/>
+            {detailLoading && (
+              <div className="flex items-center gap-2 py-2 text-xs text-slate-400">
+                <Loader2 size={14} className="animate-spin text-violet-400"/> Cargando detalle desde API OMS...
               </div>
-            ) : (<>
+            )}
+            {true && (<>
 
               {/* Código + Título */}
               <div className="flex items-start gap-3">
