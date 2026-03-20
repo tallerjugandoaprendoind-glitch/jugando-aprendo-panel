@@ -36,9 +36,12 @@ function fmtFecha(f: string) {
 function TooltipABA({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   const logro = payload.find((p: any) => p.dataKey === 'logro')?.value
+  // label is now the session number "n"; get actual date from payload
+  const fechaStr = payload[0]?.payload?.fecha
+  const displayLabel = fechaStr ? `S${label} · ${fmtFecha(fechaStr)}` : `Sesión ${label}`
   return (
     <div style={{ background: "var(--card)", border: "1px solid var(--card-border)", color: "var(--text-primary)" }} className="rounded-2xl shadow-2xl p-3 text-xs min-w-[160px]">
-      <p className="font-black mb-2 border-b pb-1" style={{ color: "var(--text-primary)", borderColor: "var(--card-border)" }}>{fmtFecha(label)}</p>
+      <p className="font-black mb-2 border-b pb-1" style={{ color: "var(--text-primary)", borderColor: "var(--card-border)" }}>{displayLabel}</p>
       {payload.map((p: any, i: number) => (
         <div key={i} className="flex justify-between gap-3 mb-1">
           <span className="flex items-center gap-1.5">
