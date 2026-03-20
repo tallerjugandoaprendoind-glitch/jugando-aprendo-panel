@@ -47,7 +47,7 @@ export default function LoginPage(props: PageProps) {
         provider: 'azure',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
-          scopes: 'email profile openid offline_access Calendars.ReadWrite',
+          scopes: 'email profile openid offline_access',
         },
       })
       if (error) throw error
