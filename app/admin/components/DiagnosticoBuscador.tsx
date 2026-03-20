@@ -127,7 +127,6 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
     setLoading(true)
     setError(null)
     setExpanded(null)
-    setDetail(null)
 
     try {
       const res  = await fetch(`/api/cie11?action=search&q=${encodeURIComponent(q2)}`)
@@ -201,7 +200,7 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
     setTimeout(() => setCopied(null), 1500)
   }
 
-  const clear = () => { setQ(''); setResults([]); setExpanded(null); setDetail(null); inputRef.current?.focus() }
+  const clear = () => { setQ(''); setResults([]); setExpanded(null); inputRef.current?.focus() }
 
   return (
     <div className="space-y-4">
