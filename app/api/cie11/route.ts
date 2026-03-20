@@ -133,12 +133,35 @@ export async function GET(req: NextRequest) {
       if (!res.ok) return NextResponse.json({ error: `WHO API ${res.status}`, fallback: true }, { status: res.status })
 
       const data = await res.json()
+
+      // Extraer definición — puede venir en diferentes formatos
+      const definition =
+        data.definition?.['@value'] ||
+        data.longDefinition?.['@value'] ||
+        (typeof data.definition === 'string' ? data.definition : '') ||
+        ''
+
+      // Extraer inclusiones
+      const inclusions = [
+        ...(data.inclusion || []).map((i: any) => i.label?.['@value'] || i['@value'] || ''),
+        ...(data.indexTerm || []).map((t: any) => t.label?.['@value'] || t['@value'] || ''),
+      ].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i)
+
+      // Extraer exclusiones
+      const exclusions = (data.exclusion || [])
+        .map((e: any) => e.label?.['@value'] || e['@value'] || '')
+        .filter(Boolean)
+
+      // Notas adicionales
+      const notes = data.codingNote?.['@value'] || ''
+
       return NextResponse.json({
-        code:       data.code,
-        title:      data.title?.['@value']      || '',
-        definition: data.definition?.['@value'] || '',
-        inclusions: (data.inclusion || []).map((i: any) => i.label?.['@value'] || ''),
-        exclusions: (data.exclusion || []).map((e: any) => e.label?.['@value'] || ''),
+        code:       data.code || '',
+        title:      data.title?.['@value'] || data.title || '',
+        definition,
+        inclusions,
+        exclusions,
+        notes,
         browserUrl: `https://icd.who.int/browse/2024-01/mms/es#${data.code}`,
       })
     } catch (e: any) {

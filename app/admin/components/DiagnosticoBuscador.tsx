@@ -98,8 +98,8 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
   const [error, setError]           = useState<string | null>(null)
   const [apiAvail, setApiAvail]     = useState<boolean | null>(null)  // null=unknown
   const [expanded, setExpanded]     = useState<string | null>(null)
-  const [detail, setDetail]         = useState<any>(null)
-  const [detailLoading, setDLoad]   = useState(false)
+  const [details, setDetails]       = useState<Record<string, any>>({})
+  const [detailLoading, setDLoad]   = useState<string | null>(null)
   const [copied, setCopied]         = useState<string | null>(null)
   const [history, setHistory]       = useState<string[]>([])
   const inputRef                    = useRef<HTMLInputElement>(null)
@@ -169,23 +169,23 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
 
   // ── Detalle de un resultado (solo API) ───────────────────────────────────
   const loadDetail = async (r: Result) => {
-    if (!r.fromApi || !r.id) return
-    if (expanded === r.code) { setExpanded(null); setDetail(null); return }
+    if (expanded === r.code) { setExpanded(null); return }
     setExpanded(r.code)
-    setDetail(null)
-    setDLoad(true)
+    // Si ya tenemos el detalle, no lo pedimos de nuevo
+    if (details[r.code]) return
+    if (!r.fromApi || !r.id) return
+    setDLoad(r.code)
     try {
       const res  = await fetch(`/api/cie11?action=detail&code=${encodeURIComponent(r.id!)}`)
       const data = await res.json()
-      if (!data.fallback) setDetail(data)
+      if (!data.fallback) setDetails(prev => ({ ...prev, [r.code]: data }))
     } catch { /* silencioso */ } finally {
-      setDLoad(false)
+      setDLoad(null)
     }
   }
 
   const toggleLocal = (code: string) => {
     setExpanded(v => v === code ? null : code)
-    setDetail(null)
   }
 
   const copiar = (r: Result) => {
@@ -364,84 +364,130 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
                     <button onClick={() => r.fromApi ? loadDetail(r) : toggleLocal(r.code)}
                       className="p-1.5 rounded-lg border transition-all hover:bg-slate-100"
                       style={{ borderColor:'var(--card-border)', color:'var(--text-secondary)' }}>
-                      {isExp ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
+                      {detailLoading === r.code
+                        ? <Loader2 size={12} className="animate-spin text-violet-500"/>
+                        : isExp ? <ChevronUp size={12}/> : <ChevronDown size={12}/>}
                     </button>
                   </div>
                 </div>
               </div>
 
               {/* Detalle expandido */}
-              {isExp && (
-                <div className="border-t px-3.5 pb-3.5 space-y-3" style={{ borderColor:'var(--card-border)' }}>
+              {isExp && (() => {
+                const d = details[r.code]
+                const isLoading = detailLoading === r.code
+                return (
+                  <div className="border-t px-3.5 pb-3.5 space-y-3" style={{ borderColor:'var(--card-border)' }}>
 
-                  {detailLoading && (
-                    <div className="pt-3 flex items-center gap-2 text-xs text-slate-400">
-                      <Loader2 size={13} className="animate-spin"/> Cargando detalle desde API OMS...
-                    </div>
-                  )}
-
-                  {/* Definición */}
-                  {(detail?.definition || r.definition) && !detailLoading && (
-                    <div className="pt-3">
-                      <p className="text-[10px] font-black uppercase tracking-wide mb-1.5 flex items-center gap-1" style={{ color:'var(--text-muted)' }}>
-                        <BookOpen size={10}/> Definición clínica
-                      </p>
-                      <p className="text-xs leading-relaxed" style={{ color:'var(--text-secondary)' }}>
-                        {detail?.definition || r.definition}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Inclusiones (API) */}
-                  {detail?.inclusions?.length > 0 && (
-                    <div className="p-2.5 rounded-xl" style={{ background:'var(--muted-bg)' }}>
-                      <p className="text-[10px] font-black uppercase tracking-wide mb-1 flex items-center gap-1" style={{ color:'var(--text-muted)' }}>
-                        <Tag size={10}/> Incluye (sinónimos / términos relacionados)
-                      </p>
-                      <div className="flex flex-wrap gap-1">
-                        {detail.inclusions.slice(0, 12).map((inc: string, i: number) => (
-                          <span key={i} className="px-2 py-0.5 rounded-full text-[10px] bg-violet-50 text-violet-600 border border-violet-100">{inc}</span>
-                        ))}
+                    {isLoading && (
+                      <div className="pt-3 flex items-center gap-2 text-xs text-slate-400">
+                        <Loader2 size={13} className="animate-spin text-violet-500"/>
+                        Cargando detalle desde API OMS...
                       </div>
-                    </div>
-                  )}
-
-                  {/* Exclusiones (API) */}
-                  {detail?.exclusions?.length > 0 && (
-                    <div className="p-2.5 rounded-xl bg-red-50 border border-red-100">
-                      <p className="text-[10px] font-black uppercase tracking-wide mb-1 text-red-700">⚠ Excluye</p>
-                      <div className="flex flex-wrap gap-1">
-                        {detail.exclusions.slice(0, 8).map((exc: string, i: number) => (
-                          <span key={i} className="px-2 py-0.5 rounded-full text-[10px] bg-red-50 text-red-600 border border-red-200">{exc}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Acciones expandido */}
-                  <div className="flex flex-wrap gap-2 pt-1">
-                    <button onClick={() => copiar(r)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-violet-600 text-white hover:bg-violet-700 transition-colors">
-                      {copied === r.code ? <Check size={11}/> : <Copy size={11}/>}
-                      {copied === r.code ? 'Copiado ✓' : 'Copiar para ARIA'}
-                    </button>
-
-                    {showAsignar && onAsignar && (
-                      <button onClick={() => onAsignar(r)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
-                        <Star size={11}/> Asignar al paciente
-                      </button>
                     )}
 
-                    <a href={`https://icd.who.int/browse/2024-01/mms/es#${r.code}`}
-                      target="_blank" rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all hover:bg-slate-50"
-                      style={{ borderColor:'var(--card-border)', color:'var(--text-secondary)' }}>
-                      <ExternalLink size={11}/> Ver en OMS CIE-11
-                    </a>
+                    {/* Código completo y capítulo */}
+                    {!isLoading && (
+                      <div className="pt-3 flex flex-wrap gap-2">
+                        <div className="px-3 py-2 rounded-xl bg-violet-50 border border-violet-100">
+                          <p className="text-[9px] font-black uppercase text-violet-400 mb-0.5">Código CIE-11</p>
+                          <p className="text-sm font-black text-violet-700">{r.code}</p>
+                        </div>
+                        {r.chapter && (
+                          <div className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-100">
+                            <p className="text-[9px] font-black uppercase text-slate-400 mb-0.5">Capítulo</p>
+                            <p className="text-sm font-black text-slate-600">{r.chapter}</p>
+                          </div>
+                        )}
+                        {r.dsm5 && (
+                          <div className="px-3 py-2 rounded-xl bg-blue-50 border border-blue-100">
+                            <p className="text-[9px] font-black uppercase text-blue-400 mb-0.5">DSM-5 / ICD-10</p>
+                            <p className="text-sm font-black text-blue-700">{r.dsm5}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Definición */}
+                    {!isLoading && (d?.definition || r.definition) && (
+                      <div className="p-3 rounded-xl" style={{ background:'var(--muted-bg)' }}>
+                        <p className="text-[10px] font-black uppercase tracking-wide mb-1.5 flex items-center gap-1" style={{ color:'var(--text-muted)' }}>
+                          <BookOpen size={10}/> Definición clínica (OMS)
+                        </p>
+                        <p className="text-xs leading-relaxed" style={{ color:'var(--text-secondary)' }}>
+                          {d?.definition || r.definition}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Sin definición disponible */}
+                    {!isLoading && !d?.definition && !r.definition && d !== undefined && (
+                      <div className="p-3 rounded-xl bg-amber-50 border border-amber-100">
+                        <p className="text-xs text-amber-700">
+                          La OMS no tiene definición textual para este código. Consultá la entrada completa en el navegador oficial.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Inclusiones */}
+                    {d?.inclusions?.length > 0 && (
+                      <div className="p-2.5 rounded-xl" style={{ background:'var(--muted-bg)' }}>
+                        <p className="text-[10px] font-black uppercase tracking-wide mb-1.5 flex items-center gap-1" style={{ color:'var(--text-muted)' }}>
+                          <Tag size={10}/> Términos incluidos / sinónimos
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {d.inclusions.map((inc: string, i: number) => (
+                            <span key={i} className="px-2 py-0.5 rounded-full text-[10px] bg-violet-50 text-violet-600 border border-violet-100">{inc}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Notas de codificación */}
+                    {d?.notes && (
+                      <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-100">
+                        <p className="text-[10px] font-black uppercase tracking-wide mb-1 text-blue-700">📋 Nota de codificación</p>
+                        <p className="text-xs text-blue-800">{d.notes}</p>
+                      </div>
+                    )}
+
+                    {/* Exclusiones */}
+                    {d?.exclusions?.length > 0 && (
+                      <div className="p-2.5 rounded-xl bg-red-50 border border-red-100">
+                        <p className="text-[10px] font-black uppercase tracking-wide mb-1.5 text-red-700">⚠ Excluye (diagnósticos alternativos)</p>
+                        <div className="flex flex-wrap gap-1">
+                          {d.exclusions.map((exc: string, i: number) => (
+                            <span key={i} className="px-2 py-0.5 rounded-full text-[10px] bg-red-50 text-red-600 border border-red-200">{exc}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Acciones */}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <button onClick={() => copiar(r)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-violet-600 text-white hover:bg-violet-700 transition-colors">
+                        {copied === r.code ? <Check size={11}/> : <Copy size={11}/>}
+                        {copied === r.code ? 'Copiado ✓' : 'Copiar para ARIA'}
+                      </button>
+
+                      {showAsignar && onAsignar && (
+                        <button onClick={() => onAsignar(r)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+                          <Star size={11}/> Asignar al paciente
+                        </button>
+                      )}
+
+                      <a href={`https://icd.who.int/browse/2024-01/mms/es#${r.code}`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all hover:bg-slate-50"
+                        style={{ borderColor:'var(--card-border)', color:'var(--text-secondary)' }}>
+                        <ExternalLink size={11}/> Ver en OMS CIE-11
+                      </a>
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
             </div>
           )
         })}
