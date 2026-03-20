@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (!profile?.google_calendar_token) {
+        console.error('[GCal] No token for userId:', userId)
         return NextResponse.json({ ok: false, error: 'Google Calendar not connected' })
       }
 
@@ -105,7 +106,10 @@ export async function POST(req: NextRequest) {
           accessToken = refreshData.access_token
           await supabaseAdmin.from('profiles').update({ google_calendar_token: accessToken }).eq('id', userId)
         }
-      } catch { /* use existing token */ }
+      } catch (refreshErr) {
+        console.error('[GCal] Token refresh failed:', refreshErr)
+        /* use existing token */
+      }
 
       // Fetch parent email from the appointment's child record
       let parentEmail: string | null = appointment.parentEmail || null
@@ -207,11 +211,13 @@ export async function POST(req: NextRequest) {
       )
 
       if (!gcalRes.ok) {
-        const err = await gcalRes.json()
-        return NextResponse.json({ ok: false, error: err.error?.message || 'Google Calendar error' })
+        const errText = await gcalRes.text()
+        console.error('[GCal] Event creation failed:', gcalRes.status, errText)
+        return NextResponse.json({ ok: false, error: `Google Calendar error ${gcalRes.status}: ${errText}` })
       }
 
       const gcalData = await gcalRes.json()
+      console.log('[GCal] ✅ Event created:', gcalData.id, gcalData.htmlLink)
 
       if (appointmentId) {
         await supabaseAdmin
@@ -315,6 +321,7 @@ export async function POST(req: NextRequest) {
         .single()
 
       if (!profile?.google_calendar_token) {
+        console.error('[GCal] No token for userId:', userId)
         return NextResponse.json({ ok: false, error: 'Google Calendar not connected' })
       }
 
