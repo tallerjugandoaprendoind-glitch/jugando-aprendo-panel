@@ -105,6 +105,20 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
   const inputRef                    = useRef<HTMLInputElement>(null)
   const debounceRef                 = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  // ── Verificar disponibilidad de la API al montar ─────────────────────────
+  useEffect(() => {
+    const checkApi = async () => {
+      try {
+        const res  = await fetch('/api/cie11?action=search&q=test')
+        const data = await res.json()
+        setApiAvail(!data.fallback)
+      } catch {
+        setApiAvail(false)
+      }
+    }
+    checkApi()
+  }, [])
+
   // ── Búsqueda ──────────────────────────────────────────────────────────────
   const search = useCallback(async (query: string) => {
     const q2 = query.trim()
