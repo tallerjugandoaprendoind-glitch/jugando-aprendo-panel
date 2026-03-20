@@ -104,8 +104,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
   // Number each session for a clean numeric X axis
   const graficaNum   = graficaABA.map((s: any, i: number) => ({ ...s, n: i + 1 }))
   const conColorNum  = conColor.map((s: any, i: number) => ({ ...s, n: i + 1 }))
-  const xTicks = Array.from({ length: xDomainMax / 10 }, (_, i) => (i + 1) * 10)
-  if (!xTicks.includes(1)) xTicks.unshift(1)
+  const xTicks = [1, ...Array.from({ length: xDomainMax / 10 }, (_, i) => (i + 1) * 10)]
 
   const histo = [
     { rango: '0-25%',   label: 'Emergente', count: graficaABA.filter((s: any) => s.logro < 26).length,                  color: '#DC2626' },
@@ -239,7 +238,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
             <ResponsiveContainer width="100%" height={190}>
               <LineChart data={graficaNum} margin={MARGINS}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: number) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
+                <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: any) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
@@ -260,7 +259,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
             <ResponsiveContainer width="100%" height={190}>
               <BarChart data={conColorNum} margin={MARGINS}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: number) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
+                <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: any) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <ReferenceLine y={CRITERIO_PCT} stroke={C.criterio} strokeDasharray="6 3" strokeWidth={2}
@@ -284,7 +283,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: number) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
+                <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: any) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
                 <YAxis domain={[0, 100]} tick={<TickY />} ticks={TICKS} />
                 <Tooltip content={<TooltipABA />} />
                 <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />

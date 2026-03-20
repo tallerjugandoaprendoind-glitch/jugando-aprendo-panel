@@ -373,7 +373,7 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
   }
 
   // xOf uses domainMax so 4 pts span only 4/10 of the chart width
-  const xOf = (i: number) => PAD.left + (i / (domainMax - 1)) * iW
+  const xOf = (i: number) => PAD.left + (i / Math.max(1, domainMax - 1)) * iW
   const yOf = (v: number) => PAD.top + iH - (v / 100) * iH
 
   const series = [
@@ -563,7 +563,7 @@ function SimpleLineChart({ data }: { data: ChartDataPoint[] }) {
 
           {/* Etiquetas eje X — cada 10 slots del dominio */}
           {Array.from({ length: domainMax / 10 + 1 }, (_, i) => i * 10).map(slot => {
-            const x = PAD.left + (slot / (domainMax - 1)) * iW
+            const x = PAD.left + (slot / Math.max(1, domainMax - 1)) * iW
             const hasData = slot < data.length
             return (
               <g key={slot}>
