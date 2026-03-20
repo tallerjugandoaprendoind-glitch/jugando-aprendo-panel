@@ -112,6 +112,7 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
       browserUrl: `https://icd.who.int/browse/2024-01/mms/es#${r.code}`,
     })
     try {
+      // Siempre usar el ID completo (URL) si está disponible — más confiable que el código alfanumérico
       const param = r.id || r.code
       const res   = await fetch(`/api/cie11?action=detail&code=${encodeURIComponent(param)}`)
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
