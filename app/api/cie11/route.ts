@@ -62,12 +62,12 @@ export async function GET(req: NextRequest) {
       // Buscar en español Y en inglés para cubrir siglas como TEA, TDAH, etc.
       const queries = [q]
       const SIGLAS: Record<string, string> = {
-        'tea':'autism spectrum', 'tdah':'attention deficit hyperactivity', 'toc':'obsessive compulsive',
+        'tea':'autism spectrum disorder', 'tdah':'attention deficit hyperactivity', 'toc':'obsessive compulsive',
         'tept':'post traumatic stress', 'tnd':'oppositional defiant', 'tlp':'borderline personality',
-        'di':'intellectual disability', 'tea':'autism', 'dislexia':'dyslexia', 'dispraxia':'developmental coordination',
+        'di':'intellectual disability', 'dislexia':'dyslexia', 'dispraxia':'developmental coordination',
         'discalculia':'dyscalculia', 'disgrafia':'dysgraphia', 'arfid':'avoidant restrictive food',
         'bipolar':'bipolar', 'esquizofrenia':'schizophrenia', 'ansiedad':'anxiety', 'depresion':'depressive',
-        'tdl':'developmental language', 'tms':'stereotyped movement', 'tme':'stereotyped movement',
+        'tdl':'developmental language', 'tme':'stereotyped movement',
       }
       const qLow = q.toLowerCase().trim()
       if (SIGLAS[qLow]) queries.push(SIGLAS[qLow])
