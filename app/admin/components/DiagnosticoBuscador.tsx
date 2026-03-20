@@ -133,19 +133,6 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
     inputRef.current?.focus()
   }
 
-  const CHAPTER_NAMES: Record<string, string> = {
-    '01':'Enfermedades infecciosas', '02':'Neoplasias', '03':'Sangre',
-    '04':'Sistema inmune', '05':'Endocrino / Nutrición / Metabólico',
-    '06':'Trastornos mentales y del comportamiento — Neurodesarrollo',
-    '07':'Trastornos del sueño y la vigilia',
-    '08':'Sistema nervioso', '09':'Ojo', '10':'Oído',
-    '11':'Sistema circulatorio', '12':'Sistema respiratorio',
-    '13':'Sistema digestivo', '14':'Piel', '15':'Músculo-esquelético',
-    '16':'Genitourinario', '17':'Condiciones sexuales', '18':'Embarazo / Parto',
-    '19':'Período perinatal', '20':'Malformaciones congénitas',
-    '21':'Síntomas y signos', '22':'Traumatismos / Lesiones',
-    '23':'Causas externas', '24':'Factores de salud', '25':'Medicina tradicional', 'V':'Suplementario',
-  }
 
   return (
     <div className="space-y-4">
