@@ -249,6 +249,54 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true, synced })
     }
 
+    // ── Borrar evento del calendario ────────────────────────────────────
+    if (action === 'delete-event') {
+      const { eventId } = body
+      if (!eventId) return NextResponse.json({ ok: true, skipped: 'no eventId' })
+
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('google_calendar_token, google_calendar_refresh_token')
+        .eq('id', userId)
+        .single()
+
+      if (!profile?.google_calendar_token) {
+        return NextResponse.json({ ok: true, skipped: 'not connected' })
+      }
+
+      let accessToken = profile.google_calendar_token
+      try {
+        const refreshRes = await fetch('https://oauth2.googleapis.com/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({
+            client_id:     process.env.GOOGLE_CALENDAR_CLIENT_ID || '',
+            client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET || '',
+            refresh_token: profile.google_calendar_refresh_token || '',
+            grant_type:    'refresh_token',
+          }),
+        })
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json()
+          accessToken = refreshData.access_token
+          await supabaseAdmin.from('profiles').update({ google_calendar_token: accessToken }).eq('id', userId)
+        }
+      } catch { /* use existing token */ }
+
+      const delRes = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/primary/events/${eventId}`,
+        { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } }
+      )
+
+      // 404 = ya fue borrado, igual es OK
+      if (!delRes.ok && delRes.status !== 404 && delRes.status !== 410) {
+        const err = await delRes.text()
+        return NextResponse.json({ ok: false, error: err })
+      }
+
+      return NextResponse.json({ ok: true, deleted: eventId })
+    }
+
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

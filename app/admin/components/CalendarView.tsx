@@ -211,8 +211,12 @@ function MonthlyCalendarView() {
     if (tipoSesion==='grupal' && selectedParticipants.length===0) { toast.error('Selecciona participantes'); return }
     setIsSaving(true)
     try {
+      // Obtener userId del admin para guardarlo en la cita (necesario para borrar del calendar)
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
+      const createdBy = currentSession?.user?.id || null
+
       let payload: any[]
-      const extra = { modalidad: modalidadCita }
+      const extra = { modalidad: modalidadCita, created_by: createdBy }
       if (tipoSesion==='grupal') {
         payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (Grupal: ${newApt.group_name||'Sin nombre'})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, ...extra }))
       } else {

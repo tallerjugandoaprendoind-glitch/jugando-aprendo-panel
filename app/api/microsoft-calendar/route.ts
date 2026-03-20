@@ -199,6 +199,57 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    // ── Borrar evento del calendario Outlook ───────────────────────────
+    if (action === 'delete-event') {
+      const { eventId } = body
+      if (!eventId) return NextResponse.json({ ok: true, skipped: 'no eventId' })
+
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('microsoft_calendar_token, microsoft_calendar_refresh_token')
+        .eq('id', userId)
+        .single()
+
+      if (!profile?.microsoft_calendar_token) {
+        return NextResponse.json({ ok: true, skipped: 'not connected' })
+      }
+
+      let accessToken = profile.microsoft_calendar_token
+      try {
+        const refreshRes = await fetch(
+          `https://login.microsoftonline.com/${MS_TENANT}/oauth2/v2.0/token`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id:     MS_CLIENT_ID,
+              client_secret: MS_CLIENT_SECRET,
+              refresh_token: profile.microsoft_calendar_refresh_token || '',
+              grant_type:    'refresh_token',
+              scope:         'Calendars.ReadWrite offline_access',
+            }),
+          }
+        )
+        if (refreshRes.ok) {
+          const refreshData = await refreshRes.json()
+          accessToken = refreshData.access_token
+          await supabaseAdmin.from('profiles').update({ microsoft_calendar_token: accessToken }).eq('id', userId)
+        }
+      } catch { /* use existing token */ }
+
+      const delRes = await fetch(
+        `https://graph.microsoft.com/v1.0/me/events/${eventId}`,
+        { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}` } }
+      )
+
+      if (!delRes.ok && delRes.status !== 404) {
+        const err = await delRes.text()
+        return NextResponse.json({ ok: false, error: err })
+      }
+
+      return NextResponse.json({ ok: true, deleted: eventId })
+    }
+
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
