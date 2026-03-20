@@ -194,12 +194,88 @@ export async function POST(req: NextRequest) {
           .eq('id', appointmentId)
       }
 
+      // ── También crear evento en el Google Calendar del PADRE si está conectado ──
+      let parentGcalEventId: string | null = null
+      if (appointment.childId) {
+        try {
+          // Buscar el parent_id del niño
+          const { data: child } = await supabaseAdmin
+            .from('children')
+            .select('parent_id')
+            .eq('id', appointment.childId)
+            .single()
+
+          if (child?.parent_id) {
+            // Ver si el padre tiene Google Calendar conectado
+            const { data: parentProfile } = await supabaseAdmin
+              .from('profiles')
+              .select('google_calendar_token, google_calendar_refresh_token, google_calendar_email')
+              .eq('id', child.parent_id)
+              .single()
+
+            if (parentProfile?.google_calendar_token) {
+              // Refresh token del padre si es necesario
+              let parentToken = parentProfile.google_calendar_token
+              try {
+                const rr = await fetch('https://oauth2.googleapis.com/token', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                  body: new URLSearchParams({
+                    client_id:     process.env.GOOGLE_CALENDAR_CLIENT_ID || '',
+                    client_secret: process.env.GOOGLE_CALENDAR_CLIENT_SECRET || '',
+                    refresh_token: parentProfile.google_calendar_refresh_token || '',
+                    grant_type:    'refresh_token',
+                  }),
+                })
+                if (rr.ok) {
+                  const rd = await rr.json()
+                  parentToken = rd.access_token
+                  await supabaseAdmin.from('profiles')
+                    .update({ google_calendar_token: parentToken })
+                    .eq('id', child.parent_id)
+                }
+              } catch { /* use existing */ }
+
+              // Crear evento en el calendario del padre (sin attendees extra)
+              const parentEvent = {
+                summary:     `🧩 ${nombrePaciente} — ${serviceType || 'Sesión ABA'}`,
+                description: `${modality === 'virtual' ? '📹 Sesión Virtual' : '📍 Sesión Presencial'}\nCentro: Jugando Aprendo${notes ? `\n📝 ${notes}` : ''}`,
+                start: { dateTime: startISO, timeZone: 'America/Lima' },
+                end:   { dateTime: endISO,   timeZone: 'America/Lima' },
+                reminders: { useDefault: false, overrides: [{ method: 'popup', minutes: 60 }] },
+                colorId: '9',
+              }
+              const parentRes = await fetch(
+                'https://www.googleapis.com/calendar/v3/calendars/primary/events',
+                {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${parentToken}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify(parentEvent),
+                }
+              )
+              if (parentRes.ok) {
+                const parentData = await parentRes.json()
+                parentGcalEventId = parentData.id
+                // Guardar event_id del padre en la cita
+                if (appointmentId) {
+                  await supabaseAdmin
+                    .from('appointments')
+                    .update({ parent_google_calendar_event_id: parentData.id })
+                    .eq('id', appointmentId)
+                }
+              }
+            }
+          }
+        } catch { /* no bloquear si falla el calendario del padre */ }
+      }
+
       return NextResponse.json({
         ok: true,
         eventId: gcalData.id,
         eventUrl: gcalData.htmlLink,
         parentNotified: !!parentEmail,
         parentEmail,
+        parentGcalEventId,
       })
     }
 

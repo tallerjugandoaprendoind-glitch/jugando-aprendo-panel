@@ -191,11 +191,90 @@ export async function POST(req: NextRequest) {
           .eq('id', appointmentId)
       }
 
+      // ── También crear evento en el Microsoft Calendar del PADRE ──
+      let parentMsEventId: string | null = null
+      if (appointment.childId) {
+        try {
+          const { data: child } = await supabaseAdmin
+            .from('children')
+            .select('parent_id')
+            .eq('id', appointment.childId)
+            .single()
+
+          if (child?.parent_id) {
+            const { data: parentProfile } = await supabaseAdmin
+              .from('profiles')
+              .select('microsoft_calendar_token, microsoft_calendar_refresh_token')
+              .eq('id', child.parent_id)
+              .single()
+
+            if (parentProfile?.microsoft_calendar_token) {
+              let parentToken = parentProfile.microsoft_calendar_token
+              try {
+                const rr = await fetch(
+                  `https://login.microsoftonline.com/${MS_TENANT}/oauth2/v2.0/token`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                      client_id:     MS_CLIENT_ID,
+                      client_secret: MS_CLIENT_SECRET,
+                      refresh_token: parentProfile.microsoft_calendar_refresh_token || '',
+                      grant_type:    'refresh_token',
+                      scope:         'Calendars.ReadWrite offline_access',
+                    }),
+                  }
+                )
+                if (rr.ok) {
+                  const rd = await rr.json()
+                  parentToken = rd.access_token
+                  await supabaseAdmin.from('profiles')
+                    .update({ microsoft_calendar_token: parentToken })
+                    .eq('id', child.parent_id)
+                }
+              } catch { /* use existing */ }
+
+              const parentEvent: any = {
+                subject: tituloEvento,
+                body: {
+                  contentType: 'HTML',
+                  content: `<b>${modality === 'virtual' ? '📹 Sesión Virtual' : '📍 Sesión Presencial'}</b><br/>Centro: Jugando Aprendo<br/>Paciente: ${nombrePaciente}${notes ? `<br/>📝 ${notes}` : ''}`,
+                },
+                start: { dateTime: startISO, timeZone: 'SA Pacific Standard Time' },
+                end:   { dateTime: endISO,   timeZone: 'SA Pacific Standard Time' },
+                isReminderOn: true,
+                reminderMinutesBeforeStart: 60,
+              }
+
+              const parentRes = await fetch(
+                'https://graph.microsoft.com/v1.0/me/events',
+                {
+                  method: 'POST',
+                  headers: { Authorization: `Bearer ${parentToken}`, 'Content-Type': 'application/json' },
+                  body: JSON.stringify(parentEvent),
+                }
+              )
+              if (parentRes.ok) {
+                const parentData = await parentRes.json()
+                parentMsEventId = parentData.id
+                if (appointmentId) {
+                  await supabaseAdmin
+                    .from('appointments')
+                    .update({ parent_microsoft_calendar_event_id: parentData.id })
+                    .eq('id', appointmentId)
+                }
+              }
+            }
+          }
+        } catch { /* no bloquear */ }
+      }
+
       return NextResponse.json({
         ok: true,
         eventId: msData.id,
         eventUrl: msData.webLink,
         parentNotified: !!parentEmail,
+        parentMsEventId,
       })
     }
 
