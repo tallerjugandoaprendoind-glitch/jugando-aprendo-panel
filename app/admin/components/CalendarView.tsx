@@ -259,49 +259,62 @@ function MonthlyCalendarView() {
             videoLink:         roomLink,
           }
 
-          // Google Calendar
+          // ── Sync calendarios ────────────────────────────────────────────
+          // Para grupal: sincronizar cada cita individualmente con su propio childId
+          // Para individual: una sola cita
           const gcalStatus = await fetch(`/api/google-calendar?action=status&userId=${calSession.user.id}`)
           const gcalData   = await gcalStatus.json()
-          if (gcalData.connected) {
-            const gcalRes = await fetch('/api/google-calendar', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action:        'sync-appointment',
-                userId:        calSession.user.id,
-                appointmentId: firstApt?.id,
-                appointment:   aptData,
-              }),
-            })
-            const gcalResult = await gcalRes.json()
-            if (gcalResult.ok) {
-              toast.success('📅 Cita añadida a Google Calendar')
-            } else {
-              console.error('Google Calendar sync error:', gcalResult.error)
+          const msStatus   = await fetch(`/api/microsoft-calendar?action=status&userId=${calSession.user.id}`)
+          const msData     = await msStatus.json()
+
+          // Construir lista de citas a sincronizar (una por participante en grupal)
+          const aptsToSync = tipoSesion === 'grupal'
+            ? savedApts.map((apt: any, i: number) => ({
+                id:      apt.id,
+                childId: selectedParticipants[i] || selectedParticipants[0] || null,
+                name:    ninos.find((n: any) => n.id === selectedParticipants[i])?.name || aptData.patientName,
+              }))
+            : [{ id: firstApt?.id, childId: childIdParaCalendario, name: aptData.patientName }]
+
+          let gcalSynced = 0
+          let msSynced   = 0
+
+          for (const aptSync of aptsToSync) {
+            const syncData = { ...aptData, childId: aptSync.childId, patientName: aptSync.name }
+
+            if (gcalData.connected) {
+              const gcalRes = await fetch('/api/google-calendar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  action:        'sync-appointment',
+                  userId:        calSession.user.id,
+                  appointmentId: aptSync.id,
+                  appointment:   syncData,
+                }),
+              })
+              const gcalResult = await gcalRes.json()
+              if (gcalResult.ok) gcalSynced++
+            }
+
+            if (msData.connected) {
+              const msRes = await fetch('/api/microsoft-calendar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  action:        'sync-appointment',
+                  userId:        calSession.user.id,
+                  appointmentId: aptSync.id,
+                  appointment:   syncData,
+                }),
+              })
+              const msResult = await msRes.json()
+              if (msResult.ok) msSynced++
             }
           }
 
-          // Microsoft Calendar
-          const msStatus = await fetch(`/api/microsoft-calendar?action=status&userId=${calSession.user.id}`)
-          const msData   = await msStatus.json()
-          if (msData.connected) {
-            const msRes = await fetch('/api/microsoft-calendar', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                action:        'sync-appointment',
-                userId:        calSession.user.id,
-                appointmentId: firstApt?.id,
-                appointment:   aptData,
-              }),
-            })
-            const msResult = await msRes.json()
-            if (msResult.ok) {
-              toast.success('📅 Cita añadida a Microsoft Calendar')
-            } else {
-              console.error('Microsoft Calendar sync error:', msResult.error)
-            }
-          }
+          if (gcalSynced > 0) toast.success(`📅 ${gcalSynced} cita${gcalSynced > 1 ? 's' : ''} añadida${gcalSynced > 1 ? 's' : ''} a Google Calendar`)
+          if (msSynced > 0)   toast.success(`📅 ${msSynced} cita${msSynced > 1 ? 's' : ''} añadida${msSynced > 1 ? 's' : ''} a Outlook Calendar`)
         }
       } catch (calError) {
         console.error('Calendar sync error:', calError)

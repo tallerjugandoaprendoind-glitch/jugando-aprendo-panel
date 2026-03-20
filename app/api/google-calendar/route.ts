@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
     const { action, userId, appointmentId, appointment } = body
 
     if (action === 'sync-appointment') {
+      console.log('[GCal] sync-appointment → appointmentId:', appointmentId, '| childId:', appointment?.childId)
       // Get user's Google token
       const { data: profile } = await supabaseAdmin
         .from('profiles')

@@ -78,6 +78,7 @@ export async function POST(req: NextRequest) {
     const { action, userId, appointmentId, appointment } = body
 
     if (action === 'sync-appointment') {
+      console.log('[MSCal] sync-appointment → appointmentId:', appointmentId, '| childId:', appointment?.childId)
       const { data: profile } = await supabaseAdmin
         .from('profiles')
         .select('microsoft_calendar_token, microsoft_calendar_refresh_token, microsoft_calendar_email')
