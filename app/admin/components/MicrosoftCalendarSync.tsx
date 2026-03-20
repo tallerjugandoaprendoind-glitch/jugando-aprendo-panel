@@ -63,38 +63,17 @@ export default function MicrosoftCalendarSync() {
     if (!userId) return
     setSyncing(true)
     try {
-      const today = new Date().toISOString().split('T')[0]
-      const { data: apts } = await (await import('@/lib/supabase')).supabase
-        .from('appointments')
-        .select('*, children(name)')
-        .gte('appointment_date', today)
-        .neq('status', 'cancelled')
-        .is('microsoft_calendar_event_id', null)
-        .limit(50)
-
-      let synced = 0
-      for (const apt of apts || []) {
-        const res = await fetch('/api/microsoft-calendar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'sync-appointment',
-            userId,
-            appointmentId: apt.id,
-            appointment: {
-              date:        apt.appointment_date,
-              time:        apt.appointment_time?.slice(0, 5),
-              childId:     apt.child_id,
-              patientName: apt.children?.name || 'Paciente',
-              serviceType: apt.service_type,
-              notes:       apt.notes,
-              modality:    apt.modalidad,
-            },
-          }),
-        })
-        if ((await res.json()).ok) synced++
+      const res  = await fetch('/api/microsoft-calendar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'sync-all', userId }),
+      })
+      const data = await res.json()
+      if (data.ok) {
+        toast.success(`✅ ${data.synced} cita${data.synced !== 1 ? 's' : ''} sincronizada${data.synced !== 1 ? 's' : ''} con Outlook`)
+      } else {
+        toast.error(data.error || 'Error al sincronizar')
       }
-      toast.success(`✅ ${synced} cita${synced !== 1 ? 's' : ''} sincronizada${synced !== 1 ? 's' : ''} con Outlook`)
     } catch (e: any) {
       toast.error('Error: ' + e.message)
     } finally {

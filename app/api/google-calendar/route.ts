@@ -228,8 +228,22 @@ export async function POST(req: NextRequest) {
       }
 
       // ── También crear evento en el Google Calendar del PADRE si está conectado ──
+      // Para sesiones grupales evitar duplicados: solo crear si no hay ya un parent_google_calendar_event_id
       let parentGcalEventId: string | null = null
-      if (appointment.childId) {
+      let skipParentSync = false
+      if (appointmentId) {
+        const { data: existingApt } = await supabaseAdmin
+          .from('appointments')
+          .select('parent_google_calendar_event_id')
+          .eq('id', appointmentId)
+          .single()
+        if (existingApt?.parent_google_calendar_event_id) {
+          skipParentSync = true
+          parentGcalEventId = existingApt.parent_google_calendar_event_id
+          console.log('[GCal] ⏭️ Padre ya tiene evento, saltando duplicado:', parentGcalEventId)
+        }
+      }
+      if (appointment.childId && !skipParentSync) {
         try {
           // Buscar el parent_id del niño
           const { data: child } = await supabaseAdmin

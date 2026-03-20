@@ -316,6 +316,53 @@ export async function POST(req: NextRequest) {
       })
     }
 
+    // ── Sincronizar TODAS las citas próximas a Microsoft Calendar ──────────
+    if (action === 'sync-all') {
+      const { data: profile } = await supabaseAdmin
+        .from('profiles')
+        .select('microsoft_calendar_token, microsoft_calendar_refresh_token')
+        .eq('id', userId)
+        .single()
+
+      if (!profile?.microsoft_calendar_token) {
+        return NextResponse.json({ ok: false, error: 'Microsoft Calendar not connected' })
+      }
+
+      const today = new Date().toISOString().split('T')[0]
+      const { data: apts } = await supabaseAdmin
+        .from('appointments')
+        .select('*, children(name)')
+        .gte('appointment_date', today)
+        .neq('status', 'cancelled')
+        .is('microsoft_calendar_event_id', null)
+        .limit(50)
+
+      let synced = 0
+      for (const apt of apts || []) {
+        const syncRes = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/microsoft-calendar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'sync-appointment',
+            userId,
+            appointmentId: apt.id,
+            appointment: {
+              date:        apt.appointment_date,
+              time:        apt.appointment_time?.slice(0, 5),
+              childId:     apt.child_id,
+              patientName: apt.children?.name || 'Paciente',
+              serviceType: apt.service_type,
+              notes:       apt.notes,
+              modality:    apt.modalidad,
+            },
+          }),
+        })
+        if ((await syncRes.json()).ok) synced++
+      }
+
+      return NextResponse.json({ ok: true, synced })
+    }
+
     // ── Borrar evento del calendario Outlook ───────────────────────────
     if (action === 'delete-event') {
       const { eventId } = body
