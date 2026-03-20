@@ -565,6 +565,22 @@ export default function KnowledgeBaseView() {
         </div>
       )}
 
+      {/* ══ TAB: CIE-11 / DSM-5 ══ */}
+      {tab === 'diagnosticos' && (
+        <div className="space-y-4">
+          <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">🏥</span>
+              <span className="font-bold text-violet-800 text-sm">Buscador de Diagnósticos — CIE-11 / DSM-5 / ICD-10</span>
+            </div>
+            <p className="text-xs text-violet-600">
+              Busca por nombre, código CIE-11 (ej: <b>6A02</b>), ICD-10 (ej: <b>F84</b>), DSM-5 o sinónimo. Haz clic en los códigos para copiarlos directamente.
+            </p>
+          </div>
+          <DiagnosticoBuscador />
+        </div>
+      )}
+
       {/* ══ TAB: BIBLIOTECA ══ */}
       {tab === 'biblioteca' && (
         <div className="space-y-4">
