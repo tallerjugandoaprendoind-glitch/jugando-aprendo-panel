@@ -149,18 +149,49 @@ export async function GET(req: NextRequest) {
       const d = await res.json()
       console.log('[CIE-11] ✅ Entity keys:', Object.keys(d).join(', '))
 
-      const children = (d.child || []).slice(0, 20).map((url: string) => {
-        const seg = url.split('/').pop() || ''
-        return {
-          id:    url,
-          code:  seg === 'other' ? 'Otro especificado' : seg === 'unspecified' ? 'Sin especificación' : seg,
-          title: '',
-        }
-      })
+      // Para los hijos: hacer fetch paralelo para obtener código y título reales
+      // Limitamos a 8 hijos para no sobrecargar
+      const childUrls = (d.child || []).slice(0, 8)
+      const children = await Promise.all(
+        childUrls.map(async (url: string) => {
+          const seg = url.split('/').pop() || ''
+          const isSpecial = seg === 'other' || seg === 'unspecified'
+          if (isSpecial) {
+            return {
+              id:    url.replace('http://', 'https://'),
+              code:  seg === 'other' ? 'Otro especificado' : 'Sin especificación',
+              title: seg === 'other' ? 'Otro trastorno especificado' : 'Sin especificación',
+            }
+          }
+          try {
+            const cr = await fetch(url.replace('http://', 'https://'), { headers: WHO_HEADERS(token), cache: 'no-store' })
+            if (!cr.ok) return { id: url.replace('http://', 'https://'), code: seg, title: '' }
+            const cd = await cr.json()
+            return {
+              id:    url.replace('http://', 'https://'),
+              code:  cd.code || seg,
+              title: txt(cd.title),
+            }
+          } catch {
+            return { id: url.replace('http://', 'https://'), code: seg, title: '' }
+          }
+        })
+      )
 
+      // Para el padre: también obtener código y título reales
       let parent: { id: string; code: string; title: string } | null = null
       if (d.parent?.[0]) {
-        parent = { id: d.parent[0], code: d.parent[0].split('/').pop() || '', title: '' }
+        try {
+          const pr = await fetch(d.parent[0].replace('http://', 'https://'), { headers: WHO_HEADERS(token), cache: 'no-store' })
+          if (pr.ok) {
+            const pd = await pr.json()
+            parent = { id: d.parent[0].replace('http://', 'https://'), code: pd.code || '', title: txt(pd.title) }
+          } else {
+            parent = { id: d.parent[0].replace('http://', 'https://'), code: d.parent[0].split('/').pop() || '', title: '' }
+          }
+        } catch {
+          parent = { id: d.parent[0].replace('http://', 'https://'), code: d.parent[0].split('/').pop() || '', title: '' }
+        }
       }
 
       return NextResponse.json({
