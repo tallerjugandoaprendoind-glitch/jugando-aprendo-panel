@@ -183,10 +183,10 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       )}
 
       {/* Filtros por área */}
-      <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex flex-wrap gap-2">
         {areas.map(area => (
           <button key={area} onClick={() => setFiltroArea(area)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
               filtroArea === area
                 ? 'bg-indigo-600 text-white border-indigo-600'
                 : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'

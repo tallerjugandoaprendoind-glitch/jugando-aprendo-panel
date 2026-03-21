@@ -1236,11 +1236,12 @@ function FormCard({ form, onStart, onSend, catInfo }: any) {
 }
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
-export default function EvaluacionesUnificadas() {
+export default function EvaluacionesUnificadas({ initialChildId, initialChildName }: { initialChildId?: string; initialChildName?: string } = {}) {
   const toast = useToast()
   const { t, locale } = useI18n()
   const [activeTab, setActiveTab] = useState<'biblioteca' | 'enviados' | 'historial'>('biblioteca')
   const [activeCategory, setActiveCategory] = useState('all')
+  const [selectedChild, setSelectedChild] = useState(initialChildId || '')
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedForm, setSelectedForm] = useState<any>(null)
   const [children, setChildren] = useState<any[]>([])
@@ -1251,6 +1252,7 @@ export default function EvaluacionesUnificadas() {
   const [expandedResponse, setExpandedResponse] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // initialChildId ya se usa como valor inicial del estado
   useEffect(() => {
     loadData()
   }, [])

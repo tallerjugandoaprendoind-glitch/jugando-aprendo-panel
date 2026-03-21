@@ -39,7 +39,7 @@ export default function PortalPadres({ childId, parentUserId, childName }: Porta
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
 
           {/* Tabs de navegación */}
-          <div className="flex border-b overflow-x-auto scrollbar-hide">
+          <div className="flex flex-wrap border-b">
             {tabs.map(t => (
               <button key={t.id} onClick={() => setTab(t.id as any)}
                 className={`flex-1 min-w-[70px] py-3 px-2 text-xs font-medium transition-colors flex flex-col items-center gap-1 ${

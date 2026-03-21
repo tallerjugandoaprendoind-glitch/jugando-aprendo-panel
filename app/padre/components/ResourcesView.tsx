@@ -130,14 +130,14 @@ export default function ResourcesView({ profile }: Props) {
           onChange={e => setSearchTerm(e.target.value)}
           className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-2xl text-sm font-medium outline-none focus:border-violet-400 transition-all shadow-sm"
         />
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-2">
           <button onClick={() => setFilterType('all')}
-            className={`shrink-0 px-4 py-2 rounded-full text-xs font-black border transition-all ${filterType === 'all' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
+            className={`px-4 py-2 rounded-full text-xs font-black border transition-all ${filterType === 'all' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
             Todos
           </button>
           {typeEntries.map(([key, cfg]) => (
             <button key={key} onClick={() => setFilterType(key)}
-              className={`shrink-0 px-4 py-2 rounded-full text-xs font-black border transition-all flex items-center gap-1.5 ${filterType === key ? `${cfg.bg} ${cfg.color} ${cfg.border}` : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
+              className={`px-4 py-2 rounded-full text-xs font-black border transition-all flex items-center gap-1.5 ${filterType === key ? `${cfg.bg} ${cfg.color} ${cfg.border}` : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
               <cfg.icon size={12}/> {cfg.label}
             </button>
           ))}

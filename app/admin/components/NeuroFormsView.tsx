@@ -625,18 +625,18 @@ export default function NeuroFormsView() {
           </div>
 
           {/* Category tabs */}
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-6 scrollbar-hide">
+          <div className="flex flex-wrap gap-2 mb-6">
             <button onClick={() => setActiveCategory('all')}
-              className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex-shrink-0 ${activeCategory === 'all' ? 'bg-slate-800 text-white' : 'bg-white border-2 border-slate-200 text-slate-600 hover:border-slate-400'}`}>
-              🗂️ Todos ({ALL_FORMS.length})
+              className={`px-3 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${activeCategory === 'all' ? 'bg-slate-800 text-white' : 'bg-white border-2 border-slate-200 text-slate-600 hover:border-slate-400'}`}>
+              🗂️ <span className="hidden sm:inline">Todos </span>({ALL_FORMS.length})
             </button>
             {Object.entries(FORM_CATEGORIES).map(([key, cat]) => {
               const count = ALL_FORMS.filter(f => f.category === key).length
               if (count === 0) return null
               return (
                 <button key={key} onClick={() => setActiveCategory(key)}
-                  className={`px-4 py-2.5 rounded-xl font-bold text-xs whitespace-nowrap transition-all flex-shrink-0 border-2 ${activeCategory === key ? `bg-gradient-to-r ${cat.color} text-white border-transparent shadow-lg` : `bg-white ${cat.border} ${cat.text} hover:bg-opacity-50`}`}>
-                  {cat.icon} {cat.label} ({count})
+                  className={`px-3 py-2 rounded-xl font-bold text-xs whitespace-nowrap transition-all border-2 ${activeCategory === key ? `bg-gradient-to-r ${cat.color} text-white border-transparent shadow-lg` : `bg-white ${cat.border} ${cat.text} hover:bg-opacity-50`}`}>
+                  {cat.icon} <span className="hidden sm:inline">{cat.label} </span><span className="sm:hidden">{cat.label.split(' ')[0]} </span>({count})
                 </button>
               )
             })}

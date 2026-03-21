@@ -81,7 +81,6 @@ export default function AdminDashboard() {
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio'),          roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'agenda',       icon: Calendar,        label: t('nav.agenda'),          roles: ['jefe','admin'] },
     { id: 'ninos',        icon: Users,           label: t('nav.pacientes'),       roles: ['jefe','admin','especialista','terapeuta'] },
-    { id: 'evaluaciones', icon: FileText,        label: t('nav.evaluaciones'),    roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'reportes',     icon: Brain,           label: t('nav.historial'),       roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'vadi',         icon: Sparkles,        label: t('nav.aria'),            roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'inteligencia', icon: Zap,             label: t('nav.hub'),             roles: ['jefe','admin','especialista'] },
@@ -101,12 +100,12 @@ export default function AdminDashboard() {
     { id: 'importar', icon: Upload, label: t('nav.importarCSV'), hidden: true },
   ]
   const PAGE_TITLES: Record<string, string> = {
-    inicio: t('dashboard.titulo'), agenda: t('nav.agenda'), ninos: t('nav.pacientes'),
-    evaluaciones: t('nav.evaluaciones'), reportes: t('nav.historial'),
-    recursos: t('nav.recursos'), mensajes: t('mensajes.titulo'),
-    usuarios: t('nav.usuarios'), importar: 'Importar CSV',
-    programas: t('nav.programas'), vadi: t('nav.aria'), cerebro: t('nav.cerebro'),
-    inteligencia: t('nav.hub'),
+    inicio: t('dashboard.titulo'), agenda: t('nav.agenda'),
+    ninos: t('nav.pacientes'),
+    reportes: t('nav.historial'), recursos: t('nav.recursos'),
+    mensajes: t('mensajes.titulo'), usuarios: t('nav.usuarios'),
+    importar: 'Importar CSV', vadi: t('nav.aria'),
+    cerebro: t('nav.cerebro'), inteligencia: t('nav.hub'),
   }
 
 
@@ -406,7 +405,7 @@ export default function AdminDashboard() {
               {currentView === 'inicio'       && <DashboardHome navigateTo={navigateTo} />}
               {currentView === 'agenda'       && <CalendarView />}
               {currentView === 'ninos'        && <PatientsView />}
-              {currentView === 'evaluaciones' && <EvaluacionesUnificadas />}
+              {/* evaluaciones integradas en PatientsView → tab Evaluaciones */}
               {currentView === 'reportes'     && <AIReportView onChildSelect={setSelectedChildReport} />}
               {currentView === 'recursos'     && <ResourcesManagementView />}
               {currentView === 'tienda'       && <StoreManagementView />}

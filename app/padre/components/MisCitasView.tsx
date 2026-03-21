@@ -279,7 +279,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         </div>
 
         {/* Status filter */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-2">
           {[
             { key: 'all', label: 'Todas' },
             { key: 'confirmed', label: '✅ Confirmadas' },
@@ -290,7 +290,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
             <button
               key={key}
               onClick={() => setStatusFilter(key)}
-              className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
                 statusFilter === key
                   ? 'bg-violet-600 text-white border-violet-600 shadow-lg shadow-violet-200'
                   : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'

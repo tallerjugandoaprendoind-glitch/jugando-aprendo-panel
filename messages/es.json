@@ -297,11 +297,17 @@
     "sesionABA2": "Sesión ABA",
     "sinRegistros": "No hay registros suficientes para generar un análisis.",
     "cargandoHist": "Cargando historial...",
-    "evalsAparecen": "Las evaluaciones aparecerán aquí al crearlas desde el módulo de Evaluaciones",
+    "evalsAparecen": "Las evaluaciones aparecerán aquí",
     "porNombre2": "📊 Por Nombre",
     "porEdad": "🎂 Por Edad",
     "nombreCompleto": "Nombre Completo",
-    "fechaNacimiento2": "Fecha Nacimiento"
+    "fechaNacimiento2": "Fecha Nacimiento",
+    "paciente": "paciente",
+    "seleccionaUno": "Selecciona un paciente",
+    "seleccionaDesc": "Elige un paciente de la lista para ver su ficha clínica completa",
+    "crear": "Crear paciente",
+    "creado": "Paciente creado correctamente",
+    "nombreRequerido": "El nombre es requerido"
   },
   "agenda": {
     "titulo": "Agenda y Citas",

@@ -611,12 +611,12 @@ export default function MisFormularios({ userId }: { userId: string }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+      <div className="flex flex-wrap gap-2">
         {TABS.map(tab => {
           const isActive = activeTab === tab.id
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`text-xs font-bold px-3.5 py-1.5 rounded-full border whitespace-nowrap flex-shrink-0 transition-all
+              className={`text-xs font-bold px-3.5 py-1.5 rounded-full border transition-all
                 ${isActive ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300 hover:text-blue-600'}`}>
               {tab.label}
             </button>

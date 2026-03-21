@@ -2,510 +2,439 @@
 
 import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
-
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
-  Activity, Baby, Calendar, ChevronRight, ClipboardList, Clock, Edit, Eye, FileText, Heart, Key, Loader2, Mail, Phone, Plus, Save, Search, Stethoscope, Ticket, Trash2, User, UserPlus, Users, X, Brain, Sparkles, BarChart3
+  ArrowLeft, Baby, BarChart3, Brain, Calendar, Check, ChevronRight,
+  ClipboardList, Edit, Loader2, Plus, Save, Search, Sparkles,
+  Stethoscope, User, Users, X
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
-import { InfoRow } from './shared'
 import { calcularEdad } from '../utils/helpers'
 import ProgramasABAView from './ProgramasABAView'
 import ARIAAgentChat from './ARIAAgentChat'
+import EvaluacionesUnificadas from './EvaluacionesUnificadas'
 
+// ── Color badge por diagnóstico ────────────────────────────────────────────
+const DX_MAP: Record<string, string> = {
+  'TEA':     'bg-purple-100 text-purple-700 border-purple-200',
+  'TDAH':    'bg-blue-100   text-blue-700   border-blue-200',
+  'Retraso': 'bg-amber-100  text-amber-700  border-amber-200',
+}
+const dxColor = (dx: string) => {
+  const k = Object.keys(DX_MAP).find(k => dx?.includes(k))
+  return k ? DX_MAP[k] : 'bg-slate-100 text-slate-600 border-slate-200'
+}
 
-// ── {t('pacientes.historiaEvaluaciones')} del paciente (mini view dentro de ficha) ────────
-function EvaluacionesHistorialPaciente({ childId, childName }: { childId: string; childName: string }) {
-  const { t, locale } = useI18n()
-  const [evaluaciones, setEvaluaciones] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const cargar = async () => {
-      setLoading(true)
-      try {
-        // Cargar desde múltiples tablas de evaluaciones
-        const { createClient } = await import('@supabase/supabase-js')
-        const sb = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
-        const [r1, r2, r3, r4] = await Promise.all([
-          sb.from('form_responses').select('id, form_title, form_type, ai_analysis, created_at').eq('child_id', childId).order('created_at', { ascending: false }).limit(15),
-          sb.from('anamnesis_completa').select('id, form_title, created_at').eq('child_id', childId).order('created_at', { ascending: false }).limit(5),
-          sb.from('registro_aba').select('id, form_title, fecha_sesion, created_at').eq('child_id', childId).order('fecha_sesion', { ascending: false }).limit(5),
-          sb.from('registro_entorno_hogar').select('id, form_title, created_at').eq('child_id', childId).order('created_at', { ascending: false }).limit(5),
-        ])
-        const all = [
-          ...(r1.data || []).map((e: any) => ({ ...e, tipo: e.form_type || 'evaluacion', fuente: '📋' })),
-          ...(r2.data || []).map((e: any) => ({ ...e, form_title: e.form_title || 'Anamnesis', tipo: 'anamnesis', fuente: '📄' })),
-          ...(r3.data || []).map((e: any) => ({ ...e, created_at: e.fecha_sesion || e.created_at, form_title: e.form_title || 'Sesión ABA', tipo: 'aba', fuente: '🎯' })),
-          ...(r4.data || []).map((e: any) => ({ ...e, form_title: e.form_title || 'Entorno Hogar', tipo: 'entorno', fuente: '🏠' })),
-        ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        setEvaluaciones(all)
-      } catch {}
-      setLoading(false)
-    }
-    cargar()
-  }, [childId])
-
-  if (loading) return <div className="flex items-center gap-2 py-8 justify-center text-slate-400" style={{ color: "var(--text-muted)" }}><Loader2 className="animate-spin" size={20}/> {t('pacientes.cargandoHist')}</div>
-
+// ── Avatar coloreado por inicial ───────────────────────────────────────────
+const PALETTES = [
+  'from-violet-500 to-purple-600', 'from-blue-500 to-indigo-600',
+  'from-emerald-500 to-teal-600',  'from-rose-500 to-pink-600',
+  'from-amber-500 to-orange-600',
+]
+function Avatar({ name, size = 'md' }: { name: string; size?: 'sm'|'md'|'lg' }) {
+  const pal = PALETTES[name.charCodeAt(0) % PALETTES.length]
+  const sz  = { sm: 'w-9 h-9 text-base', md: 'w-12 h-12 text-lg', lg: 'w-16 h-16 text-2xl' }[size]
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('pacientes.historiaEvaluaciones')} · {childName}</p>
-        <span className="text-[10px] bg-slate-100 px-2 py-1 rounded-full font-bold text-slate-500" style={{ color: "var(--text-muted)" }}>{evaluaciones.length} registros</span>
-      </div>
-      {evaluaciones.length === 0 ? (
-        <div className="py-8 text-center">
-          <ClipboardList className="mx-auto text-slate-200 mb-2" size={36}/>
-          <p className="text-slate-400 text-sm font-bold">{t('ui.no_evaluations')}</p>
-          <p className="text-slate-300 text-xs mt-1">{t('pacientes.evalsAparecen')}</p>
-        </div>
-      ) : evaluaciones.map((ev, i) => (
-        <div key={ev.id || i} className="bg-slate-50 rounded-xl p-3 border border-slate-100 flex items-start gap-3">
-          <span className="text-lg">{ev.fuente}</span>
-          <div className="flex-1 min-w-0">
-            <p className="font-bold text-slate-700 text-sm truncate">{ev.form_title}</p>
-            <p className="text-xs text-slate-400 mt-0.5">{ev.tipo} · {new Date(ev.created_at).toLocaleDateString(toBCP47(locale), { year: 'numeric', month: 'short', day: 'numeric' })}</p>
-            {ev.ai_analysis && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{typeof ev.ai_analysis === 'string' ? ev.ai_analysis.slice(0, 120) + '...' : ''}</p>}
-          </div>
-        </div>
-      ))}
+    <div className={`bg-gradient-to-br ${pal} ${sz} rounded-2xl flex items-center justify-center font-black text-white flex-shrink-0 shadow-sm`}>
+      {name.charAt(0).toUpperCase()}
     </div>
   )
 }
 
-function PatientsView() {
-    const { t, locale } = useI18n()
-    const [listaNinos, setListaNinos] = useState<any[]>([])
-    const [listaNinosFiltrada, setListaNinosFiltrada] = useState<any[]>([])
-    const [isLoading, setIsLoading] = useState(true)
-    const [searchTerm, setSearchTerm] = useState('')
-    const [filterDiagnosis, setFilterDiagnosis] = useState('todos')
-    const [sortBy, setSortBy] = useState('nombre')
-    const [ultimasSesiones, setUltimasSesiones] = useState<Record<string, string>>({})
-    const [patientTab, setPatientTab] = useState<'info' | 'programas' | 'vadi' | 'evaluaciones'>('info')
-
-    const [selectedPatient, setSelectedPatient] = useState<any>(null)
-    const [showPatientModal, setShowPatientModal] = useState(false)
-    const [isEditing, setIsEditing] = useState(false)
-    const [isSaving, setIsSaving] = useState(false)
-
-    const [editForm, setEditForm] = useState({
-        name: '',
-        birth_date: '',
-        diagnosis: '',
-        age: 0
-    })
-
-    useEffect(() => { 
-        cargarPacientes()
-    }, [])
-
-    const cargarPacientes = async () => {
-        setIsLoading(true)
-        const { data } = await supabase
-            .from('children')
-            .select('*')
-            .order('created_at', { ascending: false })
-        
-        if (data) {
-            setListaNinos(data)
-            setListaNinosFiltrada(data)
-            // Cargar última sesión de cada paciente
-            const { data: sesiones } = await supabase
-                .from('aba_sessions_v2')
-                .select('child_id, session_date')
-                .order('session_date', { ascending: false })
-            if (sesiones) {
-                const map: Record<string, string> = {}
-                sesiones.forEach((s: any) => {
-                    if (!map[s.child_id]) map[s.child_id] = s.session_date
-                })
-                setUltimasSesiones(map)
-            }
-        }
-        setIsLoading(false)
-    }
-
-    // Calcula días desde última sesión
-    const diasSinSesion = (childId: string): number | null => {
-        const fecha = ultimasSesiones[childId]
-        if (!fecha) return null
-        const diff = (Date.now() - new Date(fecha).getTime()) / (1000 * 60 * 60 * 24)
-        return Math.floor(diff)
-    }
-
-    const alertaColor = (dias: number | null) => {
-        if (dias === null) return { bg: 'bg-slate-100', text: 'text-slate-500', label: t('pacientes.sinSesiones') }
-        if (dias <= 14) return { bg: 'bg-emerald-100', text: 'text-emerald-700', label: `Hace ${dias}d` }
-        if (dias <= 30) return { bg: 'bg-amber-100', text: 'text-amber-700', label: `Hace ${dias}d ⚠️` }
-        return { bg: 'bg-red-100', text: 'text-red-700', label: `Hace ${dias}d 🚨` }
-    }
-
-    const calcularEdadDesdeString = (birthDate: string): number => {
-        if (!birthDate) return 0
-        const today = new Date()
-        const birth = new Date(birthDate)
-        let age = today.getFullYear() - birth.getFullYear()
-        const monthDiff = today.getMonth() - birth.getMonth()
-        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-            age--
-        }
-        return age > 0 ? age : 0
-    }
-
-    const handleBirthDateChange = (newBirthDate: string) => {
-        const edad = calcularEdadDesdeString(newBirthDate)
-        setEditForm({
-            ...editForm, 
-            birth_date: newBirthDate,
-            age: edad
-        })
-    }
-
-    useEffect(() => {
-        let resultado = [...listaNinos]
-        if (searchTerm) {
-            resultado = resultado.filter(nino => nino.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        }
-        if (filterDiagnosis !== 'todos') {
-            resultado = resultado.filter(nino => nino.diagnosis === filterDiagnosis)
-        }
-        resultado.sort((a, b) => {
-            if (sortBy === 'nombre') return a.name.localeCompare(b.name)
-            if (sortBy === 'edad') return (b.age || 0) - (a.age || 0)
-            if (sortBy === 'reciente') return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-            return 0
-        })
-        setListaNinosFiltrada(resultado)
-    }, [searchTerm, filterDiagnosis, sortBy, listaNinos])
-
-    const diagnosticosUnicos = ['todos', ...new Set(listaNinos.map(n => n.diagnosis).filter(Boolean))]
-
-    const verDetallePaciente = (paciente: any) => {
-        setSelectedPatient(paciente)
-        setIsEditing(false)
-        setShowPatientModal(true)
-    }
-
-    const activarEdicion = () => {
-        const edad = calcularEdadDesdeString(selectedPatient.birth_date)
-        setEditForm({
-            name: selectedPatient.name || '',
-            birth_date: selectedPatient.birth_date || '',
-            diagnosis: selectedPatient.diagnosis || '',
-            age: edad
-        })
-        setIsEditing(true)
-    }
-
-    const guardarCambios = async () => {
-        if (!editForm.name.trim()) return alert("❌ Nombre obligatorio");
-        if (!editForm.birth_date) return alert("❌ Fecha obligatoria");
-
-        setIsSaving(true);
-
-        try {
-            const fechaNac = new Date(editForm.birth_date);
-            const hoy = new Date();
-            let edad = hoy.getFullYear() - fechaNac.getFullYear();
-            const m = hoy.getMonth() - fechaNac.getMonth();
-            if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) {
-                edad--;
-            }
-            edad = Math.max(0, edad);
-            const { data, error } = await supabase
-                .from('children')
-                .update({
-                    name: editForm.name.trim(),
-                    birth_date: editForm.birth_date,
-                    age: edad,
-                    diagnosis: editForm.diagnosis,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', selectedPatient.id)
-                .select();
-            if (error) {
-                alert(`❌ ERROR: ${error.message}`);
-            } else if (!data || data.length === 0) {
-                alert("⚠️ No se actualizó ningún registro. Verifica los permisos.");
-            } else {
-                alert(`✅ Guardado correctamente. Edad: ${edad} años.`);
-                await cargarPacientes();
-                setIsEditing(false);
-                setShowPatientModal(false);
-            }
-
-        } catch (e: any) {
-            alert("❌ Error: " + e.message);
-        } finally {
-            setIsSaving(false);
-        }
-    }
-
-    return (
-        <div className="rounded-3xl md:rounded-[2.5rem] shadow-sm overflow-hidden h-full flex flex-col animate-fade-in-up" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-            <div className="p-4 md:p-6 lg:p-8 border-b sticky top-0 z-10 space-y-4" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div>
-                        <h3 className="font-bold text-xl md:text-2xl text-slate-800 flex items-center gap-3">
-                            <Users className="text-blue-600" size={28}/> Directorio de Pacientes
-                        </h3>
-                        <p className="text-slate-400 text-xs md:text-sm mt-1">{listaNinosFiltrada.length} de {listaNinos.length} pacientes</p>
-                    </div>
-                    <button onClick={cargarPacientes} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-sm text-slate-600 transition-all flex items-center gap-2">
-                        <Activity size={16}/> Actualizar
-                    </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
-                    <div className="md:col-span-5 relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18}/>
-                        <input type="text" {...{placeholder: t('ui.search_patient')}} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-blue-500 focus:bg-white transition-all"/>
-                        {searchTerm && <button onClick={() => setSearchTerm('')} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-full"><X size={16} className="text-slate-400"/></button>}
-                    </div>
-                    <div className="md:col-span-4">
-                        <select value={filterDiagnosis} onChange={(e) => setFilterDiagnosis(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-purple-500 focus:bg-white transition-all font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>
-                            {diagnosticosUnicos.map(diag => <option key={diag} value={diag}>{diag === 'todos' ? '🔍 Todos' : `📋 ${diag}`}</option>)}
-                        </select>
-                    </div>
-                    <div className="md:col-span-3">
-                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm outline-none focus:border-green-500 focus:bg-white transition-all font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>
-                            <option value="nombre">{t('pacientes.porNombre2')}</option>
-                            <option value="edad">{t('pacientes.porEdad')}</option>
-                            <option value="reciente">{t('ui.most_recent')}</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto">
-                {isLoading ? (
-                    <div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-blue-500 mb-4" size={48} /><p className="text-slate-400 font-bold">{t('common.cargando')}</p></div>
-                ) : listaNinosFiltrada.length === 0 ? (
-                    <div className="p-20 text-center"><Users className="mx-auto text-slate-200 mb-4" size={64}/><p className="text-slate-400 font-bold text-lg">{t('ui.no_patients')}</p></div>
-                ) : (
-                    <>
-                        <div className="md:hidden p-4 space-y-3">
-                            {listaNinosFiltrada.map((nino) => (
-                                <div key={nino.id} onClick={() => verDetallePaciente(nino)} className="bg-white border-2 border-slate-200 rounded-2xl p-5 hover:border-blue-400 hover:shadow-lg transition-all cursor-pointer">
-                                    <div className="flex items-center gap-3 mb-3">
-                                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-lg">{nino.name.charAt(0)}</div>
-                                        <div className="flex-1"><h4 className="font-black text-slate-800 text-base">{nino.name}</h4></div>
-                                        <ChevronRight size={20} className="text-slate-300"/>
-                                    </div>
-                                    <div className="flex items-center justify-between">
-                                        <span className="px-3 py-1.5 rounded-lg bg-purple-50 text-purple-600 font-bold text-xs border border-purple-100">{nino.diagnosis || t('pacientes.enEvaluacion')}</span>
-                                        <span className="px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-black text-xs">
-                                            {nino.age ? `${nino.age}a` : "N/A"}
-                                        </span>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        <table className="hidden md:table w-full text-left border-collapse">
-                            <thead className="bg-slate-50 sticky top-0 z-10">
-                                <tr className="text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">
-                                    <th className="p-4 lg:p-6 lg:pl-10">{t('agenda.paciente')}</th>
-                                    <th className="p-4 lg:p-6">{t('common.anos')}</th>
-                                    <th className="p-4 lg:p-6">{t('pacientes.diagnostico')}</th>
-                                    <th className="p-4 lg:p-6">{t('pacientes.ultimaSesion')}</th>
-                                    <th className="p-4 lg:p-6 text-right lg:pr-10">{t('common.acciones')}</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-50">
-                                {listaNinosFiltrada.map((nino) => (
-                                    <tr key={nino.id} className="hover:bg-blue-50/30 transition-colors group">
-                                        <td className="p-4 lg:p-6 lg:pl-10">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-md">{nino.name.charAt(0)}</div>
-                                                <span className="font-black text-slate-700 text-base">{nino.name}</span>
-                                            </div>
-                                        </td>
-                                        <td className="p-4 lg:p-6">
-                                            <span className="font-black text-slate-700" style={{ color: "var(--text-secondary)" }}>
-                                                {nino.age ? `${nino.age} años` : "N/A"}
-                                            </span>
-                                        </td>
-                                        <td className="p-4 lg:p-6"><span className="px-4 py-2 rounded-xl text-xs font-black bg-purple-50 text-purple-600 border border-purple-100 inline-block">{nino.diagnosis || t('pacientes.enEvaluacion')}</span></td>
-                                        <td className="p-4 lg:p-6">
-                                            {(() => {
-                                                const dias = diasSinSesion(nino.id)
-                                                const cfg = alertaColor(dias)
-                                                return (
-                                                    <span className={`px-3 py-1.5 rounded-xl text-xs font-black ${cfg.bg} ${cfg.text} inline-block`}>
-                                                        {cfg.label}
-                                                    </span>
-                                                )
-                                            })()}
-                                        </td>
-                                        <td className="p-4 lg:p-6 text-right lg:pr-10">
-                                            <div className="flex items-center justify-end gap-2">
-                                              <button onClick={() => { verDetallePaciente(nino); setPatientTab('programas') }} className="px-3 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5"><BarChart3 size={13}/> Programas</button>
-                                              <button onClick={() => verDetallePaciente(nino)} className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all inline-flex items-center gap-2 shadow-md hover:shadow-lg"><Eye size={14}/> Ver</button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </>
-                )}
-            </div>
-
-            {showPatientModal && selectedPatient && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-                    <div className="rounded-3xl max-w-5xl w-full max-h-[95vh] overflow-y-auto shadow-2xl animate-scale-in" style={{ background: "var(--card)" }}>
-                        <div className={`p-6 text-white transition-colors ${isEditing ? 'bg-gradient-to-r from-orange-500 to-red-500' : 'bg-gradient-to-r from-blue-600 to-blue-700'}`}>
-                            <div className="flex justify-between items-start">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center text-3xl font-black backdrop-blur-sm">
-                                        {isEditing ? <Edit size={32}/> : selectedPatient.name.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <h3 className="text-2xl font-black">{isEditing ? 'Editar Paciente' : selectedPatient.name}</h3>
-                                        <p className="text-white/80 text-sm font-bold">{selectedPatient.diagnosis || "Diagnóstico pendiente"}</p>
-                                        {!isEditing && selectedPatient.age && (
-                                          <p className="text-white/60 text-xs mt-0.5">{selectedPatient.age} años</p>
-                                        )}
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {!isEditing && patientTab !== 'programas' && (
-                                    <button
-                                      onClick={() => setPatientTab('programas')}
-                                      className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5"
-                                    >
-                                      <Activity size={13}/> Ver programas
-                                    </button>
-                                  )}
-                                  <button onClick={() => {setShowPatientModal(false); setIsEditing(false)}} className="p-2 hover:bg-white/20 rounded-xl transition-colors"><X size={24}/></button>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="p-6 space-y-4">
-                            {/* Tabs */}
-                            {!isEditing && (
-                              <div className="flex gap-2 mb-4 border-b border-slate-100 pb-4">
-                                {[
-                                  { id: 'info', label: '📋 Info', icon: User },
-                                  { id: 'programas', label: '📈 Programas ABA', icon: Activity },
-                                  { id: 'evaluaciones', label: '📝 Evaluaciones', icon: ClipboardList },
-                                  { id: 'vadi', label: '🤖 ARIA', icon: Brain },
-                                ].map(tab => (
-                                  <button key={tab.id} onClick={() => setPatientTab(tab.id as any)}
-                                    className={`px-4 py-2.5 rounded-xl text-xs font-black transition-all border ${
-                                      patientTab === tab.id
-                                        ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
-                                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-blue-300 hover:text-blue-600'
-                                    }`}>
-                                    {tab.label}
-                                  </button>
-                                ))}
-                              </div>
-                            )}
-                            {!isEditing && patientTab === 'info' && (
-                                <>
-                                    <InfoRow label={t('pacientes.fechaNacimiento')} value={selectedPatient.birth_date ? new Date(selectedPatient.birth_date).toLocaleDateString(toBCP47(locale)) : t('pacientes.noRegistrada')} icon={<Calendar size={16}/>}/>
-                                    <InfoRow label="Edad" value={selectedPatient.age ? `${selectedPatient.age} años` : "No disponible"} icon={<Baby size={16}/>}/>
-                                    <InfoRow label={t('pacientes.diagnostico')} value={selectedPatient.diagnosis || t('pacientes.enEvaluacion')} icon={<Stethoscope size={16}/>}/>
-                                </>
-                            )}
-                            {!isEditing && patientTab === 'programas' && (
-                              <ProgramasABAView
-                                childId={selectedPatient.id}
-                                childName={selectedPatient.name}
-                              />
-                            )}
-                            {!isEditing && patientTab === 'evaluaciones' && (
-                              <EvaluacionesHistorialPaciente childId={selectedPatient.id} childName={selectedPatient.name} />
-                            )}
-                            {!isEditing && patientTab === 'vadi' && (
-                              <ARIAAgentChat
-                                userId={selectedPatient.id}
-                                childId={selectedPatient.id}
-                                childName={selectedPatient.name}
-                                contexto="paciente"
-                                compact
-                              />
-                            )}
-                            {isEditing && (
-                                <div className="space-y-4 animate-fade-in">
-                                    <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('pacientes.nombreCompleto')}</label>
-                                        <input 
-                                            type="text" 
-                                            value={editForm.name} 
-                                            onChange={e => setEditForm({...editForm, name: e.target.value})} 
-                                            className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-blue-500"
-                                        />
-                                    </div>
-                                    
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('pacientes.fechaNacimiento2')}</label>
-                                            <input 
-                                                type="date" 
-                                                value={editForm.birth_date} 
-                                                onChange={e => handleBirthDateChange(e.target.value)} 
-                                                className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-blue-500"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Edad (auto)</label>
-                                            <div className="w-full p-4 bg-green-50 border-2 border-green-200 rounded-xl font-black text-green-700 flex items-center justify-center">
-                                                {editForm.age > 0 ? `${editForm.age} años` : 'Sin edad'}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">{t('pacientes.diagnostico')}</label>
-                                        <select 
-                                            value={editForm.diagnosis} 
-                                            onChange={e => setEditForm({...editForm, diagnosis: e.target.value})} 
-                                            className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl font-bold text-slate-700 outline-none focus:border-blue-500"
-                                        >
-                                            <option value="">{t('ui.select_option')}</option>
-                                            {diagnosticosUnicos.filter(d => d !== 'todos').map(d => <option key={d} value={d}>{d}</option>)}
-                                            <option value="TEA">TEA</option>
-                                            <option value="TDAH">TDAH</option>
-                                            <option value="Retraso del lenguaje">{t('ui.language_delay')}</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="p-6 border-t flex gap-3" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
-                            {!isEditing ? (
-                                <>
-                                    <button onClick={() => setShowPatientModal(false)} className="flex-1 px-6 py-3 rounded-xl font-bold transition-all hover:opacity-80" style={{ background: "var(--muted-bg)", border: "2px solid var(--card-border)", color: "var(--text-primary)" }}>{t('common.cerrar')}</button>
-                                    <button onClick={activarEdicion} className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2">
-                                        <Edit size={18}/> {t('common.editar')}
-                                    </button>
-                                </>
-                            ) : (
-                                <>
-                                    <button onClick={() => setIsEditing(false)} disabled={isSaving} className="flex-1 px-6 py-3 bg-slate-200 hover:bg-slate-300 rounded-xl font-bold text-slate-700 transition-all disabled:opacity-50">{t('common.cancelar')}</button>
-                                    <button onClick={guardarCambios} disabled={isSaving} className="flex-1 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition-all flex items-center justify-center gap-2 disabled:opacity-50">
-                                        {isSaving ? <Loader2 className="animate-spin" size={18}/> : <Save size={18}/>}
-                                        {isSaving ? 'Guardando...' : 'Guardar'}
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
-    )
+// ── InfoPill ──────────────────────────────────────────────────────────────
+function InfoPill({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) {
+  return (
+    <div className="p-3 rounded-xl space-y-1" style={{ background: 'var(--muted-bg)' }}>
+      <div className="flex items-center gap-1.5">
+        <span className="text-blue-500">{icon}</span>
+        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{label}</p>
+      </div>
+      <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>{value || '—'}</p>
+    </div>
+  )
 }
 
-export default PatientsView
+// ── Tab Info del paciente ──────────────────────────────────────────────────
+function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
+  const { t, locale } = useI18n()
+  const toast = useToast()
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving]   = useState(false)
+  const [form, setForm] = useState({
+    name: nino.name, birth_date: nino.birth_date || '',
+    diagnosis: nino.diagnosis || '', age: nino.age || '',
+  })
+
+  useEffect(() => {
+    setForm({ name: nino.name, birth_date: nino.birth_date || '', diagnosis: nino.diagnosis || '', age: nino.age || '' })
+    setEditing(false)
+  }, [nino.id])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const edad = form.birth_date ? calcularEdad(form.birth_date) : (parseInt(String(form.age)) || null)
+      const { error } = await supabase.from('children').update({
+        name: form.name.trim(), birth_date: form.birth_date || null,
+        diagnosis: form.diagnosis.trim() || null, age: edad,
+      }).eq('id', nino.id)
+      if (error) throw error
+      toast.success(t('common.exitoGuardado'))
+      setEditing(false); onSaved()
+    } catch (e: any) { toast.error(e.message) }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className="p-4 md:p-6 max-w-lg space-y-4">
+      {/* Avatar + nombre */}
+      <div className="flex items-start gap-4">
+        <Avatar name={nino.name} size="lg"/>
+        <div className="flex-1 min-w-0">
+          {editing
+            ? <input value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))}
+                className="w-full text-xl font-black border-b-2 border-blue-400 bg-transparent outline-none pb-1"
+                style={{ color: 'var(--text-primary)' }}/>
+            : <h2 className="text-xl font-black truncate" style={{ color: 'var(--text-primary)' }}>{nino.name}</h2>
+          }
+          <div className="flex flex-wrap items-center gap-2 mt-1">
+            {editing
+              ? <input value={form.diagnosis} onChange={e => setForm(f=>({...f,diagnosis:e.target.value}))}
+                  placeholder={t('pacientes.diagnostico')}
+                  className="text-sm border rounded-lg px-2 py-1 outline-none"
+                  style={{ borderColor:'var(--card-border)', color:'var(--text-primary)', background:'var(--card)' }}/>
+              : <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${dxColor(nino.diagnosis)}`}>
+                  {nino.diagnosis || t('pacientes.sinDiagnostico')}
+                </span>
+            }
+            {nino.age && <span className="text-xs" style={{ color:'var(--text-muted)' }}>{nino.age} {t('common.anos')}</span>}
+          </div>
+        </div>
+        {/* Botón editar / guardar */}
+        {editing
+          ? <div className="flex gap-2 flex-shrink-0">
+              <button onClick={()=>setEditing(false)} className="p-2 rounded-xl border" style={{ borderColor:'var(--card-border)' }}>
+                <X size={15} style={{ color:'var(--text-muted)' }}/>
+              </button>
+              <button onClick={handleSave} disabled={saving}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold">
+                {saving ? <Loader2 size={13} className="animate-spin"/> : <Save size={13}/>}
+                {t('common.guardar')}
+              </button>
+            </div>
+          : <button onClick={()=>setEditing(true)} className="p-2 rounded-xl border flex-shrink-0"
+              style={{ borderColor:'var(--card-border)' }}>
+              <Edit size={15} style={{ color:'var(--text-muted)' }}/>
+            </button>
+        }
+      </div>
+
+      {/* Grid de datos */}
+      {!editing
+        ? <div className="grid grid-cols-2 gap-2">
+            <InfoPill label={t('pacientes.fechaNacimiento')}
+              value={nino.birth_date ? new Date(nino.birth_date).toLocaleDateString(toBCP47(locale)) : '—'}
+              icon={<Calendar size={13}/>}/>
+            <InfoPill label={t('common.edad')}
+              value={nino.age ? `${nino.age} ${t('common.anos')}` : '—'}
+              icon={<Baby size={13}/>}/>
+            <InfoPill label={t('pacientes.diagnostico')} value={nino.diagnosis||'—'} icon={<Stethoscope size={13}/>}/>
+            <InfoPill label="ID" value={nino.id?.slice(0,8)+'...'} icon={<User size={13}/>}/>
+          </div>
+        : <div className="space-y-3">
+            <div>
+              <label className="block text-xs font-black uppercase tracking-widest mb-1.5" style={{ color:'var(--text-muted)' }}>
+                {t('pacientes.fechaNacimiento')}
+              </label>
+              <input type="date" value={form.birth_date}
+                onChange={e=>setForm(f=>({...f,birth_date:e.target.value}))}
+                className="w-full px-3 py-2.5 rounded-xl text-sm border outline-none"
+                style={{ borderColor:'var(--card-border)', color:'var(--text-primary)', background:'var(--muted-bg)' }}/>
+            </div>
+          </div>
+      }
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL — Layout adaptativo móvil / desktop
+// ═══════════════════════════════════════════════════════════════════════════
+export default function PatientsView() {
+  const { t } = useI18n()
+  const toast  = useToast()
+
+  const [pacientes, setPacientes] = useState<any[]>([])
+  const [filtrados, setFiltrados] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [search, setSearch] = useState('')
+
+  // En móvil: 'list' | 'detail'. En desktop ambos visibles.
+  const [mobileView, setMobileView] = useState<'list'|'detail'>('list')
+  const [selected, setSelected] = useState<any>(null)
+  const [tab, setTab] = useState<'info'|'programas'|'evaluaciones'|'aria'>('info')
+
+  // Nuevo paciente
+  const [showNew, setShowNew] = useState(false)
+  const [newForm, setNewForm] = useState({ name:'', birth_date:'', diagnosis:'' })
+  const [saving, setSaving] = useState(false)
+
+  // ── Cargar ────────────────────────────────────────────────────────────────
+  const cargar = useCallback(async () => {
+    setIsLoading(true)
+    const { data } = await supabase.from('children').select('*').order('name', { ascending: true })
+    if (data) { setPacientes(data); setFiltrados(data) }
+    setIsLoading(false)
+  }, [])
+
+  useEffect(() => { cargar() }, [cargar])
+
+  // ── Filtrar ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!search.trim()) { setFiltrados(pacientes); return }
+    const q = search.toLowerCase()
+    setFiltrados(pacientes.filter(p => p.name?.toLowerCase().includes(q) || p.diagnosis?.toLowerCase().includes(q)))
+  }, [search, pacientes])
+
+  // ── Seleccionar paciente ──────────────────────────────────────────────────
+  const selectPatient = (p: any) => {
+    setSelected(p); setTab('info')
+    setMobileView('detail')   // en móvil ir a la ficha
+  }
+
+  // ── Volver a la lista (solo móvil) ────────────────────────────────────────
+  const goBack = () => { setMobileView('list'); setSelected(null) }
+
+  // ── Crear nuevo ───────────────────────────────────────────────────────────
+  const handleCreate = async () => {
+    if (!newForm.name.trim()) { toast.error(t('pacientes.nombreRequerido')); return }
+    setSaving(true)
+    try {
+      const { data, error } = await supabase.from('children').insert({
+        name: newForm.name.trim(),
+        birth_date: newForm.birth_date || null,
+        diagnosis: newForm.diagnosis.trim() || null,
+      }).select().single()
+      if (error) throw error
+      toast.success(t('pacientes.creado'))
+      setNewForm({ name:'', birth_date:'', diagnosis:'' })
+      setShowNew(false)
+      await cargar()
+      if (data) selectPatient(data)
+    } catch (e: any) { toast.error(e.message) }
+    finally { setSaving(false) }
+  }
+
+  // ── Tabs ──────────────────────────────────────────────────────────────────
+  const TABS = [
+    { id:'info',         icon:<User size={14}/>,          label: t('pacientes.informacion') },
+    { id:'programas',    icon:<BarChart3 size={14}/>,     label: t('nav.programas') },
+    { id:'evaluaciones', icon:<ClipboardList size={14}/>, label: t('nav.evaluaciones') },
+    { id:'aria',         icon:<Sparkles size={14}/>,      label: 'ARIA' },
+  ] as const
+
+  // ── PANEL LISTA ───────────────────────────────────────────────────────────
+  const ListPanel = (
+    <div
+      className={`
+        flex flex-col bg-white dark:bg-slate-900 overflow-hidden
+        /* móvil: ocupa todo si no hay detalle */
+        ${mobileView === 'detail' ? 'hidden' : 'flex'}
+        /* desktop: columna fija al lado */
+        md:flex md:w-64 xl:w-72 md:flex-shrink-0 md:border-r
+        h-full
+      `}
+      style={{ borderColor:'var(--card-border)', background:'var(--card)' }}
+    >
+      {/* Header */}
+      <div className="p-3 border-b space-y-2 flex-shrink-0" style={{ borderColor:'var(--card-border)' }}>
+        <div className="flex items-center justify-between">
+          <h2 className="text-xs font-black uppercase tracking-widest" style={{ color:'var(--text-muted)' }}>
+            {t('nav.pacientes')} · <span className="font-normal">{filtrados.length}</span>
+          </h2>
+          <button onClick={()=>setShowNew(true)}
+            className="w-7 h-7 rounded-lg bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition-all shadow-sm">
+            <Plus size={14} className="text-white"/>
+          </button>
+        </div>
+        <div className="relative">
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color:'var(--text-muted)' }}/>
+          <input value={search} onChange={e=>setSearch(e.target.value)}
+            placeholder={t('ui.search_patient')}
+            className="w-full pl-8 pr-3 py-2 rounded-xl text-xs outline-none border"
+            style={{ background:'var(--muted-bg)', borderColor:'var(--card-border)', color:'var(--text-primary)' }}/>
+        </div>
+      </div>
+
+      {/* Lista */}
+      <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+        {isLoading
+          ? <div className="flex justify-center py-12"><Loader2 className="animate-spin" size={20} style={{ color:'var(--text-muted)' }}/></div>
+          : filtrados.length === 0
+            ? <div className="py-12 text-center">
+                <Users className="mx-auto mb-2" size={32} style={{ color:'var(--text-muted)', opacity:0.3 }}/>
+                <p className="text-xs font-bold" style={{ color:'var(--text-muted)' }}>
+                  {search ? t('ui.sinResultados') : t('pacientes.sinPacientes')}
+                </p>
+              </div>
+            : filtrados.map(p => (
+                <button key={p.id} onClick={()=>selectPatient(p)}
+                  className={`w-full text-left flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all border
+                    ${selected?.id===p.id
+                      ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/30'
+                      : 'border-transparent hover:bg-slate-50 dark:hover:bg-slate-800'}`}>
+                  <Avatar name={p.name} size="sm"/>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate" style={{ color:'var(--text-primary)' }}>{p.name}</p>
+                    <p className="text-[11px] truncate" style={{ color:'var(--text-muted)' }}>
+                      {p.diagnosis || t('pacientes.sinDiagnostico')} · {p.age || '?'}{t('common.anos')}
+                    </p>
+                  </div>
+                  {selected?.id===p.id
+                    ? <Check size={13} className="text-blue-500 flex-shrink-0"/>
+                    : <ChevronRight size={13} className="flex-shrink-0 opacity-30"/>}
+                </button>
+              ))
+        }
+      </div>
+    </div>
+  )
+
+  // ── PANEL DETALLE ─────────────────────────────────────────────────────────
+  const DetailPanel = (
+    <div
+      className={`
+        flex-1 flex flex-col overflow-hidden
+        ${mobileView === 'list' ? 'hidden' : 'flex'}
+        md:flex
+      `}
+    >
+      {selected ? (
+        <>
+          {/* Header paciente */}
+          <div className="flex-shrink-0 border-b" style={{ borderColor:'var(--card-border)', background:'var(--card)' }}>
+            <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+              {/* Botón volver — solo móvil */}
+              <button onClick={goBack}
+                className="md:hidden p-2 -ml-1 rounded-xl hover:bg-slate-100 transition-all flex-shrink-0">
+                <ArrowLeft size={18} style={{ color:'var(--text-primary)' }}/>
+              </button>
+              <Avatar name={selected.name} size="md"/>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-lg font-black truncate leading-tight" style={{ color:'var(--text-primary)' }}>
+                  {selected.name}
+                </h1>
+                <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${dxColor(selected.diagnosis)}`}>
+                    {selected.diagnosis || t('pacientes.sinDiagnostico')}
+                  </span>
+                  {selected.age &&
+                    <span className="text-xs" style={{ color:'var(--text-muted)' }}>
+                      {selected.age} {t('common.anos')}
+                    </span>}
+                </div>
+              </div>
+            </div>
+
+            {/* Tabs — scroll horizontal en móvil */}
+            <div className="flex overflow-x-auto scrollbar-hide px-2">
+              {TABS.map(tb => (
+                <button key={tb.id} onClick={()=>setTab(tb.id)}
+                  className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all flex-shrink-0
+                    ${tab===tb.id ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
+                  style={{ color: tab===tb.id ? undefined : 'var(--text-muted)' }}>
+                  {tb.icon}
+                  <span className="hidden sm:inline">{tb.label}</span>
+                  {/* En móvil solo icono + label corto */}
+                  <span className="sm:hidden">{tb.label.split(' ')[0]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Contenido tab */}
+          <div className="flex-1 overflow-y-auto">
+            {tab==='info' &&
+              <PatientInfoTab nino={selected} onSaved={async()=>{
+                await cargar()
+                const upd = pacientes.find(p=>p.id===selected.id)
+                if (upd) setSelected(upd)
+              }}/>}
+            {tab==='programas' && <div className="h-full"><ProgramasABAView childId={selected.id} childName={selected.name}/></div>}
+            {tab==='evaluaciones' && <div className="h-full"><EvaluacionesUnificadas initialChildId={selected.id} initialChildName={selected.name}/></div>}
+            {tab==='aria' && <div className="h-full"><ARIAAgentChat userId={selected.id} childId={selected.id} childName={selected.name} contexto="paciente"/></div>}
+          </div>
+        </>
+      ) : (
+        /* Empty state — solo visible en desktop */
+        <div className="flex-1 hidden md:flex flex-col items-center justify-center gap-4 p-8">
+          <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+            <Users size={36} className="text-blue-400"/>
+          </div>
+          <div className="text-center">
+            <h3 className="font-black text-lg mb-1" style={{ color:'var(--text-primary)' }}>{t('pacientes.seleccionaUno')}</h3>
+            <p className="text-sm max-w-xs" style={{ color:'var(--text-muted)' }}>{t('pacientes.seleccionaDesc')}</p>
+          </div>
+          <button onClick={()=>setShowNew(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm">
+            <Plus size={15}/> {t('pacientes.nuevo')}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+
+  // ── MODAL nuevo paciente ──────────────────────────────────────────────────
+  const NewModal = showNew && (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md shadow-2xl p-5 space-y-4"
+        style={{ background:'var(--card)' }}>
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-black" style={{ color:'var(--text-primary)' }}>{t('pacientes.nuevo')}</h3>
+          <button onClick={()=>setShowNew(false)} className="p-2 rounded-xl hover:bg-slate-100">
+            <X size={16} style={{ color:'var(--text-muted)' }}/>
+          </button>
+        </div>
+        <div className="space-y-3">
+          {[
+            { key:'name',       label:t('common.nombre'),            type:'text', placeholder:'Ej: María García', req:true },
+            { key:'birth_date', label:t('pacientes.fechaNacimiento'), type:'date', placeholder:'',                req:false },
+            { key:'diagnosis',  label:t('pacientes.diagnostico'),    type:'text', placeholder:'Ej: TEA Nivel 2',  req:false },
+          ].map(f => (
+            <div key={f.key}>
+              <label className="block text-xs font-black uppercase tracking-widest mb-1.5" style={{ color:'var(--text-muted)' }}>
+                {f.label}{f.req && <span className="text-red-400 ml-0.5">*</span>}
+              </label>
+              <input type={f.type} placeholder={f.placeholder}
+                value={(newForm as any)[f.key]}
+                onChange={e=>setNewForm(fm=>({...fm,[f.key]:e.target.value}))}
+                className="w-full px-4 py-3 rounded-xl text-sm outline-none border"
+                style={{ background:'var(--muted-bg)', borderColor:'var(--card-border)', color:'var(--text-primary)' }}/>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-3 pt-1">
+          <button onClick={()=>setShowNew(false)}
+            className="flex-1 py-3 rounded-xl font-bold text-sm border"
+            style={{ borderColor:'var(--card-border)', color:'var(--text-muted)' }}>
+            {t('common.cancelar')}
+          </button>
+          <button onClick={handleCreate} disabled={saving||!newForm.name.trim()}
+            className="flex-1 py-3 rounded-xl font-bold text-sm bg-blue-600 text-white disabled:opacity-50 flex items-center justify-center gap-2">
+            {saving ? <Loader2 size={14} className="animate-spin"/> : <Plus size={14}/>}
+            {t('pacientes.crear')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className="flex h-full overflow-hidden" style={{ background:'var(--bg)' }}>
+      {ListPanel}
+      {DetailPanel}
+      {NewModal}
+    </div>
+  )
+}
