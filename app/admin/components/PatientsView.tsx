@@ -339,17 +339,24 @@ export default function PatientsView() {
               </div>
             </div>
 
-            {/* Tabs — scroll horizontal en móvil */}
-            <div className="flex overflow-x-auto scrollbar-hide px-2">
+            {/* Tabs */}
+            <div className="flex overflow-x-auto scrollbar-hide border-b" style={{ borderColor: 'var(--card-border)' }}>
               {TABS.map(tb => (
                 <button key={tb.id} onClick={()=>setTab(tb.id)}
-                  className={`flex items-center gap-1.5 px-3 py-2.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all flex-shrink-0
+                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all flex-shrink-0
                     ${tab===tb.id ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
-                  style={{ color: tab===tb.id ? undefined : 'var(--text-muted)' }}>
+                  style={{ color: tab===tb.id ? undefined : 'var(--text-muted)' }}
+                  title={tb.label}>
                   {tb.icon}
-                  <span className="hidden sm:inline">{tb.label}</span>
-                  {/* En móvil solo icono + label corto */}
-                  <span className="sm:hidden">{tb.label.split(' ')[0]}</span>
+                  {/* desktop: label completo | móvil: label corto abreviado */}
+                  <span className="hidden md:inline">{tb.label}</span>
+                  <span className="md:hidden text-[10px]">{
+                    tb.id === 'info'         ? 'Info' :
+                    tb.id === 'programas'    ? 'ABA' :
+                    tb.id === 'evaluaciones' ? 'Eval.' :
+                    tb.id === 'aria'         ? 'ARIA' :
+                    tb.id === 'historial'    ? 'Hist.' : tb.label
+                  }</span>
                 </button>
               ))}
             </div>
