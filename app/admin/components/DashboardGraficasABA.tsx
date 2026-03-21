@@ -109,11 +109,11 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
                 Criterio {programa.criterio_dominio_pct}%
               </span>
             </div>
-            <ResponsiveContainer width="100%" height={160}>
-              <LineChart data={data} margin={{ top: 4, right: 8, bottom: 14, left: -20 }}>
+            <ResponsiveContainer width="100%" height={260}>
+              <LineChart data={data} margin={{ top: 10, right: 16, bottom: 20, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                <XAxis dataKey="sesion" tick={{ fontSize: 9 }} ticks={Array.from({length: Math.ceil((data.length || 1) / 10) * 10 + 1}, (_, i) => i).filter(i => i % 10 === 0 || i === 1 || i <= data.length).slice(0, 20)} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -4, fontSize: 9 }} interval={0} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 9 }} tickFormatter={v => `${v}%`} ticks={[0, 25, 50, 75, 90, 100]} />
+                <XAxis dataKey="sesion" tick={{ fontSize: 10 }} ticks={Array.from({length: Math.ceil((data.length || 1) / 10) * 10 + 1}, (_, i) => i).filter(i => i % 10 === 0 || i === 1 || i <= data.length).slice(0, 20)} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -6, fontSize: 10 }} interval={0} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} ticks={[0, 25, 50, 75, 90, 100]} width={36} />
                 <Tooltip
                   formatter={(v: any) => [`${v}%`, 'Éxito']}
                   labelFormatter={(l) => {
@@ -126,8 +126,8 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
                 ))}
                 <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="5 3" strokeWidth={1.5}
                   label={{ value: `${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 9, fill: '#10b981' }} />
-                <Line type="linear" dataKey="pct" stroke="#6366f1" strokeWidth={2}
-                  dot={{ r: 3, fill: '#6366f1', strokeWidth: 0 }} activeDot={{ r: 5 }} />
+                <Line type="linear" dataKey="pct" stroke="#6366f1" strokeWidth={2.5}
+                  dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }} activeDot={{ r: 6 }} />
               </LineChart>
             </ResponsiveContainer>
           </>

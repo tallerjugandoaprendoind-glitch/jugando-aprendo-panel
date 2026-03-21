@@ -238,7 +238,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
 
           {/* LÍNEAS */}
           {tipo === 'lineas' && (
-            <ResponsiveContainer width="100%" height={190}>
+            <ResponsiveContainer width="100%" height={260}>
               <LineChart data={graficaNum} margin={MARGINS}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                 <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: any) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
@@ -259,7 +259,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
 
           {/* BARRAS */}
           {tipo === 'barras' && (
-            <ResponsiveContainer width="100%" height={190}>
+            <ResponsiveContainer width="100%" height={260}>
               <BarChart data={conColorNum} margin={MARGINS}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                 <XAxis dataKey="n" type="number" domain={[1, xDomainMax]} ticks={xTicks} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: any) => `S${v}`} label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 9, fill: 'var(--text-muted)' }} />
@@ -277,7 +277,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
 
           {/* COMBINADO */}
           {tipo === 'combinado' && (
-            <ResponsiveContainer width="100%" height={190}>
+            <ResponsiveContainer width="100%" height={260}>
               <ComposedChart data={graficaNum} margin={MARGINS}>
                 <defs>
                   <linearGradient id="gLogro" x1="0" y1="0" x2="0" y2="1">
@@ -304,7 +304,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
           {/* HISTOGRAMA */}
           {tipo === 'histograma' && (
             <div>
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={histo} margin={MARGINS}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
                   <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--text-muted)" }} />
@@ -332,7 +332,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
             pieData.length === 0
               ? <p className="text-center text-slate-400 py-8 text-sm">{t('ui.sinDatosMostrar')}</p>
               : <div className="flex items-center gap-4">
-                  <ResponsiveContainer width="55%" height={200}>
+                  <ResponsiveContainer width="55%" height={260}>
                     <PieChart>
                       <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={85} innerRadius={35} paddingAngle={3} strokeWidth={2} stroke="#fff">
                         {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
@@ -367,7 +367,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
               ? <p className="text-center text-slate-400 py-8 text-sm">Necesitas al menos 1 sesión</p>
               : <div>
                   <p className="text-xs text-slate-400 mb-1 text-center">Promedio últimas {ult3.length} sesiones</p>
-                  <ResponsiveContainer width="100%" height={220}>
+                  <ResponsiveContainer width="100%" height={280}>
                     <RadarChart data={radarData} margin={{ top: 10, right: 30, left: 30, bottom: 10 }}>
                       <PolarGrid stroke="var(--card-border)" />
                       <PolarAngleAxis dataKey="h" tick={{ fontSize: 10, fill: '#64748b', fontWeight: 600 }} />
