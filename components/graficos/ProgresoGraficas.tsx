@@ -130,7 +130,7 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
   ] : []
 
   const tipoActual = TIPOS.find(t => t.id === tipo)
-  const TICKS = [0, 25, 50, 75, 90, 100]
+  const TICKS = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
   const MARGINS = { top: 5, right: 12, left: 0, bottom: 20 }
   const TIPO_LABELS: Record<string, string> = {
     lineas:     t('reportes.lineas'),
