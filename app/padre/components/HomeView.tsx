@@ -326,7 +326,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
   const age = child ? calcAge(child.birth_date) : 0
 
   return (
-    <div className="space-y-5 animate-fade-in pb-4">
+    <div className="space-y-4 animate-fade-in pb-2 w-full overflow-x-hidden">
 
       {/* ── CELEBRACIÓN DE OBJETIVOS ── */}
       {showCelebration && (
@@ -387,7 +387,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       )}
 
       {/* ── HERO CARD ── */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-6 text-white shadow-2xl shadow-purple-200">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 p-4 sm:p-6 text-white shadow-xl shadow-purple-200 w-full">
         <div className="absolute top-0 right-0 w-56 h-56 bg-white/10 rounded-full blur-3xl -translate-y-16 translate-x-16" />
         <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-400/20 rounded-full blur-2xl translate-y-8" />
         <div className="relative z-10 flex items-start justify-between gap-4">

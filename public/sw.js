@@ -1,26 +1,32 @@
-const CACHE_NAME = 'vanty-v1'
+// Vanty Service Worker v3 — optimizado para iOS Safari PWA
+const CACHE_NAME = 'vanty-v3'
 
-// Recursos que se cachean al instalar
 const STATIC_ASSETS = [
   '/',
   '/login',
+  '/padre',
+  '/admin',
   '/manifest.json',
   '/icons/icon-192x192.png',
   '/icons/icon-512x512.png',
+  '/icons/icon-152x152.png',
   '/icons/apple-touch-icon.png',
 ]
 
-// ── Instalación: cachear recursos estáticos ──────────────────────────────────
+// ── Instalación ─────────────────────────────────────────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(STATIC_ASSETS)
+      // addAll puede fallar si algún asset no existe — usar add individual
+      return Promise.allSettled(
+        STATIC_ASSETS.map(url => cache.add(url).catch(() => {}))
+      )
     })
   )
   self.skipWaiting()
 })
 
-// ── Activación: limpiar caches viejos ────────────────────────────────────────
+// ── Activación: limpiar caches viejos ───────────────────────────────────────
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -32,94 +38,87 @@ self.addEventListener('activate', event => {
   self.clients.claim()
 })
 
-// ── Fetch: Network first, cache como fallback ────────────────────────────────
+// ── Fetch strategy ───────────────────────────────────────────────────────────
 self.addEventListener('fetch', event => {
   const { request } = event
   const url = new URL(request.url)
 
-  // No interceptar llamadas a APIs ni Supabase
+  // No interceptar: APIs, auth, supabase, otros dominios
   if (
+    request.method !== 'GET' ||
     url.pathname.startsWith('/api/') ||
     url.hostname.includes('supabase') ||
     url.hostname.includes('openai') ||
-    request.method !== 'GET'
+    url.hostname.includes('anthropic') ||
+    url.hostname.includes('googleapis') ||
+    url.hostname.includes('microsoft') ||
+    url.hostname !== self.location.hostname
   ) {
     return
   }
 
-  // Para navegación de páginas: network first
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then(cache => cache.put(request, clone))
-          return response
-        })
-        .catch(() => caches.match(request).then(cached => cached || caches.match('/')))
-    )
-    return
-  }
-
-  // Para assets estáticos: cache first
+  // Estrategia: Network first con fallback a cache
+  // Para iOS Safari PWA es importante tener fallback para offline
   event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) return cached
-      return fetch(request).then(response => {
-        if (response.ok) {
-          const clone = response.clone()
-          caches.open(CACHE_NAME).then(cache => cache.put(request, clone))
+    fetch(request)
+      .then(response => {
+        // Solo cachear respuestas exitosas
+        if (response && response.status === 200 && response.type === 'basic') {
+          const responseToCache = response.clone()
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put(request, responseToCache)
+          })
         }
         return response
       })
-    })
+      .catch(() => {
+        // Fallback a cache cuando no hay red
+        return caches.match(request).then(cached => {
+          if (cached) return cached
+          // Fallback final: página principal
+          if (request.destination === 'document') {
+            return caches.match('/') || caches.match('/login')
+          }
+        })
+      })
   )
 })
 
-// ── Push notifications ────────────────────────────────────────────────────────
+// ── Push notifications (mantener funcionalidad existente) ────────────────────
 self.addEventListener('push', event => {
   if (!event.data) return
-
-  let data = {}
-  try { data = event.data.json() } catch { data = { title: 'Vanty', body: event.data.text() } }
-
-  const title = data.title || 'Vanty'
-  const options = {
-    body: data.body || 'Tienes un nuevo mensaje',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-96x96.png',
-    image: data.image || undefined,
-    data: { url: data.url || '/padre' },
-    vibrate: [200, 100, 200, 100, 200],
-    requireInteraction: false,
-    actions: [
-      { action: 'open', title: 'Ver mensaje' },
-      { action: 'close', title: 'Cerrar' },
-    ],
-    tag: 'vanty-message',
-    renotify: true,
+  try {
+    const data = event.data.json()
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'Vanty', {
+        body:    data.body    || '',
+        icon:    data.icon    || '/icons/icon-192x192.png',
+        badge:   data.badge   || '/icons/icon-96x96.png',
+        data:    data.data    || {},
+        actions: data.actions || [],
+        tag:     data.tag     || 'vanty-notification',
+        renotify: true,
+      })
+    )
+  } catch {
+    const text = event.data.text()
+    event.waitUntil(
+      self.registration.showNotification('Vanty', { body: text, icon: '/icons/icon-192x192.png' })
+    )
   }
-
-  event.waitUntil(self.registration.showNotification(title, options))
 })
 
 self.addEventListener('notificationclick', event => {
   event.notification.close()
-  const url = event.notification.data?.url || '/padre'
-
-  if (event.action === 'close') return
-
+  const url = event.notification.data?.url || '/'
   event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
-      // If app is already open, focus it and navigate
-      for (const client of windowClients) {
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      for (const client of clientList) {
         if (client.url.includes(self.location.origin) && 'focus' in client) {
           client.focus()
-          client.navigate(url)
           return
         }
       }
-      // Otherwise open a new window
       if (clients.openWindow) return clients.openWindow(url)
     })
   )

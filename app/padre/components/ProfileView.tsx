@@ -213,7 +213,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
     const phone = profile?.phone || 'No registrado'
 
     return (
-        <div className="max-w-2xl mx-auto animate-fade-in space-y-6">
+        <div className="max-w-2xl mx-auto animate-fade-in space-y-6 px-1">
              <div className="text-center">
                 <div className="w-28 h-28 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl mx-auto flex items-center justify-center text-5xl font-bold text-white shadow-2xl shadow-blue-300/50 mb-6 ring-4 ring-blue-100 relative group cursor-pointer hover:scale-110 transition-transform">
                     {initial}

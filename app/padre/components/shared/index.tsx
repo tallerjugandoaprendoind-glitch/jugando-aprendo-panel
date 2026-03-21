@@ -71,13 +71,18 @@ export function NavBtnMobile({icon, label, active, onClick, badge}: any) {
     return (
         <button
             onClick={onClick}
-            className={`flex flex-col items-center gap-1 px-3 py-2 rounded-2xl transition-all relative ${active ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+            className={`flex flex-col items-center gap-0.5 flex-1 py-1 rounded-xl transition-all relative active:scale-95 ${active ? 'text-blue-600' : 'text-slate-400'}`}
+            style={{ minWidth: 0 }}
         >
-            <div className="relative">
+            <div className={`relative p-1.5 rounded-xl transition-all ${active ? 'bg-blue-50' : ''}`}>
                 {icon}
-                {badge > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[8px] font-black flex items-center justify-center">{badge}</span>}
+                {badge > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[8px] font-black flex items-center justify-center">
+                        {badge}
+                    </span>
+                )}
             </div>
-            <span className="text-[10px] font-bold">{label}</span>
+            <span className="text-[9px] font-bold leading-tight truncate w-full text-center">{label}</span>
         </button>
     )
 }

@@ -1,3 +1,4 @@
+import PWAInstallButton from '@/components/PWAInstallButton'
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
@@ -203,6 +204,8 @@ export default function AdminDashboard() {
   const userInitial = userName.charAt(0).toUpperCase()
 
   return (
+    <>
+    <PWAInstallButton />
     <div className={`flex h-screen font-sans overflow-hidden transition-colors duration-200
       ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
 
@@ -529,5 +532,6 @@ export default function AdminDashboard() {
         />
       )}
     </div>
+    </>
   )
 }

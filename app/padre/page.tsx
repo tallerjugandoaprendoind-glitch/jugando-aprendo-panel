@@ -1,3 +1,4 @@
+import PWAInstallButton from '@/components/PWAInstallButton'
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
@@ -460,6 +461,7 @@ export default function ParentDashboard() {
         
         {/* 🔔 PUSH NOTIFICATIONS BANNER */}
         <PushNotificationBanner userId={profile?.id || null} />
+        <PWAInstallButton />
 
         {/* 📹 VIDEOLLAMADA MODAL */}
         {videoCallSession && (

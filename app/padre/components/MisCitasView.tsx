@@ -238,7 +238,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           </h1>
           
           {/* Stats row */}
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             <div className="bg-white/15 backdrop-blur-sm rounded-2xl p-3 text-center">
               <div className="text-2xl font-black">{upcomingCount}</div>
               <div className="text-[10px] text-purple-200 font-semibold uppercase tracking-wider mt-0.5">{t('ui.upcoming')}</div>
@@ -329,7 +329,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           )}
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 w-full overflow-x-hidden">
           {Object.entries(grouped).map(([monthYear, appts]) => (
             <div key={monthYear}>
               {/* Month header */}
