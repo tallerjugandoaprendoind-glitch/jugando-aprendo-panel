@@ -340,21 +340,23 @@ export default function PatientsView() {
             </div>
 
             {/* Tabs — auto-ajuste por ancho disponible */}
-            <div className="flex border-b" style={{ borderColor: 'var(--card-border)' }}>
+            <div className="flex border-b @container" style={{ borderColor: 'var(--card-border)' }}>
               {TABS.map(tb => (
                 <button key={tb.id} onClick={()=>setTab(tb.id)}
-                  className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] sm:text-xs font-bold border-b-2 transition-all min-w-0
+                  className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 font-bold border-b-2 transition-all min-w-0
                     ${tab===tb.id ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
                   style={{ color: tab===tb.id ? undefined : 'var(--text-muted)' }}
                   title={tb.label}>
-                  <span className="flex-shrink-0">{tb.icon}</span>
-                  <span className="truncate w-full text-center px-0.5">{
+                  <span className="flex-shrink-0 [&>svg]:w-3.5 [&>svg]:h-3.5 @[500px]:[&>svg]:w-4 @[500px]:[&>svg]:h-4">{tb.icon}</span>
+                  {/* label corto siempre visible, label largo solo si hay espacio */}
+                  <span className="text-[9px] @[500px]:hidden truncate w-full text-center px-0.5">{
                     tb.id === 'info'         ? 'Info' :
                     tb.id === 'programas'    ? 'ABA' :
                     tb.id === 'evaluaciones' ? 'Eval.' :
                     tb.id === 'aria'         ? 'ARIA' :
                     'Hist.'
                   }</span>
+                  <span className="hidden @[500px]:block text-[11px] truncate w-full text-center px-1">{tb.label}</span>
                 </button>
               ))}
             </div>
