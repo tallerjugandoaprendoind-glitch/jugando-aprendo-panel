@@ -339,18 +339,16 @@ export default function PatientsView() {
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex overflow-x-auto scrollbar-hide border-b" style={{ borderColor: 'var(--card-border)' }}>
+            {/* Tabs — auto-ajuste por ancho disponible */}
+            <div className="flex border-b" style={{ borderColor: 'var(--card-border)' }}>
               {TABS.map(tb => (
                 <button key={tb.id} onClick={()=>setTab(tb.id)}
-                  className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-2.5 text-xs font-bold border-b-2 whitespace-nowrap transition-all flex-shrink-0
+                  className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 text-[10px] sm:text-xs font-bold border-b-2 transition-all min-w-0
                     ${tab===tb.id ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
                   style={{ color: tab===tb.id ? undefined : 'var(--text-muted)' }}
                   title={tb.label}>
-                  {tb.icon}
-                  {/* desktop: label completo | móvil: label corto abreviado */}
-                  <span className="hidden md:inline">{tb.label}</span>
-                  <span className="md:hidden text-[10px]">{
+                  <span className="flex-shrink-0">{tb.icon}</span>
+                  <span className="truncate w-full text-center px-0.5">{
                     tb.id === 'info'         ? 'Info' :
                     tb.id === 'programas'    ? 'ABA' :
                     tb.id === 'evaluaciones' ? 'Eval.' :
