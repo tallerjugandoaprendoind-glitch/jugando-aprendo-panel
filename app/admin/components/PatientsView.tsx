@@ -356,7 +356,7 @@ export default function PatientsView() {
           </div>
 
           {/* Contenido tab */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
             {tab==='info' &&
               <PatientInfoTab nino={selected} onSaved={async()=>{
                 await cargar()
@@ -434,7 +434,7 @@ export default function PatientsView() {
   )
 
   return (
-    <div className="flex h-full overflow-hidden" style={{ background:'var(--bg)' }}>
+    <div className="flex h-full min-h-0 overflow-hidden" style={{ background:'var(--bg)' }}>
       {ListPanel}
       {DetailPanel}
       {NewModal}

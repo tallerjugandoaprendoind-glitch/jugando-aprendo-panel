@@ -397,11 +397,12 @@ export default function AdminDashboard() {
         </header>
 
         {/* Content */}
-        <div className={`flex-1 overflow-y-auto p-3 md:p-6 transition-colors flex flex-col admin-content pb-20 md:pb-6
+        <div className={`flex-1 overflow-y-auto transition-colors flex flex-col admin-content
+          ${currentView === 'ninos' ? 'p-0 overflow-hidden' : 'p-3 md:p-6 pb-20 md:pb-6'}
           ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
           {/* Views that scroll normally */}
           {currentView !== 'usuarios' && (
-            <div className="flex-1">
+            <div className={`flex-1 ${currentView === 'ninos' ? 'min-h-0 flex flex-col' : ''}`}>
               {currentView === 'inicio'       && <DashboardHome navigateTo={navigateTo} />}
               {currentView === 'agenda'       && <CalendarView />}
               {currentView === 'ninos'        && <PatientsView />}
