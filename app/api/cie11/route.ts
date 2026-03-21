@@ -129,8 +129,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: `Token failed: ${e.message}`, fallback: true }, { status: 503 })
     }
 
+    // La OMS devuelve IDs con http:// pero la API requiere https://
     const entityUrl = code.startsWith('http')
-      ? code
+      ? code.replace('http://', 'https://')
       : `https://id.who.int/icd/release/11/2024-01/mms/${code}`
 
     try {
