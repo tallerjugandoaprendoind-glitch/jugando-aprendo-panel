@@ -379,22 +379,25 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
 
   return (
     <div className="flex flex-col gap-4 md:gap-6 animate-fade-in-up">
-      <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 flex-shrink-0">
-        <h3 className="font-bold text-slate-700 dark:text-slate-200 text-lg md:text-xl flex items-center gap-2 md:gap-3 shrink-0">
-          <div className="p-2 bg-purple-50 rounded-xl">
-            <Brain size={24} className="text-purple-600"/>
-          </div>
-          Analizador Inteligente
-        </h3>
-        <select 
-          className="p-3 md:p-4 bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-xl md:rounded-2xl outline-none font-bold text-slate-700 dark:text-slate-200 text-sm w-full md:w-[400px] focus:bg-white dark:focus:bg-slate-600 focus:ring-4 focus:ring-purple-50 focus:border-purple-500 transition-all" 
-          onChange={(e) => handleSelectChild(e.target.value)}
-          value={selectedChild}
-        >
-          <option value="">🔍 Seleccionar Paciente...</option>
-          {listaNinos.map(n => <option key={n.id} value={n.id}>👤 {n.name}</option>)}
-        </select>
-      </div>
+      {/* Solo mostrar el selector si NO viene pre-seleccionado desde PatientsView */}
+      {!initialChildId && (
+        <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 flex-shrink-0">
+          <h3 className="font-bold text-slate-700 dark:text-slate-200 text-lg md:text-xl flex items-center gap-2 md:gap-3 shrink-0">
+            <div className="p-2 bg-purple-50 rounded-xl">
+              <Brain size={24} className="text-purple-600"/>
+            </div>
+            Analizador Inteligente
+          </h3>
+          <select
+            className="p-3 md:p-4 bg-slate-50 dark:bg-slate-700 border-2 border-slate-200 dark:border-slate-600 rounded-xl md:rounded-2xl outline-none font-bold text-slate-700 dark:text-slate-200 text-sm w-full md:w-[400px] focus:bg-white dark:focus:bg-slate-600 focus:ring-4 focus:ring-purple-50 focus:border-purple-500 transition-all"
+            onChange={(e) => handleSelectChild(e.target.value)}
+            value={selectedChild}
+          >
+            <option value="">🔍 Seleccionar Paciente...</option>
+            {listaNinos.map(n => <option key={n.id} value={n.id}>👤 {n.name}</option>)}
+          </select>
+        </div>
+      )}
 
       {selectedChild ? (
         <div className="flex flex-col gap-3">
