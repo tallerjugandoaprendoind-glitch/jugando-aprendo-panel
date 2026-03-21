@@ -35,6 +35,7 @@ import DashboardGraficasABA from './components/DashboardGraficasABA'
 import InteligenciaHubView from './components/InteligenciaHubView'
 import LocaleSelector from '@/app/components/LocaleSelector'
 import WhatsAppQRPanel from './components/WhatsAppQRPanel'
+import ARIAFloatingChat from './components/ARIAFloatingChat'
 
 // Roles: 'jefe'|'admin' ven todo. 'especialista'/'terapeuta' NO ven agenda ni tienda.
 
@@ -123,6 +124,7 @@ export default function AdminDashboard() {
   const [notifications, setNotifications] = useState<any[]>([])
   const [pendingMessages, setPendingMessages] = useState(0)
   const [userId, setUserId] = useState('')
+  const [ariaOpen, setAriaOpen] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -529,6 +531,75 @@ export default function AdminDashboard() {
           childName={selectedChildReport.name}
           onClose={() => setShowAnalytics(false)}
         />
+      )}
+
+      {/* ── ARIA FLOTANTE ── */}
+      {ariaOpen && (
+        <div className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[90] w-[calc(100vw-2rem)] max-w-sm md:max-w-md rounded-3xl shadow-2xl overflow-hidden border flex flex-col transition-all duration-300
+          ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}
+          style={{ height: '560px' }}>
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex-shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <rect x="6" y="9" width="16" height="13" rx="3" fill="white" fillOpacity="0.9"/>
+                  <rect x="9" y="13" width="3" height="3" rx="1" fill="#7c3aed"/>
+                  <rect x="16" y="13" width="3" height="3" rx="1" fill="#7c3aed"/>
+                  <rect x="11" y="17" width="6" height="1.5" rx="0.75" fill="#7c3aed"/>
+                  <rect x="13" y="6" width="2" height="4" rx="1" fill="white" fillOpacity="0.9"/>
+                  <circle cx="14" cy="5.5" r="1.5" fill="white"/>
+                  <rect x="2" y="12" width="2.5" height="5" rx="1.25" fill="white" fillOpacity="0.7"/>
+                  <rect x="23.5" y="12" width="2.5" height="5" rx="1.25" fill="white" fillOpacity="0.7"/>
+                </svg>
+              </div>
+              <div>
+                <p className="text-white font-black text-sm leading-tight flex items-center gap-2">
+                  ARIA
+                  <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-black">IA</span>
+                </p>
+                <div className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"/>
+                  <p className="text-violet-200 text-[10px] font-medium">Asistente Clínico · Activa</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => setAriaOpen(false)}
+                className="p-1.5 hover:bg-white/20 rounded-xl transition-all" title="Cerrar">
+                <X size={16} className="text-white"/>
+              </button>
+            </div>
+          </div>
+          {/* Chat */}
+          <div className="flex-1 min-h-0">
+            <ARIAAgentChat userId={userId} compact={true} />
+          </div>
+        </div>
+      )}
+
+      {/* Botón flotante robot */}
+      {!ariaOpen && (
+        <button
+          onClick={() => setAriaOpen(true)}
+          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[91] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 bg-gradient-to-br from-violet-600 to-indigo-600 relative"
+          title="ARIA — Asistente IA">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="9" width="16" height="13" rx="3" fill="white" fillOpacity="0.9"/>
+            <rect x="9" y="13" width="3" height="3" rx="1" fill="#7c3aed"/>
+            <rect x="16" y="13" width="3" height="3" rx="1" fill="#7c3aed"/>
+            <rect x="11" y="17" width="6" height="1.5" rx="0.75" fill="#7c3aed"/>
+            <rect x="13" y="6" width="2" height="4" rx="1" fill="white" fillOpacity="0.9"/>
+            <circle cx="14" cy="5.5" r="1.5" fill="white"/>
+            <rect x="2" y="12" width="2.5" height="5" rx="1.25" fill="white" fillOpacity="0.7"/>
+            <rect x="23.5" y="12" width="2.5" height="5" rx="1.25" fill="white" fillOpacity="0.7"/>
+          </svg>
+          <span className="absolute inset-0 rounded-full bg-violet-500 animate-ping opacity-20"/>
+          {/* Tooltip */}
+          <span className="absolute right-16 bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none shadow-lg">
+            ARIA Agente IA
+          </span>
+        </button>
       )}
     </div>
     </>
