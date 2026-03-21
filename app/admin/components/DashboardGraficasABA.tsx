@@ -113,7 +113,7 @@ function ProgramaChart({ programa, expanded }: { programa: any; expanded: boolea
               <LineChart data={data} margin={{ top: 10, right: 16, bottom: 20, left: -10 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="sesion" tick={{ fontSize: 10 }} ticks={Array.from({length: Math.ceil((data.length || 1) / 10) * 10 + 1}, (_, i) => i).filter(i => i % 10 === 0 || i === 1 || i <= data.length).slice(0, 20)} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -6, fontSize: 10 }} interval={0} />
-                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} ticks={[0, 25, 50, 75, 90, 100]} width={36} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} tickFormatter={v => `${v}%`} ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]} width={36} />
                 <Tooltip
                   formatter={(v: any) => [`${v}%`, 'Éxito']}
                   labelFormatter={(l) => {
