@@ -355,7 +355,7 @@ export default function PatientsView() {
                     tb.id === 'programas'    ? 'ABA' :
                     tb.id === 'evaluaciones' ? 'Eval.' :
                     tb.id === 'aria'         ? 'ARIA' :
-                    tb.id === 'historial'    ? 'Hist.' : tb.label
+                    'Hist.'
                   }</span>
                 </button>
               ))}
