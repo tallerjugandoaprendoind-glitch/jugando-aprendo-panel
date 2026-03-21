@@ -14,6 +14,7 @@ import { calcularEdad } from '../utils/helpers'
 import ProgramasABAView from './ProgramasABAView'
 import ARIAAgentChat from './ARIAAgentChat'
 import EvaluacionesUnificadas from './EvaluacionesUnificadas'
+import AIReportView from './AIReportView'
 
 // ── Color badge por diagnóstico ────────────────────────────────────────────
 const DX_MAP: Record<string, string> = {
@@ -173,7 +174,7 @@ export default function PatientsView() {
   // En móvil: 'list' | 'detail'. En desktop ambos visibles.
   const [mobileView, setMobileView] = useState<'list'|'detail'>('list')
   const [selected, setSelected] = useState<any>(null)
-  const [tab, setTab] = useState<'info'|'programas'|'evaluaciones'|'aria'>('info')
+  const [tab, setTab] = useState<'info'|'programas'|'evaluaciones'|'aria'|'historial'>('info')
 
   // Nuevo paciente
   const [showNew, setShowNew] = useState(false)
@@ -232,6 +233,7 @@ export default function PatientsView() {
     { id:'programas',    icon:<BarChart3 size={14}/>,     label: t('nav.programas') },
     { id:'evaluaciones', icon:<ClipboardList size={14}/>, label: t('nav.evaluaciones') },
     { id:'aria',         icon:<Sparkles size={14}/>,      label: 'ARIA' },
+    { id:'historial',    icon:<Brain size={14}/>,         label: 'Historial & IA' },
   ] as const
 
   // ── PANEL LISTA ───────────────────────────────────────────────────────────
@@ -364,6 +366,7 @@ export default function PatientsView() {
             {tab==='programas' && <div className="h-full"><ProgramasABAView childId={selected.id} childName={selected.name}/></div>}
             {tab==='evaluaciones' && <div className="h-full"><EvaluacionesUnificadas initialChildId={selected.id} initialChildName={selected.name}/></div>}
             {tab==='aria' && <div className="h-full"><ARIAAgentChat userId={selected.id} childId={selected.id} childName={selected.name} contexto="paciente"/></div>}
+            {tab==='historial' && <div className="h-full"><AIReportView initialChildId={selected.id} /></div>}
           </div>
         </>
       ) : (

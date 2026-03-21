@@ -125,10 +125,10 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import ReportGenerator from '@/components/ReportGenerator'
 
-function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, name: string} | null) => void }) {
+function AIReportView({ onChildSelect, initialChildId }: { onChildSelect?: (child: {id: string, name: string} | null) => void; initialChildId?: string }) {
   const { t, locale } = useI18n()
   const [listaNinos, setListaNinos] = useState<any[]>([])
-  const [selectedChild, setSelectedChild] = useState('')
+  const [selectedChild, setSelectedChild] = useState(initialChildId || '')
   const [historyData, setHistoryData] = useState<any>({ anamnesis: null, aba: [], entorno: [] })
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null)
   const [reportesHistorial, setReportesHistorial] = useState<any[]>([])
@@ -154,8 +154,15 @@ function AIReportView({ onChildSelect }: { onChildSelect?: (child: {id: string, 
   const { listening, supported: micSupported, startListening, stopListening } = useSpeechToText(handleVoiceResult)
 
   useEffect(() => {
-    supabase.from('children').select('id, name').then(({ data }) => data && setListaNinos(data))
-  }, [])
+    supabase.from('children').select('id, name').then(({ data }) => {
+      if (data) {
+        setListaNinos(data)
+        if (initialChildId) {
+          handleSelectChild(initialChildId)
+        }
+      }
+    })
+  }, []) // eslint-disable-line
 
   useEffect(() => {
     if (chatContainerRef.current) {
