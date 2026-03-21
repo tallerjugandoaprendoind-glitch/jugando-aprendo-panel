@@ -11,7 +11,8 @@ type Result = { id?: string; code: string; title: string; chapter?: string; isLe
 type Detail = {
   code: string; title: string; definition: string
   inclusions: string[]; exclusions: string[]; indexTerms: string[]
-  codingNote: string; children: { id: string; code: string; title: string }[]
+  codingNote: string; diagnosticCriteria: string
+  children: { id: string; code: string; title: string }[]
   parent: { id: string; code: string; title: string } | null
   browserUrl: string
 }
@@ -108,7 +109,8 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
     setSelected({
       code: r.code, title: r.title || r.code,
       definition: '', inclusions: [], exclusions: [],
-      indexTerms: [], codingNote: '', children: [], parent: null,
+      indexTerms: [], codingNote: '', diagnosticCriteria: '',
+      children: [], parent: null,
       browserUrl: `https://icd.who.int/browse/2024-01/mms/es#${r.code}`,
     })
     try {
@@ -120,16 +122,17 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
       console.log('[CIE-11] detail response:', data)
       if (data.fallback || data.error) throw new Error(data.error || 'fallback')
       setSelected({
-        code:       data.code       || r.code,
-        title:      data.title      || r.title || r.code,
-        definition: data.definition || '',
-        inclusions: Array.isArray(data.inclusions) ? data.inclusions : [],
-        exclusions: Array.isArray(data.exclusions) ? data.exclusions : [],
-        indexTerms: Array.isArray(data.indexTerms) ? data.indexTerms : [],
-        children:   Array.isArray(data.children)   ? data.children   : [],
-        codingNote: data.codingNote || '',
-        parent:     data.parent     || null,
-        browserUrl: data.browserUrl || `https://icd.who.int/browse/2024-01/mms/es#${data.code || r.code}`,
+        code:               data.code       || r.code,
+        title:              data.title      || r.title || r.code,
+        definition:         data.definition || '',
+        inclusions:         Array.isArray(data.inclusions) ? data.inclusions : [],
+        exclusions:         Array.isArray(data.exclusions) ? data.exclusions : [],
+        indexTerms:         Array.isArray(data.indexTerms) ? data.indexTerms : [],
+        children:           Array.isArray(data.children)   ? data.children   : [],
+        codingNote:         data.codingNote         || '',
+        diagnosticCriteria: data.diagnosticCriteria || '',
+        parent:             data.parent             || null,
+        browserUrl:         data.browserUrl || `https://icd.who.int/browse/2024-01/mms/es#${data.code || r.code}`,
       })
     } catch (e) {
       console.warn('[CIE-11] Detail load failed:', e)
@@ -270,6 +273,16 @@ export default function DiagnosticoBuscador({ onAsignar, showAsignar = false }: 
                   <p className="text-sm leading-relaxed" style={{ color:'var(--text-secondary)' }}>
                     {selected.definition}
                   </p>
+                </div>
+              )}
+
+              {/* Criterios diagnósticos OMS */}
+              {selected.diagnosticCriteria && (
+                <div className="p-3 rounded-xl bg-teal-50 border border-teal-200">
+                  <p className="text-[10px] font-black uppercase tracking-widest text-teal-700 mb-1.5 flex items-center gap-1.5">
+                    🩺 Criterios diagnósticos (OMS CIE-11)
+                  </p>
+                  <p className="text-xs leading-relaxed text-teal-900 whitespace-pre-line">{selected.diagnosticCriteria}</p>
                 </div>
               )}
 

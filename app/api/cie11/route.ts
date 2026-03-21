@@ -31,8 +31,16 @@ const H = (token: string) => ({
 function txt(v: any): string {
   if (!v) return ''
   if (typeof v === 'string') return v
+  // API v2: { "@language": "es", "@value": "..." }
   if (v['@value']) return v['@value']
-  if (Array.isArray(v)) return v.map(txt).filter(Boolean).join(', ')
+  // Array of language objects — buscar español primero, luego cualquiera
+  if (Array.isArray(v)) {
+    const es = v.find((x: any) => x['@language'] === 'es' || x['@language'] === 'es-ES')
+    if (es) return es['@value'] || ''
+    const any = v.find((x: any) => x['@value'])
+    if (any) return any['@value'] || ''
+    return v.map(txt).filter(Boolean).join(', ')
+  }
   return ''
 }
 
@@ -95,11 +103,14 @@ export async function GET(req: NextRequest) {
 
     try {
       // Usar la URL directamente si ya es una URL completa (viene del resultado de búsqueda)
-      const entityUrl = code.startsWith('http')
+      const baseUrl = code.startsWith('http')
         ? code
         : `https://id.who.int/icd/release/11/2024-01/mms/${code}`
 
-      console.log('[CIE-11] Fetching detail:', entityUrl.slice(-20))
+      // Incluir criterios diagnósticos (disponible para trastornos mentales cap.06)
+      const entityUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 'include=diagnosticCriteria'
+
+      console.log('[CIE-11] Fetching detail:', baseUrl.split('/').pop())
 
       const res = await fetch(entityUrl, { headers: H(token) })
 
@@ -110,6 +121,9 @@ export async function GET(req: NextRequest) {
       }
 
       const d = await res.json()
+      console.log('[CIE-11] Raw keys:', Object.keys(d).join(', '))
+      console.log('[CIE-11] definition raw:', JSON.stringify(d.definition)?.slice(0, 200))
+      console.log('[CIE-11] inclusion count:', (d.inclusion||[]).length)
 
       // Subcategorías: devolver IDs para que el frontend pueda navegar
       const children = (d.child || []).slice(0, 20).map((url: string) => {
@@ -125,6 +139,9 @@ export async function GET(req: NextRequest) {
         parent = { id: d.parent[0], code: seg, title: '' }
       }
 
+      // Criterios diagnósticos (cap. 06 trastornos mentales)
+      const diagnosticCriteria = txt(d.diagnosticCriteria) || ''
+
       return NextResponse.json({
         code:       d.code || '',
         title:      txt(d.title),
@@ -133,6 +150,7 @@ export async function GET(req: NextRequest) {
         exclusions: (d.exclusion  || []).map((e: any) => txt(e.label)).filter(Boolean),
         indexTerms: (d.indexTerm  || []).map((t: any) => txt(t.label)).filter(Boolean),
         codingNote: txt(d.codingNote),
+        diagnosticCriteria,
         children,
         parent,
         browserUrl: `https://icd.who.int/browse/2024-01/mms/es#${d.code || ''}`,
