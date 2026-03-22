@@ -1035,21 +1035,6 @@ function TabReportes({ pacientes }: { pacientes: Paciente[] }) {
         {error && <div className="bg-red-50 border border-red-100 rounded-xl p-3"><p className="text-red-600 text-xs">{error}</p></div>}
         {success && <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3"><p className="text-emerald-700 text-sm font-semibold">{success}</p></div>}
       </div>
-
-      {/* Info cards */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { emoji: '👨‍👩‍👧', title: 'Padres', desc: 'Carta emocional con logros, actividades en casa y predicción. Sin tecnicismos.' },
-          { emoji: '🏥', title: 'Seguros', desc: 'CIE-10, justificación médica, tabla de programas, firma profesional.' },
-          { emoji: '📊', title: 'Comparativo', desc: 'Progreso entre períodos con gráficos de predicción a 30 y 90 días.' },
-        ].map((c, i) => (
-          <div key={i} className=" border border-slate-100 rounded-xl p-3" style={{ background: "var(--card)" }}>
-            <p className="text-xl mb-1">{c.emoji}</p>
-            <p className="text-xs font-bold text-slate-700" style={{ color: "var(--text-secondary)" }}>{c.title}</p>
-            <p className="text-[10px] text-slate-400 mt-1">{c.desc}</p>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }

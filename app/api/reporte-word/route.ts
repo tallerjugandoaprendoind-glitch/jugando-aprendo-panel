@@ -202,230 +202,312 @@ INSTRUCCIONES:
   return { doc: makeDoc(sections, 'Reporte Padres'), fileName }
 }
 
+
+// ── Gráfico de barras tipo Word (tabla con celdas coloreadas) ─────────────────
+function graficoBarras(titulo: string, datos: { label: string; valor: number }[]): DocChild[] {
+  const COLS = 28
+
+  const headerRow = new TableRow({ children: [
+    new TableCell({ borders: NBDR, width: { size: 3600, type: WidthType.DXA }, shading: { fill: '1E293B', type: ShadingType.CLEAR }, margins: { top: 90, bottom: 90, left: 140, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: titulo, bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
+    new TableCell({ borders: NBDR, width: { size: 900, type: WidthType.DXA }, shading: { fill: '1E293B', type: ShadingType.CLEAR }, margins: { top: 90, bottom: 90, left: 60, right: 60 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Valor', bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
+    ...Array.from({ length: COLS }, () => new TableCell({ borders: NBDR, width: { size: 175, type: WidthType.DXA }, shading: { fill: '1E293B', type: ShadingType.CLEAR }, children: [new Paragraph({ children: [] })] })),
+  ]})
+
+  const dataRows = datos.map((d, i) => {
+    const pct = Math.min(100, Math.max(0, d.valor))
+    const filled = Math.round((pct / 100) * COLS)
+    const barColor = pct >= 75 ? '16A34A' : pct >= 50 ? 'D97706' : 'DC2626'
+    const bgRow = i % 2 === 0 ? 'F8FAFC' : 'FFFFFF'
+    const valBg = pct >= 75 ? 'DCFCE7' : pct >= 50 ? 'FEF3C7' : 'FEE2E2'
+
+    return new TableRow({ children: [
+      new TableCell({ borders: NBDR, shading: { fill: bgRow, type: ShadingType.CLEAR }, margins: { top: 70, bottom: 70, left: 140, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: d.label, size: 17, font: 'Arial', color: '334155' })] })] }),
+      new TableCell({ borders: NBDR, shading: { fill: valBg, type: ShadingType.CLEAR }, margins: { top: 70, bottom: 70, left: 60, right: 60 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${pct}%`, bold: true, size: 19, font: 'Arial', color: barColor })] })] }),
+      ...Array.from({ length: COLS }, (_, ci) => new TableCell({
+        borders: NBDR,
+        shading: { fill: ci < filled ? barColor : bgRow, type: ShadingType.CLEAR },
+        children: [new Paragraph({ children: [] })],
+      })),
+    ]})
+  })
+
+  return [new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [3600, 900, ...Array(COLS).fill(175)],
+    rows: [headerRow, ...dataRows],
+  })]
+}
+
 // ── Reporte Para Seguros ──────────────────────────────────────────────────────
 async function generarReporteSeguro(childId: string, userLocale = 'es'): Promise<{ doc: Document; fileName: string }> {
   const { data: child } = await supabaseAdmin.from('children').select('name, age, diagnosis, birth_date').eq('id', childId).single()
   const nombre = (child as any)?.name || 'Paciente'
+  const nombreCap = nombre.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
   const edad = (child as any)?.age || 'N/A'
   const diagnostico = (child as any)?.diagnosis || 'TEA'
 
-  const CIE10: Record<string, string> = {
-    'TEA': 'F84.0', 'Autismo': 'F84.0', 'TDAH': 'F90.0',
-    'Síndrome de Down': 'Q90', 'Discapacidad intelectual': 'F79',
-  }
-  const cie = CIE10[diagnostico] || 'F84.0'
+  const CIE10: Record<string, string> = { 'TEA': 'F84.0', 'Autismo': 'F84.0', 'TDAH': 'F90.0', 'Síndrome de Down': 'Q90', 'Discapacidad intelectual': 'F79', 'Retraso': 'F79' }
+  const cie = Object.entries(CIE10).find(([k]) => diagnostico?.includes(k))?.[1] || 'F84.0'
 
-  const { data: sesiones } = await supabaseAdmin.from('registro_aba')
-    .select('datos, fecha_sesion').eq('child_id', childId)
-    .order('fecha_sesion', { ascending: true }).limit(50)
+  const [{ data: sesiones }, { data: programas }, { data: sesionesProg }] = await Promise.all([
+    supabaseAdmin.from('registro_aba').select('datos, fecha_sesion').eq('child_id', childId).order('fecha_sesion', { ascending: true }).limit(60),
+    supabaseAdmin.from('programas_aba').select('titulo, area, fase_actual, criterio_dominio_pct, estado, nombre').eq('child_id', childId).limit(15),
+    supabaseAdmin.from('sesiones_datos_aba').select('fecha, porcentaje_exito, programa_id, fase, notas').eq('child_id', childId).order('fecha', { ascending: true }).limit(100),
+  ])
 
-  const { data: programas } = await supabaseAdmin.from('programas_aba')
-    .select('titulo, area, fase_actual, criterio_dominio_pct, estado').eq('child_id', childId).limit(10)
-
-  // Cargar sesiones por programa (datos ABA detallados)
-  const { data: sesionesProg } = await supabaseAdmin.from('sesiones_datos_aba')
-    .select('fecha, porcentaje_exito, programa_id, fase').eq('child_id', childId)
-    .order('fecha', { ascending: true }).limit(100)
-
-  const totalSesiones = sesiones?.length || 0
   const sesionesArr = sesiones || []
+  const programasArr = programas || []
+  const sesionesPArr = sesionesProg || []
+  const totalSesiones = sesionesArr.length
 
-  // Calcular promedio general
-  const logros = sesionesArr.map((s: any) =>
-    parseNivelLogro(s.datos?.nivel_logro_objetivos) ??
-    parseNivelLogro(s.datos?.porcentaje_logro) ??
-    parseNivelLogro(s.datos?.porcentaje_exito) ??
-    parseNivelLogro(s.datos?.logro_objetivos)
-  ).filter((v): v is number => v !== null)
-  const promedioLogro = logros.length > 0 ? Math.round(logros.reduce((a, b) => a + b, 0) / logros.length) : 0
+  const extraerLogro = (s: any) =>
+    parseNivelLogro(s.datos?.nivel_logro_objetivos) ?? parseNivelLogro(s.datos?.porcentaje_logro) ??
+    parseNivelLogro(s.datos?.porcentaje_exito) ?? parseNivelLogro(s.datos?.logro_objetivos) ?? parseNivelLogro(s.datos?.logro)
 
-  // Tendencia: primeras 3 vs últimas 3 sesiones
-  const primerasLogros = logros.slice(0, 3)
-  const ultimasLogros = logros.slice(-3)
-  const avgPrimeras = primerasLogros.length > 0 ? Math.round(primerasLogros.reduce((a,b) => a+b, 0)/primerasLogros.length) : 0
-  const avgUltimas = ultimasLogros.length > 0 ? Math.round(ultimasLogros.reduce((a,b) => a+b, 0)/ultimasLogros.length) : 0
-  const tendenciaDelta = avgUltimas - avgPrimeras
-  const tendenciaTexto = tendenciaDelta > 5 ? `📈 Progreso positivo (+${tendenciaDelta}%)` : tendenciaDelta < -5 ? `📉 Regresión (${tendenciaDelta}%)` : '➡️ Estable'
+  const logros = sesionesArr.map(extraerLogro).filter((v: number | null): v is number => v !== null)
+  const atenciones = sesionesArr.map((s: any) => s.datos?.nivel_atencion ? Math.round((s.datos.nivel_atencion/5)*100) : null).filter((v: number | null): v is number => v !== null)
+  const tolerancias = sesionesArr.map((s: any) => s.datos?.tolerancia_frustracion ? Math.round((s.datos.tolerancia_frustracion/5)*100) : null).filter((v: number | null): v is number => v !== null)
+  const comunicaciones = sesionesArr.map((s: any) => s.datos?.iniciativa_comunicativa ? Math.round((s.datos.iniciativa_comunicativa/5)*100) : null).filter((v: number | null): v is number => v !== null)
 
-  // Fechas
-  const fechaInicio = sesionesArr.length > 0
-    ? new Date(sesionesArr[0].fecha_sesion).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
-    : 'N/A'
-  const fechaFin = sesionesArr.length > 0
-    ? new Date(sesionesArr[sesionesArr.length-1].fecha_sesion).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
-    : new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+  const avg = (arr: number[]) => arr.length > 0 ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length) : 0
+  const promedioLogro = avg(logros)
+  const promedioAtencion = avg(atenciones)
+  const promedioTolerancia = avg(tolerancias)
+  const promedioComunicacion = avg(comunicaciones)
 
-  // Barra de progreso ASCII para Word
-  const barraProgreso = (pct: number, width = 20) => {
-    const filled = Math.round((pct / 100) * width)
-    return '█'.repeat(filled) + '░'.repeat(width - filled) + ` ${pct}%`
+  const q = (arr: number[], from: number, to: number) => avg(arr.slice(Math.floor(arr.length*from), Math.floor(arr.length*to)))
+  const logro_q1 = q(logros,0,0.25), logro_q2 = q(logros,0.25,0.5), logro_q3 = q(logros,0.5,0.75), logro_q4 = q(logros,0.75,1)
+  const avgInicial = q(logros,0,0.33), avgFinal = q(logros,0.67,1)
+  const delta = avgFinal - avgInicial
+  const tendenciaVerbal = delta>10?'progreso significativo':delta>3?'progreso moderado':delta<-5?'regresión clínica':'estabilidad terapéutica'
+
+  const diasUnicos = new Set(sesionesArr.map((s:any)=>s.fecha_sesion?.slice(0,10))).size
+  const fmt = (d:string) => new Date(d).toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})
+  const fechaInicio = sesionesArr.length>0?fmt(sesionesArr[0].fecha_sesion):'N/A'
+  const fechaFin = sesionesArr.length>0?fmt(sesionesArr[sesionesArr.length-1].fecha_sesion):fmt(new Date().toISOString())
+  const semanasTratamiento = sesionesArr.length>1 ? Math.round((new Date(sesionesArr[sesionesArr.length-1].fecha_sesion).getTime()-new Date(sesionesArr[0].fecha_sesion).getTime())/(7*24*60*60*1000)):0
+
+  const areaMap: Record<string,number[]> = {}
+  for (const p of programasArr) {
+    const area = (p as any).area||'General'
+    const vals = sesionesPArr.filter((s:any)=>s.programa_id===(p as any).id).map((s:any)=>s.porcentaje_exito||0).filter((v:number)=>v>0)
+    if(vals.length>0){if(!areaMap[area])areaMap[area]=[];areaMap[area].push(...vals)}
   }
+  const areasData = Object.entries(areaMap).map(([label,vals])=>({label,valor:avg(vals)}))
+  const historial = sesionesArr.slice(-12).reverse()
+  const progActivos = programasArr.filter((p:any)=>p.estado==='activo'||p.estado==='intervencion')
+  const progDominados = programasArr.filter((p:any)=>p.estado==='dominado')
 
-  // Asistencia
-  const diasUnicos = new Set(sesionesArr.map((s: any) => s.fecha_sesion?.slice(0,10))).size
+  const hoy = new Date().toLocaleDateString('es-ES',{day:'2-digit',month:'long',year:'numeric'})
+  const hoyISO = new Date().toISOString().slice(0,10)
+  const docNum = `${hoyISO.replace(/-/g,'')}-${childId.slice(0,6).toUpperCase()}`
+  const fileName = `Reporte_Clinico_${nombreCap.replace(/\s+/g,'_')}_${hoyISO}.docx`
 
-  const hoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
-  const hoyISO = new Date().toISOString().slice(0, 10)
-  const fileName = `Reporte_Seguro_${nombre.replace(/\s+/g, '_')}_${hoyISO}.docx`
-
-  // Historial de sesiones (últimas 15 para tabla)
-  const historialReciente = sesionesArr.slice(-15).reverse()
-
-  // Desglose por área
-  const areaMap: Record<string, number[]> = {}
-  for (const p of (programas || [])) {
-    const area = (p as any).area || 'General'
-    const sesP = (sesionesProg || []).filter((s: any) => s.programa_id === (p as any).id)
-    const vals = sesP.map((s: any) => s.porcentaje_exito || 0).filter((v: number) => v > 0)
-    if (vals.length > 0) {
-      if (!areaMap[area]) areaMap[area] = []
-      areaMap[area].push(...vals)
-    }
-  }
-
-  const prompt = `Redacta la justificación médica y pronóstico para un reporte de seguro/IMSS para ${nombre} (${edad} años, ${diagnostico}, CIE-10: ${cie}).
-
-Contexto clínico:
-- ${totalSesiones} sesiones realizadas desde ${fechaInicio} hasta ${fechaFin}
-- Promedio general de logro: ${promedioLogro}%
-- Tendencia: ${tendenciaTexto}
-- Promedio inicial: ${avgPrimeras}% → Promedio actual: ${avgUltimas}%
-- Programas activos: ${programas?.length || 0} (${programas?.map((p: any) => `${p.area}: ${p.titulo}`).join('; ') || 'sin programas'})
-
-Redacta EN PÁRRAFOS (sin bullets) en lenguaje técnico-clínico formal:
-1. Justificación de necesidad del tratamiento (2 oraciones)
-2. Descripción del progreso cuantificado con los datos reales (2 oraciones) 
-3. Pronóstico y plan de tratamiento continuo (2 oraciones)
-Máximo 200 palabras totales.`
-
-  const textoTecnico = await callGroqSimple('', prompt + getLangInstruction(userLocale), { model: GROQ_MODELS.SMART, temperature: 0.2, maxTokens: 600 })
+  const [textoAnamnesis, textoProceso, textoPronostico, textoConclusiones] = await Promise.all([
+    callGroqSimple('Eres neuropsicóloga clínica ABA. Lenguaje técnico formal, párrafos fluidos, sin bullets.',
+      `ANTECEDENTES Y MOTIVO DE CONSULTA para ${nombreCap} (${edad} años, ${diagnostico}, CIE-10: ${cie}). Justifica la necesidad clínica del tratamiento ABA. 2 párrafos, máximo 100 palabras.`+getLangInstruction(userLocale),
+      {model:GROQ_MODELS.SMART,temperature:0.3,maxTokens:250}),
+    callGroqSimple('Eres neuropsicóloga clínica ABA. Lenguaje técnico formal, párrafos fluidos, sin bullets.',
+      `EVOLUCIÓN TERAPÉUTICA de ${nombreCap}: ${totalSesiones} sesiones (${fechaInicio} al ${fechaFin}, ${semanasTratamiento} semanas). Logro: ${avgInicial}% inicial → ${avgFinal}% actual (${tendenciaVerbal}, delta ${delta>0?'+':''}${delta}%). Atención: ${promedioAtencion}%, Tolerancia: ${promedioTolerancia}%, Comunicación: ${promedioComunicacion}%. Programas activos: ${progActivos.map((p:any)=>p.titulo||p.nombre||p.area).join(', ')||'en evaluación'}. Dominados: ${progDominados.length>0?progDominados.map((p:any)=>p.titulo||p.nombre).join(', '):'ninguno aún'}. 3 párrafos, máximo 160 palabras.`+getLangInstruction(userLocale),
+      {model:GROQ_MODELS.SMART,temperature:0.2,maxTokens:350}),
+    callGroqSimple('Eres neuropsicóloga clínica ABA. Lenguaje técnico formal, párrafos fluidos, sin bullets.',
+      `PRONÓSTICO Y PLAN para ${nombreCap} (${diagnostico}). ${totalSesiones} sesiones, ${promedioLogro}% promedio, tendencia ${tendenciaVerbal}. Incluye objetivos a 3-6 meses, frecuencia recomendada, áreas prioritarias. 2 párrafos, máximo 100 palabras.`+getLangInstruction(userLocale),
+      {model:GROQ_MODELS.SMART,temperature:0.2,maxTokens:250}),
+    callGroqSimple('Eres neuropsicóloga clínica ABA. Lenguaje técnico-legal formal.',
+      `CONCLUSIONES para aseguradora sobre ${nombreCap}: necesidad médica del tratamiento, eficacia demostrada, recomendación de continuidad. 1 párrafo contundente, máximo 70 palabras.`+getLangInstruction(userLocale),
+      {model:GROQ_MODELS.SMART,temperature:0.2,maxTokens:180}),
+  ])
 
   const sections: DocChild[] = [
-    // Encabezado
-    new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: 'JUGANDO APRENDO — Centro de Terapia ABA', bold: true, size: 28, font: 'Arial', color: '1E293B' })] }),
-    new Paragraph({ spacing: { before: 0, after: 80 }, children: [new TextRun({ text: 'REPORTE CLÍNICO PARA ASEGURADORAS / IMSS', bold: true, size: 32, font: 'Arial', color: '1E40AF' })] }),
-    subtitle(`Fecha de emisión: ${hoy}  ·  Documento Confidencial`),
+    // PORTADA
+    new Paragraph({ spacing:{before:0,after:20}, border:{bottom:{style:BorderStyle.SINGLE,size:8,color:'1E40AF',space:8}},
+      children:[new TextRun({text:'JUGANDO APRENDO',bold:true,size:38,font:'Arial',color:'1E293B'}),
+                new TextRun({text:'  ·  Centro Especializado de Terapia ABA',size:22,font:'Arial',color:'64748B'})] }),
+    new Paragraph({ spacing:{before:180,after:60},
+      children:[new TextRun({text:'REPORTE NEUROPSICOLÓGICO Y CLÍNICO',bold:true,size:46,font:'Arial',color:'1E40AF'})] }),
+    new Paragraph({ spacing:{before:0,after:20},
+      children:[new TextRun({text:'Para presentación ante Aseguradoras, IMSS e ISSSTE',bold:true,size:24,font:'Arial',color:'475569'})] }),
+    new Paragraph({ spacing:{before:80,after:360}, shading:{fill:'EFF6FF',type:ShadingType.CLEAR},
+      children:[new TextRun({text:`Nº ${docNum}   ·   Emitido: ${hoy}   ·   Vigencia: 6 meses   ·   CONFIDENCIAL`,size:18,font:'Arial',color:'64748B'})] }),
 
-    // I. Datos del paciente
-    h2('I. DATOS DEL PACIENTE'),
-    new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-      kv('Nombre completo', nombre),
-      kv('Edad', `${edad} años`),
+    // I. DATOS
+    h2('I.  DATOS DE IDENTIFICACIÓN DEL PACIENTE'),
+    new Table({ width:{size:9360,type:WidthType.DXA}, columnWidths:[3200,6160], rows:[
+      kv('Nombre completo', nombreCap),
+      kv('Edad cronológica', `${edad} años`),
       kv('Diagnóstico principal', diagnostico),
-      kv('Código CIE-10', cie),
-      kv('Fecha del reporte', hoy),
-      kv('Período de tratamiento', `${fechaInicio} al ${fechaFin}`),
+      kv('Clasificación CIE-10', cie),
+      kv('Modalidad de intervención', 'Análisis Aplicado de la Conducta (ABA) — Terapia Individual'),
+      kv('Centro terapéutico', 'Jugando Aprendo — Centro Especializado en Neurodesarrollo'),
+      kv('Inicio del tratamiento', fechaInicio),
+      kv('Última sesión registrada', fechaFin),
+      kv('Duración total del proceso', `${semanasTratamiento} semanas (${totalSesiones} sesiones)`),
+      kv('Fecha del presente reporte', hoy),
     ]}),
 
-    // II. Resumen ejecutivo de progreso
-    h2('II. RESUMEN EJECUTIVO DE PROGRESO'),
-    new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-      kv('Modalidad', 'Análisis Aplicado de la Conducta (ABA)'),
-      kv('Total de sesiones', String(totalSesiones)),
-      kv('Días de asistencia', String(diasUnicos)),
-      kv('Promedio de logro global', `${promedioLogro}%  ${barraProgreso(promedioLogro, 15)}`),
-      kv('Logro inicial (primeras sesiones)', `${avgPrimeras}%`),
-      kv('Logro actual (últimas sesiones)', `${avgUltimas}%`),
-      kv('Evolución del tratamiento', tendenciaTexto),
-      kv('Programas de intervención activos', String(programas?.filter((p: any) => p.estado === 'activo' || p.estado === 'intervencion').length || 0)),
+    // II. ANTECEDENTES
+    h2('II.  ANTECEDENTES CLÍNICOS Y MOTIVO DE CONSULTA'),
+    ...textoAnamnesis.split('\n').filter((l:string)=>l.trim()).map((l:string)=>pp(l)),
+
+    // III. INDICADORES
+    h2('III.  INDICADORES CUANTITATIVOS DE PROGRESO TERAPÉUTICO'),
+    pp('Los siguientes indicadores resultan del análisis sistemático de las hojas de datos ABA registradas durante el período de tratamiento. Cada valor representa el promedio ponderado de todas las sesiones evaluadas en el período indicado.'),
+    new Table({ width:{size:9360,type:WidthType.DXA}, columnWidths:[3800,1960,3600], rows:[
+      new TableRow({ children:[
+        new TableCell({borders:BDR,shading:{fill:'0F172A',type:ShadingType.CLEAR},margins:{top:90,bottom:90,left:120,right:80},children:[new Paragraph({children:[new TextRun({text:'Indicador clínico',bold:true,size:18,font:'Arial',color:'FFFFFF'})]})]}),
+        new TableCell({borders:BDR,shading:{fill:'0F172A',type:ShadingType.CLEAR},margins:{top:90,bottom:90,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Valor',bold:true,size:18,font:'Arial',color:'FFFFFF'})]})]}),
+        new TableCell({borders:BDR,shading:{fill:'0F172A',type:ShadingType.CLEAR},margins:{top:90,bottom:90,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:'Interpretación clínica',bold:true,size:18,font:'Arial',color:'FFFFFF'})]})]})
+      ]}),
+      ...([
+        ['Total de sesiones realizadas', `${totalSesiones}`, totalSesiones>=20?'Proceso terapéutico consolidado':totalSesiones>=10?'Proceso en desarrollo activo':'Fase inicial de intervención'],
+        ['Promedio global de logro de objetivos', `${promedioLogro}%`, promedioLogro>=75?'Nivel óptimo de respuesta terapéutica':promedioLogro>=55?'Nivel funcional adecuado':promedioLogro>=35?'En desarrollo, requiere continuidad':'Fase inicial de adquisición'],
+        ['Nivel de logro — inicio del tratamiento', `${avgInicial}%`, 'Línea base del paciente al inicio'],
+        ['Nivel de logro — etapa actual', `${avgFinal}%`, delta>5?`Mejora de +${delta}% respecto al inicio`:delta<-3?`Variación de ${delta}% respecto al inicio`:'Estabilización del proceso de aprendizaje'],
+        ['Atención sostenida durante sesiones', promedioAtencion>0?`${promedioAtencion}%`:'No registrado', promedioAtencion>=70?'Atención funcional adecuada para el aprendizaje':promedioAtencion>0?'En desarrollo activo':'—'],
+        ['Tolerancia a la frustración', promedioTolerancia>0?`${promedioTolerancia}%`:'No registrado', promedioTolerancia>=60?'Regulación emocional adecuada':promedioTolerancia>0?'Área de trabajo prioritaria':'—'],
+        ['Iniciativa comunicativa', promedioComunicacion>0?`${promedioComunicacion}%`:'No registrado', promedioComunicacion>=60?'Comunicación funcional presente':promedioComunicacion>0?'En proceso de adquisición':'—'],
+        ['Programas activos actualmente', `${progActivos.length}`, progActivos.length>0?progActivos.map((p:any)=>p.titulo||p.nombre||p.area).slice(0,3).join(' · '):'En evaluación inicial'],
+        ['Programas con criterio de dominio alcanzado', `${progDominados.length}`, progDominados.length>0?progDominados.map((p:any)=>p.titulo||p.nombre).join(' · '):'En proceso de dominio'],
+        ['Tendencia clínica general del período', tendenciaVerbal.charAt(0).toUpperCase()+tendenciaVerbal.slice(1), delta>=0?`Incremento de ${Math.abs(delta)} puntos porcentuales`:`Variación de ${Math.abs(delta)} puntos porcentuales`],
+      ] as [string,string,string][]).map(([ind,val,interp],i)=>{
+        const isKey = i===1
+        const vColor = isKey?(promedioLogro>=75?'15803D':promedioLogro>=45?'92400E':'991B1B'):'1E293B'
+        const vBg = isKey?(promedioLogro>=75?'DCFCE7':promedioLogro>=45?'FEF3C7':'FEE2E2'):i%2===0?'F8FAFC':'FFFFFF'
+        return new TableRow({children:[
+          new TableCell({borders:BDR,shading:{fill:i%2===0?'F8FAFC':'FFFFFF',type:ShadingType.CLEAR},margins:{top:70,bottom:70,left:120,right:80},children:[new Paragraph({children:[new TextRun({text:ind,size:17,font:'Arial',bold:isKey})]})]  }),
+          new TableCell({borders:BDR,shading:{fill:vBg,type:ShadingType.CLEAR},margins:{top:70,bottom:70,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:val,bold:true,size:isKey?22:17,font:'Arial',color:vColor})]})]}),
+          new TableCell({borders:BDR,shading:{fill:i%2===0?'F8FAFC':'FFFFFF',type:ShadingType.CLEAR},margins:{top:70,bottom:70,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:interp,size:16,font:'Arial',color:'64748B',italics:true})]})]}),
+        ]})
+      }),
     ]}),
 
-    // III. Progreso por programa
-    h2('III. PROGRAMAS DE INTERVENCIÓN Y PROGRESO'),
-    new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [2800, 1600, 1600, 1680, 1680],
-      rows: [
-        new TableRow({ children: [
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: 'Programa', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Área', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Fase', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Criterio', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Estado', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
+    // IV. GRÁFICOS
+    h2('IV.  REPRESENTACIÓN GRÁFICA DEL PROGRESO TERAPÉUTICO'),
+    pp('Los gráficos siguientes ilustran la evolución del nivel de logro de objetivos ABA a lo largo de cuatro fases temporales equitativas del período de tratamiento:'),
+    ...(logros.length>=4?graficoBarras('Evolución por Fase Terapéutica',[
+      {label:`Fase 1 — Línea Base  (S1–S${Math.ceil(totalSesiones*0.25)})`,valor:logro_q1},
+      {label:`Fase 2 — Adquisición  (S${Math.ceil(totalSesiones*0.25)+1}–S${Math.ceil(totalSesiones*0.5)})`,valor:logro_q2},
+      {label:`Fase 3 — Consolidación  (S${Math.ceil(totalSesiones*0.5)+1}–S${Math.ceil(totalSesiones*0.75)})`,valor:logro_q3},
+      {label:`Fase 4 — Estado Actual  (S${Math.ceil(totalSesiones*0.75)+1}–S${totalSesiones})`,valor:logro_q4},
+    ]):[pp('Datos insuficientes para representación gráfica por fases (mínimo 4 sesiones).')]),
+    new Paragraph({spacing:{before:200,after:0},children:[]}),
+
+    ...(areasData.length>0?[
+      pp('Nivel de desempeño promedio por área de intervención terapéutica:'),
+      ...graficoBarras('Avance por Área de Intervención',areasData),
+      new Paragraph({spacing:{before:200,after:0},children:[]}),
+    ]:[]),
+
+    ...(promedioAtencion>0||promedioTolerancia>0||promedioComunicacion>0?[
+      pp('Perfil de indicadores conductuales y habilidades adaptativas del paciente:'),
+      ...graficoBarras('Perfil Conductual Integral',[
+        {label:'Logro de objetivos ABA',valor:promedioLogro},
+        ...(promedioAtencion>0?[{label:'Atención sostenida en sesión',valor:promedioAtencion}]:[]),
+        ...(promedioTolerancia>0?[{label:'Tolerancia a la frustración',valor:promedioTolerancia}]:[]),
+        ...(promedioComunicacion>0?[{label:'Iniciativa comunicativa',valor:promedioComunicacion}]:[]),
+      ]),
+      new Paragraph({spacing:{before:200,after:0},children:[]}),
+    ]:[]),
+
+    // V. PROGRAMAS
+    h2('V.  PROGRAMAS DE INTERVENCIÓN ABA — ESTADO DETALLADO'),
+    pp('Se detallan los programas terapéuticos implementados, su área de intervención, fase de aplicación y estado de dominio según el criterio establecido (≥90% de respuestas correctas en dos sesiones consecutivas):'),
+    new Table({ width:{size:9360,type:WidthType.DXA}, columnWidths:[3000,1600,1760,1400,1600],
+      rows:[
+        new TableRow({children:[
+          new TableCell({borders:BDR,shading:{fill:'1E3A5F',type:ShadingType.CLEAR},margins:{top:90,bottom:90,left:120,right:80},children:[new Paragraph({children:[new TextRun({text:'Programa / Objetivo terapéutico',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
+          new TableCell({borders:BDR,shading:{fill:'1E3A5F',type:ShadingType.CLEAR},margins:{top:90,bottom:90,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:'Área',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
+          new TableCell({borders:BDR,shading:{fill:'1E3A5F',type:ShadingType.CLEAR},margins:{top:90,bottom:90,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:'Fase actual',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
+          new TableCell({borders:BDR,shading:{fill:'1E3A5F',type:ShadingType.CLEAR},margins:{top:90,bottom:90,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Criterio',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
+          new TableCell({borders:BDR,shading:{fill:'1E3A5F',type:ShadingType.CLEAR},margins:{top:90,bottom:90,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Estado',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
         ]}),
-        ...(programas || []).map((p: any, i: number) => new TableRow({ children: [
-          new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: p.titulo || p.nombre || 'Sin nombre', size: 17, font: 'Arial', bold: true })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.area || 'General', size: 17, font: 'Arial' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.fase_actual || 'N/A', size: 17, font: 'Arial' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: `≥${p.criterio_dominio_pct || 90}%`, size: 17, font: 'Arial' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: p.estado === 'dominado' ? 'D1FAE5' : p.estado === 'activo' || p.estado === 'intervencion' ? 'DBEAFE' : 'F8FAFC', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.estado === 'dominado' ? '✅ Dominado' : p.estado === 'activo' ? '🔵 Activo' : p.estado === 'intervencion' ? '🔵 En intervención' : p.estado || 'N/A', size: 17, font: 'Arial', color: p.estado === 'dominado' ? '065F46' : '1D4ED8' })] })] }),
-        ]})),
-        ...(!programas || programas.length === 0 ? [new TableRow({ children: [
-          new TableCell({ borders: BDR, columnSpan: 5, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Sin programas registrados', size: 18, font: 'Arial', color: '9CA3AF' })] })] }),
-        ]})] : []),
+        ...programasArr.map((p:any,i:number)=>{
+          const isDom=p.estado==='dominado', isAct=p.estado==='activo'||p.estado==='intervencion'
+          return new TableRow({children:[
+            new TableCell({borders:BDR,shading:{fill:i%2===0?'F8FAFC':'FFFFFF',type:ShadingType.CLEAR},margins:{top:70,bottom:70,left:120,right:80},children:[new Paragraph({children:[new TextRun({text:p.titulo||p.nombre||'Sin título',size:17,font:'Arial',bold:true})]})]  }),
+            new TableCell({borders:BDR,shading:{fill:i%2===0?'F8FAFC':'FFFFFF',type:ShadingType.CLEAR},margins:{top:70,bottom:70,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:p.area||'General',size:16,font:'Arial'})]})]  }),
+            new TableCell({borders:BDR,shading:{fill:i%2===0?'F8FAFC':'FFFFFF',type:ShadingType.CLEAR},margins:{top:70,bottom:70,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:p.fase_actual?.replace(/_/g,' ')||'N/A',size:16,font:'Arial'})]})]  }),
+            new TableCell({borders:BDR,shading:{fill:i%2===0?'F8FAFC':'FFFFFF',type:ShadingType.CLEAR},margins:{top:70,bottom:70,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:`≥${p.criterio_dominio_pct||90}%`,bold:true,size:17,font:'Arial',color:'1E40AF'})]})]  }),
+            new TableCell({borders:BDR,shading:{fill:isDom?'DCFCE7':isAct?'DBEAFE':'F1F5F9',type:ShadingType.CLEAR},margins:{top:70,bottom:70,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:isDom?'✓ DOMINADO':isAct?'EN CURSO':p.estado?.toUpperCase()||'N/A',bold:true,size:16,font:'Arial',color:isDom?'15803D':isAct?'1D4ED8':'475569'})]})]  }),
+          ]})
+        }),
+        ...(!programasArr.length?[new TableRow({children:[new TableCell({borders:BDR,columnSpan:5,margins:{top:80,bottom:80,left:120,right:120},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Sin programas registrados en el período actual',size:17,font:'Arial',color:'94A3B8',italics:true})]})]})]})]:  []),
       ]
     }),
 
-    // IV. Progreso por área
-    ...(Object.keys(areaMap).length > 0 ? [
-      h2('IV. AVANCE POR ÁREA DE INTERVENCIÓN'),
-      new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [2800, 2000, 4560],
-        rows: [
-          new TableRow({ children: [
-            new TableCell({ borders: BDR, shading: { fill: '0F172A', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: 'Área', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
-            new TableCell({ borders: BDR, shading: { fill: '0F172A', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Promedio', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
-            new TableCell({ borders: BDR, shading: { fill: '0F172A', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Indicador visual', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
+    // VI. HISTORIAL
+    ...(historial.length>0?[
+      h2('VI.  REGISTRO CRONOLÓGICO DE SESIONES TERAPÉUTICAS'),
+      pp(`Registro de las últimas ${Math.min(historial.length,12)} sesiones con indicadores conductuales medidos por el terapeuta durante cada intervención:`),
+      new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[1800,1500,1500,1500,3060],
+        rows:[
+          new TableRow({children:[
+            new TableCell({borders:BDR,shading:{fill:'334155',type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:120,right:80},children:[new Paragraph({children:[new TextRun({text:'Fecha',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
+            new TableCell({borders:BDR,shading:{fill:'334155',type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Logro obj.',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
+            new TableCell({borders:BDR,shading:{fill:'334155',type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Atención',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
+            new TableCell({borders:BDR,shading:{fill:'334155',type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:'Tolerancia',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
+            new TableCell({borders:BDR,shading:{fill:'334155',type:ShadingType.CLEAR},margins:{top:80,bottom:80,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:'Observación clínica',bold:true,size:17,font:'Arial',color:'FFFFFF'})]})]  }),
           ]}),
-          ...Object.entries(areaMap).map(([area, vals], i) => {
-            const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
-            const color = avg >= 75 ? '065F46' : avg >= 50 ? 'B45309' : 'B91C1C'
-            const fill = avg >= 75 ? 'D1FAE5' : avg >= 50 ? 'FEF3C7' : 'FEE2E2'
-            return new TableRow({ children: [
-              new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: area, size: 18, font: 'Arial', bold: true })] })] }),
-              new TableCell({ borders: BDR, shading: { fill, type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${avg}%`, size: 22, font: 'Arial', bold: true, color })] })] }),
-              new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: barraProgreso(avg, 18), size: 16, font: 'Courier New', color })] })] }),
+          ...historial.map((s:any,i:number)=>{
+            const logro=extraerLogro(s)??0
+            const aten=s.datos?.nivel_atencion?`${Math.round((s.datos.nivel_atencion/5)*100)}%`:'—'
+            const tol=s.datos?.tolerancia_frustracion?`${Math.round((s.datos.tolerancia_frustracion/5)*100)}%`:'—'
+            const obs=s.datos?.observaciones_generales||s.datos?.notas||'Sin observación registrada'
+            const fc=logro>=75?'15803D':logro>=50?'92400E':'991B1B'
+            const fg=logro>=75?'DCFCE7':logro>=50?'FEF3C7':'FEE2E2'
+            const rb=i%2===0?'F8FAFC':'FFFFFF'
+            return new TableRow({children:[
+              new TableCell({borders:BDR,shading:{fill:rb,type:ShadingType.CLEAR},margins:{top:60,bottom:60,left:120,right:80},children:[new Paragraph({children:[new TextRun({text:new Date(s.fecha_sesion).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit'}),size:16,font:'Arial'})]})]  }),
+              new TableCell({borders:BDR,shading:{fill:fg,type:ShadingType.CLEAR},margins:{top:60,bottom:60,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:`${logro}%`,bold:true,size:20,font:'Arial',color:fc})]})]  }),
+              new TableCell({borders:BDR,shading:{fill:rb,type:ShadingType.CLEAR},margins:{top:60,bottom:60,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:aten,size:16,font:'Arial',color:'475569'})]})]  }),
+              new TableCell({borders:BDR,shading:{fill:rb,type:ShadingType.CLEAR},margins:{top:60,bottom:60,left:80,right:80},children:[new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:tol,size:16,font:'Arial',color:'475569'})]})]  }),
+              new TableCell({borders:BDR,shading:{fill:rb,type:ShadingType.CLEAR},margins:{top:60,bottom:60,left:80,right:80},children:[new Paragraph({children:[new TextRun({text:obs.length>75?obs.slice(0,75)+'…':obs,size:15,font:'Arial',color:'64748B',italics:true})]})]}),
             ]})
           }),
         ]
       }),
-    ] : []),
+    ]:[]),
 
-    // V. Historial de sesiones
-    ...(historialReciente.length > 0 ? [
-      h2('V. HISTORIAL DE SESIONES (últimas 15)'),
-      new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [2200, 2000, 2580, 2580],
-        rows: [
-          new TableRow({ children: [
-            new TableCell({ borders: BDR, shading: { fill: '334155', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: 'Fecha', bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
-            new TableCell({ borders: BDR, shading: { fill: '334155', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Logro', bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
-            new TableCell({ borders: BDR, shading: { fill: '334155', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Atención', bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
-            new TableCell({ borders: BDR, shading: { fill: '334155', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Tolerancia', bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
-          ]}),
-          ...historialReciente.map((s: any, i: number) => {
-            const logro = parseNivelLogro(s.datos?.nivel_logro_objetivos ?? s.datos?.porcentaje_logro ?? s.datos?.porcentaje_exito) ?? 0
-            const atencion = s.datos?.nivel_atencion ? `${Math.round((s.datos.nivel_atencion/5)*100)}%` : '—'
-            const tolerancia = s.datos?.tolerancia_frustracion ? `${Math.round((s.datos.tolerancia_frustracion/5)*100)}%` : '—'
-            const color = logro >= 75 ? '065F46' : logro >= 50 ? 'B45309' : 'B91C1C'
-            const fill = i % 2 === 0 ? 'F8FAFC' : 'FFFFFF'
-            const fecha = new Date(s.fecha_sesion).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' })
-            return new TableRow({ children: [
-              new TableCell({ borders: BDR, shading: { fill, type: ShadingType.CLEAR }, margins: { top: 50, bottom: 50, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: fecha, size: 16, font: 'Arial' })] })] }),
-              new TableCell({ borders: BDR, shading: { fill: logro >= 75 ? 'D1FAE5' : logro >= 50 ? 'FEF3C7' : 'FEE2E2', type: ShadingType.CLEAR }, margins: { top: 50, bottom: 50, left: 80, right: 80 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${logro}%`, size: 18, font: 'Arial', bold: true, color })] })] }),
-              new TableCell({ borders: BDR, shading: { fill, type: ShadingType.CLEAR }, margins: { top: 50, bottom: 50, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: atencion, size: 16, font: 'Arial' })] })] }),
-              new TableCell({ borders: BDR, shading: { fill, type: ShadingType.CLEAR }, margins: { top: 50, bottom: 50, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: tolerancia, size: 16, font: 'Arial' })] })] }),
-            ]})
-          }),
-        ]
-      }),
-    ] : []),
+    // VII. EVOLUCIÓN
+    h2('VII.  EVOLUCIÓN DEL PROCESO TERAPÉUTICO'),
+    ...textoProceso.split('\n').filter((l:string)=>l.trim()).map((l:string)=>pp(l)),
 
-    // VI. Justificación clínica
-    h2(`${Object.keys(areaMap).length > 0 ? 'VI' : 'IV'}. JUSTIFICACIÓN CLÍNICA Y PRONÓSTICO`),
-    ...textoTecnico.split('\n').filter((l: string) => l.trim()).map((line: string) => pp(line)),
+    // VIII. PRONÓSTICO
+    h2('VIII.  PRONÓSTICO Y PLAN DE TRATAMIENTO PROPUESTO'),
+    ...textoPronostico.split('\n').filter((l:string)=>l.trim()).map((l:string)=>pp(l)),
 
-    // VII. Firma
-    h2(`${Object.keys(areaMap).length > 0 ? 'VII' : 'V'}. FIRMA Y ACREDITACIÓN`),
-    new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
-      kv('Centro terapéutico', 'Jugando Aprendo'),
-      kv('Especialidad', 'Análisis Aplicado de la Conducta (ABA)'),
-      kv('Fecha de emisión', hoy),
-      kv('Documento válido para', 'Aseguradoras, IMSS, ISSSTE, Seguro privado'),
+    // IX. CONCLUSIONES
+    h2('IX.  CONCLUSIONES CLÍNICAS PARA ASEGURADORA'),
+    new Paragraph({ spacing:{before:80,after:160}, shading:{fill:'EFF6FF',type:ShadingType.CLEAR},
+      border:{left:{style:BorderStyle.SINGLE,size:14,color:'1E40AF',space:10}},
+      children:textoConclusiones.split('\n').filter((l:string)=>l.trim()).flatMap((line:string,i:number,arr:string[])=>[
+        new TextRun({text:line,size:20,font:'Arial',color:'1E3A5F'}),
+        ...(i<arr.length-1?[new TextRun({text:'\n',break:1})]:[])
+      ]),
+    }),
+
+    // X. FIRMA
+    h2('X.  ACREDITACIÓN PROFESIONAL Y FIRMA'),
+    new Table({width:{size:9360,type:WidthType.DXA},columnWidths:[3200,6160],rows:[
+      kv('Centro terapéutico','Jugando Aprendo — Centro Especializado en Neurodesarrollo'),
+      kv('Especialidad','Análisis Aplicado de la Conducta (ABA)'),
+      kv('Tipo de intervención','Terapia individual — intervención temprana y desarrollo'),
+      kv('Fecha de emisión',hoy),
+      kv('Número de documento',docNum),
+      kv('Documento válido para','Aseguradoras privadas, IMSS, ISSSTE, Seguro Popular'),
+      kv('Vigencia','6 meses a partir de la fecha de emisión'),
     ]}),
+    new Paragraph({spacing:{before:600,after:80},children:[new TextRun({text:'_'.repeat(50),size:20,font:'Arial',color:'1E293B'})]}),
+    new Paragraph({spacing:{before:0,after:20},children:[new TextRun({text:'Responsable del Tratamiento — Jugando Aprendo',bold:true,size:18,font:'Arial',color:'1E293B'})]}),
+    new Paragraph({spacing:{before:0,after:40},children:[new TextRun({text:'Terapeuta ABA Certificado / Neuropsicólogo Clínico',size:17,font:'Arial',color:'64748B',italics:true})]}),
 
-    new Paragraph({ spacing: { before: 400 }, children: [new TextRun({ text: '─'.repeat(60), size: 18, font: 'Arial', color: 'E2E8F0' })] }),
-    pp('DOCUMENTO CONFIDENCIAL — Para uso exclusivo con aseguradoras autorizadas', 'DC2626'),
-    pp(`Jugando Aprendo · ${hoy}`, '9CA3AF'),
+    new Paragraph({spacing:{before:320},border:{top:{style:BorderStyle.SINGLE,size:2,color:'E2E8F0',space:8}},
+      shading:{fill:'FFF7ED',type:ShadingType.CLEAR},
+      children:[new TextRun({text:'⚠  DOCUMENTO CONFIDENCIAL — Uso exclusivo para trámites médico-legales con aseguradoras autorizadas. Prohibida su reproducción parcial o total sin autorización del centro emisor.',size:17,font:'Arial',color:'B45309',bold:true})]}),
+    new Paragraph({spacing:{before:40,after:0},children:[new TextRun({text:`Jugando Aprendo  ·  ${hoy}  ·  Documento Nº ${docNum}`,size:16,font:'Arial',color:'94A3B8'})]}),
   ]
 
-  return { doc: makeDoc(sections, 'Reporte Seguro'), fileName }
+  return { doc: makeDoc(sections, fileName), fileName }
 }
 
 // ── Reporte Comparativo + Predicción ─────────────────────────────────────────
