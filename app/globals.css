@@ -60,17 +60,44 @@ body {
   color: var(--foreground);
 }
 
-/* Cards blancas — solo dentro de admin y modales */
+/* Cards blancas — admin, modales, y nested divs */
 .dark .admin-content .bg-white,
-.dark .fixed > .bg-white,
-.dark .fixed > div > .bg-white {
+.dark .fixed .bg-white {
   background-color: var(--card) !important;
 }
 
-/* Fondos slate — sin tocar dark:bg-* de Tailwind */
+/* Fondos slate claros en dark */
 .dark .admin-content .bg-slate-50:not([class*="dark:"]),
-.dark .admin-content .bg-slate-100:not([class*="dark:"]) {
+.dark .admin-content .bg-slate-100:not([class*="dark:"]),
+.dark .fixed .bg-slate-50:not([class*="dark:"]),
+.dark .fixed .bg-slate-100:not([class*="dark:"]) {
   background-color: var(--muted-bg) !important;
+}
+
+/* Bordes claros en dark */
+.dark .admin-content .border-slate-100:not([class*="dark:"]),
+.dark .admin-content .border-slate-200:not([class*="dark:"]),
+.dark .fixed .border-slate-100:not([class*="dark:"]),
+.dark .fixed .border-slate-200:not([class*="dark:"]) {
+  border-color: var(--card-border) !important;
+}
+
+/* Textos oscuros que no se ven en dark */
+.dark .admin-content .text-slate-800:not([class*="dark:"]),
+.dark .admin-content .text-slate-700:not([class*="dark:"]),
+.dark .fixed .text-slate-800:not([class*="dark:"]),
+.dark .fixed .text-slate-700:not([class*="dark:"]) {
+  color: var(--text-primary) !important;
+}
+.dark .admin-content .text-slate-600:not([class*="dark:"]),
+.dark .fixed .text-slate-600:not([class*="dark:"]) {
+  color: var(--text-secondary) !important;
+}
+.dark .admin-content .text-slate-500:not([class*="dark:"]),
+.dark .admin-content .text-slate-400:not([class*="dark:"]),
+.dark .fixed .text-slate-500:not([class*="dark:"]),
+.dark .fixed .text-slate-400:not([class*="dark:"]) {
+  color: var(--text-muted) !important;
 }
 
 

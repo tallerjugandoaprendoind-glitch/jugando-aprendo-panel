@@ -33,13 +33,13 @@ function colorPorPct(pct: number) {
 
 // ── Colores por área ────────────────────────────────────────────────────────
 const AREA_CONFIG: Record<string, { color: string; bg: string; label: string; emoji: string }> = {
-  comunicacion: { color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-200',   label: 'Comunicación',   emoji: '💬' },
-  conducta:     { color: 'text-red-700',    bg: 'bg-red-50 border-red-200',     label: 'Conducta',       emoji: '🎯' },
-  cognitivo:    { color: 'text-violet-700', bg: 'bg-violet-50 border-violet-200',label: 'Cognitivo',     emoji: '🧠' },
-  social:       { color: 'text-emerald-700',bg: 'bg-emerald-50 border-emerald-200',label: 'Social',      emoji: '👥' },
-  autonomia:    { color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-200', label: 'Autonomía',      emoji: '🌟' },
-  academico:    { color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-200',label: 'Académico',     emoji: '📚' },
-  sensorial:    { color: 'text-pink-700',   bg: 'bg-pink-50 border-pink-200',   label: 'Sensorial',      emoji: '✋' },
+  comunicacion: { color: 'dark:text-blue-300 text-blue-700',   bg: 'dark:bg-blue-900/30 bg-blue-50 dark:border-blue-700 border-blue-200',   label: 'Comunicación',   emoji: '💬' },
+  conducta:     { color: 'dark:text-red-300 text-red-700',    bg: 'dark:bg-red-900/30 bg-red-50 dark:border-red-700 border-red-200',     label: 'Conducta',       emoji: '🎯' },
+  cognitivo:    { color: 'dark:text-violet-300 text-violet-700', bg: 'dark:bg-violet-900/30 bg-violet-50 dark:border-violet-700 border-violet-200',label: 'Cognitivo',     emoji: '🧠' },
+  social:       { color: 'dark:text-emerald-300 text-emerald-700',bg: 'dark:bg-emerald-900/30 bg-emerald-50 dark:border-emerald-700 border-emerald-200',label: 'Social',      emoji: '👥' },
+  autonomia:    { color: 'dark:text-amber-300 text-amber-700',  bg: 'dark:bg-amber-900/30 bg-amber-50 dark:border-amber-700 border-amber-200', label: 'Autonomía',      emoji: '🌟' },
+  academico:    { color: 'dark:text-indigo-300 text-indigo-700', bg: 'dark:bg-indigo-900/30 bg-indigo-50 dark:border-indigo-700 border-indigo-200',label: 'Académico',     emoji: '📚' },
+  sensorial:    { color: 'dark:text-pink-300 text-pink-700',   bg: 'dark:bg-pink-900/30 bg-pink-50 dark:border-pink-700 border-pink-200',   label: 'Sensorial',      emoji: '✋' },
 }
 
 const FASE_COLORS: Record<string, string> = {
@@ -130,13 +130,13 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h2 className="font-black text-xl text-slate-800 flex items-center gap-2">
-            <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center">
+          <h2 className="font-black text-xl flex items-center gap-2">
+            <div className="w-8 h-8 dark:bg-indigo-900/40 bg-indigo-100 rounded-xl flex items-center justify-center">
               <Activity size={16} className="text-indigo-600" />
             </div>
             {t('programas.titulo')}
           </h2>
-          <p className="text-slate-400 text-xs mt-0.5 ml-1">Registro de datos conductuales · {childName}</p>
+          <p className="text-xs mt-0.5 ml-1" style={{color:"var(--text-muted)"}}>Registro de datos conductuales · {childName}</p>
         </div>
         <button onClick={() => setShowCrear(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
@@ -147,23 +147,23 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: t('programas.activos'), value: stats.activos, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-          { label: t('programas.dominados'), value: stats.dominados, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-          { label: t('programas.enIntervencion'), value: stats.enIntervencion, color: 'text-violet-600', bg: 'bg-violet-50' },
-          { label: t('programas.alertasIA'), value: stats.alertas, color: 'text-amber-600', bg: 'bg-amber-50' },
+          { label: t('programas.activos'), value: stats.activos, color: 'text-indigo-400', bg: 'bg-indigo-900/20 dark:bg-indigo-900/30' },
+          { label: t('programas.dominados'), value: stats.dominados, color: 'text-emerald-400', bg: 'bg-emerald-900/20 dark:bg-emerald-900/30' },
+          { label: t('programas.enIntervencion'), value: stats.enIntervencion, color: 'text-violet-400', bg: 'bg-violet-900/20 dark:bg-violet-900/30' },
+          { label: t('programas.alertasIA'), value: stats.alertas, color: 'text-amber-400', bg: 'bg-amber-900/20 dark:bg-amber-900/30' },
         ].map(s => (
           <div key={s.label} className={`${s.bg} rounded-2xl p-3 text-center`}>
             <p className={`font-black text-2xl ${s.color}`}>{s.value}</p>
-            <p className="text-xs text-slate-500 font-medium mt-0.5">{s.label}</p>
+            <p className="text-xs font-medium mt-0.5" style={{color:"var(--text-secondary)"}}>{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Alertas IA proactivas */}
       {loadingAI && (
-        <div className="bg-violet-50 border border-violet-200 rounded-2xl p-4 flex items-center gap-3">
+        <div className="dark:bg-violet-900/20 bg-violet-50 border dark:border-violet-700 border-violet-200 rounded-2xl p-4 flex items-center gap-3">
           <Loader2 size={16} className="animate-spin text-violet-500" />
-          <p className="text-sm text-violet-700 font-medium">{t('dashboard.ariAnalizando')}</p>
+          <p className="text-sm font-medium dark:text-violet-300 text-violet-700">{t('dashboard.ariAnalizando')}</p>
         </div>
       )}
       {aiAnalysis && aiAnalysis.alertas?.length > 0 && (
@@ -172,8 +172,8 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
             <Brain size={11} className="text-violet-500" /> Análisis ARIA
           </p>
           {aiAnalysis.resumen && (
-            <div className="bg-gradient-to-r from-violet-50 to-indigo-50 border border-violet-200 rounded-2xl p-4">
-              <p className="text-sm text-violet-800 leading-relaxed">{aiAnalysis.resumen}</p>
+            <div className="dark:bg-violet-900/20 bg-gradient-to-r from-violet-50 to-indigo-50 border dark:border-violet-700 border-violet-200 rounded-2xl p-4">
+              <p className="text-sm leading-relaxed dark:text-violet-200 text-violet-800">{aiAnalysis.resumen}</p>
             </div>
           )}
           {aiAnalysis.alertas.map((alerta: any, i: number) => (
@@ -189,7 +189,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
               filtroArea === area
                 ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-slate-600 border-slate-200 hover:border-indigo-300'
+                : 'bg-[var(--card)] text-[var(--text-secondary)] border-[var(--card-border)] hover:border-indigo-300'
             }`}>
             {area === 'todos' ? `📋 ${t('programas.todos')}` : `${AREA_CONFIG[area]?.emoji} ${AREA_LABELS[area] || AREA_CONFIG[area]?.label}`}
           </button>
@@ -200,15 +200,15 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
       {loading ? (
         <div className="flex flex-col items-center py-16 gap-3">
           <Loader2 className="animate-spin text-indigo-400" size={28} />
-          <p className="text-slate-400 text-sm">{t('programas.sinProgramas')}</p>
+          <p className="text-sm" style={{color:"var(--text-muted)"}}>{t('programas.sinProgramas')}</p>
         </div>
       ) : programasFiltrados.length === 0 ? (
-        <div className="bg-white dark:bg-slate-800 border-2 border-dashed border-slate-200 dark:border-slate-600 rounded-3xl p-14 text-center">
-          <div className="w-14 h-14 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
+        <div className="border-2 border-dashed border-[var(--card-border)] bg-[var(--card)] rounded-3xl p-14 text-center">
+          <div className="w-14 h-14 dark:bg-indigo-900/30 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
             <BarChart3 size={26} className="text-indigo-300" />
           </div>
           <p className="font-bold text-slate-500 mb-1">{t('programas.sinProgramas')}{filtroArea !== 'todos' ? ` ${t('programas.enArea').replace('{area}', AREA_CONFIG[filtroArea]?.label || '')}` : ''}</p>
-          <p className="text-xs text-slate-300">{t('programas.creaElPrimero').replace('{nombre}', childName)}</p>
+          <p className="text-xs" style={{color:"var(--text-muted)",opacity:0.6}}>{t('programas.creaElPrimero').replace('{nombre}', childName)}</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -246,9 +246,9 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
 // ── Tarjeta de alerta IA ─────────────────────────────────────────────────────
 function AlertaCard({ alerta }: { alerta: any }) {
   const colores: Record<string, string> = {
-    alta: 'bg-red-50 border-red-200 text-red-800',
-    media: 'bg-amber-50 border-amber-200 text-amber-800',
-    baja: 'bg-blue-50 border-blue-200 text-blue-700',
+    alta: 'dark:bg-red-900/30 bg-red-50 border-red-200 dark:border-red-700 text-red-800 dark:text-red-300',
+    media: 'dark:bg-amber-900/30 bg-amber-50 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-300',
+    baja: 'dark:bg-blue-900/30 bg-blue-50 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300',
   }
   const icons: Record<string, string> = { alta: '🚨', media: '⚠️', baja: 'ℹ️' }
   return (
@@ -315,7 +315,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
   }
 
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-2xl border-2 border-slate-100 dark:border-slate-700 shadow-sm overflow-hidden hover:border-indigo-100 transition-all">
+    <div className="rounded-2xl border-2 border-[var(--card-border)] bg-[var(--card)] shadow-sm overflow-hidden hover:border-indigo-100 transition-all">
       {/* Header */}
       <div className="p-5 cursor-pointer" onClick={loadDetalle}>
         <div className="flex items-start gap-3">
@@ -324,7 +324,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-black text-slate-800 text-sm">{programa.titulo}</h3>
+              <h3 className="font-black text-sm" style={{color:"var(--text-primary)"}}>{programa.titulo}</h3>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border ${area.bg} ${area.color}`}>
                 {area.label}
               </span>
@@ -332,7 +332,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
             </div>
             <p className="text-xs text-slate-400 mt-1 line-clamp-1">{programa.objetivo_lp}</p>
             <div className="flex items-center gap-4 mt-2">
-              <span className="text-xs text-slate-500 flex items-center gap-1">
+              <span className="text-xs flex items-center gap-1" style={{color:"var(--text-muted)"}}>
                 <BarChart3 size={10} /> {sesiones.length} {t('programas.sesiones') || 'sesiones'}
               </span>
               {ultimoPct !== null && (
@@ -345,7 +345,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                   </span>
                 </span>
               )}
-              <span className="text-xs text-slate-400">
+              <span className="text-xs" style={{color:"var(--text-muted)"}}>
                 {t('programas.criterio')}: {programa.criterio_dominio_pct}%
               </span>
             </div>
@@ -374,7 +374,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 
       {/* Detalle expandido */}
       {expanded && (
-        <div className="border-t border-slate-100 bg-slate-50/50 p-5 space-y-5">
+        <div className="border-t border-[var(--card-border)] bg-[var(--muted-bg)] p-5 space-y-5">
           {loadingDetalle ? (
             <div className="flex justify-center py-8">
               <Loader2 className="animate-spin text-indigo-400" size={24} />
@@ -390,7 +390,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       📈 Gráfica de progreso
                     </p>
                     {/* Selector de tipo — solo analista */}
-                    <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                    <div className="flex gap-1 bg-[var(--muted-bg)] p-1 rounded-xl">
                       {([
                         { id: 'lineas'     as const, label: t('reportes.lineas'),     emoji: '📈' },
                         { id: 'barras'     as const, label: t('reportes.barras'),     emoji: '📊' },
@@ -401,7 +401,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           title={t.label}
                           className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                             tipoGrafico === t.id
-                              ? 'bg-white shadow text-indigo-700'
+                              ? 'bg-[var(--card)] shadow text-indigo-700'
                               : 'text-slate-500 hover:text-slate-700'
                           }`}>
                           {t.emoji}
@@ -411,7 +411,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-xl p-4 border border-slate-100">
+                  <div className="rounded-xl p-4 border border-[var(--card-border)] bg-[var(--card)]">
                     {/* Leyenda de fases */}
                     <div className="flex gap-3 mb-3 flex-wrap">
                       {Object.entries(faseLabel).map(([key, label]) => {
@@ -447,7 +447,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       if (bands.length === 0) return null
                       const total = chartData.length
                       return (
-                        <div className="flex mb-1 rounded-lg overflow-hidden border border-slate-100 text-[10px] font-black">
+                        <div className="flex mb-1 rounded-lg overflow-hidden border border-[var(--card-border)] text-[10px] font-black">
                           {bands.map((b, i) => {
                             const width = ((b.end - b.start + 1) / total) * 100
                             const colors = ['bg-indigo-100 text-indigo-700', 'bg-violet-100 text-violet-700', 'bg-blue-100 text-blue-700', 'bg-purple-100 text-purple-700', 'bg-fuchsia-100 text-fuchsia-700']
@@ -494,7 +494,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       })
                       const total = chartData.length
                       return bands.length > 1 ? (
-                        <div className="flex mb-1 rounded-lg overflow-hidden border border-slate-100 text-[10px] font-black">
+                        <div className="flex mb-1 rounded-lg overflow-hidden border border-[var(--card-border)] text-[10px] font-black">
                           {bands.map((b, i) => {
                             const colors = ['bg-amber-100 text-amber-700', 'bg-orange-100 text-orange-700', 'bg-yellow-100 text-yellow-700']
                             return <div key={i} className={`${colors[i % colors.length]} flex items-center justify-center py-1 truncate`} style={{ width: `${((b.end - b.start + 1) / total) * 100}%`, minWidth: '24px' }}>{b.set}</div>
@@ -580,7 +580,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                                 <span className="text-xs font-black" style={{ color: p.color }}>{p.value}</span>
                               </div>
                             ))}
-                            <p className="text-[10px] text-slate-400 pt-1 border-t border-slate-100">
+                            <p className="text-[10px] text-slate-400 pt-1 border-t border-[var(--card-border)]">
                               {t('programas.totalSesiones')}: {chartData.length} {t('programas.sesiones') || 'sesiones'}
                             </p>
                           </div>
@@ -609,7 +609,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                         <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
                           obj.estado === 'dominado' ? 'bg-emerald-100 text-emerald-700' :
                           obj.estado === 'en_progreso' ? 'bg-indigo-100 text-indigo-700' :
-                          'bg-slate-100 text-slate-500'
+                          'bg-[var(--muted-bg)] text-[var(--text-muted)]'
                         }`}>
                           {obj.estado === 'dominado' ? t('programas.dominado') : obj.estado === 'en_progreso' ? t('programas.enProgreso') : t('programas.pendiente')}
                         </span>
@@ -625,7 +625,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                   <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📋 {t('programas.ultimasSesiones')}</p>
                   <div className="space-y-1.5">
                     {detalle.sesiones_datos_aba.slice(-6).reverse().map((s: any) => (
-                      <div key={s.id} className="flex items-center gap-3 bg-white rounded-xl p-3 border border-slate-100 text-xs">
+                      <div key={s.id} className="flex items-center gap-3 rounded-xl p-3 border border-[var(--card-border)] bg-[var(--card)] text-xs">
                         <span className="text-slate-400 w-20 shrink-0">{s.fecha}</span>
                         <FaseTag fase={s.fase} small />
                         {s.porcentaje_exito !== null && (
@@ -649,7 +649,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
               {(detalle.sd_estimulo || detalle.reforzadores || detalle.materiales) && (
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">📌 Procedimiento</p>
-                  <div className="bg-white dark:bg-slate-700 rounded-xl p-4 border border-slate-100 dark:border-slate-600 space-y-2 text-xs text-slate-600 dark:text-slate-300">
+                  <div className="rounded-xl p-4 border border-[var(--card-border)] bg-[var(--card)] space-y-2 text-xs text-slate-600 dark:text-slate-300">
                     {detalle.sd_estimulo && <p><span className="font-bold">📍 Sd:</span> {detalle.sd_estimulo}</p>}
                     {detalle.unidad_positiva && <p><span className="font-bold">✅ Unidad +:</span> {detalle.unidad_positiva}</p>}
                     {detalle.unidad_negativa && <p><span className="font-bold">❎ Unidad -:</span> {detalle.unidad_negativa}</p>}
@@ -671,13 +671,13 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
   const { t } = useI18n()
   const labels: Record<string, { label: string; color: string }> = {
-    linea_base:    { label: t('programas.lineaBase'),    color: 'bg-slate-100 text-slate-600' },
+    linea_base:    { label: t('programas.lineaBase'),    color: 'bg-[var(--muted-bg)] text-[var(--text-secondary)]' },
     intervencion:  { label: 'Intervención',  color: 'bg-indigo-100 text-indigo-700' },
     mantenimiento: { label: t('programas.mantenimiento'), color: 'bg-emerald-100 text-emerald-700' },
     seguimiento:   { label: 'Seguimiento',   color: 'bg-amber-100 text-amber-700' },
     dominado:      { label: t('programas.dominado'),   color: 'bg-emerald-100 text-emerald-700' },
   }
-  const cfg = labels[fase] || { label: fase, color: 'bg-slate-100 text-slate-500' }
+  const cfg = labels[fase] || { label: fase, color: 'bg-[var(--muted-bg)] text-[var(--text-muted)]' }
   return (
     <span className={`${cfg.color} rounded-full font-bold ${small ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5'}`}>
       {cfg.label}
@@ -739,15 +739,15 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+      <div className="rounded-3xl bg-[var(--card)] w-full max-w-md shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-5">
             <div>
-              <h3 className="font-black text-lg text-slate-800">{t('programas.registrarSesion')}</h3>
+              <h3 className="font-black text-lg" style={{color:"var(--text-primary)"}}>{t('programas.registrarSesion')}</h3>
               <p className="text-sm text-slate-400 mt-0.5">{programa.titulo}</p>
             </div>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-[var(--muted-bg)]"><X size={18} /></button>
           </div>
 
           <div className="space-y-4">
@@ -756,12 +756,12 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('common.fecha')}</label>
                 <input type="date" value={form.fecha}
                   onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
-                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
+                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
               </div>
               <div>
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('ui.phase')}</label>
                 <select value={form.fase} onChange={e => setForm(f => ({ ...f, fase: e.target.value }))}
-                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400">
+                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400">
                   <option value="linea_base">{t('ui.baseline')}</option>
                   <option value="intervencion">{t('ui.intervention')}</option>
                   <option value="mantenimiento">{t('programas.mantenimiento')}</option>
@@ -820,7 +820,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
                 value={form.nivel_ayuda_custom}
                 onChange={e => setForm(f => ({ ...f, nivel_ayuda: e.target.value, nivel_ayuda_custom: e.target.value }))}
                 {...{placeholder: t('ui.observations_session')}}
-                className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
+                className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
             </div>
 
             {/* Notas */}
@@ -828,12 +828,12 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">📝 Notas</label>
               <textarea value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
                 rows={2} {...{placeholder: t('ui.session_observations')}}
-                className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
+                className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm resize-none outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
             </div>
           </div>
 
           <div className="flex gap-3 mt-5">
-            <button onClick={onClose} className="flex-1 py-3 text-slate-400 font-bold border-2 border-slate-100 rounded-xl hover:bg-slate-50">
+            <button onClick={onClose} className="flex-1 py-3 text-slate-400 font-bold border-2 border-slate-100 rounded-xl hover:bg-[var(--muted-bg)]">
               Cancelar
             </button>
             <button onClick={handleSave} disabled={saving}
@@ -889,12 +889,12 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
   }
 
   return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-800 rounded-3xl w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+      <div className="rounded-3xl bg-[var(--card)] w-full max-w-lg shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-black text-lg text-slate-800">{t('programas.nuevoPrograma')}</h3>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100"><X size={18} /></button>
+            <h3 className="font-black text-lg" style={{color:"var(--text-primary)"}}>{t('programas.nuevoPrograma')}</h3>
+            <button onClick={onClose} className="p-2 rounded-full hover:bg-[var(--muted-bg)]"><X size={18} /></button>
           </div>
 
           {/* Steps */}
@@ -911,7 +911,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.nombrePrograma')} *</label>
                 <input value={form.titulo} onChange={e => set('titulo', e.target.value)}
                   placeholder={t('programas.placeholderNombre')}
-                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
+                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 block mb-2">{t('programas.area')} *</label>
@@ -930,7 +930,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.objetivoLargoPlazo')} *</label>
                 <textarea value={form.objetivo_lp} onChange={e => set('objetivo_lp', e.target.value)}
                   rows={3} placeholder={t('ui.mastery_criterion_placeholder')}
-                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
+                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm resize-none outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
               </div>
             </div>
           )}
@@ -938,7 +938,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
           {step === 2 && (
             <div className="space-y-4">
               <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Paso 2 · Sets / Objetivos CP</p>
-              <p className="text-xs text-slate-400">{t('programas.definePasos')}</p>
+              <p className="text-xs" style={{color:"var(--text-muted)"}}>{t('programas.definePasos')}</p>
               {objetivos.map((obj, i) => (
                 <div key={i} className="flex gap-2">
                   <span className="w-7 h-7 bg-indigo-600 text-white rounded-full text-xs font-black flex items-center justify-center shrink-0 mt-2.5">{i + 1}</span>
@@ -949,7 +949,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                       setObjetivos(updated)
                     }}
                     placeholder={`Set ${i + 1}: ej: Permanece sentado ${(i + 1) * 3} minutos`}
-                    className="flex-1 p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
+                    className="flex-1 p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
                   {objetivos.length > 1 && (
                     <button onClick={() => setObjetivos(objetivos.filter((_, j) => j !== i))}
                       className="p-2.5 text-slate-300 hover:text-red-400 mt-1"><X size={14} /></button>
@@ -957,7 +957,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 </div>
               ))}
               <button onClick={() => setObjetivos([...objetivos, { descripcion: '' }])}
-                className="w-full py-2.5 border-2 border-dashed border-slate-200 rounded-xl text-sm font-bold text-slate-400 hover:border-indigo-300 hover:text-indigo-500">
+                className="w-full py-2.5 border-2 border-dashed border-[var(--card-border)] rounded-xl text-sm font-bold text-slate-400 hover:border-indigo-300 hover:text-indigo-500">
                 + Agregar set
               </button>
               {/* Enlace Google Drive / Sheets opcional */}
@@ -967,20 +967,20 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 </label>
                 <input value={(form as any).drive_url ?? ''} onChange={e => set('drive_url', e.target.value)}
                   placeholder="https://docs.google.com/spreadsheets/..."
-                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-indigo-400" />
+                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm outline-none focus:border-indigo-400" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.criterioDominio')}</label>
                   <input type="number" min="0" max="100" value={form.criterio_dominio_pct}
                     onChange={e => set('criterio_dominio_pct', Number(e.target.value))}
-                    className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-center" />
+                    className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-center" />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-slate-500 block mb-1.5">Sesiones consecutivas</label>
                   <input type="number" min="1" value={form.criterio_sesiones_consecutivas}
                     onChange={e => set('criterio_sesiones_consecutivas', Number(e.target.value))}
-                    className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-center" />
+                    className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-center" />
                 </div>
               </div>
             </div>
@@ -1003,7 +1003,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                   <label className="text-xs font-bold text-slate-500 block mb-1">{label}</label>
                   <textarea value={(form as any)[key] ?? ''} onChange={e => set(key, e.target.value)}
                     rows={key === 'generalizacion' || key === 'notas_programa' ? 2 : 1} placeholder={placeholder}
-                    className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm resize-none outline-none focus:border-indigo-400" />
+                    className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm resize-none outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
                 </div>
               ))}
               {/* Total unidades — fijo en 10 pero editable */}
@@ -1011,7 +1011,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 <label className="text-xs font-bold text-slate-500 block mb-1">📍 Total</label>
                 <input value={(form as any).total_unidades ?? '10u.'} onChange={e => set('total_unidades', e.target.value)}
                   placeholder="10u."
-                  className="w-full p-3 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-indigo-400" />
+                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
               </div>
             </div>
           )}
@@ -1019,7 +1019,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
           <div className="flex gap-3 mt-6">
             {step > 1 && (
               <button onClick={() => setStep(s => s - 1)}
-                className="flex-1 py-3 text-slate-500 font-bold border-2 border-slate-100 rounded-xl hover:bg-slate-50">
+                className="flex-1 py-3 text-slate-500 font-bold border-2 border-slate-100 rounded-xl hover:bg-[var(--muted-bg)]">
                 ← Atrás
               </button>
             )}

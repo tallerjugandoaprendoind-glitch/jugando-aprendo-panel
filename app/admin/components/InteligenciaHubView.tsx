@@ -77,14 +77,12 @@ function ScoreRing({ score, size = 80, color }: { score: number; size?: number; 
 }
 
 function Badge({ label, color }: { label: string; color: string }) {
-  const { t } = useI18n()
-
   const colors: Record<string, string> = {
-    green: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    red: 'bg-red-50 text-red-700 border-red-200',
-    yellow: 'bg-amber-50 text-amber-700 border-amber-200',
-    blue: 'bg-blue-50 text-blue-700 border-blue-200',
-    purple: 'bg-purple-50 text-purple-700 border-purple-200',
+    green: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+    red: 'bg-red-500/15 text-red-400 border-red-500/30',
+    yellow: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+    blue: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    purple: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
   }
   return (
     <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border ${colors[color] || colors.blue}`}>
@@ -102,7 +100,7 @@ function ProgressBar({ value, max = 100, color = 'blue' }: { value: number; max?
     yellow: 'bg-amber-500', purple: 'bg-purple-500', gray: 'bg-slate-400'
   }
   return (
-    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+    <div className="w-full rounded-full h-2 overflow-hidden" style={{ background: 'var(--muted-bg)' }}>
       <div className={`h-full rounded-full transition-all duration-700 ${colors[color] || colors.blue}`}
         style={{ width: `${pct}%` }} />
     </div>
@@ -710,11 +708,159 @@ function TabCompetitividad() {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TAB: PATRONES ABA (CAPA 1)
+// TAB: PATRONES ABA (CAPA 1) — Rediseño neuropsicológico profesional
 // ═══════════════════════════════════════════════════════════════════════════════
+const PATRON_CONFIG: Record<string, {
+  label: string; icon: string; accent: string; bg: string; border: string; text: string; badge: string
+}> = {
+  regresion:     { label: 'Regresión Conductual',   icon: '↘', accent: '#ef4444', bg: 'rgba(239,68,68,0.08)',    border: 'rgba(239,68,68,0.25)',    text: '#fca5a5', badge: 'bg-red-500/15 text-red-400 border-red-500/30' },
+  estancamiento: { label: 'Plateau de Aprendizaje', icon: '→', accent: '#f59e0b', bg: 'rgba(245,158,11,0.08)',   border: 'rgba(245,158,11,0.25)',   text: '#fcd34d', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
+  aceleracion:   { label: 'Aceleración del Logro',  icon: '↗', accent: '#10b981', bg: 'rgba(16,185,129,0.08)',   border: 'rgba(16,185,129,0.25)',   text: '#6ee7b7', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
+  inconsistencia:{ label: 'Variabilidad Alta',      icon: '⟺', accent: '#8b5cf6', bg: 'rgba(139,92,246,0.08)',   border: 'rgba(139,92,246,0.25)',   text: '#c4b5fd', badge: 'bg-violet-500/15 text-violet-400 border-violet-500/30' },
+  dominio:       { label: 'Criterio de Dominio',    icon: '★', accent: '#3b82f6', bg: 'rgba(59,130,246,0.08)',   border: 'rgba(59,130,246,0.25)',   text: '#93c5fd', badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+}
+
+function PatronCard({ p, index }: { p: any; index: number }) {
+  const cfg = PATRON_CONFIG[p.tipo] || PATRON_CONFIG.estancamiento
+  const delta = p.valor_actual - p.valor_anterior
+  return (
+    <div className="rounded-2xl p-5 border transition-all"
+      style={{ background: cfg.bg, borderColor: cfg.border }}>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-black flex-shrink-0"
+            style={{ background: `${cfg.accent}20`, color: cfg.accent }}>
+            {cfg.icon}
+          </div>
+          <div>
+            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${cfg.badge}`}>
+              {cfg.label}
+            </span>
+            <p className="font-black text-sm mt-1.5" style={{ color: 'var(--text-primary)' }}>{p.area}</p>
+          </div>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Confianza</p>
+          <div className="flex items-center gap-1.5 justify-end">
+            <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="h-full rounded-full" style={{ width: `${p.confianza}%`, background: cfg.accent }} />
+            </div>
+            <span className="text-sm font-black" style={{ color: cfg.accent }}>{p.confianza}%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Métricas */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {[
+          { label: 'Valor anterior', val: `${p.valor_anterior}%` },
+          { label: 'Valor actual',   val: `${p.valor_actual}%`, highlight: true },
+          { label: 'Δ Cambio',       val: `${delta >= 0 ? '+' : ''}${delta}%` },
+        ].map(m => (
+          <div key={m.label} className="rounded-xl p-2.5 text-center"
+            style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <p className="text-[9px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
+            <p className="text-base font-black" style={{ color: m.highlight ? cfg.accent : 'var(--text-primary)' }}>{m.val}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Descripción clínica */}
+      <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{p.descripcion}</p>
+
+      {/* Acción recomendada */}
+      <div className="rounded-xl px-4 py-3 flex items-start gap-2.5"
+        style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid ${cfg.border}` }}>
+        <span className="text-sm mt-0.5 flex-shrink-0" style={{ color: cfg.accent }}>💡</span>
+        <p className="text-xs leading-relaxed font-medium" style={{ color: cfg.text }}>{p.accion_sugerida}</p>
+      </div>
+
+      {/* Sesiones involucradas */}
+      <p className="text-[10px] mt-3" style={{ color: 'var(--text-muted)' }}>
+        Basado en <strong style={{ color: 'var(--text-secondary)' }}>{p.sesiones_involucradas} sesiones</strong> · {p.semanas_detectado} sem. de monitoreo
+      </p>
+    </div>
+  )
+}
+
+function ResumenIACard({ texto }: { texto: string }) {
+  // Parse **bold** markdown
+  const renderText = (t: string) =>
+    t.split(/\*\*(.*?)\*\*/g).map((part, i) =>
+      i % 2 === 1
+        ? <strong key={i} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{part}</strong>
+        : part
+    )
+
+  const bloques = texto.split(/\n\n+/).filter(b => b.trim())
+
+  const sectionColors: Record<string, string> = {
+    'INTERPRETACIÓN': '#a78bfa',
+    'HIPÓTESIS': '#fb923c',
+    'INTERVENCIÓN': '#f87171',
+    'SEÑAL POSITIVA': '#34d399',
+    'RECOMENDACIÓN': '#60a5fa',
+  }
+
+  return (
+    <div className="rounded-2xl overflow-hidden border" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
+      {/* Header tipo informe */}
+      <div className="px-5 py-3.5 flex items-center justify-between"
+        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%)', borderBottom: '1px solid rgba(139,92,246,0.3)' }}>
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-violet-500/20 flex items-center justify-center">
+            <Brain size={14} className="text-violet-300" />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-violet-200">Informe Clínico IA</p>
+            <p className="text-[10px] text-violet-400">Análisis neuropsicológico · ABA Supervisor</p>
+          </div>
+        </div>
+        <span className="text-[10px] px-2.5 py-1 rounded-full font-black border"
+          style={{ background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', borderColor: 'rgba(139,92,246,0.3)' }}>
+          BCBA IA
+        </span>
+      </div>
+
+      {/* Cuerpo */}
+      <div className="p-5 space-y-3">
+        {bloques.map((bloque, i) => {
+          const upper = bloque.toUpperCase()
+          const matchKey = Object.keys(sectionColors).find(k => upper.includes(k))
+          const color = matchKey ? sectionColors[matchKey] : null
+
+          // Es encabezado tipo **TEXTO**
+          if (/^\*\*[^*]+\*\*[:\s]*$/.test(bloque.trim())) {
+            const label = bloque.replace(/\*\*/g, '').replace(/:$/, '').trim()
+            const c = Object.entries(sectionColors).find(([k]) => label.toUpperCase().includes(k))?.[1] || '#94a3b8'
+            return (
+              <div key={i} className="flex items-center gap-2 pt-1">
+                <div className="w-1 h-4 rounded-full flex-shrink-0" style={{ background: c }} />
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: c }}>{label}</p>
+                <div className="flex-1 h-px" style={{ background: `${c}25` }} />
+              </div>
+            )
+          }
+
+          // Párrafo normal
+          return (
+            <p key={i} className="text-sm leading-relaxed pl-3"
+              style={{
+                color: 'var(--text-secondary)',
+                borderLeft: color ? `2px solid ${color}40` : '2px solid transparent'
+              }}>
+              {renderText(bloque.trim())}
+            </p>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
   const { t } = useI18n()
-
   const [selected, setSelected] = useState<Paciente | null>(null)
   const [resultado, setResultado] = useState<any>(null)
   const [loading, setLoading] = useState(false)
@@ -736,87 +882,150 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
     finally { setLoading(false) }
   }
 
-  const colorTipo: Record<string, string> = {
-    regresion: 'bg-red-100 text-red-700 border-red-200',
-    estancamiento: 'bg-amber-100 text-amber-700 border-amber-200',
-    aceleracion: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    inconsistencia: 'bg-orange-100 text-orange-700 border-orange-200',
-    dominio: 'bg-blue-100 text-blue-700 border-blue-200',
-  }
+  const urgentes = resultado?.patrones?.filter((p: any) => p.tipo === 'regresion' || p.tipo === 'estancamiento') || []
+  const positivos = resultado?.patrones?.filter((p: any) => p.tipo === 'aceleracion' || p.tipo === 'dominio') || []
+  const otros = resultado?.patrones?.filter((p: any) => p.tipo === 'inconsistencia') || []
 
   return (
-    <div className="space-y-4">
-      <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
-        <div className="flex items-center gap-2 mb-1">
-          <Activity size={16} className="text-violet-600" />
-          <span className="font-bold text-violet-800 text-sm">{t('hub.detectorPatrones')}</span>
+    <div className="space-y-5">
+      {/* Header informativo */}
+      <div className="rounded-2xl p-5 border"
+        style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(99,102,241,0.08) 100%)', borderColor: 'rgba(139,92,246,0.25)' }}>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(139,92,246,0.2)' }}>
+            <Activity size={16} className="text-violet-400" />
+          </div>
+          <div>
+            <p className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Detector de Patrones ABA — CAPA 1</p>
+            <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Análisis de regresiones, plateaus, aceleraciones e inconsistencias conductuales</p>
+          </div>
         </div>
-        <p className="text-xs text-violet-600">Analiza el historial de sesiones y detecta regresiones, estancamientos, aceleraciones e inconsistencias.</p>
+        <div className="flex flex-wrap gap-3 mt-3 pt-3" style={{ borderTop: '1px solid rgba(139,92,246,0.15)' }}>
+          {[
+            { icon: '↘', label: 'Regresión',   color: '#f87171' },
+            { icon: '→', label: 'Plateau',      color: '#fbbf24' },
+            { icon: '↗', label: 'Aceleración',  color: '#34d399' },
+            { icon: '⟺', label: 'Variabilidad', color: '#a78bfa' },
+            { icon: '★', label: 'Dominio',      color: '#60a5fa' },
+          ].map(item => (
+            <div key={item.label} className="flex items-center gap-1.5">
+              <span className="text-xs font-black" style={{ color: item.color }}>{item.icon}</span>
+              <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{item.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className=" rounded-2xl border border-slate-100 p-4 space-y-3" style={{ background: "var(--card)" }}>
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">{t('ui.select_patient')}</label>
-        <select className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-          value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
-          <option value="">{t('hub.seleccionar')}</option>
-          {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
+
+      {/* Selector + botón */}
+      <div className="rounded-2xl p-5 border space-y-4" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
+        <div>
+          <label className="block text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
+            Selecciona Paciente
+          </label>
+          <select
+            className="w-full rounded-xl px-4 py-3 text-sm font-semibold outline-none border transition-all"
+            style={{
+              background: 'var(--input-bg)', borderColor: 'var(--input-border)',
+              color: 'var(--text-primary)'
+            }}
+            value={selected?.id || ''} onChange={e => setSelected(pacientes.find(p => p.id === e.target.value) || null)}>
+            <option value="">— Seleccionar paciente —</option>
+            {pacientes.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+        </div>
         <button onClick={analizar} disabled={!selected || loading}
-          className="w-full py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition">
-          {loading ? <><RefreshCw size={14} className="animate-spin" /> Analizando patrones...</> : <><Activity size={14} /> Detectar Patrones</>}
+          className="w-full py-3.5 rounded-xl text-sm font-black flex items-center justify-center gap-2.5 transition-all"
+          style={{
+            background: !selected || loading ? 'rgba(124,58,237,0.4)' : 'linear-gradient(135deg, #7c3aed, #6366f1)',
+            color: 'white',
+            boxShadow: !selected || loading ? 'none' : '0 4px 20px rgba(124,58,237,0.35)'
+          }}>
+          {loading
+            ? <><RefreshCw size={15} className="animate-spin" /> Analizando historial clínico...</>
+            : <><Activity size={15} /> Detectar Patrones</>}
         </button>
-        {error && <p className="text-red-500 text-xs">{error}</p>}
+        {error && (
+          <div className="rounded-xl px-4 py-3 text-xs font-medium"
+            style={{ background: 'rgba(239,68,68,0.1)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.25)' }}>
+            {error}
+          </div>
+        )}
       </div>
+
+      {/* Resultados */}
       {resultado && (
-        <div className="space-y-3">
+        <div className="space-y-5">
+          {/* KPIs */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Sesiones', val: resultado.sesiones_analizadas || 0 },
-              { label: 'Patrones', val: resultado.patrones?.length || 0 },
-              { label: 'Urgentes', val: resultado.patrones_urgentes || 0 },
+              { label: 'Sesiones analizadas', val: resultado.sesiones_analizadas || 0, color: '#60a5fa', icon: '📋' },
+              { label: 'Patrones detectados', val: resultado.patrones?.length || 0,   color: '#a78bfa', icon: '🔍' },
+              { label: 'Requieren atención',  val: resultado.patrones_urgentes || 0,   color: resultado.patrones_urgentes > 0 ? '#f87171' : '#34d399', icon: resultado.patrones_urgentes > 0 ? '⚠' : '✓' },
             ].map(m => (
-              <div key={m.label} className=" rounded-xl border border-slate-100 p-3 text-center" style={{ background: "var(--card)" }}>
-                <p className="text-2xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{m.val}</p>
-                <p className="text-xs text-slate-400">{m.label}</p>
+              <div key={m.label} className="rounded-2xl p-4 text-center border"
+                style={{ background: `${m.color}12`, borderColor: `${m.color}25` }}>
+                <p className="text-2xl mb-1">{m.icon}</p>
+                <p className="text-2xl font-black" style={{ color: m.color }}>{m.val}</p>
+                <p className="text-[10px] mt-1 leading-tight" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
               </div>
             ))}
           </div>
-          {(resultado.patrones || []).map((p: any, i: number) => (
-            <div key={i} className={`rounded-xl border p-4 ${colorTipo[p.tipo] || 'border-slate-200'}`} style={{ background: "var(--card)" }}>
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${colorTipo[p.tipo] || ''}`}>{p.tipo}</span>
-                <span className="text-xs text-slate-400">{p.confianza}% confianza</span>
-              </div>
-              <p className="font-bold text-sm text-slate-800" style={{ color: "var(--text-primary)" }}>{p.area}</p>
-              <p className="text-xs text-slate-600 mt-1">{p.descripcion}</p>
-              <p className="text-xs font-semibold mt-2 rounded-lg px-3 py-2" style={{ background: "var(--muted-bg)", color: "var(--text-secondary)" }}>💡 {p.accion_sugerida}</p>
-            </div>
-          ))}
-          {(resultado.analisis_ia || resultado.resumen) && (
-            <div className="bg-violet-50 rounded-xl border border-violet-100 p-4">
-              <p className="text-xs font-bold text-violet-700 mb-2">Resumen IA</p>
-              <p className="text-sm text-violet-800">{resultado.analisis_ia || resultado.resumen}</p>
+
+          {/* Sin patrones */}
+          {resultado.patrones?.length === 0 && (
+            <div className="rounded-2xl p-8 text-center border"
+              style={{ background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.2)' }}>
+              <p className="text-3xl mb-3">✓</p>
+              <p className="font-black text-sm mb-1" style={{ color: '#34d399' }}>Progreso Estable</p>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                {resultado.resumen || `Sin patrones problemáticos en ${resultado.sesiones_analizadas} sesiones.`}
+              </p>
             </div>
           )}
-          {/* Gráficos de progreso por programa */}
-          {resultado.programas && resultado.programas.length > 0 && (
-            <div className="rounded-xl border p-4" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
-              <p className="text-xs font-black uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-                📈 Progreso por programa
-              </p>
-              <div className="space-y-4">
-                {resultado.programas.slice(0, 4).map((prog: any) => (
-                  prog.sesiones?.length >= 2 && (
-                    <LineChartProgreso
-                      key={prog.id}
-                      sesiones={prog.sesiones}
-                      criterio={prog.criterio || 90}
-                      titulo={prog.titulo}
-                      color="#7c3aed"
-                    />
-                  )
-                ))}
+
+          {/* Patrones urgentes */}
+          {urgentes.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-red-400" />
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#f87171' }}>
+                  Requieren Atención Inmediata ({urgentes.length})
+                </p>
               </div>
+              {urgentes.map((p: any, i: number) => <PatronCard key={i} p={p} index={i} />)}
             </div>
+          )}
+
+          {/* Patrones positivos */}
+          {positivos.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-emerald-400" />
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#34d399' }}>
+                  Logros Clínicos ({positivos.length})
+                </p>
+              </div>
+              {positivos.map((p: any, i: number) => <PatronCard key={i} p={p} index={i} />)}
+            </div>
+          )}
+
+          {/* Otros */}
+          {otros.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-violet-400" />
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#a78bfa' }}>
+                  Otras Observaciones ({otros.length})
+                </p>
+              </div>
+              {otros.map((p: any, i: number) => <PatronCard key={i} p={p} index={i} />)}
+            </div>
+          )}
+
+          {/* Informe Clínico IA */}
+          {(resultado.analisis_ia || resultado.resumen) && resultado.patrones?.length > 0 && (
+            <ResumenIACard texto={resultado.analisis_ia || resultado.resumen} />
           )}
         </div>
       )}
@@ -1160,7 +1369,7 @@ export default function InteligenciaHubView() {
       </div>
 
       {/* Tabs scrollable */}
-      <div className="flex gap-1.5 bg-slate-100 rounded-xl p-1.5 overflow-x-auto">
+      <div className="flex gap-1.5 rounded-xl p-1.5 overflow-x-auto" style={{ background: 'var(--muted-bg)' }}>
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
