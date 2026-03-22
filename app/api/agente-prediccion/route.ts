@@ -64,14 +64,18 @@ export async function POST(req: NextRequest) {
 
     // Cargar TODOS los programas del paciente sin filtrar por estado
     // (el filtro de estado varía por implementación — filtramos en código)
+    // Usamos * para descubrir las columnas reales disponibles
     const { data: todosProgramas, error: errProg } = await supabaseAdmin
       .from('programas_aba')
-      .select('id, titulo, objetivo, fase_actual, criterio_dominio_pct, tipo_medicion, created_at, estado, activo, area')
+      .select('*')
       .eq('child_id', childId)
       .order('created_at', { ascending: true })
 
-    // Log para diagnóstico
-    console.log('🔍 programas_aba query:', { childId, total: todosProgramas?.length, error: errProg?.message, sample: todosProgramas?.[0] })
+    // Log columnas disponibles para diagnóstico
+    if (todosProgramas && todosProgramas.length > 0) {
+      console.log('✅ programas_aba columnas disponibles:', Object.keys(todosProgramas[0]))
+    }
+    console.log('🔍 programas_aba query:', { childId, total: todosProgramas?.length, error: errProg?.message })
 
     // Filtrar en código: excluir solo los explícitamente archivados/dados de alta
     const ESTADOS_EXCLUIDOS = ['archivado', 'alta', 'dado_de_alta', 'inactivo', 'cancelado']
@@ -86,9 +90,10 @@ export async function POST(req: NextRequest) {
         analisis_por_programa: [],
         resumen_general: null,
         _debug_total_encontrados: todosProgramas?.length || 0,
+        _debug_columnas: todosProgramas?.[0] ? Object.keys(todosProgramas[0]) : [],
         _debug_error_supabase: errProg?.message || null,
         mensaje: todosProgramas && todosProgramas.length > 0
-          ? `Se encontraron ${todosProgramas.length} programa(s) pero todos están archivados o dados de alta. Estados: ${todosProgramas.map((p: any) => p.estado).join(', ')}`
+          ? `Se encontraron ${todosProgramas.length} programa(s). Estados: ${todosProgramas.map((p: any) => p.estado).join(', ')}`
           : errProg
           ? `Error al consultar programas: ${errProg.message}`
           : 'No hay programas ABA registrados para este paciente.',
@@ -99,7 +104,7 @@ export async function POST(req: NextRequest) {
 
     for (const prog of programas) {
       const progNombre = prog.titulo || (prog as any).nombre || 'Sin nombre'
-      const progObjetivo = prog.objetivo || (prog as any).descripcion || ''
+      const progObjetivo = (prog as any).objetivo || (prog as any).descripcion || (prog as any).area || ''
 
       // Cargar sesiones — intentar primero sesiones_datos_aba, luego sesiones_programa
       let sesiones: any[] | null = null
