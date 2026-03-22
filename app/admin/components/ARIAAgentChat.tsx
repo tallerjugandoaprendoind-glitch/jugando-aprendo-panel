@@ -107,7 +107,8 @@ export default function ARIAAgentChat({
         boxShadow: 'var(--shadow-sm)',
       }}
     >
-      {/* Header */}
+      {/* Header — oculto en modo compact */}
+      {!compact && (
       <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4 flex items-center gap-3 flex-shrink-0">
         <div className="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center">
           <Brain size={18} className="text-white" />
@@ -126,6 +127,7 @@ export default function ARIAAgentChat({
           <span className="text-white/70 text-[10px] font-bold">{t('common.activo')}</span>
         </div>
       </div>
+      )}
 
       {/* Messages */}
       <div
