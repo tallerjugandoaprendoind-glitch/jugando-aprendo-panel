@@ -582,7 +582,7 @@ export default function AdminDashboard() {
       {!ariaOpen && (
         <button
           onClick={() => setAriaOpen(true)}
-          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[91] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 bg-gradient-to-br from-violet-600 to-indigo-600 relative"
+          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[91] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 bg-gradient-to-br from-violet-600 to-indigo-600"
           title="ARIA — Asistente IA">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="6" y="9" width="16" height="13" rx="3" fill="white" fillOpacity="0.9"/>
@@ -594,11 +594,7 @@ export default function AdminDashboard() {
             <rect x="2" y="12" width="2.5" height="5" rx="1.25" fill="white" fillOpacity="0.7"/>
             <rect x="23.5" y="12" width="2.5" height="5" rx="1.25" fill="white" fillOpacity="0.7"/>
           </svg>
-          <span className="absolute inset-0 rounded-full bg-violet-500 animate-ping opacity-20"/>
-          {/* Tooltip */}
-          <span className="absolute right-16 bg-slate-800 text-white text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none shadow-lg">
-            ARIA Agente IA
-          </span>
+          <span className="pointer-events-none absolute inset-0 rounded-full bg-violet-400 animate-ping opacity-20"/>
         </button>
       )}
     </div>
