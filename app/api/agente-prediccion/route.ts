@@ -62,20 +62,36 @@ export async function POST(req: NextRequest) {
     const { childId, childName } = await req.json()
     if (!childId) return NextResponse.json({ error: 'childId requerido' }, { status: 400 })
 
-    // Cargar programas ABA del paciente (todos los activos/en intervención)
-    const { data: programas } = await supabaseAdmin
+    // Cargar TODOS los programas del paciente sin filtrar por estado
+    // (el filtro de estado varía por implementación — filtramos en código)
+    const { data: todosProgramas, error: errProg } = await supabaseAdmin
       .from('programas_aba')
-      .select('id, nombre, objetivo, fase_actual, criterio_dominio_pct, tipo_medicion, created_at, estado, activo, titulo')
+      .select('id, nombre, objetivo, fase_actual, criterio_dominio_pct, tipo_medicion, created_at, estado, activo, titulo, area')
       .eq('child_id', childId)
-      .or('activo.eq.true,estado.eq.activo,estado.eq.intervencion,estado.eq.en_progreso')
       .order('created_at', { ascending: true })
 
-    if (!programas || programas.length === 0) {
+    // Log para diagnóstico
+    console.log('🔍 programas_aba query:', { childId, total: todosProgramas?.length, error: errProg?.message, sample: todosProgramas?.[0] })
+
+    // Filtrar en código: excluir solo los explícitamente archivados/dados de alta
+    const ESTADOS_EXCLUIDOS = ['archivado', 'alta', 'dado_de_alta', 'inactivo', 'cancelado']
+    const programas = (todosProgramas || []).filter((p: any) => {
+      if (ESTADOS_EXCLUIDOS.includes(p.estado?.toLowerCase())) return false
+      return true // incluir activo, intervencion, en_progreso, linea_base, dominado, null, etc.
+    })
+
+    if (programas.length === 0) {
       return NextResponse.json({
         programas_analizados: 0,
         analisis_por_programa: [],
         resumen_general: null,
-        mensaje: 'No hay programas ABA activos para este paciente.',
+        _debug_total_encontrados: todosProgramas?.length || 0,
+        _debug_error_supabase: errProg?.message || null,
+        mensaje: todosProgramas && todosProgramas.length > 0
+          ? `Se encontraron ${todosProgramas.length} programa(s) pero todos están archivados o dados de alta. Estados: ${todosProgramas.map((p: any) => p.estado).join(', ')}`
+          : errProg
+          ? `Error al consultar programas: ${errProg.message}`
+          : 'No hay programas ABA registrados para este paciente.',
       })
     }
 

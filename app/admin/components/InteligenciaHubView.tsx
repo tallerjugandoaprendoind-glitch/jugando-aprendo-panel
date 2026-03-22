@@ -276,8 +276,8 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             {/* Sin programas */}
             {((prediccion as any).programas_analizados === 0) && (
               <div className="rounded-xl p-6 text-center border-2 border-dashed" style={{ borderColor: "var(--card-border)", background: "var(--muted-bg)" }}>
-                <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>Sin programas ABA activos</p>
-                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{t('hub.creaProgramas')}el paciente para generar análisis por nivel.</p>
+                <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>Sin programas ABA con datos</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{(prediccion as any).mensaje || 'Crea programas ABA en la ficha del paciente y registra al menos una sesión para generar análisis.'}</p>
               </div>
             )}
 
