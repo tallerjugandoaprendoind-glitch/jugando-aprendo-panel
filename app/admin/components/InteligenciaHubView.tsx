@@ -720,6 +720,61 @@ const PATRON_CONFIG: Record<string, {
   dominio:       { label: 'Criterio de Dominio',    icon: '★', accent: '#3b82f6', bg: 'rgba(59,130,246,0.08)',   border: 'rgba(59,130,246,0.25)',   text: '#93c5fd', badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
 }
 
+function PatronCard({ p, index }: { p: any; index: number }) {
+  const cfg = PATRON_CONFIG[p.tipo] || PATRON_CONFIG.estancamiento
+  const delta = p.valor_actual - p.valor_anterior
+  return (
+    <div className="rounded-2xl p-5 border transition-all"
+      style={{ background: cfg.bg, borderColor: cfg.border }}>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-black flex-shrink-0"
+            style={{ background: `${cfg.accent}20`, color: cfg.accent }}>
+            {cfg.icon}
+          </div>
+          <div>
+            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${cfg.badge}`}>
+              {cfg.label}
+            </span>
+            <p className="font-black text-sm mt-1.5" style={{ color: 'var(--text-primary)' }}>{p.area}</p>
+          </div>
+        </div>
+        <div className="text-right flex-shrink-0">
+          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Confianza</p>
+          <div className="flex items-center gap-1.5 justify-end">
+            <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div className="h-full rounded-full" style={{ width: `${p.confianza}%`, background: cfg.accent }} />
+            </div>
+            <span className="text-sm font-black" style={{ color: cfg.accent }}>{p.confianza}%</span>
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        {[
+          { label: 'Valor anterior', val: `${p.valor_anterior}%` },
+          { label: 'Valor actual',   val: `${p.valor_actual}%`, highlight: true },
+          { label: 'Δ Cambio',       val: `${delta >= 0 ? '+' : ''}${delta}%` },
+        ].map(m => (
+          <div key={m.label} className="rounded-xl p-2.5 text-center"
+            style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <p className="text-[9px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
+            <p className="text-base font-black" style={{ color: m.highlight ? cfg.accent : 'var(--text-primary)' }}>{m.val}</p>
+          </div>
+        ))}
+      </div>
+      <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{p.descripcion}</p>
+      <div className="rounded-xl px-4 py-3 flex items-start gap-2.5"
+        style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid ${cfg.border}` }}>
+        <span className="text-sm mt-0.5 flex-shrink-0" style={{ color: cfg.accent }}>💡</span>
+        <p className="text-xs leading-relaxed font-medium" style={{ color: cfg.text }}>{p.accion_sugerida}</p>
+      </div>
+      <p className="text-[10px] mt-3" style={{ color: 'var(--text-muted)' }}>
+        Basado en <strong style={{ color: 'var(--text-secondary)' }}>{p.sesiones_involucradas} sesiones</strong> · {p.semanas_detectado} sem. de monitoreo
+      </p>
+    </div>
+  )
+}
+
 function RenderMD({ text }: { text: string }) {
   const parts = text.split(/\*\*(.*?)\*\*/g)
   return (
