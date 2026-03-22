@@ -62,12 +62,12 @@ export async function POST(req: NextRequest) {
     const { childId, childName } = await req.json()
     if (!childId) return NextResponse.json({ error: 'childId requerido' }, { status: 400 })
 
-    // Cargar programas ABA del paciente
+    // Cargar programas ABA del paciente (todos los activos/en intervención)
     const { data: programas } = await supabaseAdmin
       .from('programas_aba')
-      .select('id, nombre, objetivo, fase_actual, criterio_dominio_pct, tipo_medicion, created_at')
+      .select('id, nombre, objetivo, fase_actual, criterio_dominio_pct, tipo_medicion, created_at, estado, activo, titulo')
       .eq('child_id', childId)
-      .eq('activo', true)
+      .or('activo.eq.true,estado.eq.activo,estado.eq.intervencion,estado.eq.en_progreso')
       .order('created_at', { ascending: true })
 
     if (!programas || programas.length === 0) {
@@ -82,18 +82,32 @@ export async function POST(req: NextRequest) {
     const analisis_por_programa = []
 
     for (const prog of programas) {
-      // Cargar sesiones de este programa específico
-      const { data: sesiones } = await supabaseAdmin
-        .from('sesiones_programa')
+      const progNombre = prog.nombre || prog.titulo || 'Sin nombre'
+      const progObjetivo = prog.objetivo || prog.descripcion || ''
+
+      // Cargar sesiones — intentar primero sesiones_datos_aba, luego sesiones_programa
+      let sesiones: any[] | null = null
+      const { data: s1 } = await supabaseAdmin
+        .from('sesiones_datos_aba')
         .select('fecha, porcentaje_exito, fase, set_nombre, oportunidades_totales, respuestas_correctas, notas')
         .eq('programa_id', prog.id)
         .order('fecha', { ascending: true })
+      if (s1 && s1.length > 0) {
+        sesiones = s1
+      } else {
+        const { data: s2 } = await supabaseAdmin
+          .from('sesiones_programa')
+          .select('fecha, porcentaje_exito, fase, set_nombre, oportunidades_totales, respuestas_correctas, notas')
+          .eq('programa_id', prog.id)
+          .order('fecha', { ascending: true })
+        sesiones = s2
+      }
 
       if (!sesiones || sesiones.length === 0) {
         analisis_por_programa.push({
           programa_id: prog.id,
-          nombre: prog.nombre,
-          objetivo: prog.objetivo,
+          nombre: progNombre,
+          objetivo: progObjetivo,
           fase_actual: prog.fase_actual,
           criterio_dominio: prog.criterio_dominio_pct || 90,
           total_sesiones: 0,
@@ -140,8 +154,8 @@ export async function POST(req: NextRequest) {
 
       analisis_por_programa.push({
         programa_id: prog.id,
-        nombre: prog.nombre,
-        objetivo: prog.objetivo,
+        nombre: progNombre,
+        objetivo: progObjetivo,
         fase_actual: prog.fase_actual,
         criterio_dominio: criterio,
         total_sesiones: sesiones.length,
