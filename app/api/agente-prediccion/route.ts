@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     // (el filtro de estado varía por implementación — filtramos en código)
     const { data: todosProgramas, error: errProg } = await supabaseAdmin
       .from('programas_aba')
-      .select('id, nombre, objetivo, fase_actual, criterio_dominio_pct, tipo_medicion, created_at, estado, activo, titulo, area')
+      .select('id, titulo, objetivo, fase_actual, criterio_dominio_pct, tipo_medicion, created_at, estado, activo, area')
       .eq('child_id', childId)
       .order('created_at', { ascending: true })
 
@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
     const analisis_por_programa = []
 
     for (const prog of programas) {
-      const progNombre = prog.nombre || prog.titulo || 'Sin nombre'
+      const progNombre = prog.titulo || (prog as any).nombre || 'Sin nombre'
       const progObjetivo = prog.objetivo || (prog as any).descripcion || ''
 
       // Cargar sesiones — intentar primero sesiones_datos_aba, luego sesiones_programa

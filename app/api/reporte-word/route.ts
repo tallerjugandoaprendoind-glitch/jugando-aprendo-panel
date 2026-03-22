@@ -120,7 +120,7 @@ async function generarReportePadres(childId: string, userLocale = 'es'): Promise
 
   const [{ data: sesiones }, { data: programas }, { data: sesionesProg }] = await Promise.all([
     supabaseAdmin.from('registro_aba').select('datos, fecha_sesion').eq('child_id', childId).order('fecha_sesion', { ascending: true }).limit(30),
-    supabaseAdmin.from('programas_aba').select('titulo, area, fase_actual, criterio_dominio_pct, estado, nombre').eq('child_id', childId).in('estado', ['activo', 'intervencion']).limit(8),
+    supabaseAdmin.from('programas_aba').select('titulo, area, fase_actual, criterio_dominio_pct, estado').eq('child_id', childId).in('estado', ['activo', 'intervencion']).limit(8),
     supabaseAdmin.from('sesiones_datos_aba').select('fecha, porcentaje_exito, programa_id').eq('child_id', childId).order('fecha', { ascending: true }).limit(60),
   ])
 
@@ -327,7 +327,7 @@ async function generarReporteComparativo(childId: string, userLocale = 'es'): Pr
 
   const [{ data: sesiones }, { data: programas }, { data: sesionesProg }] = await Promise.all([
     supabaseAdmin.from('registro_aba').select('datos, fecha_sesion').eq('child_id', childId).order('fecha_sesion', { ascending: true }).limit(50),
-    supabaseAdmin.from('programas_aba').select('titulo, area, fase_actual, criterio_dominio_pct, estado, nombre').eq('child_id', childId).limit(12),
+    supabaseAdmin.from('programas_aba').select('titulo, area, fase_actual, criterio_dominio_pct, estado').eq('child_id', childId).limit(12),
     supabaseAdmin.from('sesiones_datos_aba').select('fecha, porcentaje_exito, programa_id').eq('child_id', childId).order('fecha', { ascending: true }).limit(80),
   ])
 
@@ -667,7 +667,7 @@ async function generarReporteSeguro(childId: string, userLocale = 'es'): Promise
 
   const [{ data: sesiones }, { data: programas }, { data: sesionesProg }] = await Promise.all([
     supabaseAdmin.from('registro_aba').select('datos, fecha_sesion').eq('child_id', childId).order('fecha_sesion', { ascending: true }).limit(60),
-    supabaseAdmin.from('programas_aba').select('titulo, area, fase_actual, criterio_dominio_pct, estado, nombre').eq('child_id', childId).limit(15),
+    supabaseAdmin.from('programas_aba').select('titulo, area, fase_actual, criterio_dominio_pct, estado').eq('child_id', childId).limit(15),
     supabaseAdmin.from('sesiones_datos_aba').select('fecha, porcentaje_exito, programa_id, fase, notas').eq('child_id', childId).order('fecha', { ascending: true }).limit(100),
   ])
 
