@@ -713,11 +713,11 @@ function TabCompetitividad() {
 const PATRON_CONFIG: Record<string, {
   label: string; icon: string; accent: string; bg: string; border: string; text: string; badge: string
 }> = {
-  regresion:     { label: 'Regresión Conductual',   icon: '↘', accent: '#ef4444', bg: 'rgba(239,68,68,0.08)',    border: 'rgba(239,68,68,0.25)',    text: '#fca5a5', badge: 'bg-red-500/15 text-red-400 border-red-500/30' },
-  estancamiento: { label: 'Plateau de Aprendizaje', icon: '→', accent: '#f59e0b', bg: 'rgba(245,158,11,0.08)',   border: 'rgba(245,158,11,0.25)',   text: '#fcd34d', badge: 'bg-amber-500/15 text-amber-400 border-amber-500/30' },
-  aceleracion:   { label: 'Aceleración del Logro',  icon: '↗', accent: '#10b981', bg: 'rgba(16,185,129,0.08)',   border: 'rgba(16,185,129,0.25)',   text: '#6ee7b7', badge: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' },
-  inconsistencia:{ label: 'Variabilidad Alta',      icon: '⟺', accent: '#8b5cf6', bg: 'rgba(139,92,246,0.08)',   border: 'rgba(139,92,246,0.25)',   text: '#c4b5fd', badge: 'bg-violet-500/15 text-violet-400 border-violet-500/30' },
-  dominio:       { label: 'Criterio de Dominio',    icon: '★', accent: '#3b82f6', bg: 'rgba(59,130,246,0.08)',   border: 'rgba(59,130,246,0.25)',   text: '#93c5fd', badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
+  regresion:     { label: 'Regresión Conductual',   icon: '↘', accent: '#e05c5c', bg: 'rgba(224,92,92,0.07)',    border: 'rgba(224,92,92,0.18)',    text: '#e8a0a0', badge: 'bg-[rgba(224,92,92,0.12)] text-[#e8a0a0] border-[rgba(224,92,92,0.25)]' },
+  estancamiento: { label: 'Plateau de Aprendizaje', icon: '→', accent: '#c9922a', bg: 'rgba(201,146,42,0.07)',   border: 'rgba(201,146,42,0.18)',   text: '#d9b87a', badge: 'bg-[rgba(201,146,42,0.12)] text-[#d9b87a] border-[rgba(201,146,42,0.25)]' },
+  aceleracion:   { label: 'Aceleración del Logro',  icon: '↗', accent: '#3d9e72', bg: 'rgba(61,158,114,0.07)',   border: 'rgba(61,158,114,0.18)',   text: '#7ec4a4', badge: 'bg-[rgba(61,158,114,0.12)] text-[#7ec4a4] border-[rgba(61,158,114,0.25)]' },
+  inconsistencia:{ label: 'Variabilidad Alta',      icon: '⟺', accent: '#7b6bbf', bg: 'rgba(123,107,191,0.07)',  border: 'rgba(123,107,191,0.18)',  text: '#ada0d8', badge: 'bg-[rgba(123,107,191,0.12)] text-[#ada0d8] border-[rgba(123,107,191,0.25)]' },
+  dominio:       { label: 'Criterio de Dominio',    icon: '★', accent: '#4a82c0', bg: 'rgba(74,130,192,0.07)',   border: 'rgba(74,130,192,0.18)',   text: '#90b8d8', badge: 'bg-[rgba(74,130,192,0.12)] text-[#90b8d8] border-[rgba(74,130,192,0.25)]' },
 }
 
 function PatronCard({ p, index }: { p: any; index: number }) {
@@ -789,12 +789,12 @@ function RenderMD({ text }: { text: string }) {
 }
 
 const SECTION_CFG = [
-  { keys: ['INTERPRETACIÓN CLÍNICA', 'INTERPRETACIÓN'],      color: '#a78bfa', icon: '🔬', bg: 'rgba(167,139,250,0.08)' },
-  { keys: ['HIPÓTESIS CLÍNICA', 'HIPÓTESIS'],                color: '#fb923c', icon: '🧩', bg: 'rgba(251,146,60,0.08)'  },
-  { keys: ['ANÁLISIS FUNCIONAL'],                            color: '#f472b6', icon: '📐', bg: 'rgba(244,114,182,0.08)' },
-  { keys: ['INDICACIONES TERAPÉUTICAS', 'INTERVENCIÓN'],     color: '#f87171', icon: '🎯', bg: 'rgba(248,113,113,0.08)' },
-  { keys: ['PRONÓSTICO', 'CRITERIOS DE AVANCE'],             color: '#60a5fa', icon: '📈', bg: 'rgba(96,165,250,0.08)'  },
-  { keys: ['SEÑAL POSITIVA', 'FORTALEZAS'],                  color: '#34d399', icon: '✦',  bg: 'rgba(52,211,153,0.08)'  },
+  { keys: ['INTERPRETACIÓN CLÍNICA', 'INTERPRETACIÓN'],      color: '#9b8ec4', icon: '🔬', bg: 'rgba(155,142,196,0.06)' },
+  { keys: ['HIPÓTESIS CLÍNICA', 'HIPÓTESIS'],                color: '#b8865a', icon: '🧩', bg: 'rgba(184,134,90,0.06)'  },
+  { keys: ['ANÁLISIS FUNCIONAL'],                            color: '#8a7fa8', icon: '📐', bg: 'rgba(138,127,168,0.06)' },
+  { keys: ['INDICACIONES TERAPÉUTICAS', 'INTERVENCIÓN'],     color: '#c47070', icon: '🎯', bg: 'rgba(196,112,112,0.06)' },
+  { keys: ['PRONÓSTICO', 'CRITERIOS DE AVANCE'],             color: '#5e8fc0', icon: '📈', bg: 'rgba(94,143,192,0.06)'  },
+  { keys: ['SEÑAL POSITIVA', 'FORTALEZAS'],                  color: '#5a9e7a', icon: '✦',  bg: 'rgba(90,158,122,0.06)'  },
 ] as const
 
 function getSectionCfg(text: string) {
@@ -827,22 +827,22 @@ function ResumenIACard({ texto }: { texto: string }) {
   return (
     <div className="rounded-2xl overflow-hidden border" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
       <div className="px-6 py-4 flex items-center justify-between"
-        style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #1e1b4b 50%, #2e1065 100%)', borderBottom: '1px solid rgba(139,92,246,0.3)' }}>
+        style={{ background: 'linear-gradient(135deg, #111827 0%, #1a1f35 60%, #1e1b3a 100%)', borderBottom: '1px solid rgba(100,100,160,0.25)' }}>
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center"
             style={{ background: 'rgba(139,92,246,0.25)', border: '1px solid rgba(139,92,246,0.4)' }}>
             <Brain size={16} className="text-violet-300" />
           </div>
           <div>
-            <p className="text-sm font-black uppercase tracking-widest" style={{ color: '#e9d5ff' }}>Informe Neuropsicológico Clínico</p>
-            <p className="text-[11px]" style={{ color: '#a78bfa' }}>Análisis ABA · Supervisión Conductual · BCBA IA</p>
+            <p className="text-sm font-black uppercase tracking-widest" style={{ color: '#d0d0e8' }}>Informe Neuropsicológico Clínico</p>
+            <p className="text-[11px]" style={{ color: '#7a7a9a' }}>Análisis ABA · Supervisión Conductual · BCBA IA</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] px-2.5 py-1 rounded-full font-black border hidden sm:inline-block"
-            style={{ background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', borderColor: 'rgba(139,92,246,0.4)' }}>BCBA IA</span>
+            style={{ background: 'rgba(100,100,180,0.15)', color: '#a8a8d0', borderColor: 'rgba(100,100,180,0.3)' }}>BCBA IA</span>
           <span className="text-[10px] px-2.5 py-1 rounded-full font-black border"
-            style={{ background: 'rgba(52,211,153,0.12)', color: '#6ee7b7', borderColor: 'rgba(52,211,153,0.3)' }}>CONFIDENCIAL</span>
+            style={{ background: 'rgba(70,130,100,0.15)', color: '#7aaa8a', borderColor: 'rgba(70,130,100,0.3)' }}>CONFIDENCIAL</span>
         </div>
       </div>
 
@@ -953,11 +953,11 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
     <div className="space-y-5">
       {/* Header informativo */}
       <div className="rounded-2xl p-5 border"
-        style={{ background: 'linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(99,102,241,0.08) 100%)', borderColor: 'rgba(139,92,246,0.25)' }}>
+        style={{ background: 'rgba(40,40,70,0.4)', borderColor: 'rgba(80,80,120,0.2)' }}>
         <div className="flex items-center gap-3 mb-2">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(139,92,246,0.2)' }}>
-            <Activity size={16} className="text-violet-400" />
+            style={{ background: 'rgba(70,70,120,0.25)' }}>
+            <Activity size={16} style={{ color: '#7878a8' }} />
           </div>
           <div>
             <p className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Detector de Patrones ABA — CAPA 1</p>
@@ -966,11 +966,11 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         </div>
         <div className="flex flex-wrap gap-3 mt-3 pt-3" style={{ borderTop: '1px solid rgba(139,92,246,0.15)' }}>
           {[
-            { icon: '↘', label: 'Regresión',   color: '#f87171' },
+            { icon: '↘', label: 'Regresión',   color: '#c47070' },
             { icon: '→', label: 'Plateau',      color: '#fbbf24' },
-            { icon: '↗', label: 'Aceleración',  color: '#34d399' },
-            { icon: '⟺', label: 'Variabilidad', color: '#a78bfa' },
-            { icon: '★', label: 'Dominio',      color: '#60a5fa' },
+            { icon: '↗', label: 'Aceleración',  color: '#5a9e7a' },
+            { icon: '⟺', label: 'Variabilidad', color: '#7b6bbf' },
+            { icon: '★', label: 'Dominio',      color: '#4a82c0' },
           ].map(item => (
             <div key={item.label} className="flex items-center gap-1.5">
               <span className="text-xs font-black" style={{ color: item.color }}>{item.icon}</span>
@@ -1000,9 +1000,9 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         <button onClick={analizar} disabled={!selected || loading}
           className="w-full py-3.5 rounded-xl text-sm font-black flex items-center justify-center gap-2.5 transition-all"
           style={{
-            background: !selected || loading ? 'rgba(124,58,237,0.4)' : 'linear-gradient(135deg, #7c3aed, #6366f1)',
+            background: !selected || loading ? 'rgba(80,80,140,0.35)' : 'linear-gradient(135deg, #3d3d7a, #4a4a8a)',
             color: 'white',
-            boxShadow: !selected || loading ? 'none' : '0 4px 20px rgba(124,58,237,0.35)'
+            boxShadow: !selected || loading ? 'none' : '0 4px 20px rgba(60,60,120,0.3)'
           }}>
           {loading
             ? <><RefreshCw size={15} className="animate-spin" /> Analizando historial clínico...</>
@@ -1022,9 +1022,9 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
           {/* KPIs */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Sesiones analizadas', val: resultado.sesiones_analizadas || 0, color: '#60a5fa', icon: '📋' },
-              { label: 'Patrones detectados', val: resultado.patrones?.length || 0,   color: '#a78bfa', icon: '🔍' },
-              { label: 'Requieren atención',  val: resultado.patrones_urgentes || 0,   color: resultado.patrones_urgentes > 0 ? '#f87171' : '#34d399', icon: resultado.patrones_urgentes > 0 ? '⚠' : '✓' },
+              { label: 'Sesiones analizadas', val: resultado.sesiones_analizadas || 0, color: '#5e8fc0', icon: '📋' },
+              { label: 'Patrones detectados', val: resultado.patrones?.length || 0,   color: '#7b6bbf', icon: '🔍' },
+              { label: 'Requieren atención',  val: resultado.patrones_urgentes || 0,   color: resultado.patrones_urgentes > 0 ? '#c47070' : '#5a9e7a', icon: resultado.patrones_urgentes > 0 ? '⚠' : '✓' },
             ].map(m => (
               <div key={m.label} className="rounded-2xl p-4 text-center border"
                 style={{ background: `${m.color}12`, borderColor: `${m.color}25` }}>
@@ -1040,7 +1040,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
             <div className="rounded-2xl p-8 text-center border"
               style={{ background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.2)' }}>
               <p className="text-3xl mb-3">✓</p>
-              <p className="font-black text-sm mb-1" style={{ color: '#34d399' }}>Progreso Estable</p>
+              <p className="font-black text-sm mb-1" style={{ color: '#5a9e7a' }}>Progreso Estable</p>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 {resultado.resumen || `Sin patrones problemáticos en ${resultado.sesiones_analizadas} sesiones.`}
               </p>
@@ -1051,8 +1051,8 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
           {urgentes.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-red-400" />
-                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#f87171' }}>
+                <div className="w-2 h-2 rounded-full" style={{ background: '#c47070' }} />
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#c47070' }}>
                   Requieren Atención Inmediata ({urgentes.length})
                 </p>
               </div>
@@ -1064,8 +1064,8 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
           {positivos.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-emerald-400" />
-                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#34d399' }}>
+                <div className="w-2 h-2 rounded-full" style={{ background: '#5a9e7a' }} />
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#5a9e7a' }}>
                   Logros Clínicos ({positivos.length})
                 </p>
               </div>
@@ -1077,8 +1077,8 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
           {otros.length > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-violet-400" />
-                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#a78bfa' }}>
+                <div className="w-2 h-2 rounded-full" style={{ background: '#7b6bbf' }} />
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#7b6bbf' }}>
                   Otras Observaciones ({otros.length})
                 </p>
               </div>
