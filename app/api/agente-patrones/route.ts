@@ -208,27 +208,58 @@ export async function POST(req: NextRequest) {
     if (patrones.length > 0) {
       try {
         analisis_ia = await callGroqSimple(
-          'Eres un psicólogo clínico ABA especializado en análisis de patrones de aprendizaje en niños neurodivergentes. Fundamenta con libros clínicos del Cerebro IA.',
-          `PACIENTE: ${childName || 'Paciente'}
-SESIONES ANALIZADAS: ${sesiones.length} (últimas ${semanas} semanas)
+          `Eres un neuropsicólogo clínico certificado BCBA con especialización en Análisis de Conducta Aplicado (ABA) para niños y adolescentes neurodivergentes (TEA, TDAH, TDL, discapacidad intelectual).
+Tu rol es redactar informes clínicos rigurosos, fundamentados en evidencia científica, con el nivel de detalle y profundidad que esperaría un equipo interdisciplinario (psicólogo, terapeuta ocupacional, fonoaudiólogo, pediatra).
+Fundamenta tus análisis en la literatura ABA contemporánea: Cooper, Heron & Heward (ABA, 3ra ed.), Skinner, Lovaas, Sundberg & Partington (ABLLS), y guías de práctica clínica del BACB.
+Escribe en español clínico profesional. Usa terminología técnica precisa pero comprensible.`,
+          `═══════════════════════════════════════════════════
+EXPEDIENTE CLÍNICO — ANÁLISIS DE PATRONES ABA
+═══════════════════════════════════════════════════
+PACIENTE: ${childName || 'Paciente'}
+PERÍODO DE EVALUACIÓN: Últimas ${semanas} semanas
+TOTAL SESIONES ANALIZADAS: ${sesiones.length}
 
-PATRONES DETECTADOS AUTOMÁTICAMENTE:
-${patrones.map(p => `- [${p.tipo.toUpperCase()}] ${p.area}: ${p.descripcion} (confianza: ${p.confianza}%)`).join('\n')}
+─── PATRONES CONDUCTUALES DETECTADOS ───────────────
+${patrones.map(p => `▸ [${p.tipo.toUpperCase()}] ${p.area}
+   Descripción: ${p.descripcion}
+   Confianza estadística: ${p.confianza}%
+   Valor anterior: ${p.valor_anterior}% → Valor actual: ${p.valor_actual}%
+   Sesiones involucradas: ${p.sesiones_involucradas}`).join('\n\n')}
 
-Últimas 5 sesiones (datos raw):
-${sesiones.slice(-5).map((s, i) => `Sesión ${i+1} (${s.fecha_sesion}): logro=${s.datos?.nivel_logro_objetivos}, atención=${s.datos?.nivel_atencion}/5, objetivo="${s.datos?.objetivo_principal || 'N/A'}"`).join('\n')}
+─── HISTORIAL DE SESIONES RECIENTES ────────────────
+${sesiones.slice(-8).map((s, i) => `Sesión ${sesiones.length - (sesiones.slice(-8).length - 1 - i)} (${s.fecha_sesion}):
+  • Logro de objetivos: ${s.datos?.nivel_logro_objetivos ?? 'N/D'}
+  • Nivel de atención: ${s.datos?.nivel_atencion ?? 'N/D'}/5
+  • Tolerancia frustración: ${s.datos?.tolerancia_frustracion ?? 'N/D'}/5
+  • Iniciativa comunicativa: ${s.datos?.iniciativa_comunicativa ?? 'N/D'}/5
+  • Objetivo trabajado: "${s.datos?.objetivo_principal || 'N/D'}"
+  • Notas clínicas: "${s.datos?.notas_sesion || s.datos?.observaciones || 'Sin notas'}"`).join('\n\n')}
 
-CONOCIMIENTO CLÍNICO (Cerebro IA):
+─── BASE DE CONOCIMIENTO CLÍNICO ───────────────────
 ${_cerebroCtx || 'No disponible'}
 
-Proporciona:
-1. INTERPRETACIÓN CLÍNICA (2-3 oraciones): qué significan estos patrones juntos para el desarrollo del paciente
-2. HIPÓTESIS PRINCIPAL: cuál es la causa más probable de los patrones problemáticos
-3. INTERVENCIÓN PRIORITARIA: la acción más importante a tomar esta semana
-4. SEÑAL POSITIVA: algo alentador en los datos (siempre hay algo)
+═══════════════════════════════════════════════════
+INSTRUCCIONES PARA EL INFORME:
+Redacta un informe clínico neuropsicológico completo y profesional con las siguientes secciones. Cada sección debe tener al menos 3-5 oraciones con profundidad clínica real. NO uses viñetas simples, redacta en prosa técnica fluida.
 
-Máximo 200 palabras. Directo y clínico.`,
-          { model: GROQ_MODELS.SMART, temperature: 0.3, maxTokens: 500 }
+**INTERPRETACIÓN CLÍNICA**
+Analiza el significado conjunto de todos los patrones detectados. Describe qué revelan sobre el perfil neuropsicológico del paciente, su etapa de desarrollo conductual, y cómo interactúan entre sí los distintos patrones. Contextualiza dentro del diagnóstico conocido.
+
+**HIPÓTESIS CLÍNICA**
+Formula 2-3 hipótesis explicativas sobre las causas subyacentes de los patrones problemáticos. Considera factores antecedentes (setting events, motivating operations), variables ambientales, desarrollo neurológico, y posibles funciones de la conducta según el modelo ABC.
+
+**ANÁLISIS FUNCIONAL PRELIMINAR**
+Describe la función probable de las conductas observadas (refuerzo positivo, negativo, automático, control atencional). Señala qué variables de control podrían estar manteniendo el estancamiento o la regresión.
+
+**INDICACIONES TERAPÉUTICAS PRIORITARIAS**
+Detalla al menos 3 intervenciones concretas y fundamentadas para esta semana y el próximo mes. Especifica procedimientos ABA (DTT, NET, PRT, incidental teaching, moldeamiento, encadenamiento, etc.) según corresponda. Incluye recomendaciones para el equipo y para la familia.
+
+**PRONÓSTICO Y CRITERIOS DE AVANCE**
+Proyecta el curso esperado del tratamiento en las próximas 4-8 semanas si se implementan las intervenciones sugeridas. Define indicadores medibles de progreso. Señala señales de alarma que requerirían revisión del plan.
+
+**SEÑALES POSITIVAS Y FORTALEZAS**
+Identifica recursos conductuales y habilidades del paciente que son activos terapéuticos. Describe cómo aprovechar estas fortalezas en el plan de intervención.`,
+          { model: GROQ_MODELS.SMART, temperature: 0.4, maxTokens: 2000 }
         )
       } catch (err) {
         console.error('Error Groq patrones:', err)

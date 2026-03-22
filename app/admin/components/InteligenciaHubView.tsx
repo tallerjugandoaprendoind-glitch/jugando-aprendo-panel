@@ -720,144 +720,152 @@ const PATRON_CONFIG: Record<string, {
   dominio:       { label: 'Criterio de Dominio',    icon: '★', accent: '#3b82f6', bg: 'rgba(59,130,246,0.08)',   border: 'rgba(59,130,246,0.25)',   text: '#93c5fd', badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30' },
 }
 
-function PatronCard({ p, index }: { p: any; index: number }) {
-  const cfg = PATRON_CONFIG[p.tipo] || PATRON_CONFIG.estancamiento
-  const delta = p.valor_actual - p.valor_anterior
+function RenderMD({ text }: { text: string }) {
+  const parts = text.split(/\*\*(.*?)\*\*/g)
   return (
-    <div className="rounded-2xl p-5 border transition-all"
-      style={{ background: cfg.bg, borderColor: cfg.border }}>
-      {/* Header */}
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-black flex-shrink-0"
-            style={{ background: `${cfg.accent}20`, color: cfg.accent }}>
-            {cfg.icon}
-          </div>
-          <div>
-            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${cfg.badge}`}>
-              {cfg.label}
-            </span>
-            <p className="font-black text-sm mt-1.5" style={{ color: 'var(--text-primary)' }}>{p.area}</p>
-          </div>
-        </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Confianza</p>
-          <div className="flex items-center gap-1.5 justify-end">
-            <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
-              <div className="h-full rounded-full" style={{ width: `${p.confianza}%`, background: cfg.accent }} />
-            </div>
-            <span className="text-sm font-black" style={{ color: cfg.accent }}>{p.confianza}%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Métricas */}
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        {[
-          { label: 'Valor anterior', val: `${p.valor_anterior}%` },
-          { label: 'Valor actual',   val: `${p.valor_actual}%`, highlight: true },
-          { label: 'Δ Cambio',       val: `${delta >= 0 ? '+' : ''}${delta}%` },
-        ].map(m => (
-          <div key={m.label} className="rounded-xl p-2.5 text-center"
-            style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <p className="text-[9px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
-            <p className="text-base font-black" style={{ color: m.highlight ? cfg.accent : 'var(--text-primary)' }}>{m.val}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Descripción clínica */}
-      <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{p.descripcion}</p>
-
-      {/* Acción recomendada */}
-      <div className="rounded-xl px-4 py-3 flex items-start gap-2.5"
-        style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid ${cfg.border}` }}>
-        <span className="text-sm mt-0.5 flex-shrink-0" style={{ color: cfg.accent }}>💡</span>
-        <p className="text-xs leading-relaxed font-medium" style={{ color: cfg.text }}>{p.accion_sugerida}</p>
-      </div>
-
-      {/* Sesiones involucradas */}
-      <p className="text-[10px] mt-3" style={{ color: 'var(--text-muted)' }}>
-        Basado en <strong style={{ color: 'var(--text-secondary)' }}>{p.sesiones_involucradas} sesiones</strong> · {p.semanas_detectado} sem. de monitoreo
-      </p>
-    </div>
+    <>
+      {parts.map((part, i) =>
+        i % 2 === 1
+          ? <strong key={i} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{part}</strong>
+          : <span key={i}>{part}</span>
+      )}
+    </>
   )
+}
+
+const SECTION_CFG = [
+  { keys: ['INTERPRETACIÓN CLÍNICA', 'INTERPRETACIÓN'],      color: '#a78bfa', icon: '🔬', bg: 'rgba(167,139,250,0.08)' },
+  { keys: ['HIPÓTESIS CLÍNICA', 'HIPÓTESIS'],                color: '#fb923c', icon: '🧩', bg: 'rgba(251,146,60,0.08)'  },
+  { keys: ['ANÁLISIS FUNCIONAL'],                            color: '#f472b6', icon: '📐', bg: 'rgba(244,114,182,0.08)' },
+  { keys: ['INDICACIONES TERAPÉUTICAS', 'INTERVENCIÓN'],     color: '#f87171', icon: '🎯', bg: 'rgba(248,113,113,0.08)' },
+  { keys: ['PRONÓSTICO', 'CRITERIOS DE AVANCE'],             color: '#60a5fa', icon: '📈', bg: 'rgba(96,165,250,0.08)'  },
+  { keys: ['SEÑAL POSITIVA', 'FORTALEZAS'],                  color: '#34d399', icon: '✦',  bg: 'rgba(52,211,153,0.08)'  },
+] as const
+
+function getSectionCfg(text: string) {
+  const upper = text.toUpperCase()
+  return SECTION_CFG.find(s => (s.keys as readonly string[]).some(k => upper.includes(k))) || null
 }
 
 function ResumenIACard({ texto }: { texto: string }) {
-  // Parse **bold** markdown
-  const renderText = (t: string) =>
-    t.split(/\*\*(.*?)\*\*/g).map((part, i) =>
-      i % 2 === 1
-        ? <strong key={i} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{part}</strong>
-        : part
-    )
+  const bloques = texto
+    .split(/\n(?=\*\*[A-ZÁÉÍÓÚÑ])|\n\n+/)
+    .map((b: string) => b?.trim())
+    .filter(Boolean)
 
-  const bloques = texto.split(/\n\n+/).filter(b => b.trim())
+  type Section = { cfg: typeof SECTION_CFG[number] | null; label: string; paras: string[] }
+  const sections: Section[] = []
+  let current: Section = { cfg: null, label: '', paras: [] }
 
-  const sectionColors: Record<string, string> = {
-    'INTERPRETACIÓN': '#a78bfa',
-    'HIPÓTESIS': '#fb923c',
-    'INTERVENCIÓN': '#f87171',
-    'SEÑAL POSITIVA': '#34d399',
-    'RECOMENDACIÓN': '#60a5fa',
-  }
+  bloques.forEach((bloque: string) => {
+    const isHeader = /^\*\*[^*\n]{3,80}\*\*[:\s]*$/.test(bloque)
+    if (isHeader) {
+      if (current.paras.length > 0 || current.label) sections.push(current)
+      const label = bloque.replace(/\*\*/g, '').replace(/:?\s*$/, '').trim()
+      current = { cfg: getSectionCfg(label), label, paras: [] }
+    } else {
+      current.paras.push(bloque)
+    }
+  })
+  if (current.paras.length > 0 || current.label) sections.push(current)
 
   return (
     <div className="rounded-2xl overflow-hidden border" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
-      {/* Header tipo informe */}
-      <div className="px-5 py-3.5 flex items-center justify-between"
-        style={{ background: 'linear-gradient(135deg, #1e1b4b 0%, #2e1065 100%)', borderBottom: '1px solid rgba(139,92,246,0.3)' }}>
-        <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-violet-500/20 flex items-center justify-center">
-            <Brain size={14} className="text-violet-300" />
+      <div className="px-6 py-4 flex items-center justify-between"
+        style={{ background: 'linear-gradient(135deg, #0f0c29 0%, #1e1b4b 50%, #2e1065 100%)', borderBottom: '1px solid rgba(139,92,246,0.3)' }}>
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'rgba(139,92,246,0.25)', border: '1px solid rgba(139,92,246,0.4)' }}>
+            <Brain size={16} className="text-violet-300" />
           </div>
           <div>
-            <p className="text-xs font-black uppercase tracking-widest text-violet-200">Informe Clínico IA</p>
-            <p className="text-[10px] text-violet-400">Análisis neuropsicológico · ABA Supervisor</p>
+            <p className="text-sm font-black uppercase tracking-widest" style={{ color: '#e9d5ff' }}>Informe Neuropsicológico Clínico</p>
+            <p className="text-[11px]" style={{ color: '#a78bfa' }}>Análisis ABA · Supervisión Conductual · BCBA IA</p>
           </div>
         </div>
-        <span className="text-[10px] px-2.5 py-1 rounded-full font-black border"
-          style={{ background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', borderColor: 'rgba(139,92,246,0.3)' }}>
-          BCBA IA
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] px-2.5 py-1 rounded-full font-black border hidden sm:inline-block"
+            style={{ background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', borderColor: 'rgba(139,92,246,0.4)' }}>BCBA IA</span>
+          <span className="text-[10px] px-2.5 py-1 rounded-full font-black border"
+            style={{ background: 'rgba(52,211,153,0.12)', color: '#6ee7b7', borderColor: 'rgba(52,211,153,0.3)' }}>CONFIDENCIAL</span>
+        </div>
       </div>
 
-      {/* Cuerpo */}
-      <div className="p-5 space-y-3">
-        {bloques.map((bloque, i) => {
-          const upper = bloque.toUpperCase()
-          const matchKey = Object.keys(sectionColors).find(k => upper.includes(k))
-          const color = matchKey ? sectionColors[matchKey] : null
-
-          // Es encabezado tipo **TEXTO**
-          if (/^\*\*[^*]+\*\*[:\s]*$/.test(bloque.trim())) {
-            const label = bloque.replace(/\*\*/g, '').replace(/:$/, '').trim()
-            const c = Object.entries(sectionColors).find(([k]) => label.toUpperCase().includes(k))?.[1] || '#94a3b8'
-            return (
-              <div key={i} className="flex items-center gap-2 pt-1">
-                <div className="w-1 h-4 rounded-full flex-shrink-0" style={{ background: c }} />
-                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: c }}>{label}</p>
-                <div className="flex-1 h-px" style={{ background: `${c}25` }} />
-              </div>
-            )
-          }
-
-          // Párrafo normal
+      <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+        {sections.map((section, si) => {
+          const c = section.cfg?.color || '#94a3b8'
+          const bg = section.cfg?.bg || 'transparent'
+          const icon = section.cfg?.icon || '▸'
           return (
-            <p key={i} className="text-sm leading-relaxed pl-3"
-              style={{
-                color: 'var(--text-secondary)',
-                borderLeft: color ? `2px solid ${color}40` : '2px solid transparent'
-              }}>
-              {renderText(bloque.trim())}
-            </p>
+            <div key={si} className="p-5 space-y-3" style={{ background: bg }}>
+              {section.label && (
+                <div className="flex items-center gap-3 mb-1">
+                  <span className="text-base leading-none" style={{ color: c }}>{icon}</span>
+                  <div className="flex-1 flex items-center gap-2">
+                    <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: c }}>{section.label}</p>
+                    <div className="flex-1 h-px" style={{ background: `${c}20` }} />
+                  </div>
+                </div>
+              )}
+              {section.paras.map((para: string, pi: number) => {
+                if (/^\d+[\.)\s]/.test(para)) {
+                  return (
+                    <div key={pi} className="space-y-2">
+                      {para.split('\n').filter(Boolean).map((line: string, li: number) => {
+                        const m = line.match(/^(\d+)[.)]\s(.+)/)
+                        if (!m) return <p key={li} className="text-sm leading-relaxed pl-8" style={{ color: 'var(--text-secondary)' }}><RenderMD text={line} /></p>
+                        const [,num,txt] = m
+                        const ci = txt.indexOf(':')
+                        return (
+                          <div key={li} className="flex gap-3 items-start">
+                            <span className="w-6 h-6 rounded-full text-[11px] font-black flex items-center justify-center flex-shrink-0 mt-0.5"
+                              style={{ background: `${c}20`, color: c }}>{num}</span>
+                            <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--text-secondary)' }}>
+                              {ci > 0 && ci < 50
+                                ? <><strong style={{ color: 'var(--text-primary)' }}>{txt.slice(0,ci)}:</strong><RenderMD text={txt.slice(ci+1)} /></>
+                                : <RenderMD text={txt} />}
+                            </p>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                }
+                if (/^[▸•\-]\s/.test(para)) {
+                  return (
+                    <div key={pi} className="space-y-1.5">
+                      {para.split('\n').filter(Boolean).map((line: string, li: number) => (
+                        <div key={li} className="flex gap-2.5 items-start">
+                          <span className="mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: c }} />
+                          <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                            <RenderMD text={line.replace(/^[▸•\-]\s/, '')} />
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                }
+                return (
+                  <p key={pi} className="text-sm leading-relaxed"
+                    style={{ color: 'var(--text-secondary)', paddingLeft: section.label ? '1.25rem' : '0', borderLeft: section.cfg ? `2px solid ${c}35` : 'none' }}>
+                    <RenderMD text={para} />
+                  </p>
+                )
+              })}
+            </div>
           )
         })}
+      </div>
+
+      <div className="px-6 py-3 flex items-center justify-between"
+        style={{ background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Generado por IA clínica · No reemplaza evaluación profesional certificada</p>
+        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
       </div>
     </div>
   )
 }
+
 
 function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
   const { t } = useI18n()
