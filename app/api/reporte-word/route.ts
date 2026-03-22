@@ -222,41 +222,91 @@ async function generarReporteSeguro(childId: string, userLocale = 'es'): Promise
   const { data: programas } = await supabaseAdmin.from('programas_aba')
     .select('titulo, area, fase_actual, criterio_dominio_pct, estado').eq('child_id', childId).limit(10)
 
+  // Cargar sesiones por programa (datos ABA detallados)
+  const { data: sesionesProg } = await supabaseAdmin.from('sesiones_datos_aba')
+    .select('fecha, porcentaje_exito, programa_id, fase').eq('child_id', childId)
+    .order('fecha', { ascending: true }).limit(100)
+
   const totalSesiones = sesiones?.length || 0
-  const promedioLogro = totalSesiones > 0
-    ? (() => {
-        const vals = (sesiones || []).map((s: any) =>
-          parseNivelLogro(s.datos?.nivel_logro_objetivos) ??
-          parseNivelLogro(s.datos?.porcentaje_logro) ??
-          parseNivelLogro(s.datos?.porcentaje_exito) ??
-          parseNivelLogro(s.datos?.logro_objetivos)
-        ).filter((v): v is number => v !== null)
-        return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
-      })()
-    : 0
+  const sesionesArr = sesiones || []
+
+  // Calcular promedio general
+  const logros = sesionesArr.map((s: any) =>
+    parseNivelLogro(s.datos?.nivel_logro_objetivos) ??
+    parseNivelLogro(s.datos?.porcentaje_logro) ??
+    parseNivelLogro(s.datos?.porcentaje_exito) ??
+    parseNivelLogro(s.datos?.logro_objetivos)
+  ).filter((v): v is number => v !== null)
+  const promedioLogro = logros.length > 0 ? Math.round(logros.reduce((a, b) => a + b, 0) / logros.length) : 0
+
+  // Tendencia: primeras 3 vs últimas 3 sesiones
+  const primerasLogros = logros.slice(0, 3)
+  const ultimasLogros = logros.slice(-3)
+  const avgPrimeras = primerasLogros.length > 0 ? Math.round(primerasLogros.reduce((a,b) => a+b, 0)/primerasLogros.length) : 0
+  const avgUltimas = ultimasLogros.length > 0 ? Math.round(ultimasLogros.reduce((a,b) => a+b, 0)/ultimasLogros.length) : 0
+  const tendenciaDelta = avgUltimas - avgPrimeras
+  const tendenciaTexto = tendenciaDelta > 5 ? `📈 Progreso positivo (+${tendenciaDelta}%)` : tendenciaDelta < -5 ? `📉 Regresión (${tendenciaDelta}%)` : '➡️ Estable'
+
+  // Fechas
+  const fechaInicio = sesionesArr.length > 0
+    ? new Date(sesionesArr[0].fecha_sesion).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+    : 'N/A'
+  const fechaFin = sesionesArr.length > 0
+    ? new Date(sesionesArr[sesionesArr.length-1].fecha_sesion).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+    : new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+
+  // Barra de progreso ASCII para Word
+  const barraProgreso = (pct: number, width = 20) => {
+    const filled = Math.round((pct / 100) * width)
+    return '█'.repeat(filled) + '░'.repeat(width - filled) + ` ${pct}%`
+  }
+
+  // Asistencia
+  const diasUnicos = new Set(sesionesArr.map((s: any) => s.fecha_sesion?.slice(0,10))).size
 
   const hoy = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
   const hoyISO = new Date().toISOString().slice(0, 10)
   const fileName = `Reporte_Seguro_${nombre.replace(/\s+/g, '_')}_${hoyISO}.docx`
 
+  // Historial de sesiones (últimas 15 para tabla)
+  const historialReciente = sesionesArr.slice(-15).reverse()
+
+  // Desglose por área
+  const areaMap: Record<string, number[]> = {}
+  for (const p of (programas || [])) {
+    const area = (p as any).area || 'General'
+    const sesP = (sesionesProg || []).filter((s: any) => s.programa_id === (p as any).id)
+    const vals = sesP.map((s: any) => s.porcentaje_exito || 0).filter((v: number) => v > 0)
+    if (vals.length > 0) {
+      if (!areaMap[area]) areaMap[area] = []
+      areaMap[area].push(...vals)
+    }
+  }
+
   const prompt = `Redacta la justificación médica y pronóstico para un reporte de seguro/IMSS para ${nombre} (${edad} años, ${diagnostico}, CIE-10: ${cie}).
 
-Contexto: ${totalSesiones} sesiones realizadas, promedio de logro ${promedioLogro}%.
-Áreas: ${programas?.map((p: any) => p.area).join(', ') || 'comunicación, conducta'}.
+Contexto clínico:
+- ${totalSesiones} sesiones realizadas desde ${fechaInicio} hasta ${fechaFin}
+- Promedio general de logro: ${promedioLogro}%
+- Tendencia: ${tendenciaTexto}
+- Promedio inicial: ${avgPrimeras}% → Promedio actual: ${avgUltimas}%
+- Programas activos: ${programas?.length || 0} (${programas?.map((p: any) => `${p.area}: ${p.titulo}`).join('; ') || 'sin programas'})
 
-Redacta en lenguaje técnico-clínico formal:
-1. Justificación de la necesidad del tratamiento (2-3 oraciones)
-2. Descripción del progreso cuantificado (2-3 oraciones)
-3. Pronóstico y plan de tratamiento continuo (2-3 oraciones)
-Usa terminología clínica apropiada. Sin bullets.`
+Redacta EN PÁRRAFOS (sin bullets) en lenguaje técnico-clínico formal:
+1. Justificación de necesidad del tratamiento (2 oraciones)
+2. Descripción del progreso cuantificado con los datos reales (2 oraciones) 
+3. Pronóstico y plan de tratamiento continuo (2 oraciones)
+Máximo 200 palabras totales.`
 
   const textoTecnico = await callGroqSimple('', prompt + getLangInstruction(userLocale), { model: GROQ_MODELS.SMART, temperature: 0.2, maxTokens: 600 })
 
   const sections: DocChild[] = [
+    // Encabezado
     new Paragraph({ spacing: { before: 0, after: 40 }, children: [new TextRun({ text: 'JUGANDO APRENDO — Centro de Terapia ABA', bold: true, size: 28, font: 'Arial', color: '1E293B' })] }),
     new Paragraph({ spacing: { before: 0, after: 80 }, children: [new TextRun({ text: 'REPORTE CLÍNICO PARA ASEGURADORAS / IMSS', bold: true, size: 32, font: 'Arial', color: '1E40AF' })] }),
     subtitle(`Fecha de emisión: ${hoy}  ·  Documento Confidencial`),
 
+    // I. Datos del paciente
     h2('I. DATOS DEL PACIENTE'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Nombre completo', nombre),
@@ -264,41 +314,105 @@ Usa terminología clínica apropiada. Sin bullets.`
       kv('Diagnóstico principal', diagnostico),
       kv('Código CIE-10', cie),
       kv('Fecha del reporte', hoy),
+      kv('Período de tratamiento', `${fechaInicio} al ${fechaFin}`),
     ]}),
 
-    h2('II. DESCRIPCIÓN DEL TRATAMIENTO'),
+    // II. Resumen ejecutivo de progreso
+    h2('II. RESUMEN EJECUTIVO DE PROGRESO'),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Modalidad', 'Análisis Aplicado de la Conducta (ABA)'),
-      kv('Sesiones realizadas', String(totalSesiones)),
-      kv('Promedio de logro', `${promedioLogro}%`),
-      kv('Áreas de intervención', programas?.map((p: any) => p.area).filter((v: string, i: number, a: string[]) => a.indexOf(v) === i).join(', ') || 'N/A'),
+      kv('Total de sesiones', String(totalSesiones)),
+      kv('Días de asistencia', String(diasUnicos)),
+      kv('Promedio de logro global', `${promedioLogro}%  ${barraProgreso(promedioLogro, 15)}`),
+      kv('Logro inicial (primeras sesiones)', `${avgPrimeras}%`),
+      kv('Logro actual (últimas sesiones)', `${avgUltimas}%`),
+      kv('Evolución del tratamiento', tendenciaTexto),
+      kv('Programas de intervención activos', String(programas?.filter((p: any) => p.estado === 'activo' || p.estado === 'intervencion').length || 0)),
     ]}),
 
-    h2('III. PROGRAMAS DE INTERVENCIÓN'),
-    new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3800, 2000, 1800, 1760],
+    // III. Progreso por programa
+    h2('III. PROGRAMAS DE INTERVENCIÓN Y PROGRESO'),
+    new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [2800, 1600, 1600, 1680, 1680],
       rows: [
         new TableRow({ children: [
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: 'Programa', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Área', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Fase', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
-          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Estado', bold: true, size: 19, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: 'Programa', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Área', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Fase', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Criterio', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: '1E40AF', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Estado', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
         ]}),
-        ...(programas || []).map((p: any) => new TableRow({ children: [
-          new TableCell({ borders: BDR, margins: { top: 60, bottom: 60, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: p.titulo, size: 18, font: 'Arial' })] })] }),
-          new TableCell({ borders: BDR, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.area, size: 18, font: 'Arial' })] })] }),
-          new TableCell({ borders: BDR, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.fase_actual || 'N/A', size: 18, font: 'Arial' })] })] }),
-          new TableCell({ borders: BDR, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.estado, size: 18, font: 'Arial' })] })] }),
+        ...(programas || []).map((p: any, i: number) => new TableRow({ children: [
+          new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: p.titulo || p.nombre || 'Sin nombre', size: 17, font: 'Arial', bold: true })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.area || 'General', size: 17, font: 'Arial' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.fase_actual || 'N/A', size: 17, font: 'Arial' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: `≥${p.criterio_dominio_pct || 90}%`, size: 17, font: 'Arial' })] })] }),
+          new TableCell({ borders: BDR, shading: { fill: p.estado === 'dominado' ? 'D1FAE5' : p.estado === 'activo' || p.estado === 'intervencion' ? 'DBEAFE' : 'F8FAFC', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: p.estado === 'dominado' ? '✅ Dominado' : p.estado === 'activo' ? '🔵 Activo' : p.estado === 'intervencion' ? '🔵 En intervención' : p.estado || 'N/A', size: 17, font: 'Arial', color: p.estado === 'dominado' ? '065F46' : '1D4ED8' })] })] }),
         ]})),
         ...(!programas || programas.length === 0 ? [new TableRow({ children: [
-          new TableCell({ borders: BDR, columnSpan: 4, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Sin programas registrados', size: 18, font: 'Arial', color: '9CA3AF' })] })] }),
+          new TableCell({ borders: BDR, columnSpan: 5, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Sin programas registrados', size: 18, font: 'Arial', color: '9CA3AF' })] })] }),
         ]})] : []),
       ]
     }),
 
-    h2('IV. JUSTIFICACIÓN CLÍNICA Y PRONÓSTICO'),
+    // IV. Progreso por área
+    ...(Object.keys(areaMap).length > 0 ? [
+      h2('IV. AVANCE POR ÁREA DE INTERVENCIÓN'),
+      new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [2800, 2000, 4560],
+        rows: [
+          new TableRow({ children: [
+            new TableCell({ borders: BDR, shading: { fill: '0F172A', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: 'Área', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
+            new TableCell({ borders: BDR, shading: { fill: '0F172A', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Promedio', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
+            new TableCell({ borders: BDR, shading: { fill: '0F172A', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Indicador visual', bold: true, size: 18, font: 'Arial', color: 'FFFFFF' })] })] }),
+          ]}),
+          ...Object.entries(areaMap).map(([area, vals], i) => {
+            const avg = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length)
+            const color = avg >= 75 ? '065F46' : avg >= 50 ? 'B45309' : 'B91C1C'
+            const fill = avg >= 75 ? 'D1FAE5' : avg >= 50 ? 'FEF3C7' : 'FEE2E2'
+            return new TableRow({ children: [
+              new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: area, size: 18, font: 'Arial', bold: true })] })] }),
+              new TableCell({ borders: BDR, shading: { fill, type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${avg}%`, size: 22, font: 'Arial', bold: true, color })] })] }),
+              new TableCell({ borders: BDR, shading: { fill: i % 2 === 0 ? 'F8FAFC' : 'FFFFFF', type: ShadingType.CLEAR }, margins: { top: 60, bottom: 60, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: barraProgreso(avg, 18), size: 16, font: 'Courier New', color })] })] }),
+            ]})
+          }),
+        ]
+      }),
+    ] : []),
+
+    // V. Historial de sesiones
+    ...(historialReciente.length > 0 ? [
+      h2('V. HISTORIAL DE SESIONES (últimas 15)'),
+      new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [2200, 2000, 2580, 2580],
+        rows: [
+          new TableRow({ children: [
+            new TableCell({ borders: BDR, shading: { fill: '334155', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: 'Fecha', bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
+            new TableCell({ borders: BDR, shading: { fill: '334155', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Logro', bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
+            new TableCell({ borders: BDR, shading: { fill: '334155', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Atención', bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
+            new TableCell({ borders: BDR, shading: { fill: '334155', type: ShadingType.CLEAR }, margins: { top: 80, bottom: 80, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: 'Tolerancia', bold: true, size: 17, font: 'Arial', color: 'FFFFFF' })] })] }),
+          ]}),
+          ...historialReciente.map((s: any, i: number) => {
+            const logro = parseNivelLogro(s.datos?.nivel_logro_objetivos ?? s.datos?.porcentaje_logro ?? s.datos?.porcentaje_exito) ?? 0
+            const atencion = s.datos?.nivel_atencion ? `${Math.round((s.datos.nivel_atencion/5)*100)}%` : '—'
+            const tolerancia = s.datos?.tolerancia_frustracion ? `${Math.round((s.datos.tolerancia_frustracion/5)*100)}%` : '—'
+            const color = logro >= 75 ? '065F46' : logro >= 50 ? 'B45309' : 'B91C1C'
+            const fill = i % 2 === 0 ? 'F8FAFC' : 'FFFFFF'
+            const fecha = new Date(s.fecha_sesion).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: '2-digit' })
+            return new TableRow({ children: [
+              new TableCell({ borders: BDR, shading: { fill, type: ShadingType.CLEAR }, margins: { top: 50, bottom: 50, left: 120, right: 120 }, children: [new Paragraph({ children: [new TextRun({ text: fecha, size: 16, font: 'Arial' })] })] }),
+              new TableCell({ borders: BDR, shading: { fill: logro >= 75 ? 'D1FAE5' : logro >= 50 ? 'FEF3C7' : 'FEE2E2', type: ShadingType.CLEAR }, margins: { top: 50, bottom: 50, left: 80, right: 80 }, children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${logro}%`, size: 18, font: 'Arial', bold: true, color })] })] }),
+              new TableCell({ borders: BDR, shading: { fill, type: ShadingType.CLEAR }, margins: { top: 50, bottom: 50, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: atencion, size: 16, font: 'Arial' })] })] }),
+              new TableCell({ borders: BDR, shading: { fill, type: ShadingType.CLEAR }, margins: { top: 50, bottom: 50, left: 80, right: 80 }, children: [new Paragraph({ children: [new TextRun({ text: tolerancia, size: 16, font: 'Arial' })] })] }),
+            ]})
+          }),
+        ]
+      }),
+    ] : []),
+
+    // VI. Justificación clínica
+    h2(`${Object.keys(areaMap).length > 0 ? 'VI' : 'IV'}. JUSTIFICACIÓN CLÍNICA Y PRONÓSTICO`),
     ...textoTecnico.split('\n').filter((l: string) => l.trim()).map((line: string) => pp(line)),
 
-    h2('V. FIRMA Y ACREDITACIÓN'),
+    // VII. Firma
+    h2(`${Object.keys(areaMap).length > 0 ? 'VII' : 'V'}. FIRMA Y ACREDITACIÓN`),
     new Table({ width: { size: 9360, type: WidthType.DXA }, columnWidths: [3000, 6360], rows: [
       kv('Centro terapéutico', 'Jugando Aprendo'),
       kv('Especialidad', 'Análisis Aplicado de la Conducta (ABA)'),

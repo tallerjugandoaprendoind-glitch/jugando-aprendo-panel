@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
 
     for (const prog of programas) {
       const progNombre = prog.nombre || prog.titulo || 'Sin nombre'
-      const progObjetivo = prog.objetivo || prog.descripcion || ''
+      const progObjetivo = prog.objetivo || (prog as any).descripcion || ''
 
       // Cargar sesiones — intentar primero sesiones_datos_aba, luego sesiones_programa
       let sesiones: any[] | null = null
