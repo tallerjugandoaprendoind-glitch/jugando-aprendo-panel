@@ -48,18 +48,25 @@ function detectarPatrones(sesiones: any[]): PatronDetectado[] {
   const comunicacion = sesiones.map(s => Number(s.datos?.iniciativa_comunicativa || 0)).filter(v => v > 0).map(v => (v / 5) * 100)
 
   const analizarSerie = (valores: number[], nombre: string) => {
-    if (valores.length < 3) return
+    // FIX: mínimo 2 valores válidos para poder detectar al menos tendencia básica
+    if (valores.length < 2) return
 
     const recientes = valores.slice(-3)
     const anteriores = valores.slice(-6, -3)
     const promReciente = recientes.reduce((a, b) => a + b, 0) / recientes.length
-    const promAnterior = anteriores.length > 0 ? anteriores.reduce((a, b) => a + b, 0) / anteriores.length : promReciente
+    // FIX: cuando no hay sesiones anteriores (< 4 sesiones), comparar contra
+    // el primer valor registrado en vez de promReciente (que causaba delta = 0)
+    const promAnterior = anteriores.length > 0
+      ? anteriores.reduce((a, b) => a + b, 0) / anteriores.length
+      : valores[0]
     const delta = promReciente - promAnterior
     const ultimo = valores[valores.length - 1]
     const semanas = Math.ceil(valores.length / 2)
 
-    // REGRESIÓN: bajó más de 15 puntos en promedio reciente
-    if (delta < -15 && anteriores.length > 0) {
+    // REGRESIÓN: bajó más de 15 puntos
+    // FIX: eliminado "anteriores.length > 0" — ahora funciona con 2-3 sesiones
+    // usando valores[0] como referencia base
+    if (delta < -15) {
       patrones.push({
         tipo: 'regresion',
         area: nombre,
@@ -73,18 +80,18 @@ function detectarPatrones(sesiones: any[]): PatronDetectado[] {
       })
     }
 
-    // ESTANCAMIENTO: variación < 5 puntos por 4+ sesiones
-    if (valores.length >= 4) {
-      const ultimas4 = valores.slice(-4)
-      const maxVal = Math.max(...ultimas4)
-      const minVal = Math.min(...ultimas4)
+    // ESTANCAMIENTO: variación < 8 puntos por 3+ sesiones (FIX: bajado de 4 a 3)
+    if (valores.length >= 3) {
+      const ultimas = valores.slice(-3)
+      const maxVal = Math.max(...ultimas)
+      const minVal = Math.min(...ultimas)
       if (maxVal - minVal < 8 && promReciente < 70) {
         patrones.push({
           tipo: 'estancamiento',
           area: nombre,
-          descripcion: `${nombre} lleva ${ultimas4.length} sesiones sin avance significativo (rango: ${Math.round(minVal)}-${Math.round(maxVal)}%)`,
+          descripcion: `${nombre} lleva ${ultimas.length} sesiones sin avance significativo (rango: ${Math.round(minVal)}-${Math.round(maxVal)}%)`,
           confianza: 80,
-          sesiones_involucradas: ultimas4.length,
+          sesiones_involucradas: ultimas.length,
           valor_actual: Math.round(promReciente),
           valor_anterior: Math.round(promAnterior),
           semanas_detectado: semanas,
@@ -94,7 +101,8 @@ function detectarPatrones(sesiones: any[]): PatronDetectado[] {
     }
 
     // ACELERACIÓN: subió más de 20 puntos
-    if (delta > 20 && anteriores.length > 0) {
+    // FIX: eliminado "anteriores.length > 0" — ahora funciona con 2-3 sesiones
+    if (delta > 20) {
       patrones.push({
         tipo: 'aceleracion',
         area: nombre,
@@ -108,8 +116,8 @@ function detectarPatrones(sesiones: any[]): PatronDetectado[] {
       })
     }
 
-    // DOMINIO: 3+ sesiones consecutivas >= 80%
-    if (valores.slice(-3).every(v => v >= 80)) {
+    // DOMINIO: 3+ sesiones consecutivas >= 80% (sin cambios, ya funcionaba)
+    if (valores.length >= 3 && valores.slice(-3).every(v => v >= 80)) {
       patrones.push({
         tipo: 'dominio',
         area: nombre,
@@ -124,7 +132,8 @@ function detectarPatrones(sesiones: any[]): PatronDetectado[] {
     }
 
     // INCONSISTENCIA: alta varianza (std > 20)
-    if (valores.length >= 4) {
+    // FIX: bajado de 4 a 3 sesiones mínimas
+    if (valores.length >= 3) {
       const mean = valores.reduce((a, b) => a + b, 0) / valores.length
       const std = Math.sqrt(valores.reduce((a, v) => a + (v - mean) ** 2, 0) / valores.length)
       if (std > 20) {
