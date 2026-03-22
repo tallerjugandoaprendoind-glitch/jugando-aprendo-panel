@@ -82,7 +82,6 @@ export default function AdminDashboard() {
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio'),          roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'agenda',       icon: Calendar,        label: t('nav.agenda'),          roles: ['jefe','admin'] },
     { id: 'ninos',        icon: Users,           label: t('nav.pacientes'),       roles: ['jefe','admin','especialista','terapeuta'] },
-    { id: 'vadi',         icon: Sparkles,        label: t('nav.aria'),            roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'inteligencia', icon: Zap,             label: t('nav.hub'),             roles: ['jefe','admin','especialista'] },
     { id: 'cerebro',      icon: Database,        label: t('nav.cerebro'),         roles: ['jefe','admin'] },
     { id: 'recursos',     icon: BookOpen,        label: t('nav.recursos'),        roles: ['jefe','admin','especialista','terapeuta'] },
