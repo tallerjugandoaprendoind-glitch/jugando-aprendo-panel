@@ -288,7 +288,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                 <div className="px-4 py-3 border-b flex items-center justify-between" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
                   <div className="min-w-0 flex-1">
                     <p className="font-black text-sm truncate" style={{ color: "var(--text-primary)" }}>{prog.nombre || prog.titulo || 'Sin nombre'}</p>
-                    <p className="text-xs truncate mt-0.5" style={{ color: "var(--text-muted)" }}>{prog.objetivo}</p>
+                    <p className="text-xs truncate mt-0.5" style={{ color: "var(--text-muted)" }}>{prog.objetivo || prog.objetivo_lp || prog.descripcion || prog.area || ''}</p>
                   </div>
                   <span className={`ml-3 shrink-0 text-[10px] font-black px-2.5 py-1 rounded-full border ${
                     prog.criterio_logrado

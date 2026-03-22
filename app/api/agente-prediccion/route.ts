@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
 
     const resumenParaIA = analisis_por_programa.map(p => ({
       programa: p.nombre,
-      objetivo: p.objetivo,
+      objetivo: p.objetivo || p.objetivo_lp || '',
       sesiones: p.total_sesiones,
       ultimo_pct: p.ultimo_porcentaje,
       media: p.media,
