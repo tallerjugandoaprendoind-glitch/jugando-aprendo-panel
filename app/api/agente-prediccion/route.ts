@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
       const progNombre = prog.titulo || (prog as any).nombre || 'Sin nombre'
       const progObjetivo = (prog as any).objetivo || (prog as any).descripcion || (prog as any).area || ''
 
-      // Cargar sesiones — intentar primero sesiones_datos_aba, luego sesiones_programa
+      // Cargar sesiones — intentar sesiones_datos_aba, luego registro_aba filtrado por programa
       let sesiones: any[] | null = null
       const { data: s1 } = await supabaseAdmin
         .from('sesiones_datos_aba')
@@ -116,12 +116,27 @@ export async function POST(req: NextRequest) {
       if (s1 && s1.length > 0) {
         sesiones = s1
       } else {
+        // Fallback: buscar en registro_aba por child_id y mapear datos
         const { data: s2 } = await supabaseAdmin
-          .from('sesiones_programa')
-          .select('fecha, porcentaje_exito, fase, set_nombre, oportunidades_totales, respuestas_correctas, notas')
-          .eq('programa_id', prog.id)
-          .order('fecha', { ascending: true })
-        sesiones = s2
+          .from('registro_aba')
+          .select('fecha_sesion, datos')
+          .eq('child_id', childId)
+          .order('fecha_sesion', { ascending: true })
+          .limit(30)
+        if (s2 && s2.length > 0) {
+          // Convertir formato registro_aba al formato esperado
+          sesiones = s2.map((s: any) => ({
+            fecha: s.fecha_sesion,
+            porcentaje_exito:
+              s.datos?.nivel_logro_objetivos != null ? Math.round(parseFloat(String(s.datos.nivel_logro_objetivos)) * (typeof s.datos.nivel_logro_objetivos === 'number' && s.datos.nivel_logro_objetivos <= 5 ? 20 : 1)) :
+              s.datos?.porcentaje_exito ?? s.datos?.porcentaje_logro ?? null,
+            fase: s.datos?.fase_actual || null,
+            set_nombre: s.datos?.set_nombre || null,
+            oportunidades_totales: s.datos?.oportunidades_totales || null,
+            respuestas_correctas: s.datos?.respuestas_correctas || null,
+            notas: s.datos?.observaciones_generales || s.datos?.notas || null,
+          })).filter((s: any) => s.porcentaje_exito !== null)
+        }
       }
 
       if (!sesiones || sesiones.length === 0) {
@@ -201,7 +216,7 @@ export async function POST(req: NextRequest) {
 
     const resumenParaIA = analisis_por_programa.map(p => ({
       programa: p.nombre,
-      objetivo: p.objetivo || p.objetivo_lp || '',
+      objetivo: p.objetivo || (p as any).objetivo_lp || '',
       sesiones: p.total_sesiones,
       ultimo_pct: p.ultimo_porcentaje,
       media: p.media,
@@ -212,27 +227,53 @@ export async function POST(req: NextRequest) {
       sets: p.sets?.map(s => `${s.nombre}: ${s.ultimo_pct}% (media: ${s.media}%, ${s.criterio_logrado ? 'LOGRADO' : 'en progreso'})`).join(' | '),
     }))
 
-    const prompt = `Eres BCBA supervisora. Analiza el progreso de ${childName} por programa y nivel de objetivo. Tu audiencia son terapeutas y supervisoras clínicas.
+    const totalSesionesAnalizadas = analisis_por_programa.reduce((a, p) => a + p.total_sesiones, 0)
+    const progConSesiones = analisis_por_programa.filter(p => p.total_sesiones > 0)
+    const progSinSesiones = analisis_por_programa.filter(p => p.total_sesiones === 0)
 
-CRITERIO DE LOGRO: ≥${analisis_por_programa[0]?.criterio_dominio || 90}% en 2 sesiones CONSECUTIVAS por nivel de objetivo.
+    const prompt = `Eres una neuropsicóloga clínica con especialización en Análisis Aplicado de la Conducta (ABA), certificada BCBA-D con 15 años de experiencia clínica. Redactas informes de supervisión clínica de alto nivel para terapeutas ABA y equipos multidisciplinarios. Tu lenguaje es técnico, preciso y fundamentado en evidencia (Cooper, Heron & Heward; JABA; Skinner).
 
-DATOS POR PROGRAMA:
-${JSON.stringify(resumenParaIA, null, 2)}
+PACIENTE: ${childName}
+SESIONES TOTALES ANALIZADAS: ${totalSesionesAnalizadas}
+PROGRAMAS CON DATOS: ${progConSesiones.length} | SIN DATOS AÚN: ${progSinSesiones.length}
+CRITERIO DE DOMINIO: ≥${analisis_por_programa[0]?.criterio_dominio || 90}% en 2 sesiones consecutivas (criterio de transferencia de control de estímulos)
 
-Genera un análisis clínico ABA con:
-1. ESTADO GENERAL (2 oraciones): resumen del progreso del paciente
-2. POR PROGRAMA (para cada uno): estado del nivel de objetivo actual, si está en criterio o no, qué ajuste recomendar al terapeuta
-3. PRIORIDADES: qué programa necesita atención inmediata y por qué
-4. PRÓXIMOS PASOS CLÍNICOS (3 puntos concretos): cambios de set, revisión de antecedentes, ajustes de consecuencias
+DATOS CLÍNICOS POR PROGRAMA:
+${resumenParaIA.map(p => [
+  `━━ ${p.programa.toUpperCase()} ━━`,
+  `  Área: ${p.objetivo || 'no especificada'} | Sesiones: ${p.sesiones} | Fase: ${p.tendencia || '—'}`,
+  `  Último registro: ${p.ultimo_pct != null ? p.ultimo_pct + '%' : 'sin datos'} | Media: ${p.media != null ? p.media + '%' : '—'} | Mediana: ${p.mediana != null ? p.mediana + '%' : '—'}`,
+  `  Criterio de dominio: ${p.logrado ? '✓ ALCANZADO' : 'EN PROGRESO'}`,
+  p.sets ? `  Sets/niveles: ${p.sets}` : '',
+].filter(Boolean).join('\n')).join('\n\n')}
 
-Sé específico y técnico. Sin perogrulladas. Máximo 350 palabras.`
+Genera un INFORME DE SUPERVISIÓN CLÍNICA ABA con exactamente este formato:
+
+**EVALUACIÓN DEL ESTADO CLÍNICO ACTUAL**
+[3-4 oraciones. Descripción objetiva del estado general del proceso terapéutico fundamentado en los datos. Menciona tendencias observables, nivel de adherencia al programa y calidad del registro de datos. Usa terminología como: tasa de respuesta, discriminación de estímulos, control instruccional, línea base, criterio de dominio.]
+
+**ANÁLISIS POR PROGRAMA DE INTERVENCIÓN**
+[Para cada programa con datos: analiza la curva de aprendizaje, variabilidad entre sesiones, si hay estancamiento o aceleración, e indica si el criterio de transferencia está próximo. Para programas sin sesiones: señala la necesidad crítica de iniciar el registro sistemático de datos.]
+
+**HIPÓTESIS CLÍNICA Y VARIABLES EN JUEGO**
+[2-3 oraciones. Plantea hipótesis sobre los factores que pueden estar afectando el progreso: variables motivacionales, calidad del antecedente, eficacia del consecuente, generalización, fatiga de reforzadores, etc.]
+
+**INDICACIONES TERAPÉUTICAS PRIORITARIAS**
+1. [Indicación clínica específica con fundamento en principios ABA — incluye qué, cómo y cuándo implementar]
+2. [Indicación clínica específica con fundamento en principios ABA]
+3. [Indicación clínica específica con fundamento en principios ABA]
+
+**CRITERIOS DE AVANCE Y MONITOREO**
+[Especifica qué indicadores deben observarse en las próximas 2-4 semanas para determinar si el plan es efectivo o requiere ajuste. Menciona umbrales de decisión clínica.]
+
+Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionales. Máximo 450 palabras.`
 
     let resumen_general: string | null = null
     try {
       resumen_general = await callGroqSimple(
-        'Eres BCBA supervisora experta en análisis de datos ABA. Usa terminología técnica. Fundamenta en JABA y Cooper.',
-        prompt + (cerebroCtx ? '\n\n━━━ CEREBRO IA ━━━\n' + cerebroCtx : ''),
-        { model: GROQ_MODELS.SMART, temperature: 0.35, maxTokens: 700 }
+        'Eres neuropsicóloga clínica BCBA-D con especialización en ABA. Redactas informes clínicos de supervisión de alto nivel. Lenguaje técnico, preciso, fundamentado en evidencia científica. Nunca usas frases motivacionales vagas. Siempre específico y accionable.',
+        prompt + (cerebroCtx ? '\n\n━━━ CONTEXTO CLÍNICO ADICIONAL ━━━\n' + cerebroCtx : ''),
+        { model: GROQ_MODELS.SMART, temperature: 0.25, maxTokens: 1000 }
       )
     } catch (err) {
       console.error('Error Groq predicción por SET:', err)

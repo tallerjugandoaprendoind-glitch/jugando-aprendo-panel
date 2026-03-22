@@ -358,12 +358,87 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
 
             {/* Análisis IA general */}
             {(prediccion as any).resumen_general && (
-              <div className="rounded-xl border p-5" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
-                <p className="text-xs font-black uppercase tracking-wider mb-3 flex items-center gap-1.5" style={{ color: "var(--text-muted)" }}>
-                  <Sparkles size={12} className="text-blue-500" /> ANÁLISIS CLÍNICO IA — SUPERVISORA
-                </p>
-                <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: "var(--text-primary)" }}>
-                  {(prediccion as any).resumen_general}
+              <div className="rounded-2xl border overflow-hidden" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
+                {/* Header */}
+                <div className="px-5 py-3 border-b flex items-center gap-2" style={{ background: "linear-gradient(135deg, #1e1b4b, #312e81)", borderColor: "var(--card-border)" }}>
+                  <Sparkles size={14} className="text-violet-300" />
+                  <p className="text-xs font-black uppercase tracking-wider text-violet-200">Análisis Clínico IA — Supervisora ABA</p>
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-violet-500/30 text-violet-300 font-bold border border-violet-500/30">BCBA IA</span>
+                </div>
+                {/* Contenido renderizado */}
+                <div className="p-5 space-y-4">
+                  {(prediccion as any).resumen_general
+                    .split(/\n\n+/)
+                    .filter((block: string) => block.trim())
+                    .map((block: string, i: number) => {
+                      // Detectar si es un encabezado tipo **TEXTO**
+                      const isHeader = /^\*\*[^*]+\*\*$/.test(block.trim())
+                      if (isHeader) {
+                        const label = block.trim().replace(/\*\*/g, '')
+                        const colors: Record<string, string> = {
+                          'EVALUACIÓN DEL ESTADO CLÍNICO ACTUAL': '10B981',
+                          'ANÁLISIS POR PROGRAMA DE INTERVENCIÓN': '3B82F6',
+                          'HIPÓTESIS CLÍNICA Y VARIABLES EN JUEGO': 'F59E0B',
+                          'INDICACIONES TERAPÉUTICAS PRIORITARIAS': 'EF4444',
+                          'CRITERIOS DE AVANCE Y MONITOREO': '8B5CF6',
+                          'ESTADO GENERAL': '10B981',
+                          'POR PROGRAMA': '3B82F6',
+                          'PRIORIDADES': 'F59E0B',
+                          'PRÓXIMOS PASOS CLÍNICOS': '8B5CF6',
+                        }
+                        const color = Object.entries(colors).find(([k]) => label.includes(k))?.[1] || '64748B'
+                        return (
+                          <div key={i} className="flex items-center gap-2 pt-2">
+                            <div className="h-0.5 w-3 rounded-full" style={{ background: `#${color}` }}/>
+                            <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: `#${color}` }}>{label}</p>
+                            <div className="flex-1 h-px" style={{ background: `#${color}30` }}/>
+                          </div>
+                        )
+                      }
+                      // Detectar si tiene numeración (1. 2. 3.)
+                      const isNumbered = /^\d+\.\s/.test(block.trim())
+                      if (isNumbered) {
+                        const lines = block.trim().split('\n').filter(Boolean)
+                        return (
+                          <div key={i} className="space-y-2">
+                            {lines.map((line: string, j: number) => {
+                              const num = line.match(/^(\d+)\.\s/)
+                              const text = line.replace(/^\d+\.\s/, '').replace(/\*\*(.*?)\*\*/g, '$1')
+                              const [title, ...rest] = text.split(':')
+                              return (
+                                <div key={j} className="flex gap-3 items-start">
+                                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5"
+                                    style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>
+                                    {num?.[1]}
+                                  </span>
+                                  <div>
+                                    {rest.length > 0 ? (
+                                      <>
+                                        <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{title}:</span>
+                                        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}> {rest.join(':')}</span>
+                                      </>
+                                    ) : (
+                                      <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{text}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )
+                      }
+                      // Párrafo normal — renderizar **bold**
+                      const parts = block.trim().split(/\*\*(.*?)\*\*/g)
+                      return (
+                        <p key={i} className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          {parts.map((part: string, j: number) =>
+                            j % 2 === 1
+                              ? <strong key={j} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{part}</strong>
+                              : part
+                          )}
+                        </p>
+                      )
+                    })}
                 </div>
               </div>
             )}
