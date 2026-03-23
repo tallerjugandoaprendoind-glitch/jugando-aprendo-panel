@@ -5,6 +5,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
 
 import { supabase } from '@/lib/supabase'
+import { useSessionTracker } from '@/lib/hooks/useSessionTracker'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
@@ -41,6 +42,9 @@ export default function ParentDashboard() {
    
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState<any>(null)
+
+  // ── Session time tracker — automatically logs how long the parent is connected ──
+  useSessionTracker(profile?.id)
   
   // --- NUEVOS ESTADOS PARA NOTIFICACIONES ---
   const [notifications, setNotifications] = useState<any[]>([])
