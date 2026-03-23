@@ -100,53 +100,60 @@ export default function ARIAAgentChat({
 
   return (
     <div
-      className={`flex flex-col rounded-3xl overflow-hidden border ${compact ? 'h-[500px]' : 'h-[680px]'}`}
-      style={{
+      className={`flex flex-col overflow-hidden ${compact ? 'rounded-2xl border h-[500px]' : 'h-full'}`}
+      style={compact ? {
         background: 'var(--card)',
         borderColor: 'var(--card-border)',
-        boxShadow: 'var(--shadow-sm)',
-      }}
+      } : { background: 'var(--card)' }}
     >
-      {/* Header — oculto en modo compact */}
+      {/* Header */}
       {!compact && (
-      <div className="bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-4 flex items-center gap-3 flex-shrink-0">
-        <div className="w-9 h-9 bg-white/20 rounded-2xl flex items-center justify-center">
-          <Brain size={18} className="text-white" />
+        <div className="flex items-center justify-between px-5 py-3.5 flex-shrink-0"
+          style={{ background: 'var(--card)', borderBottom: '1px solid var(--card-border)' }}>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
+              <Brain size={15} style={{ color: 'var(--text-secondary)' }} />
+            </div>
+            <div>
+              <h3 className="font-black text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+                ARIA — Asistente Clínico IA
+                <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide"
+                  style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)', border: '1px solid var(--card-border)' }}>
+                  BETA
+                </span>
+              </h3>
+              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+                {childId ? `Caso activo: ${childName || 'Paciente'}` : 'Asistente clínico especializado'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            <span className="text-[10px] font-semibold" style={{ color: 'var(--text-muted)' }}>{t('common.activo')}</span>
+          </div>
         </div>
-        <div>
-          <h3 className="font-black text-white text-sm flex items-center gap-2">
-            ARIA — Asistente Clínico IA
-            <span className="px-1.5 py-0.5 bg-white/20 rounded-full text-[9px] font-black">BETA</span>
-          </h3>
-          <p className="text-violet-200 text-[10px]">
-            {childId ? `Caso activo: ${childName || 'Paciente'}` : 'Asistente clínico especializado'}
-          </p>
-        </div>
-        <div className="ml-auto flex items-center gap-1.5">
-          <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-          <span className="text-white/70 text-[10px] font-bold">{t('common.activo')}</span>
-        </div>
-      </div>
       )}
 
       {/* Messages */}
       <div
-        className="flex-1 overflow-y-auto p-4 space-y-4"
-        style={{ background: 'var(--background)' }}
+        className="flex-1 overflow-y-auto p-5 space-y-4"
+        style={{ background: 'var(--background)', minHeight: 0 }}
       >
         {messages.map((msg, i) => (
           <MessageBubble key={i} message={msg} />
         ))}
         {loading && (
           <div className="flex gap-3">
-            <div className="w-8 h-8 bg-violet-500/20 rounded-2xl flex items-center justify-center shrink-0">
-              <Brain size={14} className="text-violet-500" />
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
+              <Brain size={14} style={{ color: 'var(--text-muted)' }} />
             </div>
             <div
               className="rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2"
               style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}
             >
-              <Loader2 size={14} className="animate-spin text-violet-500" />
+              <Loader2 size={14} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
               <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>{t('aria.ariaPensando')}</span>
             </div>
           </div>
@@ -157,7 +164,7 @@ export default function ARIAAgentChat({
       {/* Sugerencias */}
       {messages.length <= 1 && (
         <div
-          className="px-4 pb-3"
+          className="px-5 pb-4"
           style={{ background: 'var(--background)', borderTop: '1px solid var(--card-border)' }}
         >
           <p className="text-[10px] font-black uppercase tracking-widest mb-2 mt-3" style={{ color: 'var(--text-muted)' }}>
@@ -168,7 +175,7 @@ export default function ARIAAgentChat({
               <button
                 key={i}
                 onClick={() => sendMessage(s)}
-                className="px-3 py-2 rounded-xl text-xs font-medium text-left leading-tight transition-all hover:border-violet-400 hover:text-violet-500"
+                className="px-3 py-2 rounded-lg text-xs font-medium text-left leading-tight transition-all"
                 style={{
                   background: 'var(--muted-bg)',
                   border: '1px solid var(--card-border)',
@@ -184,7 +191,7 @@ export default function ARIAAgentChat({
 
       {/* Input */}
       <div
-        className="p-4 flex-shrink-0"
+        className="px-5 py-4 flex-shrink-0"
         style={{
           background: 'var(--card)',
           borderTop: '1px solid var(--card-border)',
@@ -198,7 +205,7 @@ export default function ARIAAgentChat({
             onKeyDown={handleKeyDown}
             rows={1}
             {...{placeholder: t('ui.ask_aria')}}
-            className="flex-1 p-3 rounded-2xl text-sm resize-none outline-none transition-all leading-relaxed max-h-28 focus:ring-2 focus:ring-violet-400"
+            className="flex-1 p-3 rounded-xl text-sm resize-none outline-none transition-all leading-relaxed max-h-28"
             style={{
               background: 'var(--input-bg)',
               border: '1.5px solid var(--input-border)',
@@ -209,7 +216,7 @@ export default function ARIAAgentChat({
           <button
             onClick={() => sendMessage()}
             disabled={!input.trim() || loading}
-            className="w-11 h-11 bg-violet-600 text-white rounded-2xl flex items-center justify-center hover:bg-violet-700 disabled:opacity-40 transition-all shrink-0"
+            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 disabled:opacity-40" style={{ background: 'var(--text-primary)', color: 'var(--card)' }}
           >
             <Send size={16} />
           </button>
@@ -238,28 +245,28 @@ function MessageBubble({ message }: { message: Message }) {
   return (
     <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
       <div
-        className="w-8 h-8 rounded-2xl flex items-center justify-center shrink-0"
-        style={{ background: isUser ? 'rgba(99,102,241,0.15)' : 'rgba(139,92,246,0.15)' }}
+        className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
+        style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}
       >
         {isUser
-          ? <User size={14} className="text-indigo-500" />
-          : <Brain size={14} className="text-violet-500" />
+          ? <User size={13} style={{ color: 'var(--text-secondary)' }} />
+          : <Brain size={13} style={{ color: 'var(--text-secondary)' }} />
         }
       </div>
       <div className={`max-w-[82%] flex flex-col gap-1 ${isUser ? 'items-end' : 'items-start'}`}>
         <div
-          className="rounded-2xl px-4 py-3 text-sm leading-relaxed"
+          className="rounded-xl px-4 py-3 text-sm leading-relaxed"
           style={isUser
             ? {
-                background: '#6d28d9',
-                color: '#ffffff',
-                borderRadius: '1rem 0.25rem 1rem 1rem',
+                background: 'var(--text-primary)',
+                color: 'var(--card)',
+                borderRadius: '0.75rem 0.2rem 0.75rem 0.75rem',
               }
             : {
-                background: 'var(--muted-bg)',
+                background: 'var(--card)',
                 color: 'var(--text-primary)',
                 border: '1px solid var(--card-border)',
-                borderRadius: '0.25rem 1rem 1rem 1rem',
+                borderRadius: '0.2rem 0.75rem 0.75rem 0.75rem',
               }
           }
         >
@@ -272,7 +279,8 @@ function MessageBubble({ message }: { message: Message }) {
           {message.fuentes && message.fuentes.length > 0 && (
             <div className="flex gap-1">
               {message.fuentes.map((f, i) => (
-                <span key={i} className="text-[9px] px-1.5 py-0.5 bg-violet-500/20 text-violet-400 rounded-full border border-violet-500/30 font-bold flex items-center gap-1">
+                <span key={i} className="text-[9px] px-1.5 py-0.5 rounded font-bold flex items-center gap-1"
+                  style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)', border: '1px solid var(--card-border)' }}>
                   <BookOpen size={8} /> {f}
                 </span>
               ))}
