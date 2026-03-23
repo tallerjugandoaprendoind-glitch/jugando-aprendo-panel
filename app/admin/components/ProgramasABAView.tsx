@@ -511,7 +511,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       })
 
                       const total = chartData.length
-                      const chartHeight = 200
+                      const chartHeight = 260
 
                       return (
                         <div>
@@ -652,108 +652,167 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       )
                     })()}
 
-                    {/* ── Barras (color por nivel) ── */}
-                    {tipoGrafico === 'barras' && chartData.length > 0 && (() => {
-                      type Band = { set: string; start: number; end: number }
-                      const bands: Band[] = []
-                      let bStart = 0; let cSet = chartData[0]?.set || null
-                      chartData.forEach((d: any, i: number) => {
-                        if (d.set !== cSet || i === chartData.length - 1) {
-                          if (cSet) bands.push({ set: cSet, start: bStart, end: i === chartData.length - 1 ? i : i - 1 })
-                          cSet = d.set; bStart = i
-                        }
-                      })
+                    {/* ── Barras con divisores de fase/set ── */}
+                    {tipoGrafico === 'barras' && (() => {
+                      // Build segments same as lineas
+                      type Seg = { label: string; fase: string; set: string | null; startIdx: number; endIdx: number }
+                      const segs: Seg[] = []
+                      if (chartData.length > 0) {
+                        let sStart = 0
+                        let curK = `${chartData[0].fase}||${chartData[0].set}`
+                        chartData.forEach((d: any, i: number) => {
+                          const k = `${d.fase}||${d.set}`
+                          if (k !== curK || i === chartData.length - 1) {
+                            const endIdx = i === chartData.length - 1 ? i : i - 1
+                            const prev = chartData[sStart]
+                            segs.push({ label: prev.set || (faseLabel[prev.fase] || prev.fase), fase: prev.fase, set: prev.set, startIdx: sStart, endIdx })
+                            curK = k; sStart = i
+                          }
+                        })
+                      }
                       const total = chartData.length
-                      return bands.length > 1 ? (
-                        <div className="flex mb-1 rounded-lg overflow-hidden border border-[var(--card-border)] text-[10px] font-black">
-                          {bands.map((b, i) => {
-                            const colors = ['bg-amber-100 text-amber-700', 'bg-orange-100 text-orange-700', 'bg-yellow-100 text-yellow-700']
-                            return <div key={i} className={`${colors[i % colors.length]} flex items-center justify-center py-1 truncate`} style={{ width: `${((b.end - b.start + 1) / total) * 100}%`, minWidth: '24px' }}>{b.set}</div>
-                          })}
-                        </div>
-                      ) : null
-                    })()}
+                      const segColors = ['#6366f1','#ef4444','#3b82f6','#8b5cf6','#f59e0b','#10b981','#ec4899']
+                      const dividers = segs.slice(0, -1).map(s => s.endIdx + 1.5)
 
-                    {tipoGrafico === 'barras' && (
-                      <ResponsiveContainer width="100%" height={180}>
-                        <BarChart data={chartData} margin={{ top: 5, right: 10, bottom: 18, left: -15 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                          <XAxis dataKey="sesion" tick={{ fontSize: 10 }} ticks={Array.from({length: Math.ceil(chartData.length / 10) + 1}, (_, i) => (i + 1) * 10).filter((t: number) => t <= chartData.length + 10).concat([1]).sort((a: number, b: number) => a - b)} interval={0} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -6, fontSize: 10 }} />
-                          <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 90, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: any) => `${v}%`} />
-                          <Tooltip
-                            formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha}${d.set ? ` · ${d.set}` : ''}` : `Sesión ${label}` }}
-                          />
-                          <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
-                            label={{ value: `🏆 ${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
-                          <Bar dataKey="pct" radius={[4, 4, 0, 0]}>
-                            {chartData.map((entry: any, index: number) => (
-                              <Cell key={index} fill={
-                                entry.pct >= programa.criterio_dominio_pct ? '#059669'
-                                : entry.pct >= 70 ? '#6366f1'
-                                : entry.pct >= 45 ? '#D97706' : '#DC2626'
-                              } />
-                            ))}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    )}
+                      return (
+                        <div>
+                          {segs.length > 1 && (
+                            <div className="flex" style={{ paddingLeft: '30px', paddingRight: '10px' }}>
+                              {segs.map((seg, i) => {
+                                const width = ((seg.endIdx - seg.startIdx + 1) / total) * 100
+                                const color = segColors[i % segColors.length]
+                                return (
+                                  <div key={i} className="flex flex-col items-center justify-end pb-1 border-r last:border-r-0"
+                                    style={{ width: `${width}%`, minWidth: '28px', borderColor: '#cbd5e1' }}>
+                                    <span className="text-[10px] font-black truncate px-1 text-center w-full" style={{ color }}>{seg.label}</span>
+                                    <span className="text-[9px] font-semibold text-slate-400 truncate px-1 text-center w-full">
+                                      {seg.set ? (faseLabel[seg.fase] || seg.fase) : ''}
+                                    </span>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          )}
+                          <ResponsiveContainer width="100%" height={260}>
+                            <BarChart data={chartData} margin={{ top: 4, right: 16, bottom: 24, left: -15 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
+                              <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+                                interval={Math.max(0, Math.floor(total / 8) - 1)}
+                                label={{ value: 'Sesión', position: 'insideBottom', offset: -10, fontSize: 10, fill: 'var(--text-muted)' }} />
+                              <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 90, 100]} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} tickFormatter={(v: any) => `${v}%`} />
+                              <Tooltip
+                                formatter={(value: any) => [`${value}%`, 'Éxito']}
+                                labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha}${d.set ? ` · ${d.set}` : ''}` : `Sesión ${label}` }}
+                                contentStyle={{ borderRadius: '10px', fontSize: '11px', border: '1px solid var(--card-border)', background: 'var(--card)' }}
+                              />
+                              {dividers.map((x, i) => <ReferenceLine key={`bd-${i}`} x={x} stroke="#475569" strokeWidth={1.5} />)}
+                              <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
+                                label={{ value: `${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
+                              <Bar dataKey="pct" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                                {chartData.map((entry: any, index: number) => (
+                                  <Cell key={index} fill={
+                                    entry.pct >= programa.criterio_dominio_pct ? '#059669'
+                                    : entry.pct >= 70 ? '#6366f1'
+                                    : entry.pct >= 45 ? '#D97706' : '#DC2626'
+                                  } />
+                                ))}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      )
+                    })()}
 
                     {/* ── Histograma de distribución ── */}
                     {tipoGrafico === 'histograma' && (() => {
                       const critPct = programa.criterio_dominio_pct
                       const histData = [
-                        { rango: '0-25%',   count: chartData.filter((d: any) => d.pct < 26).length,               color: '#DC2626' },
-                        { rango: '26-50%',  count: chartData.filter((d: any) => d.pct >= 26 && d.pct < 51).length, color: '#D97706' },
-                        { rango: '51-75%',  count: chartData.filter((d: any) => d.pct >= 51 && d.pct < 76).length, color: '#6366f1' },
-                        { rango: '76-89%',  count: chartData.filter((d: any) => d.pct >= 76 && d.pct < critPct).length, color: '#0891B2' },
-                        { rango: `${critPct}%+`, count: chartData.filter((d: any) => d.pct >= critPct).length,            color: '#059669' },
+                        { rango: '0-25%',        count: chartData.filter((d: any) => d.pct < 26).length,                    color: '#DC2626' },
+                        { rango: '26-50%',       count: chartData.filter((d: any) => d.pct >= 26 && d.pct < 51).length,     color: '#D97706' },
+                        { rango: '51-75%',       count: chartData.filter((d: any) => d.pct >= 51 && d.pct < 76).length,     color: '#6366f1' },
+                        { rango: '76-89%',       count: chartData.filter((d: any) => d.pct >= 76 && d.pct < critPct).length, color: '#0891B2' },
+                        { rango: `${critPct}%+`, count: chartData.filter((d: any) => d.pct >= critPct).length,              color: '#059669' },
                       ]
+                      const maxCount = Math.max(...histData.map(h => h.count), 1)
                       return (
-                        <ResponsiveContainer width="100%" height={200}>
-                          <BarChart data={histData} margin={{ top: 5, right: 10, bottom: 5, left: -15 }}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                            <XAxis dataKey="rango" tick={{ fontSize: 10 }} />
-                            <YAxis tick={{ fontSize: 10 }} label={{ value: 'Sesiones', angle: -90, position: 'insideLeft', fontSize: 10 }} />
-                            <Tooltip formatter={(v: any) => [`${v} ${t('programas.sesiones') || 'sesiones'}`, t('programas.cantidad')]} />
-                            <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                              {histData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
+                        <div className="p-4">
+                          <ResponsiveContainer width="100%" height={240}>
+                            <BarChart data={histData} margin={{ top: 8, right: 16, bottom: 8, left: -10 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
+                              <XAxis dataKey="rango" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
+                              <YAxis allowDecimals={false} tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+                                label={{ value: 'Sesiones', angle: -90, position: 'insideLeft', fontSize: 10, fill: 'var(--text-muted)' }} />
+                              <Tooltip
+                                formatter={(v: any) => [`${v} sesiones`, 'Cantidad']}
+                                contentStyle={{ borderRadius: '10px', fontSize: '11px', border: '1px solid var(--card-border)', background: 'var(--card)' }}
+                              />
+                              <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={60}>
+                                {histData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
+                              </Bar>
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
                       )
                     })()}
 
-                    {/* ── Pie chart ── */}
+                    {/* ── Pie chart mejorado ── */}
                     {tipoGrafico === 'pie' && (() => {
                       const critPct = programa.criterio_dominio_pct
                       const pieRaw = [
-                        { name: `Criterio (≥${critPct}%)`, value: chartData.filter((d: any) => d.pct >= critPct).length, color: '#059669' },
-                        { name: '70-89%',  value: chartData.filter((d: any) => d.pct >= 70 && d.pct < critPct).length, color: '#6366f1' },
-                        { name: '45-69%',  value: chartData.filter((d: any) => d.pct >= 45 && d.pct < 70).length,  color: '#D97706' },
-                        { name: '<45%',    value: chartData.filter((d: any) => d.pct < 45).length,                  color: '#DC2626' },
+                        { name: `≥${critPct}% · Criterio`, value: chartData.filter((d: any) => d.pct >= critPct).length, color: '#059669', bg: '#d1fae5' },
+                        { name: '70-89% · Cerca',          value: chartData.filter((d: any) => d.pct >= 70 && d.pct < critPct).length, color: '#6366f1', bg: '#ede9fe' },
+                        { name: '45-69% · En proceso',     value: chartData.filter((d: any) => d.pct >= 45 && d.pct < 70).length, color: '#D97706', bg: '#fef3c7' },
+                        { name: '<45% · Inicial',          value: chartData.filter((d: any) => d.pct < 45).length, color: '#DC2626', bg: '#fee2e2' },
                       ].filter(p => p.value > 0)
+                      const total = chartData.length
+                      const pct = (v: number) => total > 0 ? Math.round((v / total) * 100) : 0
+
+                      const RADIAN = Math.PI / 180
+                      const renderLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, value }: any) => {
+                        if (value === 0) return null
+                        const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+                        const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                        const y = cy + radius * Math.sin(-midAngle * RADIAN)
+                        return <text x={x} y={y} fill="white" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight="bold">{pct(value)}%</text>
+                      }
+
                       return (
-                        <div className="flex items-center gap-4">
-                          <ResponsiveContainer width="55%" height={180}>
-                            <PieChart>
-                              <Pie data={pieRaw} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} paddingAngle={3}>
-                                {pieRaw.map((entry, i) => <Cell key={i} fill={entry.color} />)}
-                              </Pie>
-                              <Tooltip formatter={(v: any) => [`${v} ${t('programas.sesiones') || 'sesiones'}`, '']} />
-                            </PieChart>
-                          </ResponsiveContainer>
-                          <div className="flex-1 space-y-2">
-                            {pieRaw.map(p => (
-                              <div key={p.name} className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full shrink-0" style={{ background: p.color }} />
-                                <span className="text-[11px] text-slate-600 flex-1">{p.name}</span>
-                                <span className="text-xs font-black" style={{ color: p.color }}>{p.value}</span>
-                              </div>
-                            ))}
-                            <p className="text-[10px] text-slate-400 pt-1 border-t border-[var(--card-border)]">
-                              {t('programas.totalSesiones')}: {chartData.length} {t('programas.sesiones') || 'sesiones'}
-                            </p>
+                        <div className="p-4">
+                          <div className="flex items-center gap-6">
+                            {/* Donut */}
+                            <div className="shrink-0">
+                              <ResponsiveContainer width={220} height={220}>
+                                <PieChart>
+                                  <Pie data={pieRaw} dataKey="value" nameKey="name"
+                                    cx="50%" cy="50%"
+                                    innerRadius={55} outerRadius={95}
+                                    paddingAngle={2}
+                                    labelLine={false}
+                                    label={renderLabel}>
+                                    {pieRaw.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                                  </Pie>
+                                  <Tooltip
+                                    formatter={(v: any, name: any) => [`${v} sesiones (${pct(v)}%)`, name]}
+                                    contentStyle={{ borderRadius: '10px', fontSize: '11px', border: '1px solid var(--card-border)', background: 'var(--card)' }}
+                                  />
+                                </PieChart>
+                              </ResponsiveContainer>
+                              {/* Center label */}
+                              <p className="text-center -mt-2 text-xs font-bold text-slate-400">{total} sesiones</p>
+                            </div>
+
+                            {/* Legend cards */}
+                            <div className="flex-1 grid grid-cols-2 gap-2">
+                              {pieRaw.map(p => (
+                                <div key={p.name} className="rounded-xl p-3 flex items-center gap-2.5" style={{ background: p.bg }}>
+                                  <div className="w-3 h-3 rounded-full shrink-0" style={{ background: p.color }} />
+                                  <div className="min-w-0">
+                                    <p className="text-[11px] font-black truncate" style={{ color: p.color }}>{p.value} sesiones</p>
+                                    <p className="text-[10px] text-slate-500 font-semibold truncate">{p.name}</p>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       )
