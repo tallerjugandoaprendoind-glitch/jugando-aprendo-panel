@@ -1178,55 +1178,83 @@ function FormFillView({ form, children, onBack, toast }: any) {
 // ─── FORM CARD ───────────────────────────────────────────────────────────────
 function FormCard({ form, onStart, onSend, catInfo }: any) {
   const { t } = useI18n()
+  const isExternal = (form as any).externalPlatform
+  const isPro = form.formKey
+  const isParent = form.targetRole === 'parent' || form.targetRole === 'both'
 
   return (
-    <div className=" rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-violet-200 transition-all group overflow-hidden" style={{ background: "var(--card)" }}>
-      <div className={`h-1.5 bg-gradient-to-r ${form.color || 'from-violet-500 to-indigo-500'}`} />
-      <div className="p-5">
-        <div className="flex items-start justify-between mb-3">
-          <div className="" style={{ background: "var(--background)" }}>
-            {form.icon}
+    <div className="rounded-xl overflow-hidden transition-all hover:shadow-md group"
+      style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+      {/* Top accent bar - thin, tasteful */}
+      <div className="h-0.5" style={{ background: `linear-gradient(90deg, ${isExternal ? '#b07830' : isPro ? '#7a4a4a' : '#4a6eaa'}, transparent)` }} />
+
+      <div className="p-4">
+        {/* Header row */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0"
+              style={{ background: 'var(--muted-bg)' }}>
+              {form.icon}
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-bold text-sm leading-tight truncate" style={{ color: 'var(--text-primary)' }}>{form.title}</h3>
+              <p className="text-[11px] truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>{form.subtitle}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            {form.targetRole === 'parent' || form.targetRole === 'both' ? (
-              <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[9px] font-black uppercase tracking-wider border border-blue-100 flex items-center gap-1">
-                <Send size={8} /> Padres
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {isParent && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide"
+                style={{ background: 'rgba(74,110,170,0.1)', color: '#4a6eaa', border: '1px solid rgba(74,110,170,0.2)' }}>
+                Padres
               </span>
-            ) : null}
-            {(form as any).externalPlatform ? (
-              <span className="px-2 py-0.5 bg-amber-50 text-amber-700 rounded-full text-[9px] font-black uppercase tracking-wider border border-amber-200 flex items-center gap-1">
-                ↗ Ext.
+            )}
+            {isExternal && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide"
+                style={{ background: 'rgba(176,120,48,0.1)', color: '#b07830', border: '1px solid rgba(176,120,48,0.2)' }}>
+                Ext.
               </span>
-            ) : form.formKey ? (
-              <span className="px-2 py-0.5 bg-red-50 text-red-600 rounded-full text-[9px] font-black uppercase tracking-wider border border-red-100 flex items-center gap-1">
-                <Stethoscope size={8} /> PRO
+            )}
+            {isPro && !isExternal && (
+              <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide"
+                style={{ background: 'rgba(122,74,74,0.1)', color: '#7a4a4a', border: '1px solid rgba(122,74,74,0.2)' }}>
+                PRO
               </span>
-            ) : null}
+            )}
           </div>
         </div>
 
-        <h3 className="font-black text-slate-800 text-sm mb-0.5 leading-tight" style={{ color: "var(--text-primary)" }}>{form.title}</h3>
-        <p className="text-xs text-slate-500 font-medium mb-2">{form.subtitle}</p>
-        <p className="text-xs text-slate-400 leading-relaxed mb-3 line-clamp-2">{form.description}</p>
+        {/* Description */}
+        <p className="text-xs leading-relaxed mb-3 line-clamp-2" style={{ color: 'var(--text-secondary)' }}>{form.description}</p>
 
-        <div className="flex flex-wrap gap-1.5 mb-4">
+        {/* Tags + time */}
+        <div className="flex flex-wrap gap-1 mb-4">
           {form.tags?.slice(0, 3).map((tag: string) => (
-            <span key={tag} className="px-2 py-0.5 bg-slate-50 text-slate-500 rounded-full text-[9px] font-bold border border-slate-200">{tag}</span>
+            <span key={tag} className="px-2 py-0.5 rounded text-[9px] font-semibold"
+              style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)', border: '1px solid var(--card-border)' }}>
+              {tag}
+            </span>
           ))}
-          <span className="px-2 py-0.5 bg-slate-50 text-slate-400 rounded-full text-[9px] font-bold border border-slate-200 flex items-center gap-1">
+          <span className="px-2 py-0.5 rounded text-[9px] font-semibold flex items-center gap-1"
+            style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)', border: '1px solid var(--card-border)' }}>
             <Clock size={8} /> {form.estimatedMinutes}m
           </span>
         </div>
 
+        {/* Actions */}
         <div className="flex gap-2">
           <button onClick={() => onStart(form)}
-            className={`flex-1 py-2.5 rounded-xl font-bold text-xs transition-all bg-gradient-to-r ${form.color || 'from-violet-600 to-indigo-600'} text-white shadow-sm hover:shadow-md hover:opacity-90 flex items-center justify-center gap-1.5`}>
-            <FileText size={13} /> {t('evaluaciones.completar')}
+            className="flex-1 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5"
+            style={{ background: 'var(--text-primary)', color: 'var(--card)' }}
+            onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.85'}
+            onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
+            <FileText size={12} /> {t('evaluaciones.completar')}
           </button>
-          {(form.targetRole === 'parent' || form.targetRole === 'both') && (
+          {isParent && (
             <button onClick={() => onSend(form)}
-              className="px-3 py-2.5 rounded-xl border-2 border-slate-200 text-slate-500 hover:border-violet-400 hover:text-violet-600 transition-all" title="Enviar a padres">
-              <Send size={13} />
+              className="px-3 py-2.5 rounded-lg transition-all"
+              style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}
+              title="Enviar a padres">
+              <Send size={12} />
             </button>
           )}
         </div>
@@ -1343,34 +1371,41 @@ export default function EvaluacionesUnificadas({ initialChildId, initialChildNam
   return (
     <div className="space-y-6 pb-8">
       {/* ── HEADER STATS ── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: 'Formularios', value: stats.total, icon: '📋', color: 'from-violet-600 to-indigo-600', bg: 'bg-violet-50' },
-          { label: t('evaluaciones.enviados_stat'), value: stats.sent, icon: '📤', color: 'from-blue-600 to-cyan-600', bg: 'bg-blue-50' },
-          { label: 'Pendientes', value: stats.pending, icon: '⏳', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
-          { label: 'Completados', value: stats.completed, icon: '✅', color: 'from-emerald-500 to-green-600', bg: 'bg-emerald-50' },
-        ].map(({ label, value, icon, color, bg }) => (
-          <div key={label} className={`${bg} rounded-2xl p-4 border border-white shadow-sm`}>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-2xl">{icon}</span>
-              <span className={`text-2xl font-black bg-gradient-to-r ${color} bg-clip-text text-transparent`}>{value}</span>
-            </div>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{label}</p>
+          { label: 'Formularios',                      value: stats.total,     bar: '#5a6eaa' },
+          { label: t('evaluaciones.enviados_stat'),    value: stats.sent,      bar: '#3a7aaa' },
+          { label: 'Pendientes',                       value: stats.pending,   bar: '#9a7020' },
+          { label: 'Completados',                      value: stats.completed, bar: '#3a8a60' },
+        ].map(({ label, value, bar }) => (
+          <div key={label} className="rounded-xl p-4 relative overflow-hidden"
+            style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+            <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl" style={{ background: bar }} />
+            <p className="text-3xl font-black pl-2 leading-none mb-1" style={{ color: bar }}>{value}</p>
+            <p className="text-[11px] font-semibold pl-2 uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>{label}</p>
           </div>
         ))}
       </div>
 
       {/* ── TABS ── */}
-      <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
+      <div className="flex rounded-xl p-1 gap-1" style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
         {[
-          { key: 'biblioteca', label: `📚 ${t('evaluaciones.biblioteca')}`, count: stats.total },
-          { key: 'enviados', label: `📤 ${t('evaluaciones.enviados')}`, count: stats.sent },
-          { key: 'historial', label: `🗂️ ${t('evaluaciones.historial')}`, count: savedForms.length },
+          { key: 'biblioteca', label: t('evaluaciones.biblioteca'), count: stats.total },
+          { key: 'enviados',   label: t('evaluaciones.enviados'),   count: stats.sent },
+          { key: 'historial',  label: t('evaluaciones.historial'),  count: savedForms.length },
         ].map(({ key, label, count }) => (
           <button key={key} onClick={() => setActiveTab(key as any)}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-black transition-all flex items-center justify-center gap-2 ${activeTab === key ? 'bg-white text-slate-800 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+            className="flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all flex items-center justify-center gap-2"
+            style={activeTab === key
+              ? { background: 'var(--card)', color: 'var(--text-primary)', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }
+              : { background: 'transparent', color: 'var(--text-muted)' }}>
             {label}
-            <span className={`text-xs px-2 py-0.5 rounded-full font-black ${activeTab === key ? 'bg-violet-100 text-violet-700' : 'bg-slate-200 text-slate-500'}`}>{count}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full font-black"
+              style={activeTab === key
+                ? { background: 'var(--muted-bg)', color: 'var(--text-secondary)' }
+                : { background: 'var(--card-border)', color: 'var(--text-muted)' }}>
+              {count}
+            </span>
           </button>
         ))}
       </div>
@@ -1385,7 +1420,7 @@ export default function EvaluacionesUnificadas({ initialChildId, initialChildNam
               <input
                 type="text" placeholder={t('ui.search_form')} value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3  border-2 border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-violet-400 transition-all shadow-sm" style={{ background: "var(--card)" }} />
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl text-sm font-medium outline-none transition-all" style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }} />
             </div>
           </div>
 
@@ -1393,7 +1428,10 @@ export default function EvaluacionesUnificadas({ initialChildId, initialChildNam
           <div className="flex gap-2 flex-wrap">
             {UNIFIED_CATEGORIES.map(cat => (
               <button key={cat.id} onClick={() => setActiveCategory(cat.id)}
-                className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 ${activeCategory === cat.id ? 'bg-violet-600 text-white border-violet-600 shadow-lg shadow-violet-200' : `${cat.color} hover:opacity-80`}`}>
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
+                style={activeCategory === cat.id
+                  ? { background: 'var(--text-primary)', color: 'var(--card)', border: '1px solid transparent' }
+                  : { background: 'var(--card)', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}>
                 {cat.icon} {({all: t('evaluaciones.catTodas'), conductual: t('evaluaciones.catABA'), familia: t('evaluaciones.catFamilia'), clinico: t('evaluaciones.catClinico'), tea: t('evaluaciones.catTEA'), tdah: t('evaluaciones.catTDAH'), habilidades: t('evaluaciones.catAdaptativa'), cognitivo: t('evaluaciones.catCognitivo'), sensorial: t('evaluaciones.catSensorial')} as Record<string,string>)[cat.id] || cat.label}
               </button>
             ))}

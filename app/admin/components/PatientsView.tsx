@@ -371,7 +371,7 @@ export default function PatientsView() {
                 if (upd) setSelected(upd)
               }}/>}
             {tab==='programas' && <div style={{ padding: '20px 24px' }}><ProgramasABAView childId={selected.id} childName={selected.name}/></div>}
-            {tab==='evaluaciones' && <div className="h-full"><EvaluacionesUnificadas initialChildId={selected.id} initialChildName={selected.name}/></div>}
+            {tab==='evaluaciones' && <div style={{ padding: '20px 24px' }}><EvaluacionesUnificadas initialChildId={selected.id} initialChildName={selected.name}/></div>}
             {tab==='aria' && <div className="h-full"><ARIAAgentChat userId={selected.id} childId={selected.id} childName={selected.name} contexto="paciente"/></div>}
             {tab==='historial' && <div style={{ padding: '20px 24px' }}><AIReportView initialChildId={selected.id} /></div>}
           </div>
