@@ -72,6 +72,35 @@ function SidebarLink({ icon: Icon, label, active, onClick, small, badge }: any) 
   )
 }
 
+function RecursosAdicionalesView({ isDark }: { isDark: boolean }) {
+  const [tab, setTab] = useState<'recursos' | 'tienda'>('recursos')
+  return (
+    <div className="flex flex-col gap-4">
+      <div className={`flex gap-1 p-1 rounded-xl w-fit ${isDark ? 'bg-[#21262d]' : 'bg-slate-100'}`}>
+        {([
+          { id: 'recursos', icon: BookOpen, label: 'Recursos' },
+          { id: 'tienda',   icon: ShoppingBag, label: 'Tienda' },
+        ] as const).map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all
+              ${tab === t.id
+                ? 'bg-blue-600 text-white shadow-md'
+                : isDark ? 'text-slate-400 hover:text-slate-200' : 'text-slate-500 hover:text-slate-700'
+              }`}
+          >
+            <t.icon size={15} />
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {tab === 'recursos' && <ResourcesManagementView />}
+      {tab === 'tienda'   && <StoreManagementView />}
+    </div>
+  )
+}
+
 export default function AdminDashboard() {
   const router = useRouter()
   const toast = useToast()
@@ -84,8 +113,7 @@ export default function AdminDashboard() {
     { id: 'ninos',        icon: Users,           label: t('nav.pacientes'),       roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'inteligencia', icon: Zap,             label: t('nav.hub'),             roles: ['jefe','admin','especialista'] },
     { id: 'cerebro',      icon: Database,        label: t('nav.cerebro'),         roles: ['jefe','admin'] },
-    { id: 'recursos',     icon: BookOpen,        label: t('nav.recursos'),        roles: ['jefe','admin','especialista','terapeuta'] },
-    { id: 'tienda',       icon: ShoppingBag,     label: t('nav.tienda'),          roles: ['jefe','admin'] },
+    { id: 'recursos-adicionales', icon: BookOpen, label: 'Recursos Adicionales',  roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'config',       icon: Settings,        label: t('common.configuracion'),roles: ['jefe'] },
   ]
   const MOBILE_NAV = [
@@ -101,7 +129,7 @@ export default function AdminDashboard() {
   const PAGE_TITLES: Record<string, string> = {
     inicio: t('dashboard.titulo'), agenda: t('nav.agenda'),
     ninos: t('nav.pacientes'),
-    reportes: t('nav.historial'), recursos: t('nav.recursos'),
+    reportes: t('nav.historial'), recursos: t('nav.recursos'), 'recursos-adicionales': 'Recursos Adicionales',
     mensajes: t('mensajes.titulo'), usuarios: t('nav.usuarios'),
     importar: 'Importar CSV', vadi: t('nav.aria'),
     cerebro: t('nav.cerebro'), inteligencia: t('nav.hub'),
@@ -413,6 +441,7 @@ export default function AdminDashboard() {
               {currentView === 'reportes'     && <AIReportView onChildSelect={setSelectedChildReport} />}
               {currentView === 'recursos'     && <ResourcesManagementView />}
               {currentView === 'tienda'       && <StoreManagementView />}
+              {currentView === 'recursos-adicionales' && <RecursosAdicionalesView isDark={isDark} />}
               {currentView === 'config'       && (
                 <div className="p-4 md:p-6">
                   <WhatsAppQRPanel />
