@@ -168,8 +168,8 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       { data: citasHoy },
       { data: citas },
       { data: actividad },
-      { data: sesRecientes },
-      { data: ses7d },
+      { data: sesV2_30d },
+      { data: sesABA_30d },
       { data: todosNinos },
       { count: mensajesPendientes },
       { data: analisis },
@@ -181,8 +181,9 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       supabase.from('appointments').select('*').eq('appointment_date', hoy).in('status', ['confirmed', 'pending']),
       supabase.from('appointments').select('*, children(name)').gte('appointment_date', hoy).neq('status', 'cancelled').neq('status', 'completed').order('appointment_date').order('appointment_time').limit(5),
       supabase.from('registro_aba').select('*, children:child_id(name)').order('fecha_sesion', { ascending: false }).limit(5),
+      // FIX: fetch BOTH tables to detect who has had a session in last 30 days
       supabase.from('aba_sessions_v2').select('child_id').gte('session_date', hace30),
-      supabase.from('registro_aba').select('fecha_sesion').gte('fecha_sesion', datesArr[0]),
+      supabase.from('registro_aba').select('child_id, fecha_sesion').gte('fecha_sesion', hace30),
       supabase.from('children').select('id, name'),
       supabase.from('parent_message_approvals').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
       supabase.from('registro_aba').select('*').gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(50),
@@ -191,18 +192,20 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       supabase.from('objetivos_cp').select('id, estado').eq('estado', 'dominado'),
     ])
 
-    // Sesiones por día
+    // Sesiones por día (últimos 7 días) — usar sesABA_30d filtrado
     const diasMap: Record<string, number> = {}
     datesArr.forEach(d => { diasMap[d] = 0 })
-    ;(ses7d || []).forEach((s: any) => { if (diasMap[s.fecha_sesion] !== undefined) diasMap[s.fecha_sesion]++ })
+    ;(sesABA_30d || []).forEach((s: any) => { if (s.fecha_sesion && diasMap[s.fecha_sesion] !== undefined) diasMap[s.fecha_sesion]++ })
     setSesionesSemanales(Object.values(diasMap))
 
-    // Pacientes sin sesión
-    const conSesion = new Set((sesRecientes || []).map((s: any) => s.child_id))
+    // FIX: combine BOTH tables — a patient counts as "active" if in either table
+    const conSesionV2 = new Set((sesV2_30d || []).map((s: any) => s.child_id))
+    const conSesionABA = new Set((sesABA_30d || []).map((s: any) => s.child_id))
+    const conSesion = new Set([...conSesionV2, ...conSesionABA])
     const sinSesion = (todosNinos || []).filter((n: any) => !conSesion.has(n.id))
 
-    // Alertas
-    const alertas = sinSesion.slice(0, 4).map((n: any) => ({
+    // Alertas — show ALL patients without session, no artificial slice limit
+    const alertas = sinSesion.map((n: any) => ({
       tipo: 'sin_sesion', paciente: n.name,
       mensaje: 'Sin sesión en los últimos 30 días.'
     }))
@@ -360,7 +363,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
               </span>
             )}
           </div>
-          <div className="p-4 space-y-2">
+          <div className="p-4 space-y-2 overflow-y-auto" style={{ maxHeight: '320px' }}>
             {alertasClinicas.length > 0
               ? alertasClinicas.map((a, i) => <AlertaRow key={i} {...a} onClick={() => navigateTo('ninos')} />)
               : (
