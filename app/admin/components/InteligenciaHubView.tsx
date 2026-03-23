@@ -710,67 +710,82 @@ function TabCompetitividad() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // TAB: PATRONES ABA (CAPA 1) — Rediseño neuropsicológico profesional
 // ═══════════════════════════════════════════════════════════════════════════════
+// accent = color principal, usado en borde izq, número, badge
+// bg/border son suficientemente ligeros para light mode
 const PATRON_CONFIG: Record<string, {
-  label: string; icon: string; accent: string; bg: string; border: string; text: string; badge: string
+  label: string; icon: string; accent: string; lightBg: string; lightBorder: string; lightText: string; darkBg: string; darkBorder: string; darkText: string
 }> = {
-  regresion:     { label: 'Regresión Conductual',   icon: '↘', accent: '#e05c5c', bg: 'rgba(224,92,92,0.07)',    border: 'rgba(224,92,92,0.18)',    text: '#e8a0a0', badge: 'bg-[rgba(224,92,92,0.12)] text-[#e8a0a0] border-[rgba(224,92,92,0.25)]' },
-  estancamiento: { label: 'Plateau de Aprendizaje', icon: '→', accent: '#c9922a', bg: 'rgba(201,146,42,0.07)',   border: 'rgba(201,146,42,0.18)',   text: '#d9b87a', badge: 'bg-[rgba(201,146,42,0.12)] text-[#d9b87a] border-[rgba(201,146,42,0.25)]' },
-  aceleracion:   { label: 'Aceleración del Logro',  icon: '↗', accent: '#3d9e72', bg: 'rgba(61,158,114,0.07)',   border: 'rgba(61,158,114,0.18)',   text: '#7ec4a4', badge: 'bg-[rgba(61,158,114,0.12)] text-[#7ec4a4] border-[rgba(61,158,114,0.25)]' },
-  inconsistencia:{ label: 'Variabilidad Alta',      icon: '⟺', accent: '#7b6bbf', bg: 'rgba(123,107,191,0.07)',  border: 'rgba(123,107,191,0.18)',  text: '#ada0d8', badge: 'bg-[rgba(123,107,191,0.12)] text-[#ada0d8] border-[rgba(123,107,191,0.25)]' },
-  dominio:       { label: 'Criterio de Dominio',    icon: '★', accent: '#4a82c0', bg: 'rgba(74,130,192,0.07)',   border: 'rgba(74,130,192,0.18)',   text: '#90b8d8', badge: 'bg-[rgba(74,130,192,0.12)] text-[#90b8d8] border-[rgba(74,130,192,0.25)]' },
+  regresion:     { label: 'Regresión Conductual',   icon: '↘', accent: '#c0524a', lightBg: '#fdf3f3', lightBorder: '#f0b8b5', lightText: '#9a3030', darkBg: 'rgba(192,82,74,0.12)',   darkBorder: 'rgba(192,82,74,0.3)',   darkText: '#e8a0a0' },
+  estancamiento: { label: 'Plateau de Aprendizaje', icon: '→', accent: '#b07830', lightBg: '#fdf8ee', lightBorder: '#e8cc90', lightText: '#7a5010', darkBg: 'rgba(176,120,48,0.12)',  darkBorder: 'rgba(176,120,48,0.3)',  darkText: '#d9b87a' },
+  aceleracion:   { label: 'Aceleración del Logro',  icon: '↗', accent: '#2e7a56', lightBg: '#f3faf6', lightBorder: '#a0d4b8', lightText: '#1a5c38', darkBg: 'rgba(46,122,86,0.12)',   darkBorder: 'rgba(46,122,86,0.3)',   darkText: '#7ec4a4' },
+  inconsistencia:{ label: 'Variabilidad Alta',      icon: '⟺', accent: '#6355a0', lightBg: '#f7f5fc', lightBorder: '#c0b8e0', lightText: '#42357a', darkBg: 'rgba(99,85,160,0.12)',   darkBorder: 'rgba(99,85,160,0.3)',   darkText: '#c4b8e8' },
+  dominio:       { label: 'Criterio de Dominio',    icon: '★', accent: '#3a68a0', lightBg: '#f3f7fc', lightBorder: '#a8c4e0', lightText: '#1e4878', darkBg: 'rgba(58,104,160,0.12)',  darkBorder: 'rgba(58,104,160,0.3)',  darkText: '#90b8d8' },
 }
 
 function PatronCard({ p, index }: { p: any; index: number }) {
   const cfg = PATRON_CONFIG[p.tipo] || PATRON_CONFIG.estancamiento
   const delta = p.valor_actual - p.valor_anterior
+  // Detect dark mode via CSS variable (--card is dark in dark mode)
   return (
-    <div className="rounded-2xl p-5 border transition-all"
-      style={{ background: cfg.bg, borderColor: cfg.border }}>
-      <div className="flex items-start justify-between gap-3 mb-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl font-black flex-shrink-0"
-            style={{ background: `${cfg.accent}20`, color: cfg.accent }}>
-            {cfg.icon}
-          </div>
-          <div>
-            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border ${cfg.badge}`}>
-              {cfg.label}
-            </span>
-            <p className="font-black text-sm mt-1.5" style={{ color: 'var(--text-primary)' }}>{p.area}</p>
-          </div>
-        </div>
-        <div className="text-right flex-shrink-0">
-          <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Confianza</p>
-          <div className="flex items-center gap-1.5 justify-end">
-            <div className="w-16 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
-              <div className="h-full rounded-full" style={{ width: `${p.confianza}%`, background: cfg.accent }} />
+    <div className="rounded-xl border transition-all overflow-hidden">
+      {/* Accent bar top */}
+      <div className="h-0.5" style={{ background: cfg.accent }} />
+      <div className="p-5" style={{ background: 'var(--card)', borderTop: 'none' }}>
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg font-black flex-shrink-0"
+              style={{ background: `${cfg.accent}15`, color: cfg.accent, border: `1px solid ${cfg.accent}30` }}>
+              {cfg.icon}
             </div>
-            <span className="text-sm font-black" style={{ color: cfg.accent }}>{p.confianza}%</span>
+            <div>
+              <span className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded"
+                style={{ background: `${cfg.accent}12`, color: cfg.accent, border: `1px solid ${cfg.accent}30` }}>
+                {cfg.label}
+              </span>
+              <p className="font-bold text-sm mt-1.5 leading-tight" style={{ color: 'var(--text-primary)' }}>{p.area}</p>
+            </div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-[10px] uppercase tracking-wide mb-1.5" style={{ color: 'var(--text-muted)' }}>Confianza</p>
+            <div className="flex items-center gap-1.5 justify-end">
+              <div className="w-14 h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--muted-bg)' }}>
+                <div className="h-full rounded-full" style={{ width: `${p.confianza}%`, background: cfg.accent }} />
+              </div>
+              <span className="text-sm font-black" style={{ color: cfg.accent }}>{p.confianza}%</span>
+            </div>
           </div>
         </div>
+
+        {/* Metrics */}
+        <div className="grid grid-cols-3 gap-2 mb-4">
+          {[
+            { label: 'Valor anterior', val: `${p.valor_anterior}%`, hi: false },
+            { label: 'Valor actual',   val: `${p.valor_actual}%`,   hi: true  },
+            { label: 'Δ Cambio',       val: `${delta >= 0 ? '+' : ''}${delta}%`, hi: false },
+          ].map(m => (
+            <div key={m.label} className="rounded-lg p-3 text-center"
+              style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
+              <p className="text-[9px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
+              <p className="text-base font-black" style={{ color: m.hi ? cfg.accent : 'var(--text-primary)' }}>{m.val}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Description */}
+        <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{p.descripcion}</p>
+
+        {/* Action */}
+        <div className="rounded-lg px-4 py-3 flex items-start gap-2.5"
+          style={{ background: `${cfg.accent}08`, border: `1px solid ${cfg.accent}25` }}>
+          <span className="text-sm mt-0.5 flex-shrink-0" style={{ color: cfg.accent }}>💡</span>
+          <p className="text-xs leading-relaxed font-medium" style={{ color: 'var(--text-primary)' }}>{p.accion_sugerida}</p>
+        </div>
+
+        <p className="text-[10px] mt-3" style={{ color: 'var(--text-muted)' }}>
+          Basado en <strong style={{ color: 'var(--text-secondary)' }}>{p.sesiones_involucradas} sesiones</strong> · {p.semanas_detectado} sem. de monitoreo
+        </p>
       </div>
-      <div className="grid grid-cols-3 gap-2 mb-4">
-        {[
-          { label: 'Valor anterior', val: `${p.valor_anterior}%` },
-          { label: 'Valor actual',   val: `${p.valor_actual}%`, highlight: true },
-          { label: 'Δ Cambio',       val: `${delta >= 0 ? '+' : ''}${delta}%` },
-        ].map(m => (
-          <div key={m.label} className="rounded-xl p-2.5 text-center"
-            style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)' }}>
-            <p className="text-[9px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
-            <p className="text-base font-black" style={{ color: m.highlight ? cfg.accent : 'var(--text-primary)' }}>{m.val}</p>
-          </div>
-        ))}
-      </div>
-      <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--text-secondary)' }}>{p.descripcion}</p>
-      <div className="rounded-xl px-4 py-3 flex items-start gap-2.5"
-        style={{ background: 'rgba(0,0,0,0.2)', border: `1px solid ${cfg.border}` }}>
-        <span className="text-sm mt-0.5 flex-shrink-0" style={{ color: cfg.accent }}>💡</span>
-        <p className="text-xs leading-relaxed font-medium" style={{ color: cfg.text }}>{p.accion_sugerida}</p>
-      </div>
-      <p className="text-[10px] mt-3" style={{ color: 'var(--text-muted)' }}>
-        Basado en <strong style={{ color: 'var(--text-secondary)' }}>{p.sesiones_involucradas} sesiones</strong> · {p.semanas_detectado} sem. de monitoreo
-      </p>
     </div>
   )
 }
@@ -789,12 +804,12 @@ function RenderMD({ text }: { text: string }) {
 }
 
 const SECTION_CFG = [
-  { keys: ['INTERPRETACIÓN CLÍNICA', 'INTERPRETACIÓN'],      color: '#9b8ec4', icon: '🔬', bg: 'rgba(155,142,196,0.06)' },
-  { keys: ['HIPÓTESIS CLÍNICA', 'HIPÓTESIS'],                color: '#b8865a', icon: '🧩', bg: 'rgba(184,134,90,0.06)'  },
-  { keys: ['ANÁLISIS FUNCIONAL'],                            color: '#8a7fa8', icon: '📐', bg: 'rgba(138,127,168,0.06)' },
-  { keys: ['INDICACIONES TERAPÉUTICAS', 'INTERVENCIÓN'],     color: '#c47070', icon: '🎯', bg: 'rgba(196,112,112,0.06)' },
-  { keys: ['PRONÓSTICO', 'CRITERIOS DE AVANCE'],             color: '#5e8fc0', icon: '📈', bg: 'rgba(94,143,192,0.06)'  },
-  { keys: ['SEÑAL POSITIVA', 'FORTALEZAS'],                  color: '#5a9e7a', icon: '✦',  bg: 'rgba(90,158,122,0.06)'  },
+  { keys: ['INTERPRETACIÓN CLÍNICA', 'INTERPRETACIÓN'],      color: '#6355a0', icon: '🔬', bg: 'transparent' },
+  { keys: ['HIPÓTESIS CLÍNICA', 'HIPÓTESIS'],                color: '#b07830', icon: '🧩', bg: 'transparent' },
+  { keys: ['ANÁLISIS FUNCIONAL'],                            color: '#6355a0', icon: '📐', bg: 'transparent' },
+  { keys: ['INDICACIONES TERAPÉUTICAS', 'INTERVENCIÓN'],     color: '#c0524a', icon: '🎯', bg: 'transparent' },
+  { keys: ['PRONÓSTICO', 'CRITERIOS DE AVANCE'],             color: '#3a68a0', icon: '📈', bg: 'transparent' },
+  { keys: ['SEÑAL POSITIVA', 'FORTALEZAS'],                  color: '#2e7a56', icon: '✦',  bg: 'transparent' },
 ] as const
 
 function getSectionCfg(text: string) {
@@ -840,13 +855,13 @@ function ResumenIACard({ texto }: { texto: string }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] px-2.5 py-1 rounded-full font-black border hidden sm:inline-block"
-            style={{ background: 'rgba(100,100,180,0.15)', color: '#a8a8d0', borderColor: 'rgba(100,100,180,0.3)' }}>BCBA IA</span>
+            style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)', borderColor: 'var(--card-border)' }}>BCBA IA</span>
           <span className="text-[10px] px-2.5 py-1 rounded-full font-black border"
-            style={{ background: 'rgba(70,130,100,0.15)', color: '#7aaa8a', borderColor: 'rgba(70,130,100,0.3)' }}>CONFIDENCIAL</span>
+            style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)', borderColor: 'var(--card-border)' }}>CONFIDENCIAL</span>
         </div>
       </div>
 
-      <div className="divide-y" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+      <div className="divide-y" style={{ borderColor: 'var(--card-border)' }}>
         {sections.map((section, si) => {
           const c = section.cfg?.color || '#94a3b8'
           const bg = section.cfg?.bg || 'transparent'
@@ -902,7 +917,7 @@ function ResumenIACard({ texto }: { texto: string }) {
                 }
                 return (
                   <p key={pi} className="text-sm leading-relaxed"
-                    style={{ color: 'var(--text-secondary)', paddingLeft: section.label ? '1.25rem' : '0', borderLeft: section.cfg ? `2px solid ${c}35` : 'none' }}>
+                    style={{ color: 'var(--text-secondary)', paddingLeft: section.label ? '1.25rem' : '0', borderLeft: section.cfg ? `2px solid ${c}55` : 'none' }}>
                     <RenderMD text={para} />
                   </p>
                 )
@@ -913,7 +928,7 @@ function ResumenIACard({ texto }: { texto: string }) {
       </div>
 
       <div className="px-6 py-3 flex items-center justify-between"
-        style={{ background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+        style={{ background: 'var(--muted-bg)', borderTop: '1px solid var(--card-border)' }}>
         <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Generado por IA clínica · No reemplaza evaluación profesional certificada</p>
         <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
       </div>
@@ -953,24 +968,24 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
     <div className="space-y-5">
       {/* Header informativo */}
       <div className="rounded-2xl p-5 border"
-        style={{ background: 'rgba(40,40,70,0.4)', borderColor: 'rgba(80,80,120,0.2)' }}>
+        style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)' }}>
         <div className="flex items-center gap-3 mb-2">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-            style={{ background: 'rgba(70,70,120,0.25)' }}>
-            <Activity size={16} style={{ color: '#7878a8' }} />
+            style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+            <Activity size={16} style={{ color: 'var(--text-secondary)' }} />
           </div>
           <div>
             <p className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Detector de Patrones ABA — CAPA 1</p>
             <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Análisis de regresiones, plateaus, aceleraciones e inconsistencias conductuales</p>
           </div>
         </div>
-        <div className="flex flex-wrap gap-3 mt-3 pt-3" style={{ borderTop: '1px solid rgba(139,92,246,0.15)' }}>
+        <div className="flex flex-wrap gap-3 mt-3 pt-3" style={{ borderTop: '1px solid var(--card-border)' }}>
           {[
-            { icon: '↘', label: 'Regresión',   color: '#c47070' },
+            { icon: '↘', label: 'Regresión',   color: '#c0524a' },
             { icon: '→', label: 'Plateau',      color: '#fbbf24' },
-            { icon: '↗', label: 'Aceleración',  color: '#5a9e7a' },
-            { icon: '⟺', label: 'Variabilidad', color: '#7b6bbf' },
-            { icon: '★', label: 'Dominio',      color: '#4a82c0' },
+            { icon: '↗', label: 'Aceleración',  color: '#2e7a56' },
+            { icon: '⟺', label: 'Variabilidad', color: '#6355a0' },
+            { icon: '★', label: 'Dominio',      color: '#3a68a0' },
           ].map(item => (
             <div key={item.label} className="flex items-center gap-1.5">
               <span className="text-xs font-black" style={{ color: item.color }}>{item.icon}</span>
@@ -1000,9 +1015,9 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         <button onClick={analizar} disabled={!selected || loading}
           className="w-full py-3.5 rounded-xl text-sm font-black flex items-center justify-center gap-2.5 transition-all"
           style={{
-            background: !selected || loading ? 'rgba(80,80,140,0.35)' : 'linear-gradient(135deg, #3d3d7a, #4a4a8a)',
-            color: 'white',
-            boxShadow: !selected || loading ? 'none' : '0 4px 20px rgba(60,60,120,0.3)'
+            background: !selected || loading ? 'var(--muted-bg)' : 'var(--text-primary)',
+            color: 'var(--card)',
+            boxShadow: 'none'
           }}>
           {loading
             ? <><RefreshCw size={15} className="animate-spin" /> Analizando historial clínico...</>
@@ -1010,7 +1025,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         </button>
         {error && (
           <div className="rounded-xl px-4 py-3 text-xs font-medium"
-            style={{ background: 'rgba(239,68,68,0.1)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.25)' }}>
+            style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)', border: '1px solid var(--card-border)', borderLeft: '3px solid #c0524a' }}>
             {error}
           </div>
         )}
@@ -1038,9 +1053,9 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
           {/* Sin patrones */}
           {resultado.patrones?.length === 0 && (
             <div className="rounded-2xl p-8 text-center border"
-              style={{ background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.2)' }}>
+              style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)' }}>
               <p className="text-3xl mb-3">✓</p>
-              <p className="font-black text-sm mb-1" style={{ color: '#5a9e7a' }}>Progreso Estable</p>
+              <p className="font-black text-sm mb-1" style={{ color: '#2e7a56' }}>Progreso Estable</p>
               <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
                 {resultado.resumen || `Sin patrones problemáticos en ${resultado.sesiones_analizadas} sesiones.`}
               </p>
@@ -1052,7 +1067,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ background: '#c47070' }} />
-                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#c47070' }}>
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#c0524a' }}>
                   Requieren Atención Inmediata ({urgentes.length})
                 </p>
               </div>
@@ -1065,7 +1080,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ background: '#5a9e7a' }} />
-                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#5a9e7a' }}>
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#2e7a56' }}>
                   Logros Clínicos ({positivos.length})
                 </p>
               </div>
@@ -1078,7 +1093,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full" style={{ background: '#7b6bbf' }} />
-                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#7b6bbf' }}>
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: '#6355a0' }}>
                   Otras Observaciones ({otros.length})
                 </p>
               </div>

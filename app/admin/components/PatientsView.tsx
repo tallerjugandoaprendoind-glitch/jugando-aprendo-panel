@@ -17,14 +17,14 @@ import EvaluacionesUnificadas from './EvaluacionesUnificadas'
 import AIReportView from './AIReportView'
 
 // ── Color badge por diagnóstico ────────────────────────────────────────────
-const DX_MAP: Record<string, string> = {
-  'TEA':     'bg-purple-100 text-purple-700 border-purple-200',
-  'TDAH':    'bg-blue-100   text-blue-700   border-blue-200',
-  'Retraso': 'bg-amber-100  text-amber-700  border-amber-200',
+const DX_BORDER: Record<string, string> = {
+  'TEA': '#7b5ea7', 'TDAH': '#3a68a0', 'Retraso': '#b07830', 'Autismo': '#7b5ea7',
+  'TDA': '#3a68a0', 'TDL': '#2e7a56',
 }
-const dxColor = (dx: string) => {
-  const k = Object.keys(DX_MAP).find(k => dx?.includes(k))
-  return k ? DX_MAP[k] : 'bg-slate-100 text-slate-600 border-slate-200'
+const getDxStyle = (dx: string) => {
+  const k = Object.keys(DX_BORDER).find(k => dx?.includes(k))
+  const color = k ? DX_BORDER[k] : '#64748b'
+  return { background: `${color}10`, color, border: `1px solid ${color}30` }
 }
 
 // ── Avatar coloreado por inicial ───────────────────────────────────────────
@@ -87,74 +87,147 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
     finally { setSaving(false) }
   }
 
+  const birthFormatted = nino.birth_date
+    ? new Date(nino.birth_date).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'long', year: 'numeric' })
+    : null
+
   return (
-    <div className="p-4 md:p-6 max-w-lg space-y-4">
-      {/* Avatar + nombre */}
-      <div className="flex items-start gap-4">
-        <Avatar name={nino.name} size="lg"/>
-        <div className="flex-1 min-w-0">
+    <div className="p-5 md:p-7 max-w-xl">
+      {/* ── Hero card ── */}
+      <div className="rounded-2xl p-5 mb-5 relative overflow-hidden"
+        style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
+        {/* Edit button */}
+        <div className="absolute top-4 right-4">
           {editing
-            ? <input value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))}
-                className="w-full text-xl font-black border-b-2 border-blue-400 bg-transparent outline-none pb-1"
-                style={{ color: 'var(--text-primary)' }}/>
-            : <h2 className="text-xl font-black truncate" style={{ color: 'var(--text-primary)' }}>{nino.name}</h2>
+            ? <div className="flex gap-2">
+                <button onClick={()=>setEditing(false)}
+                  className="p-1.5 rounded-lg transition-all"
+                  style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+                  <X size={14} style={{ color:'var(--text-muted)' }}/>
+                </button>
+                <button onClick={handleSave} disabled={saving}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                  style={{ background: 'var(--text-primary)', color: 'var(--card)' }}>
+                  {saving ? <Loader2 size={12} className="animate-spin"/> : <Save size={12}/>}
+                  {t('common.guardar')}
+                </button>
+              </div>
+            : <button onClick={()=>setEditing(true)}
+                className="p-1.5 rounded-lg transition-all"
+                style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+                <Edit size={14} style={{ color:'var(--text-muted)' }}/>
+              </button>
           }
-          <div className="flex flex-wrap items-center gap-2 mt-1">
+        </div>
+
+        <div className="flex items-center gap-4">
+          <Avatar name={nino.name} size="lg"/>
+          <div className="flex-1 min-w-0 pr-16">
             {editing
-              ? <input value={form.diagnosis} onChange={e => setForm(f=>({...f,diagnosis:e.target.value}))}
-                  placeholder={t('pacientes.diagnostico')}
-                  className="text-sm border rounded-lg px-2 py-1 outline-none"
-                  style={{ borderColor:'var(--card-border)', color:'var(--text-primary)', background:'var(--card)' }}/>
-              : <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${dxColor(nino.diagnosis)}`}>
-                  {nino.diagnosis || t('pacientes.sinDiagnostico')}
-                </span>
+              ? <input value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))}
+                  className="w-full text-lg font-black bg-transparent outline-none border-b pb-0.5 mb-1"
+                  style={{ color: 'var(--text-primary)', borderColor: 'var(--card-border)' }}/>
+              : <h2 className="text-lg font-black leading-tight mb-1.5" style={{ color: 'var(--text-primary)' }}>{nino.name}</h2>
             }
-            {nino.age && <span className="text-xs" style={{ color:'var(--text-muted)' }}>{nino.age} {t('common.anos')}</span>}
+            <div className="flex flex-wrap items-center gap-2">
+              {editing
+                ? <input value={form.diagnosis} onChange={e => setForm(f=>({...f,diagnosis:e.target.value}))}
+                    placeholder={t('pacientes.diagnostico')}
+                    className="text-sm px-2 py-1 rounded-md outline-none"
+                    style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}/>
+                : nino.diagnosis && (
+                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md" style={getDxStyle(nino.diagnosis)}>
+                      {nino.diagnosis}
+                    </span>
+                  )
+              }
+              {nino.age && (
+                <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+                  {nino.age} {t('common.anos')}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-        {/* Botón editar / guardar */}
-        {editing
-          ? <div className="flex gap-2 flex-shrink-0">
-              <button onClick={()=>setEditing(false)} className="p-2 rounded-xl border" style={{ borderColor:'var(--card-border)' }}>
-                <X size={15} style={{ color:'var(--text-muted)' }}/>
-              </button>
-              <button onClick={handleSave} disabled={saving}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 text-white text-sm font-bold">
-                {saving ? <Loader2 size={13} className="animate-spin"/> : <Save size={13}/>}
-                {t('common.guardar')}
-              </button>
-            </div>
-          : <button onClick={()=>setEditing(true)} className="p-2 rounded-xl border flex-shrink-0"
-              style={{ borderColor:'var(--card-border)' }}>
-              <Edit size={15} style={{ color:'var(--text-muted)' }}/>
-            </button>
-        }
       </div>
 
-      {/* Grid de datos */}
-      {!editing
-        ? <div className="grid grid-cols-2 gap-2">
-            <InfoPill label={t('pacientes.fechaNacimiento')}
-              value={nino.birth_date ? new Date(nino.birth_date).toLocaleDateString(toBCP47(locale)) : '—'}
-              icon={<Calendar size={13}/>}/>
-            <InfoPill label={t('common.edad')}
-              value={nino.age ? `${nino.age} ${t('common.anos')}` : '—'}
-              icon={<Baby size={13}/>}/>
-            <InfoPill label={t('pacientes.diagnostico')} value={nino.diagnosis||'—'} icon={<Stethoscope size={13}/>}/>
-            <InfoPill label="ID" value={nino.id?.slice(0,8)+'...'} icon={<User size={13}/>}/>
-          </div>
-        : <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-black uppercase tracking-widest mb-1.5" style={{ color:'var(--text-muted)' }}>
-                {t('pacientes.fechaNacimiento')}
-              </label>
-              <input type="date" value={form.birth_date}
-                onChange={e=>setForm(f=>({...f,birth_date:e.target.value}))}
-                className="w-full px-3 py-2.5 rounded-xl text-sm border outline-none"
-                style={{ borderColor:'var(--card-border)', color:'var(--text-primary)', background:'var(--muted-bg)' }}/>
+      {/* ── Data fields ── */}
+      {!editing ? (
+        <div className="space-y-2">
+          {/* Row 1 */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Calendar size={12} style={{ color: 'var(--text-muted)' }}/>
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  {t('pacientes.fechaNacimiento')}
+                </p>
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {birthFormatted || '—'}
+              </p>
+            </div>
+            <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Baby size={12} style={{ color: 'var(--text-muted)' }}/>
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  {t('common.edad')}
+                </p>
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {nino.age ? `${nino.age} ${t('common.anos')}` : '—'}
+              </p>
             </div>
           </div>
-      }
+
+          {/* Row 2 */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Stethoscope size={12} style={{ color: 'var(--text-muted)' }}/>
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  {t('pacientes.diagnostico')}
+                </p>
+              </div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                {nino.diagnosis || '—'}
+              </p>
+            </div>
+            <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+              <div className="flex items-center gap-1.5 mb-2">
+                <User size={12} style={{ color: 'var(--text-muted)' }}/>
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  ID
+                </p>
+              </div>
+              <p className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>
+                {nino.id?.slice(0,12)}…
+              </p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3 rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color:'var(--text-muted)' }}>
+              {t('pacientes.fechaNacimiento')}
+            </label>
+            <input type="date" value={form.birth_date}
+              onChange={e=>setForm(f=>({...f,birth_date:e.target.value}))}
+              className="w-full px-3 py-2.5 rounded-lg text-sm border outline-none"
+              style={{ borderColor:'var(--card-border)', color:'var(--text-primary)', background:'var(--muted-bg)' }}/>
+          </div>
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color:'var(--text-muted)' }}>
+              {t('pacientes.diagnostico')}
+            </label>
+            <input type="text" value={form.diagnosis}
+              onChange={e=>setForm(f=>({...f,diagnosis:e.target.value}))}
+              className="w-full px-3 py-2.5 rounded-lg text-sm border outline-none"
+              style={{ borderColor:'var(--card-border)', color:'var(--text-primary)', background:'var(--muted-bg)' }}/>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -328,7 +401,7 @@ export default function PatientsView() {
                   {selected.name}
                 </h1>
                 <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${dxColor(selected.diagnosis)}`}>
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md" style={getDxStyle(selected.diagnosis)}>
                     {selected.diagnosis || t('pacientes.sinDiagnostico')}
                   </span>
                   {selected.age &&
