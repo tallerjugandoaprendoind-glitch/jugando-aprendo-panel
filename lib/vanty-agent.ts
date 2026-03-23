@@ -88,15 +88,18 @@ const AGENT_TOOLS = {
     const resumenes: string[] = []
 
     for (const p of pacientes as any[]) {
-      // Edad calculada
-      let edadTexto = p.age ? `${p.age} años` : 'edad N/E'
-      if (!p.age && p.birth_date) {
+      // FIX: Priorizar birth_date (preciso) sobre age guardado (puede estar desactualizado)
+      let edadTexto = 'edad N/E'
+      if (p.birth_date) {
         const hoy = new Date()
         const nac = new Date(p.birth_date)
         const diff = hoy.getFullYear() - nac.getFullYear()
         const m = hoy.getMonth() - nac.getMonth()
         const edad = (m < 0 || (m === 0 && hoy.getDate() < nac.getDate())) ? diff - 1 : diff
         edadTexto = `${edad} años`
+      } else if (p.age) {
+        const numAge = parseInt(String(p.age).replace(/[^0-9]/g, ''), 10)
+        edadTexto = !isNaN(numAge) ? `${numAge} años` : 'edad N/E'
       }
 
       // Última sesión ABA

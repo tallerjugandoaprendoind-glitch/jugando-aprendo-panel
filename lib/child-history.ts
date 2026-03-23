@@ -33,18 +33,19 @@ export async function getChildHistory(childId: string, fallbackName?: string, fa
       diagnostico = (childData as any).diagnosis || diagnostico
       const rawAge = (childData as any).age
       const birthDate = (childData as any).birth_date
-      // Prioridad: age del DB > birth_date calculado > fallback
-      if (rawAge !== null && rawAge !== undefined && rawAge !== '') {
-        edad = String(rawAge)  // Usar SIEMPRE el valor del DB (puede ser número o string)
-      } else if (birthDate) {
+      // FIX: Priorizar birth_date (más preciso) sobre age guardado (puede estar desactualizado)
+      if (birthDate) {
         const birth = new Date(birthDate)
         const now = new Date()
         let years = now.getFullYear() - birth.getFullYear()
         const months = now.getMonth() - birth.getMonth()
         if (months < 0 || (months === 0 && now.getDate() < birth.getDate())) years--
         edad = `${years} años`
+      } else if (rawAge !== null && rawAge !== undefined && rawAge !== '') {
+        // Solo usar age del DB si NO hay birth_date
+        const numAge = parseInt(String(rawAge).replace(/[^0-9]/g, ''), 10)
+        if (!isNaN(numAge)) edad = `${numAge} años`
       }
-      // Si nada funciona, mantener el fallback original
     }
 
     // 2. Últimas 5 sesiones ABA

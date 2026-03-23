@@ -12,7 +12,6 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { calcularEdad, calcularEdadNumerica } from '../utils/helpers'
 import ProgramasABAView from './ProgramasABAView'
-import ARIAAgentChat from './ARIAAgentChat'
 import EvaluacionesUnificadas from './EvaluacionesUnificadas'
 import AIReportView from './AIReportView'
 
@@ -263,7 +262,7 @@ export default function PatientsView() {
   // En móvil: 'list' | 'detail'. En desktop ambos visibles.
   const [mobileView, setMobileView] = useState<'list'|'detail'>('list')
   const [selected, setSelected] = useState<any>(null)
-  const [tab, setTab] = useState<'info'|'programas'|'evaluaciones'|'aria'|'historial'>('info')
+  const [tab, setTab] = useState<'info'|'programas'|'evaluaciones'|'historial'>('info')
 
   // Nuevo paciente
   const [showNew, setShowNew] = useState(false)
@@ -321,7 +320,6 @@ export default function PatientsView() {
     { id:'info',         icon:<User size={14}/>,          label: t('pacientes.informacion') },
     { id:'programas',    icon:<BarChart3 size={14}/>,     label: t('nav.programas') },
     { id:'evaluaciones', icon:<ClipboardList size={14}/>, label: t('nav.evaluaciones') },
-    { id:'aria',         icon:<Sparkles size={14}/>,      label: 'ARIA' },
     { id:'historial',    icon:<Brain size={14}/>,         label: 'Historial & IA' },
   ] as const
 
@@ -442,7 +440,6 @@ export default function PatientsView() {
                     tb.id === 'info'         ? 'Info' :
                     tb.id === 'programas'    ? 'ABA' :
                     tb.id === 'evaluaciones' ? 'Eval.' :
-                    tb.id === 'aria'         ? 'ARIA' :
                     'Hist.'
                   }</span>
                   <span className="hidden @[500px]:block text-[11px] truncate w-full text-center px-1">{tb.label}</span>
@@ -461,7 +458,6 @@ export default function PatientsView() {
               }}/>}
             {tab==='programas' && <div style={{ padding: '20px 24px' }}><ProgramasABAView childId={selected.id} childName={selected.name}/></div>}
             {tab==='evaluaciones' && <div style={{ padding: '20px 24px' }}><EvaluacionesUnificadas initialChildId={selected.id} initialChildName={selected.name}/></div>}
-            {tab==='aria' && <div className="h-full"><ARIAAgentChat userId={selected.id} childId={selected.id} childName={selected.name} contexto="paciente"/></div>}
             {tab==='historial' && <div style={{ padding: '20px 24px' }}><AIReportView initialChildId={selected.id} /></div>}
           </div>
         </>
