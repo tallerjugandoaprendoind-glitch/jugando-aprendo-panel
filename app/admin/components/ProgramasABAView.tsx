@@ -1,7 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import GraficoProgramaABA from '@/components/graficos/GraficoProgramaABA'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -10,7 +10,7 @@ import {
 import {
   Plus, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp,
   Target, BarChart3, BarChart2, Edit3, CheckCircle2, AlertTriangle, Clock,
-  Loader2, X, Save, Activity, Zap, Brain, BookOpen, ArrowRight, Timer
+  Loader2, X, Save, Activity, Zap, Brain, BookOpen, ArrowRight
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 
@@ -58,39 +58,10 @@ const FASE_COLORS: Record<string, string> = {
   mantenimiento: '#10b981',
 }
 
-// ── Session Timer Hook ───────────────────────────────────────────────────────
-function useSessionTimer() {
-  const [seconds, setSeconds] = useState(0)
-  const [running, setRunning] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [running])
-
-  const toggle = () => setRunning(r => !r)
-  const reset = () => { setRunning(false); setSeconds(0) }
-
-  const fmt = (s: number) => {
-    const h = Math.floor(s / 3600)
-    const m = Math.floor((s % 3600) / 60)
-    const sec = s % 60
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-  }
-
-  return { seconds, running, toggle, reset, fmt }
-}
 
 export default function ProgramasABAView({ childId, childName }: { childId: string; childName: string }) {
   const toast = useToast()
   const { t } = useI18n()
-  const timer = useSessionTimer()
 
   const FASE_LABELS: Record<string, string> = {
     linea_base:    'Baseline',
@@ -188,33 +159,13 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
           </div>
         </div>
 
-        {/* ── Session Timer ── */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
-            <Timer size={13} style={{ color: timer.running ? '#6366f1' : 'var(--text-muted)' }} />
-            <span className={`text-sm font-black tabular-nums ${timer.running ? 'text-indigo-600' : ''}`}
-              style={{ color: timer.running ? '#6366f1' : 'var(--text-muted)', minWidth: '52px' }}>
-              {timer.fmt(timer.seconds)}
-            </span>
-            <button onClick={timer.toggle}
-              className="text-[10px] font-black px-2 py-0.5 rounded-md transition-all"
-              style={{ background: timer.running ? '#fef2f2' : '#f0f4ff', color: timer.running ? '#dc2626' : '#6366f1' }}>
-              {timer.running ? 'Pausar' : timer.seconds > 0 ? 'Reanudar' : 'Iniciar'}
-            </button>
-            {timer.seconds > 0 && (
-              <button onClick={timer.reset} className="text-[10px] font-bold text-slate-400 hover:text-red-400 transition-all">✕</button>
-            )}
-          </div>
-
-          <button onClick={() => setShowCrear(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
-            style={{ background: 'var(--text-primary)', color: 'var(--card)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.88'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
-            <Plus size={15} /> {t('programas.nuevo')}
-          </button>
-        </div>
+        <button onClick={() => setShowCrear(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
+          style={{ background: 'var(--text-primary)', color: 'var(--card)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.88'}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
+          <Plus size={15} /> {t('programas.nuevo')}
+        </button>
       </div>
 
       {/* ── Stats ── */}
@@ -515,81 +466,191 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     </div>
                   </div>
 
-                  <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                    {/* Leyenda de fases */}
-                    <div className="flex gap-3 mb-3 flex-wrap">
-                      {Object.entries(faseLabel).map(([key, label]) => {
-                        const hasFase = chartData.some((d: any) => d.fase === key)
-                        if (!hasFase) return null
-                        return (
-                          <span key={key} className="flex items-center gap-1 text-[10px] font-bold text-slate-500">
-                            <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: FASE_COLORS[key] }} />
-                            {label}
-                          </span>
-                        )
-                      })}
-                      <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
-                        <span className="w-5 border-t-2 border-dashed border-emerald-500" />
-                        Criterio {programa.criterio_dominio_pct}%
-                      </span>
-                    </div>
+                  <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
 
-                    {/* ── SET band labels (Thread Learning style) ── */}
-                    {tipoGrafico === 'lineas' && chartData.length > 0 && (() => {
-                      type Band = { set: string; start: number; end: number; label: string }
-                      const bands: Band[] = []
-                      let bandStart = 0
-                      let currentSet = chartData[0]?.set || null
-                      chartData.forEach((d: any, i: number) => {
-                        if (d.set !== currentSet || i === chartData.length - 1) {
-                          if (currentSet) {
-                            bands.push({ set: currentSet, start: bandStart, end: i === chartData.length - 1 ? i : i - 1, label: currentSet })
+                    {/* ── ABA Phase Chart — segmentos con líneas verticales y labels ── */}
+                    {tipoGrafico === 'lineas' && (() => {
+                      // Build segments: each unique (set+fase) combo is a segment
+                      type Seg = { label: string; fase: string; set: string | null; startIdx: number; endIdx: number }
+                      const segments: Seg[] = []
+                      if (chartData.length > 0) {
+                        let segStart = 0
+                        let curKey = `${chartData[0].fase}||${chartData[0].set}`
+                        chartData.forEach((d: any, i: number) => {
+                          const key = `${d.fase}||${d.set}`
+                          if (key !== curKey || i === chartData.length - 1) {
+                            const endIdx = i === chartData.length - 1 ? i : i - 1
+                            const prev = chartData[segStart]
+                            const setLabel = prev.set || ''
+                            const fLabel = faseLabel[prev.fase] || prev.fase
+                            segments.push({
+                              label: setLabel ? `${setLabel}` : fLabel,
+                              fase: prev.fase,
+                              set: prev.set,
+                              startIdx: segStart,
+                              endIdx,
+                            })
+                            curKey = key
+                            segStart = i
                           }
-                          currentSet = d.set
-                          bandStart = i
-                        }
+                        })
+                      }
+
+                      // Color palette per segment index
+                      const segColors = ['#6366f1','#ef4444','#3b82f6','#8b5cf6','#f59e0b','#10b981','#ec4899']
+                      // Map each segment to a color
+                      const segColorMap = segments.map((_, i) => segColors[i % segColors.length])
+
+                      // Divider x-positions (between segments)
+                      const dividers = segments.slice(0, -1).map(seg => seg.endIdx + 1.5)
+
+                      // Build per-point color: dot color matches its segment
+                      const dotColorByIdx = chartData.map((_: any, i: number) => {
+                        const segIdx = segments.findIndex(s => i >= s.startIdx && i <= s.endIdx)
+                        return segIdx >= 0 ? segColorMap[segIdx] : '#6366f1'
                       })
-                      if (bands.length === 0) return null
+
                       const total = chartData.length
+                      const chartHeight = 200
+
                       return (
-                        <div className="flex mb-1 rounded-lg overflow-hidden border border-[var(--card-border)] text-[10px] font-black">
-                          {bands.map((b, i) => {
-                            const width = ((b.end - b.start + 1) / total) * 100
-                            const colors = ['bg-indigo-100 text-indigo-700', 'bg-violet-100 text-violet-700', 'bg-blue-100 text-blue-700', 'bg-purple-100 text-purple-700', 'bg-fuchsia-100 text-fuchsia-700']
-                            return (
-                              <div key={i} className={`${colors[i % colors.length]} flex items-center justify-center py-1 px-1 truncate`} style={{ width: `${width}%`, minWidth: '24px' }}>
-                                {b.label}
-                              </div>
-                            )
-                          })}
+                        <div>
+                          {/* ── Phase header labels — proportional width per segment ── */}
+                          <div className="flex" style={{ paddingLeft: '30px', paddingRight: '10px' }}>
+                            {segments.map((seg, i) => {
+                              const width = ((seg.endIdx - seg.startIdx + 1) / total) * 100
+                              const color = segColorMap[i]
+                              return (
+                                <div key={i}
+                                  className="flex flex-col items-center justify-end pb-1 border-r last:border-r-0"
+                                  style={{ width: `${width}%`, minWidth: '28px', borderColor: '#cbd5e1' }}>
+                                  <span className="text-[10px] font-black truncate px-1 text-center w-full" style={{ color }}>
+                                    {seg.label}
+                                  </span>
+                                  <span className="text-[9px] font-semibold text-slate-400 truncate px-1 text-center w-full">
+                                    {seg.set ? (faseLabel[seg.fase] || seg.fase) : ''}
+                                  </span>
+                                </div>
+                              )
+                            })}
+                          </div>
+
+                          {/* ── Main line chart ── */}
+                          <ResponsiveContainer width="100%" height={chartHeight}>
+                            <LineChart data={chartData} margin={{ top: 4, right: 16, bottom: 20, left: -15 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
+                              <XAxis
+                                dataKey="sesion"
+                                tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+                                interval={Math.max(0, Math.floor(total / 8) - 1)}
+                                label={{ value: 'Sesión', position: 'insideBottom', offset: -8, fontSize: 10, fill: 'var(--text-muted)' }}
+                              />
+                              <YAxis
+                                domain={[0, 100]}
+                                ticks={[0, 25, 50, 75, 90, 100]}
+                                tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
+                                tickFormatter={(v: number) => `${v}%`}
+                              />
+                              <Tooltip
+                                formatter={(value: any) => [`${value}%`, 'Éxito']}
+                                labelFormatter={(label: any) => {
+                                  const d = chartData[label - 1]
+                                  if (!d) return `Sesión ${label}`
+                                  const segIdx = segments.findIndex(s => (label - 1) >= s.startIdx && (label - 1) <= s.endIdx)
+                                  const segName = segIdx >= 0 ? segments[segIdx].label : ''
+                                  return `Sesión ${label} · ${d.fecha}${segName ? ` · ${segName}` : ''}`
+                                }}
+                                contentStyle={{ borderRadius: '10px', fontSize: '11px', border: '1px solid var(--card-border)', background: 'var(--card)' }}
+                              />
+
+                              {/* Vertical phase dividers */}
+                              {dividers.map((x, i) => (
+                                <ReferenceLine key={`div-${i}`} x={x} stroke="#475569" strokeWidth={1.5} />
+                              ))}
+
+                              {/* Criterion line */}
+                              <ReferenceLine
+                                y={programa.criterio_dominio_pct}
+                                stroke="#10b981"
+                                strokeDasharray="6 3"
+                                strokeWidth={2}
+                                label={{ value: `${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }}
+                              />
+
+                              {/* The line — dots colored by segment */}
+                              <Line
+                                type="linear"
+                                dataKey="pct"
+                                stroke="#6366f1"
+                                strokeWidth={0}
+                                dot={false}
+                                activeDot={{ r: 6, fill: '#6366f1' }}
+                              />
+
+                              {/* Render segment lines separately with correct color */}
+                              {segments.map((seg, si) => {
+                                const color = segColorMap[si]
+                                const segPoints = chartData.slice(seg.startIdx, seg.endIdx + 1)
+                                // We render individual SVG lines via a custom dot approach
+                                // Instead use a masked Line per segment using data filtering
+                                return null // handled below via CustomLine
+                              })}
+                            </LineChart>
+                          </ResponsiveContainer>
+
+                          {/* ── Overlay: segment colored lines drawn as SVG on top ── */}
+                          {/* We use a separate recharts chart overlaid for per-segment colors */}
+                          <div style={{ marginTop: `-${chartHeight}px`, pointerEvents: 'none' }}>
+                            <ResponsiveContainer width="100%" height={chartHeight}>
+                              <LineChart data={chartData} margin={{ top: 4, right: 16, bottom: 20, left: -15 }}>
+                                <XAxis dataKey="sesion" hide />
+                                <YAxis domain={[0, 100]} hide />
+                                {segments.map((seg, si) => {
+                                  const color = segColorMap[si]
+                                  // Create a dataKey that only has values for this segment's range
+                                  const segKey = `seg_${si}`
+                                  // Inject data with only this segment's values, null elsewhere
+                                  return (
+                                    <Line
+                                      key={segKey}
+                                      type="linear"
+                                      dataKey={(d: any) => {
+                                        const idx = chartData.indexOf(d)
+                                        return idx >= seg.startIdx && idx <= seg.endIdx ? d.pct : null
+                                      }}
+                                      stroke={color}
+                                      strokeWidth={2.5}
+                                      dot={(props: any) => {
+                                        const { cx, cy, index } = props
+                                        if (index < seg.startIdx || index > seg.endIdx) return <g key={index} />
+                                        const dotColor = (chartData[index]?.pct ?? 0) >= crit ? '#059669' : color
+                                        return <circle key={index} cx={cx} cy={cy} r={4} fill={dotColor} stroke="white" strokeWidth={1.5} />
+                                      }}
+                                      connectNulls={false}
+                                      isAnimationActive={false}
+                                    />
+                                  )
+                                })}
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+
+                          {/* ── Legend ── */}
+                          <div className="flex flex-wrap gap-3 px-4 pb-3 pt-1">
+                            {segments.map((seg, i) => (
+                              <span key={i} className="flex items-center gap-1 text-[10px] font-bold" style={{ color: segColorMap[i] }}>
+                                <span className="w-4 border-t-2 inline-block" style={{ borderColor: segColorMap[i] }} />
+                                {seg.label}{seg.set && seg.fase ? ` (${faseLabel[seg.fase] || seg.fase})` : ''}
+                              </span>
+                            ))}
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                              <span className="w-4 border-t-2 border-dashed border-emerald-500 inline-block" />
+                              Criterio {programa.criterio_dominio_pct}%
+                            </span>
+                          </div>
                         </div>
                       )
                     })()}
-
-                    {/* ── Líneas ── */}
-                    {tipoGrafico === 'lineas' && (
-                      <ResponsiveContainer width="100%" height={180}>
-                        <LineChart data={chartData} margin={{ top: 5, right: 10, bottom: 18, left: -15 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" />
-                          <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: "var(--text-muted)" }} ticks={Array.from({length: Math.ceil(chartData.length / 10) + 1}, (_, i) => (i + 1) * 10).filter(t => t <= chartData.length + 10).concat([1]).sort((a, b) => a - b)} interval={0} label={{ value: t('programas.sesionLabel'), position: 'insideBottom', offset: -6, fontSize: 10, fill: "var(--text-muted)" }} />
-                          <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 90, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
-                          <Tooltip
-                            formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}${d.set ? ` · ${d.set}` : ''}` : `Sesión ${label}` }}
-                          />
-                          {cambiosFase.map(x => <ReferenceLine key={x} x={x} stroke="#a5b4fc" strokeDasharray="4 2" strokeWidth={1.5} />)}
-                          <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
-                            label={{ value: `🏆 ${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
-                          <Line type="linear" dataKey="pct" stroke="#6366f1" strokeWidth={2.5}
-                            dot={(props: any) => {
-                              const { cx, cy, payload } = props
-                              const color = (payload.pct ?? 0) >= crit ? '#059669' : '#6366f1'
-                              return <circle key={payload.sesion} cx={cx} cy={cy} r={4} fill={color} stroke="none" />
-                            }}
-                            activeDot={{ r: 6 }} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    )}
 
                     {/* ── Barras (color por nivel) ── */}
                     {tipoGrafico === 'barras' && chartData.length > 0 && (() => {
