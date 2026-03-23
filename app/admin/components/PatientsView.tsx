@@ -63,33 +63,53 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
   const [editing, setEditing] = useState(false)
   const [saving, setSaving]   = useState(false)
   const [form, setForm] = useState({
-    name: nino.name, birth_date: nino.birth_date || '',
-    diagnosis: nino.diagnosis || '', age: nino.age || '',
+    name: nino.name || '',
+    birth_date: nino.birth_date || '',
+    diagnosis: nino.diagnosis || '',
+    // FIX: extract only numeric part from age to avoid "22 años" syntax error
+    age: String(nino.age || '').replace(/[^0-9]/g, ''),
   })
 
   useEffect(() => {
-    setForm({ name: nino.name, birth_date: nino.birth_date || '', diagnosis: nino.diagnosis || '', age: nino.age || '' })
+    setForm({
+      name: nino.name || '',
+      birth_date: nino.birth_date || '',
+      diagnosis: nino.diagnosis || '',
+      age: String(nino.age || '').replace(/[^0-9]/g, ''),
+    })
     setEditing(false)
   }, [nino.id])
 
   const handleSave = async () => {
     setSaving(true)
     try {
-      const edad = form.birth_date ? calcularEdad(form.birth_date) : (parseInt(String(form.age)) || null)
+      // FIX: always compute age from birth_date if available, else parse numeric string only
+      const edadNum = form.birth_date
+        ? calcularEdad(form.birth_date)
+        : (form.age.trim() ? parseInt(form.age.replace(/[^0-9]/g, ''), 10) || null : null)
+
       const { error } = await supabase.from('children').update({
-        name: form.name.trim(), birth_date: form.birth_date || null,
-        diagnosis: form.diagnosis.trim() || null, age: edad,
+        name: form.name.trim(),
+        birth_date: form.birth_date || null,
+        diagnosis: form.diagnosis.trim() || null,
+        age: edadNum,
       }).eq('id', nino.id)
       if (error) throw error
       toast.success(t('common.exitoGuardado'))
-      setEditing(false); onSaved()
+      setEditing(false)
+      onSaved()
     } catch (e: any) { toast.error(e.message) }
     finally { setSaving(false) }
   }
 
   const birthFormatted = nino.birth_date
-    ? new Date(nino.birth_date).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'long', year: 'numeric' })
+    ? new Date(nino.birth_date + 'T12:00:00').toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'long', year: 'numeric' })
     : null
+
+  const ageDisplay = nino.age
+    ? `${String(nino.age).replace(/[^0-9]/g, '')} ${t('common.anos')}`
+    : birthFormatted ? `${calcularEdad(nino.birth_date)} ${t('common.anos')}` : '—'
+
 
   return (
     <div className="p-5 md:p-7 max-w-xl">
@@ -175,7 +195,7 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
                 </p>
               </div>
               <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                {nino.age ? `${nino.age} ${t('common.anos')}` : '—'}
+                {ageDisplay}
               </p>
             </div>
           </div>
@@ -209,22 +229,37 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
       ) : (
         <div className="space-y-3 rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color:'var(--text-muted)' }}>
+            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>
               {t('pacientes.fechaNacimiento')}
             </label>
             <input type="date" value={form.birth_date}
-              onChange={e=>setForm(f=>({...f,birth_date:e.target.value}))}
+              onChange={e => setForm(f => ({ ...f, birth_date: e.target.value }))}
               className="w-full px-3 py-2.5 rounded-lg text-sm border outline-none"
-              style={{ borderColor:'var(--card-border)', color:'var(--text-primary)', background:'var(--muted-bg)' }}/>
+              style={{ borderColor: 'var(--card-border)', color: 'var(--text-primary)', background: 'var(--muted-bg)' }} />
           </div>
           <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color:'var(--text-muted)' }}>
+            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>
               {t('pacientes.diagnostico')}
             </label>
             <input type="text" value={form.diagnosis}
-              onChange={e=>setForm(f=>({...f,diagnosis:e.target.value}))}
+              onChange={e => setForm(f => ({ ...f, diagnosis: e.target.value }))}
+              placeholder="Ej: TEA Nivel 2, TDAH..."
               className="w-full px-3 py-2.5 rounded-lg text-sm border outline-none"
-              style={{ borderColor:'var(--card-border)', color:'var(--text-primary)', background:'var(--muted-bg)' }}/>
+              style={{ borderColor: 'var(--card-border)', color: 'var(--text-primary)', background: 'var(--muted-bg)' }} />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              {t('common.edad')} (años)
+            </label>
+            <input type="number" min="0" max="99"
+              value={form.age}
+              onChange={e => setForm(f => ({ ...f, age: e.target.value.replace(/[^0-9]/g, '') }))}
+              placeholder="Ej: 8"
+              className="w-full px-3 py-2.5 rounded-lg text-sm border outline-none"
+              style={{ borderColor: 'var(--card-border)', color: 'var(--text-primary)', background: 'var(--muted-bg)' }} />
+            <p className="text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
+              Se calcula automáticamente si hay fecha de nacimiento
+            </p>
           </div>
         </div>
       )}
