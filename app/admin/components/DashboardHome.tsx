@@ -242,12 +242,12 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
     : 0
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
+    <div className="space-y-5">
 
       {/* ── HERO ── */}
       <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
         <div className="h-0.5" style={{ background: 'linear-gradient(90deg, #3a68a0 0%, #6355a0 50%, #2e7a56 100%)' }} />
-        <div className="p-4 flex items-center justify-between gap-4 flex-wrap">
+        <div className="p-6 flex items-center justify-between gap-4 flex-wrap">
           <div>
             <p className="text-xs capitalize mb-0.5" style={{ color: 'var(--text-muted)' }}>{diaStr}</p>
             <h2 className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>{saludo}, Directora 👋</h2>
@@ -348,7 +348,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
 
         {/* Alertas */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
+          <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <div className="flex items-center gap-2">
               <Bell size={12} style={{ color: 'var(--text-muted)' }} />
               <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Alertas Clínicas</p>
@@ -360,7 +360,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
               </span>
             )}
           </div>
-          <div className="p-3 space-y-2">
+          <div className="p-4 space-y-2">
             {alertasClinicas.length > 0
               ? alertasClinicas.map((a, i) => <AlertaRow key={i} {...a} onClick={() => navigateTo('ninos')} />)
               : (
@@ -375,7 +375,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
 
         {/* Próximas citas */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
+          <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <div className="flex items-center gap-2">
               <Calendar size={12} style={{ color: 'var(--text-muted)' }} />
               <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Próximas Citas</p>
