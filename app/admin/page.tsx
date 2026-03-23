@@ -573,7 +573,7 @@ export default function AdminDashboard() {
           </div>
           {/* Chat */}
           <div className="flex-1 min-h-0">
-            <ARIAAgentChat userId={userId} compact={true} childId={activeChild?.id} childName={activeChild?.name} contexto={activeChild ? 'paciente' : 'general'} />
+            <ARIAFloatingChat userId={userId} childId={activeChild?.id} childName={activeChild?.name} />
           </div>
         </div>
       )}

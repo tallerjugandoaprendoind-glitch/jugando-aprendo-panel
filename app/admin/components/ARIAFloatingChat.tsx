@@ -12,7 +12,7 @@ interface Message {
   fuentes?: string[]
 }
 
-export default function ARIAFloatingChat({ userId }: { userId: string }) {
+export default function ARIAFloatingChat({ userId, childId, childName }: { userId: string; childId?: string; childName?: string }) {
   const { t, locale } = useI18n()
   const [open, setOpen]         = useState(false)
   const [minimized, setMinimized] = useState(false)
@@ -24,14 +24,17 @@ export default function ARIAFloatingChat({ userId }: { userId: string }) {
   const bottomRef  = useRef<HTMLDivElement>(null)
   const inputRef   = useRef<HTMLTextAreaElement>(null)
 
-  // Mensaje de bienvenida
+  // Mensaje de bienvenida — actualizar cuando cambia el paciente activo
   useEffect(() => {
     setMessages([{
       role: 'assistant',
-      content: '¡Hola! 👋 Soy **ARIA**, tu asistente clínica. ¿En qué te puedo ayudar hoy? 🧠',
+      content: childId && childName
+        ? `¡Hola! 👋 Soy **ARIA**. Estoy revisando el expediente de **${childName}** y tengo acceso a todo su historial, programas ABA y evaluaciones.\n\n¿En qué te puedo ayudar?`
+        : '¡Hola! 👋 Soy **ARIA**, tu asistente clínica. ¿En qué te puedo ayudar hoy? 🧠',
       timestamp: new Date().toISOString(),
     }])
-  }, [])
+    setConversacionId(null)
+  }, [childId, childName])
 
   useEffect(() => {
     if (open) {
@@ -57,20 +60,22 @@ export default function ARIAFloatingChat({ userId }: { userId: string }) {
     setMessages(prev => [...prev, userMsg])
 
     try {
-      const res = await fetch('/api/vadi-agent', {
+      const res = await fetch('/api/agente/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-locale': locale },
         body: JSON.stringify({
-          message: msg,
+          mensaje: msg,
           userId,
+          childId: childId || undefined,
           conversacionId,
-          contexto: 'general',
+          contexto: childId ? 'paciente' : 'general',
+          locale,
         }),
       })
       const data = await res.json()
       const reply: Message = {
         role: 'assistant',
-        content: data.response || 'No pude procesar tu consulta.',
+        content: data.response || data.mensaje || 'No pude procesar tu consulta.',
         timestamp: new Date().toISOString(),
         fuentes: data.fuentes,
       }

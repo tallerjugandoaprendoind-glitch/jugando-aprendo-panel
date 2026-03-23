@@ -43,11 +43,13 @@ export default function ARIAAgentChat({
   }, [messages])
 
   useEffect(() => {
+    // Reset conversacion when patient changes so ARIA loads fresh context
+    setConversacionId(null)
     setMessages([{
       role: 'assistant',
       content: childId
-        ? `¡Hola! 👋 Soy **ARIA**. Estoy revisando el expediente de **${childName || 'tu paciente'}** y tengo acceso a todo su historial, programas ABA y evaluaciones previas.\n\n¿En qué te puedo ayudar hoy?`
-        : `¡Hola! 👋 Soy **ARIA**, tu asistente clínica de **Vanty**.\n\nEstoy entrenada en evaluación e intervención de población infantil, con base en **ABA**, ética clínica, neuropsicología y educación especial.\n\n¿En qué puedo ayudarte hoy? 🧠`,
+        ? `¡Hola! 👋 Soy **ARIA**. Estoy revisando el expediente de **${childName || 'tu paciente'}** y tengo acceso a todo su historial, programas ABA, objetivos terapéuticos y evaluaciones previas.\n\n¿En qué te puedo ayudar hoy?`
+        : `¡Hola! 👋 Soy **ARIA**, tu asistente clínica.\n\nEstoy entrenada en ABA, neuropsicología y educación especial.\n\n¿En qué puedo ayudarte hoy? 🧠`,
       timestamp: new Date().toISOString(),
     }])
   }, [childId, childName])
