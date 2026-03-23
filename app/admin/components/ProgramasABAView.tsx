@@ -32,14 +32,24 @@ function colorPorPct(pct: number) {
 }
 
 // ── Colores por área ────────────────────────────────────────────────────────
+const AREA_COLOR: Record<string, { dot: string }> = {
+  comunicacion: { dot: '#3d6eaa' },
+  conducta:     { dot: '#aa4a4a' },
+  cognitivo:    { dot: '#6a4aaa' },
+  social:       { dot: '#2e8a60' },
+  autonomia:    { dot: '#9a7020' },
+  academico:    { dot: '#3a7aaa' },
+  sensorial:    { dot: '#aa5a80' },
+}
+
 const AREA_CONFIG: Record<string, { color: string; bg: string; label: string; emoji: string }> = {
-  comunicacion: { color: 'dark:text-blue-300 text-blue-700',   bg: 'dark:bg-blue-900/30 bg-blue-50 dark:border-blue-700 border-blue-200',   label: 'Comunicación',   emoji: '💬' },
-  conducta:     { color: 'dark:text-red-300 text-red-700',    bg: 'dark:bg-red-900/30 bg-red-50 dark:border-red-700 border-red-200',     label: 'Conducta',       emoji: '🎯' },
-  cognitivo:    { color: 'dark:text-violet-300 text-violet-700', bg: 'dark:bg-violet-900/30 bg-violet-50 dark:border-violet-700 border-violet-200',label: 'Cognitivo',     emoji: '🧠' },
-  social:       { color: 'dark:text-emerald-300 text-emerald-700',bg: 'dark:bg-emerald-900/30 bg-emerald-50 dark:border-emerald-700 border-emerald-200',label: 'Social',      emoji: '👥' },
-  autonomia:    { color: 'dark:text-amber-300 text-amber-700',  bg: 'dark:bg-amber-900/30 bg-amber-50 dark:border-amber-700 border-amber-200', label: 'Autonomía',      emoji: '🌟' },
-  academico:    { color: 'dark:text-indigo-300 text-indigo-700', bg: 'dark:bg-indigo-900/30 bg-indigo-50 dark:border-indigo-700 border-indigo-200',label: 'Académico',     emoji: '📚' },
-  sensorial:    { color: 'dark:text-pink-300 text-pink-700',   bg: 'dark:bg-pink-900/30 bg-pink-50 dark:border-pink-700 border-pink-200',   label: 'Sensorial',      emoji: '✋' },
+  comunicacion: { color: 'text-blue-700 dark:text-blue-300',   bg: 'bg-blue-50 dark:bg-blue-900/25 border-blue-200 dark:border-blue-800',   label: 'Comunicación',   emoji: '💬' },
+  conducta:     { color: 'text-red-700 dark:text-red-300',     bg: 'bg-red-50 dark:bg-red-900/25 border-red-200 dark:border-red-800',       label: 'Conducta',       emoji: '🎯' },
+  cognitivo:    { color: 'text-violet-700 dark:text-violet-300', bg: 'bg-violet-50 dark:bg-violet-900/25 border-violet-200 dark:border-violet-800', label: 'Cognitivo', emoji: '🧠' },
+  social:       { color: 'text-emerald-700 dark:text-emerald-300', bg: 'bg-emerald-50 dark:bg-emerald-900/25 border-emerald-200 dark:border-emerald-800', label: 'Social', emoji: '👥' },
+  autonomia:    { color: 'text-amber-700 dark:text-amber-300', bg: 'bg-amber-50 dark:bg-amber-900/25 border-amber-200 dark:border-amber-800', label: 'Autonomía',    emoji: '🌟' },
+  academico:    { color: 'text-indigo-700 dark:text-indigo-300', bg: 'bg-indigo-50 dark:bg-indigo-900/25 border-indigo-200 dark:border-indigo-800', label: 'Académico', emoji: '📚' },
+  sensorial:    { color: 'text-pink-700 dark:text-pink-300',   bg: 'bg-pink-50 dark:bg-pink-900/25 border-pink-200 dark:border-pink-800',   label: 'Sensorial',      emoji: '✋' },
 }
 
 const FASE_COLORS: Record<string, string> = {
@@ -125,55 +135,70 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
     alertas: aiAnalysis?.alertas?.length || 0,
   }
 
+  const STAT_CFG = [
+    { label: t('programas.activos'),        value: stats.activos,        icon: '◉', lightBg: '#f0f4ff', lightNum: '#3d5a99', lightLabel: '#6b7a9a', darkBg: 'rgba(61,90,153,0.12)', darkNum: '#7b9cd4', darkLabel: '#6b7a9a', bar: '#3d5a99' },
+    { label: t('programas.dominados'),       value: stats.dominados,      icon: '✓', lightBg: '#f0faf5', lightNum: '#2d7a56', lightLabel: '#5a8a70', darkBg: 'rgba(45,122,86,0.12)',  darkNum: '#6ab890', darkLabel: '#5a8a70', bar: '#2d7a56' },
+    { label: t('programas.enIntervencion'),  value: stats.enIntervencion, icon: '▶', lightBg: '#f5f0ff', lightNum: '#5a3d99', lightLabel: '#7a6a9a', darkBg: 'rgba(90,61,153,0.12)',  darkNum: '#9d80d4', darkLabel: '#7a6a9a', bar: '#5a3d99' },
+    { label: t('programas.alertasIA'),       value: stats.alertas,        icon: '⚑', lightBg: '#fff8ee', lightNum: '#956020', lightLabel: '#9a7a4a', darkBg: 'rgba(149,96,32,0.12)',  darkNum: '#d4a060', darkLabel: '#9a7a4a', bar: '#956020' },
+  ]
+
   return (
-    <div className="space-y-5 pb-10">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="font-black text-xl flex items-center gap-2">
-            <div className="w-8 h-8 dark:bg-indigo-900/40 bg-indigo-100 rounded-xl flex items-center justify-center">
-              <Activity size={16} className="text-indigo-600" />
-            </div>
-            {t('programas.titulo')}
-          </h2>
-          <p className="text-xs mt-0.5 ml-1" style={{color:"var(--text-muted)"}}>Registro de datos conductuales · {childName}</p>
+    <div className="pb-10" style={{ padding: '0 2px' }}>
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
+            <Activity size={16} style={{ color: 'var(--text-secondary)' }} />
+          </div>
+          <div>
+            <h2 className="font-black text-lg leading-tight" style={{ color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              {t('programas.titulo')}
+            </h2>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Registro conductual · {childName}</p>
+          </div>
         </div>
         <button onClick={() => setShowCrear(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white rounded-xl font-bold text-sm hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200">
-          <Plus size={16} /> {t('programas.nuevo')}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
+          style={{ background: 'var(--text-primary)', color: 'var(--card)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.88'}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
+          <Plus size={15} /> {t('programas.nuevo')}
         </button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: t('programas.activos'), value: stats.activos, color: 'text-indigo-400', bg: 'bg-indigo-900/20 dark:bg-indigo-900/30' },
-          { label: t('programas.dominados'), value: stats.dominados, color: 'text-emerald-400', bg: 'bg-emerald-900/20 dark:bg-emerald-900/30' },
-          { label: t('programas.enIntervencion'), value: stats.enIntervencion, color: 'text-violet-400', bg: 'bg-violet-900/20 dark:bg-violet-900/30' },
-          { label: t('programas.alertasIA'), value: stats.alertas, color: 'text-amber-400', bg: 'bg-amber-900/20 dark:bg-amber-900/30' },
-        ].map(s => (
-          <div key={s.label} className={`${s.bg} rounded-2xl p-3 text-center`}>
-            <p className={`font-black text-2xl ${s.color}`}>{s.value}</p>
-            <p className="text-xs font-medium mt-0.5" style={{color:"var(--text-secondary)"}}>{s.label}</p>
+      {/* ── Stats ── */}
+      <div className="grid grid-cols-4 gap-3 mb-6">
+        {STAT_CFG.map(s => (
+          <div key={s.label} className="rounded-2xl p-4 relative overflow-hidden"
+            style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+            <div className="absolute top-0 left-0 w-1 h-full rounded-l-2xl" style={{ background: s.bar }} />
+            <p className="text-3xl font-black pl-1 leading-none mb-1"
+              style={{ color: s.bar }}>
+              {s.value}
+            </p>
+            <p className="text-[11px] font-semibold pl-1" style={{ color: 'var(--text-muted)' }}>{s.label}</p>
           </div>
         ))}
       </div>
 
-      {/* Alertas IA proactivas */}
+      {/* ── Alertas IA ── */}
       {loadingAI && (
-        <div className="dark:bg-violet-900/20 bg-violet-50 border dark:border-violet-700 border-violet-200 rounded-2xl p-4 flex items-center gap-3">
-          <Loader2 size={16} className="animate-spin text-violet-500" />
-          <p className="text-sm font-medium dark:text-violet-300 text-violet-700">{t('dashboard.ariAnalizando')}</p>
+        <div className="rounded-xl p-3.5 flex items-center gap-3 mb-4"
+          style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
+          <Loader2 size={14} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
+          <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{t('dashboard.ariAnalizando')}</p>
         </div>
       )}
       {aiAnalysis && aiAnalysis.alertas?.length > 0 && (
-        <div className="space-y-2">
-          <p className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-            <Brain size={11} className="text-violet-500" /> Análisis ARIA
+        <div className="space-y-2 mb-5">
+          <p className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 mb-2"
+            style={{ color: 'var(--text-muted)' }}>
+            <Brain size={10} style={{ color: 'var(--text-muted)' }} /> Análisis ARIA
           </p>
           {aiAnalysis.resumen && (
-            <div className="dark:bg-violet-900/20 bg-gradient-to-r from-violet-50 to-indigo-50 border dark:border-violet-700 border-violet-200 rounded-2xl p-4">
-              <p className="text-sm leading-relaxed dark:text-violet-200 text-violet-800">{aiAnalysis.resumen}</p>
+            <div className="rounded-xl p-4" style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)', borderLeft: '3px solid var(--text-muted)' }}>
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{aiAnalysis.resumen}</p>
             </div>
           )}
           {aiAnalysis.alertas.map((alerta: any, i: number) => (
@@ -182,16 +207,15 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
         </div>
       )}
 
-      {/* Filtros por área */}
-      <div className="flex flex-wrap gap-2">
+      {/* ── Filtros por área ── */}
+      <div className="flex flex-wrap gap-2 mb-5">
         {areas.map(area => (
           <button key={area} onClick={() => setFiltroArea(area)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${
-              filtroArea === area
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-[var(--card)] text-[var(--text-secondary)] border-[var(--card-border)] hover:border-indigo-300'
-            }`}>
-            {area === 'todos' ? `📋 ${t('programas.todos')}` : `${AREA_CONFIG[area]?.emoji} ${AREA_LABELS[area] || AREA_CONFIG[area]?.label}`}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            style={filtroArea === area
+              ? { background: 'var(--text-primary)', color: 'var(--card)', border: '1px solid transparent' }
+              : { background: 'var(--card)', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}>
+            {area === 'todos' ? `${t('programas.todos')}` : `${AREA_CONFIG[area]?.emoji} ${AREA_LABELS[area] || AREA_CONFIG[area]?.label}`}
           </button>
         ))}
       </div>
@@ -245,16 +269,22 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
 
 // ── Tarjeta de alerta IA ─────────────────────────────────────────────────────
 function AlertaCard({ alerta }: { alerta: any }) {
-  const colores: Record<string, string> = {
-    alta: 'dark:bg-red-900/30 bg-red-50 border-red-200 dark:border-red-700 text-red-800 dark:text-red-300',
-    media: 'dark:bg-amber-900/30 bg-amber-50 border-amber-200 dark:border-amber-700 text-amber-800 dark:text-amber-300',
-    baja: 'dark:bg-blue-900/30 bg-blue-50 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300',
+  const cfg: Record<string, { border: string; icon: string; label: string }> = {
+    alta:  { border: '#c0524a', icon: '⚠', label: '#c0524a' },
+    media: { border: '#b07830', icon: '!', label: '#b07830' },
+    baja:  { border: '#4a7aaa', icon: 'i', label: '#4a7aaa' },
   }
-  const icons: Record<string, string> = { alta: '🚨', media: '⚠️', baja: 'ℹ️' }
+  const c = cfg[alerta.prioridad] || cfg.media
   return (
-    <div className={`rounded-xl p-3.5 border text-sm ${colores[alerta.prioridad] || colores.media}`}>
-      <p className="font-bold flex items-center gap-1.5">{icons[alerta.prioridad]} {alerta.titulo}</p>
-      <p className="mt-1 text-xs leading-relaxed opacity-80">{alerta.mensaje}</p>
+    <div className="rounded-xl p-4" style={{ background: 'var(--muted-bg)', border: `1px solid var(--card-border)`, borderLeft: `3px solid ${c.border}` }}>
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-[10px] font-black w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+          style={{ background: `${c.border}18`, color: c.border }}>
+          {c.icon}
+        </span>
+        <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{alerta.titulo}</p>
+      </div>
+      <p className="text-xs leading-relaxed pl-6" style={{ color: 'var(--text-secondary)' }}>{alerta.mensaje}</p>
     </div>
   )
 }
@@ -315,7 +345,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
   }
 
   return (
-    <div className="rounded-2xl border-2 border-[var(--card-border)] bg-[var(--card)] shadow-sm overflow-hidden hover:border-indigo-100 transition-all">
+    <div className="rounded-2xl overflow-hidden transition-all" style={{ background: 'var(--card)', border: '1px solid var(--card-border)', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
       {/* Header */}
       <div className="p-5 cursor-pointer" onClick={loadDetalle}>
         <div className="flex items-start gap-3">
@@ -324,7 +354,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-black text-sm" style={{color:"var(--text-primary)"}}>{programa.titulo}</h3>
+              <h3 className="font-bold text-sm leading-snug" style={{ color: 'var(--text-primary)' }}>{programa.titulo}</h3>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-black border ${area.bg} ${area.color}`}>
                 {area.label}
               </span>
@@ -352,7 +382,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <button onClick={e => { e.stopPropagation(); onRegistrarSesion() }}
-              className="px-3 py-1.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition-all">
+              className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all" style={{ background: 'var(--text-primary)', color: 'var(--card)' }}>
               {t('programas.agregarSesion')}
             </button>
             {expanded ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
@@ -374,7 +404,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 
       {/* Detalle expandido */}
       {expanded && (
-        <div className="border-t border-[var(--card-border)] bg-[var(--muted-bg)] p-5 space-y-5">
+        <div className="p-5 space-y-5" style={{ borderTop: '1px solid var(--card-border)', background: 'var(--muted-bg)' }}>
           {loadingDetalle ? (
             <div className="flex justify-center py-8">
               <Loader2 className="animate-spin text-indigo-400" size={24} />
@@ -390,7 +420,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       📈 Gráfica de progreso
                     </p>
                     {/* Selector de tipo — solo analista */}
-                    <div className="flex gap-1 bg-[var(--muted-bg)] p-1 rounded-xl">
+                    <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
                       {([
                         { id: 'lineas'     as const, label: t('reportes.lineas'),     emoji: '📈' },
                         { id: 'barras'     as const, label: t('reportes.barras'),     emoji: '📊' },
@@ -399,11 +429,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       ] as const).map(t => (
                         <button key={t.id} onClick={() => onChangeTipoGrafico(t.id)}
                           title={t.label}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                            tipoGrafico === t.id
-                              ? 'bg-[var(--card)] shadow text-indigo-700'
-                              : 'text-slate-500 hover:text-slate-700'
-                          }`}>
+                          className="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+                          style={tipoGrafico === t.id
+                            ? { background: 'var(--card)', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', color: 'var(--text-primary)' }
+                            : { color: 'var(--text-muted)', background: 'transparent' }}>
                           {t.emoji}
                           <span className="ml-1 hidden sm:inline">{t.label}</span>
                         </button>
@@ -411,7 +440,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     </div>
                   </div>
 
-                  <div className="rounded-xl p-4 border border-[var(--card-border)] bg-[var(--card)]">
+                  <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
                     {/* Leyenda de fases */}
                     <div className="flex gap-3 mb-3 flex-wrap">
                       {Object.entries(faseLabel).map(([key, label]) => {
@@ -670,16 +699,17 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 
 function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
   const { t } = useI18n()
-  const labels: Record<string, { label: string; color: string }> = {
-    linea_base:    { label: t('programas.lineaBase'),    color: 'bg-[var(--muted-bg)] text-[var(--text-secondary)]' },
-    intervencion:  { label: 'Intervención',  color: 'bg-indigo-100 text-indigo-700' },
-    mantenimiento: { label: t('programas.mantenimiento'), color: 'bg-emerald-100 text-emerald-700' },
-    seguimiento:   { label: 'Seguimiento',   color: 'bg-amber-100 text-amber-700' },
-    dominado:      { label: t('programas.dominado'),   color: 'bg-emerald-100 text-emerald-700' },
+  const labels: Record<string, { label: string; border: string; color: string }> = {
+    linea_base:    { label: t('programas.lineaBase'),      border: '#94a3b8', color: '#64748b' },
+    intervencion:  { label: 'Intervención',                border: '#4a6eaa', color: '#4a6eaa' },
+    mantenimiento: { label: t('programas.mantenimiento'),  border: '#3a8a60', color: '#3a8a60' },
+    seguimiento:   { label: 'Seguimiento',                 border: '#9a7020', color: '#9a7020' },
+    dominado:      { label: t('programas.dominado'),       border: '#3a8a60', color: '#3a8a60' },
   }
-  const cfg = labels[fase] || { label: fase, color: 'bg-[var(--muted-bg)] text-[var(--text-muted)]' }
+  const cfg = labels[fase] || { label: fase, border: '#94a3b8', color: '#64748b' }
   return (
-    <span className={`${cfg.color} rounded-full font-bold ${small ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5'}`}>
+    <span className={`rounded-md font-semibold ${small ? 'text-[9px] px-1.5 py-0.5' : 'text-[10px] px-2 py-0.5'}`}
+      style={{ border: `1px solid ${cfg.border}40`, color: cfg.color, background: `${cfg.border}12` }}>
       {cfg.label}
     </span>
   )
@@ -756,7 +786,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('common.fecha')}</label>
                 <input type="date" value={form.fecha}
                   onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
-                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
+                  className="w-full p-3 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
               </div>
               <div>
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('ui.phase')}</label>
@@ -820,7 +850,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
                 value={form.nivel_ayuda_custom}
                 onChange={e => setForm(f => ({ ...f, nivel_ayuda: e.target.value, nivel_ayuda_custom: e.target.value }))}
                 {...{placeholder: t('ui.observations_session')}}
-                className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
+                className="w-full p-3 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
             </div>
 
             {/* Notas */}
@@ -828,7 +858,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">📝 Notas</label>
               <textarea value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
                 rows={2} {...{placeholder: t('ui.session_observations')}}
-                className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm resize-none outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
+                className="w-full p-3 rounded-xl text-sm resize-none outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
             </div>
           </div>
 
@@ -911,7 +941,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.nombrePrograma')} *</label>
                 <input value={form.titulo} onChange={e => set('titulo', e.target.value)}
                   placeholder={t('programas.placeholderNombre')}
-                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
+                  className="w-full p-3 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
               </div>
               <div>
                 <label className="text-xs font-bold text-slate-500 block mb-2">{t('programas.area')} *</label>
@@ -930,7 +960,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.objetivoLargoPlazo')} *</label>
                 <textarea value={form.objetivo_lp} onChange={e => set('objetivo_lp', e.target.value)}
                   rows={3} placeholder={t('ui.mastery_criterion_placeholder')}
-                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm resize-none outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
+                  className="w-full p-3 rounded-xl text-sm resize-none outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
               </div>
             </div>
           )}
@@ -949,7 +979,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                       setObjetivos(updated)
                     }}
                     placeholder={`Set ${i + 1}: ej: Permanece sentado ${(i + 1) * 3} minutos`}
-                    className="flex-1 p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
+                    className="flex-1 p-3 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
                   {objetivos.length > 1 && (
                     <button onClick={() => setObjetivos(objetivos.filter((_, j) => j !== i))}
                       className="p-2.5 text-slate-300 hover:text-red-400 mt-1"><X size={14} /></button>
@@ -1003,7 +1033,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                   <label className="text-xs font-bold text-slate-500 block mb-1">{label}</label>
                   <textarea value={(form as any)[key] ?? ''} onChange={e => set(key, e.target.value)}
                     rows={key === 'generalizacion' || key === 'notas_programa' ? 2 : 1} placeholder={placeholder}
-                    className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm resize-none outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
+                    className="w-full p-3 rounded-xl text-sm resize-none outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
                 </div>
               ))}
               {/* Total unidades — fijo en 10 pero editable */}
@@ -1011,7 +1041,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                 <label className="text-xs font-bold text-slate-500 block mb-1">📍 Total</label>
                 <input value={(form as any).total_unidades ?? '10u.'} onChange={e => set('total_unidades', e.target.value)}
                   placeholder="10u."
-                  className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400 text-[var(--text-primary)]" />
+                  className="w-full p-3 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
               </div>
             </div>
           )}
