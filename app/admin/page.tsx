@@ -124,6 +124,7 @@ export default function AdminDashboard() {
   const [pendingMessages, setPendingMessages] = useState(0)
   const [userId, setUserId] = useState('')
   const [ariaOpen, setAriaOpen] = useState(false)
+  const [activeChild, setActiveChild] = useState<{id: string, name: string} | null>(null)
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -405,7 +406,7 @@ export default function AdminDashboard() {
             <div className={`flex-1 ${currentView === 'ninos' ? 'min-h-0 flex flex-col' : ''}`}>
               {currentView === 'inicio'       && <DashboardHome navigateTo={navigateTo} />}
               {currentView === 'agenda'       && <CalendarView />}
-              {currentView === 'ninos'        && <PatientsView />}
+              {currentView === 'ninos'        && <PatientsView onPatientSelect={(id: string, name: string) => setActiveChild({ id, name })} />}
               {/* evaluaciones integradas en PatientsView → tab Evaluaciones */}
               {currentView === 'reportes'     && <AIReportView onChildSelect={setSelectedChildReport} />}
               {currentView === 'recursos'     && <ResourcesManagementView />}
@@ -559,7 +560,7 @@ export default function AdminDashboard() {
                 </p>
                 <div className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"/>
-                  <p className="text-violet-200 text-[10px] font-medium">Asistente Clínico · Activa</p>
+                  <p className="text-violet-200 text-[10px] font-medium">{activeChild ? `Caso: ${activeChild.name}` : 'Asistente Clínico · Activa'}</p>
                 </div>
               </div>
             </div>
@@ -572,7 +573,7 @@ export default function AdminDashboard() {
           </div>
           {/* Chat */}
           <div className="flex-1 min-h-0">
-            <ARIAAgentChat userId={userId} compact={true} />
+            <ARIAAgentChat userId={userId} compact={true} childId={activeChild?.id} childName={activeChild?.name} contexto={activeChild ? 'paciente' : 'general'} />
           </div>
         </div>
       )}

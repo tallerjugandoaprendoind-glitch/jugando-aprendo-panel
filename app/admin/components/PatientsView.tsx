@@ -250,7 +250,7 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL — Layout adaptativo móvil / desktop
 // ═══════════════════════════════════════════════════════════════════════════
-export default function PatientsView() {
+export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (id: string, name: string) => void } = {}) {
   const { t } = useI18n()
   const toast  = useToast()
 
@@ -290,6 +290,7 @@ export default function PatientsView() {
   const selectPatient = (p: any) => {
     setSelected(p); setTab('info')
     setMobileView('detail')   // en móvil ir a la ficha
+    if (onPatientSelect) onPatientSelect(p.id, p.name)  // notify parent for ARIA context
   }
 
   // ── Volver a la lista (solo móvil) ────────────────────────────────────────
