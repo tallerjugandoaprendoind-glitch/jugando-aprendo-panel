@@ -547,7 +547,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                               />
                               <YAxis
                                 domain={[0, 100]}
-                                ticks={[0, 25, 50, 75, 90, 100]}
+                                ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]}
                                 tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
                                 tickFormatter={(v: number) => `${v}%`}
                               />
@@ -699,7 +699,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                               <XAxis dataKey="sesion" tick={{ fontSize: 10, fill: 'var(--text-muted)' }}
                                 interval={Math.max(0, Math.floor(total / 8) - 1)}
                                 label={{ value: 'Sesión', position: 'insideBottom', offset: -10, fontSize: 10, fill: 'var(--text-muted)' }} />
-                              <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 90, 100]} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} tickFormatter={(v: any) => `${v}%`} />
+                              <YAxis domain={[0, 100]} ticks={[0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]} tick={{ fontSize: 10, fill: 'var(--text-muted)' }} tickFormatter={(v: any) => `${v}%`} />
                               <Tooltip
                                 formatter={(value: any) => [`${value}%`, 'Éxito']}
                                 labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha}${d.set ? ` · ${d.set}` : ''}` : `Sesión ${label}` }}
