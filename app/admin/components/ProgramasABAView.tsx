@@ -143,7 +143,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
   ]
 
   return (
-    <div className="pb-10" style={{ padding: '0 2px' }}>
+    <div className="pb-10">
       {/* ── Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <div className="flex items-center gap-3">

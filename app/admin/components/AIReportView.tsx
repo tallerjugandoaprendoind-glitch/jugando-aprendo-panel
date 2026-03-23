@@ -378,10 +378,10 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
   const toggleCard = (id: string) => setExpandedCardId(expandedCardId === id ? null : id)
 
   return (
-    <div className="flex flex-col gap-4 md:gap-6 animate-fade-in-up">
+    <div className="flex flex-col gap-3 animate-fade-in-up">
       {/* Solo mostrar el selector si NO viene pre-seleccionado desde PatientsView */}
       {!initialChildId && (
-        <div className="bg-white dark:bg-slate-800 p-4 md:p-6 rounded-3xl md:rounded-[2.5rem] shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 flex-shrink-0">
+        <div className="rounded-2xl p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-shrink-0" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
           <h3 className="font-bold text-slate-700 dark:text-slate-200 text-lg md:text-xl flex items-center gap-2 md:gap-3 shrink-0">
             <div className="p-2 bg-purple-50 rounded-xl">
               <Brain size={24} className="text-purple-600"/>
@@ -661,7 +661,7 @@ function AccordionSection({ id, title, icon, badge, defaultOpen, children }: {
     <div className="rounded-2xl overflow-hidden shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4 transition-all hover:opacity-80"
+        className="w-full flex items-center justify-between px-5 py-4 transition-all hover:opacity-90"
       >
         <div className="flex items-center gap-3">
           {icon}
@@ -731,7 +731,7 @@ function ReporteHistorialCard({ reporte }: { reporte: any }) {
   const badge     = BADGE_REPORTE[reporte.tipo_reporte]   || 'bg-slate-100 text-slate-600 border-slate-200'
 
   return (
-    <div className="bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 hover:border-blue-300 hover:shadow-lg rounded-2xl overflow-hidden transition-all duration-200 group">
+    <div className="rounded-2xl overflow-hidden transition-all duration-200 group" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
       {/* Barra superior con color del tipo */}
       <div className={`bg-gradient-to-r ${gradiente} p-4 flex items-center gap-3`}>
         <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
@@ -751,7 +751,7 @@ function ReporteHistorialCard({ reporte }: { reporte: any }) {
           {reporte.tipo_reporte}
         </span>
 
-        <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
+        <div className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>
           <Clock size={10} />
           <span>
             {new Date(reporte.fecha_generacion).toLocaleDateString(toBCP47(locale), {
@@ -762,7 +762,7 @@ function ReporteHistorialCard({ reporte }: { reporte: any }) {
         </div>
 
         {reporte.generado_por && (
-          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-bold">
+          <div className="flex items-center gap-1.5 text-[10px] font-bold" style={{ color: 'var(--text-muted)' }}>
             <User size={10} />
             <span>{reporte.generado_por}</span>
           </div>
