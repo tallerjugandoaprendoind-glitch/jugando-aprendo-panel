@@ -35,6 +35,7 @@ import DashboardGraficasABA from './components/DashboardGraficasABA'
 import InteligenciaHubView from './components/InteligenciaHubView'
 import LocaleSelector from '@/app/components/LocaleSelector'
 import WhatsAppQRPanel from './components/WhatsAppQRPanel'
+import ConfiguracionView from './components/ConfiguracionView'
 import ARIAFloatingChat from './components/ARIAFloatingChat'
 
 // Roles: 'jefe'|'admin' ven todo. 'especialista'/'terapeuta' NO ven agenda ni tienda.
@@ -443,9 +444,7 @@ export default function AdminDashboard() {
               {currentView === 'tienda'       && <StoreManagementView />}
               {currentView === 'recursos-adicionales' && <RecursosAdicionalesView isDark={isDark} />}
               {currentView === 'config'       && (
-                <div className="p-4 md:p-6">
-                  <WhatsAppQRPanel />
-                </div>
+                <ConfiguracionView />
               )}
               {currentView === 'programas'    && (
                 <div className="max-w-4xl mx-auto">
