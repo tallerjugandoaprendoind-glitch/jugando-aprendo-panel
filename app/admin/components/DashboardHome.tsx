@@ -180,7 +180,8 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       supabase.from('children').select('*', { count: 'exact', head: true }),
       supabase.from('appointments').select('*').eq('appointment_date', hoy).in('status', ['confirmed', 'pending']),
       supabase.from('appointments').select('*, children(name)').gte('appointment_date', hoy).neq('status', 'cancelled').neq('status', 'completed').order('appointment_date').order('appointment_time').limit(5),
-      supabase.from('registro_aba').select('*, children:child_id(name)').order('fecha_sesion', { ascending: false }).limit(5),
+      // Actividad reciente — try join, fallback handled below
+      supabase.from('registro_aba').select('id, child_id, fecha_sesion, datos, created_at').order('fecha_sesion', { ascending: false }).limit(10),
       // FIX: fetch BOTH tables to detect who has had a session in last 30 days
       supabase.from('aba_sessions_v2').select('child_id').gte('session_date', hace30),
       supabase.from('registro_aba').select('child_id, fecha_sesion').gte('fecha_sesion', hace30),
@@ -191,6 +192,14 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       supabase.from('programas_aba').select('id, estado, child_id').eq('estado', 'activo'),
       supabase.from('objetivos_cp').select('id, estado').eq('estado', 'dominado'),
     ])
+
+    // Manual name enrichment — join actividad with todosNinos by child_id
+    const ninosMap: Record<string, string> = {}
+    ;(todosNinos || []).forEach((n: any) => { ninosMap[n.id] = n.name })
+    const actividadEnriquecida = (actividad || []).map((a: any) => ({
+      ...a,
+      children: { name: ninosMap[a.child_id] || 'Paciente' }
+    }))
 
     // Sesiones por día (últimos 7 días) — usar sesABA_30d filtrado
     const diasMap: Record<string, number> = {}
@@ -212,9 +221,9 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
 
     // Progreso top pacientes — sesiones últimos 30d por paciente
     const sesMap: Record<string, { name: string; count: number }> = {}
-    ;(actividad || []).forEach((a: any) => {
-      const id = a.child_id || a.children?.id
-      const name = a.children?.name || 'Paciente'
+    ;(actividadEnriquecida || []).forEach((a: any) => {
+      const id = a.child_id
+      const name = a.children?.name || ninosMap[id] || 'Paciente'
       if (id) { sesMap[id] = sesMap[id] || { name, count: 0 }; sesMap[id].count++ }
     })
     const maxSes = Math.max(...Object.values(sesMap).map(v => v.count), 1)
@@ -236,7 +245,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       objetivosCompletos: objetivos?.length || 0,
     })
     setProximasCitas(citas || [])
-    setActividadReciente(actividad || [])
+    setActividadReciente(actividadEnriquecida || [])
     setAlertasClinicas(alertas)
   }
 
