@@ -124,6 +124,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
   const [alertasClinicas, setAlertasClinicas] = useState<any[]>([])
   const [actividadReciente, setActividadReciente] = useState<any[]>([])
+  const [programasActivos, setProgramasActivos] = useState<any[]>([])
   const [sesSemanales, setSesSemanales] = useState<number[]>([0,0,0,0,0,0,0])
   const [diasLabels, setDiasLabels] = useState<string[]>(['L','M','M','J','V','S','D'])
   const [sinSesion, setSinSesion] = useState<any[]>([])
@@ -213,6 +214,24 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
 
       const hace30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
       const hace7 = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
+
+      // Programas ABA activos con último porcentaje
+      const { data: progData } = await supabase
+        .from('programas_aba')
+        .select('id, titulo, child_id, estado, criterio_dominio_pct, fase_actual, sesiones_datos_aba(porcentaje_exito, fecha)')
+        .eq('estado', 'activo')
+        .order('updated_at', { ascending: false })
+        .limit(5)
+
+      if (progData && progData.length > 0) {
+        const enriquecidos = progData.map((p: any) => {
+          const seses = (p.sesiones_datos_aba || []).sort((a: any, b: any) => b.fecha?.localeCompare(a.fecha || '') || 0)
+          const ultimoPct = seses[0]?.porcentaje_exito ?? null
+          const nombre = ninosMap[p.child_id] || 'Paciente'
+          return { titulo: p.titulo, nombre, ultimoPct, criterio: p.criterio_dominio_pct || 90, fase: p.fase_actual }
+        })
+        setProgramasActivos(enriquecidos)
+      }
 
       // Actividad reciente — agenda_sesiones realizadas (primary) + registro_aba (fallback)
       const { data: sesAgenda } = await supabase
@@ -370,34 +389,42 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
           </div>
         </div>
 
-        {/* Actividad por paciente */}
+        {/* Programas ABA activos */}
         <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <p className="text-[11px] font-black uppercase tracking-wide mb-3" style={{ color: 'var(--text-muted)' }}>Actividad por paciente</p>
-          {actividadReciente.length > 0 ? (
-            <div className="space-y-2">
-              {actividadReciente.slice(0, 3).map((a, i) => {
-                const colors = ['#3a68a0', '#2e7a56', '#6355a0', '#b07830']
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Programas ABA Activos</p>
+            <button onClick={() => navigateTo('ninos')} className="text-[10px] font-semibold" style={{ color: '#3a68a0' }}>Ver todos →</button>
+          </div>
+          {programasActivos.length > 0 ? (
+            <div className="space-y-3">
+              {programasActivos.map((p, i) => {
+                const pct = p.ultimoPct ?? 0
+                const color = pct >= p.criterio ? '#2e7a56' : pct >= 60 ? '#b07830' : '#3a68a0'
                 return (
-                  <div key={i} className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 rounded-lg text-[11px] font-black flex items-center justify-center flex-shrink-0 text-white"
-                      style={{ background: colors[i % colors.length] }}>
-                      {a.nombrePaciente?.charAt(0)?.toUpperCase() || '?'}
+                  <div key={i}>
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex-1 min-w-0 mr-3">
+                        <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{p.titulo}</p>
+                        <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{p.nombre}</p>
+                      </div>
+                      <span className="text-sm font-black flex-shrink-0" style={{ color }}>
+                        {p.ultimoPct !== null ? `${p.ultimoPct}%` : '—'}
+                      </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{a.nombrePaciente}</p>
-                      <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{a.objetivo}</p>
+                    <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--muted-bg)' }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
                     </div>
-                    <p className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-                      {a.fecha_sesion?.slice(5)?.replace('-', '/')}
-                    </p>
                   </div>
                 )
               })}
             </div>
           ) : (
             <div className="flex flex-col items-center py-4">
-              <Activity size={20} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
-              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin actividad reciente</p>
+              <Target size={20} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
+              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin programas activos</p>
+              <button onClick={() => navigateTo('ninos')} className="text-xs font-bold mt-2" style={{ color: '#3a68a0' }}>
+                Crear programa →
+              </button>
             </div>
           )}
         </div>
@@ -465,37 +492,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
         </div>
       </div>
 
-      {/* ── ÚLTIMA ACTIVIDAD ── */}
-      {actividadReciente.length > 0 && (
-        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <div className="flex items-center justify-between px-4 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
-            <div className="flex items-center gap-2">
-              <Activity size={13} style={{ color: 'var(--text-muted)' }} />
-              <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Última Actividad</p>
-            </div>
-          </div>
-          <div className="divide-y" style={{ borderColor: 'var(--card-border)' }}>
-            {actividadReciente.map((a, i) => {
-              const colors = ['#3a68a0', '#2e7a56', '#6355a0', '#b07830', '#c0524a']
-              return (
-                <div key={i} className="flex items-center gap-3 px-4 py-3">
-                  <div className="w-8 h-8 rounded-lg text-xs font-black flex items-center justify-center flex-shrink-0 text-white"
-                    style={{ background: colors[a.nombrePaciente?.charCodeAt(0) % colors.length || 0] }}>
-                    {a.nombrePaciente?.charAt(0)?.toUpperCase() || '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{a.nombrePaciente}</p>
-                    <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{a.objetivo}</p>
-                  </div>
-                  <p className="text-[11px] flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-                    {a.fecha_sesion ? new Date(a.fecha_sesion + 'T12:00:00').toLocaleDateString(toBCP47(locale), { day: '2-digit', month: 'short' }) : ''}
-                  </p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
+
 
     </div>
   )
