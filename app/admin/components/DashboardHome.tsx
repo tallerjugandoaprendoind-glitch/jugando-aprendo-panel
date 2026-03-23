@@ -206,46 +206,69 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
         setSesSemanales(Object.values(map))
       }
 
-      // 3. Actividad reciente — registro_aba + children lookup
+      // 3. Children map (needed for multiple lookups)
       const { data: todosNinos } = await supabase.from('children').select('id, name')
       const ninosMap: Record<string, string> = {}
       ;(todosNinos || []).forEach((n: any) => { ninosMap[n.id] = n.name })
 
       const hace30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
+      const hace7 = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
 
-      const { data: sesRecientesABA } = await supabase
-        .from('registro_aba')
-        .select('id, child_id, fecha_sesion, datos, created_at')
-        .order('fecha_sesion', { ascending: false })
+      // Actividad reciente — agenda_sesiones realizadas (primary) + registro_aba (fallback)
+      const { data: sesAgenda } = await supabase
+        .from('agenda_sesiones')
+        .select('id, child_id, fecha, hora_inicio, estado, tipo, children(name)')
+        .in('estado', ['realizada', 'completada', 'confirmada'])
+        .order('fecha', { ascending: false })
         .limit(8)
 
-      setActividadReciente(
-        (sesRecientesABA || []).map((s: any) => ({
-          ...s,
+      let actividadFinal: any[] = []
+      if (sesAgenda && sesAgenda.length > 0) {
+        actividadFinal = sesAgenda.map((s: any) => ({
+          nombrePaciente: s.children?.name || ninosMap[s.child_id] || 'Paciente',
+          objetivo: s.tipo || 'Sesión terapéutica',
+          fecha_sesion: s.fecha,
+        }))
+      } else {
+        // Fallback: registro_aba
+        const { data: sesABA } = await supabase
+          .from('registro_aba')
+          .select('child_id, fecha_sesion, datos')
+          .order('fecha_sesion', { ascending: false })
+          .limit(8)
+        actividadFinal = (sesABA || []).map((s: any) => ({
           nombrePaciente: ninosMap[s.child_id] || 'Paciente',
           objetivo: s.datos?.objetivo_principal || s.datos?.objetivo || 'Sesión ABA',
+          fecha_sesion: s.fecha_sesion,
         }))
-      )
+      }
+      setActividadReciente(actividadFinal)
 
-      // 4. Pacientes sin sesión (últimos 30 días) — registro_aba + aba_sessions_v2
+      // 4. Pacientes sin sesión — agenda_sesiones + aba_sessions_v2 + registro_aba
+      const { data: conSesAgenda } = await supabase
+        .from('agenda_sesiones').select('child_id')
+        .in('estado', ['realizada', 'completada']).gte('fecha', hace30)
       const { data: conSesABA } = await supabase
         .from('registro_aba').select('child_id').gte('fecha_sesion', hace30)
       const { data: conSesV2 } = await supabase
         .from('aba_sessions_v2').select('child_id').gte('session_date', hace30)
+      const { data: conSesPrograma } = await supabase
+        .from('sesiones_datos_aba').select('child_id').gte('fecha', hace30)
 
       const conSesion = new Set([
+        ...(conSesAgenda || []).map((s: any) => s.child_id),
         ...(conSesABA || []).map((s: any) => s.child_id),
         ...(conSesV2 || []).map((s: any) => s.child_id),
+        ...(conSesPrograma || []).map((s: any) => s.child_id),
       ])
       const pacientesSinSesion = (todosNinos || []).filter((n: any) => !conSesion.has(n.id))
       setSinSesion(pacientesSinSesion)
 
-      // Merge alertas: API + sin sesión
+      // Alertas: API + sin sesión (sin duplicados)
       const alertasSinSesion = pacientesSinSesion.map((n: any) => ({
         tipo: 'sin_sesion', paciente: n.name,
         mensaje: 'Sin sesión en los últimos 30 días.', prioridad: 2,
       }))
-
       setAlertasClinicas(prev => {
         const existentes = prev.filter((a: any) => a.tipo !== 'sin_sesion')
         return [...existentes, ...alertasSinSesion]
@@ -381,7 +404,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       </div>
 
       {/* ── PANEL INFERIOR ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
         {/* Alertas clínicas */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
@@ -397,14 +420,14 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
               </span>
             )}
           </div>
-          <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: '300px' }}>
+          <div className="p-3 space-y-2 overflow-y-auto" style={{ maxHeight: '320px' }}>
             {alertasClinicas.length > 0
               ? alertasClinicas.map((a, i) => (
                   <AlertaRow key={i} {...a} onClick={() => navigateTo('ninos')} />
                 ))
               : (
-                <div className="flex flex-col items-center py-8">
-                  <CheckCircle2 size={22} style={{ color: '#2e7a56', opacity: 0.5 }} />
+                <div className="flex flex-col items-center py-10">
+                  <CheckCircle2 size={24} style={{ color: '#2e7a56', opacity: 0.5 }} />
                   <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin alertas activas</p>
                 </div>
               )
@@ -425,12 +448,12 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
               Ver agenda <ArrowUpRight size={10} />
             </button>
           </div>
-          <div className="p-3">
+          <div className="p-3 overflow-y-auto" style={{ maxHeight: '320px' }}>
             {proximasCitas.length > 0
               ? proximasCitas.map((c, i) => <CitaRow key={i} cita={c} />)
               : (
-                <div className="flex flex-col items-center py-10">
-                  <Calendar size={22} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
+                <div className="flex flex-col items-center py-12">
+                  <Calendar size={24} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
                   <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin citas agendadas</p>
                   <button onClick={() => navigateTo('agenda')} className="mt-3 text-xs font-bold" style={{ color: '#3a68a0' }}>
                     Agendar ahora →
@@ -438,59 +461,6 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
                 </div>
               )
             }
-          </div>
-        </div>
-
-        {/* Acciones + Hub IA */}
-        <div className="space-y-3">
-          {/* Acciones rápidas */}
-          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-            <div className="px-4 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
-              <div className="flex items-center gap-2">
-                <Zap size={13} style={{ color: 'var(--text-muted)' }} />
-                <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Acciones Rápidas</p>
-              </div>
-            </div>
-            <div className="p-3 space-y-1.5">
-              {[
-                { label: 'Nueva Evaluación',  icon: FileText,   view: 'evaluaciones', bar: '#3a68a0' },
-                { label: 'Agendar Cita',      icon: Calendar,   view: 'agenda',       bar: '#2e7a56' },
-                { label: 'Ver Pacientes',     icon: Users,      view: 'ninos',        bar: '#6355a0' },
-                { label: 'Hub IA',            icon: Brain,      view: 'hub-ia',       bar: '#b07830' },
-              ].map(({ label, icon: Icon, view, bar }) => (
-                <button key={view} onClick={() => navigateTo(view)}
-                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-80"
-                  style={{ background: 'var(--muted-bg)', color: 'var(--text-primary)', border: '1px solid var(--card-border)', borderLeft: `3px solid ${bar}` }}>
-                  <div className="flex items-center gap-2.5">
-                    <Icon size={14} style={{ color: bar }} />
-                    {label}
-                  </div>
-                  <ChevronRight size={12} style={{ color: 'var(--text-muted)' }} />
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Banner IA */}
-          <div className="rounded-xl p-4 flex items-center gap-3"
-            style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-              <Brain size={16} style={{ color: 'var(--text-secondary)' }} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Hub IA</p>
-              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                {metricas?.pacientes?.progresoPromedio
-                  ? `Progreso promedio: ${metricas.pacientes.progresoPromedio}%`
-                  : 'Detecta patrones y genera reportes'}
-              </p>
-            </div>
-            <button onClick={() => navigateTo('hub-ia')}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold flex-shrink-0 transition-all"
-              style={{ background: 'var(--text-primary)', color: 'var(--card)' }}>
-              Abrir
-            </button>
           </div>
         </div>
       </div>
