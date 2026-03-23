@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
-import { calcularEdad } from '../utils/helpers'
+import { calcularEdad, calcularEdadNumerica } from '../utils/helpers'
 import ProgramasABAView from './ProgramasABAView'
 import ARIAAgentChat from './ARIAAgentChat'
 import EvaluacionesUnificadas from './EvaluacionesUnificadas'
@@ -83,9 +83,9 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
   const handleSave = async () => {
     setSaving(true)
     try {
-      // FIX: always compute age from birth_date if available, else parse numeric string only
-      const edadNum = form.birth_date
-        ? calcularEdad(form.birth_date)
+      // Use calcularEdadNumerica (returns integer) not calcularEdad (returns string like "22 años")
+      const edadNum: number | null = form.birth_date
+        ? calcularEdadNumerica(form.birth_date)
         : (form.age.trim() ? parseInt(form.age.replace(/[^0-9]/g, ''), 10) || null : null)
 
       const { error } = await supabase.from('children').update({
@@ -108,67 +108,48 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
 
   const ageDisplay = nino.age
     ? `${String(nino.age).replace(/[^0-9]/g, '')} ${t('common.anos')}`
-    : birthFormatted ? `${calcularEdad(nino.birth_date)} ${t('common.anos')}` : '—'
+    : birthFormatted ? `${calcularEdadNumerica(nino.birth_date)} ${t('common.anos')}` : '—'
 
 
   return (
-    <div className="p-5 md:p-7 max-w-xl">
-      {/* ── Hero card ── */}
-      <div className="rounded-2xl p-5 mb-5 relative overflow-hidden"
-        style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
-        {/* Edit button */}
-        <div className="absolute top-4 right-4">
-          {editing
-            ? <div className="flex gap-2">
-                <button onClick={()=>setEditing(false)}
-                  className="p-1.5 rounded-lg transition-all"
-                  style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                  <X size={14} style={{ color:'var(--text-muted)' }}/>
-                </button>
-                <button onClick={handleSave} disabled={saving}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-                  style={{ background: 'var(--text-primary)', color: 'var(--card)' }}>
-                  {saving ? <Loader2 size={12} className="animate-spin"/> : <Save size={12}/>}
-                  {t('common.guardar')}
-                </button>
-              </div>
-            : <button onClick={()=>setEditing(true)}
-                className="p-1.5 rounded-lg transition-all"
-                style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                <Edit size={14} style={{ color:'var(--text-muted)' }}/>
-              </button>
-          }
-        </div>
-
-        <div className="flex items-center gap-4">
-          <Avatar name={nino.name} size="lg"/>
-          <div className="flex-1 min-w-0 pr-16">
-            {editing
-              ? <input value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))}
-                  className="w-full text-lg font-black bg-transparent outline-none border-b pb-0.5 mb-1"
-                  style={{ color: 'var(--text-primary)', borderColor: 'var(--card-border)' }}/>
-              : <h2 className="text-lg font-black leading-tight mb-1.5" style={{ color: 'var(--text-primary)' }}>{nino.name}</h2>
-            }
-            <div className="flex flex-wrap items-center gap-2">
-              {editing
-                ? <input value={form.diagnosis} onChange={e => setForm(f=>({...f,diagnosis:e.target.value}))}
-                    placeholder={t('pacientes.diagnostico')}
-                    className="text-sm px-2 py-1 rounded-md outline-none"
-                    style={{ background: 'var(--card)', border: '1px solid var(--card-border)', color: 'var(--text-primary)' }}/>
-                : nino.diagnosis && (
-                    <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md" style={getDxStyle(nino.diagnosis)}>
-                      {nino.diagnosis}
-                    </span>
-                  )
-              }
-              {nino.age && (
-                <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                  {nino.age} {t('common.anos')}
+    <div className="p-4 md:p-6">
+      {/* ── Header compacto ── */}
+      <div className="flex items-center justify-between gap-4 mb-5 pb-4"
+        style={{ borderBottom: '1px solid var(--card-border)' }}>
+        <div className="flex items-center gap-3">
+          <Avatar name={nino.name} size="md"/>
+          <div>
+            <h2 className="font-black text-base leading-tight" style={{ color: 'var(--text-primary)' }}>{nino.name}</h2>
+            <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+              {nino.diagnosis && (
+                <span className="text-xs font-semibold px-2 py-0.5 rounded" style={getDxStyle(nino.diagnosis)}>
+                  {nino.diagnosis}
                 </span>
               )}
+              <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{ageDisplay}</span>
             </div>
           </div>
         </div>
+        {editing
+          ? <div className="flex gap-2 flex-shrink-0">
+              <button onClick={() => setEditing(false)}
+                className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)', border: '1px solid var(--card-border)' }}>
+                Cancelar
+              </button>
+              <button onClick={handleSave} disabled={saving}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                style={{ background: 'var(--text-primary)', color: 'var(--card)' }}>
+                {saving ? <Loader2 size={12} className="animate-spin"/> : <Save size={12}/>}
+                {t('common.guardar')}
+              </button>
+            </div>
+          : <button onClick={() => setEditing(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex-shrink-0"
+              style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}>
+              <Edit size={12}/> Editar
+            </button>
+        }
       </div>
 
       {/* ── Data fields ── */}

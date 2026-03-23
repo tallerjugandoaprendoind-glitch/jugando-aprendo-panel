@@ -5,37 +5,59 @@ import { toBCP47 } from '@/lib/i18n'
 import { useState, useEffect } from 'react'
 import {
   Activity, Brain, Calendar, ChevronRight, Clock,
-  FileText, Users, Loader2, AlertTriangle, Heart,
-  Sparkles, Bell, ArrowUpRight, MessageCircle,
-  TrendingUp, CheckCircle2, AlertCircle, Zap,
-  BarChart3, UserCheck, Target
+  Users, AlertTriangle, TrendingUp, MessageCircle,
+  AlertCircle, CheckCircle2, Bell, Sparkles, BarChart3,
+  ArrowUpRight, Target, Zap
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useToast } from '@/components/Toast'
 
-// ─── Mini sparkline SVG ───────────────────────────────────────────────────────
-function MiniSparkline({ values, color }: { values: number[]; color: string }) {
-  if (values.length < 2) return null
-  const max = Math.max(...values, 1)
-  const w = 64, h = 28
-  const pts = values.map((v, i) => `${(i / (values.length - 1)) * w},${h - (v / max) * h}`).join(' ')
+// ─── Donut chart SVG ──────────────────────────────────────────────────────────
+function DonutChart({ value, total, color, size = 56 }: { value: number; total: number; color: string; size?: number }) {
+  const r = size / 2 - 5
+  const circ = 2 * Math.PI * r
+  const pct = total > 0 ? Math.min(value / total, 1) : 0
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="opacity-60">
-      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--muted-bg)" strokeWidth="5" />
+      <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="5"
+        strokeDasharray={`${pct * circ} ${circ}`} strokeLinecap="round"
+        style={{ transform: `rotate(-90deg)`, transformOrigin: '50% 50%', transition: 'stroke-dasharray 0.8s ease' }} />
+      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" fontSize={size * 0.22} fontWeight="800" fill={color}>
+        {Math.round(pct * 100)}%
+      </text>
     </svg>
   )
 }
 
+// ─── Mini bar chart ───────────────────────────────────────────────────────────
+function BarChart({ values, color, labels }: { values: number[]; color: string; labels?: string[] }) {
+  const max = Math.max(...values, 1)
+  return (
+    <div className="flex items-end gap-1 h-10">
+      {values.map((v, i) => {
+        const isLast = i === values.length - 1
+        return (
+          <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+            <div className="w-full rounded-sm transition-all duration-500"
+              style={{ height: `${Math.max(2, (v / max) * 36)}px`, background: isLast ? color : `${color}50` }} />
+            {labels && <span className="text-[8px]" style={{ color: 'var(--text-muted)' }}>{labels[i]}</span>}
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 // ─── KPI Card ─────────────────────────────────────────────────────────────────
-function KPICard({ label, value, sub, icon: Icon, bar, trend, onClick, urgent }: any) {
+function KPICard({ label, value, sub, icon: Icon, bar, urgent, onClick, extra }: any) {
   return (
     <div onClick={onClick}
       className={`rounded-xl p-4 relative overflow-hidden transition-all ${onClick ? 'cursor-pointer hover:shadow-md' : ''}`}
-      style={{ background: 'var(--card)', border: urgent ? `1px solid ${bar}50` : '1px solid var(--card-border)' }}>
+      style={{ background: 'var(--card)', border: urgent ? `1px solid ${bar}40` : '1px solid var(--card-border)' }}>
       <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl" style={{ background: bar }} />
       <div className="flex items-start justify-between pl-2">
-        <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>{label}</p>
+        <div className="flex-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
           <p className="text-3xl font-black leading-none mb-1" style={{ color: urgent ? bar : 'var(--text-primary)' }}>{value}</p>
           <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{sub}</p>
         </div>
@@ -44,37 +66,27 @@ function KPICard({ label, value, sub, icon: Icon, bar, trend, onClick, urgent }:
           <Icon size={16} style={{ color: bar }} />
         </div>
       </div>
-      {trend && (
-        <div className="flex items-center gap-1 mt-3 pl-2">
-          <TrendingUp size={10} style={{ color: bar }} />
-          <span className="text-[10px] font-semibold" style={{ color: bar }}>{trend}</span>
-        </div>
-      )}
+      {extra}
     </div>
   )
 }
 
-// ─── Alerta clínica ───────────────────────────────────────────────────────────
-function AlertaClinica({ tipo, paciente, mensaje, onClick }: any) {
-  const colors: Record<string, { bar: string; icon: string }> = {
-    sin_sesion:     { bar: '#b07830', icon: '○' },
-    bienestar_bajo: { bar: '#3a68a0', icon: '◇' },
-    sin_cita:       { bar: '#c0524a', icon: '△' },
-  }
-  const c = colors[tipo] || colors.sin_sesion
+// ─── Alerta row ───────────────────────────────────────────────────────────────
+function AlertaRow({ tipo, paciente, mensaje, onClick }: any) {
+  const bar = tipo === 'sin_sesion' ? '#b07830' : tipo === 'bienestar_bajo' ? '#3a68a0' : '#c0524a'
+  const icon = tipo === 'sin_sesion' ? '○' : tipo === 'bienestar_bajo' ? '◇' : '△'
   return (
     <button onClick={onClick}
-      className="w-full text-left flex items-center gap-3 px-4 py-3 rounded-lg transition-all hover:opacity-80"
-      style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)', borderLeft: `3px solid ${c.bar}` }}>
-      <span className="text-xs font-black w-4 text-center flex-shrink-0" style={{ color: c.bar }}>{c.icon}</span>
+      className="w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all hover:opacity-80"
+      style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)', borderLeft: `3px solid ${bar}` }}>
+      <span className="text-[10px] font-black w-3 flex-shrink-0" style={{ color: bar }}>{icon}</span>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black uppercase tracking-wide mb-0.5" style={{ color: c.bar }}>
-          {tipo === 'sin_sesion' ? 'Sin sesión' : tipo === 'bienestar_bajo' ? 'Bienestar' : 'Sin cita'}
+        <p className="text-[9px] font-black uppercase tracking-wider mb-0.5" style={{ color: bar }}>
+          {tipo === 'sin_sesion' ? 'Sin sesión 30d' : tipo === 'bienestar_bajo' ? 'Bienestar' : 'Sin cita'}
         </p>
         <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{paciente}</p>
-        <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{mensaje}</p>
       </div>
-      <ChevronRight size={13} style={{ color: 'var(--text-muted)' }} className="flex-shrink-0" />
+      <ChevronRight size={12} style={{ color: 'var(--text-muted)' }} className="flex-shrink-0" />
     </button>
   )
 }
@@ -86,42 +98,20 @@ function CitaRow({ cita }: { cita: any }) {
   const mes = fecha.toLocaleString('es', { month: 'short' }).toUpperCase()
   const dia = fecha.getDate()
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg transition-all`}
-      style={{ background: esHoy ? 'rgba(58,104,160,0.06)' : 'transparent', border: esHoy ? '1px solid rgba(58,104,160,0.15)' : '1px solid transparent' }}>
-      <div className="w-9 h-9 rounded-lg flex flex-col items-center justify-center flex-shrink-0"
+    <div className="flex items-center gap-3 py-2.5"
+      style={{ borderBottom: '1px solid var(--card-border)' }}>
+      <div className="w-8 h-8 rounded-lg flex flex-col items-center justify-center flex-shrink-0 text-xs"
         style={{ background: esHoy ? '#3a68a0' : 'var(--muted-bg)', color: esHoy ? '#fff' : 'var(--text-secondary)' }}>
-        <span className="text-[8px] font-bold leading-none">{mes}</span>
-        <span className="text-sm font-black leading-none">{dia}</span>
+        <span className="text-[7px] font-bold leading-none">{mes}</span>
+        <span className="font-black leading-none">{dia}</span>
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{cita.children?.name || 'Paciente'}</p>
-        <p className="text-[11px] flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
-          <Clock size={9} /> {cita.appointment_time?.slice(0, 5)}
-          {esHoy && <span className="font-bold" style={{ color: '#3a68a0' }}> · Hoy</span>}
+        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
+          <Clock size={8} className="inline mr-1" />{cita.appointment_time?.slice(0, 5)}
+          {esHoy && <span className="font-bold ml-1" style={{ color: '#3a68a0' }}>· Hoy</span>}
         </p>
       </div>
-    </div>
-  )
-}
-
-// ─── Actividad item ───────────────────────────────────────────────────────────
-function ActividadItem({ item, locale }: any) {
-  const inicial = item.children?.name?.charAt(0)?.toUpperCase() || '?'
-  const colors = ['#3a68a0', '#2e7a56', '#6355a0', '#b07830', '#c0524a']
-  const color = colors[inicial.charCodeAt(0) % colors.length]
-  return (
-    <div className="flex items-center gap-3 py-2.5 px-1">
-      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black flex-shrink-0 text-white"
-        style={{ background: color }}>
-        {inicial}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.children?.name}</p>
-        <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{item.datos?.objetivo || 'Sesión registrada'}</p>
-      </div>
-      <p className="text-[10px] flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
-        {new Date(item.created_at).toLocaleDateString(toBCP47(locale), { day: '2-digit', month: 'short' })}
-      </p>
     </div>
   )
 }
@@ -129,13 +119,18 @@ function ActividadItem({ item, locale }: any) {
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function DashboardHome({ navigateTo }: { navigateTo: (view: string) => void }) {
   const { t, locale } = useI18n()
-  const toast = useToast()
-  const [stats, setStats] = useState({ pacientes: 0, sesionesHoy: 0, sinSesion30d: 0, mensajesPendientes: 0, analisisIA: 0, completados: 0 })
+
+  const [stats, setStats] = useState({
+    pacientes: 0, sesionesHoy: 0, sinSesion30d: 0,
+    mensajesPendientes: 0, analisisIA: 0, completados7d: 0,
+    programasActivos: 0, objetivosCompletos: 0,
+  })
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
   const [actividadReciente, setActividadReciente] = useState<any[]>([])
   const [alertasClinicas, setAlertasClinicas] = useState<any[]>([])
-  const [bienestarData, setBienestarData] = useState<any[]>([])
-  const [sesionesSemanales, setSesionesSemanales] = useState<number[]>([])
+  const [sesionesSemanales, setSesionesSemanales] = useState<number[]>([0,0,0,0,0,0,0])
+  const [diasLabels, setDiasLabels] = useState<string[]>([])
+  const [progresoPacientes, setProgresoPacientes] = useState<{ name: string; pct: number; color: string }[]>([])
   const [horaActual, setHoraActual] = useState<Date | null>(null)
   const [diaStr, setDiaStr] = useState('')
   const [saludo, setSaludo] = useState('')
@@ -157,49 +152,75 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
   const cargarDatos = async () => {
     const hoy = new Date().toISOString().split('T')[0]
     const hace30 = new Date(Date.now() - 30 * 86400000).toISOString().split('T')[0]
-    const hace7 = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
+
+    // Build 7-day labels
+    const labels: string[] = []
+    const datesArr: string[] = []
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000)
+      labels.push(d.toLocaleDateString('es', { weekday: 'short' }).charAt(0).toUpperCase())
+      datesArr.push(d.toISOString().split('T')[0])
+    }
+    setDiasLabels(labels)
 
     const [
       { count: pacientes },
       { data: citasHoy },
       { data: citas },
       { data: actividad },
-      { data: sesionesRecientes },
-      { data: sesiones7d },
+      { data: sesRecientes },
+      { data: ses7d },
       { data: todosNinos },
       { count: mensajesPendientes },
-      { data: bienestar },
       { data: analisis },
       { data: sesCompletas },
+      { data: programas },
+      { data: objetivos },
     ] = await Promise.all([
       supabase.from('children').select('*', { count: 'exact', head: true }),
       supabase.from('appointments').select('*').eq('appointment_date', hoy).in('status', ['confirmed', 'pending']),
       supabase.from('appointments').select('*, children(name)').gte('appointment_date', hoy).neq('status', 'cancelled').neq('status', 'completed').order('appointment_date').order('appointment_time').limit(5),
-      supabase.from('registro_aba').select('*, children:child_id(name)').order('fecha_sesion', { ascending: false }).limit(6),
+      supabase.from('registro_aba').select('*, children:child_id(name)').order('fecha_sesion', { ascending: false }).limit(5),
       supabase.from('aba_sessions_v2').select('child_id').gte('session_date', hace30),
-      supabase.from('registro_aba').select('fecha_sesion').gte('fecha_sesion', hace7),
+      supabase.from('registro_aba').select('fecha_sesion').gte('fecha_sesion', datesArr[0]),
       supabase.from('children').select('id, name'),
       supabase.from('parent_message_approvals').select('*', { count: 'exact', head: true }).eq('status', 'pending_approval'),
-      supabase.from('parent_forms').select('*').eq('status', 'completed').eq('form_type', 'wellbeing').order('created_at', { ascending: false }).limit(20),
       supabase.from('registro_aba').select('*').gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()).limit(50),
-      supabase.from('appointments').select('*').eq('status', 'completed').gte('appointment_date', hace7),
+      supabase.from('appointments').select('*').eq('status', 'completed').gte('appointment_date', datesArr[0]),
+      supabase.from('programas_aba').select('id, estado, child_id').eq('estado', 'activo'),
+      supabase.from('objetivos_cp').select('id, estado').eq('estado', 'dominado'),
     ])
 
-    // Sesiones por día últimos 7 días
+    // Sesiones por día
     const diasMap: Record<string, number> = {}
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 86400000).toISOString().split('T')[0]
-      diasMap[d] = 0
-    }
-    ;(sesiones7d || []).forEach((s: any) => { if (diasMap[s.fecha_sesion] !== undefined) diasMap[s.fecha_sesion]++ })
+    datesArr.forEach(d => { diasMap[d] = 0 })
+    ;(ses7d || []).forEach((s: any) => { if (diasMap[s.fecha_sesion] !== undefined) diasMap[s.fecha_sesion]++ })
     setSesionesSemanales(Object.values(diasMap))
 
-    const conSesion = new Set((sesionesRecientes || []).map((s: any) => s.child_id))
+    // Pacientes sin sesión
+    const conSesion = new Set((sesRecientes || []).map((s: any) => s.child_id))
     const sinSesion = (todosNinos || []).filter((n: any) => !conSesion.has(n.id))
 
-    const alertas: any[] = sinSesion.slice(0, 3).map((n: any) => ({
-      tipo: 'sin_sesion', paciente: n.name, mensaje: 'Sin sesión en los últimos 30 días. Revisa si hubo cancelaciones.'
+    // Alertas
+    const alertas = sinSesion.slice(0, 4).map((n: any) => ({
+      tipo: 'sin_sesion', paciente: n.name,
+      mensaje: 'Sin sesión en los últimos 30 días.'
     }))
+
+    // Progreso top pacientes — sesiones últimos 30d por paciente
+    const sesMap: Record<string, { name: string; count: number }> = {}
+    ;(actividad || []).forEach((a: any) => {
+      const id = a.child_id || a.children?.id
+      const name = a.children?.name || 'Paciente'
+      if (id) { sesMap[id] = sesMap[id] || { name, count: 0 }; sesMap[id].count++ }
+    })
+    const maxSes = Math.max(...Object.values(sesMap).map(v => v.count), 1)
+    const colors = ['#3a68a0', '#2e7a56', '#6355a0', '#b07830', '#c0524a']
+    setProgresoPacientes(
+      Object.values(sesMap).sort((a, b) => b.count - a.count).slice(0, 4).map((v, i) => ({
+        name: v.name, pct: Math.round((v.count / maxSes) * 100), color: colors[i % colors.length]
+      }))
+    )
 
     setStats({
       pacientes: pacientes || 0,
@@ -207,180 +228,145 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       sinSesion30d: sinSesion.length,
       mensajesPendientes: mensajesPendientes || 0,
       analisisIA: analisis?.length || 0,
-      completados: sesCompletas?.length || 0,
+      completados7d: sesCompletas?.length || 0,
+      programasActivos: programas?.length || 0,
+      objetivosCompletos: objetivos?.length || 0,
     })
     setProximasCitas(citas || [])
     setActividadReciente(actividad || [])
     setAlertasClinicas(alertas)
-    setBienestarData(bienestar || [])
   }
 
-  const diasSemana = ['D', 'L', 'M', 'X', 'J', 'V', 'S']
-    .slice(new Date().getDay() + 1).concat(['D', 'L', 'M', 'X', 'J', 'V', 'S'].slice(0, new Date().getDay() + 1))
+  const tasaAsistencia = stats.pacientes > 0
+    ? Math.round(((stats.pacientes - stats.sinSesion30d) / stats.pacientes) * 100)
+    : 0
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
+    <div className="space-y-4 max-w-7xl mx-auto">
 
       {/* ── HERO ── */}
-      <div className="rounded-2xl overflow-hidden relative"
-        style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-        {/* Accent strip */}
-        <div className="h-1" style={{ background: 'linear-gradient(90deg, #3a68a0, #6355a0, #2e7a56)' }} />
-        <div className="p-5 flex items-center justify-between gap-4 flex-wrap">
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+        <div className="h-0.5" style={{ background: 'linear-gradient(90deg, #3a68a0 0%, #6355a0 50%, #2e7a56 100%)' }} />
+        <div className="p-4 flex items-center justify-between gap-4 flex-wrap">
           <div>
-            <p className="text-xs font-medium capitalize mb-1" style={{ color: 'var(--text-muted)' }}>{diaStr}</p>
-            <h2 className="text-xl font-black leading-tight" style={{ color: 'var(--text-primary)' }}>
-              {saludo}, Directora 👋
-            </h2>
-            <div className="flex flex-wrap items-center gap-3 mt-2">
-              <div className="flex items-center gap-1.5 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-                <Calendar size={12} />
-                <span>{stats.sesionesHoy} citas hoy</span>
-              </div>
+            <p className="text-xs capitalize mb-0.5" style={{ color: 'var(--text-muted)' }}>{diaStr}</p>
+            <h2 className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>{saludo}, Directora 👋</h2>
+            <div className="flex flex-wrap items-center gap-2 mt-1.5">
+              <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--text-muted)' }}>
+                <Calendar size={11} /> {stats.sesionesHoy} citas hoy
+              </span>
               {stats.sinSesion30d > 0 && (
-                <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full"
-                  style={{ background: 'rgba(176,120,48,0.1)', color: '#b07830', border: '1px solid rgba(176,120,48,0.25)' }}>
-                  <AlertCircle size={10} />
-                  {stats.sinSesion30d} sin sesión reciente
-                </div>
+                <span className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(176,120,48,0.1)', color: '#b07830', border: '1px solid rgba(176,120,48,0.2)' }}>
+                  <AlertCircle size={10} /> {stats.sinSesion30d} sin sesión
+                </span>
               )}
               {stats.mensajesPendientes > 0 && (
-                <div className="flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full"
-                  style={{ background: 'rgba(58,104,160,0.1)', color: '#3a68a0', border: '1px solid rgba(58,104,160,0.25)' }}>
-                  <MessageCircle size={10} />
-                  {stats.mensajesPendientes} mensajes pendientes
-                </div>
+                <button onClick={() => navigateTo('mensajes')}
+                  className="flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(99,85,160,0.1)', color: '#6355a0', border: '1px solid rgba(99,85,160,0.2)' }}>
+                  <MessageCircle size={10} /> {stats.mensajesPendientes} mensajes
+                </button>
               )}
             </div>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-4xl font-black tabular-nums leading-none" style={{ color: 'var(--text-primary)' }}>
+            <p className="text-3xl font-black tabular-nums" style={{ color: 'var(--text-primary)' }}>
               {horaActual ? horaActual.toLocaleTimeString(toBCP47(locale), { hour: '2-digit', minute: '2-digit' }) : '--:--'}
             </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-              {horaActual ? horaActual.toLocaleDateString(toBCP47(locale), { weekday: 'short' }) : ''} · {horaActual?.getSeconds()}s
-            </p>
+            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{horaActual?.getSeconds()}s</p>
           </div>
         </div>
       </div>
 
       {/* ── KPIs ── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
-        <KPICard label="Pacientes activos"   value={stats.pacientes}          sub="Total registrados" icon={Users}          bar="#3a68a0" onClick={() => navigateTo('ninos')} />
-        <KPICard label="Sesiones hoy"        value={stats.sesionesHoy}        sub="Por realizar"      icon={Calendar}       bar="#2e7a56" onClick={() => navigateTo('agenda')} />
-        <KPICard label="Sin sesión (30d)"    value={stats.sinSesion30d}       sub="Requieren atención" icon={AlertTriangle}  bar="#b07830" urgent={stats.sinSesion30d > 0} onClick={() => navigateTo('ninos')} />
-        <KPICard label="Mensajes pendientes" value={stats.mensajesPendientes} sub="Sin revisar"        icon={MessageCircle}  bar="#6355a0" urgent={stats.mensajesPendientes > 2} onClick={() => navigateTo('mensajes')} />
+        <KPICard label="Pacientes" value={stats.pacientes} sub="Total registrados" icon={Users} bar="#3a68a0" onClick={() => navigateTo('ninos')} />
+        <KPICard label="Sesiones hoy" value={stats.sesionesHoy} sub="Citas agendadas" icon={Calendar} bar="#2e7a56" onClick={() => navigateTo('agenda')} />
+        <KPICard label="Sin sesión 30d" value={stats.sinSesion30d} sub="Requieren seguimiento" icon={AlertTriangle} bar="#b07830" urgent={stats.sinSesion30d > 0} onClick={() => navigateTo('ninos')} />
+        <KPICard label="Programas activos" value={stats.programasActivos} sub="En intervención ABA" icon={Target} bar="#6355a0" onClick={() => navigateTo('ninos')} />
       </div>
 
-      {/* ── ACTIVIDAD SEMANAL ── */}
+      {/* ── ROW 2: Métricas clínicas ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+
         {/* Sesiones 7 días */}
         <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Sesiones últimos 7 días</p>
-              <p className="text-2xl font-black mt-0.5" style={{ color: 'var(--text-primary)' }}>
-                {sesionesSemanales.reduce((a, b) => a + b, 0)}
-              </p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Sesiones — últimos 7 días</p>
+            <span className="text-lg font-black" style={{ color: '#3a68a0' }}>
+              {sesionesSemanales.reduce((a, b) => a + b, 0)}
+            </span>
+          </div>
+          <BarChart values={sesionesSemanales} color="#3a68a0" labels={diasLabels} />
+        </div>
+
+        {/* Tasa de retención */}
+        <div className="rounded-xl p-4 flex items-center gap-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+          <DonutChart value={stats.pacientes - stats.sinSesion30d} total={stats.pacientes} color="#2e7a56" size={64} />
+          <div>
+            <p className="text-[10px] font-black uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Retención activa</p>
+            <p className="text-xl font-black" style={{ color: 'var(--text-primary)' }}>
+              {stats.pacientes - stats.sinSesion30d}<span className="text-sm font-medium ml-1" style={{ color: 'var(--text-muted)' }}>/ {stats.pacientes}</span>
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>pacientes con sesión reciente</p>
+            <div className="flex items-center gap-1 mt-1.5">
+              <div className="w-1.5 h-1.5 rounded-full" style={{ background: stats.objetivosCompletos > 0 ? '#2e7a56' : 'var(--text-muted)' }} />
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{stats.objetivosCompletos} objetivos dominados</span>
             </div>
-            <MiniSparkline values={sesionesSemanales} color="#3a68a0" />
-          </div>
-          <div className="flex items-end gap-1 h-8">
-            {sesionesSemanales.map((v, i) => {
-              const max = Math.max(...sesionesSemanales, 1)
-              const isToday = i === sesionesSemanales.length - 1
-              return (
-                <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                  <div className="w-full rounded-sm transition-all"
-                    style={{ height: `${Math.max(3, (v / max) * 28)}px`, background: isToday ? '#3a68a0' : 'var(--muted-bg)' }} />
-                </div>
-              )
-            })}
-          </div>
-          <div className="flex mt-1">
-            {diasSemana.slice(-7).map((d, i) => (
-              <div key={i} className="flex-1 text-center text-[9px]" style={{ color: 'var(--text-muted)' }}>{d}</div>
-            ))}
           </div>
         </div>
 
-        {/* Completados esta semana */}
+        {/* Progreso pacientes top */}
         <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <p className="text-[10px] font-black uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Citas completadas (7d)</p>
-          <p className="text-2xl font-black mb-3" style={{ color: 'var(--text-primary)' }}>{stats.completados}</p>
-          <div className="space-y-2">
-            {[
-              { label: 'Tasa de asistencia', pct: stats.sesionesHoy > 0 ? Math.round((stats.completados / Math.max(stats.pacientes, 1)) * 100) : 0, color: '#2e7a56' },
-              { label: 'Pacientes con sesión', pct: stats.pacientes > 0 ? Math.round(((stats.pacientes - stats.sinSesion30d) / stats.pacientes) * 100) : 0, color: '#3a68a0' },
-            ].map(({ label, pct, color }) => (
-              <div key={label}>
-                <div className="flex items-center justify-between text-[10px] mb-1">
-                  <span style={{ color: 'var(--text-muted)' }}>{label}</span>
-                  <span className="font-black" style={{ color }}>{pct}%</span>
-                </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--muted-bg)' }}>
-                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bienestar padres */}
-        <div className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <p className="text-[10px] font-black uppercase tracking-wide mb-3" style={{ color: 'var(--text-muted)' }}>Bienestar de familias</p>
-          {bienestarData.length > 0 ? (
-            <>
-              <p className="text-2xl font-black mb-3" style={{ color: 'var(--text-primary)' }}>{bienestarData.length} <span className="text-sm font-medium" style={{ color: 'var(--text-muted)' }}>respuestas</span></p>
-              <div className="space-y-2">
-                {[
-                  { label: 'Con energía',     count: bienestarData.filter(d => (d.responses?.answer || '').includes('Bien')).length,     color: '#2e7a56' },
-                  { label: 'Regular',         count: bienestarData.filter(d => (d.responses?.answer || '').includes('Regular')).length,  color: '#b07830' },
-                  { label: 'Necesita apoyo',  count: bienestarData.filter(d => (d.responses?.answer || '').includes('Difícil')).length,  color: '#c0524a' },
-                ].map(({ label, count, color }) => (
-                  <div key={label} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: color }} />
-                      <span className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{label}</span>
-                    </div>
-                    <span className="text-xs font-black ml-2" style={{ color }}>{count}</span>
+          <p className="text-[10px] font-black uppercase tracking-wide mb-3" style={{ color: 'var(--text-muted)' }}>Actividad por paciente</p>
+          {progresoPacientes.length > 0 ? (
+            <div className="space-y-2.5">
+              {progresoPacientes.map(({ name, pct, color }) => (
+                <div key={name}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-semibold truncate" style={{ color: 'var(--text-primary)', maxWidth: '70%' }}>{name}</span>
+                    <span className="text-[10px] font-black" style={{ color }}>{pct}%</span>
                   </div>
-                ))}
-              </div>
-            </>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--muted-bg)' }}>
+                    <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, background: color }} />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : (
-            <div className="flex flex-col items-center justify-center h-16">
-              <Heart size={20} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
-              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin datos este mes</p>
+            <div className="flex flex-col items-center py-4">
+              <Activity size={20} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
+              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin actividad reciente</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── ALERTAS + ACCIONES ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      {/* ── ROW 3: Alertas + Citas + Actividad ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
 
-        {/* Alertas clínicas */}
-        <div className="lg:col-span-1 rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+        {/* Alertas */}
+        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <div className="flex items-center gap-2">
-              <Bell size={13} style={{ color: 'var(--text-muted)' }} />
+              <Bell size={12} style={{ color: 'var(--text-muted)' }} />
               <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Alertas Clínicas</p>
             </div>
             {alertasClinicas.length > 0 && (
               <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(176,120,48,0.12)', color: '#b07830', border: '1px solid rgba(176,120,48,0.25)' }}>
-                {alertasClinicas.length} nueva(s)
+                style={{ background: 'rgba(176,120,48,0.1)', color: '#b07830', border: '1px solid rgba(176,120,48,0.2)' }}>
+                {alertasClinicas.length}
               </span>
             )}
           </div>
           <div className="p-3 space-y-2">
             {alertasClinicas.length > 0
-              ? alertasClinicas.map((a, i) => <AlertaClinica key={i} {...a} onClick={() => navigateTo(a.tipo === 'bienestar_bajo' ? 'mensajes' : 'ninos')} />)
+              ? alertasClinicas.map((a, i) => <AlertaRow key={i} {...a} onClick={() => navigateTo('ninos')} />)
               : (
-                <div className="flex flex-col items-center py-6">
-                  <CheckCircle2 size={24} style={{ color: '#2e7a56', opacity: 0.5 }} />
-                  <p className="text-xs mt-2 font-medium" style={{ color: 'var(--text-muted)' }}>Sin alertas activas</p>
+                <div className="flex flex-col items-center py-5">
+                  <CheckCircle2 size={20} style={{ color: '#2e7a56', opacity: 0.5 }} />
+                  <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin alertas activas</p>
                 </div>
               )
             }
@@ -391,110 +377,85 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <div className="flex items-center gap-2">
-              <Calendar size={13} style={{ color: 'var(--text-muted)' }} />
+              <Calendar size={12} style={{ color: 'var(--text-muted)' }} />
               <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Próximas Citas</p>
             </div>
-            <span className="text-[10px] font-semibold" style={{ color: 'var(--text-muted)' }}>{proximasCitas.length} agendadas</span>
-          </div>
-          <div className="p-3">
-            {proximasCitas.length > 0
-              ? <>
-                  {proximasCitas.map((c, i) => <CitaRow key={i} cita={c} />)}
-                  <button onClick={() => navigateTo('agenda')}
-                    className="w-full mt-2 py-2 text-xs font-semibold rounded-lg transition-all"
-                    style={{ color: '#3a68a0', background: 'rgba(58,104,160,0.06)' }}>
-                    Ver agenda completa →
-                  </button>
-                </>
-              : (
-                <div className="flex flex-col items-center py-8">
-                  <Calendar size={24} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
-                  <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin citas agendadas</p>
-                  <button onClick={() => navigateTo('agenda')}
-                    className="mt-3 text-xs font-bold" style={{ color: '#3a68a0' }}>
-                    Agendar ahora →
-                  </button>
-                </div>
-              )
-            }
-          </div>
-        </div>
-
-        {/* Acciones rápidas */}
-        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <div className="px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
-            <div className="flex items-center gap-2">
-              <Zap size={13} style={{ color: 'var(--text-muted)' }} />
-              <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Acciones Rápidas</p>
-            </div>
-          </div>
-          <div className="p-3 space-y-2">
-            {[
-              { label: 'Nueva Evaluación',  icon: FileText,      view: 'evaluaciones', bar: '#3a68a0' },
-              { label: 'Agendar Cita',      icon: Calendar,      view: 'agenda',       bar: '#2e7a56' },
-              { label: 'Ver Pacientes',     icon: Users,         view: 'ninos',        bar: '#6355a0' },
-              { label: 'Hub IA',            icon: Brain,         view: 'hub-ia',       bar: '#b07830' },
-              { label: 'Reportes Word',     icon: FileText,      view: 'reportes',     bar: '#64748b' },
-            ].map(({ label, icon: Icon, view, bar }) => (
-              <button key={view} onClick={() => navigateTo(view)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all hover:opacity-80"
-                style={{ background: 'var(--muted-bg)', color: 'var(--text-primary)', border: '1px solid var(--card-border)', borderLeft: `3px solid ${bar}` }}>
-                <div className="flex items-center gap-2.5">
-                  <Icon size={14} style={{ color: bar }} />
-                  {label}
-                </div>
-                <ChevronRight size={13} style={{ color: 'var(--text-muted)' }} />
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* ── ACTIVIDAD RECIENTE + BANNER IA ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
-            <div className="flex items-center gap-2">
-              <Activity size={13} style={{ color: 'var(--text-muted)' }} />
-              <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Actividad Reciente</p>
-            </div>
-          </div>
-          <div className="px-4 divide-y" style={{ borderColor: 'var(--card-border)' }}>
-            {actividadReciente.length > 0
-              ? actividadReciente.map((a, i) => <ActividadItem key={i} item={a} locale={locale} />)
-              : (
-                <div className="flex flex-col items-center py-8">
-                  <Activity size={24} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
-                  <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin actividad reciente</p>
-                </div>
-              )
-            }
-          </div>
-        </div>
-
-        {/* Banner IA */}
-        <div className="rounded-xl p-5 flex flex-col justify-between"
-          style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
-          <div>
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-              style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-              <Brain size={18} style={{ color: 'var(--text-secondary)' }} />
-            </div>
-            <p className="font-black text-sm mb-1" style={{ color: 'var(--text-primary)' }}>Hub de Inteligencia</p>
-            <p className="text-xs leading-relaxed mb-4" style={{ color: 'var(--text-muted)' }}>
-              {stats.analisisIA} registros procesados esta semana. Detecta patrones, genera reportes y predice progreso clínico.
-            </p>
-          </div>
-          <div className="space-y-2">
-            <button onClick={() => navigateTo('hub-ia')}
-              className="w-full py-2.5 rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2"
-              style={{ background: 'var(--text-primary)', color: 'var(--card)' }}>
-              <Sparkles size={14} /> Abrir Hub IA
+            <button onClick={() => navigateTo('agenda')}
+              className="text-[10px] font-semibold flex items-center gap-1"
+              style={{ color: '#3a68a0' }}>
+              Ver agenda <ArrowUpRight size={10} />
             </button>
-            <button onClick={() => navigateTo('reportes')}
-              className="w-full py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2"
-              style={{ background: 'var(--card)', color: 'var(--text-secondary)', border: '1px solid var(--card-border)' }}>
-              <BarChart3 size={14} /> Ver Reportes
+          </div>
+          <div className="px-4">
+            {proximasCitas.length > 0
+              ? proximasCitas.map((c, i) => <CitaRow key={i} cita={c} />)
+              : (
+                <div className="flex flex-col items-center py-8">
+                  <Calendar size={20} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
+                  <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>Sin citas agendadas</p>
+                  <button onClick={() => navigateTo('agenda')} className="mt-2 text-xs font-bold" style={{ color: '#3a68a0' }}>
+                    Agendar →
+                  </button>
+                </div>
+              )
+            }
+          </div>
+        </div>
+
+        {/* Actividad + Hub IA */}
+        <div className="flex flex-col gap-3">
+          {/* Actividad reciente */}
+          <div className="rounded-xl overflow-hidden flex-1" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+            <div className="flex items-center gap-2 px-4 py-3" style={{ borderBottom: '1px solid var(--card-border)' }}>
+              <Activity size={12} style={{ color: 'var(--text-muted)' }} />
+              <p className="text-[10px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Última Actividad</p>
+            </div>
+            <div className="divide-y" style={{ borderColor: 'var(--card-border)' }}>
+              {actividadReciente.length > 0
+                ? actividadReciente.slice(0, 3).map((a, i) => {
+                    const inicial = a.children?.name?.charAt(0)?.toUpperCase() || '?'
+                    const colors = ['#3a68a0','#2e7a56','#6355a0','#b07830']
+                    const color = colors[inicial.charCodeAt(0) % colors.length]
+                    return (
+                      <div key={i} className="flex items-center gap-3 px-4 py-2.5">
+                        <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                          style={{ background: color }}>
+                          {inicial}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{a.children?.name}</p>
+                          <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{a.datos?.objetivo || 'Sesión ABA'}</p>
+                        </div>
+                        <p className="text-[9px] flex-shrink-0" style={{ color: 'var(--text-muted)' }}>
+                          {new Date(a.created_at).toLocaleDateString(toBCP47(locale), { day: '2-digit', month: 'short' })}
+                        </p>
+                      </div>
+                    )
+                  })
+                : (
+                  <div className="flex flex-col items-center py-5">
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin actividad reciente</p>
+                  </div>
+                )
+              }
+            </div>
+          </div>
+
+          {/* Hub IA mini banner */}
+          <div className="rounded-xl p-4 flex items-center gap-3"
+            style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
+            <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+              style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+              <Brain size={16} style={{ color: 'var(--text-secondary)' }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>Hub IA</p>
+              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{stats.analisisIA} registros · {stats.objetivosCompletos} dominados</p>
+            </div>
+            <button onClick={() => navigateTo('inteligencia')}
+              className="flex-shrink-0 flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-lg transition-all"
+              style={{ background: 'var(--text-primary)', color: 'var(--card)' }}>
+              <Sparkles size={11} /> Abrir
             </button>
           </div>
         </div>
