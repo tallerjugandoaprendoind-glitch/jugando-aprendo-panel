@@ -125,6 +125,8 @@ export default function AdminDashboard() {
   const [userId, setUserId] = useState('')
   const [ariaOpen, setAriaOpen] = useState(false)
   const [activeChild, setActiveChild] = useState<{id: string, name: string} | null>(null)
+  // Clear patient context when leaving patients view
+  useEffect(() => { if (currentView !== 'ninos') setActiveChild(null) }, [currentView])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }) => {
@@ -560,7 +562,7 @@ export default function AdminDashboard() {
                 </p>
                 <div className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"/>
-                  <p className="text-violet-200 text-[10px] font-medium">{activeChild ? `Caso: ${activeChild.name}` : 'Asistente Clínico · Activa'}</p>
+                  <p className="text-violet-200 text-[10px] font-medium">{(currentView === 'ninos' && activeChild) ? `Caso: ${activeChild.name}` : 'Asistente Clínico · Activa'}</p>
                 </div>
               </div>
             </div>
@@ -573,7 +575,10 @@ export default function AdminDashboard() {
           </div>
           {/* Chat */}
           <div className="flex-1 min-h-0">
-            <ARIAFloatingChat userId={userId} childId={activeChild?.id} childName={activeChild?.name} />
+            <ARIAAgentChat userId={userId} compact={true}
+              childId={currentView === 'ninos' ? activeChild?.id : undefined}
+              childName={currentView === 'ninos' ? activeChild?.name : undefined}
+              contexto={currentView === 'ninos' && activeChild ? 'paciente' : 'general'} />
           </div>
         </div>
       )}

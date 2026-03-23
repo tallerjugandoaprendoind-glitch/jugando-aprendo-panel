@@ -1,7 +1,7 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import GraficoProgramaABA from '@/components/graficos/GraficoProgramaABA'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -10,7 +10,7 @@ import {
 import {
   Plus, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp,
   Target, BarChart3, BarChart2, Edit3, CheckCircle2, AlertTriangle, Clock,
-  Loader2, X, Save, Activity, Zap, Brain, BookOpen, ArrowRight, Timer
+  Loader2, X, Save, Activity, Zap, Brain, BookOpen, ArrowRight
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 
@@ -52,50 +52,21 @@ const AREA_CONFIG: Record<string, { color: string; bg: string; label: string; em
   sensorial:    { color: 'text-pink-700 dark:text-pink-300',   bg: 'bg-pink-50 dark:bg-pink-900/25 border-pink-200 dark:border-pink-800',   label: 'Sensorial',      emoji: '✋' },
 }
 
-// Removed 'seguimiento' — mantenimiento covers it
 const FASE_COLORS: Record<string, string> = {
   linea_base: '#94a3b8', intervencion: '#6366f1',
-  mantenimiento: '#10b981',
-}
-
-// ── Session Timer Hook ───────────────────────────────────────────────────────
-function useSessionTimer() {
-  const [seconds, setSeconds] = useState(0)
-  const [running, setRunning] = useState(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    if (running) {
-      intervalRef.current = setInterval(() => setSeconds(s => s + 1), 1000)
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-    }
-    return () => { if (intervalRef.current) clearInterval(intervalRef.current) }
-  }, [running])
-
-  const toggle = () => setRunning(r => !r)
-  const reset = () => { setRunning(false); setSeconds(0) }
-
-  const fmt = (s: number) => {
-    const h = Math.floor(s / 3600)
-    const m = Math.floor((s % 3600) / 60)
-    const sec = s % 60
-    if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-    return `${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
-  }
-
-  return { seconds, running, toggle, reset, fmt }
+  mantenimiento: '#10b981', seguimiento: '#f59e0b',
 }
 
 export default function ProgramasABAView({ childId, childName }: { childId: string; childName: string }) {
   const toast = useToast()
   const { t } = useI18n()
-  const timer = useSessionTimer()
+
 
   const FASE_LABELS: Record<string, string> = {
-    linea_base:    'Baseline',
+    linea_base:    t('programas.lineaBase'),
     intervencion:  t('programas.intervencion'),
     mantenimiento: t('programas.mantenimiento'),
+    seguimiento:   t('programas.seguimiento'),
   }
   const CHART_TIPO_LABELS: Record<string, string> = {
     lineas:     t('reportes.lineas'),
@@ -187,34 +158,13 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
             <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Registro conductual · {childName}</p>
           </div>
         </div>
-
-        {/* ── Session Timer ── */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ background: 'var(--muted-bg)', border: '1px solid var(--card-border)' }}>
-            <Timer size={13} style={{ color: timer.running ? '#6366f1' : 'var(--text-muted)' }} />
-            <span className={`text-sm font-black tabular-nums ${timer.running ? 'text-indigo-600' : ''}`}
-              style={{ color: timer.running ? '#6366f1' : 'var(--text-muted)', minWidth: '52px' }}>
-              {timer.fmt(timer.seconds)}
-            </span>
-            <button onClick={timer.toggle}
-              className="text-[10px] font-black px-2 py-0.5 rounded-md transition-all"
-              style={{ background: timer.running ? '#fef2f2' : '#f0f4ff', color: timer.running ? '#dc2626' : '#6366f1' }}>
-              {timer.running ? 'Pausar' : timer.seconds > 0 ? 'Reanudar' : 'Iniciar'}
-            </button>
-            {timer.seconds > 0 && (
-              <button onClick={timer.reset} className="text-[10px] font-bold text-slate-400 hover:text-red-400 transition-all">✕</button>
-            )}
-          </div>
-
-          <button onClick={() => setShowCrear(true)}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
-            style={{ background: 'var(--text-primary)', color: 'var(--card)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
-            onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.88'}
-            onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
-            <Plus size={15} /> {t('programas.nuevo')}
-          </button>
-        </div>
+        <button onClick={() => setShowCrear(true)}
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all"
+          style={{ background: 'var(--text-primary)', color: 'var(--card)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}
+          onMouseEnter={e => (e.currentTarget as HTMLElement).style.opacity = '0.88'}
+          onMouseLeave={e => (e.currentTarget as HTMLElement).style.opacity = '1'}>
+          <Plus size={15} /> {t('programas.nuevo')}
+        </button>
       </div>
 
       {/* ── Stats ── */}
@@ -361,20 +311,6 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
     ? ultimoPct > anterior + 3 ? 'up' : ultimoPct < anterior - 3 ? 'down' : 'stable'
     : 'stable'
 
-  // ── Check for criterion streak (2 consecutive sessions at or above criterio) ──
-  const crit = programa.criterio_dominio_pct || 90
-  const critSesiones = programa.criterio_sesiones_consecutivas || 2
-  const criterioAlcanzado = (() => {
-    if (sesiones.length < critSesiones) return false
-    const last = sesiones.slice(-critSesiones)
-    return last.every((s: any) => (s.porcentaje_exito ?? 0) >= crit)
-  })()
-  // Check if 1 away (one session at criterion, one needed)
-  const unaFalta = !criterioAlcanzado && critSesiones >= 2 && sesiones.length >= 1 && (() => {
-    const last = sesiones.slice(-(critSesiones - 1))
-    return last.length === critSesiones - 1 && last.every((s: any) => (s.porcentaje_exito ?? 0) >= crit)
-  })()
-
   const loadDetalle = async () => {
     if (detalle) { setExpanded(!expanded); return }
     setExpanded(true)
@@ -382,8 +318,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
     try {
       const res = await fetch(`/api/programas-aba?id=${programa.id}`)
       const json = await res.json()
+      // Usar el programa actual como fallback si la API no retorna detalle
       setDetalle(json.data || programa)
     } catch {
+      // En caso de error, usar el programa ya cargado como detalle
       setDetalle(programa)
     }
     finally { setLoadingDetalle(false) }
@@ -395,7 +333,6 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
     pct: s.porcentaje_exito,
     fase: s.fase,
     fecha: s.fecha,
-    set: s.set || s.objetivo_set || null,
   }))
 
   // Detectar cambios de fase para líneas verticales
@@ -405,8 +342,8 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
   }
 
   const faseLabel: Record<string, string> = {
-    linea_base: 'Baseline', intervencion: t('programas.intervencion'),
-    mantenimiento: t('programas.mantenimiento'),
+    linea_base: t('programas.lineaBase'), intervencion: t('programas.intervencion'),
+    mantenimiento: t('programas.mantenimiento'), seguimiento: t('programas.seguimiento'),
   }
 
   return (
@@ -424,16 +361,6 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                 {area.label}
               </span>
               <FaseTag fase={programa.fase_actual} />
-              {criterioAlcanzado && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-700 border border-emerald-200">
-                  🏆 Criterio alcanzado
-                </span>
-              )}
-              {unaFalta && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-700 border border-amber-200">
-                  ⚡ ¡Vas bien! Falta 1 sesión
-                </span>
-              )}
             </div>
             <p className="text-xs text-slate-400 mt-1 line-clamp-1">{programa.objetivo_lp}</p>
             <div className="flex items-center gap-4 mt-2">
@@ -494,7 +421,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     <p className="text-xs font-black text-slate-400 uppercase tracking-widest">
                       📈 Gráfica de progreso
                     </p>
-                    {/* Selector de tipo */}
+                    {/* Selector de tipo — solo analista */}
                     <div className="flex gap-1 p-1 rounded-lg" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
                       {([
                         { id: 'lineas'     as const, label: t('reportes.lineas'),     emoji: '📈' },
@@ -536,15 +463,14 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 
                     {/* ── SET band labels (Thread Learning style) ── */}
                     {tipoGrafico === 'lineas' && chartData.length > 0 && (() => {
+                      // Build set bands: consecutive sessions with same 'set' value
                       type Band = { set: string; start: number; end: number; label: string }
                       const bands: Band[] = []
                       let bandStart = 0
-                      let currentSet = chartData[0]?.set || null
+                      let currentSet = chartData[0]?.set || 'Nivel 1'
                       chartData.forEach((d: any, i: number) => {
                         if (d.set !== currentSet || i === chartData.length - 1) {
-                          if (currentSet) {
-                            bands.push({ set: currentSet, start: bandStart, end: i === chartData.length - 1 ? i : i - 1, label: currentSet })
-                          }
+                          bands.push({ set: currentSet, start: bandStart, end: i === chartData.length - 1 ? i : i - 1, label: currentSet || `Nivel ${bands.length + 1}` })
                           currentSet = d.set
                           bandStart = i
                         }
@@ -575,18 +501,13 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 90, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={v => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase}${d.set ? ` · ${d.set}` : ''}` : `Sesión ${label}` }}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${faseLabel[d.fase] || d.fase} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           {cambiosFase.map(x => <ReferenceLine key={x} x={x} stroke="#a5b4fc" strokeDasharray="4 2" strokeWidth={1.5} />)}
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
                             label={{ value: `🏆 ${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
                           <Line type="linear" dataKey="pct" stroke="#6366f1" strokeWidth={2.5}
-                            dot={(props: any) => {
-                              const { cx, cy, payload } = props
-                              const color = (payload.pct ?? 0) >= crit ? '#059669' : '#6366f1'
-                              return <circle key={payload.sesion} cx={cx} cy={cy} r={4} fill={color} stroke="none" />
-                            }}
-                            activeDot={{ r: 6 }} />
+                            dot={{ r: 4, fill: '#6366f1', strokeWidth: 0 }} activeDot={{ r: 6 }} />
                         </LineChart>
                       </ResponsiveContainer>
                     )}
@@ -595,10 +516,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                     {tipoGrafico === 'barras' && chartData.length > 0 && (() => {
                       type Band = { set: string; start: number; end: number }
                       const bands: Band[] = []
-                      let bStart = 0; let cSet = chartData[0]?.set || null
+                      let bStart = 0; let cSet = chartData[0]?.set || 'Nivel 1'
                       chartData.forEach((d: any, i: number) => {
                         if (d.set !== cSet || i === chartData.length - 1) {
-                          if (cSet) bands.push({ set: cSet, start: bStart, end: i === chartData.length - 1 ? i : i - 1 })
+                          bands.push({ set: cSet, start: bStart, end: i === chartData.length - 1 ? i : i - 1 })
                           cSet = d.set; bStart = i
                         }
                       })
@@ -621,7 +542,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           <YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 90, 100]} tick={{ fontSize: 10, fill: "var(--text-muted)" }} tickFormatter={(v: any) => `${v}%`} />
                           <Tooltip
                             formatter={(value: any) => [`${value}%`, 'Éxito']}
-                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `Sesión ${label} · ${d.fecha}${d.set ? ` · ${d.set}` : ''}` : `Sesión ${label}` }}
+                            labelFormatter={(label) => { const d = chartData[label - 1]; return d ? `${t('programas.sesionLabel')} ${label} · ${d.fecha} · ${d.set || ''}` : `${t('programas.sesionLabel')} ${label}` }}
                           />
                           <ReferenceLine y={programa.criterio_dominio_pct} stroke="#10b981" strokeDasharray="6 3" strokeWidth={2}
                             label={{ value: `🏆 ${programa.criterio_dominio_pct}%`, position: 'right', fontSize: 10, fill: '#10b981' }} />
@@ -640,13 +561,13 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 
                     {/* ── Histograma de distribución ── */}
                     {tipoGrafico === 'histograma' && (() => {
-                      const critPct = programa.criterio_dominio_pct
+                      const crit = programa.criterio_dominio_pct
                       const histData = [
                         { rango: '0-25%',   count: chartData.filter((d: any) => d.pct < 26).length,               color: '#DC2626' },
                         { rango: '26-50%',  count: chartData.filter((d: any) => d.pct >= 26 && d.pct < 51).length, color: '#D97706' },
                         { rango: '51-75%',  count: chartData.filter((d: any) => d.pct >= 51 && d.pct < 76).length, color: '#6366f1' },
-                        { rango: '76-89%',  count: chartData.filter((d: any) => d.pct >= 76 && d.pct < critPct).length, color: '#0891B2' },
-                        { rango: `${critPct}%+`, count: chartData.filter((d: any) => d.pct >= critPct).length,            color: '#059669' },
+                        { rango: '76-89%',  count: chartData.filter((d: any) => d.pct >= 76 && d.pct < crit).length, color: '#0891B2' },
+                        { rango: `${crit}%+`, count: chartData.filter((d: any) => d.pct >= crit).length,            color: '#059669' },
                       ]
                       return (
                         <ResponsiveContainer width="100%" height={200}>
@@ -665,10 +586,10 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 
                     {/* ── Pie chart ── */}
                     {tipoGrafico === 'pie' && (() => {
-                      const critPct = programa.criterio_dominio_pct
+                      const crit = programa.criterio_dominio_pct
                       const pieRaw = [
-                        { name: `Criterio (≥${critPct}%)`, value: chartData.filter((d: any) => d.pct >= critPct).length, color: '#059669' },
-                        { name: '70-89%',  value: chartData.filter((d: any) => d.pct >= 70 && d.pct < critPct).length, color: '#6366f1' },
+                        { name: `Criterio (≥${crit}%)`, value: chartData.filter((d: any) => d.pct >= crit).length, color: '#059669' },
+                        { name: '70-89%',  value: chartData.filter((d: any) => d.pct >= 70 && d.pct < crit).length, color: '#6366f1' },
                         { name: '45-69%',  value: chartData.filter((d: any) => d.pct >= 45 && d.pct < 70).length,  color: '#D97706' },
                         { name: '<45%',    value: chartData.filter((d: any) => d.pct < 45).length,                  color: '#DC2626' },
                       ].filter(p => p.value > 0)
@@ -738,7 +659,6 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                       <div key={s.id} className="flex items-center gap-3 rounded-xl p-3 border border-[var(--card-border)] bg-[var(--card)] text-xs">
                         <span className="text-slate-400 w-20 shrink-0">{s.fecha}</span>
                         <FaseTag fase={s.fase} small />
-                        {s.set && <span className="text-indigo-500 font-semibold text-[10px] bg-indigo-50 px-1.5 py-0.5 rounded-md">{s.set}</span>}
                         {s.porcentaje_exito !== null && (
                           <span className={`font-black ${
                             s.porcentaje_exito >= programa.criterio_dominio_pct ? 'text-emerald-600' :
@@ -748,6 +668,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                         {s.oportunidades_totales > 0 && (
                           <span className="text-slate-400">{s.respuestas_correctas}/{s.oportunidades_totales}</span>
                         )}
+                        {s.nivel_ayuda && <span className="text-slate-400 capitalize">{s.nivel_ayuda.replace('_', ' ')}</span>}
                         {s.notas && <span className="text-slate-400 italic flex-1 truncate">{s.notas}</span>}
                       </div>
                     ))}
@@ -781,10 +702,11 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 function FaseTag({ fase, small }: { fase: string; small?: boolean }) {
   const { t } = useI18n()
   const labels: Record<string, { label: string; border: string; color: string }> = {
-    linea_base:    { label: 'Baseline',                         border: '#94a3b8', color: '#64748b' },
-    intervencion:  { label: 'Intervención',                     border: '#4a6eaa', color: '#4a6eaa' },
-    mantenimiento: { label: t('programas.mantenimiento'),       border: '#3a8a60', color: '#3a8a60' },
-    dominado:      { label: t('programas.dominado'),            border: '#3a8a60', color: '#3a8a60' },
+    linea_base:    { label: t('programas.lineaBase'),      border: '#94a3b8', color: '#64748b' },
+    intervencion:  { label: 'Intervención',                border: '#4a6eaa', color: '#4a6eaa' },
+    mantenimiento: { label: t('programas.mantenimiento'),  border: '#3a8a60', color: '#3a8a60' },
+    seguimiento:   { label: 'Seguimiento',                 border: '#9a7020', color: '#9a7020' },
+    dominado:      { label: t('programas.dominado'),       border: '#3a8a60', color: '#3a8a60' },
   }
   const cfg = labels[fase] || { label: fase, border: '#94a3b8', color: '#64748b' }
   return (
@@ -804,7 +726,8 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
     fase: programa.fase_actual || 'intervencion',
     oportunidades_totales: '',
     respuestas_correctas: '',
-    set_activo: '',
+    nivel_ayuda: '',
+    nivel_ayuda_custom: '',
     notas: '',
     fecha: new Date().toISOString().split('T')[0],
   })
@@ -812,26 +735,6 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
   const pct = form.oportunidades_totales && form.respuestas_correctas
     ? ((Number(form.respuestas_correctas) / Number(form.oportunidades_totales)) * 100).toFixed(1)
     : null
-
-  const crit = programa.criterio_dominio_pct || 90
-  const critSesiones = programa.criterio_sesiones_consecutivas || 2
-
-  // Check recent sessions for criterion progress
-  const sesiones = programa.sesiones_datos_aba || []
-  const recentAtCrit = sesiones.slice(-critSesiones + 1).filter((s: any) => (s.porcentaje_exito ?? 0) >= crit).length
-  const currentPctNum = pct ? Number(pct) : null
-  const meetsThisSession = currentPctNum !== null && currentPctNum >= crit
-
-  let criterioMsg = null
-  if (pct) {
-    if (meetsThisSession && recentAtCrit >= critSesiones - 1) {
-      criterioMsg = { type: 'success', msg: `🏆 ¡Criterio alcanzado! ${critSesiones} sesiones consecutivas al ${crit}%` }
-    } else if (meetsThisSession && critSesiones > 1) {
-      const remaining = critSesiones - 1 - recentAtCrit
-      if (remaining === 1) criterioMsg = { type: 'close', msg: `⚡ ¡Vas muy bien! Falta 1 sesión más al ${crit}% para dominar` }
-      else criterioMsg = { type: 'progress', msg: `👍 Buen trabajo, sigue así` }
-    }
-  }
 
   const handleSave = async () => {
     if (!form.oportunidades_totales) {
@@ -853,7 +756,7 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
             oportunidades_totales: Number(form.oportunidades_totales) || 0,
             respuestas_correctas: Number(form.respuestas_correctas) || 0,
             respuestas_incorrectas: Math.max(0, Number(form.oportunidades_totales) - Number(form.respuestas_correctas)),
-            set: form.set_activo || null,
+            nivel_ayuda: form.nivel_ayuda_custom || form.nivel_ayuda,
             notas: form.notas,
           },
         }),
@@ -866,9 +769,6 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
       toast.error(e.message)
     } finally { setSaving(false) }
   }
-
-  // Fetch sets for this program
-  const sets = programa.objetivos_cp || []
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
@@ -894,9 +794,10 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
                 <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">{t('ui.phase')}</label>
                 <select value={form.fase} onChange={e => setForm(f => ({ ...f, fase: e.target.value }))}
                   className="w-full p-3 bg-[var(--input-bg)] border-2 border-[var(--input-border)] rounded-xl text-sm font-bold outline-none focus:border-indigo-400">
-                  <option value="linea_base">Baseline</option>
+                  <option value="linea_base">{t('ui.baseline')}</option>
                   <option value="intervencion">{t('ui.intervention')}</option>
                   <option value="mantenimiento">{t('programas.mantenimiento')}</option>
+                  <option value="seguimiento">{t('ui.follow_up')}</option>
                 </select>
               </div>
             </div>
@@ -920,54 +821,45 @@ function RegistrarSesionModal({ programa, childId, onClose, onSaved }: any) {
               </div>
               {pct && (
                 <div className={`mt-3 text-center py-2 rounded-xl font-black text-2xl ${
-                  Number(pct) >= crit ? 'bg-emerald-100 text-emerald-700' :
+                  Number(pct) >= programa.criterio_dominio_pct ? 'bg-emerald-100 text-emerald-700' :
                   Number(pct) >= 70 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-600'
                 }`}>
                   {pct}%
-                  {Number(pct) >= crit && <span className="text-sm ml-1">✅ Criterio!</span>}
-                </div>
-              )}
-              {criterioMsg && (
-                <div className={`mt-2 text-center py-1.5 px-3 rounded-lg text-xs font-bold ${
-                  criterioMsg.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                  criterioMsg.type === 'close' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                  'bg-slate-50 text-slate-500'
-                }`}>
-                  {criterioMsg.msg}
+                  {Number(pct) >= programa.criterio_dominio_pct && <span className="text-sm ml-1">✅ Criterio!</span>}
                 </div>
               )}
             </div>
 
-            {/* Sets — reemplaza nivel de ayuda */}
-            {sets.length > 0 && (
-              <div>
-                <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">🎯 Set activo</label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {sets.map((s: any) => (
-                    <button key={s.id}
-                      onClick={() => setForm(f => ({ ...f, set_activo: s.numero_set ? `Set ${s.numero_set}` : s.descripcion }))}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
-                        form.set_activo === (s.numero_set ? `Set ${s.numero_set}` : s.descripcion)
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-indigo-300'
-                      }`}>
-                      {s.numero_set ? `Set ${s.numero_set}` : s.descripcion}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  value={form.set_activo}
-                  onChange={e => setForm(f => ({ ...f, set_activo: e.target.value }))}
-                  placeholder="Ej: Set 2, Nivel 3 (opcional)"
-                  className="w-full p-3 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
+
+
+            {/* Nivel de ayuda — texto libre con sugerencias */}
+            <div>
+              <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-2">🤝🏼 {t('programas.nivelAyuda')}</label>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {['Independiente', 'Gesto', 'Verbal', 'Modelado', 'Físico parcial', 'Físico total'].map(nivel => (
+                  <button key={nivel}
+                    onClick={() => setForm(f => ({ ...f, nivel_ayuda: nivel, nivel_ayuda_custom: nivel }))}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
+                      form.nivel_ayuda_custom === nivel
+                        ? 'bg-indigo-600 text-white border-indigo-600'
+                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-indigo-300'
+                    }`}>
+                    {nivel}
+                  </button>
+                ))}
               </div>
-            )}
+              <input
+                value={form.nivel_ayuda_custom}
+                onChange={e => setForm(f => ({ ...f, nivel_ayuda: e.target.value, nivel_ayuda_custom: e.target.value }))}
+                {...{placeholder: t('ui.observations_session')}}
+                className="w-full p-3 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
+            </div>
 
             {/* Notas */}
             <div>
               <label className="text-xs font-black text-slate-400 uppercase tracking-widest block mb-1.5">📝 Notas</label>
               <textarea value={form.notas} onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
-                rows={2} placeholder="Observaciones de la sesión..."
+                rows={2} {...{placeholder: t('ui.session_observations')}}
                 className="w-full p-3 rounded-xl text-sm resize-none outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
             </div>
           </div>
@@ -995,7 +887,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
   const [saving, setSaving] = useState(false)
   const [step, setStep] = useState(1)
   const [form, setForm] = useState({
-    titulo: '', area: 'comunicacion', area_tags: [] as string[], objetivo_lp: '',
+    titulo: '', area: 'comunicacion', objetivo_lp: '',
     sd_estimulo: '', correccion_error: '', reforzadores: '', materiales: '',
     unidad_positiva: '', unidad_negativa: '', generalizacion: 'Promover con la familia que realicen este ejercicio en casa.',
     total_unidades: '10u.', notas_programa: '', drive_url: '',
@@ -1004,12 +896,6 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
   const [objetivos, setObjetivos] = useState([{ descripcion: '' }])
 
   const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }))
-  const toggleAreaTag = (tag: string) => {
-    setForm(f => ({
-      ...f,
-      area_tags: f.area_tags.includes(tag) ? f.area_tags.filter(t => t !== tag) : [...f.area_tags, tag]
-    }))
-  }
 
   const handleSave = async () => {
     if (!form.titulo || !form.objetivo_lp) { toast.error('Título y objetivo son requeridos'); return }
@@ -1033,8 +919,6 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
     } catch (e: any) { toast.error(e.message) }
     finally { setSaving(false) }
   }
-
-  const AREA_TAG_OPTIONS = Object.entries(AREA_CONFIG).map(([k, v]) => ({ key: k, ...v }))
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
@@ -1061,24 +945,15 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                   placeholder={t('programas.placeholderNombre')}
                   className="w-full p-3 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
               </div>
-              {/* Área — texto libre + tags opcionales */}
               <div>
-                <label className="text-xs font-bold text-slate-500 block mb-1.5">{t('programas.area')} *</label>
-                <input value={form.area === 'comunicacion' && form.area_tags.length === 0 ? '' : form.area}
-                  onChange={e => set('area', e.target.value || 'comunicacion')}
-                  placeholder="Ej: Comunicación, Conducta..."
-                  className="w-full rounded-xl text-sm font-bold outline-none transition-all mb-2" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
-                <p className="text-[10px] text-slate-400 mb-1.5">Tags rápidos (opcional):</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {AREA_TAG_OPTIONS.map(({ key, label, emoji }) => (
-                    <button key={key}
-                      onClick={() => { set('area', key); }}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all ${
-                        form.area === key
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-indigo-200'
+                <label className="text-xs font-bold text-slate-500 block mb-2">{t('programas.area')} *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {Object.entries(AREA_CONFIG).map(([k, v]) => (
+                    <button key={k} onClick={() => set('area', k)}
+                      className={`p-2.5 rounded-xl border-2 text-xs font-bold transition-all ${
+                        form.area === k ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-100 text-slate-500 hover:border-indigo-200'
                       }`}>
-                      {emoji} {label}
+                      {v.emoji} {v.label}
                     </button>
                   ))}
                 </div>
@@ -1163,7 +1038,7 @@ function CrearProgramaModal({ childId, onClose, onCreated }: any) {
                     className="w-full p-3 rounded-xl text-sm resize-none outline-none transition-all" style={{ background: 'var(--input-bg)', border: '1.5px solid var(--input-border)', color: 'var(--text-primary)', padding: '10px 14px' }} />
                 </div>
               ))}
-              {/* Total unidades */}
+              {/* Total unidades — fijo en 10 pero editable */}
               <div>
                 <label className="text-xs font-bold text-slate-500 block mb-1">📍 Total</label>
                 <input value={(form as any).total_unidades ?? '10u.'} onChange={e => set('total_unidades', e.target.value)}
