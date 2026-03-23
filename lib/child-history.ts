@@ -56,6 +56,19 @@ export async function getChildHistory(childId: string, fallbackName?: string, fa
       .order('fecha_sesion', { ascending: false })
       .limit(5)
 
+    // 2b. Programas ABA activos con sus objetivos (Sets) y últimas sesiones
+    const { data: programasAba } = await supabaseAdmin
+      .from('programas_aba')
+      .select(`
+        id, titulo, objetivo_lp, area, fase_actual, estado, criterio_dominio_pct,
+        objetivos_cp(numero_set, descripcion, estado),
+        sesiones_datos_aba(fecha, porcentaje_exito, fase, nivel_ayuda, notas)
+      `)
+      .eq('child_id', childId)
+      .in('estado', ['activo', 'en_progreso', 'mantenimiento'])
+      .order('updated_at', { ascending: false })
+      .limit(6)
+
     // 3. Anamnesis más reciente
     const { data: anamnesis } = await supabaseAdmin
       .from('anamnesis_completa')
@@ -120,6 +133,31 @@ export async function getChildHistory(childId: string, fallbackName?: string, fa
       if (motivo || antecedentes) {
         partes.push(`Anamnesis (${new Date((anamnesis as any).fecha_creacion).toLocaleDateString('es-PE')}):\n  Motivo: ${motivo || 'N/E'}\n  Antecedentes: ${antecedentes || 'N/E'}`)
       }
+    }
+
+    if (programasAba && programasAba.length > 0) {
+      const progTexto = (programasAba as any[]).map(p => {
+        const sets = (p.objetivos_cp || [])
+          .sort((a: any, b: any) => a.numero_set - b.numero_set)
+          .map((o: any) => `    Set ${o.numero_set}: ${o.descripcion} [${o.estado || 'pendiente'}]`)
+          .join('\n')
+
+        const sesiones = (p.sesiones_datos_aba || [])
+          .sort((a: any, b: any) => (b.fecha || '').localeCompare(a.fecha || ''))
+          .slice(0, 5)
+          .map((s: any) => `    ${s.fecha}: ${s.porcentaje_exito ?? '?'}% | ${s.fase || ''} | Ayuda: ${s.nivel_ayuda || 'N/E'}${s.notas ? ` | ${s.notas}` : ''}`)
+          .join('\n')
+
+        const ultimoPct = (p.sesiones_datos_aba || [])
+          .sort((a: any, b: any) => (b.fecha || '').localeCompare(a.fecha || ''))[0]?.porcentaje_exito
+
+        return `  Programa: ${p.titulo} [Área: ${p.area || 'N/E'} | Fase: ${p.fase_actual || 'N/E'} | Criterio: ${p.criterio_dominio_pct}%${ultimoPct !== undefined ? ` | Último: ${ultimoPct}%` : ''}]
+  Objetivo largo plazo: ${p.objetivo_lp || 'N/E'}
+${sets ? `  Objetivos/Sets CP:\n${sets}` : ''}
+${sesiones ? `  Últimas sesiones:\n${sesiones}` : ''}`
+      }).join('\n\n')
+
+      partes.push(`Programas ABA activos (${programasAba.length}):\n${progTexto}`)
     }
 
     if (sesionesAba && sesionesAba.length > 0) {
