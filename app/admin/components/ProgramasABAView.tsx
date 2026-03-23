@@ -242,6 +242,8 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
               programa={prog}
               onRegistrarSesion={() => { setProgramaActivo(prog); setShowRegistrarSesion(true) }}
               onReload={loadProgramas}
+              tipoGrafico={tiposGrafico[prog.id] || 'lineas'}
+              onChangeTipoGrafico={(tipo: TipoGrafico) => setTipoGrafico(prog.id, tipo)}
             />
           ))}
         </div>
