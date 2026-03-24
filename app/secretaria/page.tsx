@@ -131,7 +131,7 @@ export default function SecretariaDashboard() {
     if (!profile) return null
     switch (activeView) {
       case 'inicio':     return <SecretariaHome onNavigate={setActiveView} />
-      case 'agenda':     return <SecretariaAgenda />
+      case 'agenda':     return <SecretariaAgenda profile={profile} />
       case 'cronograma': return <SecretariaCronograma />
       case 'reportes':   return <SecretariaReportes />
       case 'perfil':     return <SecretariaPerfil profile={profile} onUpdate={loadProfile} />

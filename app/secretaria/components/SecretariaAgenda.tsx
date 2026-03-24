@@ -5,30 +5,56 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   Calendar, ChevronLeft, ChevronRight, Plus, X, Loader2,
   Clock, User, Users, MapPin, Video, CheckCircle2, Trash2,
-  Edit2, RefreshCw, Search, Filter, AlertTriangle
+  Edit2, RefreshCw, Search, Bell, CalendarDays, FileText,
+  Phone, TrendingUp, MoreHorizontal, CheckCheck
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+const MESES_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const DIAS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
 const STATUS_CFG: Record<string, { label: string; color: string; bg: string; dot: string }> = {
-  confirmed: { label: 'Confirmada',  color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' },
-  pending:   { label: 'Pendiente',   color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',     dot: 'bg-amber-400' },
-  cancelled: { label: 'Cancelada',   color: 'text-red-700',     bg: 'bg-red-50 border-red-200',         dot: 'bg-red-400' },
-  completed: { label: 'Completada',  color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',       dot: 'bg-blue-500' },
+  confirmed: { label: 'Confirmada', color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', dot: 'bg-emerald-500' },
+  pending:   { label: 'Pendiente',  color: 'text-amber-700',   bg: 'bg-amber-50 border-amber-200',     dot: 'bg-amber-400' },
+  cancelled: { label: 'Cancelada',  color: 'text-red-600',     bg: 'bg-red-50 border-red-200',         dot: 'bg-red-400' },
+  completed: { label: 'Completada', color: 'text-blue-700',    bg: 'bg-blue-50 border-blue-200',       dot: 'bg-blue-500' },
 }
 
 const SERVICES = [
   'Terapia ABA','Evaluación Inicial','Seguimiento BRIEF-2','Evaluación ADOS-2',
   'Evaluación Vineland-3','Evaluación WISC-V','Evaluación BASC-3',
-  'Sesión Familiar','Sesión de Orientación','Visita Domiciliaria'
+  'Sesión Familiar','Sesión de Orientación','Visita Domiciliaria',
 ]
 
-export default function SecretariaAgenda() {
+const HORARIOS = [
+  '08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30',
+  '12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30',
+  '16:00','16:30','17:00','17:30','18:00','18:30',
+]
+
+async function notifyAdmin(action: string, appointment: any, childName: string, secretariaName: string) {
+  try {
+    await fetch('/api/appointments/notify-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action, appointment, childName, secretariaName }),
+    })
+  } catch { /* silencioso */ }
+}
+
+function formatHour(timeStr: string) {
+  if (!timeStr) return ''
+  const [h, m] = timeStr.split(':').map(Number)
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`
+}
+
+export default function SecretariaAgenda({ profile }: { profile?: any }) {
   const toast = useToast()
   const { t } = useI18n()
+
   const [mes, setMes] = useState<Date>(new Date())
   const [apts, setApts] = useState<any[]>([])
   const [ninos, setNinos] = useState<any[]>([])
@@ -37,29 +63,33 @@ export default function SecretariaAgenda() {
   const [showForm, setShowForm] = useState(false)
   const [editingApt, setEditingApt] = useState<any>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [filterStatus, setFilterStatus] = useState('todos')
   const [searchText, setSearchText] = useState('')
+  const [filterStatus, setFilterStatus] = useState('todos')
+  const [activeMenu, setActiveMenu] = useState<string | null>(null)
 
   const emptyForm = {
     child_id: '', service: SERVICES[0], date: '', time: '',
-    status: 'confirmed', notes: '', modality: 'presencial',
-    session_type: 'individual'
+    status: 'confirmed', notes: '', modality: 'presencial', session_type: 'individual'
   }
   const [form, setForm] = useState(emptyForm)
+
+  const year = mes.getFullYear()
+  const month = mes.getMonth()
+  const todayStr = new Date().toISOString().split('T')[0]
 
   const cargar = useCallback(async () => {
     setLoading(true)
     try {
       const [{ data: aptsData }, { data: ninosData }] = await Promise.all([
         supabase.from('appointments')
-          .select('*, children(name, profiles!children_parent_id_fkey(full_name, phone))')
+          .select('*, children(name, profiles!children_parent_id_fkey(full_name, phone, email))')
           .order('appointment_date').order('appointment_time'),
-        supabase.from('children').select('id, name').eq('is_active', true).order('name')
+        supabase.from('children').select('id, name').eq('is_active', true).order('name'),
       ])
       setApts(aptsData || [])
       setNinos(ninosData || [])
     } catch (e: any) {
-      toast.error('Error: ' + e.message)
+      toast.error('Error cargando datos: ' + e.message)
     } finally {
       setLoading(false)
     }
@@ -67,21 +97,24 @@ export default function SecretariaAgenda() {
 
   useEffect(() => { cargar() }, [cargar])
 
-  // Calendar grid
-  const year = mes.getFullYear()
-  const month = mes.getMonth()
-  const firstDay = new Date(year, month, 1).getDay()
+  const todayApts    = apts.filter(a => a.appointment_date === todayStr && a.status !== 'cancelled')
+  const upcomingApts = apts.filter(a => a.appointment_date >= todayStr && a.status !== 'cancelled')
+  const monthApts    = apts.filter(a => { const [y,m] = a.appointment_date.split('-').map(Number); return y===year && m===month+1 })
+  const pendingApts  = apts.filter(a => a.status === 'pending')
+
+  const firstDay    = new Date(year, month, 1).getDay()
   const daysInMonth = new Date(year, month + 1, 0).getDate()
 
   const getDayApts = (day: number) => {
-    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
     return apts.filter(a => a.appointment_date === dateStr)
   }
 
   const selectedApts = diaSeleccionado
-    ? apts.filter(a => a.appointment_date === diaSeleccionado
-        && (filterStatus === 'todos' || a.status === filterStatus)
-        && (searchText === '' || a.children?.name?.toLowerCase().includes(searchText.toLowerCase()))
+    ? apts.filter(a =>
+        a.appointment_date === diaSeleccionado &&
+        (filterStatus === 'todos' || a.status === filterStatus) &&
+        (searchText === '' || a.children?.name?.toLowerCase().includes(searchText.toLowerCase()))
       )
     : []
 
@@ -102,14 +135,20 @@ export default function SecretariaAgenda() {
         modalidad: form.modality,
         is_group: form.session_type === 'grupal',
       }
+      const childName = ninos.find(n => n.id === form.child_id)?.name || 'Paciente'
+      const secretariaName = profile?.full_name || profile?.email || 'Secretaria'
+
       if (editingApt) {
-        const { error } = await supabase.from('appointments').update(payload).eq('id', editingApt.id)
+        const { data, error } = await supabase.from('appointments').update(payload).eq('id', editingApt.id).select().single()
         if (error) throw error
-        toast.success('✅ Cita actualizada')
+        toast.success('✅ Cita actualizada · Notificando al administrador...')
+        notifyAdmin('updated', data, childName, secretariaName)
       } else {
-        const { error } = await supabase.from('appointments').insert(payload)
+        const { data, error } = await supabase.from('appointments').insert(payload).select().single()
         if (error) throw error
-        toast.success('✅ Cita creada')
+        toast.success('✅ Cita creada · Administrador notificado')
+        notifyAdmin('created', data, childName, secretariaName)
+        setDiaSeleccionado(form.date)
       }
       setShowForm(false); setEditingApt(null); setForm(emptyForm)
       cargar()
@@ -120,107 +159,146 @@ export default function SecretariaAgenda() {
     }
   }
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('¿Confirmar eliminación de esta cita?')) return
+  const handleDelete = async (apt: any) => {
+    if (!confirm(`¿Eliminar la cita de ${apt.children?.name || 'este paciente'}?`)) return
     try {
-      const { error } = await supabase.from('appointments').delete().eq('id', id)
+      const { error } = await supabase.from('appointments').delete().eq('id', apt.id)
       if (error) throw error
       toast.success('Cita eliminada')
+      notifyAdmin('cancelled', apt, apt.children?.name || 'Paciente', profile?.full_name || 'Secretaria')
       cargar()
-    } catch (e: any) {
-      toast.error('Error: ' + e.message)
-    }
+    } catch (e: any) { toast.error('Error: ' + e.message) }
   }
 
-  const handleStatusChange = async (id: string, status: string) => {
+  const handleStatusChange = async (apt: any, status: string) => {
     try {
-      const { error } = await supabase.from('appointments').update({ status }).eq('id', id)
+      const { data, error } = await supabase.from('appointments').update({ status }).eq('id', apt.id).select().single()
       if (error) throw error
-      toast.success('Estado actualizado')
+      toast.success('Estado actualizado · Administrador notificado')
+      notifyAdmin('status_changed', { ...data, status }, apt.children?.name || 'Paciente', profile?.full_name || 'Secretaria')
+      setActiveMenu(null)
       cargar()
-    } catch (e: any) {
-      toast.error(e.message)
-    }
+    } catch (e: any) { toast.error(e.message) }
   }
 
   const openEdit = (apt: any) => {
     setForm({
       child_id: apt.child_id, service: apt.service_type || SERVICES[0],
-      date: apt.appointment_date, time: apt.appointment_time?.slice(0, 5) || '',
-      status: apt.status, notes: apt.notes || '', modality: apt.modalidad || 'presencial',
-      session_type: apt.session_type || 'individual'
+      date: apt.appointment_date, time: apt.appointment_time?.slice(0,5) || '',
+      status: apt.status, notes: apt.notes || '',
+      modality: apt.modalidad || 'presencial',
+      session_type: apt.is_group ? 'grupal' : 'individual',
     })
-    setEditingApt(apt)
-    setShowForm(true)
+    setEditingApt(apt); setShowForm(true); setActiveMenu(null)
+  }
+
+  const formatDateLabel = (dateStr: string) => {
+    const [y,m,d] = dateStr.split('-').map(Number)
+    const date = new Date(y, m-1, d)
+    return `${DIAS[date.getDay()]}, ${d} de ${MESES[m-1]} ${y}`
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-8">
 
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">Agenda de Citas</h2>
-          <p className="text-sm text-slate-400 mt-0.5">Gestión completa del calendario del centro</p>
+          <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2.5">
+            <div className="w-9 h-9 bg-violet-100 rounded-2xl flex items-center justify-center">
+              <CalendarDays size={18} className="text-violet-600"/>
+            </div>
+            Agenda de Citas
+          </h2>
+          <p className="text-sm text-slate-400 mt-0.5 ml-12">Gestión de citas · Jugando Aprendo</p>
         </div>
         <button
           onClick={() => { setForm(emptyForm); setEditingApt(null); setShowForm(true) }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-violet-200"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-violet-200/60 active:scale-95"
         >
-          <Plus size={16} /> Nueva Cita
+          <Plus size={16}/> Nueva Cita
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {[
+          { label: 'Hoy',       val: todayApts.length,    icon: <Clock size={16}/>,       bg: 'bg-blue-50',   ic: 'text-blue-600' },
+          { label: 'Próximas',  val: upcomingApts.length, icon: <CalendarDays size={16}/>, bg: 'bg-violet-50', ic: 'text-violet-600' },
+          { label: 'Este mes',  val: monthApts.length,    icon: <TrendingUp size={16}/>,  bg: 'bg-emerald-50',ic: 'text-emerald-600' },
+          { label: 'Pendientes',val: pendingApts.length,  icon: <Bell size={16}/>,        bg: 'bg-amber-50',  ic: 'text-amber-600' },
+        ].map(({ label, val, icon, bg, ic }) => (
+          <div key={label} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${bg} ${ic}`}>{icon}</div>
+            <div>
+              <p className="text-2xl font-black text-slate-800 leading-none">{val}</p>
+              <p className="text-xs text-slate-400 font-semibold mt-0.5">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Calendar + Detail */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
         {/* Calendar */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
-            <button onClick={() => setMes(new Date(year, month - 1))} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
-              <ChevronLeft size={18} />
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-violet-600 to-purple-700">
+            <button onClick={() => setMes(new Date(year, month-1))} className="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all active:scale-90">
+              <ChevronLeft size={16}/>
             </button>
-            <h3 className="font-black text-sm text-slate-800">{MESES[month]} {year}</h3>
-            <button onClick={() => setMes(new Date(year, month + 1))} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors text-slate-500">
-              <ChevronRight size={18} />
+            <div className="text-center">
+              <h3 className="font-black text-white text-sm">{MESES[month]} {year}</h3>
+              <p className="text-purple-200 text-[10px] mt-0.5">{monthApts.length} cita{monthApts.length!==1?'s':''} este mes</p>
+            </div>
+            <button onClick={() => setMes(new Date(year, month+1))} className="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all active:scale-90">
+              <ChevronRight size={16}/>
             </button>
           </div>
 
           <div className="p-4">
-            {/* Day labels */}
-            <div className="grid grid-cols-7 mb-2">
-              {DIAS.map(d => (
-                <div key={d} className="text-center text-[10px] font-black text-slate-400 py-1">{d}</div>
+            <div className="grid grid-cols-7 mb-3">
+              {DIAS.map((d,i) => (
+                <div key={d} className={`text-center text-[10px] font-black py-1 ${i===0||i===6?'text-slate-300':'text-slate-400'}`}>{d}</div>
               ))}
             </div>
-            {/* Days */}
             <div className="grid grid-cols-7 gap-y-1">
-              {Array(firstDay).fill(null).map((_, i) => <div key={`e${i}`} />)}
-              {Array(daysInMonth).fill(null).map((_, i) => {
+              {Array(firstDay).fill(null).map((_,i) => <div key={`e${i}`}/>)}
+              {Array(daysInMonth).fill(null).map((_,i) => {
                 const day = i + 1
-                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
                 const dayApts = getDayApts(day)
-                const isToday = dateStr === new Date().toISOString().split('T')[0]
+                const isToday    = dateStr === todayStr
                 const isSelected = diaSeleccionado === dateStr
-                const hasPending = dayApts.some(a => a.status === 'pending')
+                const isPast     = dateStr < todayStr
 
                 return (
                   <button
                     key={day}
                     onClick={() => setDiaSeleccionado(isSelected ? null : dateStr)}
-                    className={`relative flex flex-col items-center justify-start pt-1 h-10 rounded-xl text-sm font-bold transition-all
-                      ${isSelected ? 'bg-violet-600 text-white shadow-md' :
-                        isToday ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                        dayApts.length > 0 ? 'hover:bg-violet-50 text-slate-700' :
-                        'hover:bg-slate-50 text-slate-500'}`}
+                    className={`
+                      relative flex flex-col items-center justify-start pt-1.5 h-10 rounded-xl text-xs font-bold transition-all
+                      ${isSelected
+                        ? 'bg-violet-600 text-white shadow-lg shadow-violet-200 scale-105 ring-2 ring-violet-400 ring-offset-1'
+                        : isToday
+                          ? 'bg-violet-50 text-violet-700 ring-2 ring-violet-300'
+                          : dayApts.length > 0
+                            ? isPast ? 'hover:bg-slate-100 text-slate-500' : 'hover:bg-violet-50 text-slate-800 font-black'
+                            : 'hover:bg-slate-50 text-slate-400'
+                      }
+                    `}
                   >
                     {day}
                     {dayApts.length > 0 && (
                       <div className="flex gap-0.5 mt-0.5">
-                        {dayApts.slice(0, 3).map((a, idx) => (
-                          <div
-                            key={idx}
-                            className={`w-1 h-1 rounded-full ${isSelected ? 'bg-white/70' : hasPending && a.status === 'pending' ? 'bg-amber-400' : 'bg-violet-400'}`}
-                          />
+                        {dayApts.slice(0,4).map((a,idx) => (
+                          <div key={idx} className={`w-1 h-1 rounded-full ${
+                            isSelected ? 'bg-white/80'
+                            : a.status==='confirmed' ? 'bg-emerald-500'
+                            : a.status==='pending'   ? 'bg-amber-400'
+                            : a.status==='cancelled' ? 'bg-red-300'
+                            : 'bg-blue-400'
+                          }`}/>
                         ))}
                       </div>
                     )}
@@ -230,122 +308,166 @@ export default function SecretariaAgenda() {
             </div>
           </div>
 
-          {/* Legend */}
-          <div className="px-4 py-3 border-t border-slate-100 flex items-center gap-4">
-            {loading ? (
-              <Loader2 size={14} className="animate-spin text-violet-400" />
-            ) : (
-              <span className="text-xs text-slate-400">{apts.length} citas totales</span>
-            )}
-            <button onClick={cargar} className="ml-auto text-xs text-slate-400 hover:text-violet-600 flex items-center gap-1">
-              <RefreshCw size={12} /> Actualizar
+          <div className="px-4 py-3 border-t border-slate-100 flex items-center gap-3 flex-wrap">
+            {[
+              { dot: 'bg-emerald-500', label: 'Confirmada' },
+              { dot: 'bg-amber-400',   label: 'Pendiente' },
+              { dot: 'bg-blue-400',    label: 'Completada' },
+            ].map(({ dot, label }) => (
+              <div key={label} className="flex items-center gap-1.5">
+                <div className={`w-2 h-2 rounded-full ${dot}`}/>
+                <span className="text-[10px] text-slate-400 font-semibold">{label}</span>
+              </div>
+            ))}
+            <button onClick={cargar} disabled={loading} className="ml-auto flex items-center gap-1 text-xs text-slate-400 hover:text-violet-600 transition-colors font-semibold disabled:opacity-50">
+              <RefreshCw size={11} className={loading?'animate-spin':''}/> Actualizar
             </button>
           </div>
         </div>
 
-        {/* Day detail */}
-        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {/* Detail panel */}
+        <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+
           {!diaSeleccionado ? (
-            <div className="flex flex-col items-center justify-center h-full py-20 text-slate-300">
-              <Calendar size={40} className="mb-3" />
-              <p className="text-sm font-semibold">Seleccioná un día en el calendario</p>
+            <div className="flex-1 flex flex-col items-center justify-center py-20 text-slate-300">
+              <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-4">
+                <CalendarDays size={36} className="text-slate-200"/>
+              </div>
+              <p className="text-sm font-bold text-slate-300">Seleccioná un día del calendario</p>
+              <p className="text-xs text-slate-200 mt-1">o creá una nueva cita con el botón de arriba</p>
             </div>
           ) : (
             <>
-              {/* Day header */}
-              <div className="px-5 py-4 border-b border-slate-100">
+              {/* Panel header */}
+              <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/60">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-black text-slate-800">
-                    {new Date(diaSeleccionado + 'T00:00:00').toLocaleDateString('es', { weekday: 'long', day: 'numeric', month: 'long' })}
-                  </h3>
+                  <div>
+                    <h3 className="font-black text-slate-800 text-sm capitalize">{formatDateLabel(diaSeleccionado)}</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {selectedApts.length} cita{selectedApts.length!==1?'s':''} ·{' '}
+                      {diaSeleccionado === todayStr ? '🔵 Hoy' : diaSeleccionado < todayStr ? '📋 Pasada' : '📅 Próxima'}
+                    </p>
+                  </div>
                   <button
                     onClick={() => { setForm({ ...emptyForm, date: diaSeleccionado }); setEditingApt(null); setShowForm(true) }}
-                    className="flex items-center gap-1.5 px-3 py-1.5 bg-violet-600 text-white rounded-lg text-xs font-bold hover:bg-violet-700 transition-colors"
+                    className="flex items-center gap-1.5 px-3 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-xl text-xs font-bold transition-colors shadow-md shadow-violet-200 active:scale-95"
                   >
-                    <Plus size={12} /> Agregar
+                    <Plus size={12}/> Agregar
                   </button>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="relative flex-1">
-                    <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                    <Search size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"/>
                     <input
                       value={searchText} onChange={e => setSearchText(e.target.value)}
                       placeholder="Buscar paciente..."
-                      className="w-full pl-8 pr-3 py-2 rounded-lg border border-slate-200 text-xs bg-slate-50 focus:outline-none focus:border-violet-400"
+                      className="w-full pl-8 pr-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-violet-300 focus:border-violet-300 transition-all"
                     />
                   </div>
                   <select
                     value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-xs bg-slate-50 focus:outline-none focus:border-violet-400"
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-violet-300 font-semibold text-slate-600 transition-all"
                   >
                     <option value="todos">Todos</option>
-                    {Object.entries(STATUS_CFG).map(([k, v]) => (
-                      <option key={k} value={k}>{v.label}</option>
-                    ))}
+                    {Object.entries(STATUS_CFG).map(([k,v]) => <option key={k} value={k}>{v.label}</option>)}
                   </select>
                 </div>
               </div>
 
               {/* Appointments list */}
-              <div className="divide-y divide-slate-50 overflow-y-auto" style={{ maxHeight: 440 }}>
+              <div className="flex-1 divide-y divide-slate-50 overflow-y-auto" style={{ maxHeight: 480 }}>
                 {selectedApts.length === 0 ? (
-                  <div className="py-12 text-center text-slate-300">
-                    <AlertTriangle size={28} className="mx-auto mb-2" />
-                    <p className="text-sm">No hay citas para este día</p>
+                  <div className="py-14 text-center">
+                    <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                      <Calendar size={24} className="text-slate-200"/>
+                    </div>
+                    <p className="text-sm font-bold text-slate-300">Sin citas para este día</p>
                     <button
                       onClick={() => { setForm({ ...emptyForm, date: diaSeleccionado }); setShowForm(true) }}
-                      className="mt-3 text-xs font-bold text-violet-600 hover:underline"
-                    >+ Crear cita para este día</button>
+                      className="mt-3 text-xs font-bold text-violet-500 hover:text-violet-700 hover:underline transition-colors"
+                    >+ Crear cita aquí</button>
                   </div>
                 ) : selectedApts.map(apt => {
                   const cfg = STATUS_CFG[apt.status] || STATUS_CFG.pending
+                  const isMenuOpen = activeMenu === apt.id
+
                   return (
-                    <div key={apt.id} className="px-5 py-4 hover:bg-slate-50 transition-colors">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-9 h-9 bg-violet-100 rounded-xl flex items-center justify-center flex-shrink-0">
-                            {apt.session_type === 'grupal' ? <Users size={16} className="text-violet-600" /> : <User size={16} className="text-violet-600" />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-black text-sm text-slate-800 truncate">{apt.children?.name || '—'}</p>
-                            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                              <span className="text-xs text-slate-400 flex items-center gap-1">
-                                <Clock size={10} /> {apt.appointment_time?.slice(0, 5)}
-                              </span>
-                              {apt.modalidad === 'virtual' ? (
-                                <span className="text-xs text-indigo-500 flex items-center gap-0.5"><Video size={10} /> Virtual</span>
-                              ) : (
-                                <span className="text-xs text-slate-400 flex items-center gap-0.5"><MapPin size={10} /> Presencial</span>
-                              )}
-                              {apt.service_type && <span className="text-xs text-slate-400 truncate">· {apt.service_type}</span>}
+                    <div key={apt.id} className="px-5 py-4 hover:bg-slate-50/70 transition-colors">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          {apt.is_group ? <Users size={16} className="text-violet-600"/> : <User size={16} className="text-violet-600"/>}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-black text-sm text-slate-800 truncate">{apt.children?.name || '—'}</p>
+                              <p className="text-xs text-slate-500 truncate font-semibold">{apt.service_type || 'Terapia'}</p>
                             </div>
-                            {apt.notes && <p className="text-xs text-slate-400 mt-1 truncate">{apt.notes}</p>}
+                            <span className={`flex-shrink-0 text-[10px] font-bold px-2.5 py-1 rounded-full border ${cfg.bg} ${cfg.color}`}>
+                              {cfg.label}
+                            </span>
                           </div>
+
+                          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+                            <span className="text-xs text-slate-500 flex items-center gap-1 font-medium">
+                              <Clock size={11} className="text-slate-400"/> {formatHour(apt.appointment_time)}
+                            </span>
+                            <span className="text-xs text-slate-400 flex items-center gap-1">
+                              {apt.modalidad==='virtual' ? <><Video size={11}/> Virtual</> : <><MapPin size={11}/> Presencial</>}
+                            </span>
+                            {apt.is_group && <span className="text-xs text-blue-500 font-bold flex items-center gap-1"><Users size={10}/> Grupal</span>}
+                          </div>
+
+                          {apt.notes && (
+                            <p className="text-xs text-slate-400 mt-1 italic truncate flex items-center gap-1">
+                              <FileText size={10}/> {apt.notes}
+                            </p>
+                          )}
+
+                          {apt.children?.profiles?.phone && (
+                            <a href={`tel:${apt.children.profiles.phone}`} className="text-[10px] text-slate-400 hover:text-violet-500 flex items-center gap-1 mt-1 w-fit transition-colors">
+                              <Phone size={9}/> {apt.children.profiles.phone}
+                            </a>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`text-[10px] font-bold px-2 py-1 rounded-full border ${cfg.bg} ${cfg.color}`}>
-                            {cfg.label}
-                          </span>
-                          <button onClick={() => openEdit(apt)} className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-violet-600 transition-colors">
-                            <Edit2 size={13} />
-                          </button>
-                          <button onClick={() => handleDelete(apt.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors">
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      </div>
-                      {/* Quick status change */}
-                      <div className="mt-2 flex items-center gap-1 ml-12">
-                        <span className="text-[10px] text-slate-400 mr-1">Cambiar estado:</span>
-                        {Object.entries(STATUS_CFG).map(([k, v]) => (
+
+                        {/* Dropdown menu */}
+                        <div className="relative flex-shrink-0">
                           <button
-                            key={k}
-                            onClick={() => handleStatusChange(apt.id, k)}
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition-all border ${apt.status === k ? `${v.bg} ${v.color}` : 'border-transparent text-slate-400 hover:bg-slate-100'}`}
+                            onClick={() => setActiveMenu(isMenuOpen ? null : apt.id)}
+                            className="w-8 h-8 rounded-xl hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
                           >
-                            {v.label}
+                            <MoreHorizontal size={15}/>
                           </button>
-                        ))}
+
+                          {isMenuOpen && (
+                            <div className="absolute right-0 top-9 z-20 bg-white rounded-2xl shadow-2xl shadow-slate-200/80 border border-slate-100 min-w-[200px] overflow-hidden">
+                              <div className="p-1.5">
+                                <button onClick={() => openEdit(apt)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-violet-50 hover:text-violet-700 transition-colors">
+                                  <Edit2 size={13}/> Editar cita
+                                </button>
+                                <div className="mx-2 my-1 h-px bg-slate-100"/>
+                                <p className="px-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-widest">Cambiar estado</p>
+                                {Object.entries(STATUS_CFG).map(([k,v]) => (
+                                  <button
+                                    key={k}
+                                    onClick={() => handleStatusChange(apt, k)}
+                                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition-colors ${apt.status===k ? `${v.bg} ${v.color}` : 'text-slate-600 hover:bg-slate-50'}`}
+                                  >
+                                    <div className={`w-2 h-2 rounded-full ${v.dot}`}/>
+                                    {v.label}
+                                    {apt.status===k && <CheckCheck size={11} className="ml-auto"/>}
+                                  </button>
+                                ))}
+                                <div className="mx-2 my-1 h-px bg-slate-100"/>
+                                <button onClick={() => handleDelete(apt)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
+                                  <Trash2 size={13}/> Eliminar cita
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   )
@@ -356,112 +478,123 @@ export default function SecretariaAgenda() {
         </div>
       </div>
 
-      {/* New / Edit form modal */}
+      {activeMenu && <div className="fixed inset-0 z-10" onClick={() => setActiveMenu(null)}/>}
+
+      {/* Form modal */}
       {showForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md border border-slate-200 overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-gradient-to-r from-violet-600 to-purple-600">
-              <h3 className="font-black text-white">{editingApt ? 'Editar Cita' : 'Nueva Cita'}</h3>
-              <button onClick={() => { setShowForm(false); setEditingApt(null) }} className="text-white/70 hover:text-white">
-                <X size={20} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg border border-slate-100 overflow-hidden flex flex-col max-h-[92vh]">
+
+            <div className="flex items-center justify-between px-6 py-5 bg-gradient-to-r from-violet-600 to-purple-700">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+                  {editingApt ? <Edit2 size={16} className="text-white"/> : <Plus size={16} className="text-white"/>}
+                </div>
+                <div>
+                  <h3 className="font-black text-white text-sm">{editingApt ? 'Editar Cita' : 'Nueva Cita'}</h3>
+                  <p className="text-purple-200 text-[10px] mt-0.5">El administrador será notificado automáticamente</p>
+                </div>
+              </div>
+              <button onClick={() => { setShowForm(false); setEditingApt(null) }} className="w-8 h-8 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all">
+                <X size={16}/>
               </button>
             </div>
-            <div className="p-6 space-y-4 overflow-y-auto max-h-[70vh]">
 
-              {/* Session type */}
+            <div className="flex items-center gap-2.5 px-5 py-3 bg-amber-50 border-b border-amber-100">
+              <Bell size={14} className="text-amber-500 shrink-0"/>
+              <p className="text-xs text-amber-700 font-semibold">Al guardar, el administrador recibirá una notificación de esta acción.</p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-5 space-y-4">
+
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Tipo de sesión</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Tipo de sesión</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {[{ v:'individual', label:'👤 Individual' }, { v:'grupal', label:'👥 Grupal' }].map(opt => (
-                    <button key={opt.v} onClick={() => setForm(p => ({ ...p, session_type: opt.v }))}
-                      className={`py-2.5 rounded-xl font-bold text-sm transition-all border-2 ${form.session_type === opt.v ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
-                      {opt.label}
+                  {[{v:'individual',icon:'👤',label:'Individual'},{v:'grupal',icon:'👥',label:'Grupal'}].map(opt => (
+                    <button key={opt.v} onClick={() => setForm(p=>({...p,session_type:opt.v}))}
+                      className={`py-3 rounded-2xl font-bold text-sm border-2 flex items-center justify-center gap-2 transition-all ${form.session_type===opt.v ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-200' : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
+                      <span>{opt.icon}</span> {opt.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Modality */}
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Modalidad</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Modalidad</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {[{ v:'presencial', label:'📍 Presencial' }, { v:'virtual', label:'📹 Virtual' }].map(opt => (
-                    <button key={opt.v} onClick={() => setForm(p => ({ ...p, modality: opt.v }))}
-                      className={`py-2.5 rounded-xl font-bold text-sm transition-all border-2 ${form.modality === opt.v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
-                      {opt.label}
+                  {[{v:'presencial',icon:'📍',label:'Presencial'},{v:'virtual',icon:'📹',label:'Virtual'}].map(opt => (
+                    <button key={opt.v} onClick={() => setForm(p=>({...p,modality:opt.v}))}
+                      className={`py-3 rounded-2xl font-bold text-sm border-2 flex items-center justify-center gap-2 transition-all ${form.modality===opt.v ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'}`}>
+                      <span>{opt.icon}</span> {opt.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Patient */}
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Paciente *</label>
-                <select
-                  value={form.child_id}
-                  onChange={e => setForm(p => ({ ...p, child_id: e.target.value }))}
-                  className="w-full p-3 rounded-xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50"
-                >
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Paciente <span className="text-red-400">*</span></label>
+                <select value={form.child_id} onChange={e => setForm(p=>({...p,child_id:e.target.value}))}
+                  className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
                   <option value="">Seleccionar paciente...</option>
                   {ninos.map(n => <option key={n.id} value={n.id}>{n.name}</option>)}
                 </select>
               </div>
 
-              {/* Service */}
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Servicio</label>
-                <select
-                  value={form.service}
-                  onChange={e => setForm(p => ({ ...p, service: e.target.value }))}
-                  className="w-full p-3 rounded-xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50"
-                >
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Servicio / Tipo de terapia</label>
+                <select value={form.service} onChange={e => setForm(p=>({...p,service:e.target.value}))}
+                  className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
                   {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
 
-              {/* Date & Time */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Fecha *</label>
-                  <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))}
-                    className="w-full p-3 rounded-xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Fecha <span className="text-red-400">*</span></label>
+                  <input type="date" value={form.date} onChange={e => setForm(p=>({...p,date:e.target.value}))}
+                    className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors"/>
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Hora *</label>
-                  <input type="time" value={form.time} onChange={e => setForm(p => ({ ...p, time: e.target.value }))}
-                    className="w-full p-3 rounded-xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50" />
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Hora <span className="text-red-400">*</span></label>
+                  <select value={form.time} onChange={e => setForm(p=>({...p,time:e.target.value}))}
+                    className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
+                    <option value="">Seleccionar...</option>
+                    {HORARIOS.map(h => <option key={h} value={h}>{h}</option>)}
+                  </select>
                 </div>
               </div>
 
-              {/* Status */}
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Estado</label>
-                <select
-                  value={form.status}
-                  onChange={e => setForm(p => ({ ...p, status: e.target.value }))}
-                  className="w-full p-3 rounded-xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50"
-                >
-                  {Object.entries(STATUS_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                </select>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Estado inicial</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(STATUS_CFG).map(([k,v]) => (
+                    <button key={k} onClick={() => setForm(p=>({...p,status:k}))}
+                      className={`py-2.5 px-3 rounded-xl font-bold text-xs border-2 flex items-center gap-2 transition-all ${form.status===k ? `${v.bg} ${v.color} border-current` : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
+                      <div className={`w-2 h-2 rounded-full ${v.dot}`}/>{v.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              {/* Notes */}
               <div>
-                <label className="text-xs font-black uppercase tracking-widest text-slate-400 block mb-2">Notas (opcional)</label>
-                <textarea rows={2} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))}
-                  placeholder="Observaciones sobre la cita..."
-                  className="w-full p-3 rounded-xl border-2 border-slate-200 text-sm focus:border-violet-400 focus:outline-none bg-slate-50 resize-none" />
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Notas <span className="text-slate-300">(opcional)</span></label>
+                <textarea rows={3} value={form.notes} onChange={e => setForm(p=>({...p,notes:e.target.value}))}
+                  placeholder="Observaciones, indicaciones especiales, preparación requerida..."
+                  className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm focus:border-violet-400 focus:outline-none bg-slate-50 resize-none transition-colors"/>
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-slate-100 flex gap-3">
+
+            <div className="px-5 py-4 border-t border-slate-100 flex gap-3 bg-slate-50/50">
               <button onClick={() => { setShowForm(false); setEditingApt(null) }}
-                className="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors">
+                className="flex-1 py-3 rounded-2xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-100 transition-colors">
                 Cancelar
               </button>
               <button onClick={handleSave} disabled={isSaving}
-                className="flex-2 flex-1 py-3 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-black text-sm transition-colors flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-violet-200">
-                {isSaving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
-                {isSaving ? 'Guardando...' : (editingApt ? 'Actualizar Cita' : 'Confirmar Cita')}
+                className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-black text-sm transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg shadow-violet-200 active:scale-95">
+                {isSaving
+                  ? <><Loader2 size={16} className="animate-spin"/> Guardando...</>
+                  : <><CheckCircle2 size={16}/> {editingApt ? 'Actualizar Cita' : 'Confirmar Cita'}</>
+                }
               </button>
             </div>
           </div>
