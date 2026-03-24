@@ -1,11 +1,179 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-
-import { useState } from 'react'
-import { User, Mail, Phone, Stethoscope, Key, Eye, EyeOff, Save, Loader2, Shield, CheckCircle2, Edit3 } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { User, Mail, Phone, Stethoscope, Key, Eye, EyeOff, Save, Loader2, Shield, CheckCircle2, Edit3, CalendarDays, ChevronRight, Check, Unlink, Link2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
+
+// ── Google Calendar ────────────────────────────────────────────────────────────
+function GoogleCalendarBlock({ userId }: { userId: string }) {
+  const toast = useToast()
+  const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading')
+  const [email, setEmail]   = useState<string | null>(null)
+  const [busy, setBusy]     = useState(false)
+
+  const check = async () => {
+    try {
+      const res  = await fetch(`/api/google-calendar?action=status&userId=${userId}`)
+      const data = await res.json()
+      setStatus(data.connected ? 'connected' : 'disconnected')
+      setEmail(data.email ?? null)
+    } catch { setStatus('disconnected') }
+  }
+
+  useEffect(() => {
+    if (!userId) return
+    check()
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('gcal') === 'connected') {
+      toast.success('✅ Google Calendar conectado')
+      check()
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (p.get('gcal') === 'error') {
+      toast.error('Error al conectar Google Calendar')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [userId])
+
+  const connect = async () => {
+    setBusy(true)
+    try {
+      const res  = await fetch(`/api/google-calendar?action=auth-url&userId=${userId}&role=especialista`)
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch { toast.error('Error iniciando conexión'); setBusy(false) }
+  }
+
+  const disconnect = async () => {
+    if (!confirm('¿Desconectar Google Calendar?')) return
+    await fetch(`/api/google-calendar?action=disconnect&userId=${userId}`)
+    setStatus('disconnected'); setEmail(null)
+    toast.success('Google Calendar desconectado')
+  }
+
+  if (status === 'loading') return null
+
+  return status === 'connected' ? (
+    <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
+          <CalendarDays size={18} className="text-emerald-600" />
+        </div>
+        <div>
+          <p className="text-sm font-black text-slate-800">Google Calendar</p>
+          <p className="text-xs text-emerald-600 font-semibold flex items-center gap-1 mt-0.5">
+            <Check size={11} /> Conectado · {email}
+          </p>
+        </div>
+      </div>
+      <button onClick={disconnect}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 hover:bg-red-50 border border-red-100 transition-all">
+        <Unlink size={13} /> Desconectar
+      </button>
+    </div>
+  ) : (
+    <button onClick={connect} disabled={busy}
+      className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-2xl transition-all group disabled:opacity-50">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+          {busy ? <Loader2 size={18} className="text-blue-600 animate-spin" /> : <CalendarDays size={18} className="text-blue-600" />}
+        </div>
+        <div className="text-left">
+          <p className="text-sm font-black text-slate-800">{busy ? 'Conectando...' : 'Vincular Google Calendar'}</p>
+          <p className="text-xs text-slate-400 mt-0.5">Sincronizá tus sesiones automáticamente</p>
+        </div>
+      </div>
+      {!busy && <ChevronRight size={16} className="text-slate-300 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />}
+    </button>
+  )
+}
+
+// ── Microsoft / Outlook Calendar ───────────────────────────────────────────────
+function MicrosoftCalendarBlock({ userId }: { userId: string }) {
+  const toast = useToast()
+  const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading')
+  const [email, setEmail]   = useState<string | null>(null)
+  const [busy, setBusy]     = useState(false)
+
+  const check = async () => {
+    try {
+      const res  = await fetch(`/api/microsoft-calendar?action=status&userId=${userId}`)
+      const data = await res.json()
+      setStatus(data.connected ? 'connected' : 'disconnected')
+      setEmail(data.email ?? null)
+    } catch { setStatus('disconnected') }
+  }
+
+  useEffect(() => {
+    if (!userId) return
+    check()
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('mscal') === 'connected') {
+      toast.success('✅ Outlook Calendar conectado')
+      check()
+      window.history.replaceState({}, '', window.location.pathname)
+    } else if (p.get('mscal') === 'error') {
+      toast.error('Error al conectar Outlook Calendar')
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [userId])
+
+  const connect = async () => {
+    setBusy(true)
+    try {
+      const res  = await fetch(`/api/microsoft-calendar?action=auth-url&userId=${userId}&role=especialista`)
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch { toast.error('Error iniciando conexión'); setBusy(false) }
+  }
+
+  const disconnect = async () => {
+    if (!confirm('¿Desconectar Outlook Calendar?')) return
+    await fetch(`/api/microsoft-calendar?action=disconnect&userId=${userId}`)
+    setStatus('disconnected'); setEmail(null)
+    toast.success('Outlook Calendar desconectado')
+  }
+
+  if (status === 'loading') return null
+
+  return status === 'connected' ? (
+    <div className="flex items-center justify-between p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+          <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+        </div>
+        <div>
+          <p className="text-sm font-black text-slate-800">Outlook Calendar</p>
+          <p className="text-xs text-blue-600 font-semibold flex items-center gap-1 mt-0.5">
+            <Check size={11} /> Conectado · {email}
+          </p>
+        </div>
+      </div>
+      <button onClick={disconnect}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-red-400 hover:bg-red-50 border border-red-100 transition-all">
+        <Unlink size={13} /> Desconectar
+      </button>
+    </div>
+  ) : (
+    <button onClick={connect} disabled={busy}
+      className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-blue-50 border border-slate-200 hover:border-blue-200 rounded-2xl transition-all group disabled:opacity-50">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+          {busy
+            ? <Loader2 size={18} className="text-blue-600 animate-spin" />
+            : <svg width="18" height="18" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+          }
+        </div>
+        <div className="text-left">
+          <p className="text-sm font-black text-slate-800">{busy ? 'Conectando...' : 'Vincular Outlook Calendar'}</p>
+          <p className="text-xs text-slate-400 mt-0.5">Sincronizá tus sesiones en Outlook automáticamente</p>
+        </div>
+      </div>
+      {!busy && <ChevronRight size={16} className="text-slate-300 group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all" />}
+    </button>
+  )
+}
 
 export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate: () => void }) {
   const toast = useToast()
@@ -16,6 +184,7 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
   const [showPass, setShowPass] = useState(false)
   const [datos, setDatos] = useState({ full_name: profile?.full_name || '', phone: profile?.phone || '', specialty: profile?.specialty || '' })
   const [pass, setPass] = useState({ nueva: '', confirmar: '' })
+  const userId: string | null = profile?.id ?? null
 
   const guardar = async () => {
     setGuardando(true)
@@ -158,6 +327,21 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
           </div>
         )}
       </div>
+      {/* Calendarios externos */}
+      {userId && (
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <div className="px-5 py-4 border-b border-slate-100 flex items-center gap-2">
+            <Link2 size={15} className="text-slate-500" />
+            <h4 className="font-bold text-slate-800 text-sm">Calendarios externos</h4>
+          </div>
+          <div className="p-5 space-y-3">
+            <p className="text-xs text-slate-400 mb-1">Sincronizá tus sesiones con Google o Outlook Calendar.</p>
+            <GoogleCalendarBlock userId={userId} />
+            <MicrosoftCalendarBlock userId={userId} />
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

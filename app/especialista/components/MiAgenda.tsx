@@ -1,11 +1,126 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-
 import { useState, useEffect, useCallback } from 'react'
-import { Calendar, ChevronLeft, ChevronRight, Clock, Loader2 } from 'lucide-react'
+import { Calendar, ChevronLeft, ChevronRight, Clock, Loader2, CalendarDays, Check, Unlink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
+
+// ── Mini botón Google Calendar ─────────────────────────────────────────────────
+function GoogleCalendarMini({ userId }: { userId: string }) {
+  const toast = useToast()
+  const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading')
+  const [busy, setBusy]     = useState(false)
+
+  const check = async () => {
+    try {
+      const res  = await fetch(`/api/google-calendar?action=status&userId=${userId}`)
+      const data = await res.json()
+      setStatus(data.connected ? 'connected' : 'disconnected')
+    } catch { setStatus('disconnected') }
+  }
+
+  useEffect(() => {
+    if (!userId) return
+    check()
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('gcal') === 'connected') {
+      toast.success('✅ Google Calendar conectado')
+      check()
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [userId])
+
+  const connect = async () => {
+    setBusy(true)
+    try {
+      const res  = await fetch(`/api/google-calendar?action=auth-url&userId=${userId}&role=especialista`)
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch { toast.error('Error conectando Google Calendar'); setBusy(false) }
+  }
+
+  const disconnect = async () => {
+    if (!confirm('¿Desconectar Google Calendar?')) return
+    await fetch(`/api/google-calendar?action=disconnect&userId=${userId}`)
+    setStatus('disconnected')
+    toast.success('Google Calendar desconectado')
+  }
+
+  if (status === 'loading') return null
+
+  return status === 'connected' ? (
+    <button onClick={disconnect} title="Google Calendar conectado — clic para desconectar"
+      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all">
+      <CalendarDays size={14} className="text-emerald-500" /><Check size={12} /> Google
+    </button>
+  ) : (
+    <button onClick={connect} disabled={busy} title="Vincular Google Calendar"
+      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all disabled:opacity-50">
+      {busy ? <Loader2 size={14} className="animate-spin" /> : <CalendarDays size={14} />} Google
+    </button>
+  )
+}
+
+// ── Mini botón Microsoft / Outlook Calendar ────────────────────────────────────
+function MicrosoftCalendarMini({ userId }: { userId: string }) {
+  const toast = useToast()
+  const [status, setStatus] = useState<'loading' | 'connected' | 'disconnected'>('loading')
+  const [busy, setBusy]     = useState(false)
+
+  const check = async () => {
+    try {
+      const res  = await fetch(`/api/microsoft-calendar?action=status&userId=${userId}`)
+      const data = await res.json()
+      setStatus(data.connected ? 'connected' : 'disconnected')
+    } catch { setStatus('disconnected') }
+  }
+
+  useEffect(() => {
+    if (!userId) return
+    check()
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('mscal') === 'connected') {
+      toast.success('✅ Outlook Calendar conectado')
+      check()
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [userId])
+
+  const connect = async () => {
+    setBusy(true)
+    try {
+      const res  = await fetch(`/api/microsoft-calendar?action=auth-url&userId=${userId}&role=especialista`)
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+    } catch { toast.error('Error conectando Outlook Calendar'); setBusy(false) }
+  }
+
+  const disconnect = async () => {
+    if (!confirm('¿Desconectar Outlook Calendar?')) return
+    await fetch(`/api/microsoft-calendar?action=disconnect&userId=${userId}`)
+    setStatus('disconnected')
+    toast.success('Outlook Calendar desconectado')
+  }
+
+  if (status === 'loading') return null
+
+  return status === 'connected' ? (
+    <button onClick={disconnect} title="Outlook Calendar conectado — clic para desconectar"
+      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all">
+      <svg width="14" height="14" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      <Check size={12} /> Outlook
+    </button>
+  ) : (
+    <button onClick={connect} disabled={busy} title="Vincular Outlook Calendar"
+      className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-600 bg-slate-50 border border-slate-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all disabled:opacity-50">
+      {busy
+        ? <Loader2 size={14} className="animate-spin" />
+        : <svg width="14" height="14" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
+      } Outlook
+    </button>
+  )
+}
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const DIAS_ABREV = ['D','L','M','X','J','V','S']
@@ -24,6 +139,13 @@ export default function MiAgenda() {
   const [loading, setLoading] = useState(true)
   const [mes, setMes] = useState<Date | null>(null)
   const [diaSeleccionado, setDiaSeleccionado] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user?.id) setUserId(session.user.id)
+    })
+  }, [])
 
   const cargar = useCallback(async () => {
     setLoading(true)
@@ -58,9 +180,17 @@ export default function MiAgenda() {
 
   return (
     <div className="space-y-5 pb-20 md:pb-6">
-      <div>
-        <h2 className="text-2xl font-black text-slate-800">{t('nav.miagenda')}</h2>
-        <p className="text-sm text-slate-500 mt-1">{t('ui.session_calendar')}</p>
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+        <div>
+          <h2 className="text-2xl font-black text-slate-800">{t('nav.miagenda')}</h2>
+          <p className="text-sm text-slate-500 mt-1">{t('ui.session_calendar')}</p>
+        </div>
+        {userId && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <GoogleCalendarMini userId={userId} />
+            <MicrosoftCalendarMini userId={userId} />
+          </div>
+        )}
       </div>
 
       {/* Calendar */}
