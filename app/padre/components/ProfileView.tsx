@@ -5,297 +5,156 @@ import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import {
-  ChevronRight, HelpCircle, Lock, LogOut, Mail, Phone, Settings, User,
-  Check, Unlink, Loader2, CalendarDays
+  ChevronRight, HelpCircle, Lock, LogOut, Mail, Phone, User,
+  Check, Unlink, Loader2, CalendarDays, Shield, Bell, Star, Settings
 } from 'lucide-react'
+import { InfoRow, HelpItem } from './shared'
 
-function MicrosoftCalendarButton({ profile }: { profile: any }) {
+function CalBtn({ label, icon, grad, profile, apiBase, paramKey, role='padre' }: any) {
   const toast = useToast()
   const [status, setStatus] = useState<'loading'|'connected'|'disconnected'>('loading')
-  const [msEmail, setMsEmail] = useState<string|null>(null)
+  const [email, setEmail] = useState<string|null>(null)
   const [connecting, setConnecting] = useState(false)
 
-  const checkStatus = async () => {
+  const check = async () => {
     if (!profile?.id) return
     try {
-      const res  = await fetch(`/api/microsoft-calendar?action=status&userId=${profile.id}`)
-      const data = await res.json()
-      setStatus(data.connected ? 'connected' : 'disconnected')
-      setMsEmail(data.email)
+      const r = await fetch(`/api/${apiBase}?action=status&userId=${profile.id}`)
+      const d = await r.json()
+      setStatus(d.connected?'connected':'disconnected'); setEmail(d.email||null)
     } catch { setStatus('disconnected') }
   }
+  useEffect(()=>{
+    check()
+    const p = new URLSearchParams(window.location.search)
+    const v = p.get(paramKey)
+    if (v==='connected') { toast.success(`✅ ${label} conectado.`); check(); window.history.replaceState({},'',window.location.pathname) }
+    else if (v==='error') { toast.error(`Error al conectar ${label}`); window.history.replaceState({},'',window.location.pathname) }
+  },[profile?.id])
 
-  useEffect(() => {
-    checkStatus()
-    const params = new URLSearchParams(window.location.search)
-    const mscal = params.get('mscal')
-    if (mscal === 'connected') {
-      toast.success('✅ Outlook Calendar conectado. Recibirás tus citas automáticamente.')
-      checkStatus()
-      window.history.replaceState({}, '', window.location.pathname)
-    } else if (mscal === 'error') {
-      toast.error('Error al conectar Outlook Calendar')
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }, [profile?.id])
-
-  const handleConnect = async () => {
-    if (!profile?.id) return
-    setConnecting(true)
+  const connect = async () => {
+    if (!profile?.id) return; setConnecting(true)
     try {
-      const res  = await fetch(`/api/microsoft-calendar?action=auth-url&userId=${profile.id}&role=padre`)
-      const data = await res.json()
-      if (data.url) window.location.href = data.url
-    } catch {
-      toast.error('Error iniciando conexión')
-      setConnecting(false)
-    }
+      const r = await fetch(`/api/${apiBase}?action=auth-url&userId=${profile.id}&role=${role}`)
+      const d = await r.json(); if (d.url) window.location.href = d.url
+    } catch { toast.error('Error iniciando conexión'); setConnecting(false) }
+  }
+  const disconnect = async () => {
+    if (!profile?.id||!confirm(`¿Desconectar ${label}?`)) return
+    await fetch(`/api/${apiBase}?action=disconnect&userId=${profile.id}`)
+    setStatus('disconnected'); setEmail(null); toast.success(`${label} desconectado`)
   }
 
-  const handleDisconnect = async () => {
-    if (!profile?.id || !confirm('¿Desconectar Outlook Calendar?')) return
-    await fetch(`/api/microsoft-calendar?action=disconnect&userId=${profile.id}`)
-    setStatus('disconnected'); setMsEmail(null)
-    toast.success('Outlook Calendar desconectado')
-  }
-
-  if (status === 'loading') return null
-
-  if (status === 'connected') {
-    return (
-      <div className="w-full p-6 flex items-center justify-between border-b border-slate-100">
-        <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
-          <div className="p-3 bg-blue-100 rounded-2xl">
-            <svg width="22" height="22" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
-          </div>
-          <div>
-            <p>Outlook Calendar</p>
-            <p className="text-xs font-normal text-blue-600 flex items-center gap-1 mt-0.5">
-              <Check size={11}/> Conectado · {msEmail}
-            </p>
-          </div>
-        </span>
-        <button onClick={handleDisconnect}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-400 hover:bg-red-50 border border-red-100 transition-all">
-          <Unlink size={13}/> Desconectar
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <button onClick={handleConnect} disabled={connecting}
-      className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group disabled:opacity-50">
-      <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
-        <div className="p-3 bg-blue-50 rounded-2xl group-hover:bg-blue-100 transition-colors">
-          {connecting
-            ? <Loader2 size={22} className="text-blue-600 animate-spin"/>
-            : <svg width="22" height="22" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
-          }
-        </div>
+  if (status==='loading') return null
+  return status==='connected' ? (
+    <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',borderBottom:'1px solid #f1f5f9' }}>
+      <div style={{ display:'flex',alignItems:'center',gap:12 }}>
+        <div style={{ width:40,height:40,background:grad,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:18,boxShadow:'0 4px 12px rgba(0,0,0,.15)' }}>{icon}</div>
         <div>
-          <p>{connecting ? 'Conectando...' : 'Vincular Outlook Calendar'}</p>
-          <p className="text-xs font-normal text-slate-400 mt-0.5">Recibí tus citas en Outlook automáticamente</p>
+          <p style={{ fontWeight:700,fontSize:14,color:'#1e293b',margin:0 }}>{label}</p>
+          <p style={{ fontSize:12,color:'#10b981',display:'flex',alignItems:'center',gap:4,margin:0 }}><Check size={11}/>Conectado · {email}</p>
         </div>
-      </span>
-      {!connecting && <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>}
+      </div>
+      <button onClick={disconnect} style={{ fontSize:12,fontWeight:700,color:'#ef4444',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,padding:'5px 10px',cursor:'pointer' }}><Unlink size={12} style={{ display:'inline',marginRight:3 }}/>Quitar</button>
+    </div>
+  ) : (
+    <button onClick={connect} disabled={connecting} style={{ width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',borderBottom:'1px solid #f1f5f9',background:'none',border:'none',cursor:'pointer',transition:'background .15s' }} onMouseEnter={e=>(e.currentTarget as any).style.background='#f8fafc'} onMouseLeave={e=>(e.currentTarget as any).style.background='transparent'}>
+      <div style={{ display:'flex',alignItems:'center',gap:12 }}>
+        <div style={{ width:40,height:40,background:`${grad}20`,borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18 }}>{connecting?<Loader2 size={18} style={{ animation:'spin 1s linear infinite' }} color="#64748b"/>:icon}</div>
+        <div style={{ textAlign:'left' }}>
+          <p style={{ fontWeight:700,fontSize:14,color:'#1e293b',margin:0 }}>{connecting?'Conectando...':label}</p>
+          <p style={{ fontSize:12,color:'#94a3b8',margin:0 }}>Sincronizá tus citas automáticamente</p>
+        </div>
+      </div>
+      {!connecting && <ChevronRight size={18} color="#cbd5e1"/>}
     </button>
   )
 }
-import { InfoRow, HelpItem } from './shared'
 
-function GoogleCalendarButton({ profile }: { profile: any }) {
-  const toast = useToast()
-  const [gcalStatus, setGcalStatus] = useState<'loading'|'connected'|'disconnected'>('loading')
-  const [gcalEmail, setGcalEmail] = useState<string|null>(null)
-  const [connecting, setConnecting] = useState(false)
-
-  const checkStatus = async () => {
-    if (!profile?.id) return
-    try {
-      const res  = await fetch(`/api/google-calendar?action=status&userId=${profile.id}`)
-      const data = await res.json()
-      setGcalStatus(data.connected ? 'connected' : 'disconnected')
-      setGcalEmail(data.email)
-    } catch { setGcalStatus('disconnected') }
-  }
-
-  useEffect(() => {
-    checkStatus()
-    // Handle redirect back
-    const params = new URLSearchParams(window.location.search)
-    const gcal = params.get('gcal')
-    if (gcal === 'connected') {
-      toast.success('✅ Google Calendar conectado. Recibirás tus citas automáticamente.')
-      checkStatus()
-      window.history.replaceState({}, '', window.location.pathname)
-    } else if (gcal === 'error') {
-      toast.error('Error al conectar Google Calendar')
-      window.history.replaceState({}, '', window.location.pathname)
-    }
-  }, [profile?.id])
-
-  const handleConnect = async () => {
-    if (!profile?.id) return
-    setConnecting(true)
-    try {
-      const res  = await fetch(`/api/google-calendar?action=auth-url&userId=${profile.id}&role=padre`)
-      const data = await res.json()
-      if (data.url) window.location.href = data.url
-    } catch {
-      toast.error('Error iniciando conexión')
-      setConnecting(false)
-    }
-  }
-
-  const handleDisconnect = async () => {
-    if (!profile?.id || !confirm('¿Desconectar Google Calendar?')) return
-    await fetch(`/api/google-calendar?action=disconnect&userId=${profile.id}`)
-    setGcalStatus('disconnected')
-    setGcalEmail(null)
-    toast.success('Google Calendar desconectado')
-  }
-
-  if (gcalStatus === 'loading') return null
-
-  if (gcalStatus === 'connected') {
-    return (
-      <div className="w-full p-6 flex items-center justify-between border-b border-slate-100">
-        <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
-          <div className="p-3 bg-emerald-100 rounded-2xl">
-            <CalendarDays size={22} className="text-emerald-600"/>
-          </div>
-          <div>
-            <p>Google Calendar</p>
-            <p className="text-xs font-normal text-emerald-600 flex items-center gap-1 mt-0.5">
-              <Check size={11}/> Conectado · {gcalEmail}
-            </p>
-          </div>
-        </span>
-        <button
-          onClick={handleDisconnect}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-red-400 hover:bg-red-50 border border-red-100 transition-all"
-        >
-          <Unlink size={13}/> Desconectar
-        </button>
-      </div>
-    )
-  }
-
+function MenuItem({ icon, label, sub, onClick, danger=false, badge='' }: any) {
   return (
-    <button
-      onClick={handleConnect}
-      disabled={connecting}
-      className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group disabled:opacity-50"
-    >
-      <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
-        <div className="p-3 bg-blue-100 rounded-2xl group-hover:bg-blue-200 transition-colors">
-          {connecting
-            ? <Loader2 size={22} className="text-blue-600 animate-spin"/>
-            : <CalendarDays size={22} className="text-blue-600"/>
-          }
+    <button onClick={onClick} style={{ width:'100%',display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 20px',background:'none',border:'none',borderBottom:'1px solid #f1f5f9',cursor:'pointer',transition:'background .15s' }}
+      onMouseEnter={e=>(e.currentTarget as any).style.background=danger?'#fff5f5':'#f8fafc'}
+      onMouseLeave={e=>(e.currentTarget as any).style.background='transparent'}>
+      <div style={{ display:'flex',alignItems:'center',gap:12 }}>
+        <div style={{ width:40,height:40,borderRadius:12,background:danger?'#fef2f2':'#f8fafc',display:'flex',alignItems:'center',justifyContent:'center' }}>{icon}</div>
+        <div style={{ textAlign:'left' }}>
+          <p style={{ fontWeight:700,fontSize:14,color:danger?'#ef4444':'#1e293b',margin:0 }}>{label}</p>
+          {sub && <p style={{ fontSize:12,color:'#94a3b8',margin:0 }}>{sub}</p>}
         </div>
-        <div>
-          <p>{connecting ? 'Conectando...' : 'Vincular Google Calendar'}</p>
-          <p className="text-xs font-normal text-slate-400 mt-0.5">Recibí tus citas automáticamente</p>
-        </div>
-      </span>
-      {!connecting && <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>}
+      </div>
+      <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+        {badge && <span style={{ background:'#7c3aed',color:'#fff',fontSize:10,fontWeight:800,padding:'2px 7px',borderRadius:20 }}>{badge}</span>}
+        {!danger && <ChevronRight size={16} color="#cbd5e1"/>}
+      </div>
     </button>
   )
 }
 
 function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy, onHelp }: any) {
   const { t } = useI18n()
-    const initial = profile?.full_name ? profile.full_name.charAt(0) : 'U'
-    const name = profile?.full_name || 'Usuario'
-    const email = profile?.email || 'Correo no disponible'
-    const phone = profile?.phone || 'No registrado'
+  const initial = profile?.full_name?.charAt(0)||'U'
+  const name = profile?.full_name||'Usuario'
+  const email = profile?.email||'—'
+  const phone = profile?.phone
 
-    return (
-        <div className="max-w-2xl mx-auto animate-fade-in space-y-6 px-1">
-             <div className="text-center">
-                <div className="w-28 h-28 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-3xl mx-auto flex items-center justify-center text-5xl font-bold text-white shadow-2xl shadow-blue-300/50 mb-6 ring-4 ring-blue-100 relative group cursor-pointer hover:scale-110 transition-transform">
-                    {initial}
-                    <div className="absolute inset-0 bg-white/20 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                </div>
-                <h2 className="text-3xl font-black text-slate-800 mb-2">{name}</h2>
-                <p className="text-slate-400 font-semibold mb-1 flex items-center justify-center gap-2">
-                    <Mail size={14}/> {email}
-                </p>
-                <p className="text-slate-500 text-sm flex items-center justify-center gap-2">
-                    <span>📱</span>
-                    {phone !== 'No registrado'
-                      ? <span className="text-green-600 font-semibold">{phone} <span className="text-[10px] text-green-400">{t('familias.whatsappActivo')}</span></span>
-                      : <span className="text-amber-500 font-medium">{t('familias.agregaWsp')}</span>
-                    }
-                </p>
-             </div>
-             
-             <div className="bg-white/80 backdrop-blur-sm rounded-3xl border border-slate-200/60 overflow-hidden shadow-xl">
-                <button onClick={onEditProfile} className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group">
-                    <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
-                        <div className="p-3 bg-purple-100 rounded-2xl group-hover:bg-purple-200 transition-colors">
-                            <User size={22} className="text-purple-600"/>
-                        </div>
-                        Editar Perfil
-                    </span>
-                    <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>
-                </button>
+  return (
+    <div style={{ maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:16,paddingBottom:8 }}>
+      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}.pv-card{animation:fadeUp .4s ease both}`}</style>
 
-                <button onClick={onChangePass} className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group">
-                    <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
-                        <div className="p-3 bg-blue-100 rounded-2xl group-hover:bg-blue-200 transition-colors">
-                            <Lock size={22} className="text-blue-600"/>
-                        </div>
-                        Cambiar Contraseña
-                    </span>
-                    <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>
-                </button>
-
-                {/* Google Calendar */}
-                <GoogleCalendarButton profile={profile} />
-
-                {/* Microsoft / Outlook Calendar */}
-                <MicrosoftCalendarButton profile={profile} />
-
-                <button onClick={onPrivacy} className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group">
-                    <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
-                        <div className="p-3 bg-purple-100 rounded-2xl group-hover:bg-purple-200 transition-colors">
-                            <Lock size={22} className="text-purple-600"/>
-                        </div>
-                        Privacidad y Seguridad
-                    </span>
-                    <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>
-                </button>
-
-                <button onClick={onHelp} className="w-full p-6 flex items-center justify-between hover:bg-slate-50 border-b border-slate-100 transition-all group">
-                    <span className="font-bold text-slate-600 flex items-center gap-4 text-lg">
-                        <div className="p-3 bg-green-100 rounded-2xl group-hover:bg-green-200 transition-colors">
-                            <HelpCircle size={22} className="text-green-600"/>
-                        </div>
-                        Centro de Ayuda
-                    </span>
-                    <ChevronRight size={20} className="text-slate-300 group-hover:text-slate-400 group-hover:translate-x-1 transition-all"/>
-                </button>
-                
-                <button onClick={onLogout} className="w-full p-6 flex items-center justify-between hover:bg-red-50 transition-all group">
-                    <span className="font-bold text-red-600 flex items-center gap-4 text-lg">
-                        <div className="p-3 bg-red-100 rounded-2xl group-hover:bg-red-200 transition-colors">
-                            <LogOut size={22}/>
-                        </div>
-                        Cerrar Sesión
-                    </span>
-                </button>
-             </div>
-
-             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-3xl border border-blue-100">
-                <p className="text-xs font-bold text-blue-600 uppercase tracking-wide mb-2">{t('familias.versionApp')}</p>
-                <p className="text-2xl font-black text-slate-800">2.0.0</p>
-                <p className="text-sm text-slate-500 mt-2">{t('familias.ultimaActualizacion')}</p>
-             </div>
+      {/* Avatar Hero */}
+      <div className="pv-card" style={{ background:'linear-gradient(135deg,#1e1b4b,#3730a3,#4f46e5)',borderRadius:28,padding:'32px 24px',textAlign:'center',position:'relative',overflow:'hidden',boxShadow:'0 20px 60px rgba(79,70,229,.3)' }}>
+        <div style={{ position:'absolute',top:-30,right:-30,width:140,height:140,background:'rgba(255,255,255,.06)',borderRadius:'50%' }}/>
+        <div style={{ position:'absolute',bottom:-20,left:20,width:80,height:80,background:'rgba(99,102,241,.3)',borderRadius:'50%' }}/>
+        <div style={{ position:'relative',zIndex:1 }}>
+          <div style={{ width:80,height:80,background:'rgba(255,255,255,.2)',backdropFilter:'blur(10px)',borderRadius:22,display:'flex',alignItems:'center',justifyContent:'center',fontSize:32,fontWeight:900,color:'#fff',margin:'0 auto 16px',border:'2px solid rgba(255,255,255,.3)',boxShadow:'0 8px 24px rgba(0,0,0,.2)' }}>{initial}</div>
+          <h2 style={{ fontSize:22,fontWeight:900,color:'#fff',margin:'0 0 4px',letterSpacing:'-0.5px' }}>{name}</h2>
+          <p style={{ fontSize:12,color:'rgba(255,255,255,.65)',margin:'0 0 2px',display:'flex',alignItems:'center',justifyContent:'center',gap:5 }}><Mail size={11}/>{email}</p>
+          {phone
+            ? <p style={{ fontSize:12,color:'#6ee7b7',margin:0,display:'flex',alignItems:'center',justifyContent:'center',gap:5 }}><Phone size={11}/>{phone} <span style={{ fontSize:10,opacity:.8 }}>· WhatsApp activo</span></p>
+            : <p style={{ fontSize:12,color:'#fbbf24',margin:0 }}>📱 Agrega tu número de WhatsApp</p>
+          }
         </div>
-    )
+      </div>
+
+      {/* Cuenta */}
+      <div className="pv-card" style={{ background:'#fff',borderRadius:22,border:'1.5px solid #f1f5f9',overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+        <div style={{ padding:'12px 20px 8px' }}>
+          <p style={{ fontSize:10,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:0 }}>Mi cuenta</p>
+        </div>
+        <MenuItem icon={<User size={18} color="#7c3aed"/>} label="Editar perfil" sub="Nombre y teléfono" onClick={onEditProfile}/>
+        <MenuItem icon={<Lock size={18} color="#3b82f6"/>} label="Cambiar contraseña" sub="Actualizar acceso" onClick={onChangePass}/>
+        <MenuItem icon={<Shield size={18} color="#8b5cf6"/>} label="Privacidad y seguridad" sub="Gestión de datos" onClick={onPrivacy}/>
+        <MenuItem icon={<HelpCircle size={18} color="#10b981"/>} label="Centro de ayuda" sub="Guías y soporte" onClick={onHelp}/>
+      </div>
+
+      {/* Calendarios */}
+      <div className="pv-card" style={{ background:'#fff',borderRadius:22,border:'1.5px solid #f1f5f9',overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+        <div style={{ padding:'12px 20px 8px' }}>
+          <p style={{ fontSize:10,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:0 }}>Calendarios vinculados</p>
+        </div>
+        <CalBtn label="Google Calendar" icon="📅" grad="linear-gradient(135deg,#4285f4,#1a73e8)" profile={profile} apiBase="google-calendar" paramKey="gcal"/>
+        <CalBtn label="Outlook Calendar" icon={<svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>} grad="linear-gradient(135deg,#0078d4,#106ebe)" profile={profile} apiBase="microsoft-calendar" paramKey="mscal"/>
+      </div>
+
+      {/* Versión */}
+      <div className="pv-card" style={{ background:'linear-gradient(135deg,#f8fafc,#f1f5f9)',borderRadius:22,border:'1.5px solid #e2e8f0',padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+        <div>
+          <p style={{ fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:'0 0 4px' }}>Versión de la app</p>
+          <p style={{ fontSize:20,fontWeight:900,color:'#1e293b',margin:0 }}>2.0.0</p>
+          <p style={{ fontSize:11,color:'#94a3b8',margin:'2px 0 0' }}>Jugando Aprendo · Portal de padres</p>
+        </div>
+        <div style={{ width:48,height:48,background:'linear-gradient(135deg,#7c3aed,#4f46e5)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(124,58,237,.3)' }}>
+          <Star size={22} color="#fff"/>
+        </div>
+      </div>
+
+      {/* Cerrar sesión */}
+      <div className="pv-card" style={{ background:'#fff',borderRadius:22,border:'1.5px solid #fecaca',overflow:'hidden' }}>
+        <MenuItem icon={<LogOut size={18} color="#ef4444"/>} label="Cerrar sesión" danger onClick={onLogout}/>
+      </div>
+    </div>
+  )
 }
 
 export default ProfileView

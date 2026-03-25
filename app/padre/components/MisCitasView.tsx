@@ -4,204 +4,106 @@ import { useI18n } from '@/lib/i18n-context'
 import { useEffect, useState, useCallback } from 'react'
 import type { JSX } from 'react'
 import { supabase as supabaseClient } from '@/lib/supabase'
-import { 
-  Calendar, Clock, CheckCircle, XCircle, AlertCircle, 
+import {
+  Calendar, Clock, CheckCircle, XCircle, AlertCircle,
   Phone, RefreshCw, CalendarDays, Baby, Video, Loader2,
-  ChevronLeft, ChevronRight, Mail, Info
+  ChevronLeft, ChevronRight, Mail, Info, MapPin, Stethoscope
 } from 'lucide-react'
 import VideoCallModal from '@/components/VideoCallModal'
 
 interface Appointment {
-  id: string
-  child_id: string
-  parent_id: string
-  appointment_date: string
-  appointment_time: string
-  service_type: string
-  status: string
-  notes: string
-  is_group: boolean
-  group_name: string
-  type: string
+  id: string; child_id: string; parent_id: string
+  appointment_date: string; appointment_time: string
+  service_type: string; status: string; notes: string
+  is_group: boolean; group_name: string; type: string
   children?: { name: string; birth_date: string }
 }
-
 interface Props {
-  profile: any
-  selectedChild: any
+  profile: any; selectedChild: any
   onCancelAppointment: (id: string, reschedule: boolean) => void
   onChangeView: (view: string) => void
 }
 
-const statusConfig: Record<string, { label: string; color: string; bg: string; icon: JSX.Element; dot: string }> = {
-  confirmed: { 
-    label: 'Confirmada', 
-    color: 'text-emerald-700', 
-    bg: 'bg-emerald-50 border-emerald-200', 
-    icon: <CheckCircle size={13}/>,
-    dot: 'bg-emerald-500'
-  },
-  pending: { 
-    label: 'Pendiente', 
-    color: 'text-amber-700', 
-    bg: 'bg-amber-50 border-amber-200', 
-    icon: <AlertCircle size={13}/>,
-    dot: 'bg-amber-400'
-  },
-  cancelled: { 
-    label: 'Cancelada', 
-    color: 'text-red-600', 
-    bg: 'bg-red-50 border-red-200', 
-    icon: <XCircle size={13}/>,
-    dot: 'bg-red-400'
-  },
-  completed: { 
-    label: 'Completada', 
-    color: 'text-slate-500', 
-    bg: 'bg-slate-50 border-slate-200', 
-    icon: <CheckCircle size={13}/>,
-    dot: 'bg-slate-400'
-  },
+const STATUS: Record<string, { label: string; dot: string; pill: string; text: string; icon: JSX.Element }> = {
+  confirmed: { label: 'Confirmada', dot: '#10b981', pill: '#f0fdf4', text: '#15803d', icon: <CheckCircle size={12}/> },
+  pending:   { label: 'Pendiente',  dot: '#f59e0b', pill: '#fffbeb', text: '#b45309', icon: <AlertCircle size={12}/> },
+  cancelled: { label: 'Cancelada',  dot: '#ef4444', pill: '#fef2f2', text: '#dc2626', icon: <XCircle size={12}/> },
+  completed: { label: 'Completada', dot: '#94a3b8', pill: '#f8fafc', text: '#64748b', icon: <CheckCircle size={12}/> },
 }
-
-const MONTHS_ES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-const MONTHS_SHORT = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
-const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
+const MONTHS_S = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
 const DAYS_MIN = ['D','L','M','M','J','V','S']
+const DAYS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
-function formatTime(timeStr: string) {
-  if (!timeStr) return ''
-  const [h, m] = timeStr.split(':').map(Number)
-  const ampm = h >= 12 ? 'PM' : 'AM'
-  const h12 = h % 12 || 12
-  return `${h12}:${m.toString().padStart(2,'0')} ${ampm}`
+function fmt(t: string) {
+  if (!t) return ''
+  const [h,m] = t.split(':').map(Number)
+  return `${h%12||12}:${m.toString().padStart(2,'0')} ${h>=12?'PM':'AM'}`
+}
+function isUpcoming(d: string) {
+  const today = new Date(); today.setHours(0,0,0,0)
+  const [y,mo,dy] = d.split('-').map(Number)
+  return new Date(y,mo-1,dy) >= today
 }
 
-function isUpcoming(dateStr: string) {
+function Calendar2({ appointments, onSelectDay, selectedDay }: { appointments: Appointment[]; onSelectDay: (d: string|null) => void; selectedDay: string|null }) {
   const today = new Date()
-  today.setHours(0,0,0,0)
-  const [y,m,d] = dateStr.split('-').map(Number)
-  const apptDate = new Date(y, m-1, d)
-  return apptDate >= today
-}
-
-function AppointmentCalendar({ appointments, onSelectDay, selectedDay }: {
-  appointments: Appointment[]
-  onSelectDay: (day: string | null) => void
-  selectedDay: string | null
-}) {
-  const todayObj = new Date()
-  const [viewYear, setViewYear] = useState(todayObj.getFullYear())
-  const [viewMonth, setViewMonth] = useState(todayObj.getMonth())
-
-  const apptMap: Record<string, Appointment[]> = {}
-  appointments.forEach(a => {
-    if (!apptMap[a.appointment_date]) apptMap[a.appointment_date] = []
-    apptMap[a.appointment_date].push(a)
-  })
-
-  const firstDay = new Date(viewYear, viewMonth, 1).getDay()
-  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
-
-  const prevMonth = () => {
-    if (viewMonth === 0) { setViewMonth(11); setViewYear(v => v - 1) }
-    else setViewMonth(m => m - 1)
-  }
-  const nextMonth = () => {
-    if (viewMonth === 11) { setViewMonth(0); setViewYear(v => v + 1) }
-    else setViewMonth(m => m + 1)
-  }
-
-  const todayStr = `${todayObj.getFullYear()}-${String(todayObj.getMonth()+1).padStart(2,'0')}-${String(todayObj.getDate()).padStart(2,'0')}`
-  const cells: (number | null)[] = [...Array(firstDay).fill(null), ...Array.from({length: daysInMonth}, (_,i) => i+1)]
-  while (cells.length % 7 !== 0) cells.push(null)
+  const [vy, setVy] = useState(today.getFullYear())
+  const [vm, setVm] = useState(today.getMonth())
+  const map: Record<string,Appointment[]> = {}
+  appointments.forEach(a => { (map[a.appointment_date] = map[a.appointment_date]||[]).push(a) })
+  const firstDay = new Date(vy,vm,1).getDay()
+  const daysInMonth = new Date(vy,vm+1,0).getDate()
+  const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`
+  const cells = [...Array(firstDay).fill(null), ...Array.from({length:daysInMonth},(_,i)=>i+1)]
+  while (cells.length%7) cells.push(null)
 
   return (
-    <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-      <div className="bg-gradient-to-r from-violet-600 to-purple-700 p-4">
-        <div className="flex items-center justify-between">
-          <button onClick={prevMonth} className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all active:scale-90">
-            <ChevronLeft size={16}/>
-          </button>
-          <div className="text-center">
-            <p className="text-white font-black text-base">{MONTHS_ES[viewMonth]}</p>
-            <p className="text-purple-200 text-xs font-semibold">{viewYear}</p>
+    <div style={{ background:'#fff', borderRadius:24, overflow:'hidden', border:'1.5px solid #f1f5f9', boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+      <div style={{ background:'linear-gradient(135deg,#7c3aed,#4f46e5)', padding:'16px 20px' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+          <button onClick={()=>{ if(vm===0){setVm(11);setVy(y=>y-1)}else setVm(m=>m-1) }} style={{ width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,.2)',border:'none',color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><ChevronLeft size={16}/></button>
+          <div style={{ textAlign:'center' }}>
+            <p style={{ color:'#fff',fontWeight:900,fontSize:15,margin:0 }}>{MONTHS[vm]}</p>
+            <p style={{ color:'rgba(255,255,255,.7)',fontSize:11,margin:0 }}>{vy}</p>
           </div>
-          <button onClick={nextMonth} className="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-all active:scale-90">
-            <ChevronRight size={16}/>
-          </button>
+          <button onClick={()=>{ if(vm===11){setVm(0);setVy(y=>y+1)}else setVm(m=>m+1) }} style={{ width:32,height:32,borderRadius:'50%',background:'rgba(255,255,255,.2)',border:'none',color:'#fff',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><ChevronRight size={16}/></button>
         </div>
       </div>
-
-      <div className="p-4">
-        <div className="grid grid-cols-7 mb-2">
-          {DAYS_MIN.map((d, i) => (
-            <div key={i} className={`text-center text-[11px] font-black py-1 ${i === 0 || i === 6 ? 'text-slate-300' : 'text-slate-400'}`}>{d}</div>
-          ))}
+      <div style={{ padding:'12px 16px' }}>
+        <div style={{ display:'grid',gridTemplateColumns:'repeat(7,1fr)',marginBottom:6 }}>
+          {DAYS_MIN.map((d,i)=><div key={i} style={{ textAlign:'center',fontSize:10,fontWeight:800,padding:'4px 0',color:i===0||i===6?'#cbd5e1':'#94a3b8' }}>{d}</div>)}
         </div>
-        <div className="grid grid-cols-7 gap-y-1">
-          {cells.map((day, i) => {
+        <div style={{ display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:'3px 0' }}>
+          {cells.map((day,i)=>{
             if (!day) return <div key={i}/>
-            const dateStr = `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
-            const dayAppts = apptMap[dateStr] || []
-            const hasAppt = dayAppts.length > 0
-            const isToday = dateStr === todayStr
-            const isSelected = dateStr === selectedDay
-            const isPast = dateStr < todayStr
-            const hasActive = dayAppts.some(a => a.status !== 'cancelled')
-            const allCancelled = dayAppts.length > 0 && dayAppts.every(a => a.status === 'cancelled')
-
+            const ds = `${vy}-${String(vm+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+            const appts = map[ds]||[]; const has = appts.length>0
+            const isTod = ds===todayStr; const isSel = ds===selectedDay; const isPast = ds<todayStr
+            const hasActive = appts.some(a=>a.status!=='cancelled')
             return (
-              <button
-                key={i}
-                onClick={() => hasAppt ? onSelectDay(isSelected ? null : dateStr) : undefined}
-                disabled={!hasAppt}
-                className={`
-                  relative aspect-square flex flex-col items-center justify-center rounded-xl text-sm font-bold transition-all
-                  ${!hasAppt ? 'cursor-default' : 'cursor-pointer hover:scale-105 active:scale-95'}
-                  ${isSelected 
-                    ? 'bg-violet-600 text-white shadow-lg shadow-violet-200 scale-105 ring-2 ring-violet-400 ring-offset-1' 
-                    : isToday && hasAppt
-                      ? 'bg-violet-600 text-white shadow-md'
-                      : isToday
-                        ? 'ring-2 ring-violet-300 text-violet-700'
-                        : hasActive && !isPast
-                          ? 'bg-purple-100 text-purple-800 ring-2 ring-purple-300'
-                          : hasActive
-                            ? 'bg-slate-100 text-slate-600'
-                            : allCancelled
-                              ? 'bg-red-50 text-red-300'
-                              : 'text-slate-400'
-                  }
-                `}
-              >
-                <span className="leading-none text-xs">{day}</span>
-                {hasAppt && (
-                  <div className="flex gap-0.5 mt-0.5">
-                    {dayAppts.slice(0, 3).map((a, idx) => {
-                      const dotColor = a.status === 'confirmed' ? 'bg-emerald-400' 
-                        : a.status === 'pending' ? 'bg-amber-400'
-                        : a.status === 'cancelled' ? 'bg-red-300'
-                        : 'bg-slate-400'
-                      return <div key={idx} className={`w-1 h-1 rounded-full ${isSelected || (isToday && hasAppt) ? 'bg-white/80' : dotColor}`}/>
-                    })}
-                  </div>
-                )}
+              <button key={i} onClick={()=>has?onSelectDay(isSel?null:ds):undefined} disabled={!has}
+                style={{ position:'relative',aspectRatio:'1',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',borderRadius:10,border:'none',cursor:has?'pointer':'default',fontSize:12,fontWeight:700,transition:'all .15s',
+                  background: isSel?'#7c3aed':isTod&&has?'#7c3aed':isTod?'transparent':hasActive&&!isPast?'#f5f3ff':has?'#f8fafc':'transparent',
+                  color: isSel||isTod&&has?'#fff':isTod?'#7c3aed':hasActive&&!isPast?'#6d28d9':has?'#475569':'#cbd5e1',
+                  outline: isTod&&!has?'2px solid #c4b5fd':'none',
+                  transform: isSel?'scale(1.1)':'scale(1)',
+                  boxShadow: isSel?'0 4px 12px rgba(124,58,237,.4)':'none',
+                }}>
+                {day}
+                {has && <div style={{ display:'flex',gap:2,marginTop:1 }}>
+                  {appts.slice(0,3).map((a,j)=><div key={j} style={{ width:4,height:4,borderRadius:'50%',background:isSel||isTod&&has?'rgba(255,255,255,.8)':a.status==='confirmed'?'#10b981':a.status==='pending'?'#f59e0b':'#ef4444' }}/>)}
+                </div>}
               </button>
             )
           })}
         </div>
       </div>
-
-      <div className="px-4 pb-4 flex flex-wrap gap-x-4 gap-y-1.5">
-        {[
-          { color: 'bg-purple-300', label: 'Con cita' },
-          { color: 'bg-emerald-400', label: 'Confirmada' },
-          { color: 'bg-amber-400', label: 'Pendiente' },
-        ].map(({ color, label }) => (
-          <div key={label} className="flex items-center gap-1.5">
-            <div className={`w-2.5 h-2.5 rounded-full ${color}`}/>
-            <span className="text-[10px] text-slate-500 font-semibold">{label}</span>
+      <div style={{ padding:'8px 16px 14px',display:'flex',flexWrap:'wrap',gap:'8px 16px' }}>
+        {[['#10b981','Confirmada'],['#f59e0b','Pendiente'],['#7c3aed','Con cita']].map(([c,l])=>(
+          <div key={l} style={{ display:'flex',alignItems:'center',gap:5 }}>
+            <div style={{ width:8,height:8,borderRadius:'50%',background:c }}/>
+            <span style={{ fontSize:10,color:'#94a3b8',fontWeight:600 }}>{l}</span>
           </div>
         ))}
       </div>
@@ -209,67 +111,52 @@ function AppointmentCalendar({ appointments, onSelectDay, selectedDay }: {
   )
 }
 
-function AppointmentCard({ apt, selectedChild, activeVideoSessions, joiningCall, handleJoinVideoCall }: {
-  apt: Appointment
-  selectedChild: any
-  activeVideoSessions: Record<string, any>
-  joiningCall: string | null
-  handleJoinVideoCall: (apt: Appointment) => void
-}) {
-  const cfg = statusConfig[apt.status] || statusConfig.pending
-  const childName = (apt as any).children?.name || selectedChild?.name || ''
+function AptCard({ apt, selectedChild, activeVid, joiningCall, onJoin }: any) {
+  const st = STATUS[apt.status]||STATUS.pending
+  const childName = apt.children?.name||selectedChild?.name||''
   const upcoming = isUpcoming(apt.appointment_date)
+  const [y,mo,d] = apt.appointment_date.split('-').map(Number)
+  const date = new Date(y,mo-1,d)
 
   return (
-    <div className={`bg-white rounded-2xl border overflow-hidden transition-all shadow-sm hover:shadow-md ${
-      upcoming && apt.status !== 'cancelled' ? 'border-violet-100' : 'border-slate-100 opacity-75'
-    }`}>
-      <div className="flex">
-        <div className={`w-1.5 shrink-0 ${cfg.dot}`}/>
-        <div className="flex-1 p-4">
-          <div className="flex items-start gap-3">
-            <div className="flex-1 min-w-0">
-              <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border mb-2 ${cfg.bg} ${cfg.color}`}>
-                {cfg.icon} {cfg.label}
-                {apt.is_group && <span className="ml-1 opacity-70">• Grupal</span>}
-              </span>
-              <h3 className="font-black text-slate-800 text-sm">{apt.service_type || apt.type || 'Terapia'}</h3>
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1.5">
-                {childName && (
-                  <span className="text-xs text-slate-400 flex items-center gap-1"><Baby size={10}/> {childName}</span>
-                )}
-                <span className="text-xs font-semibold text-slate-600 flex items-center gap-1">
-                  <Clock size={10} className="text-slate-400"/> {formatTime(apt.appointment_time)}
+    <div style={{ background:'#fff', borderRadius:20, border:`1.5px solid ${upcoming&&apt.status!=='cancelled'?'#ede9fe':'#f1f5f9'}`, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', opacity:!upcoming||apt.status==='cancelled'?.65:1 }}>
+      <div style={{ display:'flex' }}>
+        <div style={{ width:5,flexShrink:0,background:st.dot }}/>
+        <div style={{ flex:1,padding:'14px 16px' }}>
+          <div style={{ display:'flex',alignItems:'flex-start',gap:14 }}>
+            <div style={{ background:'linear-gradient(135deg,#7c3aed,#4f46e5)',color:'#fff',borderRadius:14,padding:'10px 12px',textAlign:'center',flexShrink:0,boxShadow:'0 4px 12px rgba(124,58,237,.25)' }}>
+              <div style={{ fontSize:11,fontWeight:700,textTransform:'uppercase',opacity:.8 }}>{MONTHS_S[mo-1]}</div>
+              <div style={{ fontSize:22,fontWeight:900,lineHeight:1.1 }}>{d}</div>
+              <div style={{ fontSize:10,opacity:.7 }}>{DAYS[date.getDay()]}</div>
+            </div>
+            <div style={{ flex:1 }}>
+              <div style={{ display:'flex',alignItems:'center',gap:6,marginBottom:6,flexWrap:'wrap' }}>
+                <span style={{ display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:st.pill,color:st.text,border:`1px solid ${st.dot}30` }}>
+                  {st.icon}{st.label}
                 </span>
-                {(apt as any).modalidad === 'virtual' && (
-                  <span className="text-xs text-indigo-500 font-bold flex items-center gap-1"><Video size={10}/> Virtual</span>
-                )}
+                {apt.is_group && <span style={{ fontSize:10,fontWeight:700,color:'#7c3aed',background:'#f5f3ff',padding:'2px 8px',borderRadius:20 }}>Grupal</span>}
               </div>
-              {apt.notes && <p className="text-xs text-slate-400 mt-2 italic line-clamp-2">"{apt.notes}"</p>}
+              <p style={{ fontWeight:800,fontSize:15,color:'#0f172a',margin:'0 0 4px' }}>{apt.service_type||apt.type||'Terapia ABA'}</p>
+              <div style={{ display:'flex',alignItems:'center',gap:10,flexWrap:'wrap' }}>
+                {childName && <span style={{ fontSize:12,color:'#94a3b8',display:'flex',alignItems:'center',gap:3 }}><Baby size={11}/>{childName}</span>}
+                <span style={{ fontSize:12,color:'#64748b',fontWeight:600,display:'flex',alignItems:'center',gap:3 }}><Clock size={11}/>{fmt(apt.appointment_time)}</span>
+                {apt.modalidad==='virtual'&&<span style={{ fontSize:11,color:'#6366f1',fontWeight:700,display:'flex',alignItems:'center',gap:3 }}><Video size={11}/>Virtual</span>}
+              </div>
+              {apt.notes && <p style={{ fontSize:11,color:'#94a3b8',marginTop:6,fontStyle:'italic' }}>"{apt.notes}"</p>}
             </div>
           </div>
-
-          {upcoming && (apt.status === 'confirmed' || apt.status === 'pending') && (apt as any).modalidad === 'virtual' && (() => {
-            const activeSession = activeVideoSessions[apt.id]
-            if (activeSession) return (
-              <div className="mt-3 pt-3 border-t border-slate-50">
-                <button
-                  onClick={() => handleJoinVideoCall(apt)}
-                  disabled={joiningCall === apt.id}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-black text-sm text-white transition-all hover:opacity-90 active:scale-95 disabled:opacity-60"
-                  style={{ background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', boxShadow: '0 4px 12px rgba(99,102,241,0.3)' }}
-                >
-                  {joiningCall === apt.id ? <><Loader2 size={15} className="animate-spin"/> Conectando...</> : <><Video size={15}/> 🟢 Unirse a videollamada</>}
+          {upcoming&&(apt.status==='confirmed'||apt.status==='pending')&&apt.modalidad==='virtual'&&(() => {
+            const vs = activeVid[apt.id]
+            return vs ? (
+              <div style={{ marginTop:12,paddingTop:12,borderTop:'1px solid #f1f5f9' }}>
+                <button onClick={()=>onJoin(apt)} disabled={joiningCall===apt.id} style={{ width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'10px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer',boxShadow:'0 4px 12px rgba(99,102,241,.3)' }}>
+                  {joiningCall===apt.id?<><Loader2 size={14} style={{ animation:'spin 1s linear infinite' }}/>Conectando...</>:<><Video size={14}/>🟢 Unirse a videollamada</>}
                 </button>
               </div>
-            )
-            return (
-              <div className="mt-3 pt-3 border-t border-slate-50">
-                <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border border-indigo-100 rounded-xl">
-                  <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse shrink-0"/>
-                  <p className="text-xs text-indigo-600 font-semibold">El enlace aparecerá cuando inicie la sesión</p>
-                  <Video size={13} className="text-indigo-400 ml-auto shrink-0"/>
-                </div>
+            ) : (
+              <div style={{ marginTop:12,paddingTop:12,borderTop:'1px solid #f1f5f9',display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'#f0f4ff',borderRadius:12 }}>
+                <div style={{ width:8,height:8,borderRadius:'50%',background:'#6366f1',animation:'pulse 2s infinite' }}/>
+                <p style={{ fontSize:11,color:'#6366f1',fontWeight:600,margin:0 }}>El enlace aparecerá cuando inicie la sesión</p>
               </div>
             )
           })()}
@@ -284,240 +171,164 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
   const supabase = supabaseClient
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedDay, setSelectedDay] = useState<string | null>(null)
-  const [videoSession, setVideoSession] = useState<{roomUrl:string;sessionId:string;appointmentId:string}|null>(null)
+  const [selectedDay, setSelectedDay] = useState<string|null>(null)
+  const [videoSession, setVideoSession] = useState<any>(null)
   const [joiningCall, setJoiningCall] = useState<string|null>(null)
-  const [activeVideoSessions, setActiveVideoSessions] = useState<Record<string, {sessionId:string;roomUrl:string}>>({})
-  const [listView, setListView] = useState<'upcoming' | 'all'>('upcoming')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [activeVid, setActiveVid] = useState<Record<string,any>>({})
+  const [listView, setListView] = useState<'upcoming'|'all'>('upcoming')
+  const [statusFilter, setStatusFilter] = useState('all')
 
-  const pollActiveSessions = useCallback(async (apts: Appointment[]) => {
-    const virtualUpcoming = apts.filter(a =>
-      (a as any).modalidad === 'virtual' &&
-      isUpcoming(a.appointment_date) &&
-      (a.status === 'confirmed' || a.status === 'pending')
-    )
-    if (virtualUpcoming.length === 0) return
-    const results: Record<string, {sessionId:string;roomUrl:string}> = {}
-    await Promise.all(
-      virtualUpcoming.map(async (apt) => {
-        try {
-          const res = await fetch(`/api/video-call?appointment_id=${apt.id}`)
-          const data = await res.json()
-          if (data.session?.roomUrl) {
-            results[apt.id] = { sessionId: data.session.sessionId, roomUrl: data.session.roomUrl }
-          }
-        } catch { /* silencioso */ }
-      })
-    )
-    setActiveVideoSessions(results)
+  const pollVid = useCallback(async (apts: Appointment[]) => {
+    const virt = apts.filter(a=>(a as any).modalidad==='virtual'&&isUpcoming(a.appointment_date)&&(a.status==='confirmed'||a.status==='pending'))
+    if (!virt.length) return
+    const res: Record<string,any> = {}
+    await Promise.all(virt.map(async apt => {
+      try {
+        const r = await fetch(`/api/video-call?appointment_id=${apt.id}`)
+        const d = await r.json()
+        if (d.session?.roomUrl) res[apt.id] = d.session
+      } catch {}
+    }))
+    setActiveVid(res)
   }, [])
 
-  const handleJoinVideoCall = (apt: Appointment) => {
-    const session = activeVideoSessions[apt.id]
-    if (!session) return
+  const onJoin = (apt: Appointment) => {
+    const s = activeVid[apt.id]; if (!s) return
     setJoiningCall(apt.id)
-    setVideoSession({ roomUrl: session.roomUrl, sessionId: session.sessionId, appointmentId: apt.id })
+    setVideoSession({ roomUrl:s.roomUrl, sessionId:s.sessionId, appointmentId:apt.id })
     setJoiningCall(null)
   }
 
-  useEffect(() => { loadAppointments() }, [profile?.id, selectedChild?.id])
-
-  useEffect(() => {
-    if (appointments.length === 0) return
-    const interval = setInterval(() => pollActiveSessions(appointments), 15000)
-    return () => clearInterval(interval)
-  }, [appointments, pollActiveSessions])
-
-  const loadAppointments = async () => {
+  const load = async () => {
     if (!profile?.id) return
     setLoading(true)
-    try {
-      const { data: myChildren } = await supabase.from('children').select('id').eq('parent_id', profile.id)
-      const childIds = (myChildren || []).map((c: any) => c.id)
-      let query = supabase
-        .from('appointments')
-        .select('*, children(name, birth_date)')
-        .order('appointment_date', { ascending: true })
-        .order('appointment_time', { ascending: true })
-      if (selectedChild?.id) {
-        query = query.eq('child_id', selectedChild.id)
-      } else if (childIds.length > 0) {
-        const childFilter = childIds.map((id: string) => `child_id.eq.${id}`).join(',')
-        query = query.or(`parent_id.eq.${profile.id},${childFilter}`)
-      } else {
-        query = query.eq('parent_id', profile.id)
-      }
-      const { data, error } = await query
-      if (error) throw error
-      setAppointments(data || [])
-      pollActiveSessions(data || [])
-    } catch (e) {
-      console.error('Error cargando citas:', e)
-    } finally {
-      setLoading(false)
-    }
+    const { data: kids } = await supabase.from('children').select('id').eq('parent_id',profile.id)
+    const childIds = (kids||[]).map((c:any)=>c.id)
+    let q = supabase.from('appointments').select('*, children(name, birth_date)').order('appointment_date',{ascending:true}).order('appointment_time',{ascending:true})
+    if (selectedChild?.id) q = q.eq('child_id',selectedChild.id)
+    else if (childIds.length>0) q = q.or(`parent_id.eq.${profile.id},${childIds.map((id:string)=>`child_id.eq.${id}`).join(',')}`)
+    else q = q.eq('parent_id',profile.id)
+    const { data } = await q
+    setAppointments(data||[])
+    pollVid(data||[])
+    setLoading(false)
   }
 
+  useEffect(()=>{ load() },[profile?.id,selectedChild?.id])
+  useEffect(()=>{ if (!appointments.length) return; const i = setInterval(()=>pollVid(appointments),15000); return ()=>clearInterval(i) },[appointments,pollVid])
+
   const today = new Date().toISOString().split('T')[0]
-  const upcomingCount = appointments.filter(a => a.appointment_date >= today && a.status !== 'cancelled').length
-  const completedCount = appointments.filter(a => a.status === 'completed').length
-
-  const selectedDayAppts = selectedDay ? appointments.filter(a => a.appointment_date === selectedDay) : []
-
-  const listAppointments = appointments.filter(a => {
+  const upcoming = appointments.filter(a=>a.appointment_date>=today&&a.status!=='cancelled').length
+  const completed = appointments.filter(a=>a.status==='completed').length
+  const selAppts = selectedDay ? appointments.filter(a=>a.appointment_date===selectedDay) : []
+  const listAppts = appointments.filter(a=>{
     if (selectedDay) return false
-    if (listView === 'upcoming') return a.appointment_date >= today && a.status !== 'cancelled'
-    if (statusFilter !== 'all') return a.status === statusFilter
-    return true
+    if (listView==='upcoming') return a.appointment_date>=today&&a.status!=='cancelled'
+    return statusFilter==='all'||a.status===statusFilter
   })
-
-  const grouped: Record<string, Appointment[]> = {}
-  listAppointments.forEach(a => {
-    if (!grouped[a.appointment_date]) grouped[a.appointment_date] = []
-    grouped[a.appointment_date].push(a)
-  })
+  const grouped: Record<string,Appointment[]> = {}
+  listAppts.forEach(a=>{ (grouped[a.appointment_date]=grouped[a.appointment_date]||[]).push(a) })
 
   return (
     <>
-      {videoSession && (
-        <VideoCallModal
-          roomUrl={videoSession.roomUrl}
-          sessionId={videoSession.sessionId}
-          appointmentId={videoSession.appointmentId}
-          participantName={profile?.full_name || 'Padre/Madre'}
-          onClose={() => { setVideoSession(null); loadAppointments() }}
-        />
-      )}
+      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}.mcv-card{animation:fadeUp .4s ease both}`}</style>
+      {videoSession && <VideoCallModal roomUrl={videoSession.roomUrl} sessionId={videoSession.sessionId} appointmentId={videoSession.appointmentId} participantName={profile?.full_name||'Padre/Madre'} onClose={()=>{setVideoSession(null);load()}}/>}
 
-      <div className="animate-fade-in space-y-5 pb-8">
-        {/* Header */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-violet-600 via-purple-600 to-indigo-700 rounded-3xl p-6 text-white shadow-xl shadow-purple-200/50">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-10 translate-x-10"/>
-          <div className="absolute bottom-0 left-0 w-28 h-28 bg-white/10 rounded-full blur-2xl translate-y-6 -translate-x-6"/>
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 mb-1">
-              <CalendarDays size={16} className="opacity-80"/>
-              <span className="text-purple-200 text-xs font-bold tracking-widest uppercase">Mis Citas</span>
+      <div style={{ display:'flex',flexDirection:'column',gap:16,paddingBottom:32 }}>
+        {/* Hero */}
+        <div className="mcv-card" style={{ background:'linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#9333ea 100%)',borderRadius:28,padding:'24px 24px 20px',color:'#fff',boxShadow:'0 20px 60px rgba(79,70,229,.3)',position:'relative',overflow:'hidden' }}>
+          <div style={{ position:'absolute',top:-30,right:-30,width:160,height:160,background:'rgba(255,255,255,.08)',borderRadius:'50%' }}/>
+          <div style={{ position:'relative',zIndex:1 }}>
+            <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:4 }}>
+              <CalendarDays size={15} style={{ opacity:.7 }}/>
+              <span style={{ fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1.2,color:'rgba(255,255,255,.7)' }}>Mis Citas</span>
             </div>
-            <h1 className="text-2xl font-black mb-4">
-              {selectedChild?.name?.split(' ')[0] || profile?.full_name?.split(' ')[0] || 'Mis citas'}
-            </h1>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { val: upcomingCount, label: 'Próximas' },
-                { val: completedCount, label: 'Realizadas' },
-                { val: appointments.length, label: 'Total' },
-              ].map(({ val, label }) => (
-                <div key={label} className="bg-white/15 backdrop-blur-sm rounded-2xl p-3 text-center">
-                  <div className="text-2xl font-black">{val}</div>
-                  <div className="text-[10px] text-purple-200 font-bold uppercase tracking-wider mt-0.5">{label}</div>
+            <h1 style={{ fontSize:24,fontWeight:900,margin:'0 0 16px',letterSpacing:'-0.5px' }}>{selectedChild?.name?.split(' ')[0]||profile?.full_name?.split(' ')[0]||'Mis citas'}</h1>
+            <div style={{ display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10 }}>
+              {[['Próximas',upcoming],['Realizadas',completed],['Total',appointments.length]].map(([l,v])=>(
+                <div key={l as string} style={{ background:'rgba(255,255,255,.15)',backdropFilter:'blur(8px)',borderRadius:14,padding:'10px 8px',textAlign:'center' }}>
+                  <div style={{ fontSize:24,fontWeight:900,lineHeight:1 }}>{v}</div>
+                  <div style={{ fontSize:10,color:'rgba(255,255,255,.7)',fontWeight:700,marginTop:2,textTransform:'uppercase',letterSpacing:.5 }}>{l}</div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Info: citas asignadas por el centro */}
-        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-2xl p-4">
-          <div className="w-8 h-8 bg-blue-100 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
-            <Info size={15} className="text-blue-500"/>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-bold text-blue-800">Las citas son asignadas por el equipo del centro</p>
-            <p className="text-xs text-blue-600 mt-0.5">Para solicitar, cambiar o cancelar, contactá directamente con recepción.</p>
-            <div className="flex flex-wrap gap-3 mt-2">
-              <a href="tel:+51924807183" className="text-xs font-bold text-blue-700 flex items-center gap-1.5 hover:underline">
-                <Phone size={11}/> +51 924 807 183
-              </a>
-              <a href="mailto:tallerjugandoaprendoind@gmail.com" className="text-xs font-bold text-blue-700 flex items-center gap-1.5 hover:underline">
-                <Mail size={11}/> Escribir email
-              </a>
+        {/* Info */}
+        <div className="mcv-card" style={{ background:'#f0f9ff',border:'1.5px solid #bae6fd',borderRadius:20,padding:'14px 16px',display:'flex',alignItems:'flex-start',gap:12 }}>
+          <div style={{ width:36,height:36,background:'#e0f2fe',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}><Info size={16} color="#0284c7"/></div>
+          <div>
+            <p style={{ fontSize:13,fontWeight:700,color:'#075985',margin:'0 0 2px' }}>Las citas son asignadas por el equipo del centro</p>
+            <p style={{ fontSize:12,color:'#0284c7',margin:'0 0 8px' }}>Para solicitar, cambiar o cancelar, contactá directamente con recepción.</p>
+            <div style={{ display:'flex',flexWrap:'wrap',gap:12 }}>
+              <a href="tel:+51924807183" style={{ fontSize:12,fontWeight:700,color:'#0369a1',display:'flex',alignItems:'center',gap:4,textDecoration:'none' }}><Phone size={11}/> +51 924 807 183</a>
+              <a href="mailto:tallerjugandoaprendoind@gmail.com" style={{ fontSize:12,fontWeight:700,color:'#0369a1',display:'flex',alignItems:'center',gap:4,textDecoration:'none' }}><Mail size={11}/> Escribir email</a>
             </div>
           </div>
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-16 gap-4">
-            <div className="w-12 h-12 rounded-full border-4 border-violet-200 border-t-violet-600 animate-spin"/>
-            <p className="text-slate-400 font-medium text-sm">Cargando citas...</p>
+          <div style={{ display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'60px 0',gap:12 }}>
+            <div style={{ width:40,height:40,borderRadius:'50%',border:'3px solid #e2e8f0',borderTop:'3px solid #7c3aed',animation:'spin 1s linear infinite' }}/>
+            <p style={{ fontSize:13,color:'#94a3b8',fontWeight:500 }}>Cargando citas...</p>
           </div>
         ) : (
           <>
-            {/* Calendar */}
-            <AppointmentCalendar appointments={appointments} onSelectDay={setSelectedDay} selectedDay={selectedDay}/>
+            <div className="mcv-card"><Calendar2 appointments={appointments} onSelectDay={setSelectedDay} selectedDay={selectedDay}/></div>
 
-            {/* Selected day detail */}
-            {selectedDay && selectedDayAppts.length > 0 && (
-              <div className="bg-white rounded-3xl border border-violet-200 shadow-sm overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-3 bg-violet-50 border-b border-violet-100">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={15} className="text-violet-500"/>
-                    <span className="text-sm font-black text-violet-700">
-                      {(() => {
-                        const [y,m,d] = selectedDay.split('-').map(Number)
-                        const date = new Date(y, m-1, d)
-                        return `${DAYS_ES[date.getDay()]}, ${d} de ${MONTHS_ES[m-1]}`
-                      })()}
-                    </span>
-                    <span className="text-xs text-violet-400 font-semibold">({selectedDayAppts.length} cita{selectedDayAppts.length !== 1 ? 's' : ''})</span>
+            {selectedDay && selAppts.length > 0 && (
+              <div className="mcv-card" style={{ background:'#fff',borderRadius:20,border:'1.5px solid #ede9fe',overflow:'hidden',boxShadow:'0 4px 20px rgba(124,58,237,.08)' }}>
+                <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'14px 16px',background:'#faf5ff',borderBottom:'1px solid #f3e8ff' }}>
+                  <div style={{ display:'flex',alignItems:'center',gap:8 }}>
+                    <Calendar size={14} color="#7c3aed"/>
+                    <span style={{ fontSize:13,fontWeight:800,color:'#6d28d9' }}>{(() => { const [y,mo,d]=selectedDay.split('-').map(Number); const dt=new Date(y,mo-1,d); return `${DAYS[dt.getDay()]}, ${d} de ${MONTHS[mo-1]}` })()}</span>
+                    <span style={{ fontSize:11,color:'#a78bfa',fontWeight:600 }}>({selAppts.length} cita{selAppts.length!==1?'s':''})</span>
                   </div>
-                  <button onClick={() => setSelectedDay(null)} className="text-xs text-violet-400 hover:text-violet-600 font-black w-6 h-6 flex items-center justify-center rounded-lg hover:bg-violet-100 transition-all">✕</button>
+                  <button onClick={()=>setSelectedDay(null)} style={{ background:'none',border:'none',fontSize:16,color:'#a78bfa',cursor:'pointer',width:28,height:28,borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center' }}>✕</button>
                 </div>
-                <div className="p-3 space-y-2">
-                  {selectedDayAppts.map(apt => (
-                    <AppointmentCard key={apt.id} apt={apt} selectedChild={selectedChild} activeVideoSessions={activeVideoSessions} joiningCall={joiningCall} handleJoinVideoCall={handleJoinVideoCall}/>
-                  ))}
+                <div style={{ padding:'12px',display:'flex',flexDirection:'column',gap:8 }}>
+                  {selAppts.map(apt=><AptCard key={apt.id} apt={apt} selectedChild={selectedChild} activeVid={activeVid} joiningCall={joiningCall} onJoin={onJoin}/>)}
                 </div>
               </div>
             )}
 
-            {/* List section */}
             {!selectedDay && (
               <>
-                <div className="flex bg-slate-100 rounded-2xl p-1 gap-1">
-                  <button onClick={() => setListView('upcoming')} className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${listView === 'upcoming' ? 'bg-white text-slate-800 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>📅 Próximas</button>
-                  <button onClick={() => setListView('all')} className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${listView === 'all' ? 'bg-white text-slate-800 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>📋 Todas</button>
+                <div className="mcv-card" style={{ display:'flex',background:'#f8fafc',borderRadius:16,padding:4,gap:4 }}>
+                  {[['upcoming','📅 Próximas'],['all','📋 Todas']].map(([k,label])=>(
+                    <button key={k} onClick={()=>setListView(k as any)} style={{ flex:1,padding:'10px',borderRadius:12,border:'none',fontSize:13,fontWeight:700,cursor:'pointer',transition:'all .15s',background:listView===k?'#fff':'transparent',color:listView===k?'#1e293b':'#94a3b8',boxShadow:listView===k?'0 2px 8px rgba(0,0,0,.08)':'none' }}>{label}</button>
+                  ))}
                 </div>
 
-                {listView === 'all' && (
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      { key: 'all', label: 'Todas' },
-                      { key: 'confirmed', label: '✅ Confirmadas' },
-                      { key: 'pending', label: '⏳ Pendientes' },
-                      { key: 'completed', label: '🏆 Completadas' },
-                      { key: 'cancelled', label: '❌ Canceladas' },
-                    ].map(({ key, label }) => (
-                      <button key={key} onClick={() => setStatusFilter(key)} className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${statusFilter === key ? 'bg-violet-600 text-white border-violet-600 shadow-md shadow-violet-200' : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>{label}</button>
+                {listView==='all' && (
+                  <div className="mcv-card" style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
+                    {[['all','Todas'],['confirmed','✅ Confirmadas'],['pending','⏳ Pendientes'],['completed','🏆 Completadas'],['cancelled','❌ Canceladas']].map(([k,label])=>(
+                      <button key={k} onClick={()=>setStatusFilter(k)} style={{ padding:'6px 12px',borderRadius:20,border:`1.5px solid ${statusFilter===k?'#7c3aed':'#e2e8f0'}`,fontSize:12,fontWeight:700,cursor:'pointer',background:statusFilter===k?'#7c3aed':'#fff',color:statusFilter===k?'#fff':'#64748b' }}>{label}</button>
                     ))}
                   </div>
                 )}
 
-                {listAppointments.length === 0 ? (
-                  <div className="bg-white rounded-3xl p-10 text-center shadow-sm border border-slate-100">
-                    <div className="w-16 h-16 bg-gradient-to-br from-violet-100 to-purple-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
-                      <CalendarDays size={28} className="text-violet-400"/>
-                    </div>
-                    <h3 className="font-bold text-slate-700 text-base mb-1">Sin citas aquí</h3>
-                    <p className="text-slate-400 text-sm">{listView === 'upcoming' ? 'No tienes citas próximas agendadas.' : 'No hay citas con ese filtro.'}</p>
+                {listAppts.length===0 ? (
+                  <div className="mcv-card" style={{ background:'#fff',borderRadius:20,padding:'48px 20px',textAlign:'center',border:'1.5px solid #f1f5f9' }}>
+                    <div style={{ width:56,height:56,background:'linear-gradient(135deg,#f5f3ff,#ede9fe)',borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><CalendarDays size={24} color="#a78bfa"/></div>
+                    <p style={{ fontWeight:700,fontSize:14,color:'#64748b',margin:'0 0 6px' }}>Sin citas aquí</p>
+                    <p style={{ fontSize:12,color:'#94a3b8' }}>{listView==='upcoming'?'No tienes citas próximas agendadas.':'No hay citas con ese filtro.'}</p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {Object.entries(grouped).map(([dateStr, appts]) => {
-                      const [y,m,d] = dateStr.split('-').map(Number)
-                      const date = new Date(y, m-1, d)
-                      const isToday = dateStr === today
+                  <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
+                    {Object.entries(grouped).map(([ds,appts])=>{
+                      const [y,mo,d]=ds.split('-').map(Number); const dt=new Date(y,mo-1,d); const isT=ds===today
                       return (
-                        <div key={dateStr}>
-                          <div className="flex items-center gap-2 mb-2 px-1">
-                            <span className={`text-xs font-black uppercase tracking-widest px-2.5 py-1 rounded-full ${isToday ? 'bg-violet-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                              {isToday ? '🔵 Hoy' : `${DAYS_ES[date.getDay()]} ${d} ${MONTHS_SHORT[m-1]}`}
+                        <div key={ds}>
+                          <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:8 }}>
+                            <span style={{ fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:.5,padding:'4px 10px',borderRadius:20,background:isT?'#7c3aed':'#f1f5f9',color:isT?'#fff':'#94a3b8' }}>
+                              {isT?'🔵 Hoy':`${DAYS[dt.getDay()]} ${d} ${MONTHS_S[mo-1]}`}
                             </span>
-                            <div className="h-px flex-1 bg-slate-100"/>
+                            <div style={{ flex:1,height:1,background:'#f1f5f9' }}/>
                           </div>
-                          <div className="space-y-2">
-                            {appts.map(apt => <AppointmentCard key={apt.id} apt={apt} selectedChild={selectedChild} activeVideoSessions={activeVideoSessions} joiningCall={joiningCall} handleJoinVideoCall={handleJoinVideoCall}/>)}
+                          <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
+                            {appts.map(apt=><AptCard key={apt.id} apt={apt} selectedChild={selectedChild} activeVid={activeVid} joiningCall={joiningCall} onJoin={onJoin}/>)}
                           </div>
                         </div>
                       )
