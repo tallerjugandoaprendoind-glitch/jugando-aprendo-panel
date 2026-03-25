@@ -44,7 +44,7 @@ function formatDate(dateStr: string) {
 // ── Animación de número contando ─────────────────────────────────────────
 function CountUp({ target, duration = 1200 }: { target: number; duration?: number }) {
   const [val, setVal] = useState(0)
-  const rafRef = useRef<number>()
+  const rafRef = useRef<number | undefined>(undefined)
   useEffect(() => {
     if (target === 0) { setVal(0); return }
     let start: number | null = null
