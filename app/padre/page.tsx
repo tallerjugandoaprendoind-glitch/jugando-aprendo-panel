@@ -498,53 +498,56 @@ export default function ParentDashboard() {
         )}
 
         {/* === SIDEBAR (PC) === */}
-        <aside className="hidden lg:flex w-72 bg-white border-r border-slate-100 flex-col justify-between p-6 z-20 shadow-sm">
-            <div>
-                <div className="flex items-center gap-4 mb-12 px-2">
-                    <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl shadow-xl shadow-blue-200/50 ring-4 ring-blue-100/50 relative group cursor-pointer">
-                        {profile?.full_name?.charAt(0) || 'F'}
-                        <div className="absolute inset-0 bg-white/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('ui.welcome')}</p>
-                        <h2 className="font-bold text-slate-800 text-lg leading-tight">Fam. {profile?.full_name?.split(' ')[0]}</h2>
-                        <p className="text-xs text-slate-400 font-medium flex items-center gap-1">
-                            <Sparkles size={10}/> Portal de padres
-                        </p>
-                    </div>
+        <aside className="hidden lg:flex w-[230px] bg-white border-r border-slate-100 flex-col z-20 shadow-[1px_0_3px_rgba(0,0,0,0.04)]">
+
+            {/* Logo header */}
+            <div className="flex items-center gap-3 px-5 h-[60px] border-b border-slate-100/80 flex-shrink-0">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-base shadow-md shadow-blue-200/50">
+                    {profile?.full_name?.charAt(0) || 'F'}
                 </div>
-                
-                <nav className="space-y-2">
-                    <NavBtnDesktop icon={<Home size={20}/>} label={t('familias.inicioProgreso')} active={activeView==='home'} onClick={()=>setActiveView('home')} />
-                    <NavBtnDesktop icon={<Calendar size={20}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
-                    <NavBtnDesktop icon={<Heart size={20}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
-                    <NavBtnDesktop icon={<MessageCircle size={20}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
-                    <NavBtnDesktop icon={<Bell size={20}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
-                    <NavBtnDesktop icon={<Book size={20}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
-                    <NavBtnDesktop icon={<ShoppingBag size={20}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
-                    <NavBtnDesktop icon={<FileText size={20}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
-                    <NavBtnDesktop icon={<User size={20}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
-                </nav>
+                <div className="min-w-0">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">{t('ui.welcome')}</p>
+                    <p className="font-black text-[13px] text-slate-800 truncate">Fam. {profile?.full_name?.split(' ')[0]}</p>
+                </div>
             </div>
-            
-            <div className="space-y-4">
-                {/* Citas gestionadas por la clínica */}
-                <div className="bg-blue-50 border border-blue-100 p-4 rounded-2xl">
-                    <p className="text-xs font-bold text-blue-700 mb-1 flex items-center gap-1.5">
-                        <Calendar size={12}/> Tus citas
-                    </p>
-                    <p className="text-xs text-blue-500 leading-relaxed">Las citas son programadas por el equipo del centro. Para cambios, contactá a recepción.</p>
+
+            {/* Role badge */}
+            <div className="px-4 pt-4 pb-2">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
+                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Portal Familias</span>
                 </div>
-                
-                {/* BOTÓN NOTIFICACIONES SIDEBAR MEJORADO */}
-                <button 
+            </div>
+
+            {/* Nav */}
+            <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
+                <NavBtnDesktop icon={<Home size={17}/>} label={t('familias.inicioProgreso')} active={activeView==='home'} onClick={()=>setActiveView('home')} />
+                <NavBtnDesktop icon={<Calendar size={17}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
+                <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
+                <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
+                <NavBtnDesktop icon={<Bell size={17}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
+                <NavBtnDesktop icon={<Book size={17}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
+                <NavBtnDesktop icon={<ShoppingBag size={17}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
+                <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
+                <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
+            </nav>
+
+            {/* Bottom section */}
+            <div className="p-3 border-t border-slate-100 space-y-2 flex-shrink-0">
+                <div className="bg-blue-50 border border-blue-100 px-4 py-3 rounded-xl">
+                    <p className="text-[10px] font-black text-blue-700 flex items-center gap-1.5 mb-1">
+                        <Calendar size={10}/> Tus citas
+                    </p>
+                    <p className="text-[10px] text-blue-500 leading-relaxed">Programadas por el equipo del centro. Para cambios contactá a recepción.</p>
+                </div>
+                <button
                     onClick={handleOpenNotifications}
-                    className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 p-4 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-blue-100 hover:scale-105 active:scale-95 shadow-sm hover:shadow-lg relative group"
+                    className="w-full bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-700 px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 border border-slate-200 hover:border-blue-200 active:scale-95 relative"
                 >
-                    <Bell size={16} className="group-hover:animate-bounce"/>
+                    <Bell size={14}/>
                     Ver Notificaciones
                     {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center animate-pulse">
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center animate-pulse">
                             {unreadCount}
                         </span>
                     )}
@@ -555,30 +558,27 @@ export default function ParentDashboard() {
         {/* === CONTENIDO PRINCIPAL === */}
         <div className="flex-1 flex flex-col h-full relative">
             
-            {/* 📱 HEADER MÓVIL MEJORADO */}
-            <header className="lg:hidden bg-white/90 backdrop-blur-xl p-4 flex justify-between items-center border-b border-slate-200/60 sticky top-0 z-30 shadow-sm">
+            {/* 📱 HEADER MÓVIL */}
+            <header className="lg:hidden bg-white/95 backdrop-blur-xl px-4 h-[60px] flex justify-between items-center border-b border-slate-100 sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-3">
-                    <div className="w-11 h-11 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center font-bold text-white shadow-lg relative">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-md shadow-blue-200/50 relative">
                         {profile?.full_name?.charAt(0)}
-                        <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                        <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white" />
                     </div>
                     <div>
-                        <p className="font-bold text-slate-800 text-sm leading-tight">{profile?.full_name?.split(' ')[0]}</p>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wide flex items-center gap-1">
-                            <Sparkles size={10}/> Portal Padres
-                        </p>
+                        <p className="font-black text-slate-800 text-sm leading-tight">{profile?.full_name?.split(' ')[0]}</p>
+                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Portal Familias</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <ThemeToggleButton />
-                    <button onClick={handleOpenNotifications} className="p-2 rounded-xl bg-blue-50 text-blue-600 relative hover:scale-110 active:scale-95 transition-transform">
-                        <Bell size={18}/>
+                    <button onClick={handleOpenNotifications} className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-600 flex items-center justify-center relative transition-colors active:scale-95 border border-slate-200">
+                        <Bell size={16}/>
                         {unreadCount > 0 && (
-                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
                         )}
                     </button>
                     <LocaleSelector compact={true} />
-
                 </div>
             </header>
 
