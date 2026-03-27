@@ -193,7 +193,7 @@ export default function EngagementView({ childId }: { childId: string }) {
   )
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,width:'100%' }}>
+    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,width:'100%',minHeight:'calc(100vh - 180px)' }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
@@ -285,8 +285,8 @@ export default function EngagementView({ childId }: { childId: string }) {
               const open = expanded === i
 
               return (
-                <div key={i} className="eng-act" onClick={() => setExpanded(open ? null : i)}
-                  style={{ background: done ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : '#fff', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', position:'relative', borderColor: done ? '#86efac' : '#f1f5f9' }}>
+                <div key={i} className="eng-act"
+                  style={{ background: done ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : '#fff', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', position:'relative', borderColor: done ? '#86efac' : '#f1f5f9', cursor:'default' }}>
 
                   {/* Barra lateral de color por área */}
                   <div style={{ position:'absolute',left:0,top:0,bottom:0,width:4,background:aCol.grad,borderRadius:'20px 0 0 20px' }}/>
@@ -308,7 +308,8 @@ export default function EngagementView({ childId }: { childId: string }) {
                       </button>
 
                       <div style={{ flex:1,minWidth:0 }}>
-                        <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8,marginBottom:6 }}>
+                        <button onClick={() => setExpanded(open ? null : i)}
+                          style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8,marginBottom:6,width:'100%',background:'none',border:'none',cursor:'pointer',padding:0,fontFamily:'inherit',textAlign:'left' }}>
                           <p style={{ fontWeight:800,fontSize:14,color:done?'#6ee7b7':'#0f172a',margin:0,lineHeight:1.3,textDecoration:done?'line-through':'none',textDecorationColor:'#86efac' }}>
                             {act.titulo}
                           </p>
@@ -316,7 +317,7 @@ export default function EngagementView({ childId }: { childId: string }) {
                             <span style={{ fontSize:16 }}>{aCol.emoji}</span>
                             <ChevronDown size={14} color="#94a3b8" style={{ transition:'transform .2s',transform:open?'rotate(180deg)':'rotate(0)' }}/>
                           </div>
-                        </div>
+                        </button>
                         <div style={{ display:'flex',flexWrap:'wrap',gap:5,alignItems:'center' }}>
                           <span style={{ fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,background:aCol.bg,color:aCol.text,border:`1px solid ${aCol.border}` }}>{act.area}</span>
                           <span style={{ display:'flex',alignItems:'center',gap:3,fontSize:10,fontWeight:700,padding:'3px 9px',borderRadius:20,background:dCol.bg,color:dCol.color }}>

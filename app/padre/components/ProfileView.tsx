@@ -7,7 +7,7 @@ import { useToast } from '@/components/Toast'
 import {
   ChevronRight, HelpCircle, Lock, LogOut, Mail, Phone, User,
   Check, Unlink, Loader2, CalendarDays, Shield, Star, Settings,
-  Bell, MessageCircle, Heart
+  Bell, MessageCircle, Heart, CheckCircle, AlertCircle, X
 } from 'lucide-react'
 import { InfoRow, HelpItem } from './shared'
 
@@ -90,7 +90,103 @@ function MenuItem({ icon, label, sub, onClick, danger=false, badge='' }: any) {
   )
 }
 
-function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy, onHelp }: any) {
+function WhatsAppSection({ profile, onUpdated }: { profile: any; onUpdated: (p: string) => void }) {
+  const [phone, setPhone] = useState(profile?.phone || '')
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+  const [error, setError] = useState('')
+  const [editing, setEditing] = useState(!profile?.phone)
+
+  const handleSave = async () => {
+    if (!phone.trim()) { setError('Ingresá tu número'); return }
+    const clean = phone.replace(/\s/g, '')
+    if (!clean.startsWith('+') || clean.length < 10) {
+      setError('Incluí el código de país, ej: +51 924 807 183'); return
+    }
+    setSaving(true); setError('')
+    try {
+      const { error: err } = await supabase
+        .from('profiles')
+        .update({ phone: clean, wsp_notif: true, updated_at: new Date().toISOString() })
+        .eq('id', profile.id)
+      if (err) throw err
+      setSaved(true); setEditing(false); onUpdated(clean)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (e: any) { setError(e.message) }
+    finally { setSaving(false) }
+  }
+
+  const handleRemove = async () => {
+    if (!confirm('¿Desactivar notificaciones WhatsApp?')) return
+    setSaving(true)
+    try {
+      await supabase.from('profiles').update({ phone: null, wsp_notif: false }).eq('id', profile.id)
+      setPhone(''); setEditing(true); onUpdated('')
+    } finally { setSaving(false) }
+  }
+
+  const hasPhone = !!profile?.phone && !editing
+
+  return (
+    <div style={{ background:'#fff', borderRadius:22, border:'1.5px solid #f1f5f9', overflow:'hidden', boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+      <div style={{ padding:'14px 20px 10px' }}>
+        <p style={{ fontSize:10,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:0 }}>Notificaciones WhatsApp</p>
+      </div>
+
+      {hasPhone ? (
+        <div style={{ padding:'12px 20px 16px' }}>
+          {/* Estado activo */}
+          <div style={{ display:'flex',alignItems:'center',gap:14,padding:'12px 14px',background:'linear-gradient(135deg,#f0fdf4,#dcfce7)',borderRadius:16,border:'1.5px solid #86efac',marginBottom:12 }}>
+            <div style={{ width:40,height:40,background:'linear-gradient(135deg,#22c55e,#16a34a)',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0 }}>📱</div>
+            <div style={{ flex:1,minWidth:0 }}>
+              <p style={{ fontWeight:800,fontSize:13,color:'#15803d',margin:0,display:'flex',alignItems:'center',gap:5 }}>
+                <CheckCircle size={13}/> Activo
+              </p>
+              <p style={{ fontSize:12,color:'#16a34a',margin:'2px 0 0',fontWeight:600 }}>{profile?.phone}</p>
+            </div>
+            <div style={{ display:'flex',gap:6 }}>
+              <button onClick={() => setEditing(true)} style={{ fontSize:11,fontWeight:700,color:'#6d28d9',background:'#f5f3ff',border:'1px solid #ddd6fe',borderRadius:10,padding:'6px 10px',cursor:'pointer' }}>Cambiar</button>
+              <button onClick={handleRemove} disabled={saving} style={{ fontSize:11,fontWeight:700,color:'#dc2626',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,padding:'6px 10px',cursor:'pointer' }}>Quitar</button>
+            </div>
+          </div>
+          {/* Qué recibirá */}
+          <div style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:6 }}>
+            {['📅 Nueva cita agendada','❌ Cita cancelada','📊 Informe disponible','💬 Mensaje del terapeuta'].map(item => (
+              <div key={item} style={{ fontSize:11,color:'#64748b',fontWeight:600,padding:'6px 10px',background:'#f8fafc',borderRadius:10,display:'flex',alignItems:'center',gap:6 }}>
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={{ padding:'4px 20px 16px' }}>
+          <p style={{ fontSize:12,color:'#64748b',lineHeight:1.5,margin:'0 0 12px' }}>
+            Ingresá tu número con código de país para recibir alertas importantes.
+          </p>
+          <div style={{ display:'flex',gap:8,marginBottom:error?8:0 }}>
+            <input
+              type="tel"
+              value={phone}
+              onChange={e => { setPhone(e.target.value); setError('') }}
+              placeholder="+51 924 807 183"
+              style={{ flex:1,padding:'11px 14px',borderRadius:14,border:`1.5px solid ${error?'#fca5a5':'#e2e8f0'}`,fontSize:13,fontWeight:600,color:'#1e293b',outline:'none',fontFamily:'inherit',background:'#f8fafc' }}
+              onKeyDown={e => e.key==='Enter' && handleSave()}
+            />
+            <button onClick={handleSave} disabled={saving} style={{ padding:'11px 18px',borderRadius:14,border:'none',background:'linear-gradient(135deg,#22c55e,#16a34a)',color:'#fff',fontWeight:700,fontSize:13,cursor:saving?'not-allowed':'pointer',flexShrink:0,display:'flex',alignItems:'center',gap:6,fontFamily:'inherit',boxShadow:'0 4px 12px rgba(34,197,94,.3)' }}>
+              {saving ? <Loader2 size={14} style={{ animation:'spin 1s linear infinite' }}/> : <Check size={14}/>}
+              {saving ? '' : 'Activar'}
+            </button>
+          </div>
+          {error && <p style={{ fontSize:11,color:'#dc2626',margin:'4px 0 0',fontWeight:600 }}>{error}</p>}
+          {saved && <p style={{ fontSize:11,color:'#16a34a',margin:'6px 0 0',fontWeight:700,display:'flex',alignItems:'center',gap:5 }}><CheckCircle size={11}/>¡Listo! Notificaciones activadas</p>}
+          <p style={{ fontSize:10,color:'#cbd5e1',margin:'8px 0 0' }}>Perú: +51 · Colombia: +57 · México: +52 · España: +34 · Tu número no se comparte con terceros.</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy, onHelp, onPhoneUpdated }: any) {
   const { t } = useI18n()
   const initial = profile?.full_name?.charAt(0)||'U'
   const name = profile?.full_name||'Usuario'
@@ -98,7 +194,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
   const phone = profile?.phone
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32 }}>
+    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,minHeight:'calc(100vh - 180px)' }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -167,6 +263,9 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
         <CalBtn label="Google Calendar" icon="📅" grad="linear-gradient(135deg,#4285f4,#1a73e8)" profile={profile} apiBase="google-calendar" paramKey="gcal"/>
         <CalBtn label="Outlook Calendar" icon={<svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>} grad="linear-gradient(135deg,#0078d4,#106ebe)" profile={profile} apiBase="microsoft-calendar" paramKey="mscal"/>
       </div>
+
+      {/* ── WHATSAPP ── */}
+      <WhatsAppSection profile={profile} onUpdated={onPhoneUpdated || (()=>{})}/>
 
       {/* ── VERSIÓN ── */}
       <div className="pv-card" style={{ background:'linear-gradient(135deg,#f8fafc,#f1f5f9)',borderRadius:22,border:'1.5px solid #e2e8f0',padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between' }}>

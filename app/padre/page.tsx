@@ -613,8 +613,8 @@ export default function ParentDashboard() {
                 </button>
             </div>
 
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 lg:pb-8">
-                <div className="max-w-6xl mx-auto">
+            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 lg:pb-8" style={{ minHeight: 0 }}>
+                <div className="max-w-6xl mx-auto min-h-full">
                     {activeView === 'home' && (
                         <HomeViewInnovative 
                             child={selectedChild} 
@@ -626,37 +626,17 @@ export default function ParentDashboard() {
                     
                     {(activeView === 'agenda' || activeView === 'miscitas') && (
                         <div className="animate-fade-in">
-                          {/* Tabs */}
-                          <div className="flex gap-2 mb-6 bg-white/80 backdrop-blur-sm rounded-2xl p-1.5 border border-slate-200/60 shadow-sm">
-                            <button
-                              onClick={() => setActiveView('agenda')}
-                              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeView === 'agenda' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50'}`}
-                            >
-                              <Calendar size={15}/> Agendar Cita
-                            </button>
-                            <button
-                              onClick={() => setActiveView('miscitas')}
-                              className={`flex-1 py-2.5 px-4 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2 ${activeView === 'miscitas' ? 'bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg' : 'text-slate-600 hover:bg-slate-50'}`}
-                            >
-                              <CalendarDays size={15}/> Mis Citas
-                            </button>
-                          </div>
-                          {activeView === 'agenda' && (
-                            <AgendaView selectedChild={selectedChild} />
-                          )}
-                          {activeView === 'miscitas' && (
-                            <MisCitasView
-                              profile={profile}
-                              selectedChild={selectedChild}
-                              onCancelAppointment={handleCancelAppointment}
-                              onChangeView={setActiveView}
-                            />
-                          )}
+                          <MisCitasView
+                            profile={profile}
+                            selectedChild={selectedChild}
+                            onCancelAppointment={handleCancelAppointment}
+                            onChangeView={setActiveView}
+                          />
                         </div>
                     )}
 
                     {activeView === 'chat' && (
-                          <div className="h-[calc(100vh-180px)] lg:h-[calc(100vh-120px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
+                          <div className="h-[calc(100vh-130px)] lg:h-[calc(100vh-100px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
                             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-white flex justify-between items-center z-10 shadow-lg">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
@@ -692,13 +672,8 @@ export default function ParentDashboard() {
                               onEditProfile={()=>setShowEditProfile(true)}
                               onPrivacy={()=>setShowPrivacy(true)}
                               onHelp={()=>setShowHelp(true)}
+                              onPhoneUpdated={(phone: string) => setProfile((p: any) => ({ ...p, phone }))}
                           />
-                          <div className="max-w-2xl mx-auto px-4">
-                            <NotifWhatsAppPanel
-                              profile={profile}
-                              onUpdated={(phone) => setProfile((p: any) => ({ ...p, phone }))}
-                            />
-                          </div>
                         </div>
                     )}
                 </div>

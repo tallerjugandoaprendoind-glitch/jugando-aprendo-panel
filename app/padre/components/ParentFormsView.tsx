@@ -321,6 +321,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
 
   const [activeTab, setActiveTab] = useState<'forms' | 'resources'>('forms')
   const [pendingForms, setPendingForms] = useState<any[]>([])
+  const [expiredForms, setExpiredForms] = useState<any[]>([])
   const [completedForms, setCompletedForms] = useState<any[]>([])
   const [resources, setResources] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -339,9 +340,12 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
         .order('created_at', { ascending: false })
       
       if (forms) {
-        const pending = forms.filter(f => f.status !== 'completed')
+        const now = new Date()
+        const pending = forms.filter(f => f.status !== 'completed' && !(f.deadline && new Date(f.deadline) < now))
+        const expired = forms.filter(f => f.status !== 'completed' && f.deadline && new Date(f.deadline) < now)
         const completed = forms.filter(f => f.status === 'completed')
         setPendingForms(pending)
+        setExpiredForms(expired)
         setCompletedForms(completed)
         if (onFormsLoaded) onFormsLoaded(pending.length)
       }
@@ -410,7 +414,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
   const resourcesCount = resources.length
 
   return (
-    <div style={{ display:"flex",flexDirection:"column",gap:14,paddingBottom:32,width:"100%" }}>
+    <div style={{ display:"flex",flexDirection:"column",gap:14,paddingBottom:32,width:"100%",minHeight:'calc(100vh - 180px)' }}>
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         @media(min-width:640px){
@@ -512,6 +516,43 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
                         className="mt-4 w-full py-3.5 bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-200/50 transition-all flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98]">
                         <FileText size={16}/> {t('evaluaciones.completarFormulario')}
                       </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Expired forms */}
+          {expiredForms.length > 0 && (
+            <div>
+              <h3 className="font-black text-slate-700 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
+                <AlertCircle size={14} className="text-slate-400"/>
+                Expirados ({expiredForms.length})
+              </h3>
+              <div className="space-y-3">
+                {expiredForms.map(form => (
+                  <div key={form.id} className="bg-slate-50 rounded-2xl border border-slate-200 shadow-sm overflow-hidden opacity-70">
+                    <div className="p-5">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-slate-100 rounded-xl flex-shrink-0">
+                          <AlertCircle size={18} className="text-slate-400"/>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
+                            <span className="text-[9px] font-black px-2 py-1 bg-slate-200 text-slate-500 rounded-full uppercase tracking-wider">
+                              ⏱ Expirado
+                            </span>
+                            {form.deadline && (
+                              <span className="text-[9px] font-black px-2 py-1 bg-slate-100 text-slate-400 rounded-full flex items-center gap-1">
+                                <Clock size={9}/> Venció el {new Date(form.deadline).toLocaleDateString('es-PE')}
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="font-black text-slate-500 text-base">{form.form_title}</h4>
+                          <p className="text-xs text-slate-400 mt-1">Este formulario ya no está disponible. Si necesitás completarlo, pedile al equipo que te lo reenvíe.</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
