@@ -740,8 +740,9 @@ export default function KnowledgeBaseView() {
 
 function DocCard({ doc, onDelete, onRetry }: {
   doc: any
-  onDelete: (id: string) => void
-  onRetry?: (id: string) => void
+  onDelete: (id: string) => void | Promise<void>
+  onRetry?: (id: string) => void | Promise<void>
+  key?: any
 }) {
   const { t } = useI18n()
   const isAuto = doc.source_url?.startsWith('auto:')

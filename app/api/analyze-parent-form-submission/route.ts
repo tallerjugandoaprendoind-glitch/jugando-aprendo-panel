@@ -250,7 +250,7 @@ Genera un INFORME CLÍNICO PROFESIONAL con:
 async function buildWordDocument(params: {
   reportType: string; childName: string; childAge?: number;
   reportData: any; aiAnalysis?: string | null; formTitle?: string;
-}): Promise<Buffer> {
+}): Promise<typeof Buffer.prototype> {
   const { reportType, childName, childAge, reportData, aiAnalysis, formTitle } = params
 
   const portada  = createCoverPage(reportType, childName, childAge, formTitle)

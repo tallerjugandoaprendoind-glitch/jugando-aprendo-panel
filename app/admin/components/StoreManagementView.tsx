@@ -243,7 +243,7 @@ function ProductModal({ product, onClose, onSaved }: { product: Product|null; on
   )
 }
 
-function ProductCard({ p, onEdit, onToggle, onDelete }: { p:Product; onEdit:()=>void; onToggle:()=>void; onDelete:()=>void }) {
+function ProductCard({ p, onEdit, onToggle, onDelete }: { p:Product; onEdit:()=>void; onToggle:()=>void|Promise<void>; onDelete:()=>void|Promise<void>; key?:any }) {
   const { isDark } = useTheme()
   const lowStock = p.tipo==='fisico' && p.stock<=3
 

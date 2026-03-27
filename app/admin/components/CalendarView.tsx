@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
@@ -188,7 +189,7 @@ function MonthlyCalendarView() {
   useEffect(() => {
     cargarCitas()
     import('@/lib/supabase').then(({ supabase }) => {
-      supabase.from('children').select('id, name').order('name').then(({ data }) => { if (data) setNinos(data) })
+      supabase.from('children').select('id, name').order('name').then(({ data }: { data: any[] | null }) => { if (data) setNinos(data) })
     })
     // Auto-refresh cada minuto para detectar sesiones vencidas
     const interval = setInterval(() => { cargarCitas() }, 60 * 1000)

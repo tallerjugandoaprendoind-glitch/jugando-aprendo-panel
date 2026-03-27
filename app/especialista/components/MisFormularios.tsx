@@ -565,7 +565,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
   useEffect(() => {
     supabase.from('children').select('id, name, age, birth_date, diagnosis')
       .eq('is_active', true).order('name')
-      .then(({ data }) => setChildren(data || []))
+      .then(({ data }: { data: any[] | null }) => setChildren(data || []))
   }, [])
 
   if (selectedForm) return (

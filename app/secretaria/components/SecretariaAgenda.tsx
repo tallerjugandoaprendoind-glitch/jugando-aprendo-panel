@@ -177,7 +177,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
 
   useEffect(() => {
     if (!profile?.id) {
-      supabase.auth.getSession().then(({ data: { session } }) => {
+      supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
         if (session?.user?.id) setUserId(session.user.id)
       })
     }

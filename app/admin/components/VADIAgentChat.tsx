@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
@@ -190,7 +191,7 @@ export default function VADIAgentChat({
   )
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({ message }: { message: Message; key?: any }) {
   const { t, locale } = useI18n()
   const isUser = message.role === 'user'
 

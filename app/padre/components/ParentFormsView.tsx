@@ -253,7 +253,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
 }
 
 // ─── RESOURCE CARD ────────────────────────────────────────────────────────────
-function ResourceCard({ resource }: { resource: any }) {
+function ResourceCard({ resource }: { resource: any; key?: any }) {
   const { t } = useI18n()
 
   const [showPreview, setShowPreview] = useState(false)

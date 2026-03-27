@@ -30,7 +30,7 @@ function DynamicEvaluationsView() {
   const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
-    supabase.from('children').select('id, name').then(({ data }) => data && setListaNinos(data));
+    supabase.from('children').select('id, name').then(({ data }: { data: any[] | null }) => data && setListaNinos(data));
   }, []);
 
   const formConfig = activeForm === 'anamnesis' ? ANAMNESIS_DATA : 

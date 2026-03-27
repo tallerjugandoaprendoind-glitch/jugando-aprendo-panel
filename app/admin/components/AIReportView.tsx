@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
@@ -154,7 +155,7 @@ function AIReportView({ onChildSelect, initialChildId }: { onChildSelect?: (chil
   const { listening, supported: micSupported, startListening, stopListening } = useSpeechToText(handleVoiceResult)
 
   useEffect(() => {
-    supabase.from('children').select('id, name').then(({ data }) => {
+    supabase.from('children').select('id, name').then(({ data }: { data: any[] | null }) => {
       if (data) {
         setListaNinos(data)
         if (initialChildId) {
@@ -701,7 +702,7 @@ const BADGE_REPORTE: Record<string, string> = {
   basc3:         'bg-rose-100 text-rose-700 border-rose-200',
 }
 
-function ReporteHistorialCard({ reporte }: { reporte: any }) {
+function ReporteHistorialCard({ reporte }: { reporte: any; key?: any }) {
   const { t, locale } = useI18n()
   const handleDownload = async () => {
     try {

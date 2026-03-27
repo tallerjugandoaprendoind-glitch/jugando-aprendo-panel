@@ -48,7 +48,7 @@ const TYPE_CONFIG: Record<string, { bg: string; text: string; border: string; ic
 function getTypeCfg(type: string) { return TYPE_CONFIG[type] || TYPE_CONFIG['default'] }
 
 
-function Field({ label, value }: { label: string; value: any }) {
+function Field({ label, value }: { label: string; value: any; key?: any }) {
   const { t, locale } = useI18n()
 
   if (value === null || value === undefined || value === '') return null
@@ -311,7 +311,7 @@ function GenericDetail({ r }: { r: any }) {
   )
 }
 
-function RecordCard({ item }: { item: any }) {
+function RecordCard({ item }: { item: any; key?: any }) {
   const { t } = useI18n()
   const [open, setOpen] = useState(false)
   const cfg = getTypeCfg(item._type || 'default')
@@ -824,11 +824,12 @@ export default function MisPacientes() {
                       Todos ({registros.length})
                     </button>
                     {uniqueTypes.map(t => {
-                      const cfg = getTypeCfg(t)
+                      const tStr = t as string
+                      const cfg = getTypeCfg(tStr)
                       return (
-                        <button key={t} onClick={() => setFilterType(t)}
-                          className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all ${filterType === t ? `${cfg.bg} ${cfg.text} ${cfg.border}` : 'bg-white text-slate-600 border-slate-200'}`}>
-                          {t} ({typeCounts[t] || 0})
+                        <button key={tStr} onClick={() => setFilterType(tStr)}
+                          className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all ${filterType === tStr ? `${cfg.bg} ${cfg.text} ${cfg.border}` : 'bg-white text-slate-600 border-slate-200'}`}>
+                          {tStr} ({typeCounts[tStr] || 0})
                         </button>
                       )
                     })}

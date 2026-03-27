@@ -35,7 +35,7 @@ export default function AgendaView({ selectedChild, onChangeView }: { selectedCh
     supabase.from('appointments').select('*')
       .eq('child_id',selectedChild.id)
       .order('appointment_date',{ascending:true})
-      .then(({data})=>{ setCitas(data||[]); setLoading(false) })
+      .then(({data}:{data:any[]|null})=>{ setCitas(data||[]); setLoading(false) })
   },[selectedChild])
 
   const today = new Date().toISOString().split('T')[0]

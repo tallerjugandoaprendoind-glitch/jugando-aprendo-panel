@@ -35,7 +35,7 @@ function StatCard({ title, value, sub, icon: Icon, color, onClick }: any) {
   )
 }
 
-function AppointmentRow({ apt }: { apt: any }) {
+function AppointmentRow({ apt }: { apt: any; key?: any }) {
   const fecha  = new Date(apt.appointment_date + 'T00:00:00')
   const mesCorto = fecha.toLocaleString('es', { month: 'short' }).replace('.','').toUpperCase()
   const dia    = fecha.getDate()

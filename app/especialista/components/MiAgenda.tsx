@@ -142,7 +142,7 @@ export default function MiAgenda() {
   const [userId, setUserId] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: any } }) => {
       if (session?.user?.id) setUserId(session.user.id)
     })
   }, [])

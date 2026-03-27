@@ -130,7 +130,7 @@ export default function EngagementView({ childId }: { childId: string }) {
     if (!plan) return
     setSaving(idx)
 
-    const next = new Set(completadas)
+    const next = new Set<number>(completadas)
     if (next.has(idx)) next.delete(idx); else next.add(idx)
 
     // 1. Actualizar UI inmediatamente
@@ -286,7 +286,7 @@ export default function EngagementView({ childId }: { childId: string }) {
 
               return (
                 <div key={i} className="eng-act"
-                  style={{ background: done ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : '#fff', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', position:'relative', borderColor: done ? '#86efac' : '#f1f5f9', cursor:'default' }}>
+                  style={{ background: done ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : '#fff', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', position:'relative', borderColor: done ? '#86efac' : '#f1f5f9', cursor:'default', ...(open ? { gridColumn:'1 / -1' } : {}) }}>
 
                   {/* Barra lateral de color por área */}
                   <div style={{ position:'absolute',left:0,top:0,bottom:0,width:4,background:aCol.grad,borderRadius:'20px 0 0 20px' }}/>

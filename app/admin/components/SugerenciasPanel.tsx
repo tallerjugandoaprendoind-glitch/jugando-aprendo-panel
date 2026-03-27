@@ -41,7 +41,7 @@ const PRIORIDAD_CONFIG = {
   baja:  { label: '🟢 Info',     badge: 'bg-emerald-100 text-emerald-700' },
 }
 
-function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: string) => void }) {
+function SugerenciaCard({ s, onResolver }: { s: Sugerencia; onResolver: (id: string) => void; key?: any }) {
   const { t, locale } = useI18n()
   const [expandido, setExpandido] = useState(false)
   const [resolviendo, setResolviendo] = useState(false)

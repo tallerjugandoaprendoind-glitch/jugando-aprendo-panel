@@ -200,7 +200,7 @@ export default function SecretariaReportes() {
                   <Users size={15} className="text-violet-500" /> Asistencia por paciente
                 </h3>
                 <div className="space-y-2">
-                  {stats.porPaciente.map(({ nombre, total, asistidas }) => {
+                  {stats.porPaciente.map(({ nombre, total, asistidas }: { nombre: any; total: any; asistidas: any }) => {
                     const pct = total > 0 ? Math.round((asistidas / total) * 100) : 0
                     return (
                       <div key={nombre} className="flex items-center gap-3">

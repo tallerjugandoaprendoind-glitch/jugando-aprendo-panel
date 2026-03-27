@@ -191,7 +191,7 @@ export default function ParentSessionAnalytics() {
 }
 
 // ── Single parent row ──────────────────────────────────────────────────────────
-function ParentRow({ parent, expanded, onToggle }: { parent: any; expanded: boolean; onToggle: () => void }) {
+function ParentRow({ parent, expanded, onToggle }: { parent: any; expanded: boolean; onToggle: () => void; key?: any }) {
   const name = parent.profile?.full_name || parent.profile?.email || 'Padre desconocido'
   const initial = name.charAt(0).toUpperCase()
   const barColor = colorByTime(parent.total_seconds)

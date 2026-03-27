@@ -1,3 +1,4 @@
+import React from 'react'
 import type { Metadata, Viewport } from "next";
 import { I18nProvider } from '@/lib/i18n-context'
 import { ToastProvider } from '@/components/Toast'

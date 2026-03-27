@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect, useRef } from 'react'
 import {
@@ -412,7 +413,7 @@ function TabCuenta() {
   const [role, setRole] = useState('')
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: any } }) => {
       if (!user) return
       setEmail(user.email || '')
       const { data } = await supabase.from('profiles').select('role').eq('id', user.id).single()

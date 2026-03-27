@@ -523,7 +523,7 @@ function AIAnalysisPanel({ analysis, editableMessage, onEditMessage, editableAct
 // ==============================================================================
 // COMPONENTE: TARJETA DE FORMULARIO EN HISTORIAL CON BOTÓN "GENERAR REPORTE"
 // ==============================================================================
-function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerated: () => void }) {
+function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerated: () => void | Promise<void>; key?: any }) {
   const { t, locale } = useI18n()
   const [generating, setGenerating] = useState(false)
   const toast = useToast()

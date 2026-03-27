@@ -333,8 +333,8 @@ export default function NeuroFormsView() {
   const [expandedResponse, setExpandedResponse] = useState<string | null>(null)
 
   useEffect(() => {
-    supabase.from('children').select('id, name, age, diagnosis').order('name').then(({ data }) => data && setChildren(data))
-    supabase.from('profiles').select('id, full_name, email').eq('role', 'padre').then(({ data }) => data && setParents(data))
+    supabase.from('children').select('id, name, age, diagnosis').order('name').then(({ data }: { data: any[] | null }) => data && setChildren(data))
+    supabase.from('profiles').select('id, full_name, email').eq('role', 'padre').then(({ data }: { data: any[] | null }) => data && setParents(data))
     loadSentForms()
   }, [])
 

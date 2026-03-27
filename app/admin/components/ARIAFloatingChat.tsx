@@ -1,4 +1,5 @@
 'use client'
+import React from 'react'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { Brain, X, Send, Loader2, User, BookOpen, Minus } from 'lucide-react'

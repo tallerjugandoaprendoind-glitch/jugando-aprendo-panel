@@ -158,7 +158,7 @@ export default function AdminDashboard() {
   useEffect(() => { if (currentView !== 'ninos') setActiveChild(null) }, [currentView])
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: any } }) => {
       if (user?.email) {
         setUserEmail(user.email)
         setUserId(user.id)

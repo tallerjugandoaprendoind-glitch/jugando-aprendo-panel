@@ -271,7 +271,7 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
 }
 
 // ── Tarjeta de alerta IA ─────────────────────────────────────────────────────
-function AlertaCard({ alerta }: { alerta: any }) {
+function AlertaCard({ alerta }: { alerta: any; key?: any }) {
   const cfg: Record<string, { border: string; icon: string; label: string }> = {
     alta:  { border: '#c0524a', icon: '⚠', label: '#c0524a' },
     media: { border: '#b07830', icon: '!', label: '#b07830' },

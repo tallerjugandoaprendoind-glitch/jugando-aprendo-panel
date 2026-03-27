@@ -525,8 +525,8 @@ function TabSeguridad() {
           </h4>
           <div className="space-y-3">
             {Object.entries(datos.accesosPorRol).map(([rol, count]) => {
-              const total = Object.values(datos.accesosPorRol).reduce((a, b) => a + b, 0)
-              const pct = Math.round((count / total) * 100)
+              const total = Object.values(datos.accesosPorRol).reduce((a: number, b: unknown) => a + (b as number), 0)
+              const pct = Math.round(((count as number) / total) * 100)
               return (
                 <div key={rol}>
                   <div className="flex justify-between text-xs font-medium mb-1">
@@ -667,7 +667,7 @@ function TabCompetitividad() {
           </div>
         </div>
         <div className="divide-y divide-slate-50">
-          {Object.entries(datos.metricas).map(([key, m]) => {
+          {Object.entries(datos.metricas).map(([key, m]: [string, any]) => {
             const score = Math.round(m.score)
             const scoreColor = score >= 75 ? 'green' : score >= 50 ? 'yellow' : 'red'
             return (
@@ -722,7 +722,7 @@ const PATRON_CONFIG: Record<string, {
   dominio:       { label: 'Criterio de Dominio',    icon: '★', accent: '#3a68a0', lightBg: '#f3f7fc', lightBorder: '#a8c4e0', lightText: '#1e4878', darkBg: 'rgba(58,104,160,0.12)',  darkBorder: 'rgba(58,104,160,0.3)',  darkText: '#90b8d8' },
 }
 
-function PatronCard({ p, index }: { p: any; index: number }) {
+function PatronCard({ p, index }: { p: any; index: number; key?: any }) {
   const cfg = PATRON_CONFIG[p.tipo] || PATRON_CONFIG.estancamiento
   const delta = p.valor_actual - p.valor_anterior
   // Detect dark mode via CSS variable (--card is dark in dark mode)
