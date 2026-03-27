@@ -209,7 +209,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
   const age = child ? calcAge(child.birth_date) : 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 8, width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 8, width: '100%', boxSizing: 'border-box' }}>
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes shimmer{from{background-position:200% center}to{background-position:-200% center}}

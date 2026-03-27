@@ -43,7 +43,7 @@ export default function AgendaView({ selectedChild, onChangeView }: { selectedCh
   const pasadas  = citas.filter(c=>c.appointment_date<today||c.status==='completed')
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32 }}>
+    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,width:'100%' }}>
       <style>{`
   @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
   @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}

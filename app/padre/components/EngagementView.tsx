@@ -1,11 +1,12 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { supabase } from '@/lib/supabase'
 import {
-  Brain, CheckCircle, Circle, Clock, ChevronRight, ChevronDown,
+  Brain, CheckCircle, Circle, Clock, ChevronDown,
   Sparkles, Heart, Target, Loader2, RefreshCw, TrendingUp, Trophy,
-  MessageCircle, Zap, Star, BookOpen, Activity, Smile
+  Zap, Star
 } from 'lucide-react'
 
 interface Actividad {
@@ -19,7 +20,6 @@ interface Plan {
   actividades: Actividad[]; child_name: string; completadas_pct?: number
 }
 
-// Colores y emojis por área
 const AREA_CFG: Record<string,{bg:string;text:string;border:string;emoji:string;grad:string}> = {
   comunicacion: { bg:'#eff6ff', text:'#1d4ed8', border:'#bfdbfe', emoji:'💬', grad:'linear-gradient(135deg,#3b82f6,#1d4ed8)' },
   conducta:     { bg:'#fff7ed', text:'#c2410c', border:'#fed7aa', emoji:'⚡', grad:'linear-gradient(135deg,#f97316,#c2410c)' },
@@ -27,14 +27,19 @@ const AREA_CFG: Record<string,{bg:string;text:string;border:string;emoji:string;
   socializacion:{ bg:'#f0fdf4', text:'#15803d', border:'#bbf7d0', emoji:'👥', grad:'linear-gradient(135deg,#22c55e,#15803d)' },
   autonomia:    { bg:'#fffbeb', text:'#b45309', border:'#fde68a', emoji:'⭐', grad:'linear-gradient(135deg,#eab308,#b45309)' },
 }
-const DIFF_CFG: Record<string,{label:string;color:string;bg:string;dot:string}> = {
-  facil: { label:'Fácil',  color:'#16a34a', bg:'#f0fdf4', dot:'#4ade80' },
-  media: { label:'Media',  color:'#d97706', bg:'#fffbeb', dot:'#fbbf24' },
-  alta:  { label:'Difícil',color:'#dc2626', bg:'#fef2f2', dot:'#f87171' },
-}
-
 const AREA_DEFAULT = { bg:'#f8fafc', text:'#64748b', border:'#e2e8f0', emoji:'📌', grad:'linear-gradient(135deg,#94a3b8,#64748b)' }
+
+const DIFF_CFG: Record<string,{label:string;color:string;bg:string;dot:string}> = {
+  facil: { label:'Fácil',   color:'#16a34a', bg:'#f0fdf4', dot:'#4ade80' },
+  media: { label:'Media',   color:'#d97706', bg:'#fffbeb', dot:'#fbbf24' },
+  alta:  { label:'Difícil', color:'#dc2626', bg:'#fef2f2', dot:'#f87171' },
+}
 const DIFF_DEFAULT = { label:'Normal', color:'#64748b', bg:'#f8fafc', dot:'#94a3b8' }
+
+// Clave de localStorage para guardar estado de completadas por plan
+function lsKey(childId: string, planId: string|null) {
+  return `engagement_done_${childId}_${planId||'current'}`
+}
 
 export default function EngagementView({ childId }: { childId: string }) {
   const { t } = useI18n()
@@ -46,67 +51,136 @@ export default function EngagementView({ childId }: { childId: string }) {
   const [expanded, setExpanded] = useState<number|null>(null)
   const [completadas, setCompletadas] = useState<Set<number>>(new Set())
   const [saving, setSaving] = useState<number|null>(null)
+  const saveTimeout = useRef<ReturnType<typeof setTimeout>|null>(null)
+
+  // Guardar en localStorage inmediatamente
+  const saveLocal = (childId: string, pId: string|null, done: Set<number>) => {
+    try {
+      localStorage.setItem(lsKey(childId, pId), JSON.stringify([...done]))
+    } catch {}
+  }
+
+  // Leer de localStorage
+  const loadLocal = (childId: string, pId: string|null): Set<number> => {
+    try {
+      const raw = localStorage.getItem(lsKey(childId, pId))
+      if (raw) return new Set(JSON.parse(raw) as number[])
+    } catch {}
+    return new Set()
+  }
 
   const cargar = async () => {
     setLoading(true)
     try {
-      const loc = typeof window!=='undefined'?(localStorage.getItem('vanty_locale')||'es'):'es'
+      const loc = typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale')||'es') : 'es'
       const r = await fetch(`/api/engagement-padres?child_id=${childId}&locale=${loc}`)
       const j = await r.json()
       if (j.plan) {
         const planData = j.plan
         const pId = planData.id || planData.plan_id || planData._id || null
-        setPlan(planData); setPlanId(pId)
-        const c = new Set<number>()
-        planData.actividades?.forEach((a:Actividad,i:number)=>{ if(a.completada) c.add(i) })
-        setCompletadas(c)
+        setPlan(planData)
+        setPlanId(pId)
+
+        // Reconstruir completadas: primero desde el servidor, luego merge con localStorage
+        const fromServer = new Set<number>()
+        planData.actividades?.forEach((a: Actividad, i: number) => { if (a.completada) fromServer.add(i) })
+        const fromLocal = loadLocal(childId, pId)
+
+        // Unión: si cualquiera de los dos lo marca como hecho, está hecho
+        const merged = new Set<number>([...fromServer, ...fromLocal])
+        setCompletadas(merged)
+
+        // Si el localStorage tiene más datos que el servidor, re-sincronizar
+        if (fromLocal.size > fromServer.size && pId) {
+          const updated = planData.actividades.map((a: Actividad, i: number) => ({ ...a, completada: merged.has(i) }))
+          fetch('/api/engagement-padres', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-locale': loc },
+            body: JSON.stringify({
+              childId, accion: 'actualizar_completadas', planId: pId,
+              actividades: updated,
+              completadas_pct: Math.round(merged.size / (planData.actividades.length || 1) * 100)
+            })
+          }).catch(() => {})
+        }
       }
-      setHistorial(j.historial||[])
-    } catch {}
+      setHistorial(j.historial || [])
+    } catch (e) { console.warn('Error cargando plan:', e) }
     setLoading(false)
   }
 
   const generar = async () => {
     setGenerando(true)
     try {
-      const loc = typeof window!=='undefined'?(localStorage.getItem('vanty_locale')||'es'):'es'
-      const r = await fetch('/api/engagement-padres',{ method:'POST', headers:{'Content-Type':'application/json','x-locale':loc}, body:JSON.stringify({childId,accion:'generar_plan',locale:loc}) })
+      const loc = typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale')||'es') : 'es'
+      const r = await fetch('/api/engagement-padres', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-locale': loc },
+        body: JSON.stringify({ childId, accion: 'generar_plan', locale: loc })
+      })
       const j = await r.json()
       if (j.error) throw new Error(j.error)
       const pId = j.plan?.id || j.plan?.plan_id || null
       setPlan(j.plan); setPlanId(pId); setCompletadas(new Set()); setExpanded(null)
-    } catch(e:any) { alert('Error: '+e.message) }
+    } catch (e: any) { alert('Error: ' + e.message) }
     setGenerando(false)
   }
 
   const toggle = async (idx: number) => {
     if (!plan) return
     setSaving(idx)
+
     const next = new Set(completadas)
     if (next.has(idx)) next.delete(idx); else next.add(idx)
+
+    // 1. Actualizar UI inmediatamente
     setCompletadas(next)
-    const updatedPlan = { ...plan, actividades: plan.actividades.map((a,i)=>({...a,completada:next.has(i)})) }
+    const updatedPlan = { ...plan, actividades: plan.actividades.map((a, i) => ({ ...a, completada: next.has(i) })) }
     setPlan(updatedPlan)
+
+    // 2. Guardar en localStorage inmediatamente (garantía de persistencia local)
     const currentPlanId = planId || plan.id || (plan as any).plan_id || null
-    try {
-      const loc = typeof window!=='undefined'?(localStorage.getItem('vanty_locale')||'es'):'es'
-      await fetch('/api/engagement-padres',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-locale':loc},
-        body:JSON.stringify({
-          childId, accion:'actualizar_completadas', planId:currentPlanId,
-          actividades:updatedPlan.actividades,
-          completadas_pct:Math.round(next.size/(plan.actividades.length||1)*100)
+    saveLocal(childId, currentPlanId, next)
+
+    // 3. Guardar en Supabase directamente (doble vía: API + Supabase directo)
+    const completadas_pct = Math.round(next.size / (plan.actividades.length || 1) * 100)
+    const loc = typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale')||'es') : 'es'
+
+    // Vía API (principal)
+    if (saveTimeout.current) clearTimeout(saveTimeout.current)
+    saveTimeout.current = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/engagement-padres', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-locale': loc },
+          body: JSON.stringify({
+            childId, accion: 'actualizar_completadas', planId: currentPlanId,
+            actividades: updatedPlan.actividades, completadas_pct
+          })
         })
-      })
-    } catch(e) { console.warn('Error persistiendo actividad:', e) }
-    setTimeout(()=>setSaving(null), 600)
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      } catch (apiErr) {
+        console.warn('API falló, intentando Supabase directo:', apiErr)
+        // Vía Supabase directo como fallback
+        if (currentPlanId) {
+          try {
+            await supabase.from('engagement_plans').update({
+              actividades: updatedPlan.actividades,
+              completadas_pct,
+              updated_at: new Date().toISOString()
+            }).eq('id', currentPlanId)
+          } catch (sbErr) { console.warn('Supabase directo también falló:', sbErr) }
+        }
+      }
+    }, 300)
+
+    setTimeout(() => setSaving(null), 500)
   }
 
-  useEffect(()=>{ if(childId) cargar() },[childId])
+  useEffect(() => { if (childId) cargar() }, [childId])
 
-  const pct = plan ? Math.round(completadas.size/(plan.actividades?.length||1)*100) : 0
-  const all = plan?.actividades?.length||0
+  const pct = plan ? Math.round(completadas.size / (plan.actividades?.length || 1) * 100) : 0
+  const all = plan?.actividades?.length || 0
 
   if (loading) return (
     <div style={{ display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'80px 20px',gap:16 }}>
@@ -119,17 +193,17 @@ export default function EngagementView({ childId }: { childId: string }) {
   )
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32 }}>
+    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,width:'100%' }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-        @keyframes checkPop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
-        @keyframes shimmer{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
+        @keyframes checkPop{0%{transform:scale(1)}50%{transform:scale(1.25)}100%{transform:scale(1)}}
         .eng-card{animation:fadeUp .35s ease both}
-        .eng-act-done{animation:checkPop .4s ease}
-        .eng-act-btn:active{transform:scale(.97)}
-        .eng-act-btn{transition:all .15s;cursor:pointer}
-        .eng-act-btn:hover{box-shadow:0 6px 20px rgba(0,0,0,.08)!important;transform:translateY(-1px)}
+        .eng-act{transition:all .15s;cursor:pointer;border:1.5px solid #f1f5f9}
+        .eng-act:hover{box-shadow:0 6px 20px rgba(0,0,0,.08)!important;transform:translateY(-1px)}
+        .eng-act:active{transform:scale(.99)}
+        .eng-toggle{transition:all .2s}
+        .eng-toggle:active{transform:scale(.9)}
         @media(min-width:640px){
           .eng-acts-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
         }
@@ -139,39 +213,38 @@ export default function EngagementView({ childId }: { childId: string }) {
       `}</style>
 
       {/* HERO */}
-      <div className="eng-card" style={{ background:'linear-gradient(135deg,#be185d 0%,#9333ea 50%,#7c3aed 100%)',borderRadius:28,padding:'22px 22px 18px',color:'#fff',boxShadow:'0 16px 50px rgba(147,51,234,.3)',position:'relative',overflow:'hidden' }}>
-        <div style={{ position:'absolute',top:-20,right:-20,width:130,height:130,background:'rgba(255,255,255,.08)',borderRadius:'50%' }}/>
-        <div style={{ position:'absolute',bottom:-30,left:-10,width:90,height:90,background:'rgba(255,255,255,.06)',borderRadius:'50%' }}/>
+      <div className="eng-card" style={{ background:'linear-gradient(135deg,#be185d,#9333ea,#7c3aed)',borderRadius:24,padding:'22px 22px 18px',color:'#fff',boxShadow:'0 16px 50px rgba(147,51,234,.3)',position:'relative',overflow:'hidden' }}>
+        <div style={{ position:'absolute',top:-20,right:-20,width:130,height:130,background:'rgba(255,255,255,.07)',borderRadius:'50%' }}/>
         <div style={{ position:'relative',zIndex:1 }}>
           <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12 }}>
-            <div>
+            <div style={{ flex:1 }}>
               <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:6 }}>
-                <div style={{ width:32,height:32,background:'rgba(255,255,255,.2)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center' }}><Heart size={16}/></div>
+                <div style={{ width:28,height:28,background:'rgba(255,255,255,.2)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center' }}><Heart size={14}/></div>
                 <span style={{ fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1.2,color:'rgba(255,255,255,.7)' }}>Actividades en casa</span>
               </div>
-              <h1 style={{ fontSize:20,fontWeight:900,margin:'0 0 4px',letterSpacing:'-0.4px' }}>Plan semanal de {plan?.child_name||'tu hijo/a'}</h1>
-              <p style={{ fontSize:12,color:'rgba(255,255,255,.65)',margin:0 }}>Actividades diseñadas por tu especialista con IA</p>
+              <h1 style={{ fontSize:20,fontWeight:900,margin:'0 0 3px' }}>Plan semanal de {plan?.child_name||'tu hijo/a'}</h1>
+              <p style={{ fontSize:12,color:'rgba(255,255,255,.6)',margin:0 }}>Actividades diseñadas con IA por tu especialista</p>
             </div>
-            <button onClick={generar} disabled={generando} style={{ display:'flex',alignItems:'center',gap:6,padding:'9px 14px',background:'rgba(255,255,255,.2)',border:'1.5px solid rgba(255,255,255,.3)',color:'#fff',borderRadius:14,fontSize:12,fontWeight:700,cursor:generando?'not-allowed':'pointer',flexShrink:0,fontFamily:'inherit',backdropFilter:'blur(8px)' }}>
-              {generando?<Loader2 size={13} style={{ animation:'spin 1s linear infinite' }}/>:<RefreshCw size={13}/>}
-              {generando?'Generando...':'Nuevo plan'}
+            <button onClick={generar} disabled={generando} style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',background:'rgba(255,255,255,.18)',border:'1px solid rgba(255,255,255,.25)',color:'#fff',borderRadius:12,fontSize:12,fontWeight:700,cursor:generando?'not-allowed':'pointer',flexShrink:0,fontFamily:'inherit' }}>
+              {generando ? <Loader2 size={13} style={{ animation:'spin 1s linear infinite' }}/> : <RefreshCw size={13}/>}
+              {generando ? 'Generando...' : 'Nuevo plan'}
             </button>
           </div>
 
           {plan && (
             <div style={{ marginTop:16 }}>
               <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6 }}>
-                <span style={{ fontSize:12,color:'rgba(255,255,255,.75)',fontWeight:600 }}>Progreso semanal</span>
+                <span style={{ fontSize:12,color:'rgba(255,255,255,.7)',fontWeight:600 }}>Progreso semanal</span>
                 <div style={{ display:'flex',alignItems:'center',gap:6 }}>
-                  <span style={{ fontSize:18,fontWeight:900 }}>{completadas.size}</span>
-                  <span style={{ fontSize:13,color:'rgba(255,255,255,.6)' }}>/ {all}</span>
-                  {pct===100&&<Trophy size={16} color="#fbbf24"/>}
+                  <span style={{ fontSize:20,fontWeight:900 }}>{completadas.size}</span>
+                  <span style={{ fontSize:13,color:'rgba(255,255,255,.55)' }}>/ {all}</span>
+                  {pct===100 && <Trophy size={16} color="#fbbf24"/>}
                 </div>
               </div>
-              <div style={{ height:8,background:'rgba(255,255,255,.2)',borderRadius:20,overflow:'hidden' }}>
-                <div style={{ height:'100%',width:`${pct}%`,background:'linear-gradient(90deg,#fce7f3,#fff)',borderRadius:20,transition:'width .7s cubic-bezier(.22,1,.36,1)' }}/>
+              <div style={{ height:8,background:'rgba(255,255,255,.18)',borderRadius:20,overflow:'hidden' }}>
+                <div style={{ height:'100%',width:`${pct}%`,background:'linear-gradient(90deg,#fce7f3,#fff)',borderRadius:20,transition:'width .6s cubic-bezier(.22,1,.36,1)' }}/>
               </div>
-              <p style={{ fontSize:11,color:'rgba(255,255,255,.6)',margin:'6px 0 0',textAlign:'right' }}>{pct}% completado · {plan.semana}</p>
+              <p style={{ fontSize:11,color:'rgba(255,255,255,.55)',margin:'5px 0 0',textAlign:'right' }}>{pct}% completado · {plan.semana}</p>
             </div>
           )}
         </div>
@@ -179,62 +252,68 @@ export default function EngagementView({ childId }: { childId: string }) {
 
       {!plan ? (
         <div className="eng-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',padding:'48px 24px',textAlign:'center',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
-          <div style={{ width:72,height:72,background:'linear-gradient(135deg,#fce7f3,#ede9fe)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}><Brain size={32} color="#9333ea"/></div>
+          <div style={{ width:72,height:72,background:'linear-gradient(135deg,#fce7f3,#ede9fe)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
+            <Brain size={32} color="#9333ea"/>
+          </div>
           <p style={{ fontWeight:800,fontSize:16,color:'#1e293b',margin:'0 0 8px' }}>Sin plan esta semana</p>
-          <p style={{ fontSize:13,color:'#94a3b8',lineHeight:1.6,maxWidth:280,margin:'0 auto 24px' }}>La IA generará actividades personalizadas basadas en el progreso terapéutico de tu hijo/a.</p>
+          <p style={{ fontSize:13,color:'#94a3b8',lineHeight:1.6,maxWidth:280,margin:'0 auto 24px' }}>La IA generará actividades personalizadas basadas en el progreso terapéutico.</p>
           <button onClick={generar} disabled={generando} style={{ display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#be185d,#7c3aed)',color:'#fff',border:'none',padding:'13px 24px',borderRadius:16,fontSize:14,fontWeight:700,cursor:generando?'not-allowed':'pointer',boxShadow:'0 6px 20px rgba(147,51,234,.3)',fontFamily:'inherit' }}>
-            <Sparkles size={16}/>{generando?'Generando plan...':'Generar actividades con IA'}
+            <Sparkles size={16}/>{generando ? 'Generando...' : 'Generar actividades con IA'}
           </button>
         </div>
       ) : (
         <>
           {/* Mensaje motivacional */}
-          <div className="eng-card" style={{ background:'linear-gradient(135deg,#faf5ff,#fce7f3)',border:'1.5px solid #ddd6fe',borderRadius:18,padding:'14px 16px',display:'flex',alignItems:'flex-start',gap:10 }}>
-            <Sparkles size={18} color="#7c3aed" style={{ flexShrink:0,marginTop:2 }}/>
+          <div className="eng-card" style={{ background:'linear-gradient(135deg,#faf5ff,#fce7f3)',border:'1.5px solid #ddd6fe',borderRadius:16,padding:'12px 16px',display:'flex',alignItems:'flex-start',gap:10 }}>
+            <Sparkles size={16} color="#7c3aed" style={{ flexShrink:0,marginTop:2 }}/>
             <p style={{ fontSize:13,color:'#6d28d9',fontWeight:600,lineHeight:1.6,margin:0 }}>{plan.mensaje_motivacional}</p>
           </div>
 
           {/* Disclaimer */}
-          <div className="eng-card" style={{ background:'#f0f9ff',border:'1.5px solid #bae6fd',borderRadius:14,padding:'10px 14px',display:'flex',alignItems:'center',gap:8 }}>
-            <span style={{ fontSize:16,flexShrink:0 }}>📋</span>
+          <div className="eng-card" style={{ background:'#f0f9ff',border:'1.5px solid #bae6fd',borderRadius:12,padding:'9px 14px',display:'flex',alignItems:'center',gap:8 }}>
+            <span style={{ fontSize:15,flexShrink:0 }}>📋</span>
             <p style={{ fontSize:12,color:'#0284c7',margin:0,lineHeight:1.5 }}>Plan diseñado con IA. Consultá con el terapeuta ante cualquier duda.</p>
           </div>
 
-          {/* Actividades */}
+          {/* ACTIVIDADES */}
           <div className="eng-acts-grid" style={{ display:'flex',flexDirection:'column',gap:10 }}>
-            {plan.actividades?.map((act,i)=>{
+            {plan.actividades?.map((act, i) => {
               const done = completadas.has(i)
-              const isSaving = saving===i
-              const aCol = AREA_CFG[act.area]||AREA_DEFAULT
-              const dCol = DIFF_CFG[act.dificultad]||DIFF_DEFAULT
-              const open = expanded===i
-              return (
-                <div key={i} className="eng-act-btn" onClick={()=>setExpanded(open?null:i)}
-                  style={{ background:done?'linear-gradient(135deg,#f0fdf4,#dcfce7)':'#fff',borderRadius:20,border:`1.5px solid ${done?'#86efac':'#f1f5f9'}`,overflow:'hidden',boxShadow:'0 2px 12px rgba(0,0,0,.04)',position:'relative' }}>
+              const isSaving = saving === i
+              const aCol = AREA_CFG[act.area] || AREA_DEFAULT
+              const dCol = DIFF_CFG[act.dificultad] || DIFF_DEFAULT
+              const open = expanded === i
 
-                  {/* Franja de color de área */}
+              return (
+                <div key={i} className="eng-act" onClick={() => setExpanded(open ? null : i)}
+                  style={{ background: done ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : '#fff', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', position:'relative', borderColor: done ? '#86efac' : '#f1f5f9' }}>
+
+                  {/* Barra lateral de color por área */}
                   <div style={{ position:'absolute',left:0,top:0,bottom:0,width:4,background:aCol.grad,borderRadius:'20px 0 0 20px' }}/>
 
-                  <div style={{ padding:'14px 14px 14px 18px' }}>
+                  <div style={{ padding:'14px 14px 14px 20px' }}>
                     <div style={{ display:'flex',alignItems:'flex-start',gap:12 }}>
-                      {/* Botón de completado - grande y touch-friendly */}
-                      <button
-                        onClick={e=>{ e.stopPropagation(); toggle(i) }}
+                      {/* Botón toggle - grande y táctil */}
+                      <button className="eng-toggle"
+                        onClick={e => { e.stopPropagation(); toggle(i) }}
                         disabled={isSaving}
-                        style={{ flexShrink:0,width:40,height:40,borderRadius:12,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',transition:'all .2s',background:done?'#dcfce7':isSaving?'#f1f5f9':'#f8fafc',boxShadow:done?'0 2px 8px rgba(16,185,129,.2)':'none' }}>
+                        title={done ? 'Marcar como pendiente' : 'Marcar como completada'}
+                        style={{ flexShrink:0,width:42,height:42,borderRadius:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',background:done?'#dcfce7':isSaving?'#f1f5f9':'#f8fafc',boxShadow:done?'0 2px 8px rgba(16,185,129,.2)':'0 1px 3px rgba(0,0,0,.08)' }}>
                         {isSaving
-                          ? <Loader2 size={18} color="#94a3b8" style={{ animation:'spin 1s linear infinite' }}/>
+                          ? <Loader2 size={20} color="#94a3b8" style={{ animation:'spin 1s linear infinite' }}/>
                           : done
-                            ? <CheckCircle size={22} color="#10b981" style={{ animation:'checkPop .4s ease' }}/>
-                            : <Circle size={22} color="#cbd5e1"/>
+                            ? <CheckCircle size={24} color="#10b981" style={{ animation:'checkPop .4s ease' }}/>
+                            : <Circle size={24} color="#d1d5db"/>
                         }
                       </button>
 
                       <div style={{ flex:1,minWidth:0 }}>
                         <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8,marginBottom:6 }}>
-                          <p style={{ fontWeight:800,fontSize:14,color:done?'#86efac':'#0f172a',margin:0,lineHeight:1.3,textDecoration:done?'line-through':'none',textDecorationColor:'#86efac' }}>{act.titulo}</p>
+                          <p style={{ fontWeight:800,fontSize:14,color:done?'#6ee7b7':'#0f172a',margin:0,lineHeight:1.3,textDecoration:done?'line-through':'none',textDecorationColor:'#86efac' }}>
+                            {act.titulo}
+                          </p>
                           <div style={{ display:'flex',alignItems:'center',gap:4,flexShrink:0 }}>
-                            <span style={{ fontSize:18 }}>{aCol.emoji}</span>
+                            <span style={{ fontSize:16 }}>{aCol.emoji}</span>
                             <ChevronDown size={14} color="#94a3b8" style={{ transition:'transform .2s',transform:open?'rotate(180deg)':'rotate(0)' }}/>
                           </div>
                         </div>
@@ -244,7 +323,9 @@ export default function EngagementView({ childId }: { childId: string }) {
                             <div style={{ width:5,height:5,borderRadius:'50%',background:dCol.dot }}/>
                             {dCol.label}
                           </span>
-                          <span style={{ fontSize:10,color:'#94a3b8',display:'flex',alignItems:'center',gap:3 }}><Clock size={10}/>{act.duracion_minutos} min</span>
+                          <span style={{ fontSize:10,color:'#94a3b8',display:'flex',alignItems:'center',gap:3 }}>
+                            <Clock size={10}/>{act.duracion_minutos} min
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -252,40 +333,49 @@ export default function EngagementView({ childId }: { childId: string }) {
 
                   {/* Panel expandido */}
                   {open && (
-                    <div style={{ padding:'0 18px 16px 18px',borderTop:'1.5px solid #f1f5f9' }} onClick={e=>e.stopPropagation()}>
+                    <div style={{ padding:'0 18px 16px 20px',borderTop:'1px solid #f1f5f9' }} onClick={e => e.stopPropagation()}>
                       <p style={{ fontSize:13,color:'#475569',lineHeight:1.7,margin:'14px 0 12px' }}>{act.descripcion}</p>
 
                       <div style={{ background:'linear-gradient(135deg,#faf5ff,#f5f3ff)',borderRadius:14,padding:'12px 14px',marginBottom:10,border:'1px solid #ddd6fe' }}>
-                        <p style={{ fontSize:11,fontWeight:800,color:'#7c3aed',margin:'0 0 5px',display:'flex',alignItems:'center',gap:5 }}><Target size={12}/>¿Por qué importa?</p>
+                        <p style={{ fontSize:11,fontWeight:800,color:'#7c3aed',margin:'0 0 5px',display:'flex',alignItems:'center',gap:5 }}>
+                          <Target size={12}/>¿Por qué importa?
+                        </p>
                         <p style={{ fontSize:12,color:'#6d28d9',margin:0,lineHeight:1.6 }}>{act.por_que_importa}</p>
                       </div>
 
-                      {act.materiales_necesarios?.length>0&&(
+                      {act.materiales_necesarios?.length > 0 && (
                         <div style={{ marginBottom:10 }}>
-                          <p style={{ fontSize:11,fontWeight:700,color:'#94a3b8',margin:'0 0 6px',display:'flex',alignItems:'center',gap:5 }}><Zap size={11}/>Materiales necesarios</p>
+                          <p style={{ fontSize:11,fontWeight:700,color:'#94a3b8',margin:'0 0 6px',display:'flex',alignItems:'center',gap:5 }}>
+                            <Zap size={11}/>Materiales
+                          </p>
                           <div style={{ display:'flex',flexWrap:'wrap',gap:5 }}>
-                            {act.materiales_necesarios.map((m:string,j:number)=>(
-                              <span key={j} style={{ fontSize:11,background:'#fff',border:'1px solid #e2e8f0',color:'#475569',padding:'4px 10px',borderRadius:20,display:'flex',alignItems:'center',gap:4 }}>
-                                <span>•</span>{m}
-                              </span>
+                            {act.materiales_necesarios.map((m: string, j: number) => (
+                              <span key={j} style={{ fontSize:11,background:'#fff',border:'1px solid #e2e8f0',color:'#475569',padding:'4px 10px',borderRadius:20 }}>{m}</span>
                             ))}
                           </div>
                         </div>
                       )}
 
-                      {act.dias_recomendados?.length>0&&(
-                        <div style={{ marginBottom:12 }}>
-                          <p style={{ fontSize:11,fontWeight:700,color:'#94a3b8',margin:'0 0 6px',display:'flex',alignItems:'center',gap:5 }}><Star size={11}/>Días recomendados</p>
+                      {act.dias_recomendados?.length > 0 && (
+                        <div style={{ marginBottom:14 }}>
+                          <p style={{ fontSize:11,fontWeight:700,color:'#94a3b8',margin:'0 0 6px',display:'flex',alignItems:'center',gap:5 }}>
+                            <Star size={11}/>Días recomendados
+                          </p>
                           <div style={{ display:'flex',gap:5,flexWrap:'wrap' }}>
-                            {act.dias_recomendados.map((d:string,j:number)=>(
+                            {act.dias_recomendados.map((d: string, j: number) => (
                               <span key={j} style={{ fontSize:11,fontWeight:700,background:'#eff6ff',color:'#2563eb',padding:'4px 10px',borderRadius:20,border:'1px solid #bfdbfe',textTransform:'capitalize' }}>{d}</span>
                             ))}
                           </div>
                         </div>
                       )}
 
-                      <button onClick={e=>{ e.stopPropagation(); toggle(i) }} style={{ width:'100%',padding:'11px',background:done?'#fef2f2':'linear-gradient(135deg,#be185d,#7c3aed)',color:done?'#dc2626':'#fff',border:done?'1.5px solid #fecaca':'none',borderRadius:14,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontFamily:'inherit',transition:'all .2s' }}>
-                        {done?<><Circle size={15}/>Marcar como pendiente</>:<><CheckCircle size={15}/>Marcar como completada</>}
+                      {/* Botón de acción principal en panel expandido */}
+                      <button onClick={e => { e.stopPropagation(); toggle(i) }}
+                        style={{ width:'100%',padding:'11px',background:done?'#f8fafc':'linear-gradient(135deg,#be185d,#7c3aed)',color:done?'#64748b':'#fff',border:done?'1.5px solid #e2e8f0':'none',borderRadius:14,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontFamily:'inherit',transition:'all .2s' }}>
+                        {done
+                          ? <><Circle size={15}/>Marcar como pendiente</>
+                          : <><CheckCircle size={15}/>Marcar como completada</>
+                        }
                       </button>
                     </div>
                   )}
@@ -294,25 +384,27 @@ export default function EngagementView({ childId }: { childId: string }) {
             })}
           </div>
 
-          {/* Celebración al completar todo */}
-          {pct===100&&all>0&&(
+          {/* Celebración */}
+          {pct === 100 && all > 0 && (
             <div className="eng-card" style={{ background:'linear-gradient(135deg,#f0fdf4,#dcfce7)',border:'1.5px solid #86efac',borderRadius:22,padding:'20px 22px',display:'flex',alignItems:'center',gap:16,boxShadow:'0 8px 24px rgba(16,185,129,.15)' }}>
               <div style={{ fontSize:40,flexShrink:0 }}>🏆</div>
               <div>
                 <p style={{ fontWeight:900,fontSize:16,color:'#15803d',margin:'0 0 4px' }}>¡Semana completada!</p>
-                <p style={{ fontSize:13,color:'#16a34a',lineHeight:1.5,margin:0 }}>Excelente trabajo acompañando a {plan.child_name||'tu hijo/a'} esta semana. ¡El esfuerzo da frutos! 🌱</p>
+                <p style={{ fontSize:13,color:'#16a34a',lineHeight:1.5,margin:0 }}>Excelente trabajo acompañando a {plan.child_name||'tu hijo/a'} esta semana. 🌱</p>
               </div>
             </div>
           )}
 
           {/* Historial */}
-          {historial.length>1&&(
+          {historial.length > 1 && (
             <div className="eng-card" style={{ background:'#fff',borderRadius:20,border:'1.5px solid #f1f5f9',padding:'16px 18px',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
-              <p style={{ fontSize:12,fontWeight:800,color:'#475569',margin:'0 0 14px',display:'flex',alignItems:'center',gap:6,textTransform:'uppercase',letterSpacing:.5 }}><TrendingUp size={14} color="#7c3aed"/>Historial de semanas</p>
+              <p style={{ fontSize:11,fontWeight:800,color:'#475569',margin:'0 0 14px',display:'flex',alignItems:'center',gap:6,textTransform:'uppercase',letterSpacing:.5 }}>
+                <TrendingUp size={13} color="#7c3aed"/>Historial de semanas
+              </p>
               <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
-                {historial.slice(0,5).map((h:any,i:number)=>(
+                {historial.slice(0, 5).map((h: any, i: number) => (
                   <div key={i} style={{ display:'flex',alignItems:'center',gap:12 }}>
-                    <span style={{ fontSize:11,color:'#94a3b8',width:80,flexShrink:0,fontWeight:600 }}>Sem. {h.semana}</span>
+                    <span style={{ fontSize:11,color:'#94a3b8',width:72,flexShrink:0,fontWeight:600 }}>Sem. {h.semana}</span>
                     <div style={{ flex:1,height:8,background:'#f1f5f9',borderRadius:20,overflow:'hidden' }}>
                       <div style={{ height:'100%',width:`${h.completadas_pct||0}%`,background:'linear-gradient(90deg,#be185d,#7c3aed)',borderRadius:20,transition:'width .8s ease' }}/>
                     </div>

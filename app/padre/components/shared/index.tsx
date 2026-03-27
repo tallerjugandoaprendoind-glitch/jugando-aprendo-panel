@@ -59,9 +59,10 @@ export function NavBtnDesktop({icon, label, active, onClick, badge}: any) {
         <button
             onClick={onClick}
             className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl transition-all relative ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+            style={{ textAlign: 'left' }}
         >
-            {icon}
-            <span className="font-bold text-sm">{label}</span>
+            <span style={{ flexShrink: 0 }}>{icon}</span>
+            <span className="font-bold text-sm" style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'left' }}>{label}</span>
             {badge > 0 && <span className="absolute right-3 top-2 w-5 h-5 bg-red-500 rounded-full text-white text-[10px] font-black flex items-center justify-center">{badge}</span>}
         </button>
     )

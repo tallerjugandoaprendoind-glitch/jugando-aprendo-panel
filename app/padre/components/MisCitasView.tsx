@@ -247,7 +247,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
 `}</style>
       {videoSession && <VideoCallModal roomUrl={videoSession.roomUrl} sessionId={videoSession.sessionId} appointmentId={videoSession.appointmentId} participantName={profile?.full_name||'Padre/Madre'} onClose={()=>{setVideoSession(null);load()}}/>}
 
-      <div style={{ display:'flex',flexDirection:'column',gap:16,paddingBottom:32 }}>
+      <div style={{ display:'flex',flexDirection:'column',gap:16,paddingBottom:32,width:'100%' }}>
         {/* Hero */}
         <div className="mcv-card" style={{ background:'linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#9333ea 100%)',borderRadius:28,padding:'24px 24px 20px',color:'#fff',boxShadow:'0 20px 60px rgba(79,70,229,.3)',position:'relative',overflow:'hidden' }}>
           <div style={{ position:'absolute',top:-30,right:-30,width:160,height:160,background:'rgba(255,255,255,.08)',borderRadius:'50%' }}/>

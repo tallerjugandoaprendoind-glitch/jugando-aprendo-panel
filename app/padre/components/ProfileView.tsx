@@ -98,7 +98,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
   const phone = profile?.phone
 
   return (
-    <div className='pv-wrapper' style={{ maxWidth:640,margin:'0 auto',display:'flex',flexDirection:'column',gap:14,paddingBottom:32 }}>
+    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32 }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
@@ -106,9 +106,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
         .pv-card:nth-child(1){animation-delay:.04s}.pv-card:nth-child(2){animation-delay:.08s}
         .pv-card:nth-child(3){animation-delay:.12s}.pv-card:nth-child(4){animation-delay:.16s}
         .pv-card:nth-child(5){animation-delay:.2s}.pv-card:nth-child(6){animation-delay:.24s}
-        @media(min-width:640px){
-          .pv-wrapper{max-width:560px!important;margin:0 auto!important}
-        }
+
         @media(max-width:380px){
           .pv-hero-name{font-size:17px!important}
           .pv-hero-pad{padding:20px 16px!important}

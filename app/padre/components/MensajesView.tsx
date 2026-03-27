@@ -118,7 +118,7 @@ export default function MensajesView({ profile }: { profile: any }) {
   )
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:16,paddingBottom:32 }}>
+    <div style={{ display:'flex',flexDirection:'column',gap:16,paddingBottom:32,width:'100%' }}>
       <style>{`
   @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
