@@ -613,8 +613,8 @@ export default function ParentDashboard() {
                 </button>
             </div>
 
-            <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 lg:pb-8" style={{ minHeight: 0 }}>
-                <div className="max-w-6xl mx-auto min-h-full">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 lg:pb-6" style={{ minHeight: 0 }}>
+                <div className="w-full min-h-full">
                     {activeView === 'home' && (
                         <HomeViewInnovative 
                             child={selectedChild} 

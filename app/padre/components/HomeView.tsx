@@ -209,7 +209,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
   const age = child ? calcAge(child.birth_date) : 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 8, width: '100%', boxSizing: 'border-box' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16, paddingBottom: 8, width: '100%', boxSizing: 'border-box', minHeight: 'calc(100vh - 140px)' }}>
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes shimmer{from{background-position:200% center}to{background-position:-200% center}}
@@ -219,9 +219,12 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         .hv-card:nth-child(5){animation-delay:.25s}.hv-card:nth-child(6){animation-delay:.3s}
         .hv-stat{transition:transform .2s ease}.hv-stat:hover{transform:scale(1.02)}
         .hv-prog{transition:width 1s cubic-bezier(.22,1,.36,1)}
-        /* Responsive grid */
         @media(min-width:640px){
           .hv-stats-grid{grid-template-columns:repeat(4,1fr)!important}
+        }
+        @media(min-width:1024px){
+          .hv-two-col{display:grid!important;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+          .hv-full{grid-column:1/-1}
         }
         @media(max-width:380px){
           .hv-hero-title{font-size:22px!important}
@@ -247,8 +250,8 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         </div>
       )}
 
-      {/* HERO CARD */}
-      <div className="hv-card" style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed,#a855f7)',borderRadius:28,padding:'24px 24px 20px',color:'#fff',boxShadow:'0 20px 60px rgba(79,70,229,.35)',position:'relative',overflow:'hidden' }}>
+      {/* HERO CARD — full width */}
+      <div className="hv-card hv-full" style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed,#a855f7)',borderRadius:28,padding:'24px 24px 20px',color:'#fff',boxShadow:'0 20px 60px rgba(79,70,229,.35)',position:'relative',overflow:'hidden' }}>
         <div style={{ position:'absolute',top:-40,right:-40,width:200,height:200,background:'rgba(255,255,255,.08)',borderRadius:'50%' }}/>
         <div style={{ position:'absolute',bottom:-30,left:-10,width:120,height:120,background:'rgba(168,85,247,.3)',borderRadius:'50%' }}/>
         <div style={{ position:'relative',zIndex:1,display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12 }}>
@@ -282,8 +285,8 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         )}
       </div>
 
-      {/* STATS GRID */}
-      <div className="hv-card hv-stats-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12 }}>
+      {/* STATS GRID — full width */}
+      <div className="hv-card hv-full hv-stats-grid" style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:12 }}>
         {[
           { value:stats.sessions, label:'Sesiones', sub:stats.monthSessions>0?`+${stats.monthSessions} este mes`:'Total realizadas', icon:<Activity size={20}/>, grad:'linear-gradient(135deg,#3b82f6,#1d4ed8)', glow:'rgba(59,130,246,.2)' },
           { value:stats.goalsAchieved, label:'Objetivos', sub:stats.totalGoals>0?`de ${stats.totalGoals} totales`:'Con dominio ≥80%', icon:<Target size={20}/>, grad:'linear-gradient(135deg,#10b981,#059669)', glow:'rgba(16,185,129,.2)' },
@@ -303,161 +306,175 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         ))}
       </div>
 
-      {/* IA INSIGHT */}
-      {(prediccion||patrones)&&(
-        <div className="hv-card" style={{ background:'linear-gradient(135deg,#0f172a,#1e1b4b,#0c0a1e)',borderRadius:24,padding:'20px 24px',position:'relative',overflow:'hidden' }}>
-          <div style={{ position:'absolute',top:-30,right:-30,width:140,height:140,background:'radial-gradient(circle,rgba(139,92,246,.4),transparent 70%)',borderRadius:'50%' }}/>
-          <div style={{ position:'relative',zIndex:1 }}>
-            <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:14 }}>
-              <div style={{ width:36,height:36,background:'linear-gradient(135deg,#7c3aed,#2563eb)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center' }}><Brain size={18} color="#fff"/></div>
+      {/* DOS COLUMNAS en desktop */}
+      <div className="hv-two-col" style={{ display:'flex',flexDirection:'column',gap:16 }}>
+
+        {/* COLUMNA IZQUIERDA */}
+        <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
+
+          {/* IA INSIGHT */}
+          {(prediccion||patrones)&&(
+            <div className="hv-card" style={{ background:'linear-gradient(135deg,#0f172a,#1e1b4b,#0c0a1e)',borderRadius:24,padding:'20px 24px',position:'relative',overflow:'hidden' }}>
+              <div style={{ position:'absolute',top:-30,right:-30,width:140,height:140,background:'radial-gradient(circle,rgba(139,92,246,.4),transparent 70%)',borderRadius:'50%' }}/>
+              <div style={{ position:'relative',zIndex:1 }}>
+                <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:14 }}>
+                  <div style={{ width:36,height:36,background:'linear-gradient(135deg,#7c3aed,#2563eb)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center' }}><Brain size={18} color="#fff"/></div>
+                  <div>
+                    <p style={{ color:'#c4b5fd',fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1,margin:0 }}>IA • Análisis Predictivo</p>
+                    <p style={{ color:'#fff',fontSize:13,fontWeight:700,margin:0 }}>Vista de progreso</p>
+                  </div>
+                  {prediccion?.confianza&&<span style={{ marginLeft:'auto',background:'rgba(139,92,246,.3)',color:'#c4b5fd',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20 }}>{prediccion.confianza}% confianza</span>}
+                </div>
+                {prediccion?.prediccion_30d&&<p style={{ color:'rgba(255,255,255,.85)',fontSize:13,lineHeight:1.5,margin:0 }}>{prediccion.prediccion_30d}</p>}
+                {prediccion?.areas_fortaleza?.length>0&&(
+                  <div style={{ display:'flex',gap:6,flexWrap:'wrap',marginTop:10 }}>
+                    {prediccion.areas_fortaleza.slice(0,3).map((a:string,i:number)=><span key={i} style={{ background:'rgba(16,185,129,.2)',color:'#6ee7b7',fontSize:11,fontWeight:600,padding:'3px 10px',borderRadius:20,border:'1px solid rgba(16,185,129,.3)' }}>✦ {a}</span>)}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* PRÓXIMA CITA */}
+          <div className="hv-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+            <div style={{ display:'flex',alignItems:'center',gap:8,padding:'16px 20px 12px',borderBottom:'1px solid #f8fafc' }}>
+              <CalendarDays size={16} color="#7c3aed"/>
+              <h2 style={{ fontWeight:800,fontSize:13,color:'#475569',textTransform:'uppercase',letterSpacing:0.5,margin:0 }}>Próxima sesión</h2>
+            </div>
+            {loading ? (
+              <div style={{ padding:'18px 20px' }}>
+                <div style={{ height:64,background:'linear-gradient(90deg,#f8fafc,#f1f5f9,#f8fafc)',backgroundSize:'200%',borderRadius:16,animation:'shimmer 1.5s linear infinite' }}/>
+              </div>
+            ) : nextAppt ? (
+              <div style={{ padding:'16px 20px' }}>
+                {(()=>{
+                  const d=formatDate(nextAppt.appointment_date)
+                  return (
+                    <div style={{ display:'flex',alignItems:'center',gap:16 }}>
+                      <div style={{ background:'linear-gradient(135deg,#7c3aed,#4f46e5)',color:'#fff',borderRadius:18,padding:'10px 16px',textAlign:'center',flexShrink:0,boxShadow:'0 8px 20px rgba(124,58,237,.3)' }}>
+                        <div style={{ fontSize:28,fontWeight:900,lineHeight:1 }}>{d.day}</div>
+                        <div style={{ fontSize:11,fontWeight:700,opacity:.8,marginTop:2,textTransform:'uppercase' }}>{d.month}</div>
+                      </div>
+                      <div style={{ flex:1 }}>
+                        <span style={{ display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,marginBottom:4,...(nextAppt.status==='confirmed'?{background:'#f0fdf4',color:'#16a34a',border:'1px solid #bbf7d0'}:{background:'#fffbeb',color:'#d97706',border:'1px solid #fde68a'}) }}>
+                          {nextAppt.status==='confirmed'?<CheckCircle size={10}/>:<AlertCircle size={10}/>}
+                          {nextAppt.status==='confirmed'?'Confirmada':'Pendiente'}
+                        </span>
+                        <p style={{ fontWeight:800,fontSize:15,color:'#0f172a',margin:'0 0 2px' }}>{nextAppt.service_type||'Terapia ABA'}</p>
+                        <p style={{ fontSize:13,color:'#64748b',margin:0,display:'flex',alignItems:'center',gap:4 }}><Clock size={12}/>{formatTime(nextAppt.appointment_time)}</p>
+                      </div>
+                    </div>
+                  )
+                })()}
+                <div style={{ display:'flex',gap:8,marginTop:14,paddingTop:14,borderTop:'1px solid #f1f5f9' }}>
+                  <button onClick={()=>onCancelAppointment(nextAppt.id,true)} style={{ flex:1,padding:'9px 12px',background:'#f5f3ff',color:'#7c3aed',border:'1.5px solid #ddd6fe',borderRadius:12,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4 }}><RefreshCw size={13}/>Reprogramar</button>
+                  <button onClick={()=>onCancelAppointment(nextAppt.id,false)} style={{ flex:1,padding:'9px 12px',background:'#fef2f2',color:'#dc2626',border:'1.5px solid #fecaca',borderRadius:12,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4 }}><XCircle size={13}/>Cancelar</button>
+                  <button onClick={()=>onChangeView('miscitas')} style={{ padding:'9px 14px',background:'#0f172a',color:'#fff',border:'none',borderRadius:12,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4 }}>Ver todas<ChevronRight size={13}/></button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ padding:'28px 20px',textAlign:'center' }}>
+                <div style={{ width:64,height:64,background:'linear-gradient(135deg,#f5f3ff,#ede9fe)',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}><CalendarDays size={28} color="#a78bfa"/></div>
+                <p style={{ fontWeight:800,fontSize:15,color:'#1e293b',margin:'0 0 8px' }}>Sin citas programadas</p>
+                <p style={{ fontSize:13,color:'#94a3b8',lineHeight:1.6,margin:'0 auto 18px',maxWidth:280 }}>La constancia en las sesiones es clave. Contactá con el centro para agendar tu próxima cita.</p>
+                <button onClick={()=>onChangeView('miscitas')} style={{ display:'inline-flex',alignItems:'center',gap:6,background:'linear-gradient(135deg,#7c3aed,#4f46e5)',color:'#fff',border:'none',padding:'10px 20px',borderRadius:12,fontSize:13,fontWeight:700,cursor:'pointer',boxShadow:'0 6px 16px rgba(124,58,237,.3)' }}><CalendarDays size={15}/>Ver mis citas</button>
+              </div>
+            )}
+          </div>
+
+        </div>{/* fin columna izquierda */}
+
+        {/* COLUMNA DERECHA */}
+        <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
+
+          {/* PROGRAMAS ABA */}
+          {programas.length>0&&(
+            <div className="hv-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+              <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px 12px',borderBottom:'1px solid #f8fafc' }}>
+                <div style={{ display:'flex',alignItems:'center',gap:8 }}><Brain size={16} color="#0ea5e9"/><h2 style={{ fontWeight:800,fontSize:13,color:'#475569',textTransform:'uppercase',letterSpacing:0.5,margin:0 }}>Programas ABA activos</h2></div>
+                <span style={{ background:'#f0f9ff',color:'#0284c7',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,border:'1px solid #bae6fd' }}>{programas.length}</span>
+              </div>
+              <div style={{ padding:'12px 16px',display:'flex',flexDirection:'column',gap:8 }}>
+                {programas.map((prog:any,i:number)=>(
+                  <div key={prog.id||i} style={{ display:'flex',alignItems:'center',gap:12,padding:'10px 12px',background:'#f8fafc',borderRadius:14 }}>
+                    <div style={{ width:8,height:8,borderRadius:'50%',background:prog.estado==='activo'?'#10b981':prog.estado==='completado'?'#6366f1':'#f59e0b',flexShrink:0 }}/>
+                    <div style={{ flex:1 }}>
+                      <p style={{ fontWeight:700,fontSize:13,color:'#1e293b',margin:0 }}>{prog.nombre||'Programa'}</p>
+                      {prog.area&&<p style={{ fontSize:11,color:'#94a3b8',margin:'1px 0 0' }}>{prog.area}</p>}
+                    </div>
+                    <span style={{ fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:0.5,padding:'3px 8px',borderRadius:10,...(prog.estado==='activo'?{background:'#f0fdf4',color:'#16a34a'}:prog.estado==='completado'?{background:'#f5f3ff',color:'#7c3aed'}:{background:'#fffbeb',color:'#d97706'}) }}>{prog.estado||'activo'}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* PROGRESO GENERAL */}
+          <div className="hv-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',padding:'18px 20px',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+            <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16 }}>
+              <div style={{ display:'flex',alignItems:'center',gap:8 }}><TrendingUp size={16} color="#7c3aed"/><h3 style={{ fontWeight:800,fontSize:13,color:'#475569',textTransform:'uppercase',letterSpacing:0.5,margin:0 }}>Progreso general</h3></div>
+              {stats.goalsAchieved>0&&<button onClick={()=>setShowCelebration(true)} style={{ display:'flex',alignItems:'center',gap:6,background:'#fffbeb',color:'#d97706',border:'1.5px solid #fde68a',borderRadius:20,fontSize:11,fontWeight:700,padding:'5px 12px',cursor:'pointer' }}><Trophy size={12}/>Ver logro 🎉</button>}
+            </div>
+            {stats.sessions===0 ? (
+              <div style={{ textAlign:'center',padding:'20px 0' }}>
+                <div style={{ width:60,height:60,background:'linear-gradient(135deg,#f8fafc,#f5f3ff)',borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><BarChart3 size={28} color="#c4b5fd"/></div>
+                <p style={{ fontWeight:700,fontSize:14,color:'#64748b',margin:'0 0 6px' }}>El progreso aparecerá aquí</p>
+                <p style={{ fontSize:12,color:'#94a3b8',lineHeight:1.6,maxWidth:260,margin:'0 auto' }}>Después de las primeras sesiones verás gráficos de avance y objetivos logrados.</p>
+              </div>
+            ) : (
+              <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
+                {[
+                  { label:'Dominio de objetivos', value:stats.masteryRate, color:'linear-gradient(90deg,#10b981,#059669)' },
+                  { label:'Asistencia al mes', value:Math.min(100,stats.monthSessions*25), color:'linear-gradient(90deg,#3b82f6,#7c3aed)' },
+                  { label:'Horas de terapia', value:Math.min(100,Math.round(stats.hoursTotal/20*100)), color:'linear-gradient(90deg,#f59e0b,#ef4444)' },
+                ].map(({ label, value, color })=>(
+                  <div key={label}>
+                    <div style={{ display:'flex',justifyContent:'space-between',marginBottom:6 }}>
+                      <span style={{ fontSize:12,fontWeight:600,color:'#64748b' }}>{label}</span>
+                      <span style={{ fontSize:12,fontWeight:800,color:'#1e293b' }}>{value}%</span>
+                    </div>
+                    <div style={{ height:8,background:'#f1f5f9',borderRadius:20,overflow:'hidden' }}>
+                      <div className="hv-prog" style={{ height:'100%',width:`${value}%`,background:color,borderRadius:20 }}/>
+                    </div>
+                  </div>
+                ))}
+                {stats.masteryRate>=80&&(
+                  <div style={{ marginTop:4,background:'linear-gradient(135deg,#f0fdf4,#dcfce7)',border:'1.5px solid #bbf7d0',borderRadius:16,padding:'14px 16px',display:'flex',alignItems:'flex-start',gap:12 }}>
+                    <PartyPopper size={20} color="#16a34a" style={{ flexShrink:0,marginTop:1 }}/>
+                    <div>
+                      <p style={{ fontWeight:800,fontSize:13,color:'#15803d',margin:'0 0 3px' }}>¡Rendimiento excepcional!</p>
+                      <p style={{ fontSize:12,color:'#16a34a',lineHeight:1.5,margin:0 }}>{child?.name?.split(' ')[0]||'Tu hijo/a'} domina sus objetivos con {stats.masteryRate}% de éxito.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* MENSAJES DEL TERAPEUTA */}
+          {parentMessages.length>0&&(
+            <div className="hv-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #ede9fe',overflow:'hidden',boxShadow:'0 4px 20px rgba(124,58,237,.07)' }}>
+              <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px 12px',borderBottom:'1px solid #faf5ff' }}>
+                <div style={{ display:'flex',alignItems:'center',gap:8 }}><MessageCircle size={16} color="#7c3aed"/><h2 style={{ fontWeight:800,fontSize:13,color:'#475569',textTransform:'uppercase',letterSpacing:0.5,margin:0 }}>Mensajes del terapeuta</h2></div>
+                <span style={{ background:'#f5f3ff',color:'#7c3aed',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,border:'1px solid #ddd6fe' }}>{parentMessages.length} nuevo{parentMessages.length!==1?'s':''}</span>
+              </div>
               <div>
-                <p style={{ color:'#c4b5fd',fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1,margin:0 }}>IA • Análisis Predictivo</p>
-                <p style={{ color:'#fff',fontSize:13,fontWeight:700,margin:0 }}>Vista de progreso</p>
-              </div>
-              {prediccion?.confianza&&<span style={{ marginLeft:'auto',background:'rgba(139,92,246,.3)',color:'#c4b5fd',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20 }}>{prediccion.confianza}% confianza</span>}
-            </div>
-            {prediccion?.prediccion_30d&&<p style={{ color:'rgba(255,255,255,.85)',fontSize:13,lineHeight:1.5,margin:0 }}>{prediccion.prediccion_30d}</p>}
-            {prediccion?.areas_fortaleza?.length>0&&(
-              <div style={{ display:'flex',gap:6,flexWrap:'wrap',marginTop:10 }}>
-                {prediccion.areas_fortaleza.slice(0,3).map((a:string,i:number)=><span key={i} style={{ background:'rgba(16,185,129,.2)',color:'#6ee7b7',fontSize:11,fontWeight:600,padding:'3px 10px',borderRadius:20,border:'1px solid rgba(16,185,129,.3)' }}>✦ {a}</span>)}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* PRÓXIMA CITA */}
-      <div className="hv-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
-        <div style={{ display:'flex',alignItems:'center',gap:8,padding:'16px 20px 12px',borderBottom:'1px solid #f8fafc' }}>
-          <CalendarDays size={16} color="#7c3aed"/>
-          <h2 style={{ fontWeight:800,fontSize:13,color:'#475569',textTransform:'uppercase',letterSpacing:0.5,margin:0 }}>Próxima sesión</h2>
-        </div>
-        {loading ? (
-          <div style={{ padding:'18px 20px' }}>
-            <div style={{ height:64,background:'linear-gradient(90deg,#f8fafc,#f1f5f9,#f8fafc)',backgroundSize:'200%',borderRadius:16,animation:'shimmer 1.5s linear infinite' }}/>
-          </div>
-        ) : nextAppt ? (
-          <div style={{ padding:'16px 20px' }}>
-            {(()=>{
-              const d=formatDate(nextAppt.appointment_date)
-              return (
-                <div style={{ display:'flex',alignItems:'center',gap:16 }}>
-                  <div style={{ background:'linear-gradient(135deg,#7c3aed,#4f46e5)',color:'#fff',borderRadius:18,padding:'10px 16px',textAlign:'center',flexShrink:0,boxShadow:'0 8px 20px rgba(124,58,237,.3)' }}>
-                    <div style={{ fontSize:28,fontWeight:900,lineHeight:1 }}>{d.day}</div>
-                    <div style={{ fontSize:11,fontWeight:700,opacity:.8,marginTop:2,textTransform:'uppercase' }}>{d.month}</div>
+                {parentMessages.map((msg:any,idx:number)=>(
+                  <div key={idx} style={{ padding:'14px 20px',borderBottom:idx<parentMessages.length-1?'1px solid #faf5ff':'none' }}>
+                    <p style={{ fontSize:11,fontWeight:700,color:'#94a3b8',margin:'0 0 3px' }}>{msg.created_at?new Date(msg.created_at).toLocaleDateString(toBCP47(locale),{dateStyle:'medium'}):''}</p>
+                    <p style={{ fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 4px' }}>{msg.title||msg.subject||'Mensaje del terapeuta'}</p>
+                    <p style={{ fontSize:13,color:'#64748b',lineHeight:1.5,margin:0,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden' }}>{msg.body||msg.message||msg.content||''}</p>
                   </div>
-                  <div style={{ flex:1 }}>
-                    <span style={{ display:'inline-flex',alignItems:'center',gap:4,padding:'3px 10px',borderRadius:20,fontSize:11,fontWeight:700,marginBottom:4,...(nextAppt.status==='confirmed'?{background:'#f0fdf4',color:'#16a34a',border:'1px solid #bbf7d0'}:{background:'#fffbeb',color:'#d97706',border:'1px solid #fde68a'}) }}>
-                      {nextAppt.status==='confirmed'?<CheckCircle size={10}/>:<AlertCircle size={10}/>}
-                      {nextAppt.status==='confirmed'?'Confirmada':'Pendiente'}
-                    </span>
-                    <p style={{ fontWeight:800,fontSize:15,color:'#0f172a',margin:'0 0 2px' }}>{nextAppt.service_type||'Terapia ABA'}</p>
-                    <p style={{ fontSize:13,color:'#64748b',margin:0,display:'flex',alignItems:'center',gap:4 }}><Clock size={12}/>{formatTime(nextAppt.appointment_time)}</p>
-                  </div>
-                </div>
-              )
-            })()}
-            <div style={{ display:'flex',gap:8,marginTop:14,paddingTop:14,borderTop:'1px solid #f1f5f9' }}>
-              <button onClick={()=>onCancelAppointment(nextAppt.id,true)} style={{ flex:1,padding:'9px 12px',background:'#f5f3ff',color:'#7c3aed',border:'1.5px solid #ddd6fe',borderRadius:12,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4 }}><RefreshCw size={13}/>Reprogramar</button>
-              <button onClick={()=>onCancelAppointment(nextAppt.id,false)} style={{ flex:1,padding:'9px 12px',background:'#fef2f2',color:'#dc2626',border:'1.5px solid #fecaca',borderRadius:12,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:4 }}><XCircle size={13}/>Cancelar</button>
-              <button onClick={()=>onChangeView('miscitas')} style={{ padding:'9px 14px',background:'#0f172a',color:'#fff',border:'none',borderRadius:12,fontSize:12,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',gap:4 }}>Ver todas<ChevronRight size={13}/></button>
+                ))}
+              </div>
+              <div style={{ padding:'12px 16px' }}>
+                <button onClick={()=>onChangeView('mensajes')} style={{ width:'100%',padding:'10px',background:'#f5f3ff',color:'#7c3aed',border:'1.5px solid #ddd6fe',borderRadius:14,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}><MessageCircle size={14}/>Ver todos los mensajes</button>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div style={{ padding:'28px 20px',textAlign:'center' }}>
-            <div style={{ width:64,height:64,background:'linear-gradient(135deg,#f5f3ff,#ede9fe)',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}><CalendarDays size={28} color="#a78bfa"/></div>
-            <p style={{ fontWeight:800,fontSize:15,color:'#1e293b',margin:'0 0 8px' }}>Sin citas programadas</p>
-            <p style={{ fontSize:13,color:'#94a3b8',lineHeight:1.6,margin:'0 auto 18px',maxWidth:280 }}>La constancia en las sesiones es clave. Contactá con el centro para agendar tu próxima cita.</p>
-            <button onClick={()=>onChangeView('miscitas')} style={{ display:'inline-flex',alignItems:'center',gap:6,background:'linear-gradient(135deg,#7c3aed,#4f46e5)',color:'#fff',border:'none',padding:'10px 20px',borderRadius:12,fontSize:13,fontWeight:700,cursor:'pointer',boxShadow:'0 6px 16px rgba(124,58,237,.3)' }}><CalendarDays size={15}/>Ver mis citas</button>
-          </div>
-        )}
-      </div>
+          )}
 
-      {/* PROGRAMAS ABA */}
-      {programas.length>0&&(
-        <div className="hv-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
-          <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px 12px',borderBottom:'1px solid #f8fafc' }}>
-            <div style={{ display:'flex',alignItems:'center',gap:8 }}><Brain size={16} color="#0ea5e9"/><h2 style={{ fontWeight:800,fontSize:13,color:'#475569',textTransform:'uppercase',letterSpacing:0.5,margin:0 }}>Programas ABA activos</h2></div>
-            <span style={{ background:'#f0f9ff',color:'#0284c7',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,border:'1px solid #bae6fd' }}>{programas.length}</span>
-          </div>
-          <div style={{ padding:'12px 16px',display:'flex',flexDirection:'column',gap:8 }}>
-            {programas.map((prog:any,i:number)=>(
-              <div key={prog.id||i} style={{ display:'flex',alignItems:'center',gap:12,padding:'10px 12px',background:'#f8fafc',borderRadius:14 }}>
-                <div style={{ width:8,height:8,borderRadius:'50%',background:prog.estado==='activo'?'#10b981':prog.estado==='completado'?'#6366f1':'#f59e0b',flexShrink:0 }}/>
-                <div style={{ flex:1 }}>
-                  <p style={{ fontWeight:700,fontSize:13,color:'#1e293b',margin:0 }}>{prog.nombre||'Programa'}</p>
-                  {prog.area&&<p style={{ fontSize:11,color:'#94a3b8',margin:'1px 0 0' }}>{prog.area}</p>}
-                </div>
-                <span style={{ fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:0.5,padding:'3px 8px',borderRadius:10,...(prog.estado==='activo'?{background:'#f0fdf4',color:'#16a34a'}:prog.estado==='completado'?{background:'#f5f3ff',color:'#7c3aed'}:{background:'#fffbeb',color:'#d97706'}) }}>{prog.estado||'activo'}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* PROGRESO GENERAL */}
-      <div className="hv-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',padding:'18px 20px',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
-        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16 }}>
-          <div style={{ display:'flex',alignItems:'center',gap:8 }}><TrendingUp size={16} color="#7c3aed"/><h3 style={{ fontWeight:800,fontSize:13,color:'#475569',textTransform:'uppercase',letterSpacing:0.5,margin:0 }}>Progreso general</h3></div>
-          {stats.goalsAchieved>0&&<button onClick={()=>setShowCelebration(true)} style={{ display:'flex',alignItems:'center',gap:6,background:'#fffbeb',color:'#d97706',border:'1.5px solid #fde68a',borderRadius:20,fontSize:11,fontWeight:700,padding:'5px 12px',cursor:'pointer' }}><Trophy size={12}/>Ver logro 🎉</button>}
-        </div>
-        {stats.sessions===0 ? (
-          <div style={{ textAlign:'center',padding:'20px 0' }}>
-            <div style={{ width:60,height:60,background:'linear-gradient(135deg,#f8fafc,#f5f3ff)',borderRadius:16,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><BarChart3 size={28} color="#c4b5fd"/></div>
-            <p style={{ fontWeight:700,fontSize:14,color:'#64748b',margin:'0 0 6px' }}>El progreso aparecerá aquí</p>
-            <p style={{ fontSize:12,color:'#94a3b8',lineHeight:1.6,maxWidth:260,margin:'0 auto' }}>Después de las primeras sesiones verás gráficos de avance y objetivos logrados.</p>
-          </div>
-        ) : (
-          <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
-            {[
-              { label:'Dominio de objetivos', value:stats.masteryRate, color:'linear-gradient(90deg,#10b981,#059669)' },
-              { label:'Asistencia al mes', value:Math.min(100,stats.monthSessions*25), color:'linear-gradient(90deg,#3b82f6,#7c3aed)' },
-              { label:'Horas de terapia', value:Math.min(100,Math.round(stats.hoursTotal/20*100)), color:'linear-gradient(90deg,#f59e0b,#ef4444)' },
-            ].map(({ label, value, color })=>(
-              <div key={label}>
-                <div style={{ display:'flex',justifyContent:'space-between',marginBottom:6 }}>
-                  <span style={{ fontSize:12,fontWeight:600,color:'#64748b' }}>{label}</span>
-                  <span style={{ fontSize:12,fontWeight:800,color:'#1e293b' }}>{value}%</span>
-                </div>
-                <div style={{ height:8,background:'#f1f5f9',borderRadius:20,overflow:'hidden' }}>
-                  <div className="hv-prog" style={{ height:'100%',width:`${value}%`,background:color,borderRadius:20 }}/>
-                </div>
-              </div>
-            ))}
-            {stats.masteryRate>=80&&(
-              <div style={{ marginTop:4,background:'linear-gradient(135deg,#f0fdf4,#dcfce7)',border:'1.5px solid #bbf7d0',borderRadius:16,padding:'14px 16px',display:'flex',alignItems:'flex-start',gap:12 }}>
-                <PartyPopper size={20} color="#16a34a" style={{ flexShrink:0,marginTop:1 }}/>
-                <div>
-                  <p style={{ fontWeight:800,fontSize:13,color:'#15803d',margin:'0 0 3px' }}>¡Rendimiento excepcional!</p>
-                  <p style={{ fontSize:12,color:'#16a34a',lineHeight:1.5,margin:0 }}>{child?.name?.split(' ')[0]||'Tu hijo/a'} domina sus objetivos con {stats.masteryRate}% de éxito.</p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* MENSAJES DEL TERAPEUTA */}
-      {parentMessages.length>0&&(
-        <div className="hv-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #ede9fe',overflow:'hidden',boxShadow:'0 4px 20px rgba(124,58,237,.07)' }}>
-          <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'16px 20px 12px',borderBottom:'1px solid #faf5ff' }}>
-            <div style={{ display:'flex',alignItems:'center',gap:8 }}><MessageCircle size={16} color="#7c3aed"/><h2 style={{ fontWeight:800,fontSize:13,color:'#475569',textTransform:'uppercase',letterSpacing:0.5,margin:0 }}>Mensajes del terapeuta</h2></div>
-            <span style={{ background:'#f5f3ff',color:'#7c3aed',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20,border:'1px solid #ddd6fe' }}>{parentMessages.length} nuevo{parentMessages.length!==1?'s':''}</span>
-          </div>
-          <div>
-            {parentMessages.map((msg:any,idx:number)=>(
-              <div key={idx} style={{ padding:'14px 20px',borderBottom:idx<parentMessages.length-1?'1px solid #faf5ff':'none' }}>
-                <p style={{ fontSize:11,fontWeight:700,color:'#94a3b8',margin:'0 0 3px' }}>{msg.created_at?new Date(msg.created_at).toLocaleDateString(toBCP47(locale),{dateStyle:'medium'}):''}</p>
-                <p style={{ fontSize:14,fontWeight:700,color:'#1e293b',margin:'0 0 4px' }}>{msg.title||msg.subject||'Mensaje del terapeuta'}</p>
-                <p style={{ fontSize:13,color:'#64748b',lineHeight:1.5,margin:0,display:'-webkit-box',WebkitLineClamp:3,WebkitBoxOrient:'vertical',overflow:'hidden' }}>{msg.body||msg.message||msg.content||''}</p>
-              </div>
-            ))}
-          </div>
-          <div style={{ padding:'12px 16px' }}>
-            <button onClick={()=>onChangeView('mensajes')} style={{ width:'100%',padding:'10px',background:'#f5f3ff',color:'#7c3aed',border:'1.5px solid #ddd6fe',borderRadius:14,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:6 }}><MessageCircle size={14}/>Ver todos los mensajes</button>
-          </div>
-        </div>
-      )}
+        </div>{/* fin columna derecha */}
+      </div>{/* fin dos columnas */}
     </div>
   )
 }
