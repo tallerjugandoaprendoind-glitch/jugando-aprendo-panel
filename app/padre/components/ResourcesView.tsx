@@ -1,289 +1,436 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import {
   Book, Video, FileText, Link as LinkIcon, Image as ImageIcon, Music,
-  ExternalLink, Download, X, Loader2, RefreshCw, Sparkles, Bell
+  ExternalLink, X, Loader2, RefreshCw, Bell, Search,
+  ShoppingBag, ShoppingCart, Plus, Minus, Package, CheckCircle,
+  Clock, Truck, XCircle as XCir, Tag, Star
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
-const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string; border: string; label: string }> = {
-  video:    { icon: Video,       color: 'text-red-600',    bg: 'bg-red-50',     border: 'border-red-200',    label: 'Video' },
-  pdf:      { icon: FileText,    color: 'text-blue-600',   bg: 'bg-blue-50',    border: 'border-blue-200',   label: 'PDF / Doc' },
-  link:     { icon: LinkIcon,    color: 'text-violet-600', bg: 'bg-violet-50',  border: 'border-violet-200', label: 'Enlace web' },
-  image:    { icon: ImageIcon,   color: 'text-emerald-600',bg: 'bg-emerald-50', border: 'border-emerald-200',label: 'Imagen' },
-  document: { icon: Book,        color: 'text-amber-600',  bg: 'bg-amber-50',   border: 'border-amber-200',  label: 'Material' },
-  audio:    { icon: Music,       color: 'text-indigo-600', bg: 'bg-indigo-50',  border: 'border-indigo-200', label: 'Audio' },
+// ── Tipos ──────────────────────────────────────────────────────────────────
+interface Resource { id: string; title: string; description: string; resource_type: string; url: string; is_global: boolean; parent_id: string | null; tags: string[]; created_at: string }
+interface Product { id: string; nombre: string; descripcion: string; precio_soles: number; stock: number; categoria: string; tipo: 'fisico'|'digital'; imagen_url: string|null; destacado: boolean }
+interface CartItem { product: Product; cantidad: number }
+interface Order { id: string; total_soles: number; estado: string; notas: string; created_at: string; store_order_items: any[] }
+
+const TYPE_CFG: Record<string,{ icon: any; color: string; bg: string; border: string; label: string }> = {
+  video:    { icon: Video,      color: '#dc2626', bg: '#fef2f2', border: '#fecaca', label: 'Video' },
+  pdf:      { icon: FileText,   color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', label: 'PDF' },
+  link:     { icon: LinkIcon,   color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe', label: 'Enlace' },
+  image:    { icon: ImageIcon,  color: '#059669', bg: '#f0fdf4', border: '#bbf7d0', label: 'Imagen' },
+  document: { icon: Book,       color: '#d97706', bg: '#fffbeb', border: '#fde68a', label: 'Material' },
+  audio:    { icon: Music,      color: '#4f46e5', bg: '#eef2ff', border: '#c7d2fe', label: 'Audio' },
 }
 
-interface Resource {
-  id: string
-  title: string
-  description: string
-  resource_type: string
-  url: string
-  is_global: boolean
-  parent_id: string | null
-  tags: string[]
-  created_at: string
+const ESTADO_CFG: Record<string,any> = {
+  pendiente:  { label:'Pendiente', Icon:Clock,     color:'#d97706', bg:'#fffbeb', border:'#fde68a' },
+  confirmado: { label:'Confirmado', Icon:CheckCircle, color:'#2563eb', bg:'#eff6ff', border:'#bfdbfe' },
+  listo:      { label:'Listo para recoger', Icon:Package, color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe' },
+  entregado:  { label:'Entregado', Icon:CheckCircle, color:'#059669', bg:'#f0fdf4', border:'#bbf7d0' },
+  cancelado:  { label:'Cancelado', Icon:XCir,     color:'#dc2626', bg:'#fef2f2', border:'#fecaca' },
 }
 
-interface Props {
-  profile: any
+// ── Carrito ────────────────────────────────────────────────────────────────
+function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
+  const total = cart.reduce((s: number, i: CartItem) => s + i.product.precio_soles * i.cantidad, 0)
+  const [nota, setNota] = useState('')
+  const [placing, setPlacing] = useState(false)
+  const [done, setDone] = useState(false)
+
+  const handleCheckout = async () => {
+    setPlacing(true); const ok = await onCheckout(nota); if (ok) setDone(true); setPlacing(false)
+  }
+
+  return (
+    <div style={{ position:'fixed',inset:0,zIndex:50,display:'flex',justifyContent:'flex-end' }} onClick={onClose}>
+      <div style={{ position:'absolute',inset:0,background:'rgba(0,0,0,.5)',backdropFilter:'blur(4px)' }}/>
+      <div style={{ position:'relative',background:'#fff',width:'100%',maxWidth:420,height:'100%',display:'flex',flexDirection:'column',boxShadow:'-20px 0 60px rgba(0,0,0,.15)' }} onClick={e=>e.stopPropagation()}>
+        <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 24px',borderBottom:'1px solid #f1f5f9' }}>
+          <h3 style={{ fontWeight:900,fontSize:18,color:'#1e293b',margin:0,display:'flex',alignItems:'center',gap:8 }}>
+            <ShoppingCart size={20} color="#3b82f6"/> Mi carrito
+            {cart.length>0&&<span style={{ background:'#3b82f6',color:'#fff',fontSize:11,fontWeight:800,padding:'2px 8px',borderRadius:20 }}>{cart.length}</span>}
+          </h3>
+          <button onClick={onClose} style={{ padding:8,background:'#f8fafc',border:'none',borderRadius:12,cursor:'pointer' }}><X size={18} color="#64748b"/></button>
+        </div>
+        {done ? (
+          <div style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,textAlign:'center' }}>
+            <div style={{ width:80,height:80,background:'#f0fdf4',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:20 }}><CheckCircle size={40} color="#16a34a"/></div>
+            <h3 style={{ fontWeight:900,fontSize:22,color:'#1e293b',marginBottom:8 }}>¡Pedido enviado!</h3>
+            <p style={{ fontSize:14,color:'#64748b',lineHeight:1.6 }}>El equipo del centro lo revisará y te contactará.</p>
+          </div>
+        ) : (
+          <>
+            <div style={{ flex:1,overflowY:'auto',padding:'16px 20px',display:'flex',flexDirection:'column',gap:12 }}>
+              {cart.length===0 ? (
+                <div style={{ textAlign:'center',padding:'40px 0' }}>
+                  <ShoppingCart size={40} color="#cbd5e1" style={{ margin:'0 auto 12px',display:'block' }}/>
+                  <p style={{ color:'#94a3b8',fontSize:14 }}>Tu carrito está vacío</p>
+                </div>
+              ) : cart.map((item: CartItem) => (
+                <div key={item.product.id} style={{ display:'flex',gap:12,padding:'12px',background:'#f8fafc',borderRadius:14 }}>
+                  <div style={{ width:48,height:48,background:'linear-gradient(135deg,#eff6ff,#dbeafe)',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>
+                    <ShoppingBag size={20} color="#3b82f6"/>
+                  </div>
+                  <div style={{ flex:1,minWidth:0 }}>
+                    <p style={{ fontWeight:700,fontSize:13,color:'#1e293b',margin:'0 0 4px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{item.product.nombre}</p>
+                    <p style={{ fontSize:12,color:'#7c3aed',fontWeight:800,margin:0 }}>S/ {(item.product.precio_soles*item.cantidad).toFixed(2)}</p>
+                  </div>
+                  <div style={{ display:'flex',alignItems:'center',gap:6 }}>
+                    <button onClick={()=>onUpdate(item.product.id,item.cantidad-1)} style={{ width:26,height:26,borderRadius:8,background:'#e2e8f0',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><Minus size={12} color="#64748b"/></button>
+                    <span style={{ fontSize:13,fontWeight:800,color:'#1e293b',minWidth:20,textAlign:'center' }}>{item.cantidad}</span>
+                    <button onClick={()=>onUpdate(item.product.id,item.cantidad+1)} style={{ width:26,height:26,borderRadius:8,background:'#dbeafe',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}><Plus size={12} color="#3b82f6"/></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            {cart.length>0&&(
+              <div style={{ padding:'16px 20px',borderTop:'1px solid #f1f5f9' }}>
+                <input value={nota} onChange={e=>setNota(e.target.value)} placeholder="Nota para el centro (opcional)" style={{ width:'100%',padding:'10px 14px',background:'#f8fafc',border:'1.5px solid #e2e8f0',borderRadius:12,fontSize:13,outline:'none',marginBottom:12,boxSizing:'border-box',fontFamily:'inherit' }}/>
+                <div style={{ display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12 }}>
+                  <span style={{ fontSize:14,color:'#64748b' }}>Total</span>
+                  <span style={{ fontSize:20,fontWeight:900,color:'#1e293b' }}>S/ {total.toFixed(2)}</span>
+                </div>
+                <button onClick={handleCheckout} disabled={placing} style={{ width:'100%',padding:'14px',background:'linear-gradient(135deg,#3b82f6,#2563eb)',color:'#fff',border:'none',borderRadius:14,fontSize:14,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
+                  {placing?<Loader2 size={16} style={{ animation:'spin 1s linear infinite' }}/>:<ShoppingBag size={16}/>}
+                  {placing?'Enviando...':'Confirmar pedido'}
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+    </div>
+  )
 }
+
+// ── Vista principal ────────────────────────────────────────────────────────
+interface Props { profile: any }
 
 export default function ResourcesView({ profile }: Props) {
   const { t } = useI18n()
+  const [activeTab, setActiveTab] = useState<'biblioteca'|'tienda'>('biblioteca')
+  // Biblioteca
   const [resources, setResources] = useState<Resource[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState<Resource | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [loadingRes, setLoadingRes] = useState(true)
+  const [selectedRes, setSelectedRes] = useState<Resource|null>(null)
+  const [searchRes, setSearchRes] = useState('')
   const [filterType, setFilterType] = useState('all')
+  // Tienda
+  const [products, setProducts] = useState<Product[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loadingStore, setLoadingStore] = useState(true)
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [showCart, setShowCart] = useState(false)
+  const [searchProd, setSearchProd] = useState('')
+  const [addedId, setAddedId] = useState<string|null>(null)
+  const [storeTab, setStoreTab] = useState<'catalogo'|'pedidos'>('catalogo')
 
-  const load = async () => {
+  // Load biblioteca
+  const loadResources = async () => {
     if (!profile?.id) return
-    setLoading(true)
+    setLoadingRes(true)
     try {
-      // Get children IDs for this parent
-      const { data: myChildren } = await supabase
-        .from('children')
-        .select('id')
-        .eq('parent_id', profile.id)
-      
-      const childIds = (myChildren || []).map((c: any) => c.id)
-      
-      // Load global + parent-targeted + child-targeted resources
+      const { data: myChildren } = await supabase.from('children').select('id').eq('parent_id', profile.id)
+      const childIds = (myChildren||[]).map((c:any)=>c.id)
       let orClause = `is_global.eq.true,parent_id.eq.${profile.id}`
-      if (childIds.length > 0) {
-        childIds.forEach((cid: string) => {
-          orClause += `,child_id.eq.${cid}`
-        })
-      }
-      
-      const { data, error } = await supabase
-        .from('parent_resources')
-        .select('*')
-        .or(orClause)
-        .order('created_at', { ascending: false })
-      if (!error) setResources(data || [])
-    } catch (e) {
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
+      childIds.forEach((cid:string) => { orClause += `,child_id.eq.${cid}` })
+      const { data } = await supabase.from('parent_resources').select('*').or(orClause).order('created_at',{ ascending:false })
+      setResources(data||[])
+    } catch {}
+    setLoadingRes(false)
   }
 
-  useEffect(() => { load() }, [profile?.id])
+  // Load tienda
+  const loadStore = useCallback(async () => {
+    setLoadingStore(true)
+    const [{ data: prods }, { data: ords }] = await Promise.all([
+      supabase.from('store_products').select('*').eq('activo',true).order('destacado',{ascending:false}).order('created_at',{ascending:false}),
+      profile?.id ? supabase.from('store_orders').select('*, store_order_items(*)').eq('parent_id',profile.id).order('created_at',{ascending:false}) : Promise.resolve({ data:[] }),
+    ])
+    setProducts(prods||[])
+    setOrders((ords as any)||[])
+    setLoadingStore(false)
+  }, [profile?.id])
 
-  const filtered = resources.filter(r => {
-    const matchType = filterType === 'all' || r.resource_type === filterType
-    const matchSearch = !searchTerm || 
-      r.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      r.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      r.tags?.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()))
+  useEffect(() => { loadResources() }, [profile?.id])
+  useEffect(() => { loadStore() }, [loadStore])
+
+  const filteredRes = resources.filter(r => {
+    const matchType = filterType==='all'||r.resource_type===filterType
+    const matchSearch = !searchRes||r.title.toLowerCase().includes(searchRes.toLowerCase())||r.description?.toLowerCase().includes(searchRes.toLowerCase())
     return matchType && matchSearch
   })
+  const filteredProds = products.filter(p => !searchProd||p.nombre.toLowerCase().includes(searchProd.toLowerCase())||p.descripcion?.toLowerCase().includes(searchProd.toLowerCase()))
+  const featuredProds = filteredProds.filter(p=>p.destacado)
+  const regularProds = filteredProds.filter(p=>!p.destacado)
 
-  const isYouTube = (url: string) => url?.includes('youtube.com') || url?.includes('youtu.be')
-  const getEmbedUrl = (url: string) => {
-    if (!url) return ''
-    const ytMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/)
-    if (ytMatch) return `https://www.youtube.com/embed/${ytMatch[1]}`
-    return url
+  const addToCart = (product: Product) => {
+    setCart(prev => { const ex=prev.find(i=>i.product.id===product.id); return ex?prev.map(i=>i.product.id===product.id?{...i,cantidad:i.cantidad+1}:i):[...prev,{product,cantidad:1}] })
+    setAddedId(product.id); setTimeout(()=>setAddedId(null),1500)
+  }
+  const updateCart = (productId: string, cantidad: number) => {
+    if (cantidad<=0) setCart(prev=>prev.filter(i=>i.product.id!==productId))
+    else setCart(prev=>prev.map(i=>i.product.id===productId?{...i,cantidad}:i))
+  }
+  const checkout = async (nota: string) => {
+    if (!profile?.id) return false
+    const total = cart.reduce((s,i)=>s+i.product.precio_soles*i.cantidad,0)
+    try {
+      const { data: order, error } = await supabase.from('store_orders').insert({ parent_id:profile.id, parent_name:profile.full_name||'', parent_email:profile.email||'', parent_phone:profile.phone||'', total_soles:total, estado:'pendiente', notas:nota }).select().single()
+      if (error) throw error
+      await supabase.from('store_order_items').insert(cart.map(i=>({ order_id:order.id, product_id:i.product.id, product_nombre:i.product.nombre, product_imagen:i.product.imagen_url||'', cantidad:i.cantidad, precio_unitario:i.product.precio_soles })))
+      setCart([]); await loadStore(); return true
+    } catch { return false }
   }
 
-  const typeEntries = Object.entries(TYPE_CONFIG)
+  const isYouTube = (url:string) => url?.includes('youtube.com')||url?.includes('youtu.be')
+  const getEmbedUrl = (url:string) => { const m=url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/); return m?`https://www.youtube.com/embed/${m[1]}`:url }
+
+  const cartCount = cart.reduce((s,i)=>s+i.cantidad,0)
 
   return (
-    <div className="animate-fade-in space-y-6 pb-8">
-      {/* Header */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700 rounded-3xl p-6 text-white shadow-2xl shadow-violet-200">
-        <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full blur-3xl -translate-y-10 translate-x-10"/>
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-1">
-            <Book size={16} className="opacity-80"/>
-            <span className="text-violet-200 text-xs font-black uppercase tracking-wider">{t('programas.materiales')}</span>
-          </div>
-          <h1 className="text-2xl font-black mb-1">{t('recursos.biblioteca2')}</h1>
-          <p className="text-violet-200 text-sm">{t('recursos.materialEducativo')}</p>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="bg-white/15 rounded-2xl px-4 py-2 text-center">
-              <p className="text-xl font-black">{resources.length}</p>
-              <p className="text-[10px] text-violet-200 font-bold uppercase">{t('ui.available')}</p>
-            </div>
-            <div className="bg-white/15 rounded-2xl px-4 py-2 text-center">
-              <p className="text-xl font-black">{resources.filter(r => !r.is_global).length}</p>
-              <p className="text-[10px] text-violet-200 font-bold uppercase">{t('ui.for_you')}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32 }}>
+      <style>{`
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+        .rv-card{animation:fadeUp .35s ease both}
+        @media(min-width:640px){
+          .rv-res-grid{grid-template-columns:repeat(2,1fr)!important;display:grid!important}
+          .rv-prod-grid{grid-template-columns:repeat(2,1fr)!important;display:grid!important}
+          .rv-feat-grid{grid-template-columns:repeat(2,1fr)!important;display:grid!important}
+        }
+        @media(min-width:1024px){
+          .rv-res-grid{grid-template-columns:repeat(3,1fr)!important}
+        }
+      `}</style>
 
-      {/* Search + Filter */}
-      <div className="flex flex-col gap-3">
-        <input
-          type="text"
-          {...{placeholder: t('ui.search_material')}}
-          value={searchTerm}
-          onChange={e => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-3 bg-white border-2 border-slate-200 rounded-2xl text-sm font-medium outline-none focus:border-violet-400 transition-all shadow-sm"
-        />
-        <div className="flex flex-wrap gap-2">
-          <button onClick={() => setFilterType('all')}
-            className={`px-4 py-2 rounded-full text-xs font-black border transition-all ${filterType === 'all' ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
-            Todos
-          </button>
-          {typeEntries.map(([key, cfg]) => (
-            <button key={key} onClick={() => setFilterType(key)}
-              className={`px-4 py-2 rounded-full text-xs font-black border transition-all flex items-center gap-1.5 ${filterType === key ? `${cfg.bg} ${cfg.color} ${cfg.border}` : 'bg-white text-slate-600 border-slate-200 hover:border-violet-300'}`}>
-              <cfg.icon size={12}/> {cfg.label}
+      {showCart&&<CartDrawer cart={cart} onClose={()=>setShowCart(false)} onUpdate={updateCart} onCheckout={checkout}/>}
+
+      {/* HERO */}
+      <div className="rv-card" style={{ background:activeTab==='biblioteca'?'linear-gradient(135deg,#7c3aed,#4f46e5,#6366f1)':'linear-gradient(135deg,#2563eb,#3b82f6,#0ea5e9)',borderRadius:28,padding:'22px 24px',color:'#fff',boxShadow:activeTab==='biblioteca'?'0 16px 50px rgba(124,58,237,.3)':'0 16px 50px rgba(59,130,246,.3)',position:'relative',overflow:'hidden',transition:'background .4s ease' }}>
+        <div style={{ position:'absolute',top:-20,right:-20,width:130,height:130,background:'rgba(255,255,255,.08)',borderRadius:'50%' }}/>
+        <div style={{ position:'relative',zIndex:1,display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12 }}>
+          <div>
+            <div style={{ display:'flex',alignItems:'center',gap:8,marginBottom:4 }}>
+              {activeTab==='biblioteca'?<Book size={15} style={{ opacity:.8 }}/>:<ShoppingBag size={15} style={{ opacity:.8 }}/>}
+              <span style={{ fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1.2,color:'rgba(255,255,255,.7)' }}>{activeTab==='biblioteca'?'Biblioteca':'Tienda'}</span>
+            </div>
+            <h2 style={{ fontSize:20,fontWeight:900,margin:'0 0 4px' }}>{activeTab==='biblioteca'?'Materiales del centro':'Productos y materiales'}</h2>
+            <p style={{ fontSize:12,color:'rgba(255,255,255,.65)',margin:0 }}>{activeTab==='biblioteca'?`${resources.length} recurso${resources.length!==1?'s':''} disponibles`:`${products.length} producto${products.length!==1?'s':''} en catálogo`}</p>
+          </div>
+          {activeTab==='tienda'&&cartCount>0&&(
+            <button onClick={()=>setShowCart(true)} style={{ display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,.2)',border:'none',color:'#fff',borderRadius:14,padding:'8px 14px',cursor:'pointer',fontFamily:'inherit',fontWeight:700,fontSize:13 }}>
+              <ShoppingCart size={16}/> {cartCount}
             </button>
-          ))}
+          )}
         </div>
       </div>
 
-      {/* Refresh */}
-      <div className="flex justify-end">
-        <button onClick={load} className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-violet-600 transition-all">
-          <RefreshCw size={13}/> Actualizar
-        </button>
+      {/* TABS */}
+      <div className="rv-card" style={{ display:'flex',background:'#f1f5f9',padding:4,borderRadius:18,gap:4 }}>
+        {[{key:'biblioteca',icon:<Book size={15}/>,label:'Biblioteca'},{key:'tienda',icon:<ShoppingBag size={15}/>,label:'Tienda'}].map(({key,icon,label})=>(
+          <button key={key} onClick={()=>setActiveTab(key as any)} style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .2s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
+            background:activeTab===key?'#fff':'transparent',
+            color:activeTab===key?'#4f46e5':'#94a3b8',
+            boxShadow:activeTab===key?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
+            {icon}{label}
+          </button>
+        ))}
       </div>
 
-      {/* Content */}
-      {loading ? (
-        <div className="flex flex-col items-center justify-center py-16 gap-3">
-          <div className="w-10 h-10 rounded-full border-4 border-violet-200 border-t-violet-600 animate-spin"/>
-          <p className="text-slate-400 text-sm font-medium">{t('common.cargandoRecursos')}</p>
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-12 text-center">
-          <div className="w-16 h-16 bg-violet-50 rounded-3xl flex items-center justify-center mx-auto mb-4">
-            <Book size={28} className="text-violet-300"/>
+      {/* ─── BIBLIOTECA ─── */}
+      {activeTab==='biblioteca'&&(
+        <>
+          {/* Búsqueda */}
+          <div className="rv-card" style={{ position:'relative' }}>
+            <Search size={15} color="#94a3b8" style={{ position:'absolute',left:14,top:'50%',transform:'translateY(-50%)' }}/>
+            <input type="text" placeholder="Buscar materiales..." value={searchRes} onChange={e=>setSearchRes(e.target.value)} style={{ width:'100%',padding:'12px 14px 12px 38px',background:'#fff',border:'1.5px solid #e2e8f0',borderRadius:14,fontSize:13,outline:'none',boxSizing:'border-box',fontFamily:'inherit',transition:'border-color .15s' }} onFocus={e=>(e.target as any).style.borderColor='#7c3aed'} onBlur={e=>(e.target as any).style.borderColor='#e2e8f0'}/>
           </div>
-          <h3 className="font-bold text-slate-700 mb-1">
-            {resources.length === 0 ? 'Sin recursos por ahora' : 'No se encontraron resultados'}
-          </h3>
-          <p className="text-slate-400 text-sm">
-            {resources.length === 0 
-              ? 'El equipo terapéutico compartirá materiales pronto'
-              : 'Prueba con otro término de búsqueda'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {filtered.map(resource => {
-            const cfg = TYPE_CONFIG[resource.resource_type] || TYPE_CONFIG.document
-            const Icon = cfg.icon
-            const isPersonal = !resource.is_global
+          {/* Filtros */}
+          <div className="rv-card" style={{ display:'flex',flexWrap:'wrap',gap:6 }}>
+            <button onClick={()=>setFilterType('all')} style={{ padding:'6px 12px',borderRadius:20,border:`1.5px solid ${filterType==='all'?'#7c3aed':'#e2e8f0'}`,fontSize:12,fontWeight:700,cursor:'pointer',background:filterType==='all'?'#7c3aed':'#fff',color:filterType==='all'?'#fff':'#64748b' }}>Todos</button>
+            {Object.entries(TYPE_CFG).map(([key,cfg])=>(
+              <button key={key} onClick={()=>setFilterType(key)} style={{ padding:'6px 12px',borderRadius:20,border:`1.5px solid ${filterType===key?cfg.border:'#e2e8f0'}`,fontSize:12,fontWeight:700,cursor:'pointer',background:filterType===key?cfg.bg:'#fff',color:filterType===key?cfg.color:'#64748b',display:'flex',alignItems:'center',gap:4 }}>
+                <cfg.icon size={12}/>{cfg.label}
+              </button>
+            ))}
+          </div>
+          {loadingRes ? (
+            <div style={{ display:'flex',justifyContent:'center',padding:'40px 0' }}><Loader2 size={32} color="#7c3aed" style={{ animation:'spin 1s linear infinite' }}/></div>
+          ) : filteredRes.length===0 ? (
+            <div style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',padding:'48px 24px',textAlign:'center' }}>
+              <div style={{ width:64,height:64,background:'#f5f3ff',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><Book size={28} color="#c4b5fd"/></div>
+              <p style={{ fontWeight:700,fontSize:14,color:'#64748b',margin:'0 0 6px' }}>{resources.length===0?'Sin recursos por ahora':'No se encontraron resultados'}</p>
+              <p style={{ fontSize:12,color:'#94a3b8' }}>{resources.length===0?'El equipo terapéutico compartirá materiales pronto':'Prueba con otro término de búsqueda'}</p>
+            </div>
+          ) : (
+            <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
+              {filteredRes.map(r=>{
+                const cfg=TYPE_CFG[r.resource_type]||TYPE_CFG.document; const Icon=cfg.icon; const isPersonal=!r.is_global
+                return (
+                  <div key={r.id} className="rv-card" onClick={()=>setSelectedRes(r)} style={{ background:'#fff',borderRadius:20,border:`1.5px solid ${isPersonal?'#ede9fe':'#f1f5f9'}`,padding:'14px 16px',cursor:'pointer',display:'flex',alignItems:'center',gap:14,transition:'all .15s',boxShadow:'0 2px 12px rgba(0,0,0,.04)' }}
+                    onMouseEnter={e=>{(e.currentTarget as any).style.transform='translateY(-1px)';(e.currentTarget as any).style.boxShadow='0 8px 24px rgba(0,0,0,.08)'}}
+                    onMouseLeave={e=>{(e.currentTarget as any).style.transform='translateY(0)';(e.currentTarget as any).style.boxShadow='0 2px 12px rgba(0,0,0,.04)'}}>
+                    <div style={{ width:44,height:44,background:cfg.bg,border:`1.5px solid ${cfg.border}`,borderRadius:13,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}><Icon size={20} color={cfg.color}/></div>
+                    <div style={{ flex:1,minWidth:0 }}>
+                      <div style={{ display:'flex',alignItems:'center',gap:6,marginBottom:2,flexWrap:'wrap' }}>
+                        <p style={{ fontWeight:800,fontSize:13,color:'#1e293b',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:200 }}>{r.title}</p>
+                        {isPersonal&&<span style={{ fontSize:9,fontWeight:800,padding:'2px 6px',background:'#f5f3ff',color:'#7c3aed',border:'1px solid #ddd6fe',borderRadius:20,display:'flex',alignItems:'center',gap:3,flexShrink:0 }}><Bell size={8}/>Para ti</span>}
+                      </div>
+                      {r.description&&<p style={{ fontSize:12,color:'#94a3b8',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{r.description}</p>}
+                      <span style={{ fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,background:cfg.bg,color:cfg.color,border:`1px solid ${cfg.border}`,display:'inline-block',marginTop:4 }}>{cfg.label}</span>
+                    </div>
+                    <ExternalLink size={16} color="#cbd5e1" style={{ flexShrink:0 }}/>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {/* Modal recurso */}
+          {selectedRes&&(()=>{
+            const cfg=TYPE_CFG[selectedRes.resource_type]||TYPE_CFG.document; const Icon=cfg.icon
             return (
-              <div
-                key={resource.id}
-                onClick={() => setSelected(resource)}
-                className={`bg-white rounded-2xl border-2 shadow-sm hover:shadow-md transition-all cursor-pointer group hover:-translate-y-0.5 ${isPersonal ? 'border-violet-200 hover:border-violet-400' : 'border-slate-100 hover:border-slate-300'}`}
-              >
-                <div className="p-4 flex items-center gap-4">
-                  <div className={`w-12 h-12 ${cfg.bg} ${cfg.border} border-2 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform`}>
-                    <Icon size={22} className={cfg.color}/>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                      <p className="font-black text-slate-800 text-sm truncate">{resource.title}</p>
-                      {isPersonal && (
-                        <span className="px-1.5 py-0.5 bg-violet-50 text-violet-600 rounded-full text-[9px] font-black border border-violet-200 flex items-center gap-0.5 shrink-0">
-                          <Bell size={8}/> Para ti
-                        </span>
-                      )}
+              <div style={{ position:'fixed',inset:0,background:'rgba(15,23,42,.7)',backdropFilter:'blur(6px)',zIndex:50,display:'flex',alignItems:'flex-end',justifyContent:'center',padding:'0 0 0 0' }}>
+                <div style={{ background:'#fff',width:'100%',maxWidth:600,borderRadius:'24px 24px 0 0',maxHeight:'90vh',overflow:'hidden',display:'flex',flexDirection:'column',boxShadow:'0 -30px 80px rgba(0,0,0,.2)' }}>
+                  <div style={{ background:`linear-gradient(135deg,#7c3aed,#4f46e5)`,padding:'20px 24px',color:'#fff',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12 }}>
+                    <div style={{ display:'flex',alignItems:'center',gap:12 }}>
+                      <div style={{ padding:10,background:'rgba(255,255,255,.2)',borderRadius:14 }}><Icon size={20}/></div>
+                      <div><p style={{ color:'rgba(255,255,255,.7)',fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:1,margin:'0 0 2px' }}>{cfg.label}</p><h3 style={{ fontWeight:900,fontSize:17,margin:0,lineHeight:1.2 }}>{selectedRes.title}</h3></div>
                     </div>
-                    {resource.description && (
-                      <p className="text-xs text-slate-500 leading-relaxed line-clamp-1">{resource.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${cfg.bg} ${cfg.color} ${cfg.border}`}>{cfg.label}</span>
-                      {resource.tags?.slice(0,2).map(t => (
-                        <span key={t} className="text-[10px] font-bold px-2 py-0.5 bg-slate-50 text-slate-500 rounded-full border border-slate-200">{t}</span>
-                      ))}
-                    </div>
+                    <button onClick={()=>setSelectedRes(null)} style={{ padding:8,background:'rgba(255,255,255,.2)',border:'none',borderRadius:12,cursor:'pointer',flexShrink:0 }}><X size={18} color="#fff"/></button>
                   </div>
-                  <ExternalLink size={16} className="text-slate-300 group-hover:text-violet-500 transition-colors shrink-0"/>
+                  <div style={{ overflowY:'auto',flex:1,padding:20,display:'flex',flexDirection:'column',gap:14 }}>
+                    {selectedRes.description&&<p style={{ fontSize:13,color:'#475569',lineHeight:1.6,background:'#f8fafc',borderRadius:16,padding:'14px 16px',margin:0 }}>{selectedRes.description}</p>}
+                    {selectedRes.tags?.length>0&&<div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>{selectedRes.tags.map(tg=><span key={tg} style={{ padding:'4px 12px',background:'#f5f3ff',color:'#7c3aed',fontSize:12,fontWeight:700,borderRadius:20,border:'1px solid #ddd6fe' }}>{tg}</span>)}</div>}
+                    {selectedRes.resource_type==='video'&&isYouTube(selectedRes.url)&&<div style={{ aspectRatio:'16/9',background:'#f1f5f9',borderRadius:16,overflow:'hidden' }}><iframe width="100%" height="100%" src={getEmbedUrl(selectedRes.url)} title={selectedRes.title} frameBorder="0" allowFullScreen/></div>}
+                    <a href={selectedRes.url} target="_blank" rel="noopener noreferrer" style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'14px',background:'linear-gradient(135deg,#7c3aed,#4f46e5)',color:'#fff',borderRadius:16,fontWeight:800,fontSize:14,textDecoration:'none' }}><ExternalLink size={16}/>Abrir {cfg.label}</a>
+                  </div>
                 </div>
               </div>
             )
-          })}
-        </div>
+          })()}
+        </>
       )}
 
-      {/* Resource Modal */}
-      {selected && (() => {
-        const cfg = TYPE_CONFIG[selected.resource_type] || TYPE_CONFIG.document
-        const Icon = cfg.icon
-        return (
-          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
-            <div className="bg-white w-full md:max-w-2xl rounded-t-3xl md:rounded-3xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col">
-              {/* Modal header */}
-              <div className={`bg-gradient-to-r from-violet-600 to-indigo-600 p-5 text-white flex items-start justify-between gap-3`}>
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-white/20 rounded-xl">
-                    <Icon size={20}/>
-                  </div>
-                  <div>
-                    <p className="text-white/70 text-xs font-bold uppercase tracking-widest">{cfg.label}</p>
-                    <h3 className="font-black text-lg leading-tight">{selected.title}</h3>
-                  </div>
-                </div>
-                <button onClick={() => setSelected(null)} className="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-all shrink-0">
-                  <X size={18}/>
-                </button>
-              </div>
-
-              <div className="overflow-y-auto flex-1 p-5 space-y-4">
-                {/* Description */}
-                {selected.description && (
-                  <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                    {selected.description}
-                  </p>
-                )}
-
-                {/* Tags */}
-                {selected.tags?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {selected.tags.map(t => (
-                      <span key={t} className="px-3 py-1 bg-violet-50 text-violet-600 text-xs font-bold rounded-full border border-violet-200">{t}</span>
-                    ))}
-                  </div>
-                )}
-
-                {/* Embed if YouTube */}
-                {selected.resource_type === 'video' && isYouTube(selected.url) && (
-                  <div className="aspect-video bg-slate-100 rounded-2xl overflow-hidden">
-                    <iframe
-                      width="100%" height="100%"
-                      src={getEmbedUrl(selected.url)}
-                      title={selected.title}
-                      frameBorder="0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="flex gap-3 pt-2">
-                  <a
-                    href={selected.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 py-3.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-2xl font-bold text-sm shadow-lg shadow-violet-200 hover:opacity-90 transition-all flex items-center justify-center gap-2"
-                  >
-                    <ExternalLink size={16}/> Abrir {cfg.label}
-                  </a>
-                </div>
-              </div>
-            </div>
+      {/* ─── TIENDA ─── */}
+      {activeTab==='tienda'&&(
+        <>
+          {/* Sub-tabs */}
+          <div className="rv-card" style={{ display:'flex',background:'#f1f5f9',padding:4,borderRadius:16,gap:4 }}>
+            {[{k:'catalogo',l:'🛍️ Catálogo'},{k:'pedidos',l:'📦 Mis pedidos'}].map(({k,l})=>(
+              <button key={k} onClick={()=>setStoreTab(k as any)} style={{ flex:1,padding:'9px 12px',borderRadius:12,border:'none',fontWeight:700,fontSize:12,cursor:'pointer',transition:'all .15s',fontFamily:'inherit',background:storeTab===k?'#fff':'transparent',color:storeTab===k?'#2563eb':'#94a3b8',boxShadow:storeTab===k?'0 2px 8px rgba(0,0,0,.08)':'none' }}>{l}</button>
+            ))}
           </div>
-        )
-      })()}
+
+          {loadingStore ? (
+            <div style={{ display:'flex',justifyContent:'center',padding:'40px 0' }}><Loader2 size={32} color="#3b82f6" style={{ animation:'spin 1s linear infinite' }}/></div>
+          ) : storeTab==='catalogo' ? (
+            <>
+              {/* Búsqueda */}
+              <div style={{ position:'relative' }}>
+                <Search size={15} color="#94a3b8" style={{ position:'absolute',left:14,top:'50%',transform:'translateY(-50%)' }}/>
+                <input type="text" placeholder="Buscar productos..." value={searchProd} onChange={e=>setSearchProd(e.target.value)} style={{ width:'100%',padding:'12px 14px 12px 38px',background:'#fff',border:'1.5px solid #e2e8f0',borderRadius:14,fontSize:13,outline:'none',boxSizing:'border-box',fontFamily:'inherit' }} onFocus={e=>(e.target as any).style.borderColor='#3b82f6'} onBlur={e=>(e.target as any).style.borderColor='#e2e8f0'}/>
+              </div>
+              {/* Destacados */}
+              {featuredProds.length>0&&(
+                <div>
+                  <p style={{ fontSize:11,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:'0 0 10px' }}>⭐ Destacados</p>
+                  <div className="rv-feat-grid" style={{ display:'flex',flexDirection:'column',gap:10 }}>
+                    {featuredProds.map(p=>{
+                      const inCart=cart.some(i=>i.product.id===p.id); const justAdded=addedId===p.id
+                      return (
+                        <div key={p.id} style={{ background:'linear-gradient(135deg,#eff6ff,#dbeafe)',borderRadius:20,border:'1.5px solid #bfdbfe',padding:'16px',display:'flex',alignItems:'center',gap:14 }}>
+                          <div style={{ width:52,height:52,background:'#fff',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 4px 12px rgba(59,130,246,.15)' }}><ShoppingBag size={24} color="#3b82f6"/></div>
+                          <div style={{ flex:1,minWidth:0 }}>
+                            <p style={{ fontWeight:800,fontSize:14,color:'#1e293b',margin:'0 0 2px' }}>{p.nombre}</p>
+                            <p style={{ fontSize:12,color:'#64748b',margin:'0 0 6px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{p.descripcion}</p>
+                            <p style={{ fontSize:16,fontWeight:900,color:'#2563eb',margin:0 }}>S/ {p.precio_soles.toFixed(2)}</p>
+                          </div>
+                          <button onClick={()=>addToCart(p)} disabled={p.stock===0} style={{ padding:'10px 16px',background:justAdded?'#f0fdf4':inCart?'#eff6ff':'linear-gradient(135deg,#3b82f6,#2563eb)',color:justAdded?'#16a34a':inCart?'#3b82f6':'#fff',border:justAdded?'1.5px solid #bbf7d0':inCart?'1.5px solid #bfdbfe':'none',borderRadius:12,fontSize:12,fontWeight:800,cursor:p.stock===0?'not-allowed':'pointer',flexShrink:0,fontFamily:'inherit' }}>
+                            {justAdded?'✓ Agregado':inCart?'En carrito':'Agregar'}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              {/* Catálogo regular */}
+              {regularProds.length>0&&(
+                <div>
+                  {featuredProds.length>0&&<p style={{ fontSize:11,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:'0 0 10px' }}>Todo el catálogo</p>}
+                  <div style={{ display:'flex',flexDirection:'column',gap:8 }}>
+                    {regularProds.map(p=>{
+                      const inCart=cart.some(i=>i.product.id===p.id); const justAdded=addedId===p.id
+                      return (
+                        <div key={p.id} style={{ background:'#fff',borderRadius:18,border:'1.5px solid #f1f5f9',padding:'14px 16px',display:'flex',alignItems:'center',gap:12 }}>
+                          <div style={{ width:44,height:44,background:'#f8fafc',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}><ShoppingBag size={20} color="#94a3b8"/></div>
+                          <div style={{ flex:1,minWidth:0 }}>
+                            <p style={{ fontWeight:700,fontSize:13,color:'#1e293b',margin:'0 0 2px' }}>{p.nombre}</p>
+                            <p style={{ fontSize:14,fontWeight:900,color:'#7c3aed',margin:0 }}>S/ {p.precio_soles.toFixed(2)}</p>
+                          </div>
+                          <button onClick={()=>addToCart(p)} disabled={p.stock===0} style={{ padding:'8px 14px',background:justAdded?'#f0fdf4':inCart?'#f5f3ff':'#f8fafc',color:justAdded?'#16a34a':inCart?'#7c3aed':'#1e293b',border:`1.5px solid ${justAdded?'#bbf7d0':inCart?'#ddd6fe':'#e2e8f0'}`,borderRadius:10,fontSize:12,fontWeight:700,cursor:p.stock===0?'not-allowed':'pointer',flexShrink:0,fontFamily:'inherit' }}>
+                            {justAdded?'✓':inCart?'En carrito':'+ Agregar'}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              {filteredProds.length===0&&(
+                <div style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',padding:'48px 24px',textAlign:'center' }}>
+                  <div style={{ width:64,height:64,background:'#eff6ff',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><ShoppingBag size={28} color="#93c5fd"/></div>
+                  <p style={{ fontWeight:700,fontSize:14,color:'#64748b',margin:'0 0 6px' }}>Sin productos disponibles</p>
+                  <p style={{ fontSize:12,color:'#94a3b8' }}>El catálogo se actualizará pronto</p>
+                </div>
+              )}
+              {/* Carrito flotante */}
+              {cartCount>0&&(
+                <div style={{ position:'sticky',bottom:16,zIndex:40 }}>
+                  <button onClick={()=>setShowCart(true)} style={{ width:'100%',padding:'14px 20px',background:'linear-gradient(135deg,#2563eb,#3b82f6)',color:'#fff',border:'none',borderRadius:18,fontSize:14,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 8px 24px rgba(37,99,235,.4)',fontFamily:'inherit' }}>
+                    <ShoppingCart size={18}/> Ver carrito · {cartCount} producto{cartCount!==1?'s':''} · S/ {cart.reduce((s,i)=>s+i.product.precio_soles*i.cantidad,0).toFixed(2)}
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Mis pedidos */
+            <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
+              {orders.length===0 ? (
+                <div style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',padding:'48px 24px',textAlign:'center' }}>
+                  <div style={{ width:64,height:64,background:'#eff6ff',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><Package size={28} color="#93c5fd"/></div>
+                  <p style={{ fontWeight:700,fontSize:14,color:'#64748b',margin:'0 0 6px' }}>Sin pedidos realizados</p>
+                  <p style={{ fontSize:12,color:'#94a3b8' }}>Tus pedidos aparecerán aquí</p>
+                </div>
+              ) : orders.map(order=>{
+                const cfg=ESTADO_CFG[order.estado]||ESTADO_CFG.pendiente; const Icon=cfg.Icon
+                return (
+                  <div key={order.id} style={{ background:'#fff',borderRadius:20,border:`1.5px solid ${cfg.border}`,padding:'16px',boxShadow:'0 2px 12px rgba(0,0,0,.04)' }}>
+                    <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10 }}>
+                      <span style={{ display:'inline-flex',alignItems:'center',gap:5,padding:'4px 10px',borderRadius:20,fontSize:11,fontWeight:700,background:cfg.bg,color:cfg.color }}><Icon size={12}/>{cfg.label}</span>
+                      <span style={{ fontSize:11,color:'#94a3b8' }}>{new Date(order.created_at).toLocaleDateString('es',{day:'2-digit',month:'short'})}</span>
+                    </div>
+                    {order.store_order_items?.map((item:any,i:number)=>(
+                      <div key={i} style={{ fontSize:13,color:'#475569',padding:'4px 0',borderBottom:i<order.store_order_items.length-1?'1px solid #f8fafc':'none' }}>
+                        {item.product_nombre} × {item.cantidad}
+                      </div>
+                    ))}
+                    <div style={{ display:'flex',justifyContent:'flex-end',marginTop:10 }}>
+                      <span style={{ fontSize:16,fontWeight:900,color:'#1e293b' }}>S/ {order.total_soles?.toFixed(2)}</span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </>
+      )}
     </div>
   )
 }

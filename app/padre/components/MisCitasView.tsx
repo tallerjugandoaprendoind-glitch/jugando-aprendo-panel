@@ -231,7 +231,20 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
 
   return (
     <>
-      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}.mcv-card{animation:fadeUp .4s ease both}`}</style>
+      <style>{`
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .mcv-card{animation:fadeUp .4s ease both}
+  @media(min-width:640px){
+    .mcv-cal-grid{font-size:14px!important}
+    .mcv-apt-grid{grid-template-columns:repeat(2,1fr)!important;display:grid!important}
+  }
+  @media(max-width:380px){
+    .mcv-hero-title{font-size:20px!important}
+    .mcv-stats-grid{gap:6px!important}
+  }
+`}</style>
       {videoSession && <VideoCallModal roomUrl={videoSession.roomUrl} sessionId={videoSession.sessionId} appointmentId={videoSession.appointmentId} participantName={profile?.full_name||'Padre/Madre'} onClose={()=>{setVideoSession(null);load()}}/>}
 
       <div style={{ display:'flex',flexDirection:'column',gap:16,paddingBottom:32 }}>
@@ -256,15 +269,12 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         </div>
 
         {/* Info */}
-        <div className="mcv-card" style={{ background:'#f0f9ff',border:'1.5px solid #bae6fd',borderRadius:20,padding:'14px 16px',display:'flex',alignItems:'flex-start',gap:12 }}>
-          <div style={{ width:36,height:36,background:'#e0f2fe',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}><Info size={16} color="#0284c7"/></div>
-          <div>
-            <p style={{ fontSize:13,fontWeight:700,color:'#075985',margin:'0 0 2px' }}>Las citas son asignadas por el equipo del centro</p>
-            <p style={{ fontSize:12,color:'#0284c7',margin:'0 0 8px' }}>Para solicitar, cambiar o cancelar, contactá directamente con recepción.</p>
-            <div style={{ display:'flex',flexWrap:'wrap',gap:12 }}>
-              <a href="tel:+51924807183" style={{ fontSize:12,fontWeight:700,color:'#0369a1',display:'flex',alignItems:'center',gap:4,textDecoration:'none' }}><Phone size={11}/> +51 924 807 183</a>
-              <a href="mailto:tallerjugandoaprendoind@gmail.com" style={{ fontSize:12,fontWeight:700,color:'#0369a1',display:'flex',alignItems:'center',gap:4,textDecoration:'none' }}><Mail size={11}/> Escribir email</a>
-            </div>
+        <div className="mcv-card" style={{ background:'linear-gradient(135deg,#f0f9ff,#e0f2fe)',border:'1.5px solid #bae6fd',borderRadius:20,padding:'16px 18px' }}>
+          <p style={{ fontSize:13,fontWeight:800,color:'#075985',margin:'0 0 6px',display:'flex',alignItems:'center',gap:6 }}><Info size={14} color="#0284c7"/>Las citas son asignadas por el equipo del centro</p>
+          <p style={{ fontSize:12,color:'#0284c7',margin:'0 0 12px',lineHeight:1.5 }}>Para solicitar, cambiar o cancelar una cita, contactá directamente con recepción.</p>
+          <div style={{ display:'flex',flexWrap:'wrap',gap:10 }}>
+            <a href="tel:+51924807183" style={{ display:'inline-flex',alignItems:'center',gap:6,padding:'8px 14px',background:'#fff',border:'1.5px solid #bae6fd',borderRadius:12,fontSize:12,fontWeight:700,color:'#0369a1',textDecoration:'none',boxShadow:'0 2px 8px rgba(0,0,0,.04)' }}><Phone size={12}/>+51 924 807 183</a>
+            <a href="mailto:tallerjugandoaprendoind@gmail.com" style={{ display:'inline-flex',alignItems:'center',gap:6,padding:'8px 14px',background:'#fff',border:'1.5px solid #bae6fd',borderRadius:12,fontSize:12,fontWeight:700,color:'#0369a1',textDecoration:'none',boxShadow:'0 2px 8px rgba(0,0,0,.04)' }}><Mail size={12}/>Escribir email</a>
           </div>
         </div>
 

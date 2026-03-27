@@ -410,7 +410,13 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
   const resourcesCount = resources.length
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div style={{ display:"flex",flexDirection:"column",gap:14,paddingBottom:32 }}>
+      <style>{`
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        @media(min-width:640px){
+          .pf-forms-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
+        }
+      `}</style>
       {/* Success message */}
       {successMsg && (
         <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
@@ -419,28 +425,46 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
         </div>
       )}
 
-      {/* Header */}
-      <div>
-        <h2 className="text-2xl font-black text-slate-800 mb-1 flex items-center gap-3">
-          <div className="p-2.5 bg-indigo-100 rounded-2xl">
-            <FileText className="text-indigo-600" size={24}/>
+      {/* Hero */}
+      <div style={{ background:'linear-gradient(135deg,#4f46e5,#7c3aed,#8b5cf6)',borderRadius:28,padding:'22px 24px',color:'#fff',boxShadow:'0 16px 50px rgba(79,70,229,.3)',position:'relative',overflow:'hidden' }}>
+        <div style={{ position:'absolute',top:-20,right:-20,width:120,height:120,background:'rgba(255,255,255,.08)',borderRadius:'50%' }}/>
+        <div style={{ position:'relative',zIndex:1 }}>
+          <div style={{ display:'flex',alignItems:'center',gap:10,marginBottom:4 }}>
+            <FileText size={15} style={{ opacity:.8 }}/>
+            <span style={{ fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1.2,color:'rgba(255,255,255,.7)' }}>Mi Centro</span>
           </div>
-          Mi Centro
-        </h2>
-        <p className="text-slate-500 text-sm">{t('familias.formsMateriales')}</p>
+          <h2 style={{ fontSize:22,fontWeight:900,margin:'0 0 4px' }}>Formularios y materiales</h2>
+          <p style={{ fontSize:12,color:'rgba(255,255,255,.65)',margin:'0 0 16px' }}>{t('familias.formsMateriales')}</p>
+          <div style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:10 }}>
+            <div style={{ background:'rgba(255,255,255,.15)',backdropFilter:'blur(8px)',borderRadius:14,padding:'10px 14px' }}>
+              <div style={{ fontSize:22,fontWeight:900,lineHeight:1 }}>{pendingCount}</div>
+              <div style={{ fontSize:10,color:'rgba(255,255,255,.7)',fontWeight:700,marginTop:2,textTransform:'uppercase',letterSpacing:.5 }}>Pendientes</div>
+            </div>
+            <div style={{ background:'rgba(255,255,255,.15)',backdropFilter:'blur(8px)',borderRadius:14,padding:'10px 14px' }}>
+              <div style={{ fontSize:22,fontWeight:900,lineHeight:1 }}>{resourcesCount}</div>
+              <div style={{ fontSize:10,color:'rgba(255,255,255,.7)',fontWeight:700,marginTop:2,textTransform:'uppercase',letterSpacing:.5 }}>Materiales</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Tab navigation */}
-      <div className="flex gap-2 bg-slate-100/60 p-1.5 rounded-2xl">
+      <div style={{ display:'flex',background:'#f1f5f9',padding:4,borderRadius:18,gap:4 }}>
         <button onClick={() => setActiveTab('forms')}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'forms' ? 'bg-white text-indigo-700 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
-          <FileText size={16}/> Formularios
-          {pendingCount > 0 && <span className="bg-red-500 text-white text-[9px] font-black px-2 py-0.5 rounded-full ml-1 animate-pulse">{pendingCount}</span>}
+          style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
+            background:activeTab==='forms'?'#fff':'transparent',
+            color:activeTab==='forms'?'#4f46e5':'#94a3b8',
+            boxShadow:activeTab==='forms'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
+          <FileText size={15}/> Formularios
+          {pendingCount > 0 && <span style={{ background:'#ef4444',color:'#fff',fontSize:9,fontWeight:800,padding:'2px 6px',borderRadius:20 }}>{pendingCount}</span>}
         </button>
         <button onClick={() => setActiveTab('resources')}
-          className={`flex-1 py-3 px-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${activeTab === 'resources' ? 'bg-white text-indigo-700 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
-          <BookOpen size={16}/> Materiales
-          {resourcesCount > 0 && <span className="bg-indigo-100 text-indigo-600 text-xs font-black px-2 py-0.5 rounded-full ml-1">{resourcesCount}</span>}
+          style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
+            background:activeTab==='resources'?'#fff':'transparent',
+            color:activeTab==='resources'?'#4f46e5':'#94a3b8',
+            boxShadow:activeTab==='resources'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
+          <BookOpen size={15}/> Materiales
+          {resourcesCount > 0 && <span style={{ background:'#ede9fe',color:'#7c3aed',fontSize:9,fontWeight:800,padding:'2px 6px',borderRadius:20 }}>{resourcesCount}</span>}
         </button>
       </div>
 

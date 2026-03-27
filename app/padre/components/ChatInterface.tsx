@@ -366,14 +366,14 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
     { icon: '💙', text: 'Necesito apoyo emocional', color: '#fdf2f8', border: '#f9a8d4' },
   ]
   return (
-    <div className="flex flex-col items-center px-6 py-8 text-center" style={{ animation: 'fadeUp .5s ease' }}>
+    <div className="flex flex-col items-center px-4 py-4 text-center" style={{ animation: 'fadeUp .5s ease' }}>
       {/* Robot grande animado */}
-      <div className="relative mb-5">
+      <div className="relative mb-3">
         <div className="absolute inset-0 rounded-full blur-2xl opacity-30 scale-110"
           style={{ background: 'radial-gradient(circle,#818cf8,#c4b5fd)', animation: 'pulse 2s ease-in-out infinite' }} />
-        <div className="relative w-24 h-24 rounded-full flex items-center justify-center shadow-xl"
+        <div className="relative w-16 h-16 rounded-full flex items-center justify-center shadow-xl"
           style={{ background: 'linear-gradient(135deg,#eef2ff,#dbeafe)', animation: 'robotBob 2.5s ease-in-out infinite' }}>
-          <RobotAvatar size={72} animated />
+          <RobotAvatar size={52} animated />
         </div>
         {/* Brillo orbital */}
         <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center shadow-md">
@@ -381,13 +381,13 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
         </div>
       </div>
 
-      <h3 className="text-xl font-black text-slate-800 mb-1">
+      <h3 className="text-lg font-black text-slate-800 mb-1">
         ¡Hola! Soy <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
       </h3>
       <p className="text-sm text-slate-500 font-medium mb-1">
         Tu asistente clínico de Jugando Aprendo
       </p>
-      <p className="text-xs text-slate-400 mb-6 leading-relaxed max-w-xs">
+      <p className="text-xs text-slate-400 mb-3 leading-relaxed max-w-xs">
         {t('aria.revisadoHistorial')} <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> y estoy lista para ayudarte en lo que necesites.
       </p>
 
@@ -610,9 +610,26 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
           0%,100% { box-shadow: 0 0 0 0 rgba(99,102,241,.4) }
           50% { box-shadow: 0 0 0 8px rgba(99,102,241,0) }
         }
+        /* Responsive chat */
+        .chat-welcome-grid {
+          display: grid;
+          grid-template-columns: repeat(2, 1fr);
+          gap: 8px;
+        }
+        @media(min-width:640px){
+          .chat-welcome-grid {
+            grid-template-columns: repeat(2, 1fr);
+          }
+        }
+        @media(max-width:360px){
+          .chat-welcome-grid {
+            grid-template-columns: 1fr;
+          }
+          .chat-input-area { padding: 10px 12px !important }
+        }
       `}</style>
 
-      <div className="flex flex-col h-full" style={{ background: 'linear-gradient(160deg, #f8f9ff 0%, #f0f0ff 50%, #f8f9ff 100%)' }}>
+      <div className="flex flex-col" style={{ background: 'linear-gradient(160deg, #f8f9ff 0%, #f0f0ff 50%, #f8f9ff 100%)', height: '100%', minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* ── Header ── */}
         <div className="shrink-0 px-5 py-4 flex items-center gap-3 border-b border-slate-100"
@@ -672,8 +689,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         )}
 
         {/* ── Área de mensajes ── */}
-        <div className="flex-1 overflow-y-auto px-4 py-4"
-          style={{ scrollbarWidth: 'thin', scrollbarColor: '#e2e8f0 transparent' }}>
+        <div className="overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e2e8f0 transparent', flex: 1, minHeight: 0 }}>
 
           {showWelcome && messages.length === 0 ? (
             <WelcomeScreen childName={childName} onQuickSend={send} />

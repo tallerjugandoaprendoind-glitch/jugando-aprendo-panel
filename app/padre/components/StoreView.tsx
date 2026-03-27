@@ -283,31 +283,50 @@ export default function StoreView({ profile }: { profile: any }) {
   )
 
   return (
-    <div className="space-y-5 pb-6 animate-fade-in">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 32 }}>
+      <style>{`
+        @media(min-width:640px){
+          .sv-products-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
+          .sv-featured-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
+          .sv-orders-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
+        }
+        @media(min-width:1024px){
+          .sv-products-grid{grid-template-columns:repeat(3,1fr)!important}
+          .sv-featured-grid{grid-template-columns:repeat(3,1fr)!important}
+        }
+      `}</style>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-black text-slate-800 flex items-center gap-2">
-            <ShoppingBag size={24} className="text-blue-600" /> Tienda
-          </h2>
-          <p className="text-sm text-slate-400 mt-0.5">{t('familias.materialesTerapeuticos')}</p>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={() => setView(v => v === 'catalogo' ? 'mis-pedidos' : 'catalogo')}
-            className={`text-sm font-bold px-4 py-2.5 rounded-xl border transition-all ${view === 'mis-pedidos' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300'}`}>
-            {view === 'catalogo' ? `Mis pedidos (${orders.length})` : '← Tienda'}
-          </button>
-          {view === 'catalogo' && (
-            <button onClick={() => setShowCart(true)} className="relative p-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition-all shadow-md shadow-blue-200">
-              <ShoppingCart size={20} />
-              {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white text-xs font-black rounded-full flex items-center justify-center animate-bounce">
-                  {cartCount}
-                </span>
-              )}
+      {/* Hero */}
+      <div style={{ background: 'linear-gradient(135deg,#2563eb,#3b82f6,#0ea5e9)', borderRadius: 28, padding: '22px 24px', color: '#fff', boxShadow: '0 16px 50px rgba(37,99,235,.3)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, background: 'rgba(255,255,255,.08)', borderRadius: '50%' }}/>
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <ShoppingBag size={15} style={{ opacity: .8 }}/>
+              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(255,255,255,.7)' }}>Tienda</span>
+            </div>
+            <h2 style={{ fontSize: 22, fontWeight: 900, margin: '0 0 4px' }}>Productos y materiales</h2>
+            <p style={{ fontSize: 12, color: 'rgba(255,255,255,.65)', margin: 0 }}>{t('familias.materialesTerapeuticos')}</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button onClick={() => setView(v => v === 'catalogo' ? 'mis-pedidos' : 'catalogo')}
+              style={{ padding: '8px 14px', background: 'rgba(255,255,255,.2)', border: 'none', color: '#fff', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
+              {view === 'catalogo' ? `📦 Pedidos (${orders.length})` : '← Tienda'}
             </button>
-          )}
+            {view === 'catalogo' && cartCount > 0 && (
+              <button onClick={() => setShowCart(true)} style={{ padding: '8px 14px', background: 'rgba(255,255,255,.25)', border: 'none', color: '#fff', borderRadius: 12, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
+                <ShoppingCart size={16}/> {cartCount}
+              </button>
+            )}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+          {[[products.filter(p=>p.destacado).length,'Destacados'],[products.length,'Productos'],[orders.length,'Mis pedidos']].map(([v,l])=>(
+            <div key={l as string} style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '8px 14px', textAlign: 'center' }}>
+              <div style={{ fontSize: 18, fontWeight: 900, lineHeight: 1 }}>{v}</div>
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.7)', fontWeight: 700, marginTop: 1 }}>{l}</div>
+            </div>
+          ))}
         </div>
       </div>
 

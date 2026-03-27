@@ -119,7 +119,17 @@ export default function MensajesView({ profile }: { profile: any }) {
 
   return (
     <div style={{ display:'flex',flexDirection:'column',gap:16,paddingBottom:32 }}>
-      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}.msg-card{animation:fadeUp .35s ease both}`}</style>
+      <style>{`
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+  .msg-card{animation:fadeUp .35s ease both}
+  @media(min-width:640px){
+    .msg-analysis-grid{grid-template-columns:repeat(2,1fr)!important}
+  }
+  @media(max-width:380px){
+    .msg-card-inner{flex-direction:column!important;gap:10px!important}
+  }
+`}</style>
 
       {/* Header */}
       <div className="msg-card" style={{ background:'linear-gradient(135deg,#1e1b4b 0%,#3730a3 50%,#4f46e5 100%)',borderRadius:28,padding:'24px',color:'#fff',boxShadow:'0 20px 60px rgba(79,70,229,.3)',position:'relative',overflow:'hidden' }}>
