@@ -184,7 +184,7 @@ export default function LoginPage(props: PageProps) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
                 { icon: '🧩', title: 'Formularios TEA y TDAH', desc: 'BRIEF-2, ADOS-2, WISC-V y más' },
-                { icon: '🤖', title: 'Análisis con IA Gemini', desc: 'Informes clínicos automáticos' },
+                { icon: '🤖', title: 'Análisis con IA Profesional', desc: 'Informes clínicos automáticos' },
                 { icon: '📊', title: 'Progreso en tiempo real', desc: 'Gráficos y seguimiento visual' },
                 { icon: '💙', title: 'Portal para familias', desc: 'Citas, formularios y asistente IA' },
               ].map(({ icon, title, desc }) => (
