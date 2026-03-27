@@ -680,21 +680,21 @@ export default function ParentDashboard() {
             </main>
 
             {/* 📱 NAVEGACIÓN INFERIOR MÓVIL MEJORADA */}
-            <nav className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 p-3 flex justify-around items-center fixed bottom-0 w-full z-30 pb-safe shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+            <nav className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-around items-center fixed bottom-0 w-full z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
                 <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                 <NavBtnMobile icon={<Calendar size={22}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} badge={null} />
-                <div className="relative -top-8">
+                <div className="relative -top-5">
                     <button 
                         onClick={()=>setActiveView('chat')} 
-                        className={`w-16 h-16 rounded-[2rem] flex items-center justify-center shadow-2xl border-[6px] border-white transition-all active:scale-95 relative group ${
+                        className={`w-14 h-14 rounded-[1.75rem] flex items-center justify-center shadow-xl border-4 border-white transition-all active:scale-95 relative group ${
                             activeView==='chat'
                             ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-purple-300' 
                             : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-indigo-300'
                         }`}
                     >
-                        <Sparkles size={28} className="group-hover:animate-spin"/>
+                        <Sparkles size={24} className="group-hover:animate-spin"/>
                         {activeView !== 'chat' && (
-                            <span className="absolute -top-2 -right-2 px-2 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full animate-bounce">
+                            <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full animate-bounce">
                                 IA
                             </span>
                         )}

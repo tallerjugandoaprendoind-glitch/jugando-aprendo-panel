@@ -125,17 +125,32 @@ export async function POST(req: NextRequest) {
           .limit(30)
         if (s2 && s2.length > 0) {
           // Convertir formato registro_aba al formato esperado
-          sesiones = s2.map((s: any) => ({
-            fecha: s.fecha_sesion,
-            porcentaje_exito:
-              s.datos?.nivel_logro_objetivos != null ? Math.round(parseFloat(String(s.datos.nivel_logro_objetivos)) * (typeof s.datos.nivel_logro_objetivos === 'number' && s.datos.nivel_logro_objetivos <= 5 ? 20 : 1)) :
-              s.datos?.porcentaje_exito ?? s.datos?.porcentaje_logro ?? null,
-            fase: s.datos?.fase_actual || null,
-            set_nombre: s.datos?.set_nombre || null,
-            oportunidades_totales: s.datos?.oportunidades_totales || null,
-            respuestas_correctas: s.datos?.respuestas_correctas || null,
-            notas: s.datos?.observaciones_generales || s.datos?.notas || null,
-          })).filter((s: any) => s.porcentaje_exito !== null)
+          // BUG FIX #2: NO filtrar sesiones con porcentaje_exito null — usar 50 como default
+          // para que las sesiones cuenten en total_sesiones aunque no tengan % explícito.
+          sesiones = s2.map((s: any) => {
+            let pct: number | null = null
+            if (s.datos?.nivel_logro_objetivos != null) {
+              const raw = parseFloat(String(s.datos.nivel_logro_objetivos))
+              pct = Math.round(raw * (typeof s.datos.nivel_logro_objetivos === 'number' && s.datos.nivel_logro_objetivos <= 5 ? 20 : 1))
+            } else if (s.datos?.porcentaje_exito != null) {
+              pct = Number(s.datos.porcentaje_exito)
+            } else if (s.datos?.porcentaje_logro != null) {
+              pct = Number(s.datos.porcentaje_logro)
+            }
+            return {
+              fecha: s.fecha_sesion,
+              // Si no hay dato de % usar 50 (promedio neutro) en vez de null para no descartar la sesión
+              porcentaje_exito: pct !== null ? pct : 50,
+              _sin_dato_real: pct === null, // flag para posible diagnóstico
+              fase: s.datos?.fase_actual || null,
+              set_nombre: s.datos?.set_nombre || null,
+              oportunidades_totales: s.datos?.oportunidades_totales || null,
+              respuestas_correctas: s.datos?.respuestas_correctas || null,
+              notas: s.datos?.observaciones_generales || s.datos?.notas || null,
+            }
+          })
+          // Solo descartar si no tiene fecha válida (no por falta de porcentaje)
+          sesiones = sesiones.filter((s: any) => !!s.fecha)
         }
       }
 
@@ -227,7 +242,16 @@ export async function POST(req: NextRequest) {
       sets: p.sets?.map(s => `${s.nombre}: ${s.ultimo_pct}% (media: ${s.media}%, ${s.criterio_logrado ? 'LOGRADO' : 'en progreso'})`).join(' | '),
     }))
 
-    const totalSesionesAnalizadas = analisis_por_programa.reduce((a, p) => a + p.total_sesiones, 0)
+    // BUG FIX #2: contar también registro_aba para tener un total consistente con otras vistas
+    const { data: registroAbaCount } = await supabaseAdmin
+      .from('registro_aba')
+      .select('id')
+      .eq('child_id', childId)
+    const totalRegistroAba = registroAbaCount?.length || 0
+    const totalSesionesAnalizadas = Math.max(
+      analisis_por_programa.reduce((a, p) => a + p.total_sesiones, 0),
+      totalRegistroAba
+    )
     const progConSesiones = analisis_por_programa.filter(p => p.total_sesiones > 0)
     const progSinSesiones = analisis_por_programa.filter(p => p.total_sesiones === 0)
 

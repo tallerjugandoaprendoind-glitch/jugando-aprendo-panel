@@ -177,15 +177,20 @@ export async function GET(request: NextRequest) {
     } catch {}
   }
 
+  // BUG FIX #2: exponer totalSesiones unificado para consistencia entre portal padres, Hub IA y admin
+  const totalSesionesUnificado = Math.max(sesiones?.length || 0, graficaABA.length)
+
   return NextResponse.json({
     graficaABA,
     asistencia,
     tareas,
     evaluaciones,
     reporteSemanal,
+    totalSesiones: totalSesionesUnificado,
     _debug: {
       registro_aba_count: errSesiones ? `ERROR: ${errSesiones.message}` : (sesiones?.length ?? 0),
-      puntos_grafica: graficaABA.length,
+      sesiones_datos_aba_count: graficaABA.length,
+      total_unificado: totalSesionesUnificado,
     }
   })
 }

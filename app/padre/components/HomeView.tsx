@@ -175,11 +175,21 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       supabase.from('registro_aba').select('id, datos').eq('child_id', child.id),
       supabase.from('aba_sessions_v2').select('id, duration_minutes').eq('child_id', child.id),
     ])
-    const [{ data: goals }, { data: progsData }] = await Promise.all([
-      supabase.from('goal_progress').select('id, mastery_level, goal_name').eq('child_id', child.id),
-      supabase.from('programas_aba').select('id, nombre, area, estado').eq('child_id', child.id).limit(4),
-    ])
-    if (progsData) setProgramas(progsData)
+    // BUG FIX #1: Usar programas_aba con objetivos_cp en vez de goal_progress (tabla vacía/sin datos).
+    // Los objetivos reales están en objetivos_cp vinculados a programas_aba con campo estado.
+    const { data: progsConObjetivos } = await supabase
+      .from('programas_aba')
+      .select('id, nombre, area, estado, objetivos_cp(id, descripcion, estado, numero_set)')
+      .eq('child_id', child.id)
+    const progsData = (progsConObjetivos || []).map((p: any) => ({
+      id: p.id, nombre: p.nombre, area: p.area, estado: p.estado
+    }))
+    if (progsData.length) setProgramas(progsData)
+    // BUG FIX #2: contar sesiones_datos_aba (fuente del admin/Hub IA) para alinear conteos
+    const progIds = (progsConObjetivos || []).map((p: any) => p.id)
+    const { data: sessDatosAba } = progIds.length
+      ? await supabase.from('sesiones_datos_aba').select('id').in('programa_id', progIds)
+      : { data: [] as any[] }
     const [{ data: msgs }, { data: parentMsgs }] = await Promise.all([
       supabase.from('notifications').select('*').eq('user_id', child.parent_id || '').eq('is_read', false).order('created_at', { ascending: false }).limit(5),
       supabase.from('parent_messages').select('*').eq('child_id', child.id).order('created_at', { ascending: false }).limit(5),
@@ -191,10 +201,13 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
     ])
     if (pred) setPrediccion(pred)
     if (pats) setPatrones(pats)
-    const totalSess = Math.max(allSess?.length || 0, allSessV2?.length || 0)
+    // BUG FIX #2: tomar el máximo entre todas las fuentes de sesiones para consistencia entre vistas
+    const totalSess = Math.max(allSess?.length || 0, allSessV2?.length || 0, sessDatosAba?.length || 0)
     const totalMinutes = (allSessV2 || []).reduce((s: number, x: any) => s + (x.duration_minutes || 45), 0) || totalSess * 45
-    const achieved = (goals || []).filter((g: any) => (g.mastery_level || 0) >= 80).length
-    const totalGoals = goals?.length || 0
+    // BUG FIX #1: calcular objetivos desde objetivos_cp (estado 'dominado' = logrado, no mastery_level)
+    const allObjetivos = (progsConObjetivos || []).flatMap((p: any) => p.objetivos_cp || [])
+    const achieved = allObjetivos.filter((o: any) => o.estado === 'dominado').length
+    const totalGoals = allObjetivos.length
     const masteryRate = totalGoals > 0 ? Math.round((achieved / totalGoals) * 100) : 0
     let level = 'Inicial'
     if (totalSess >= 50) level = 'Avanzado'
