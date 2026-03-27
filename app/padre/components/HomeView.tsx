@@ -168,54 +168,50 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
     setLoading(true)
     const today = new Date().toISOString().split('T')[0]
     const monthStart = today.slice(0,7) + '-01'
-    const { data: appts } = await supabase.from('appointments').select('*').eq('child_id', child.id).gte('appointment_date', today).neq('status', 'cancelled').neq('status', 'completed').order('appointment_date', { ascending: true }).order('appointment_time', { ascending: true }).limit(1)
-    setNextAppt(appts?.[0] || null)
-    const [{ data: monthSess }, { data: allSess }, { data: allSessV2 }] = await Promise.all([
+
+    // Próxima cita y mensajes — usan anon key normal (tienen RLS correcta)
+    const [
+      { data: appts },
+      { data: monthSess },
+      { data: msgs },
+      { data: parentMsgs },
+      { data: pred },
+      { data: pats },
+    ] = await Promise.all([
+      supabase.from('appointments').select('*').eq('child_id', child.id).gte('appointment_date', today).neq('status', 'cancelled').neq('status', 'completed').order('appointment_date', { ascending: true }).order('appointment_time', { ascending: true }).limit(1),
       supabase.from('registro_aba').select('id').eq('child_id', child.id).gte('fecha_sesion', monthStart),
-      supabase.from('registro_aba').select('id, datos').eq('child_id', child.id),
-      supabase.from('aba_sessions_v2').select('id, duration_minutes').eq('child_id', child.id),
-    ])
-    // BUG FIX #1: Usar programas_aba con objetivos_cp en vez de goal_progress (tabla vacía/sin datos).
-    // Los objetivos reales están en objetivos_cp vinculados a programas_aba con campo estado.
-    const { data: progsConObjetivos } = await supabase
-      .from('programas_aba')
-      .select('id, nombre, area, estado, objetivos_cp(id, descripcion, estado, numero_set)')
-      .eq('child_id', child.id)
-    const progsData = (progsConObjetivos || []).map((p: any) => ({
-      id: p.id, nombre: p.nombre, area: p.area, estado: p.estado
-    }))
-    if (progsData.length) setProgramas(progsData)
-    // BUG FIX #2: contar sesiones_datos_aba (fuente del admin/Hub IA) para alinear conteos
-    const progIds = (progsConObjetivos || []).map((p: any) => p.id)
-    const { data: sessDatosAba } = progIds.length
-      ? await supabase.from('sesiones_datos_aba').select('id').in('programa_id', progIds)
-      : { data: [] as any[] }
-    const [{ data: msgs }, { data: parentMsgs }] = await Promise.all([
       supabase.from('notifications').select('*').eq('user_id', child.parent_id || '').eq('is_read', false).order('created_at', { ascending: false }).limit(5),
       supabase.from('parent_messages').select('*').eq('child_id', child.id).order('created_at', { ascending: false }).limit(5),
-    ])
-    setParentMessages([...(msgs || []), ...(parentMsgs || [])].slice(0, 5))
-    const [{ data: pred }, { data: pats }] = await Promise.all([
       supabase.from('predicciones_ia').select('*').eq('child_id', child.id).single(),
       supabase.from('patrones_detectados').select('*').eq('child_id', child.id).single(),
     ])
+
+    setNextAppt(appts?.[0] || null)
+    setParentMessages([...(msgs || []), ...(parentMsgs || [])].slice(0, 5))
     if (pred) setPrediccion(pred)
     if (pats) setPatrones(pats)
-    // BUG FIX #2: tomar el máximo entre todas las fuentes de sesiones para consistencia entre vistas
-    const totalSess = Math.max(allSess?.length || 0, allSessV2?.length || 0, sessDatosAba?.length || 0)
-    const totalMinutes = (allSessV2 || []).reduce((s: number, x: any) => s + (x.duration_minutes || 45), 0) || totalSess * 45
-    // BUG FIX #1: calcular objetivos desde objetivos_cp (estado 'dominado' = logrado, no mastery_level)
-    const allObjetivos = (progsConObjetivos || []).flatMap((p: any) => p.objetivos_cp || [])
-    const achieved = allObjetivos.filter((o: any) => o.estado === 'dominado').length
-    const totalGoals = allObjetivos.length
-    const masteryRate = totalGoals > 0 ? Math.round((achieved / totalGoals) * 100) : 0
-    let level = 'Inicial'
-    if (totalSess >= 50) level = 'Avanzado'
-    else if (totalSess >= 20) level = 'Intermedio'
-    else if (totalSess >= 5) level = 'Básico'
+
+    // ── Stats con service_role via API (evita restricciones RLS en objetivos_cp y sesiones_datos_aba)
+    let apiStats: any = null
+    try {
+      const res = await fetch(`/api/padre/stats?child_id=${child.id}`)
+      if (res.ok) apiStats = await res.json()
+    } catch (e) {
+      console.warn('[HomeView] Error cargando stats via API:', e)
+    }
+
+    const totalSess = apiStats?.totalSesiones ?? 0
+    const achieved  = apiStats?.goalsAchieved  ?? 0
+    const totalGoals = apiStats?.totalGoals    ?? 0
+    const masteryRate = apiStats?.masteryRate  ?? 0
+    const hoursTotal  = apiStats?.hoursTotal   ?? (totalSess * 0.75)
+    const level       = apiStats?.level        ?? 'Inicial'
+
+    if (apiStats?.programas?.length) setProgramas(apiStats.programas)
+
     if (prevGoals !== -1 && achieved > prevGoals && achieved > 0) setShowCelebration(true)
     setPrevGoals(achieved)
-    setStats({ sessions: totalSess, goalsAchieved: achieved, hoursTotal: Math.round(totalMinutes / 60 * 10) / 10, level, monthSessions: monthSess?.length || 0, masteryRate, totalGoals })
+    setStats({ sessions: totalSess, goalsAchieved: achieved, hoursTotal, level, monthSessions: monthSess?.length || 0, masteryRate, totalGoals })
     setLoading(false)
   }
 

@@ -260,7 +260,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                   <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">{t('hub.analisPorPrograma')}</p>
                   <h3 className="text-xl font-black">{selectedPaciente.name}</h3>
                   <p className="text-blue-200 text-sm mt-0.5">
-                    {(prediccion as any).programas_analizados || 0} programas · {(prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) || 0} sesiones totales
+                    {(prediccion as any).programas_analizados || 0} programas · {(prediccion as any).total_sesiones_unificado ?? (prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) ?? 0} sesiones totales
                   </p>
                 </div>
                 <div className="bg-white/15 rounded-xl px-3 py-2 text-center">

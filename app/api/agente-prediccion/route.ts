@@ -316,7 +316,7 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
         areas_riesgo: analisis_por_programa.filter(p => (p.tendencia_slope ?? 0) < -1).map(p => p.nombre),
         areas_fortaleza: analisis_por_programa.filter(p => p.criterio_logrado).map(p => p.nombre),
         analisis_ia: resumen_general,
-        sesiones_analizadas: analisis_por_programa.reduce((a, p) => a + p.total_sesiones, 0),
+        sesiones_analizadas: totalSesionesAnalizadas, // unificado: max(sesiones_datos_aba, registro_aba)
         updated_at: new Date().toISOString(),
       }, { onConflict: 'child_id' })
     } catch { /* no bloquear */ }
@@ -325,6 +325,9 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
       programas_analizados: analisis_por_programa.length,
       analisis_por_programa,
       resumen_general,
+      // total_sesiones_unificado: fuente de verdad para el display del Hub IA
+      // usa Math.max entre sesiones_datos_aba y registro_aba para consistencia
+      total_sesiones_unificado: totalSesionesAnalizadas,
       criterio_nota: '≥90% en 2 sesiones consecutivas por nivel de objetivo = LOGRADO',
     })
 
