@@ -67,9 +67,16 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'El terapeuta ya tiene una sesion en ese horario' }, { status: 409 })
       }
 
+      // ── Generar link de videollamada si es virtual ──
+      let meeting_link: string | null = null
+      if (modalidad === 'virtual') {
+        const tempId = `${child_id}-${fecha}-${hora_inicio}`.replace(/:/g, '-')
+        meeting_link = `https://meet.jit.si/JugandoAprendo-${tempId}`
+      }
+
       const { data, error } = await supabaseAdmin
         .from('agenda_sesiones')
-        .insert({ child_id, terapeuta_id, fecha, hora_inicio, hora_fin, tipo, modalidad, notas, estado: 'programada' })
+        .insert({ child_id, terapeuta_id, fecha, hora_inicio, hora_fin, tipo, modalidad, notas, estado: 'programada', ...(meeting_link ? { meeting_link } : {}) })
         .select('*, children(name)')
         .single()
 
@@ -86,16 +93,22 @@ export async function POST(req: NextRequest) {
         const { data: parentProf } = await supabaseAdmin
           .from('profiles').select('phone, wsp_notif').eq('id', parentLink.user_id).maybeSingle()
         if ((parentProf as any)?.phone && (parentProf as any)?.wsp_notif !== false) {
-          // Notificar directo al padre via microservicio Baileys
+          // Notificar directo al padre via microservicio Baileys — incluir link si es virtual
           notifyParentDirect((parentProf as any).phone, 'cita_confirmada', {
-            fecha, hora: hora_inicio, paciente: childName, tipo: modalidad || tipo || 'Presencial',
+            fecha, hora: hora_inicio, paciente: childName,
+            tipo: modalidad === 'virtual' ? 'Virtual 📹' : (tipo || 'Presencial'),
+            ...(meeting_link ? { link: meeting_link } : {}),
           })
         }
       }
       // Notificar al admin también
       notifyAsync({
         tipo: 'cita_confirmada',
-        vars: { fecha, hora: hora_inicio, paciente: childName, tipo: modalidad || tipo || 'Presencial' },
+        vars: {
+          fecha, hora: hora_inicio, paciente: childName,
+          tipo: modalidad === 'virtual' ? 'Virtual 📹' : (tipo || 'Presencial'),
+          ...(meeting_link ? { link: meeting_link } : {}),
+        },
       })
 
       // ── Agregar al Google / Microsoft Calendar del padre (si tiene OAuth) ──

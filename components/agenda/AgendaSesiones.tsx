@@ -161,7 +161,7 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
                     </div>
                     <div className="flex-1">
                       <p className="font-semibold text-gray-800 text-sm">{s.children?.name || 'Sin nombre'}</p>
-                      <p className="text-xs text-gray-500">{s.tipo} • {s.modalidad}</p>
+                      <p className="text-xs text-gray-500">{s.tipo} • {s.modalidad}{s.meeting_link ? ' 📹' : ''}</p>
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${cfg.bg} ${cfg.color}`}>{cfg.label}</span>
                   </div>
@@ -185,6 +185,28 @@ export default function AgendaSesiones({ childId }: { childId?: string }) {
               <button onClick={() => setModal(null)} className="text-gray-400 hover:text-gray-600 text-xl">✕</button>
             </div>
             {modal.notas && <p className="text-sm text-gray-600 bg-gray-50 rounded-lg p-3 italic">{modal.notas}</p>}
+            {modal.meeting_link && (
+              <div className="bg-blue-50 rounded-xl p-3 flex items-start gap-3">
+                <span className="text-xl">🔗</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-blue-700 mb-1">Link de Videollamada</p>
+                  <a
+                    href={modal.meeting_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-blue-600 hover:text-blue-800 underline break-all"
+                  >
+                    {modal.meeting_link}
+                  </a>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(modal.meeting_link); alert('Link copiado ✅') }}
+                    className="mt-2 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors w-full"
+                  >
+                    📋 Copiar link
+                  </button>
+                </div>
+              </div>
+            )}
             <div>
               <p className="text-xs text-gray-500 font-medium mb-2">{t('agenda.cambiarEstado')}</p>
               <div className="grid grid-cols-2 gap-2">
