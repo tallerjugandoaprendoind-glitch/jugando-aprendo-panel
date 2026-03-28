@@ -114,7 +114,15 @@ export async function POST(req: NextRequest) {
         .eq('programa_id', prog.id)
         .order('fecha', { ascending: true })
       if (s1 && s1.length > 0) {
-        sesiones = s1
+        // Normalizar: calcular porcentaje_exito desde respuestas/oportunidades si está null
+        sesiones = s1.map((s: any) => ({
+          ...s,
+          porcentaje_exito: s.porcentaje_exito != null
+            ? s.porcentaje_exito
+            : (s.oportunidades_totales > 0
+                ? Math.round((Number(s.respuestas_correctas) / Number(s.oportunidades_totales)) * 100)
+                : null)
+        })).filter((s: any) => s.porcentaje_exito != null)
       } else {
         // Fallback: buscar en registro_aba por child_id y mapear datos
         const { data: s2 } = await supabaseAdmin

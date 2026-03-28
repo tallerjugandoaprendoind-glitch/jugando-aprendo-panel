@@ -72,9 +72,16 @@ export async function POST(req: NextRequest) {
 
     if (action === 'registrar_sesion') {
       const { sesion } = body
+      // Calcular porcentaje_exito si no viene explícito pero hay oportunidades/respuestas
+      const sesionConPct = { ...sesion }
+      if (sesionConPct.porcentaje_exito == null && sesionConPct.oportunidades_totales > 0) {
+        sesionConPct.porcentaje_exito = Math.round(
+          (Number(sesionConPct.respuestas_correctas) / Number(sesionConPct.oportunidades_totales)) * 100
+        )
+      }
       const { data, error } = await supabaseAdmin
         .from('sesiones_datos_aba')
-        .insert(sesion)
+        .insert(sesionConPct)
         .select()
         .single()
       if (error) throw error
@@ -143,16 +150,25 @@ async function verificarCriterioDominio(programaId: string) {
       .single()
     if (!prog || (prog as any).fase_actual !== 'intervencion') return
 
-    const { data: sesiones } = await supabaseAdmin
+    const { data: sesionesRaw } = await supabaseAdmin
       .from('sesiones_datos_aba')
-      .select('porcentaje_exito')
+      .select('porcentaje_exito, oportunidades_totales, respuestas_correctas')
       .eq('programa_id', programaId)
       .order('fecha', { ascending: false })
       .limit((prog as any).criterio_sesiones_consecutivas)
 
-    if (!sesiones || sesiones.length < (prog as any).criterio_sesiones_consecutivas) return
+    if (!sesionesRaw || sesionesRaw.length < (prog as any).criterio_sesiones_consecutivas) return
 
-    const cumpleCriterio = (sesiones as any[]).every(
+    // Normalizar porcentaje_exito
+    const sesiones = (sesionesRaw as any[]).map(s => ({
+      porcentaje_exito: s.porcentaje_exito != null
+        ? s.porcentaje_exito
+        : (s.oportunidades_totales > 0
+            ? Math.round((Number(s.respuestas_correctas) / Number(s.oportunidades_totales)) * 100)
+            : 0)
+    }))
+
+    const cumpleCriterio = sesiones.every(
       s => s.porcentaje_exito >= (prog as any).criterio_dominio_pct
     )
 

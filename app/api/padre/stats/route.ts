@@ -29,13 +29,22 @@ export async function GET(req: NextRequest) {
     const progIds = (programas || []).map((p: any) => p.id)
 
     // 2. Sesiones por programa (sesiones_datos_aba — fuente del admin / Hub IA)
-    const { data: sesionesPrograma } = progIds.length
+    const { data: sesionesRaw } = progIds.length
       ? await supabaseAdmin
           .from('sesiones_datos_aba')
-          .select('id, programa_id, fecha, porcentaje_exito, objetivo_cp_id')
+          .select('id, programa_id, fecha, porcentaje_exito, objetivo_cp_id, oportunidades_totales, respuestas_correctas')
           .in('programa_id', progIds)
           .order('fecha', { ascending: true })
       : { data: [] as any[] }
+    // Normalizar porcentaje_exito: calcularlo desde respuestas/oportunidades si está null
+    const sesionesPrograma = (sesionesRaw || []).map((s: any) => ({
+      ...s,
+      porcentaje_exito: s.porcentaje_exito != null
+        ? s.porcentaje_exito
+        : (s.oportunidades_totales > 0
+            ? Math.round((Number(s.respuestas_correctas) / Number(s.oportunidades_totales)) * 100)
+            : null)
+    }))
 
     // 3. Sesiones registro_aba (fuente legacy)
     const { data: registroAba } = await supabaseAdmin
