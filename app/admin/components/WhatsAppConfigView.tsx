@@ -5,6 +5,7 @@ import { toBCP47 } from '@/lib/i18n'
 // Panel de configuración de notificaciones — Telegram (recomendado) + WhatsApp
 import { useState, useEffect } from 'react'
 import { Bell, CheckCircle, XCircle, ExternalLink, Copy, Send, MessageCircle } from 'lucide-react'
+import WhatsAppQRPanel from './WhatsAppQRPanel'
 
 export default function WhatsAppConfigView() {
   const { t, locale } = useI18n()
@@ -12,7 +13,7 @@ export default function WhatsAppConfigView() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null)
-  const [tab, setTab] = useState<'telegram' | 'whatsapp'>('telegram')
+  const [tab, setTab] = useState<'telegram' | 'whatsapp' | 'baileys'>('baileys')
 
   useEffect(() => {
     fetch('/api/whatsapp').then(r => r.json()).then(d => { setStatus(d); setLoading(false) })
@@ -109,8 +110,9 @@ export default function WhatsAppConfigView() {
       {/* Tabs */}
       <div className="flex gap-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
         {([
+          { id: 'baileys',   label: '💬 WhatsApp',  badge: 'Baileys' },
           { id: 'telegram',  label: '✈️ Telegram', badge: 'Recomendado' },
-          { id: 'whatsapp',  label: '💬 WhatsApp',  badge: 'Meta Cloud API' },
+          { id: 'whatsapp',  label: '☁️ Meta Cloud API',  badge: '' },
         ] as const).map(t => (
           <button
             key={t.id}
@@ -128,6 +130,9 @@ export default function WhatsAppConfigView() {
           </button>
         ))}
       </div>
+
+      {/* ── BAILEYS QR ── */}
+      {tab === 'baileys' && <WhatsAppQRPanel />}
 
       {/* ── TELEGRAM ── */}
       {tab === 'telegram' && (
