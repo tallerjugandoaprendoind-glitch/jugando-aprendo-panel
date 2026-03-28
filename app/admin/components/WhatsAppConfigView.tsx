@@ -30,7 +30,7 @@ export default function WhatsAppConfigView() {
         return
       }
       // Obtener número del admin desde su perfil
-      const profileRes = await fetch('/api/auth/role')
+      const profileRes = await fetch('/api/admin/profile')
       const profileData = await profileRes.json()
       const adminPhone = profileData?.phone
       if (!adminPhone) {
