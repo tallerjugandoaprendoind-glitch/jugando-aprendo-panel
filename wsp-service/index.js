@@ -1,18 +1,26 @@
-// wsp-service/index.js
+// wsp-service/index.js — ESM version
 // Microservicio WhatsApp Baileys — Jugando Aprendo
-// Deploy en Railway/Render, escanea QR una vez y queda conectado.
-// ──────────────────────────────────────────────────────────────────
-// Variables de entorno:
-//   PORT              Puerto HTTP (default: 3001)
-//   SERVICE_SECRET    Clave secreta para autenticar requests desde Vanty
-//   ADMIN_PHONE       Número del admin (ej: +51924807183) para alertas internas
 
-require('dotenv').config()
+import { createRequire } from 'module'
+import { fileURLToPath } from 'url'
+import { dirname } from 'path'
+import { existsSync, rmSync } from 'fs'
 
-const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys')
-const express  = require('express')
-const pino     = require('pino')
-const QRCode   = require('qrcode')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname  = dirname(__filename)
+
+import makeWASocket, {
+  useMultiFileAuthState,
+  DisconnectReason,
+  fetchLatestBaileysVersion
+} from '@whiskeysockets/baileys'
+
+import express from 'express'
+import pino    from 'pino'
+import QRCode  from 'qrcode'
+import dotenv  from 'dotenv'
+
+dotenv.config()
 
 const PORT   = process.env.PORT || 3001
 const SECRET = process.env.SERVICE_SECRET || 'changeme'
@@ -23,24 +31,22 @@ app.use(express.json())
 
 // ── Estado global ─────────────────────────────────────────────────
 let sock        = null
-let qrBase64    = null   // QR como imagen base64 para mostrar en el panel
+let qrBase64    = null
 let isConnected = false
-let isWaiting   = true   // true mientras genera el QR
+let isWaiting   = true
 
-// ── Autenticación de requests ─────────────────────────────────────
+// ── Autenticación ─────────────────────────────────────────────────
 function auth(req, res, next) {
   const secret = req.headers['x-service-secret']
   if (secret !== SECRET) return res.status(401).json({ error: 'Unauthorized' })
   next()
 }
 
-// ── Iniciar/reconectar Baileys ────────────────────────────────────
+// ── WhatsApp ──────────────────────────────────────────────────────
 async function startWhatsApp() {
   try {
     const { state, saveCreds } = await useMultiFileAuthState('./auth_info')
 
-    // fetchLatestBaileysVersion puede fallar si Railway bloquea la red al inicio.
-    // Usamos versión conocida como fallback para que el proceso nunca muera.
     let version = [2, 3000, 1015901307]
     try {
       const result = await Promise.race([
@@ -49,13 +55,13 @@ async function startWhatsApp() {
       ])
       version = result.version
     } catch (e) {
-      console.log('⚠️ No se pudo obtener versión de WA, usando fallback:', version)
+      console.log('⚠️ Usando versión fallback de WA:', version)
     }
 
     sock = makeWASocket({
       version,
       logger,
-      printQRInTerminal: true,   // también imprime en logs de Railway
+      printQRInTerminal: true,
       auth: state,
       browser: ['Jugando Aprendo', 'Chrome', '120.0.0'],
       connectTimeoutMs: 60_000,
@@ -69,7 +75,6 @@ async function startWhatsApp() {
       const { connection, lastDisconnect, qr } = update
 
       if (qr) {
-        // Convertir QR a imagen base64 para el panel admin
         qrBase64    = await QRCode.toDataURL(qr)
         isWaiting   = false
         isConnected = false
@@ -92,10 +97,8 @@ async function startWhatsApp() {
           isWaiting = true
           setTimeout(startWhatsApp, 3000)
         } else {
-          // Sesión cerrada — borrar credenciales para que pida QR de nuevo
-          const fs = require('fs')
-          if (fs.existsSync('./auth_info')) {
-            fs.rmSync('./auth_info', { recursive: true, force: true })
+          if (existsSync('./auth_info')) {
+            rmSync('./auth_info', { recursive: true, force: true })
           }
           isWaiting = true
           setTimeout(startWhatsApp, 3000)
@@ -105,18 +108,13 @@ async function startWhatsApp() {
   } catch (err) {
     console.error('❌ Error en startWhatsApp:', err.message)
     isWaiting = true
-    // Reintentar en 5 segundos
     setTimeout(startWhatsApp, 5000)
   }
 }
 
-// ── Formatear número de teléfono ──────────────────────────────────
-// Acepta: +51924807183, 51924807183, 924807183
-// Retorna: 51924807183@s.whatsapp.net
+// ── Formatear teléfono ────────────────────────────────────────────
 function formatPhone(phone) {
-  // Quitar todo excepto dígitos
   let digits = phone.replace(/\D/g, '')
-  // Si viene sin código de país peruano, agregarlo
   if (digits.length === 9 && !digits.startsWith('51')) {
     digits = '51' + digits
   }
@@ -125,7 +123,6 @@ function formatPhone(phone) {
 
 // ── ENDPOINTS ─────────────────────────────────────────────────────
 
-// GET /status — estado de la conexión
 app.get('/status', auth, (req, res) => {
   res.json({
     connected: isConnected,
@@ -134,26 +131,18 @@ app.get('/status', auth, (req, res) => {
   })
 })
 
-// GET /qr — obtener QR como imagen base64
 app.get('/qr', auth, (req, res) => {
   if (isConnected) return res.json({ connected: true })
   if (!qrBase64)   return res.json({ waiting: true })
   res.json({ qr: qrBase64 })
 })
 
-// POST /send — enviar mensaje
-// Body: { to: "+51924807183", message: "Hola!" }
 app.post('/send', auth, async (req, res) => {
   const { to, message } = req.body
-
-  if (!to || !message) {
+  if (!to || !message)
     return res.status(400).json({ error: 'to y message son requeridos' })
-  }
-
-  if (!isConnected || !sock) {
+  if (!isConnected || !sock)
     return res.status(503).json({ error: 'WhatsApp no conectado', connected: false })
-  }
-
   try {
     const jid = formatPhone(to)
     await sock.sendMessage(jid, { text: message })
@@ -165,18 +154,12 @@ app.post('/send', auth, async (req, res) => {
   }
 })
 
-// POST /broadcast — enviar a múltiples números
-// Body: { phones: ["+51xxx", "+51yyy"], message: "Hola!" }
 app.post('/broadcast', auth, async (req, res) => {
   const { phones, message } = req.body
-
-  if (!phones?.length || !message) {
+  if (!phones?.length || !message)
     return res.status(400).json({ error: 'phones[] y message son requeridos' })
-  }
-
-  if (!isConnected || !sock) {
+  if (!isConnected || !sock)
     return res.status(503).json({ error: 'WhatsApp no conectado' })
-  }
 
   const results = await Promise.allSettled(
     phones.map(async (phone) => {
@@ -185,18 +168,15 @@ app.post('/broadcast', auth, async (req, res) => {
       return phone
     })
   )
-
   const sent   = results.filter(r => r.status === 'fulfilled').length
   const failed = results.length - sent
   res.json({ ok: true, sent, failed, total: phones.length })
 })
 
-// GET /health — health check para Railway (sin autenticación)
+// Sin autenticación — Railway lo llama directamente
 app.get('/health', (req, res) => res.json({ ok: true }))
 
 // ── Arrancar ──────────────────────────────────────────────────────
-
-// Evitar que errores no manejados maten el proceso
 process.on('unhandledRejection', (reason) => {
   console.error('⚠️ unhandledRejection:', reason?.message || reason)
 })
