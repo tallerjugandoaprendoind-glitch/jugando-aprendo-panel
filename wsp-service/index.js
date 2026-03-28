@@ -36,59 +36,78 @@ function auth(req, res, next) {
 
 // ── Iniciar/reconectar Baileys ────────────────────────────────────
 async function startWhatsApp() {
-  const { state, saveCreds } = await useMultiFileAuthState('./auth_info')
-  const { version }          = await fetchLatestBaileysVersion()
+  try {
+    const { state, saveCreds } = await useMultiFileAuthState('./auth_info')
 
-  sock = makeWASocket({
-    version,
-    logger,
-    printQRInTerminal: true,   // también imprime en logs de Railway
-    auth: state,
-    browser: ['Jugando Aprendo', 'Chrome', '120.0.0'],
-    connectTimeoutMs: 60_000,
-    keepAliveIntervalMs: 25_000,
-    retryRequestDelayMs: 2_000,
-  })
-
-  sock.ev.on('creds.update', saveCreds)
-
-  sock.ev.on('connection.update', async (update) => {
-    const { connection, lastDisconnect, qr } = update
-
-    if (qr) {
-      // Convertir QR a imagen base64 para el panel admin
-      qrBase64    = await QRCode.toDataURL(qr)
-      isWaiting   = false
-      isConnected = false
-      console.log('📱 QR generado — escaneá desde el panel admin')
+    // fetchLatestBaileysVersion puede fallar si Railway bloquea la red al inicio.
+    // Usamos versión conocida como fallback para que el proceso nunca muera.
+    let version = [2, 3000, 1015901307]
+    try {
+      const result = await Promise.race([
+        fetchLatestBaileysVersion(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10_000))
+      ])
+      version = result.version
+    } catch (e) {
+      console.log('⚠️ No se pudo obtener versión de WA, usando fallback:', version)
     }
 
-    if (connection === 'open') {
-      isConnected = true
-      isWaiting   = false
-      qrBase64    = null
-      console.log('✅ WhatsApp conectado')
-    }
+    sock = makeWASocket({
+      version,
+      logger,
+      printQRInTerminal: true,   // también imprime en logs de Railway
+      auth: state,
+      browser: ['Jugando Aprendo', 'Chrome', '120.0.0'],
+      connectTimeoutMs: 60_000,
+      keepAliveIntervalMs: 25_000,
+      retryRequestDelayMs: 2_000,
+    })
 
-    if (connection === 'close') {
-      isConnected = false
-      const code = lastDisconnect?.error?.output?.statusCode
-      const shouldReconnect = code !== DisconnectReason.loggedOut
-      console.log(`⚠️ Desconectado (código ${code}) — reconectando: ${shouldReconnect}`)
-      if (shouldReconnect) {
-        isWaiting = true
-        setTimeout(startWhatsApp, 3000)
-      } else {
-        // Sesión cerrada — borrar credenciales para que pida QR de nuevo
-        const fs = require('fs')
-        if (fs.existsSync('./auth_info')) {
-          fs.rmSync('./auth_info', { recursive: true, force: true })
-        }
-        isWaiting = true
-        setTimeout(startWhatsApp, 3000)
+    sock.ev.on('creds.update', saveCreds)
+
+    sock.ev.on('connection.update', async (update) => {
+      const { connection, lastDisconnect, qr } = update
+
+      if (qr) {
+        // Convertir QR a imagen base64 para el panel admin
+        qrBase64    = await QRCode.toDataURL(qr)
+        isWaiting   = false
+        isConnected = false
+        console.log('📱 QR generado — escaneá desde el panel admin')
       }
-    }
-  })
+
+      if (connection === 'open') {
+        isConnected = true
+        isWaiting   = false
+        qrBase64    = null
+        console.log('✅ WhatsApp conectado')
+      }
+
+      if (connection === 'close') {
+        isConnected = false
+        const code = lastDisconnect?.error?.output?.statusCode
+        const shouldReconnect = code !== DisconnectReason.loggedOut
+        console.log(`⚠️ Desconectado (código ${code}) — reconectando: ${shouldReconnect}`)
+        if (shouldReconnect) {
+          isWaiting = true
+          setTimeout(startWhatsApp, 3000)
+        } else {
+          // Sesión cerrada — borrar credenciales para que pida QR de nuevo
+          const fs = require('fs')
+          if (fs.existsSync('./auth_info')) {
+            fs.rmSync('./auth_info', { recursive: true, force: true })
+          }
+          isWaiting = true
+          setTimeout(startWhatsApp, 3000)
+        }
+      }
+    })
+  } catch (err) {
+    console.error('❌ Error en startWhatsApp:', err.message)
+    isWaiting = true
+    // Reintentar en 5 segundos
+    setTimeout(startWhatsApp, 5000)
+  }
 }
 
 // ── Formatear número de teléfono ──────────────────────────────────
@@ -172,11 +191,23 @@ app.post('/broadcast', auth, async (req, res) => {
   res.json({ ok: true, sent, failed, total: phones.length })
 })
 
-// GET /health — health check para Railway
+// GET /health — health check para Railway (sin autenticación)
 app.get('/health', (req, res) => res.json({ ok: true }))
 
 // ── Arrancar ──────────────────────────────────────────────────────
+
+// Evitar que errores no manejados maten el proceso
+process.on('unhandledRejection', (reason) => {
+  console.error('⚠️ unhandledRejection:', reason?.message || reason)
+})
+process.on('uncaughtException', (err) => {
+  console.error('⚠️ uncaughtException:', err.message)
+})
+
 app.listen(PORT, () => {
   console.log(`🚀 wsp-service corriendo en puerto ${PORT}`)
-  startWhatsApp()
+  startWhatsApp().catch(err => {
+    console.error('❌ startWhatsApp falló al inicio:', err.message)
+    setTimeout(startWhatsApp, 5000)
+  })
 })
