@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     // 1. Programas ABA con objetivos_cp anidados (usando service_role)
     const { data: programas, error: errProg } = await supabaseAdmin
       .from('programas_aba')
-      .select('id, titulo, nombre, area, estado, objetivos_cp(id, descripcion, estado, numero_set)')
+      .select('id, titulo, nombre, area, estado, criterio_dominio_pct, objetivos_cp(id, descripcion, estado, numero_set)')
       .eq('child_id', childId)
       .order('created_at', { ascending: false })
 
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     const { data: sesionesPrograma } = progIds.length
       ? await supabaseAdmin
           .from('sesiones_datos_aba')
-          .select('id, programa_id, fecha, porcentaje_exito')
+          .select('id, programa_id, fecha, porcentaje_exito, objetivo_cp_id')
           .in('programa_id', progIds)
           .order('fecha', { ascending: true })
       : { data: [] as any[] }
@@ -52,8 +52,67 @@ export async function GET(req: NextRequest) {
     // ── Calcular objetivos ─────────────────────────────────────
     const allObjetivos = (programas || []).flatMap((p: any) => p.objetivos_cp || [])
     const totalGoals = allObjetivos.length
-    const goalsAchieved = allObjetivos.filter((o: any) => o.estado === 'dominado').length
-    const masteryRate = totalGoals > 0 ? Math.round((goalsAchieved / totalGoals) * 100) : 0
+
+    // Estrategia de dominio en cascada:
+    //
+    // NIVEL 1 — El set tiene estado === 'dominado' en objetivos_cp
+    // NIVEL 2 — El programa padre tiene estado === 'dominado' (especialista marcó
+    //           el programa completo via cambiar_fase, sin actualizar cada set)
+    // NIVEL 3 — Las últimas 2+ sesiones de sesiones_datos_aba para ese set
+    //           superan el criterio_dominio_pct del programa (≥80% por defecto)
+
+    const criterioPorPrograma: Record<string, number> = {}
+    for (const p of (programas || [])) {
+      criterioPorPrograma[p.id] = (p as any).criterio_dominio_pct ?? 80
+    }
+
+    // mapa: objetivo_cp_id → lista de porcentajes ordenados cronológicamente
+    const sesionesPorSet: Record<string, number[]> = {}
+    for (const s of (sesionesPrograma || []) as any[]) {
+      if (!s.objetivo_cp_id) continue
+      if (!sesionesPorSet[s.objetivo_cp_id]) sesionesPorSet[s.objetivo_cp_id] = []
+      sesionesPorSet[s.objetivo_cp_id].push(s.porcentaje_exito)
+    }
+
+    const programasDominados = new Set(
+      (programas || []).filter((p: any) => p.estado === 'dominado').map((p: any) => p.id)
+    )
+
+    const programaPorObjetivo: Record<string, string> = {}
+    for (const p of (programas || []) as any[]) {
+      for (const o of (p.objetivos_cp || [])) {
+        programaPorObjetivo[o.id] = p.id
+      }
+    }
+
+    let goalsAchieved = 0
+    for (const obj of allObjetivos) {
+      const progId = programaPorObjetivo[obj.id]
+
+      // Nivel 1
+      if (obj.estado === 'dominado') { goalsAchieved++; continue }
+
+      // Nivel 2
+      if (progId && programasDominados.has(progId)) { goalsAchieved++; continue }
+
+      // Nivel 3
+      const criterio = criterioPorPrograma[progId] ?? 80
+      const sesiones = sesionesPorSet[obj.id] || []
+      if (sesiones.length >= 2 && sesiones.slice(-2).every((pct: number) => pct >= criterio)) {
+        goalsAchieved++
+        continue
+      }
+    }
+
+    // Masteryrate: si no hay sets pero hay programas, usar proporción de programas dominados
+    let masteryRate = 0
+    if (totalGoals > 0) {
+      masteryRate = Math.round((goalsAchieved / totalGoals) * 100)
+    } else {
+      const totalProg = (programas || []).length
+      const domProg = (programas || []).filter((p: any) => p.estado === 'dominado').length
+      masteryRate = totalProg > 0 ? Math.round((domProg / totalProg) * 100) : 0
+    }
 
     // ── Calcular sesiones unificadas ──────────────────────────
     const totalSesiones = Math.max(
@@ -96,7 +155,9 @@ export async function GET(req: NextRequest) {
         aba_sessions_v2: sessionsV2?.length ?? 0,
         sesiones_datos_aba: sesionesPrograma?.length ?? 0,
         total_objetivos: totalGoals,
-        dominados: goalsAchieved,
+        dominados_n1_estado: allObjetivos.filter((o: any) => o.estado === 'dominado').length,
+        dominados_n2_prog: [...programasDominados].length,
+        dominados_final: goalsAchieved,
       },
     })
   } catch (e: any) {

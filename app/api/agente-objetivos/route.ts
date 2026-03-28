@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       .from('programas_aba')
       .select('id, titulo, area, fase_actual, estado, criterio_dominio_pct, objetivos_cp(id, nombre, estado, numero_set)')
       .eq('child_id', childId)
-      .in('estado', ['activo', 'intervencion'])
+      .not('estado', 'in', '("archivado","alta","dado_de_alta","inactivo","cancelado")')
       .order('created_at', { ascending: false })
       .limit(10)
 
@@ -60,13 +60,20 @@ export async function POST(req: NextRequest) {
     // Calcular tasa de dominio por programa
     const resumenProgramas = programas?.map(p => {
       const objetivos = (p as any).objetivos_cp || []
-      const dominados = objetivos.filter((o: any) => o.estado === 'dominado').length
       const total = objetivos.length
+      // Lógica en cascada: mismo criterio que padre/stats
+      // Nivel 1: estado === 'dominado' en el set individual
+      // Nivel 2: el programa completo está dominado → todos sus sets son logrados
+      const progDominado = p.estado === 'dominado'
+      const dominados = progDominado
+        ? total
+        : objetivos.filter((o: any) => o.estado === 'dominado').length
       return {
         titulo: p.titulo,
         area: p.area,
         fase: p.fase_actual,
-        pct_dominio: total > 0 ? Math.round((dominados / total) * 100) : 0,
+        estado: p.estado,
+        pct_dominio: total > 0 ? Math.round((dominados / total) * 100) : (progDominado ? 100 : 0),
         dominados,
         total,
         criterio: p.criterio_dominio_pct || 80

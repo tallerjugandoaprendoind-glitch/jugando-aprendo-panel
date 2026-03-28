@@ -49,7 +49,7 @@ async function analizarPaciente(childId: string, childName: string): Promise<Sug
       .gte('fecha_sesion', hace8semanas.toISOString().split('T')[0])
       .order('fecha_sesion', { ascending: true }),
     supabaseAdmin.from('programas_aba').select('id, titulo, area, fase_actual, estado, criterio_dominio_pct, objetivos_cp(nombre, estado)')
-      .eq('child_id', childId).eq('estado', 'activo')
+      .eq('child_id', childId).not('estado', 'in', '("archivado","alta","dado_de_alta","inactivo","cancelado")')
   ])
 
   const sesiones = sesionesRes.data || []

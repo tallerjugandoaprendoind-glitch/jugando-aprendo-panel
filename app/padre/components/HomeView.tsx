@@ -332,9 +332,14 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                     <p style={{ color:'#c4b5fd',fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1,margin:0 }}>IA • Análisis Predictivo</p>
                     <p style={{ color:'#fff',fontSize:13,fontWeight:700,margin:0 }}>Vista de progreso</p>
                   </div>
-                  {prediccion?.confianza&&<span style={{ marginLeft:'auto',background:'rgba(139,92,246,.3)',color:'#c4b5fd',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20 }}>{prediccion.confianza}% confianza</span>}
+                  {(prediccion?.confianza != null && prediccion.confianza > 0)&&<span style={{ marginLeft:'auto',background:'rgba(139,92,246,.3)',color:'#c4b5fd',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20 }}>{prediccion.confianza}% confianza</span>}
                 </div>
-                {prediccion?.prediccion_30d&&<p style={{ color:'rgba(255,255,255,.85)',fontSize:13,lineHeight:1.5,margin:0 }}>{prediccion.prediccion_30d}</p>}
+                {/* prediccion_30d: primer párrafo del análisis IA — fallback a analisis_ia */}
+                {(prediccion?.prediccion_30d||prediccion?.analisis_ia)&&(
+                  <p style={{ color:'rgba(255,255,255,.85)',fontSize:13,lineHeight:1.5,margin:0 }}>
+                    {prediccion.prediccion_30d || (prediccion.analisis_ia as string).split('\n\n').find((b:string)=>b.trim()&&!/^\*\*[^*]+\*\*$/.test(b.trim()))?.replace(/\*\*(.*?)\*\*/g,'$1').trim()}
+                  </p>
+                )}
                 {prediccion?.areas_fortaleza?.length>0&&(
                   <div style={{ display:'flex',gap:6,flexWrap:'wrap',marginTop:10 }}>
                     {prediccion.areas_fortaleza.slice(0,3).map((a:string,i:number)=><span key={i} style={{ background:'rgba(16,185,129,.2)',color:'#6ee7b7',fontSize:11,fontWeight:600,padding:'3px 10px',borderRadius:20,border:'1px solid rgba(16,185,129,.3)' }}>✦ {a}</span>)}

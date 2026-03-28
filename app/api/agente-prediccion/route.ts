@@ -305,18 +305,46 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
 
     // Guardar en predicciones_ia (resumen general)
     try {
-      const logrados = analisis_por_programa.filter(p => p.criterio_logrado).length
-      const enProgreso = analisis_por_programa.filter(p => !p.criterio_logrado).length
+      // Confianza: escala logarítmica (piso 20%, techo 92%)
+      // 1 sesión→~20%, 5→~40%, 10→~55%, 20→~70%, 40→~85%, 50+→~92%
+      const totalSes = analisis_por_programa.reduce((a, p) => a + p.total_sesiones, 0)
+      const confianza = totalSes === 0
+        ? 0
+        : Math.round(Math.min(92, 20 + (Math.log(totalSes + 1) / Math.log(55)) * 72))
+
+      // areas_fortaleza: logrados primero; si no hay, programas con tendencia positiva
+      const logradosList = analisis_por_programa.filter(p => p.criterio_logrado).map(p => p.nombre)
+      const positivosList = analisis_por_programa
+        .filter(p => !p.criterio_logrado && (p.tendencia_slope ?? 0) > 1 && p.total_sesiones > 0)
+        .map(p => p.nombre)
+      const areas_fortaleza = logradosList.length > 0 ? logradosList : positivosList
+
+      // areas_riesgo: tendencia negativa o media baja con >=3 sesiones
+      const areas_riesgo = analisis_por_programa
+        .filter(p => (p.tendencia_slope ?? 0) < -1 || (p.media != null && p.media < 50 && p.total_sesiones >= 3))
+        .map(p => p.nombre)
+
+      // prediccion_30d: primer párrafo narrativo del análisis IA (lo que ve el padre en HomeView)
+      let prediccion_30d: string | null = null
+      if (resumen_general) {
+        const bloques = resumen_general
+          .split(/\n\n+/)
+          .map((b: string) => b.trim())
+          .filter((b: string) => b && !/^\*\*[^*]+\*\*$/.test(b))
+        prediccion_30d = bloques[0] ?? null
+        if (prediccion_30d) prediccion_30d = prediccion_30d.replace(/\*\*(.*?)\*\*/g, '$1').trim()
+      }
+
       await supabaseAdmin.from('predicciones_ia').upsert({
         child_id: childId,
         fecha_prediccion: new Date().toISOString().split('T')[0],
-        prediccion_30d: null,
+        prediccion_30d,
         prediccion_90d: null,
-        confianza: Math.min(95, analisis_por_programa.reduce((a, p) => a + p.total_sesiones, 0) * 2),
-        areas_riesgo: analisis_por_programa.filter(p => (p.tendencia_slope ?? 0) < -1).map(p => p.nombre),
-        areas_fortaleza: analisis_por_programa.filter(p => p.criterio_logrado).map(p => p.nombre),
+        confianza,
+        areas_riesgo,
+        areas_fortaleza,
         analisis_ia: resumen_general,
-        sesiones_analizadas: totalSesionesAnalizadas, // unificado: max(sesiones_datos_aba, registro_aba)
+        sesiones_analizadas: totalSesionesAnalizadas,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'child_id' })
     } catch { /* no bloquear */ }

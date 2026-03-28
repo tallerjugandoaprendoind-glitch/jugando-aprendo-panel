@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
 
     if (action === 'cambiar_fase') {
       const { programa_id, child_id, fase_nueva, motivo, fase_anterior } = body
-      const [cambio, _] = await Promise.all([
+      const [cambio] = await Promise.all([
         supabaseAdmin.from('cambios_fase_aba').insert({
           programa_id, child_id, fase_nueva, fase_anterior, motivo,
         }).select().single(),
@@ -96,6 +96,17 @@ export async function POST(req: NextRequest) {
           ...(fase_nueva === 'dominado' ? { estado: 'dominado', fecha_dominio: new Date().toISOString().split('T')[0] } : {}),
         }).eq('id', programa_id),
       ])
+
+      // Si el programa pasa a dominado, marcar también todos sus sets (objetivos_cp)
+      // Esto garantiza que el contador del Hub IA sea siempre correcto (nivel 1)
+      if (fase_nueva === 'dominado') {
+        await supabaseAdmin
+          .from('objetivos_cp')
+          .update({ estado: 'dominado' })
+          .eq('programa_id', programa_id)
+          .neq('estado', 'dominado') // evitar escrituras innecesarias
+      }
+
       return NextResponse.json({ data: cambio.data })
     }
 
