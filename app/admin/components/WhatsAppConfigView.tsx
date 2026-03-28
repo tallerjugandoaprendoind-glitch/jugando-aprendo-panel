@@ -23,22 +23,37 @@ export default function WhatsAppConfigView() {
     setSending(true)
     setTestResult(null)
     try {
-      const res = await fetch('/api/whatsapp', {
+      const statusRes = await fetch('/api/whatsapp-service/status')
+      const statusData = await statusRes.json()
+      if (!statusData.connected) {
+        setTestResult({ ok: false, msg: '❌ WhatsApp no está conectado. Escaneá el QR primero.' })
+        return
+      }
+      // Obtener número del admin desde su perfil
+      const profileRes = await fetch('/api/auth/role')
+      const profileData = await profileRes.json()
+      const adminPhone = profileData?.phone
+      if (!adminPhone) {
+        setTestResult({ ok: false, msg: '❌ Agregá tu número de teléfono en Mi Perfil primero.' })
+        return
+      }
+      const res = await fetch('/api/whatsapp-service/send', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          tipo: 'custom',
-          vars: { mensaje: `🧪 *Test Vanty* — ${new Date().toLocaleTimeString(toBCP47(locale))} ✅\n${t('whatsapp.notifOk')}` },
-          guardar: false,
+          to: adminPhone,
+          message: `🧪 *Test Vanty* — ${new Date().toLocaleTimeString()} ✅\nLas notificaciones están funcionando correctamente.`,
         }),
       })
       const d = await res.json()
       setTestResult({
-        ok: d.sent,
-        msg: d.sent
+        ok: d.ok,
+        msg: d.ok
           ? '✅ Mensaje enviado correctamente'
-          : '❌ No se pudo enviar. Verificá las variables de entorno en Vercel.',
+          : `❌ ${d.error || 'No se pudo enviar.'}`,
       })
+    } catch {
+      setTestResult({ ok: false, msg: '❌ Error de conexión con el servicio.' })
     } finally { setSending(false) }
   }
 
