@@ -51,7 +51,9 @@ export async function POST(request: NextRequest) {
         const childName = (apt as any).children?.name || 'Paciente'
         const fecha = apt.appointment_date || ''
         const hora  = apt.appointment_time || ''
-        notificarPadre(apt.child_id, 'cita_confirmada', { fecha, hora, paciente: childName, tipo: apt.appointment_type || 'Presencial' })
+        const modalidad = apt.modalidad === 'virtual' ? 'Virtual 📹' : (apt.appointment_type || 'Presencial')
+        const videoLink  = apt.video_link || apt.videoLink || null
+        notificarPadre(apt.child_id, 'cita_confirmada', { fecha, hora, paciente: childName, tipo: modalidad, ...(videoLink ? { link: videoLink } : {}) })
       }
     }
 

@@ -16,7 +16,7 @@ export function wspTemplate(tipo: WspTipo, vars: Record<string, string> = {}): s
   const v = vars
   const centro = process.env.CENTRO_NOMBRE || 'Jugando Aprendo'
   const T: Record<WspTipo, string> = {
-    cita_confirmada:   `✅ *Cita confirmada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n📍 ${v.tipo || 'Presencial'}\n\nVe los detalles en tu portal Vanty 💜`,
+    cita_confirmada:   `✅ *Cita confirmada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n📍 ${v.tipo || 'Presencial'}${v.link ? `\n🔗 Videollamada: ${v.link}` : ''}\n\nVe los detalles en tu portal Vanty 💜`,
     cita_cancelada:    `❌ *Cita cancelada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n\nContactá a recepción para reagendar.\n_Vanty_ 💜`,
     formulario_nuevo:  `📋 *Nuevo formulario — ${centro}*\nTipo: ${v.tipo || 'Formulario'}\nPaciente: ${v.paciente}\n\nRevisalo en tu portal 👆\n_Vanty_ 💜`,
     informe_nuevo:     `📊 *Nuevo informe disponible — ${centro}*\nPaciente: ${v.paciente}${v.periodo ? `\nPeríodo: ${v.periodo}` : ''}\n\nYa podés verlo en Vanty 👆\n_${centro}_ 💜`,

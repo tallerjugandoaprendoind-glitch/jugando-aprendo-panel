@@ -238,6 +238,28 @@ function MonthlyCalendarView() {
             ? `https://meet.jit.si/JugandoAprendo-${firstApt?.id || Date.now()}`
             : null
 
+          // Enviar notificación WhatsApp con datos completos (incluyendo link si es virtual)
+          if (firstApt?.child_id) {
+            const patientName = tipoSesion === 'grupal'
+              ? (newApt.group_name || 'Grupo')
+              : ninos.find((n: any) => n.id === newApt.child_id)?.name || 'Paciente'
+            fetch('/api/whatsapp-service/notify-parent', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                childId:  firstApt.child_id,
+                tipo:     'cita_confirmada',
+                vars: {
+                  fecha:    newApt.date,
+                  hora:     newApt.time,
+                  paciente: patientName,
+                  tipo:     modalidadCita === 'virtual' ? 'Virtual 📹' : 'Presencial',
+                  ...(roomLink ? { link: roomLink } : {}),
+                },
+              }),
+            }).catch(() => {})
+          }
+
           // Para sesión grupal, usar el primer participante para el sync del calendario del padre
           const childIdParaCalendario = tipoSesion === 'grupal'
             ? (selectedParticipants[0] || null)
