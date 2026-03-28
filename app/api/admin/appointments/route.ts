@@ -1,5 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { notifyAsync, notifyParentDirect } from '@/lib/notifications'
+
+// Helper: notificar al padre de un paciente
+async function notificarPadre(childId: string, tipo: 'cita_confirmada' | 'cita_cancelada', vars: Record<string, string>) {
+  try {
+    const { data: parentLink } = await supabaseAdmin
+      .from('parent_accounts').select('user_id').eq('child_id', childId).maybeSingle()
+    if (parentLink?.user_id) {
+      const { data: parentProf } = await supabaseAdmin
+        .from('profiles').select('phone').eq('id', parentLink.user_id).maybeSingle()
+      if ((parentProf as any)?.phone) {
+        notifyParentDirect((parentProf as any).phone, tipo, vars)
+      }
+    }
+    notifyAsync({ tipo, vars })
+  } catch { /* silent */ }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,6 +44,17 @@ export async function POST(request: NextRequest) {
       .select('*, children(name)')
 
     if (error) throw error
+
+    // Notificar al padre por cada cita creada
+    for (const apt of (data || [])) {
+      if (apt.child_id) {
+        const childName = (apt as any).children?.name || 'Paciente'
+        const fecha = apt.appointment_date || ''
+        const hora  = apt.appointment_time || ''
+        notificarPadre(apt.child_id, 'cita_confirmada', { fecha, hora, paciente: childName, tipo: apt.appointment_type || 'Presencial' })
+      }
+    }
+
     return NextResponse.json({ data })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -128,6 +156,21 @@ export async function DELETE(request: NextRequest) {
             }),
           })
         }
+      } catch { /* silent */ }
+    }
+
+    // 5b. Notificar al padre que la cita fue cancelada
+    if (apt?.child_id) {
+      try {
+        const { data: childData } = await supabaseAdmin
+          .from('appointments').select('appointment_date, appointment_time, appointment_type, children(name)')
+          .eq('id', id).maybeSingle()
+        const childName = (childData as any)?.children?.name || 'Paciente'
+        notificarPadre(apt.child_id, 'cita_cancelada', {
+          fecha: (childData as any)?.appointment_date || '',
+          hora:  (childData as any)?.appointment_time || '',
+          paciente: childName,
+        })
       } catch { /* silent */ }
     }
 
