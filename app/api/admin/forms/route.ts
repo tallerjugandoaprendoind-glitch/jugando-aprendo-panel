@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { notifyAsync } from '@/lib/notifications'
+import { notifyAsync, sendWspToParent, buildParentMessage } from '@/lib/notifications'
 
 // GET: List forms assigned to parents (optionally filter by parent_id or status)
 export async function GET(request: NextRequest) {
@@ -73,6 +73,24 @@ export async function POST(request: NextRequest) {
         especialista: '',
       },
     })
+
+    // WhatsApp directo al padre — nuevo formulario para completar
+    if (parent_id) {
+      try {
+        const { data: pProf } = await supabaseAdmin
+          .from('profiles').select('phone, wsp_notif, full_name').eq('id', parent_id).maybeSingle()
+        if ((pProf as any)?.phone && (pProf as any)?.wsp_notif !== false) {
+          // Obtener nombre del paciente
+          let pName = child_id || 'su hijo/a'
+          if (child_id) {
+            const { data: ch } = await supabaseAdmin.from('children').select('name').eq('id', child_id).maybeSingle()
+            if ((ch as any)?.name) pName = (ch as any).name
+          }
+          const msg = buildParentMessage('formulario_nuevo', { tipo: form_title || form_type || 'Formulario', paciente: pName })
+          sendWspToParent((pProf as any).phone, msg).catch(() => {})
+        }
+      } catch { /* silencioso */ }
+    }
 
 
     return NextResponse.json({ data })

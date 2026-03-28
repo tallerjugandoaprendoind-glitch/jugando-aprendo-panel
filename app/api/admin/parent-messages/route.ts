@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
+import { sendWspToParent, buildParentMessage } from '@/lib/notifications'
 
 export async function GET(request: NextRequest) {
   try {
@@ -106,6 +107,21 @@ export async function PATCH(request: NextRequest) {
         // Non-critical — log but don't fail the approval
         console.error('Push notification error (non-critical):', pushErr)
       }
+
+      // 📱 WhatsApp directo al padre cuando el admin aprueba el mensaje
+      try {
+        const { data: pProf } = await supabaseAdmin
+          .from('profiles').select('phone, wsp_notif').eq('id', record.parent_id).maybeSingle()
+        if ((pProf as any)?.phone && (pProf as any)?.wsp_notif !== false) {
+          const terapeutaNombre = (record as any).profiles?.full_name || 'Tu terapeuta'
+          const preview = messageToSend.length > 120 ? messageToSend.slice(0, 117) + '...' : messageToSend
+          const msg = buildParentMessage('mensaje_terapeuta', {
+            terapeuta: terapeutaNombre,
+            preview,
+          })
+          sendWspToParent((pProf as any).phone, msg).catch(() => {})
+        }
+      } catch { /* silencioso */ }
 
       return NextResponse.json({ data })
 

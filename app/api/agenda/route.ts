@@ -1,7 +1,7 @@
 // app/api/agenda/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { notifyAsync } from '@/lib/notifications'
+import { notifyAsync, notifyParentDirect } from '@/lib/notifications'
 
 // ─── GET: obtener agenda ──────────────────────────────────────
 export async function GET(req: NextRequest) {
@@ -86,10 +86,13 @@ export async function POST(req: NextRequest) {
         const { data: parentProf } = await supabaseAdmin
           .from('profiles').select('phone, wsp_notif').eq('id', parentLink.user_id).maybeSingle()
         if ((parentProf as any)?.phone && (parentProf as any)?.wsp_notif !== false) {
-          // Con Meta API: notificar al padre directamente (futuro)
-          // Con CallMeBot: llega al admin con el nombre del padre incluido
+          // Notificar directo al padre via microservicio Baileys
+          notifyParentDirect((parentProf as any).phone, 'cita_confirmada', {
+            fecha, hora: hora_inicio, paciente: childName, tipo: modalidad || tipo || 'Presencial',
+          })
         }
       }
+      // Notificar al admin también
       notifyAsync({
         tipo: 'cita_confirmada',
         vars: { fecha, hora: hora_inicio, paciente: childName, tipo: modalidad || tipo || 'Presencial' },
@@ -133,15 +136,31 @@ export async function POST(req: NextRequest) {
       if (estado === 'cancelada' && data.children) {
         await crearNotificacionCita((data.children as any).id, data, 'cancelada')
 
+        const cancelFecha = (data as any).fecha || ''
+        const cancelHora  = (data as any).hora_inicio || ''
+        const cancelNombre = (data.children as any).name || 'Paciente'
+        const cancelChildId = (data.children as any).id
+
         // WhatsApp al admin
         notifyAsync({
           tipo: 'cita_cancelada',
-          vars: {
-            fecha: (data as any).fecha || '',
-            hora: (data as any).hora_inicio || '',
-            paciente: (data.children as any).name || 'Paciente',
-          },
+          vars: { fecha: cancelFecha, hora: cancelHora, paciente: cancelNombre },
         })
+
+        // WhatsApp directo al padre via Baileys
+        try {
+          const { data: pLink } = await supabaseAdmin
+            .from('parent_accounts').select('user_id').eq('child_id', cancelChildId).maybeSingle()
+          if (pLink?.user_id) {
+            const { data: pProf } = await supabaseAdmin
+              .from('profiles').select('phone, wsp_notif').eq('id', pLink.user_id).maybeSingle()
+            if ((pProf as any)?.phone && (pProf as any)?.wsp_notif !== false) {
+              notifyParentDirect((pProf as any).phone, 'cita_cancelada', {
+                fecha: cancelFecha, hora: cancelHora, paciente: cancelNombre,
+              })
+            }
+          }
+        } catch { /* silencioso */ }
       }
 
       return NextResponse.json({ data })

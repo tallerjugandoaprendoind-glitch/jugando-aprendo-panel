@@ -1,12 +1,12 @@
 // lib/notifications.ts
-// Capa unificada de notificaciones — Telegram (principal) + WhatsApp/Meta (fallback)
-// Prioridad: Telegram > Meta WhatsApp Cloud API > CallMeBot
-// Telegram es 100% gratis, sin límites, sin registro de empresa
+// Canal único de notificaciones: WhatsApp via microservicio Baileys
+// Variables: WSP_SERVICE_URL, WSP_SERVICE_SECRET
 
-import { sendTelegram, type NotifTipo, type NotifLocale } from './telegram'
-import { sendWhatsApp, type WspTipo }                     from './whatsapp'
+import { sendWhatsApp, wspTemplate, notifyParent as wspNotifyParent, type WspTipo } from './whatsapp'
+import { supabaseAdmin } from './supabase-admin'
 
-export type { NotifTipo, NotifLocale }
+export type NotifTipo = WspTipo
+export type NotifLocale = 'es'
 
 export interface Notif {
   tipo: NotifTipo
@@ -14,101 +14,72 @@ export interface Notif {
   locale?: NotifLocale
 }
 
-// ── Detecta qué canal tiene credenciales configuradas ─────────────────────────
-function getChannel(): 'telegram' | 'meta' | 'callmebot' | 'none' {
-  if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) return 'telegram'
-  if (process.env.META_WA_PHONE_ID   && process.env.META_WA_TOKEN)     return 'meta'
-  if (process.env.CALLMEBOT_PHONE    && process.env.CALLMEBOT_APIKEY)  return 'callmebot'
-  return 'none'
+// ── Obtener número de admin del centro ───────────────────────────────────────
+async function getAdminPhone(): Promise<string | null> {
+  try {
+    const { data } = await supabaseAdmin
+      .from('profiles')
+      .select('phone')
+      .in('role', ['admin', 'jefe'])
+      .not('phone', 'is', null)
+      .limit(1)
+      .maybeSingle()
+    return (data as any)?.phone ?? null
+  } catch {
+    return null
+  }
 }
 
-// ── Envío principal ───────────────────────────────────────────────────────────
-export async function notify(notif: Notif): Promise<boolean> {
-  const channel = getChannel()
-
-  if (channel === 'telegram') {
-    return sendTelegram(notif)
+// ── Estado del servicio ───────────────────────────────────────────────────────
+export function getNotifStatus() {
+  const configured = !!(process.env.WSP_SERVICE_URL && process.env.WSP_SERVICE_SECRET)
+  return {
+    channel: configured ? 'baileys' : 'none',
+    configured,
+    label: configured ? '✅ WhatsApp (Baileys)' : '❌ Sin configurar',
   }
-
-  if (channel === 'meta' || channel === 'callmebot') {
-    return sendWhatsApp({ tipo: notif.tipo as WspTipo, vars: notif.vars, locale: notif.locale })
-  }
-
-  console.log('[Notify] Sin canal configurado — omitido:', notif.tipo)
-  return false
 }
 
-// ── Fire-and-forget (no bloquea la respuesta HTTP) ────────────────────────────
+// ── Notificar al admin del centro (fire-and-forget) ───────────────────────────
 export function notifyAsync(notif: Notif): void {
   notify(notif).catch(() => {})
 }
 
-// ── Estado del canal activo ───────────────────────────────────────────────────
-export function getNotifStatus() {
-  const channel = getChannel()
-  return {
-    channel,
-    configured: channel !== 'none',
-    label: {
-      telegram:  '✅ Telegram',
-      meta:      '✅ WhatsApp Cloud API',
-      callmebot: '⚠️ CallMeBot (limitado)',
-      none:      '❌ Sin configurar',
-    }[channel],
-  }
-}
-
-// ── Enviar via microservicio WhatsApp Business (Baileys) ──────────────────────
-// Usa WSP_SERVICE_URL + WSP_SERVICE_SECRET si están configurados
-// Prioridad: Microservicio WSP > Telegram > Meta API > CallMeBot
-export async function sendViaWspService(
-  phone: string,
-  message: string
-): Promise<boolean> {
-  const url    = process.env.WSP_SERVICE_URL
-  const secret = process.env.WSP_SERVICE_SECRET
-  if (!url || !secret) return false
-
-  try {
-    const res = await fetch(`${url}/send`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-service-secret': secret },
-      body: JSON.stringify({ to: phone, message }),
-      signal: AbortSignal.timeout(8000),
-    })
-    return res.ok
-  } catch {
+export async function notify(notif: Notif): Promise<boolean> {
+  const adminPhone = await getAdminPhone()
+  if (!adminPhone) {
+    console.log('[Notify] Sin número de admin configurado')
     return false
   }
+  const message = wspTemplate(notif.tipo, notif.vars ?? {})
+  return sendWhatsApp(adminPhone, message)
 }
 
-// ── Notificar a un padre directamente ────────────────────────────────────────
-// Intenta WSP Service primero, luego fallback al canal admin
+// ── Notificar directo a un padre ──────────────────────────────────────────────
 export async function notifyParentDirect(
   parentPhone: string | null | undefined,
   tipo: NotifTipo,
-  vars: Record<string, string> = {},
-  locale: NotifLocale = 'es'
+  vars: Record<string, string> = {}
 ): Promise<void> {
   if (!parentPhone) {
-    // Sin número del padre → notificar solo al admin
-    notifyAsync({ tipo, vars, locale })
+    notifyAsync({ tipo, vars })
     return
   }
+  wspNotifyParent(parentPhone, tipo, vars)
+}
 
-  const wspUrl = process.env.WSP_SERVICE_URL
-  if (wspUrl) {
-    // Microservicio disponible → enviar directo al padre
-    const { telegramTemplate } = await import('./telegram')
-    // Reusar template de telegram (mismo formato) para el mensaje
-    const message = telegramTemplate(tipo as any, vars, locale)
-    const sent = await sendViaWspService(parentPhone, message)
-    if (!sent) {
-      // Fallback al canal admin
-      notifyAsync({ tipo, vars, locale })
-    }
-  } else {
-    // Sin microservicio → canal admin (CallMeBot/Telegram)
-    notifyAsync({ tipo, vars, locale })
-  }
+// ── Helper: enviar WhatsApp a un padre + notificar al admin ──────────────────
+export async function sendWspToParent(
+  parentPhone: string,
+  message: string
+): Promise<boolean> {
+  return sendWhatsApp(parentPhone, message)
+}
+
+// ── Helper: construir mensaje para un padre ───────────────────────────────────
+export function buildParentMessage(
+  tipo: NotifTipo,
+  vars: Record<string, string> = {}
+): string {
+  return wspTemplate(tipo, vars)
 }
