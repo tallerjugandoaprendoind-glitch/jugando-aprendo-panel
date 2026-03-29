@@ -224,7 +224,11 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
 
     // Si hay sesiones reales, regenerar prediccion si está desactualizada
     const sesionesEnPrediccion = pred?.sesiones_analizadas ?? pred?.total_sesiones_unificado ?? 0
-    if (totalSess > 0 && sesionesEnPrediccion < totalSess) {
+    const textoCorrupto = !pred?.analisis_ia ||
+      (pred?.analisis_ia as string)?.includes('0 sesiones') ||
+      (pred?.analisis_ia as string)?.includes('0 programas')
+
+    if (totalSess > 0 && (sesionesEnPrediccion < totalSess || textoCorrupto)) {
       // Fire & forget — no esperamos respuesta (Vercel puede cortar la conexión antes)
       fetch('/api/agente-prediccion', {
         method: 'POST',

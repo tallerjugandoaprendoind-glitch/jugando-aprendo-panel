@@ -104,34 +104,49 @@ export async function POST(req: NextRequest) {
 
     const analisis_por_programa = []
 
+    // ── Cargar TODAS las sesiones de todos los programas de una sola vez ──
+    // Usamos .in('programa_id', allProgIds) EXACTAMENTE igual que lo hace stats/route.ts
+    // Antes se hacía .eq() dentro del loop por programa, lo que podía dar 0 resultados
+    // por diferencias sutiles en cómo Supabase maneja eq vs in para UUIDs.
+    const allProgIds = programas.map((p: any) => p.id)
+    const { data: todasLasSesiones, error: errSesiones } = allProgIds.length
+      ? await supabaseAdmin
+          .from('sesiones_datos_aba')
+          .select('fecha, created_at, programa_id, porcentaje_exito, fase, set_nombre, oportunidades_totales, respuestas_correctas, notas')
+          .in('programa_id', allProgIds)
+          .order('created_at', { ascending: true })
+      : { data: [] as any[], error: null }
+
+    console.log('🔍 sesiones_datos_aba bulk query:', {
+      progIds: allProgIds,
+      totalFilas: todasLasSesiones?.length ?? 0,
+      error: errSesiones?.message ?? null,
+    })
+
+    // Agrupar sesiones por programa_id para lookup rápido en el loop
+    const sesionesPorPrograma: Record<string, any[]> = {}
+    for (const s of (todasLasSesiones || [])) {
+      const pid = s.programa_id
+      if (!sesionesPorPrograma[pid]) sesionesPorPrograma[pid] = []
+      // Normalizar fecha y porcentaje
+      let pct: number | null = null
+      if (s.porcentaje_exito != null) {
+        pct = Number(s.porcentaje_exito)
+      } else if (s.oportunidades_totales > 0) {
+        pct = Math.round((Number(s.respuestas_correctas) / Number(s.oportunidades_totales)) * 100)
+      }
+      const fechaNorm = s.fecha || s.created_at || null
+      sesionesPorPrograma[pid].push({ ...s, fecha: fechaNorm, porcentaje_exito: pct !== null ? pct : 50, _sin_dato_real: pct === null })
+    }
+
     for (const prog of programas) {
       const progNombre = prog.titulo || (prog as any).nombre || 'Sin nombre'
       const progObjetivo = (prog as any).objetivo || (prog as any).descripcion || (prog as any).area || ''
 
-      // Cargar sesiones — intentar sesiones_datos_aba, luego registro_aba filtrado por programa
-      let sesiones: any[] | null = null
-      const { data: s1 } = await supabaseAdmin
-        .from('sesiones_datos_aba')
-        .select('fecha, created_at, porcentaje_exito, fase, set_nombre, oportunidades_totales, respuestas_correctas, notas')
-        .eq('programa_id', prog.id)
-        .order('created_at', { ascending: true })
-      if (s1 && s1.length > 0) {
-        // Normalizar: calcular porcentaje_exito desde respuestas/oportunidades si está null
-        // Si no hay dato real, usar 50 (neutro) — no descartar sesiones válidas por falta de %
-        sesiones = s1.map((s: any) => {
-          let pct: number | null = null
-          if (s.porcentaje_exito != null) {
-            pct = Number(s.porcentaje_exito)
-          } else if (s.oportunidades_totales > 0) {
-            pct = Math.round((Number(s.respuestas_correctas) / Number(s.oportunidades_totales)) * 100)
-          }
-          // Normalizar fecha: usar fecha → created_at como fallback
-          // ANTES: .filter(!!s.fecha) descartaba TODAS las sesiones si la columna
-          // no se llamaba 'fecha' → Groq recibía "0 sesiones analizadas"
-          const fechaNorm = s.fecha || s.created_at || null
-          return { ...s, fecha: fechaNorm, porcentaje_exito: pct !== null ? pct : 50, _sin_dato_real: pct === null }
-        }).filter((s: any) => s.fecha != null)
-      } else {
+      // Sesiones del programa: del bulk query agrupado (misma fuente que stats API)
+      let sesiones: any[] | null = (sesionesPorPrograma[prog.id] || []).filter((s: any) => s.fecha != null)
+
+      if (sesiones.length === 0) {
         // Fallback: buscar en registro_aba por child_id y mapear datos
         const { data: s2 } = await supabaseAdmin
           .from('registro_aba')
@@ -388,10 +403,17 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
       programas_analizados: analisis_por_programa.length,
       analisis_por_programa,
       resumen_general,
-      // total_sesiones_unificado: fuente de verdad para el display del Hub IA
-      // usa Math.max entre sesiones_datos_aba y registro_aba para consistencia
       total_sesiones_unificado: totalSesionesAnalizadas,
       criterio_nota: '≥90% en 2 sesiones consecutivas por nivel de objetivo = LOGRADO',
+      _debug: {
+        bulk_sesiones_encontradas: todasLasSesiones?.length ?? 0,
+        bulk_error: errSesiones?.message ?? null,
+        prog_ids_usados: allProgIds,
+        sesiones_por_programa: Object.fromEntries(
+          Object.entries(sesionesPorPrograma).map(([k, v]) => [k, (v as any[]).length])
+        ),
+        total_sesiones_analizadas: totalSesionesAnalizadas,
+      },
     })
 
   } catch (e: any) {
