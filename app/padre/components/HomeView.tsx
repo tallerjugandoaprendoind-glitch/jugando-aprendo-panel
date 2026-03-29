@@ -232,9 +232,11 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       .then(r => r.ok ? r.json() : null)
       .then(fresh => {
         if (fresh && !fresh.error) {
-          // Recargar prediccion desde la BD actualizada
-          supabase.from('predicciones_ia').select('*').eq('child_id', child.id).single()
-            .then(({ data }) => { if (data) setPrediccion(data) })
+          // Pequeño delay para asegurar que el upsert en BD ya se propagó
+          setTimeout(() => {
+            supabase.from('predicciones_ia').select('*').eq('child_id', child.id).single()
+              .then(({ data }) => { if (data) setPrediccion(data) })
+          }, 800)
         }
       })
       .catch(() => {})
@@ -357,8 +359,8 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         {/* COLUMNA IZQUIERDA */}
         <div style={{ display:'flex',flexDirection:'column',gap:16 }}>
 
-          {/* IA INSIGHT */}
-          {(prediccion||patrones)&&(
+          {/* IA INSIGHT — solo mostrar cuando stats ya cargaron */}
+          {!loading && (prediccion||patrones)&&(
             <div className="hv-card" style={{ background:'linear-gradient(135deg,#0f172a,#1e1b4b,#0c0a1e)',borderRadius:24,padding:'20px 24px',position:'relative',overflow:'hidden' }}>
               <div style={{ position:'absolute',top:-30,right:-30,width:140,height:140,background:'radial-gradient(circle,rgba(139,92,246,.4),transparent 70%)',borderRadius:'50%' }}/>
               <div style={{ position:'relative',zIndex:1 }}>

@@ -2,6 +2,8 @@
 // 🧠 Agente Predicción IA — predice progreso por PROGRAMA y NIVEL DE OBJETIVO específico
 // Criterio de logro: ≥90% en 2 sesiones consecutivas por nivel de objetivo = LOGRADO
 
+export const maxDuration = 60 // Vercel: hasta 60s para planes Pro (evitar timeout en análisis IA)
+
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
