@@ -836,13 +836,36 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                           {obj.numero_set}
                         </span>
                         <span className="flex-1 font-medium text-slate-700">{obj.descripcion}</span>
-                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
-                          obj.estado === 'dominado' ? 'bg-emerald-100 text-emerald-700' :
-                          obj.estado === 'en_progreso' ? 'bg-indigo-100 text-indigo-700' :
-                          'bg-[var(--muted-bg)] text-[var(--text-muted)]'
-                        }`}>
-                          {obj.estado === 'dominado' ? t('programas.dominado') : obj.estado === 'en_progreso' ? t('programas.enProgreso') : t('programas.pendiente')}
-                        </span>
+                        <select
+                          value={obj.estado || 'pendiente'}
+                          onChange={async (e) => {
+                            const nuevoEstado = e.target.value
+                            const res = await fetch('/api/programas-aba', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ action: 'actualizar_objetivo', objetivo_id: obj.id, estado: nuevoEstado }),
+                            })
+                            const json = await res.json()
+                            if (json.error) { toast.error(json.error); return }
+                            toast.success(`Set ${obj.numero_set} → ${nuevoEstado === 'dominado' ? '✅ Dominado' : nuevoEstado === 'en_progreso' ? '🔄 En progreso' : '⏳ Pendiente'}`)
+                            // Actualizar detalle local sin recargar todo
+                            setDetalle((prev: any) => prev ? {
+                              ...prev,
+                              objetivos_cp: prev.objetivos_cp.map((o: any) =>
+                                o.id === obj.id ? { ...o, estado: nuevoEstado } : o
+                              )
+                            } : prev)
+                          }}
+                          className={`text-[10px] font-black px-2 py-1 rounded-full border-0 cursor-pointer outline-none ${
+                            obj.estado === 'dominado' ? 'bg-emerald-100 text-emerald-700' :
+                            obj.estado === 'en_progreso' ? 'bg-indigo-100 text-indigo-700' :
+                            'bg-[var(--muted-bg)] text-[var(--text-muted)]'
+                          }`}
+                        >
+                          <option value="pendiente">⏳ {t('programas.pendiente')}</option>
+                          <option value="en_progreso">🔄 {t('programas.enProgreso')}</option>
+                          <option value="dominado">✅ {t('programas.dominado')}</option>
+                        </select>
                       </div>
                     ))}
                   </div>

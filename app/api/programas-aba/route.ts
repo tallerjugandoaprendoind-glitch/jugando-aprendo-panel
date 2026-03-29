@@ -92,6 +92,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ data })
     }
 
+    if (action === 'actualizar_objetivo') {
+      const { objetivo_id, estado } = body
+      const ESTADOS_VALIDOS = ['pendiente', 'en_progreso', 'dominado']
+      if (!objetivo_id || !ESTADOS_VALIDOS.includes(estado)) {
+        return NextResponse.json({ error: 'objetivo_id y estado válido requeridos' }, { status: 400 })
+      }
+      const { data, error } = await supabaseAdmin
+        .from('objetivos_cp')
+        .update({ estado, ...(estado === 'dominado' ? { fecha_dominio: new Date().toISOString().split('T')[0] } : {}) })
+        .eq('id', objetivo_id)
+        .select()
+        .single()
+      if (error) throw error
+      return NextResponse.json({ data })
+    }
+
     if (action === 'cambiar_fase') {
       const { programa_id, child_id, fase_nueva, motivo, fase_anterior } = body
       const [cambio] = await Promise.all([
