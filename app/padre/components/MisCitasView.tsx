@@ -82,11 +82,13 @@ function AptCard({ apt, selectedChild, activeVid, joiningCall, onJoin }: any) {
           </div>
           {upcoming&&(apt.status==='confirmed'||apt.status==='pending')&&apt.modalidad==='virtual'&&(() => {
             const vs = activeVid[apt.id]
-            return vs ? (
+            const directLink = (apt as any).video_link || (apt as any).videoLink || null
+            const roomUrl = vs?.roomUrl || directLink
+            return roomUrl ? (
               <div style={{ marginTop:12,paddingTop:12,borderTop:'1px solid #f1f5f9' }}>
-                <button onClick={()=>onJoin(apt)} disabled={joiningCall===apt.id} style={{ width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'10px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer',boxShadow:'0 4px 12px rgba(99,102,241,.3)' }}>
-                  {joiningCall===apt.id?<><Loader2 size={14} style={{ animation:'spin 1s linear infinite' }}/>Conectando...</>:<><Video size={14}/>🟢 Unirse a videollamada</>}
-                </button>
+                <a href={roomUrl} target="_blank" rel="noopener noreferrer" style={{ width:'100%',display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'10px',borderRadius:12,border:'none',background:'linear-gradient(135deg,#6366f1,#8b5cf6)',color:'#fff',fontWeight:700,fontSize:13,cursor:'pointer',boxShadow:'0 4px 12px rgba(99,102,241,.3)',textDecoration:'none' }}>
+                  <Video size={14}/>🟢 Unirse a videollamada
+                </a>
               </div>
             ) : (
               <div style={{ marginTop:12,paddingTop:12,borderTop:'1px solid #f1f5f9',display:'flex',alignItems:'center',gap:8,padding:'8px 12px',background:'#f0f4ff',borderRadius:12 }}>
@@ -149,12 +151,25 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
   const load = async () => {
     if (!profile?.id) return
     setLoading(true)
-    const { data: kids } = await supabase.from('children').select('id').eq('parent_id',profile.id)
-    const childIds = (kids||[]).map((c:any)=>c.id)
+    // Buscar hijos por parent_id directo Y por parent_accounts (ambos métodos de vinculación)
+    const [{ data: kids1 }, { data: parentLinks }] = await Promise.all([
+      supabase.from('children').select('id').eq('parent_id', profile.id),
+      supabase.from('parent_accounts').select('child_id').eq('user_id', profile.id),
+    ])
+    const fromParentId = (kids1||[]).map((c:any) => c.id)
+    const fromAccounts = (parentLinks||[]).map((p:any) => p.child_id)
+    const allChildIds = [...new Set([...fromParentId, ...fromAccounts])]
+
     let q = supabase.from('appointments').select('*, children(name, birth_date)').order('appointment_date',{ascending:true}).order('appointment_time',{ascending:true})
-    if (selectedChild?.id) q = q.eq('child_id',selectedChild.id)
-    else if (childIds.length>0) q = q.or(`parent_id.eq.${profile.id},${childIds.map((id:string)=>`child_id.eq.${id}`).join(',')}`)
-    else q = q.eq('parent_id',profile.id)
+    if (selectedChild?.id) {
+      q = q.eq('child_id', selectedChild.id)
+    } else if (allChildIds.length > 0) {
+      const orParts = allChildIds.map((id:string) => `child_id.eq.${id}`)
+      orParts.push(`parent_id.eq.${profile.id}`)
+      q = q.or(orParts.join(','))
+    } else {
+      q = q.eq('parent_id', profile.id)
+    }
     const { data } = await q
     setAppointments(data||[])
     pollVid(data||[])
