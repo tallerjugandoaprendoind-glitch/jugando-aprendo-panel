@@ -267,6 +267,19 @@ export async function POST(req: NextRequest) {
     const progConSesiones = analisis_por_programa.filter(p => p.total_sesiones > 0)
     const progSinSesiones = analisis_por_programa.filter(p => p.total_sesiones === 0)
 
+    // ⚡ EARLY UPSERT: guardar sesiones_analizadas ANTES de llamar a Groq.
+    // Esto permite que el polling del frontend termine exitosamente incluso si
+    // Groq tarda o Vercel corta la función por timeout (10s en plan free).
+    if (totalSesionesAnalizadas > 0) {
+      try {
+        await supabaseAdmin.from('predicciones_ia').upsert({
+          child_id: childId,
+          sesiones_analizadas: totalSesionesAnalizadas,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'child_id' })
+      } catch { /* no bloquear el análisis */ }
+    }
+
     const prompt = `Eres una neuropsicóloga clínica con especialización en Análisis Aplicado de la Conducta (ABA), certificada BCBA-D con 15 años de experiencia clínica. Redactas informes de supervisión clínica de alto nivel para terapeutas ABA y equipos multidisciplinarios. Tu lenguaje es técnico, preciso y fundamentado en evidencia (Cooper, Heron & Heward; JABA; Skinner).
 
 PACIENTE: ${childName}

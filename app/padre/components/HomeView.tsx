@@ -137,6 +137,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
   const [programas, setProgramas] = useState<any[]>([])
   const [gcalConnected, setGcalConnected] = useState<boolean | null>(null)
   const [gcalBannerDismissed, setGcalBannerDismissed] = useState(false)
+  const [pollingTimedOut, setPollingTimedOut] = useState(false)
 
   useEffect(() => {
     if (gcalBannerDismissed) return
@@ -248,6 +249,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         } else if (intentos >= 10) {
           // Timeout: mostrar lo que haya aunque no esté actualizado
           if (fresh) setPrediccion(fresh)
+          setPollingTimedOut(true) // ← evita que "desactualizado" quede pegado para siempre
           clearInterval(poll)
         }
       }, 5000)
@@ -387,7 +389,8 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 {(prediccion?.prediccion_30d || prediccion?.analisis_ia || stats.sessions > 0) && (() => {
                   const sesionesEnPred = prediccion?.sesiones_analizadas ?? prediccion?.total_sesiones_unificado ?? 0
                   // Si el análisis guardado tiene menos sesiones que las reales → está desactualizado
-                  const desactualizado = stats.sessions > 0 && sesionesEnPred < stats.sessions
+                  // Pero si el polling ya agotó sus intentos, mostramos lo que haya para no quedar colgados
+                  const desactualizado = !pollingTimedOut && stats.sessions > 0 && sesionesEnPred < stats.sessions
 
                   if (desactualizado) {
                     return (
