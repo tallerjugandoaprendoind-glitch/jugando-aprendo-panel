@@ -221,9 +221,9 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
 
     if (apiStats?.programas?.length) setProgramas(apiStats.programas)
 
-    // Si hay sesiones reales pero la predicción guardada dice 0, regenerarla en background
+    // Si hay sesiones reales, regenerar prediccion si está desactualizada
     const sesionesEnPrediccion = pred?.sesiones_analizadas ?? pred?.total_sesiones_unificado ?? 0
-    if (totalSess > 0 && sesionesEnPrediccion === 0) {
+    if (totalSess > 0 && sesionesEnPrediccion < totalSess) {
       fetch('/api/agente-prediccion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -371,9 +371,14 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                   {(prediccion?.confianza != null && prediccion.confianza > 0)&&<span style={{ marginLeft:'auto',background:'rgba(139,92,246,.3)',color:'#c4b5fd',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20 }}>{prediccion.confianza}% confianza</span>}
                 </div>
                 {/* prediccion_30d: primer párrafo del análisis IA — fallback a analisis_ia */}
-                {(prediccion?.prediccion_30d||prediccion?.analisis_ia)&&(
+                {(prediccion?.prediccion_30d||prediccion?.analisis_ia||stats.sessions>0)&&(
                   <p style={{ color:'rgba(255,255,255,.85)',fontSize:13,lineHeight:1.5,margin:0 }}>
-                    {prediccion.prediccion_30d || (prediccion.analisis_ia as string).split('\n\n').find((b:string)=>b.trim()&&!/^\*\*[^*]+\*\*$/.test(b.trim()))?.replace(/\*\*(.*?)\*\*/g,'$1').trim()}
+                    {(() => {
+                      const sesionesEnPred = prediccion?.sesiones_analizadas ?? prediccion?.total_sesiones_unificado ?? 0
+                      const desactualizado = sesionesEnPred === 0 && stats.sessions > 0
+                      if (desactualizado) return `✨ Se detectaron ${stats.sessions} sesión${stats.sessions!==1?'es':''} registrada${stats.sessions!==1?'s':''}. Actualizando análisis predictivo...`
+                      return prediccion?.prediccion_30d || (prediccion?.analisis_ia as string)?.split('\n\n').find((b:string)=>b.trim()&&!/^\*\*[^*]+\*\*$/.test(b.trim()))?.replace(/\*\*(.*?)\*\*/g,'$1').trim() || ''
+                    })()}
                   </p>
                 )}
                 {prediccion?.areas_fortaleza?.length>0&&(

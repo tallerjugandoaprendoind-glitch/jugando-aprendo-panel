@@ -142,15 +142,10 @@ export async function GET(req: NextRequest) {
       masteryRate = totalProg > 0 ? Math.round((domProg / totalProg) * 100) : 0
     }
 
-    // ── Calcular sesiones unificadas — misma lógica que progreso-paciente ──
-    // sesiones_datos_aba puede tener múltiples filas por sesión (una por objetivo/set)
-    // Contar FECHAS ÚNICAS = sesiones reales
-    const fechasUnicasSda = new Set(
-      (sesionesPrograma || [])
-        .map((s: any) => (s.fecha || '').split('T')[0])
-        .filter(Boolean)
-    )
-    const sesionesDesdePrograma = fechasUnicasSda.size
+    // ── Calcular sesiones unificadas ──────────────────────────
+    // sesiones_datos_aba: usar misma lógica que agente-prediccion (sesiones.length = filas)
+    // ya que el admin muestra "9 sesiones totales" contando filas directamente
+    const sesionesDesdePrograma = sesionesPrograma?.length || 0
 
     // registro_aba: una fila = una sesión
     const sesionesDesdeRegistro = registroAba?.length || 0
@@ -218,8 +213,7 @@ export async function GET(req: NextRequest) {
         prog_ids: progIds,
         registro_aba: sesionesDesdeRegistro,
         aba_sessions_v2: sesionesDesdeV2,
-        sesiones_datos_aba_filas: sesionesPrograma?.length ?? 0,
-        sesiones_datos_aba_fechas_unicas: sesionesDesdePrograma,
+        sesiones_datos_aba_filas_total: sesionesPrograma?.length ?? 0,
         agenda_sesiones: sesionesDesdeAgenda,
         appointments_completed: sesionesDesdeAppointments,
         total_sesiones_final: totalSesiones,
