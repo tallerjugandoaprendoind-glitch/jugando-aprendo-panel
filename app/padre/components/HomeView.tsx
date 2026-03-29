@@ -243,13 +243,17 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           .eq('child_id', child.id)
           .single()
         const fressSess = fresh?.sesiones_analizadas ?? fresh?.total_sesiones_unificado ?? 0
-        if (fresh && fressSess >= sessionesObjetivo) {
+        const textoListo = !!(fresh?.prediccion_30d || fresh?.analisis_ia)
+        // Esperar que TANTO las sesiones estén contadas COMO el texto de Groq esté listo.
+        // Antes: solo chequeaba fressSess → paraba apenas el early upsert guardaba
+        // sesiones_analizadas, mostrando texto corrupto/viejo. Ahora espera el texto real.
+        if (fresh && fressSess >= sessionesObjetivo && textoListo) {
           setPrediccion(fresh)
           clearInterval(poll)
         } else if (intentos >= 10) {
           // Timeout: mostrar lo que haya aunque no esté actualizado
           if (fresh) setPrediccion(fresh)
-          setPollingTimedOut(true) // ← evita que "desactualizado" quede pegado para siempre
+          setPollingTimedOut(true)
           clearInterval(poll)
         }
       }, 5000)
@@ -390,7 +394,9 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                   const sesionesEnPred = prediccion?.sesiones_analizadas ?? prediccion?.total_sesiones_unificado ?? 0
                   // Si el análisis guardado tiene menos sesiones que las reales → está desactualizado
                   // Pero si el polling ya agotó sus intentos, mostramos lo que haya para no quedar colgados
-                  const desactualizado = !pollingTimedOut && stats.sessions > 0 && sesionesEnPred < stats.sessions
+                  // Texto limpiado por early upsert (null) también es señal de análisis en curso
+                  const textoListo = !!(prediccion?.prediccion_30d || prediccion?.analisis_ia)
+                  const desactualizado = !pollingTimedOut && stats.sessions > 0 && (sesionesEnPred < stats.sessions || !textoListo)
 
                   if (desactualizado) {
                     return (
