@@ -286,20 +286,7 @@ export async function POST(req: NextRequest) {
     const progConSesiones = analisis_por_programa.filter(p => p.total_sesiones > 0)
     const progSinSesiones = analisis_por_programa.filter(p => p.total_sesiones === 0)
 
-    // ⚡ EARLY UPSERT: señalizar que hay un análisis en curso.
-    // Limpiamos prediccion_30d y analisis_ia para que el frontend sepa que el texto
-    // está siendo regenerado (evita mostrar texto corrupto de una corrida anterior).
-    // El polling del frontend ahora espera TAMBIÉN a que prediccion_30d != null.
     const sesionesParaUpsert = totalSesionesAnalizadas
-    try {
-      await supabaseAdmin.from('predicciones_ia').upsert({
-        child_id: childId,
-        sesiones_analizadas: sesionesParaUpsert,
-        prediccion_30d: null,   // limpiar texto stale — indica "análisis en curso"
-        analisis_ia: null,      // ídem
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'child_id' })
-    } catch { /* no bloquear el análisis */ }
 
     const prompt = `Eres una neuropsicóloga clínica con especialización en Análisis Aplicado de la Conducta (ABA), certificada BCBA-D con 15 años de experiencia clínica. Redactas informes de supervisión clínica de alto nivel para terapeutas ABA y equipos multidisciplinarios. Tu lenguaje es técnico, preciso y fundamentado en evidencia (Cooper, Heron & Heward; JABA; Skinner).
 
