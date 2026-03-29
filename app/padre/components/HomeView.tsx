@@ -179,7 +179,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       { data: pats },
     ] = await Promise.all([
       supabase.from('appointments').select('*').eq('child_id', child.id).gte('appointment_date', today).neq('status', 'cancelled').neq('status', 'completed').order('appointment_date', { ascending: true }).order('appointment_time', { ascending: true }).limit(1),
-      supabase.from('agenda_sesiones').select('id').eq('child_id', child.id).gte('fecha', monthStart).in('estado', ['realizada', 'completada', 'completed']),
+      supabase.from('appointments').select('id').eq('child_id', child.id).in('status', ['completed', 'realizada', 'completada']),
       supabase.from('notifications').select('*').eq('user_id', child.parent_id || '').eq('is_read', false).order('created_at', { ascending: false }).limit(5),
       supabase.from('parent_messages').select('*').eq('child_id', child.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('predicciones_ia').select('*').eq('child_id', child.id).single(),
@@ -200,18 +200,35 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       console.warn('[HomeView] Error cargando stats via API:', e)
     }
 
-    const totalSess = apiStats?.totalSesiones ?? 0
+    const completedAppts = monthSess?.length || 0  // monthSess is now ALL completed appointments
+    const totalSess = apiStats?.totalSesiones && apiStats.totalSesiones > 0
+      ? apiStats.totalSesiones
+      : completedAppts
     const achieved  = apiStats?.goalsAchieved  ?? 0
     const totalGoals = apiStats?.totalGoals    ?? 0
     const masteryRate = apiStats?.masteryRate  ?? 0
-    const hoursTotal  = apiStats?.hoursTotal   ?? (totalSess * 0.75)
-    const level       = apiStats?.level        ?? 'Inicial'
+    const hoursTotal  = apiStats?.hoursTotal && apiStats.hoursTotal > 0
+      ? apiStats.hoursTotal
+      : Math.round(totalSess * 0.75 * 10) / 10
+    let level = apiStats?.level ?? 'Inicial'
+    // Calcular nivel localmente si la API falló
+    if (!apiStats?.level || totalSess !== (apiStats?.totalSesiones ?? 0)) {
+      if (totalSess >= 50) level = 'Avanzado'
+      else if (totalSess >= 20) level = 'Intermedio'
+      else if (totalSess >= 5) level = 'Básico'
+      else level = 'Inicial'
+    }
 
     if (apiStats?.programas?.length) setProgramas(apiStats.programas)
 
     if (prevGoals !== -1 && achieved > prevGoals && achieved > 0) setShowCelebration(true)
     setPrevGoals(achieved)
-    setStats({ sessions: totalSess, goalsAchieved: achieved, hoursTotal, level, monthSessions: monthSess?.length || 0, masteryRate, totalGoals })
+    // monthSessions = this month's completed appointments
+    const thisMonth = today.slice(0, 7)
+    const monthCompletedCount = (monthSess || []).filter((a: any) => 
+      (a.appointment_date || '').startsWith(thisMonth)
+    ).length
+    setStats({ sessions: totalSess, goalsAchieved: achieved, hoursTotal, level, monthSessions: monthCompletedCount, masteryRate, totalGoals })
     setLoading(false)
   }
 
