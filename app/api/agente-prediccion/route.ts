@@ -115,14 +115,16 @@ export async function POST(req: NextRequest) {
         .order('fecha', { ascending: true })
       if (s1 && s1.length > 0) {
         // Normalizar: calcular porcentaje_exito desde respuestas/oportunidades si está null
-        sesiones = s1.map((s: any) => ({
-          ...s,
-          porcentaje_exito: s.porcentaje_exito != null
-            ? s.porcentaje_exito
-            : (s.oportunidades_totales > 0
-                ? Math.round((Number(s.respuestas_correctas) / Number(s.oportunidades_totales)) * 100)
-                : null)
-        })).filter((s: any) => s.porcentaje_exito != null)
+        // Si no hay dato real, usar 50 (neutro) — no descartar sesiones válidas por falta de %
+        sesiones = s1.map((s: any) => {
+          let pct: number | null = null
+          if (s.porcentaje_exito != null) {
+            pct = Number(s.porcentaje_exito)
+          } else if (s.oportunidades_totales > 0) {
+            pct = Math.round((Number(s.respuestas_correctas) / Number(s.oportunidades_totales)) * 100)
+          }
+          return { ...s, porcentaje_exito: pct !== null ? pct : 50, _sin_dato_real: pct === null }
+        }).filter((s: any) => !!s.fecha)
       } else {
         // Fallback: buscar en registro_aba por child_id y mapear datos
         const { data: s2 } = await supabaseAdmin
