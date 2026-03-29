@@ -23,7 +23,12 @@ export async function GET(req: NextRequest) {
 
     if (errProg) {
       console.error('[padre/stats] Error programas_aba:', errProg.message)
-      return NextResponse.json({ error: errProg.message }, { status: 500 })
+      // No fallar — devolver stats básicas vacías en lugar de 500
+      return NextResponse.json({
+        ok: true, totalSesiones: 0, totalGoals: 0, goalsAchieved: 0,
+        masteryRate: 0, hoursTotal: 0, level: 'Inicial', programas: [],
+        _debug: { error_programas: errProg.message }
+      })
     }
 
     const progIds = (programas || []).map((p: any) => p.id)
@@ -137,24 +142,45 @@ export async function GET(req: NextRequest) {
       masteryRate = totalProg > 0 ? Math.round((domProg / totalProg) * 100) : 0
     }
 
-    // ── Calcular sesiones unificadas (todas las fuentes) ─────
+    // ── Calcular sesiones unificadas — misma lógica que progreso-paciente ──
+    // sesiones_datos_aba puede tener múltiples filas por sesión (una por objetivo/set)
+    // Contar FECHAS ÚNICAS = sesiones reales
+    const fechasUnicasSda = new Set(
+      (sesionesPrograma || [])
+        .map((s: any) => (s.fecha || '').split('T')[0])
+        .filter(Boolean)
+    )
+    const sesionesDesdePrograma = fechasUnicasSda.size
+
+    // registro_aba: una fila = una sesión
+    const sesionesDesdeRegistro = registroAba?.length || 0
+
+    // agenda_sesiones: una fila = una sesión (ya filtradas por estado)
+    const sesionesDesdeAgenda = agendaSesiones?.length || 0
+
+    // appointments completadas: una fila = una cita completada
+    const sesionesDesdeAppointments = appointmentsCompleted?.length || 0
+
+    // aba_sessions_v2
+    const sesionesDesdeV2 = sessionsV2?.length || 0
+
+    // Usar el mayor valor entre todas las fuentes reales
     const totalSesiones = Math.max(
-      registroAba?.length || 0,
-      sessionsV2?.length || 0,
-      sesionesPrograma?.length || 0,
-      agendaSesiones?.length || 0,
-      appointmentsCompleted?.length || 0
+      sesionesDesdePrograma,
+      sesionesDesdeRegistro,
+      sesionesDesdeAgenda,
+      sesionesDesdeAppointments,
+      sesionesDesdeV2
     )
 
     // ── Horas totales ─────────────────────────────────────────
-    // Intentar calcular desde duración real de agenda_sesiones
     const minutosAgenda = (agendaSesiones || []).reduce((sum: number, s: any) => {
       if (s.hora_inicio && s.hora_fin) {
         const [h1, m1] = s.hora_inicio.split(':').map(Number)
         const [h2, m2] = s.hora_fin.split(':').map(Number)
         return sum + Math.max(0, (h2 * 60 + m2) - (h1 * 60 + m1))
       }
-      return sum + 45 // default 45 min por sesión
+      return sum + 45
     }, 0)
 
     const totalMinutes =
@@ -187,11 +213,15 @@ export async function GET(req: NextRequest) {
       level,
       programas: programasUI,
       _debug: {
-        registro_aba: registroAba?.length ?? 0,
-        aba_sessions_v2: sessionsV2?.length ?? 0,
-        sesiones_datos_aba: sesionesPrograma?.length ?? 0,
-        agenda_sesiones: agendaSesiones?.length ?? 0,
-        appointments_completed: appointmentsCompleted?.length ?? 0,
+        child_id_recibido: childId,
+        programas_encontrados: (programas || []).length,
+        prog_ids: progIds,
+        registro_aba: sesionesDesdeRegistro,
+        aba_sessions_v2: sesionesDesdeV2,
+        sesiones_datos_aba_filas: sesionesPrograma?.length ?? 0,
+        sesiones_datos_aba_fechas_unicas: sesionesDesdePrograma,
+        agenda_sesiones: sesionesDesdeAgenda,
+        appointments_completed: sesionesDesdeAppointments,
         total_sesiones_final: totalSesiones,
         total_objetivos: totalGoals,
         dominados_n1_estado: allObjetivos.filter((o: any) => o.estado === 'dominado').length,
