@@ -112,9 +112,9 @@ export async function POST(req: NextRequest) {
       let sesiones: any[] | null = null
       const { data: s1 } = await supabaseAdmin
         .from('sesiones_datos_aba')
-        .select('fecha, porcentaje_exito, fase, set_nombre, oportunidades_totales, respuestas_correctas, notas')
+        .select('fecha, created_at, porcentaje_exito, fase, set_nombre, oportunidades_totales, respuestas_correctas, notas')
         .eq('programa_id', prog.id)
-        .order('fecha', { ascending: true })
+        .order('created_at', { ascending: true })
       if (s1 && s1.length > 0) {
         // Normalizar: calcular porcentaje_exito desde respuestas/oportunidades si está null
         // Si no hay dato real, usar 50 (neutro) — no descartar sesiones válidas por falta de %
@@ -125,8 +125,12 @@ export async function POST(req: NextRequest) {
           } else if (s.oportunidades_totales > 0) {
             pct = Math.round((Number(s.respuestas_correctas) / Number(s.oportunidades_totales)) * 100)
           }
-          return { ...s, porcentaje_exito: pct !== null ? pct : 50, _sin_dato_real: pct === null }
-        }).filter((s: any) => !!s.fecha)
+          // Normalizar fecha: usar fecha → created_at como fallback
+          // ANTES: .filter(!!s.fecha) descartaba TODAS las sesiones si la columna
+          // no se llamaba 'fecha' → Groq recibía "0 sesiones analizadas"
+          const fechaNorm = s.fecha || s.created_at || null
+          return { ...s, fecha: fechaNorm, porcentaje_exito: pct !== null ? pct : 50, _sin_dato_real: pct === null }
+        }).filter((s: any) => s.fecha != null)
       } else {
         // Fallback: buscar en registro_aba por child_id y mapear datos
         const { data: s2 } = await supabaseAdmin
@@ -270,11 +274,14 @@ export async function POST(req: NextRequest) {
     // ⚡ EARLY UPSERT: guardar sesiones_analizadas ANTES de llamar a Groq.
     // Esto permite que el polling del frontend termine exitosamente incluso si
     // Groq tarda o Vercel corta la función por timeout (10s en plan free).
-    if (totalSesionesAnalizadas > 0) {
+    // Usamos stats.totalSesiones del contexto (ya calculado arriba) como fuente de verdad.
+    const sesionesParaUpsert = totalSesionesAnalizadas > 0 ? totalSesionesAnalizadas :
+      analisis_por_programa.flatMap(p => Array(p.total_sesiones)).length
+    if (true) { // siempre hacer el early upsert para que el polling pueda terminar
       try {
         await supabaseAdmin.from('predicciones_ia').upsert({
           child_id: childId,
-          sesiones_analizadas: totalSesionesAnalizadas,
+          sesiones_analizadas: sesionesParaUpsert,
           updated_at: new Date().toISOString(),
         }, { onConflict: 'child_id' })
       } catch { /* no bloquear el análisis */ }
