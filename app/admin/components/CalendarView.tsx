@@ -238,8 +238,8 @@ function MonthlyCalendarView() {
             ? `https://meet.jit.si/JugandoAprendo-${firstApt?.id || Date.now()}`
             : null
 
-          // ✅ La notificación WhatsApp ya la envía /api/admin/appointments (servidor)
-          // No llamar a notify-parent desde el cliente para evitar duplicados
+          // ✅ El servidor ya notifica al padre, pero si es virtual necesita pasar el link
+          // El servidor ahora genera el link en el insert, así que no hace falta notificar de nuevo
 
           // Para sesión grupal, usar el primer participante para el sync del calendario del padre
           const childIdParaCalendario = tipoSesion === 'grupal'
