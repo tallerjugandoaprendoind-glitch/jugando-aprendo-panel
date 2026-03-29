@@ -300,7 +300,10 @@ Genera un INFORME DE SUPERVISIÓN CLÍNICA ABA con exactamente este formato:
 **CRITERIOS DE AVANCE Y MONITOREO**
 [Especifica qué indicadores deben observarse en las próximas 2-4 semanas para determinar si el plan es efectivo o requiere ajuste. Menciona umbrales de decisión clínica.]
 
-Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionales. Máximo 450 palabras.`
+**RESUMEN PARA FAMILIA**
+[3-4 oraciones en lenguaje simple y cálido, dirigido a los padres. Sin jerga técnica, sin siglas. Explica cómo va el niño/a en terapia, destaca algo positivo y menciona qué pueden esperar próximamente. Escribe como si hablaras directamente con la familia.]
+
+Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionales. Máximo 500 palabras.`
 
     let resumen_general: string | null = null
     try {
@@ -334,47 +337,15 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
         .filter(p => (p.tendencia_slope ?? 0) < -1 || (p.media != null && p.media < 50 && p.total_sesiones >= 3))
         .map(p => p.nombre)
 
-      // prediccion_30d: resumen para padres, generado con un segundo prompt en lenguaje simple y cálido
+      // prediccion_30d: extraer sección "RESUMEN PARA FAMILIA" del análisis principal — sin segundo llamado a Groq
       let prediccion_30d: string | null = null
       if (resumen_general) {
-        try {
-          const sesionesTexto = totalSesionesAnalizadas === 1 ? '1 sesión' : `${totalSesionesAnalizadas} sesiones`
-          const programasTexto = progConSesiones.map((p: any) => p.nombre || p.programa).filter(Boolean).join(', ')
-          const logradosTexto = analisis_por_programa.filter((p: any) => p.criterio_logrado).map((p: any) => p.nombre || p.programa).filter(Boolean).join(', ')
-
-          const promptPadre = `Eres un terapeuta empático que comunica el progreso de un niño a sus padres de forma clara, cálida y motivadora. Nunca uses jerga clínica ni siglas (no escribas "ABA", "BCBA", "control instruccional", etc.). Escribe como si hablaras directamente con la familia.
-
-NIÑO/A: ${childName}
-SESIONES COMPLETADAS: ${sesionesTexto}
-${programasTexto ? `ÁREAS TRABAJADAS: ${programasTexto}` : ''}
-${logradosTexto ? `OBJETIVOS LOGRADOS: ${logradosTexto}` : ''}
-
-Basándote en el siguiente análisis clínico, escribe UN SOLO PÁRRAFO de 3 a 4 oraciones para los padres. El párrafo debe:
-1. Explicar cómo va ${childName} en terapia con palabras simples
-2. Destacar algo positivo o un avance concreto
-3. Mencionar qué pueden esperar en las próximas semanas
-4. Sonar como un mensaje personal y cercano, no un informe
-
-Análisis clínico de referencia:
-${resumen_general}
-
-Escribe solo el párrafo, sin título ni introducción.`
-
-          const resumenPadre = await callGroqSimple(
-            `Eres un terapeuta que explica el progreso de ${childName} a sus padres. Lenguaje simple, cálido, sin tecnicismos. Máximo 4 oraciones.`,
-            promptPadre,
-            { model: GROQ_MODELS.SMART, temperature: 0.35, maxTokens: 200 }
-          )
-          prediccion_30d = resumenPadre?.replace(/\*\*(.*?)\*\*/g, '$1').trim() || null
-        } catch (err) {
-          // Fallback: primer párrafo del análisis técnico limpio
-          console.error('Error generando resumen para padres:', err)
-          const bloques = resumen_general
-            .split(/\n\n+/)
-            .map((b: string) => b.trim())
-            .filter((b: string) => b && !/^\*\*[^*]+\*\*$/.test(b))
-          prediccion_30d = bloques[0] ?? null
-          if (prediccion_30d) prediccion_30d = prediccion_30d.replace(/\*\*(.*?)\*\*/g, '$1').trim()
+        const matchFamilia = resumen_general.match(/\*\*RESUMEN PARA FAMILIA\*\*\s*\n+([\s\S]+?)(?=\n\n\*\*|$)/i)
+        if (matchFamilia) {
+          prediccion_30d = matchFamilia[1].replace(/\*\*(.*?)\*\*/g, '$1').trim()
+        } else {
+          const bloques = resumen_general.split(/\n\n+/).map((b: string) => b.trim()).filter((b: string) => b && !/^\*\*[^*]+\*\*$/.test(b))
+          prediccion_30d = (bloques[0] ?? '').replace(/\*\*(.*?)\*\*/g, '$1').trim() || null
         }
       }
 
