@@ -137,7 +137,6 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
   const [programas, setProgramas] = useState<any[]>([])
   const [gcalConnected, setGcalConnected] = useState<boolean | null>(null)
   const [gcalBannerDismissed, setGcalBannerDismissed] = useState(false)
-  const [showAnalisisCompleto, setShowAnalisisCompleto] = useState(false)
 
   useEffect(() => {
     if (gcalBannerDismissed) return
@@ -371,60 +370,37 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                   </div>
                   {(prediccion?.confianza != null && prediccion.confianza > 0)&&<span style={{ marginLeft:'auto',background:'rgba(139,92,246,.3)',color:'#c4b5fd',fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:20 }}>{prediccion.confianza}% confianza</span>}
                 </div>
-                {/* Resumen para padres (prediccion_30d) — lenguaje simple y cálido */}
-                {(prediccion?.prediccion_30d||prediccion?.analisis_ia||stats.sessions>0)&&(
-                  <p style={{ color:'rgba(255,255,255,.85)',fontSize:13,lineHeight:1.6,margin:0 }}>
-                    {(() => {
-                      const sesionesEnPred = prediccion?.sesiones_analizadas ?? prediccion?.total_sesiones_unificado ?? 0
-                      const desactualizado = sesionesEnPred === 0 && stats.sessions > 0
-                      if (desactualizado) return `✨ Se detectaron ${stats.sessions} sesión${stats.sessions!==1?'es':''} registrada${stats.sessions!==1?'s':''}. Actualizando análisis...`
-                      return prediccion?.prediccion_30d || (prediccion?.analisis_ia as string)?.split('\n\n').find((b:string)=>b.trim()&&!/^\*\*[^*]+\*\*$/.test(b.trim()))?.replace(/\*\*(.*?)\*\*/g,'$1').trim() || ''
-                    })()}
-                  </p>
-                )}
-                {prediccion?.areas_fortaleza?.length>0&&(
-                  <div style={{ display:'flex',gap:6,flexWrap:'wrap',marginTop:10 }}>
-                    {prediccion.areas_fortaleza.slice(0,3).map((a:string,i:number)=><span key={i} style={{ background:'rgba(16,185,129,.2)',color:'#6ee7b7',fontSize:11,fontWeight:600,padding:'3px 10px',borderRadius:20,border:'1px solid rgba(16,185,129,.3)' }}>✦ {a}</span>)}
-                  </div>
-                )}
-                {/* Botón para ver el análisis clínico completo */}
-                {prediccion?.analisis_ia&&(
-                  <button
-                    onClick={()=>setShowAnalisisCompleto(true)}
-                    style={{ marginTop:14,background:'rgba(255,255,255,.1)',border:'1px solid rgba(255,255,255,.2)',color:'#e2e8f0',fontSize:12,fontWeight:600,padding:'7px 16px',borderRadius:20,cursor:'pointer',display:'flex',alignItems:'center',gap:6,transition:'background .2s' }}
-                    onMouseEnter={e=>(e.currentTarget.style.background='rgba(255,255,255,.18)')}
-                    onMouseLeave={e=>(e.currentTarget.style.background='rgba(255,255,255,.1)')}
-                  >
-                    📋 Ver análisis completo
-                  </button>
-                )}
+                {/* Resumen para padres — texto simple y cálido generado por IA */}
+                {(prediccion?.prediccion_30d || prediccion?.analisis_ia || stats.sessions > 0) && (() => {
+                  // Prioridad: prediccion_30d (texto para padres) → fallback primer párrafo de analisis_ia
+                  const textoParaPadre = prediccion?.prediccion_30d ||
+                    (prediccion?.analisis_ia as string)?.split('\n\n')
+                      .find((b:string) => b.trim() && !/^\*\*[^*]+\*\*$/.test(b.trim()))
+                      ?.replace(/\*\*(.*?)\*\*/g, '$1').trim()
 
-                {/* Modal análisis clínico completo */}
-                {showAnalisisCompleto&&prediccion?.analisis_ia&&(
-                  <div style={{ position:'fixed',inset:0,background:'rgba(0,0,0,.7)',zIndex:9999,display:'flex',alignItems:'flex-start',justifyContent:'center',padding:'20px 12px',overflowY:'auto' }} onClick={()=>setShowAnalisisCompleto(false)}>
-                    <div style={{ background:'#0f172a',borderRadius:20,padding:'24px 20px',maxWidth:520,width:'100%',border:'1px solid rgba(139,92,246,.3)',marginTop:20 }} onClick={e=>e.stopPropagation()}>
-                      <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:18 }}>
-                        <div style={{ display:'flex',alignItems:'center',gap:8 }}>
-                          <div style={{ width:32,height:32,background:'linear-gradient(135deg,#7c3aed,#2563eb)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center' }}><span style={{ fontSize:16 }}>🧠</span></div>
-                          <div>
-                            <p style={{ color:'#c4b5fd',fontSize:10,fontWeight:700,textTransform:'uppercase',letterSpacing:1,margin:0 }}>IA • Análisis Clínico</p>
-                            <p style={{ color:'#fff',fontSize:13,fontWeight:700,margin:0 }}>Informe detallado</p>
-                          </div>
-                        </div>
-                        <button onClick={()=>setShowAnalisisCompleto(false)} style={{ background:'rgba(255,255,255,.1)',border:'none',color:'#94a3b8',fontSize:18,width:32,height:32,borderRadius:8,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center' }}>×</button>
-                      </div>
-                      <div style={{ display:'flex',flexDirection:'column',gap:14 }}>
-                        {prediccion.analisis_ia.split(/\n\n+/).map((bloque:string,i:number)=>{
-                          const esTitulo = /^\*\*[^*]+\*\*$/.test(bloque.trim())
-                          const textoLimpio = bloque.replace(/\*\*(.*?)\*\*/g,'$1').trim()
-                          if(!textoLimpio) return null
-                          return esTitulo
-                            ? <p key={i} style={{ color:'#a78bfa',fontSize:11,fontWeight:800,textTransform:'uppercase',letterSpacing:1,margin:0,borderBottom:'1px solid rgba(139,92,246,.2)',paddingBottom:6 }}>{textoLimpio}</p>
-                            : <p key={i} style={{ color:'rgba(255,255,255,.82)',fontSize:13,lineHeight:1.65,margin:0 }}>{textoLimpio}</p>
-                        })}
-                      </div>
-                      {prediccion.confianza>0&&<p style={{ color:'#64748b',fontSize:11,marginTop:16,textAlign:'right' }}>Confianza del análisis: {prediccion.confianza}% · Basado en {prediccion.sesiones_analizadas} sesiones</p>}
-                    </div>
+                  // Solo mostrar "actualizando" si no hay ningún texto guardado aún
+                  const sinTexto = !textoParaPadre
+                  const actualizando = sinTexto && stats.sessions > 0
+
+                  if (actualizando) {
+                    return (
+                      <p style={{ color:'rgba(255,255,255,.7)',fontSize:13,lineHeight:1.6,margin:0,fontStyle:'italic' }}>
+                        ✨ Preparando el resumen de progreso...
+                      </p>
+                    )
+                  }
+                  if (!textoParaPadre) return null
+                  return (
+                    <p style={{ color:'rgba(255,255,255,.88)',fontSize:13,lineHeight:1.65,margin:0 }}>
+                      {textoParaPadre}
+                    </p>
+                  )
+                })()}
+                {prediccion?.areas_fortaleza?.length > 0 && (
+                  <div style={{ display:'flex',gap:6,flexWrap:'wrap',marginTop:10 }}>
+                    {prediccion.areas_fortaleza.slice(0,3).map((a:string,i:number) => (
+                      <span key={i} style={{ background:'rgba(16,185,129,.2)',color:'#6ee7b7',fontSize:11,fontWeight:600,padding:'3px 10px',borderRadius:20,border:'1px solid rgba(16,185,129,.3)' }}>✦ {a}</span>
+                    ))}
                   </div>
                 )}
               </div>
