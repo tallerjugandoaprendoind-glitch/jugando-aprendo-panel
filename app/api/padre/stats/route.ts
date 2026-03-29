@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     // 1. Programas ABA con objetivos_cp anidados (usando service_role)
     const { data: programas, error: errProg } = await supabaseAdmin
       .from('programas_aba')
-      .select('id, titulo, nombre, area, estado, criterio_dominio_pct, objetivos_cp(id, descripcion, estado, numero_set)')
+      .select('id, titulo, area, estado, criterio_dominio_pct, objetivos_cp(id, descripcion, estado, numero_set)')
       .eq('child_id', childId)
       .order('created_at', { ascending: false })
 
@@ -198,7 +198,7 @@ export async function GET(req: NextRequest) {
     // ── Programas simplificados para UI ──────────────────────
     const programasUI = (programas || []).map((p: any) => ({
       id: p.id,
-      nombre: p.titulo || p.nombre,
+      nombre: p.titulo,
       area: p.area,
       estado: p.estado,
     }))
