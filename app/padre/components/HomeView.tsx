@@ -372,24 +372,29 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 </div>
                 {/* Resumen para padres — texto simple y cálido generado por IA */}
                 {(prediccion?.prediccion_30d || prediccion?.analisis_ia || stats.sessions > 0) && (() => {
+                  const sesionesEnPred = prediccion?.sesiones_analizadas ?? prediccion?.total_sesiones_unificado ?? 0
+                  // Si el análisis guardado tiene menos sesiones que las reales → está desactualizado
+                  const desactualizado = stats.sessions > 0 && sesionesEnPred < stats.sessions
+
+                  if (desactualizado) {
+                    return (
+                      <p style={{ color:'rgba(255,255,255,.7)',fontSize:13,lineHeight:1.6,margin:0,fontStyle:'italic' }}>
+                        ✨ Actualizando el resumen con las {stats.sessions} sesiones registradas...
+                      </p>
+                    )
+                  }
+
                   // Prioridad: prediccion_30d (texto para padres) → fallback primer párrafo de analisis_ia
                   const textoParaPadre = prediccion?.prediccion_30d ||
                     (prediccion?.analisis_ia as string)?.split('\n\n')
                       .find((b:string) => b.trim() && !/^\*\*[^*]+\*\*$/.test(b.trim()))
                       ?.replace(/\*\*(.*?)\*\*/g, '$1').trim()
 
-                  // Solo mostrar "actualizando" si no hay ningún texto guardado aún
-                  const sinTexto = !textoParaPadre
-                  const actualizando = sinTexto && stats.sessions > 0
-
-                  if (actualizando) {
-                    return (
-                      <p style={{ color:'rgba(255,255,255,.7)',fontSize:13,lineHeight:1.6,margin:0,fontStyle:'italic' }}>
-                        ✨ Preparando el resumen de progreso...
-                      </p>
-                    )
-                  }
-                  if (!textoParaPadre) return null
+                  if (!textoParaPadre) return (
+                    <p style={{ color:'rgba(255,255,255,.7)',fontSize:13,lineHeight:1.6,margin:0,fontStyle:'italic' }}>
+                      ✨ Preparando el resumen de progreso...
+                    </p>
+                  )
                   return (
                     <p style={{ color:'rgba(255,255,255,.88)',fontSize:13,lineHeight:1.65,margin:0 }}>
                       {textoParaPadre}
