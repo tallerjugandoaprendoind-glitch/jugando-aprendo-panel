@@ -224,22 +224,33 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
     // Si hay sesiones reales, regenerar prediccion si está desactualizada
     const sesionesEnPrediccion = pred?.sesiones_analizadas ?? pred?.total_sesiones_unificado ?? 0
     if (totalSess > 0 && sesionesEnPrediccion < totalSess) {
+      // Fire & forget — no esperamos respuesta (Vercel puede cortar la conexión antes)
       fetch('/api/agente-prediccion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ childId: child.id, childName: child.name }),
-      })
-      .then(r => r.ok ? r.json() : null)
-      .then(fresh => {
-        if (fresh && !fresh.error) {
-          // Pequeño delay para asegurar que el upsert en BD ya se propagó
-          setTimeout(() => {
-            supabase.from('predicciones_ia').select('*').eq('child_id', child.id).single()
-              .then(({ data }) => { if (data) setPrediccion(data) })
-          }, 800)
+      }).catch(() => {})
+
+      // Polling: revisar Supabase cada 5s hasta que sesiones_analizadas se actualice (max 10 intentos = 50s)
+      let intentos = 0
+      const sessionesObjetivo = totalSess
+      const poll = setInterval(async () => {
+        intentos++
+        const { data: fresh } = await supabase
+          .from('predicciones_ia')
+          .select('*')
+          .eq('child_id', child.id)
+          .single()
+        const fressSess = fresh?.sesiones_analizadas ?? fresh?.total_sesiones_unificado ?? 0
+        if (fresh && fressSess >= sessionesObjetivo) {
+          setPrediccion(fresh)
+          clearInterval(poll)
+        } else if (intentos >= 10) {
+          // Timeout: mostrar lo que haya aunque no esté actualizado
+          if (fresh) setPrediccion(fresh)
+          clearInterval(poll)
         }
-      })
-      .catch(() => {})
+      }, 5000)
     }
 
     if (prevGoals !== -1 && achieved > prevGoals && achieved > 0) setShowCelebration(true)
