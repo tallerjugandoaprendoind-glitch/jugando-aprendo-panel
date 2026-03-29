@@ -221,6 +221,25 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
 
     if (apiStats?.programas?.length) setProgramas(apiStats.programas)
 
+    // Si hay sesiones reales pero la predicción guardada dice 0, regenerarla en background
+    const sesionesEnPrediccion = pred?.sesiones_analizadas ?? pred?.total_sesiones_unificado ?? 0
+    if (totalSess > 0 && sesionesEnPrediccion === 0) {
+      fetch('/api/agente-prediccion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId: child.id, childName: child.name }),
+      })
+      .then(r => r.ok ? r.json() : null)
+      .then(fresh => {
+        if (fresh && !fresh.error) {
+          // Recargar prediccion desde la BD actualizada
+          supabase.from('predicciones_ia').select('*').eq('child_id', child.id).single()
+            .then(({ data }) => { if (data) setPrediccion(data) })
+        }
+      })
+      .catch(() => {})
+    }
+
     if (prevGoals !== -1 && achieved > prevGoals && achieved > 0) setShowCelebration(true)
     setPrevGoals(achieved)
     // monthSessions = this month's completed appointments
