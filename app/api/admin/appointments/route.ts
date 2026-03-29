@@ -11,11 +11,14 @@ async function notificarPadre(childId: string, tipo: 'cita_confirmada' | 'cita_c
       const { data: parentProf } = await supabaseAdmin
         .from('profiles').select('phone').eq('id', parentLink.user_id).maybeSingle()
       if ((parentProf as any)?.phone) {
-        notifyParentDirect((parentProf as any).phone, tipo, vars)
+        await notifyParentDirect((parentProf as any).phone, tipo, vars)
       }
     }
-    notifyAsync({ tipo, vars })
-  } catch { /* silent */ }
+    // También notificar al admin del centro
+    await notifyAsync({ tipo, vars })
+  } catch (err) {
+    console.error('[notificarPadre] Error:', err)
+  }
 }
 
 export async function GET(request: NextRequest) {
@@ -54,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error
 
-    // Notificar al padre por cada cita creada
+    // Notificar al padre por cada cita creada (await para que no se corte en serverless)
     for (const apt of (data || [])) {
       if (apt.child_id) {
         const childName = (apt as any).children?.name || 'Paciente'
@@ -62,7 +65,7 @@ export async function POST(request: NextRequest) {
         const hora  = apt.appointment_time || ''
         const modalidad = apt.modalidad === 'virtual' ? 'Virtual 📹' : (apt.appointment_type || 'Presencial')
         const videoLink  = apt.video_link || apt.videoLink || null
-        notificarPadre(apt.child_id, 'cita_confirmada', { fecha, hora, paciente: childName, tipo: modalidad, ...(videoLink ? { link: videoLink } : {}) })
+        await notificarPadre(apt.child_id, 'cita_confirmada', { fecha, hora, paciente: childName, tipo: modalidad, ...(videoLink ? { link: videoLink } : {}) })
       }
     }
 

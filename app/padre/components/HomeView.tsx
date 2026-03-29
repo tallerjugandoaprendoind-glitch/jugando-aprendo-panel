@@ -179,7 +179,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       { data: pats },
     ] = await Promise.all([
       supabase.from('appointments').select('*').eq('child_id', child.id).gte('appointment_date', today).neq('status', 'cancelled').neq('status', 'completed').order('appointment_date', { ascending: true }).order('appointment_time', { ascending: true }).limit(1),
-      supabase.from('registro_aba').select('id').eq('child_id', child.id).gte('fecha_sesion', monthStart),
+      supabase.from('agenda_sesiones').select('id').eq('child_id', child.id).gte('fecha', monthStart).in('estado', ['realizada', 'completada', 'completed']),
       supabase.from('notifications').select('*').eq('user_id', child.parent_id || '').eq('is_read', false).order('created_at', { ascending: false }).limit(5),
       supabase.from('parent_messages').select('*').eq('child_id', child.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('predicciones_ia').select('*').eq('child_id', child.id).single(),

@@ -41,8 +41,8 @@ export function getNotifStatus() {
 }
 
 // ── Notificar al admin del centro (fire-and-forget) ───────────────────────────
-export function notifyAsync(notif: Notif): void {
-  notify(notif).catch(() => {})
+export function notifyAsync(notif: Notif): Promise<boolean> {
+  return notify(notif).catch(() => false)
 }
 
 export async function notify(notif: Notif): Promise<boolean> {
@@ -62,10 +62,10 @@ export async function notifyParentDirect(
   vars: Record<string, string> = {}
 ): Promise<void> {
   if (!parentPhone) {
-    notifyAsync({ tipo, vars })
+    await notifyAsync({ tipo, vars })
     return
   }
-  wspNotifyParent(parentPhone, tipo, vars)
+  await wspNotifyParent(parentPhone, tipo, vars)
 }
 
 // ── Helper: enviar WhatsApp a un padre + notificar al admin ──────────────────

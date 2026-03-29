@@ -58,6 +58,20 @@ export async function GET(req: NextRequest) {
       .select('id, duration_minutes')
       .eq('child_id', childId)
 
+    // 5. Sesiones desde agenda_sesiones (estado realizada/completada)
+    const { data: agendaSesiones } = await supabaseAdmin
+      .from('agenda_sesiones')
+      .select('id, hora_inicio, hora_fin')
+      .eq('child_id', childId)
+      .in('estado', ['realizada', 'completada', 'completed'])
+
+    // 6. Citas completadas desde appointments
+    const { data: appointmentsCompleted } = await supabaseAdmin
+      .from('appointments')
+      .select('id')
+      .eq('child_id', childId)
+      .in('status', ['completed', 'realizada', 'completada'])
+
     // ── Calcular objetivos ─────────────────────────────────────
     const allObjetivos = (programas || []).flatMap((p: any) => p.objetivos_cp || [])
     const totalGoals = allObjetivos.length
@@ -123,16 +137,29 @@ export async function GET(req: NextRequest) {
       masteryRate = totalProg > 0 ? Math.round((domProg / totalProg) * 100) : 0
     }
 
-    // ── Calcular sesiones unificadas ──────────────────────────
+    // ── Calcular sesiones unificadas (todas las fuentes) ─────
     const totalSesiones = Math.max(
       registroAba?.length || 0,
       sessionsV2?.length || 0,
-      sesionesPrograma?.length || 0
+      sesionesPrograma?.length || 0,
+      agendaSesiones?.length || 0,
+      appointmentsCompleted?.length || 0
     )
 
     // ── Horas totales ─────────────────────────────────────────
+    // Intentar calcular desde duración real de agenda_sesiones
+    const minutosAgenda = (agendaSesiones || []).reduce((sum: number, s: any) => {
+      if (s.hora_inicio && s.hora_fin) {
+        const [h1, m1] = s.hora_inicio.split(':').map(Number)
+        const [h2, m2] = s.hora_fin.split(':').map(Number)
+        return sum + Math.max(0, (h2 * 60 + m2) - (h1 * 60 + m1))
+      }
+      return sum + 45 // default 45 min por sesión
+    }, 0)
+
     const totalMinutes =
       (sessionsV2 || []).reduce((s: number, x: any) => s + (x.duration_minutes || 45), 0) ||
+      minutosAgenda ||
       totalSesiones * 45
     const hoursTotal = Math.round((totalMinutes / 60) * 10) / 10
 
@@ -163,6 +190,9 @@ export async function GET(req: NextRequest) {
         registro_aba: registroAba?.length ?? 0,
         aba_sessions_v2: sessionsV2?.length ?? 0,
         sesiones_datos_aba: sesionesPrograma?.length ?? 0,
+        agenda_sesiones: agendaSesiones?.length ?? 0,
+        appointments_completed: appointmentsCompleted?.length ?? 0,
+        total_sesiones_final: totalSesiones,
         total_objetivos: totalGoals,
         dominados_n1_estado: allObjetivos.filter((o: any) => o.estado === 'dominado').length,
         dominados_n2_prog: [...programasDominados].length,

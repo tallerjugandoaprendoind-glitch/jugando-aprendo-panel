@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
           .from('profiles').select('phone, wsp_notif').eq('id', parentLink.user_id).maybeSingle()
         if ((parentProf as any)?.phone && (parentProf as any)?.wsp_notif !== false) {
           // Notificar directo al padre via microservicio Baileys — incluir link si es virtual
-          notifyParentDirect((parentProf as any).phone, 'cita_confirmada', {
+          await notifyParentDirect((parentProf as any).phone, 'cita_confirmada', {
             fecha, hora: hora_inicio, paciente: childName,
             tipo: modalidad === 'virtual' ? 'Virtual 📹' : (tipo || 'Presencial'),
             ...(meeting_link ? { link: meeting_link } : {}),
@@ -102,7 +102,7 @@ export async function POST(req: NextRequest) {
         }
       }
       // Notificar al admin también
-      notifyAsync({
+      await notifyAsync({
         tipo: 'cita_confirmada',
         vars: {
           fecha, hora: hora_inicio, paciente: childName,
