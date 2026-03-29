@@ -4,7 +4,7 @@
 // Variables requeridas: WSP_SERVICE_URL, WSP_SERVICE_SECRET
 
 export type WspTipo =
-  | 'cita_confirmada' | 'cita_cancelada'
+  | 'cita_confirmada' | 'cita_cancelada' | 'sesion_iniciada'
   | 'formulario_nuevo' | 'informe_nuevo'
   | 'alerta_clinica'  | 'mensaje_terapeuta'
   | 'recurso_nuevo'   | 'custom'
@@ -17,7 +17,8 @@ export function wspTemplate(tipo: WspTipo, vars: Record<string, string> = {}): s
   const centro = process.env.CENTRO_NOMBRE || 'Jugando Aprendo'
   const T: Record<WspTipo, string> = {
     cita_confirmada:   `✅ *Cita confirmada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n📍 ${v.tipo || 'Presencial'}${v.link ? `\n🔗 Videollamada: ${v.link}` : ''}\n\nVe los detalles en tu portal Vanty 💜`,
-    cita_cancelada:    `❌ *Cita cancelada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n\nContactá a recepción para reagendar.\n_Vanty_ 💜`,
+    cita_cancelada:    `❌ *Cita cancelada — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n\nLamentamos el inconveniente. Contactá a recepción para reagendar.\n_Vanty_ 💜`,
+    sesion_iniciada:   `🟢 *¡Tu sesión está comenzando! — ${centro}*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}${v.link ? `\n\n🔗 *Únete ahora:*\n${v.link}` : ''}\n\n¡El terapeuta te está esperando! 💜\n_Vanty_`,
     formulario_nuevo:  `📋 *Nuevo formulario — ${centro}*\nTipo: ${v.tipo || 'Formulario'}\nPaciente: ${v.paciente}\n\nRevisalo en tu portal 👆\n_Vanty_ 💜`,
     informe_nuevo:     `📊 *Nuevo informe disponible — ${centro}*\nPaciente: ${v.paciente}${v.periodo ? `\nPeríodo: ${v.periodo}` : ''}\n\nYa podés verlo en Vanty 👆\n_${centro}_ 💜`,
     alerta_clinica:    `⚠️ *Alerta — ${centro}*\nPaciente: ${v.paciente}\n${v.descripcion || ''}\n_Vanty_ 💜`,

@@ -176,6 +176,30 @@ export async function POST(req: NextRequest) {
         } catch { /* silencioso */ }
       }
 
+      // ── Notificar "sesión iniciada" cuando el terapeuta marca como confirmada ──
+      if (estado === 'confirmada' && data.children) {
+        const inicioFecha  = (data as any).fecha || ''
+        const inicioHora   = (data as any).hora_inicio || ''
+        const inicioNombre = (data.children as any).name || 'Paciente'
+        const inicioChildId = (data.children as any).id
+        const meetingLink  = (data as any).meeting_link || null
+
+        try {
+          const { data: pLink } = await supabaseAdmin
+            .from('parent_accounts').select('user_id').eq('child_id', inicioChildId).maybeSingle()
+          if (pLink?.user_id) {
+            const { data: pProf } = await supabaseAdmin
+              .from('profiles').select('phone, wsp_notif').eq('id', pLink.user_id).maybeSingle()
+            if ((pProf as any)?.phone && (pProf as any)?.wsp_notif !== false) {
+              notifyParentDirect((pProf as any).phone, 'sesion_iniciada', {
+                fecha: inicioFecha, hora: inicioHora, paciente: inicioNombre,
+                ...(meetingLink ? { link: meetingLink } : {}),
+              })
+            }
+          }
+        } catch { /* silencioso */ }
+      }
+
       return NextResponse.json({ data })
     }
 

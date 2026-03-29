@@ -161,18 +161,24 @@ export async function DELETE(request: NextRequest) {
       } catch { /* silent */ }
     }
 
-    // 5b. Notificar al padre que la cita fue cancelada
+    // 5b. Notificar al padre SOLO si la cita no estaba ya completada/realizada
+    // (borrar un historial completado no debe generar "cita cancelada")
     if (apt?.child_id) {
       try {
         const { data: childData } = await supabaseAdmin
-          .from('appointments').select('appointment_date, appointment_time, appointment_type, children(name)')
+          .from('appointments')
+          .select('appointment_date, appointment_time, appointment_type, status, children(name)')
           .eq('id', id).maybeSingle()
-        const childName = (childData as any)?.children?.name || 'Paciente'
-        notificarPadre(apt.child_id, 'cita_cancelada', {
-          fecha: (childData as any)?.appointment_date || '',
-          hora:  (childData as any)?.appointment_time || '',
-          paciente: childName,
-        })
+        const aptStatus = (childData as any)?.status || ''
+        const esCompletada = ['completed', 'realizada', 'done', 'completada'].includes(aptStatus)
+        if (!esCompletada) {
+          const childName = (childData as any)?.children?.name || 'Paciente'
+          notificarPadre(apt.child_id, 'cita_cancelada', {
+            fecha:    (childData as any)?.appointment_date || '',
+            hora:     (childData as any)?.appointment_time || '',
+            paciente: childName,
+          })
+        }
       } catch { /* silent */ }
     }
 
