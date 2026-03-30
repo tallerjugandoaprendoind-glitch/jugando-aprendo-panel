@@ -274,7 +274,7 @@ function MonthlyCalendarView() {
 
           // Avisar si ningún calendario está conectado para el especialista
           if (!gcalData.connected && !msData.connected) {
-            toast('⚠️ El especialista no tiene Google ni Outlook Calendar conectado. La cita se guardó correctamente.', { icon: '📅' })
+            toast.warning('⚠️ El especialista no tiene Google ni Outlook Calendar conectado. La cita se guardó correctamente.')
           }
 
           // Construir lista de citas a sincronizar (una por participante en grupal)
