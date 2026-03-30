@@ -15,7 +15,7 @@ import {
   Award, Target, Smile, Book, Star, Zap, Bell, Download, Share2, Eye, Mail, Phone,
   Settings, HelpCircle, FileText, Video, Headphones, Image as ImageIcon, ExternalLink,
   Camera, Upload, Gift, PartyPopper, Flame, TrendingDown, Baby, Stethoscope, PlayCircle,
-  CalendarDays, ShoppingBag, BookOpen
+  CalendarDays, ShoppingBag, BookOpen, MoreHorizontal
 } from 'lucide-react'
 
 import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './components/shared'
@@ -64,7 +64,8 @@ export default function ParentDashboard() {
     { id: 'recursos',    icon: BookOpen,  label: 'Centro de Recursos' },
     { id: 'perfil',      icon: User,      label: t('nav.miperfil') },
   ]
-  const [activeView, setActiveView] = useState('home') 
+  const [activeView, setActiveView] = useState('home')
+  const [showMoreMenu, setShowMoreMenu] = useState(false) 
   
   // Auto-navegar a perfil si el padre regresa del OAuth de calendario
   useEffect(() => {
@@ -698,8 +699,31 @@ export default function ParentDashboard() {
                         )}
                     </button>
                 </div>
-                <NavBtnMobile icon={<Book size={22}/>} label="Centro de Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
                 <NavBtnMobile icon={<User size={22}/>} label="Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
+                <div className="relative">
+                  <button
+                    onClick={()=>setShowMoreMenu(v=>!v)}
+                    className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all ${showMoreMenu ? 'text-purple-600' : 'text-slate-500'}`}
+                  >
+                    <MoreHorizontal size={22}/>
+                    <span className="text-[10px] font-medium">Más</span>
+                  </button>
+                  {showMoreMenu && (
+                    <div className="absolute bottom-14 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 w-52 z-50 flex flex-col gap-1">
+                      {[
+                        { id: 'actividades', icon: <Zap size={18}/>, label: 'Act. en Casa' },
+                        { id: 'chat',        icon: <Sparkles size={18}/>, label: 'Asistente IA' },
+                        { id: 'mensajes',    icon: <MessageCircle size={18}/>, label: 'Mensajes' },
+                        { id: 'resources',   icon: <Book size={18}/>, label: 'Centro de Recursos' },
+                      ].map(item => (
+                        <button key={item.id} onClick={()=>{setActiveView(item.id);setShowMoreMenu(false)}}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeView===item.id ? 'bg-purple-50 text-purple-700' : 'text-slate-700 hover:bg-slate-50'}`}>
+                          {item.icon}{item.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
             </nav>
         </div>
 
