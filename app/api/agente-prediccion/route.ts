@@ -377,8 +377,6 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
       const { error: upsertError } = await supabaseAdmin.from('predicciones_ia').upsert({
         child_id: childId,
         fecha_prediccion: new Date().toISOString().split('T')[0],
-        prediccion_30d,
-        prediccion_90d: null,
         confianza,
         areas_riesgo,
         areas_fortaleza,
