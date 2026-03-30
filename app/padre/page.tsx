@@ -61,8 +61,7 @@ export default function ParentDashboard() {
     { id: 'citas',       icon: Calendar,  label: t('nav.miscitas') },
     { id: 'actividades', icon: Zap,       label: t('nav.actividades') },
     { id: 'mensajes',    icon: MessageCircle, label: t('nav.mensajes') },
-    { id: 'recursos',    icon: BookOpen,  label: t('nav.recursos') },
-    { id: 'tienda',      icon: ShoppingBag, label: t('nav.tienda') },
+    { id: 'recursos',    icon: BookOpen,  label: 'Centro de Recursos' },
     { id: 'perfil',      icon: User,      label: t('nav.miperfil') },
   ]
   const [activeView, setActiveView] = useState('home') 
@@ -526,8 +525,7 @@ export default function ParentDashboard() {
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                 <NavBtnDesktop icon={<Bell size={17}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
-                <NavBtnDesktop icon={<Book size={17}/>} label="Biblioteca" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
-                <NavBtnDesktop icon={<ShoppingBag size={17}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
+                <NavBtnDesktop icon={<Book size={17}/>} label="Centro de Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
                 <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
@@ -700,8 +698,7 @@ export default function ParentDashboard() {
                         )}
                     </button>
                 </div>
-                <NavBtnMobile icon={<Book size={22}/>} label="Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
-                <NavBtnMobile icon={<ShoppingBag size={22}/>} label="Tienda" active={activeView==='tienda'} onClick={()=>setActiveView('tienda')} />
+                <NavBtnMobile icon={<Book size={22}/>} label="Centro de Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
                 <NavBtnMobile icon={<User size={22}/>} label="Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
         </div>
