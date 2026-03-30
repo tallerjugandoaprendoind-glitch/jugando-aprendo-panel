@@ -267,7 +267,8 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
         for (const cid of idsAUsar) {
           await aptAPI('POST', makePayload(cid))
         }
-        toast.success(isGrupal ? \`✅ \${idsAUsar.length} citas grupales creadas\` : '✅ Cita creada · Padre y administrador notificados')
+        const msg = isGrupal ? idsAUsar.length + ' citas grupales creadas' : 'Cita creada · Padre y administrador notificados'
+        toast.success('✅ ' + msg)
         setDia(form.date)
       }
 
@@ -309,6 +310,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
   const openEdit = (apt: any) => {
     setForm({
       child_id:     apt.child_id,
+      child_ids:    [],
       service:      apt.service_type || SERVICES[0],
       date:         apt.appointment_date,
       time:         apt.appointment_time?.slice(0,5) || '',
@@ -669,10 +671,10 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
                         <button key={n.id} type="button"
                           onClick={() => setForm(p => ({
                             ...p,
-                            child_ids: checked ? p.child_ids.filter((id:string) => id !== n.id) : [...p.child_ids, n.id]
+                            child_ids: checked ? p.child_ids.filter((id: string) => id !== n.id) : [...p.child_ids, n.id]
                           }))}
-                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-colors text-left ${checked ? 'bg-violet-50 text-violet-700' : 'text-slate-700 hover:bg-white'}`}>
-                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${checked ? 'bg-violet-600 border-violet-600' : 'border-slate-300'}`}>
+                          className={'w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-colors text-left ' + (checked ? 'bg-violet-50 text-violet-700' : 'text-slate-700 hover:bg-white')}>
+                          <div className={'w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ' + (checked ? 'bg-violet-600 border-violet-600' : 'border-slate-300')}>
                             {checked && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>}
                           </div>
                           {n.name}
