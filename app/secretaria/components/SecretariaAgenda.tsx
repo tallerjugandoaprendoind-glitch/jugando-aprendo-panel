@@ -4,7 +4,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect, useCallback } from 'react'
 import {
   Calendar, ChevronLeft, ChevronRight, Plus, X, Loader2,
-  Clock, User, Users, MapPin, Video, CheckCircle2, Trash2,
+  Clock, User, Users, MapPin, Video, CheckCircle2, XCircle,
   Edit2, RefreshCw, Search, Bell, CalendarDays, FileText,
   Phone, TrendingUp, MoreHorizontal, CheckCheck, Check, Unlink, Link2
 } from 'lucide-react'
@@ -281,12 +281,18 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
     }
   }
 
-  // ── Eliminar ───────────────────────────────────────────────────────────────
+  // ── Cancelar (soft-delete: cambia status → 'cancelled', NO borra el registro)
+  // Así las citas quedan en BD y aparecen en los reportes de asistencia.
   const handleDelete = async (apt: any) => {
-    if (!confirm(`¿Eliminar la cita de ${apt.children?.name || 'este paciente'}?`)) return
+    if (!confirm(`¿Cancelar la cita de ${apt.children?.name || 'este paciente'}?\nEl registro quedará guardado y aparecerá en los reportes.`)) return
     try {
-      await aptAPI('DELETE', { id: apt.id, secretaria_name: secretariaName })
-      toast.success('Cita eliminada · Padre y administrador notificados')
+      await aptAPI('PATCH', {
+        id:             apt.id,
+        status:         'cancelled',
+        accion:         'status_changed',
+        secretaria_name: secretariaName,
+      })
+      toast.success('Cita cancelada · Padre y administrador notificados')
       cargar()
     } catch (e: any) { toast.error('Error: ' + e.message) }
   }
@@ -585,7 +591,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
                                 ))}
                                 <div className="mx-2 my-1 h-px bg-slate-100"/>
                                 <button onClick={()=>handleDelete(apt)} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-red-500 hover:bg-red-50 transition-colors">
-                                  <Trash2 size={13}/> Eliminar cita
+                                  <XCircle size={13}/> Cancelar cita
                                 </button>
                               </div>
                             </div>
