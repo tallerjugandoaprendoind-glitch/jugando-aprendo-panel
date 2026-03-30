@@ -339,6 +339,7 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
       console.error('Error Groq predicción por SET:', err)
     }
 
+    let upsertErr: string | null = null
     // Guardar en predicciones_ia (resumen general)
     try {
       // Confianza: escala logarítmica (piso 20%, techo 92%)
@@ -372,7 +373,7 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
         }
       }
 
-      await supabaseAdmin.from('predicciones_ia').upsert({
+      const { error: upsertError } = await supabaseAdmin.from('predicciones_ia').upsert({
         child_id: childId,
         fecha_prediccion: new Date().toISOString().split('T')[0],
         prediccion_30d,
@@ -384,7 +385,9 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
         sesiones_analizadas: totalSesionesAnalizadas,
         updated_at: new Date().toISOString(),
       }, { onConflict: 'child_id' })
-    } catch { /* no bloquear */ }
+      if (upsertError) console.error('❌ upsert predicciones_ia error:', upsertError)
+      upsertErr = upsertError?.message ?? null
+    } catch (e: any) { upsertErr = e.message }
 
     return NextResponse.json({
       programas_analizados: analisis_por_programa.length,
@@ -400,6 +403,9 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
           Object.entries(sesionesPorPrograma).map(([k, v]) => [k, (v as any[]).length])
         ),
         total_sesiones_analizadas: totalSesionesAnalizadas,
+        upsert_error: upsertErr,
+        prediccion_30d_length: prediccion_30d?.length ?? 0,
+        analisis_ia_length: resumen_general?.length ?? 0,
       },
     })
 
