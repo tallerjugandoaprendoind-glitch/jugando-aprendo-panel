@@ -233,214 +233,202 @@ export default function SecretariaPerfil({ profile, onUpdate }: { profile: any; 
   const initial = (profile?.full_name || 'S').charAt(0).toUpperCase()
 
   return (
-    <div className="w-full h-full min-h-screen flex flex-col">
-      {/* Header Banner */}
-      <div className="relative w-full bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 px-8 py-8 overflow-hidden">
-        {/* Decorative circles */}
-        <div className="absolute -top-10 -right-10 w-48 h-48 bg-white/5 rounded-full" />
-        <div className="absolute top-4 right-20 w-24 h-24 bg-white/5 rounded-full" />
-        <div className="absolute -bottom-8 left-32 w-36 h-36 bg-white/5 rounded-full" />
+    <div className="w-full flex flex-col">
 
-        <div className="relative flex items-center gap-6">
-          <div className="w-20 h-20 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white text-3xl font-black shadow-2xl">
+      {/* ── BANNER — edge to edge ── */}
+      <div className="relative w-full bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 px-6 md:px-10 py-8 overflow-hidden">
+        <div className="absolute -top-12 -right-12 w-56 h-56 bg-white/5 rounded-full pointer-events-none" />
+        <div className="absolute top-6 right-28 w-28 h-28 bg-white/5 rounded-full pointer-events-none" />
+        <div className="absolute -bottom-10 left-40 w-40 h-40 bg-white/5 rounded-full pointer-events-none" />
+        <div className="relative flex items-center gap-5">
+          <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white text-2xl md:text-3xl font-black shadow-xl flex-shrink-0">
             {initial}
           </div>
           <div>
-            <h1 className="text-2xl font-black text-white">{profile?.full_name || 'Secretaria(o)'}</h1>
-            <span className="inline-block mt-1.5 px-3 py-1 rounded-full bg-white/20 border border-white/30 text-white text-xs font-black uppercase tracking-widest">
+            <h1 className="text-xl md:text-2xl font-black text-white leading-tight">{profile?.full_name || 'Secretaria(o)'}</h1>
+            <span className="inline-block mt-1.5 px-3 py-0.5 rounded-full bg-white/20 border border-white/30 text-white text-[10px] font-black uppercase tracking-widest">
               Secretaria(o)
             </span>
-            <p className="text-white/60 text-xs mt-1.5">{profile?.email || ''}</p>
+            <p className="text-white/60 text-xs mt-1">{profile?.email || ''}</p>
           </div>
         </div>
       </div>
 
-      {/* Page title */}
-      <div className="px-8 pt-6 pb-2">
-        <h2 className="text-xl font-black text-slate-800">Mi Perfil</h2>
-        <p className="text-sm text-slate-400 mt-0.5">Información personal y seguridad</p>
-      </div>
+      {/* ── CONTENT ── */}
+      <div className="px-6 md:px-10 py-6 flex flex-col gap-6">
 
-      {/* Two-column grid */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-6 px-8 pb-8 pt-4">
-
-        {/* LEFT — Personal Info */}
-        <div className="space-y-6">
-          {/* Info card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-violet-100 flex items-center justify-center">
-                  <User size={14} className="text-violet-600" />
-                </div>
-                <span className="font-black text-sm text-slate-800">Información personal</span>
-              </div>
-              {!editMode && (
-                <button onClick={() => setEditMode(true)}
-                  className="text-xs font-bold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 transition-colors">
-                  Editar
-                </button>
-              )}
-            </div>
-
-            <div className="p-6">
-              {editMode ? (
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Nombre completo</label>
-                    <input
-                      value={form.full_name}
-                      onChange={e => setForm(p => ({ ...p, full_name: e.target.value }))}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Teléfono</label>
-                    <input
-                      value={form.phone}
-                      onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
-                      placeholder="+51 999 000 000"
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
-                    />
-                  </div>
-                  <div className="flex gap-3 pt-2">
-                    <button onClick={() => setEditMode(false)}
-                      className="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors">
-                      Cancelar
-                    </button>
-                    <button onClick={handleSaveProfile} disabled={saving}
-                      className="flex-1 py-3 rounded-xl bg-violet-600 text-white font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors shadow-lg shadow-violet-200">
-                      {saving ? <Loader2 size={15} className="animate-spin" /> : <Save size={15} />}
-                      {saving ? 'Guardando...' : 'Guardar cambios'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {[
-                    { icon: User, label: 'Nombre', value: profile?.full_name },
-                    { icon: Mail, label: 'Email', value: profile?.email },
-                    { icon: Phone, label: 'Teléfono', value: profile?.phone },
-                  ].map(({ icon: Icon, label, value }) => (
-                    <div key={label} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-violet-100 hover:bg-violet-50/30 transition-all group">
-                      <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-violet-200 transition-colors flex-shrink-0">
-                        <Icon size={15} className="text-slate-400 group-hover:text-violet-500 transition-colors" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide">{label}</p>
-                        <p className="text-sm font-bold text-slate-700 truncate">{value || '—'}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Password card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center">
-                  <Key size={14} className="text-amber-600" />
-                </div>
-                <span className="font-black text-sm text-slate-800">Seguridad</span>
-              </div>
-              {!showPassSection && (
-                <button onClick={() => setShowPassSection(true)}
-                  className="text-xs font-bold text-violet-600 hover:text-violet-700 px-3 py-1.5 rounded-lg hover:bg-violet-50 transition-colors">
-                  Cambiar contraseña
-                </button>
-              )}
-            </div>
-            <div className="p-6">
-              {showPassSection ? (
-                <div className="space-y-3">
-                  <input
-                    type="password"
-                    placeholder="Nueva contraseña (mín. 6 caracteres)"
-                    value={passForm.nueva}
-                    onChange={e => setPassForm(p => ({ ...p, nueva: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirmar nueva contraseña"
-                    value={passForm.confirmar}
-                    onChange={e => setPassForm(p => ({ ...p, confirmar: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all"
-                  />
-                  <div className="flex gap-3 pt-1">
-                    <button onClick={() => { setShowPassSection(false); setPassForm({ nueva:'', confirmar:'' }) }}
-                      className="flex-1 py-3 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors">
-                      Cancelar
-                    </button>
-                    <button onClick={handleChangePassword} disabled={changingPass}
-                      className="flex-1 py-3 rounded-xl bg-violet-600 text-white font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors shadow-lg shadow-violet-200">
-                      {changingPass ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
-                      {changingPass ? 'Actualizando...' : 'Actualizar'}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100">
-                  <div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm flex-shrink-0">
-                    <Key size={15} className="text-slate-400" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-700">Contraseña</p>
-                    <p className="text-xs text-slate-400 mt-0.5">Se aplica en el próximo inicio de sesión</p>
-                  </div>
-                  <div className="ml-auto">
-                    <span className="text-lg tracking-widest text-slate-300">••••••</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+        {/* Section label */}
+        <div>
+          <h2 className="text-lg font-black text-slate-800">Mi Perfil</h2>
+          <p className="text-xs text-slate-400 mt-0.5">Información personal y seguridad</p>
         </div>
 
-        {/* RIGHT — Calendars */}
-        <div className="space-y-6">
-          {/* Calendars card */}
-          {userId && (
+        {/* Two-column grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+
+          {/* LEFT */}
+          <div className="space-y-5">
+
+            {/* Info card */}
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/60 flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Link2 size={14} className="text-blue-600" />
+              <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-violet-100 flex items-center justify-center">
+                    <User size={13} className="text-violet-600" />
+                  </div>
+                  <span className="font-black text-sm text-slate-800">Información personal</span>
                 </div>
-                <span className="font-black text-sm text-slate-800">Calendarios externos</span>
+                {!editMode && (
+                  <button onClick={() => setEditMode(true)}
+                    className="text-xs font-bold text-violet-600 hover:text-violet-700 px-3 py-1 rounded-lg hover:bg-violet-50 transition-colors">
+                    Editar
+                  </button>
+                )}
               </div>
-              <div className="p-6 space-y-3">
-                <p className="text-xs text-slate-400 mb-4">Sincronizá tus citas con Google o Outlook Calendar para tener todo en un solo lugar.</p>
-                <GoogleCalendarBlock userId={userId} />
-                <MicrosoftCalendarBlock userId={userId} />
+              <div className="p-5">
+                {editMode ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Nombre completo</label>
+                      <input value={form.full_name} onChange={e => setForm(p => ({ ...p, full_name: e.target.value }))}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1.5">Teléfono</label>
+                      <input value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))}
+                        placeholder="+51 999 000 000"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all" />
+                    </div>
+                    <div className="flex gap-3 pt-1">
+                      <button onClick={() => setEditMode(false)}
+                        className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors">
+                        Cancelar
+                      </button>
+                      <button onClick={handleSaveProfile} disabled={saving}
+                        className="flex-1 py-2.5 rounded-xl bg-violet-600 text-white font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors shadow-md shadow-violet-200">
+                        {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                        {saving ? 'Guardando...' : 'Guardar'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {[
+                      { icon: User, label: 'Nombre', value: profile?.full_name },
+                      { icon: Mail, label: 'Email', value: profile?.email },
+                      { icon: Phone, label: 'Teléfono', value: profile?.phone },
+                    ].map(({ icon: Icon, label, value }) => (
+                      <div key={label} className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-violet-100 hover:bg-violet-50/20 transition-all group">
+                        <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm group-hover:border-violet-200 transition-colors flex-shrink-0">
+                          <Icon size={14} className="text-slate-400 group-hover:text-violet-500 transition-colors" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide">{label}</p>
+                          <p className="text-sm font-bold text-slate-700 truncate">{value || '—'}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
-          )}
 
-          {/* Account summary card */}
-          <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl border border-violet-100 p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-lg font-black shadow-lg shadow-violet-200">
-                {initial}
+            {/* Security card */}
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <Key size={13} className="text-amber-600" />
+                  </div>
+                  <span className="font-black text-sm text-slate-800">Seguridad</span>
+                </div>
+                {!showPassSection && (
+                  <button onClick={() => setShowPassSection(true)}
+                    className="text-xs font-bold text-violet-600 hover:text-violet-700 px-3 py-1 rounded-lg hover:bg-violet-50 transition-colors">
+                    Cambiar contraseña
+                  </button>
+                )}
               </div>
-              <div>
-                <p className="font-black text-slate-800">{profile?.full_name || 'Secretaria(o)'}</p>
-                <p className="text-xs text-slate-500">{profile?.email || ''}</p>
+              <div className="p-5">
+                {showPassSection ? (
+                  <div className="space-y-3">
+                    <input type="password" placeholder="Nueva contraseña (mín. 6 caracteres)"
+                      value={passForm.nueva} onChange={e => setPassForm(p => ({ ...p, nueva: e.target.value }))}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all" />
+                    <input type="password" placeholder="Confirmar nueva contraseña"
+                      value={passForm.confirmar} onChange={e => setPassForm(p => ({ ...p, confirmar: e.target.value }))}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-violet-500 transition-all" />
+                    <div className="flex gap-3 pt-1">
+                      <button onClick={() => { setShowPassSection(false); setPassForm({ nueva:'', confirmar:'' }) }}
+                        className="flex-1 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors">
+                        Cancelar
+                      </button>
+                      <button onClick={handleChangePassword} disabled={changingPass}
+                        className="flex-1 py-2.5 rounded-xl bg-violet-600 text-white font-black text-sm hover:bg-violet-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-colors shadow-md shadow-violet-200">
+                        {changingPass ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />}
+                        {changingPass ? 'Actualizando...' : 'Actualizar'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 border border-slate-100">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 flex items-center justify-center shadow-sm flex-shrink-0">
+                      <Key size={14} className="text-slate-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-slate-700">Contraseña</p>
+                      <p className="text-xs text-slate-400">Se aplica en el próximo inicio de sesión</p>
+                    </div>
+                    <span className="text-base tracking-widest text-slate-300">••••••</span>
+                  </div>
+                )}
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { label: 'Rol', value: 'Secretaria' },
-                { label: 'Estado', value: 'Activa' },
-                { label: 'Acceso', value: 'Total' },
-              ].map(({ label, value }) => (
-                <div key={label} className="bg-white/70 rounded-xl p-3 text-center border border-violet-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide">{label}</p>
-                  <p className="text-sm font-black text-violet-700 mt-0.5">{value}</p>
+          </div>
+
+          {/* RIGHT */}
+          <div className="space-y-5">
+
+            {/* Calendars card */}
+            {userId && (
+              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div className="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center">
+                    <Link2 size={13} className="text-blue-600" />
+                  </div>
+                  <span className="font-black text-sm text-slate-800">Calendarios externos</span>
                 </div>
-              ))}
+                <div className="p-5 space-y-3">
+                  <p className="text-xs text-slate-400">Sincronizá tus citas con Google o Outlook Calendar para tener todo en un solo lugar.</p>
+                  <GoogleCalendarBlock userId={userId} />
+                  <MicrosoftCalendarBlock userId={userId} />
+                </div>
+              </div>
+            )}
+
+            {/* Account summary */}
+            <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl border border-violet-100 p-5">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-base font-black shadow-lg shadow-violet-200 flex-shrink-0">
+                  {initial}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-black text-slate-800 truncate">{profile?.full_name || 'Secretaria(o)'}</p>
+                  <p className="text-xs text-slate-500 truncate">{profile?.email || ''}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-2.5">
+                {[
+                  { label: 'Rol', value: 'Secretaria' },
+                  { label: 'Estado', value: 'Activa' },
+                  { label: 'Acceso', value: 'Total' },
+                ].map(({ label, value }) => (
+                  <div key={label} className="bg-white/80 rounded-xl p-3 text-center border border-violet-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide">{label}</p>
+                    <p className="text-sm font-black text-violet-700 mt-0.5">{value}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
