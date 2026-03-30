@@ -340,6 +340,7 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
     }
 
     let upsertErr: string | null = null
+    let prediccion_30d_out: string | null = null
     // Guardar en predicciones_ia (resumen general)
     try {
       // Confianza: escala logarítmica (piso 20%, techo 92%)
@@ -386,6 +387,7 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
         updated_at: new Date().toISOString(),
       }, { onConflict: 'child_id' })
       if (upsertError) console.error('❌ upsert predicciones_ia error:', upsertError)
+      prediccion_30d_out = prediccion_30d
       upsertErr = upsertError?.message ?? null
     } catch (e: any) { upsertErr = e.message }
 
@@ -404,7 +406,7 @@ Redacta en tercera persona institucional. Sin tuteos. Sin clichés motivacionale
         ),
         total_sesiones_analizadas: totalSesionesAnalizadas,
         upsert_error: upsertErr,
-        prediccion_30d_length: prediccion_30d?.length ?? 0,
+        prediccion_30d_length: prediccion_30d_out?.length ?? 0,
         analisis_ia_length: resumen_general?.length ?? 0,
       },
     })
