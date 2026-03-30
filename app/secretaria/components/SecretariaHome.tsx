@@ -73,6 +73,7 @@ export default function SecretariaHome({ onNavigate }: Props) {
   const [stats, setStats] = useState({ hoy: 0, semana: 0, pendientes: 0, canceladas: 0, pacientes: 0, completadas: 0 })
   const [citasHoy, setCitasHoy] = useState<any[]>([])
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
+  const [citasRecientes, setCitasRecientes] = useState<any[]>([])
 
   const cargar = async () => {
     setLoading(true)
@@ -81,13 +82,17 @@ export default function SecretariaHome({ onNavigate }: Props) {
       const d = new Date(); const day = d.getDay()
       const lunesStr = (() => { const x = new Date(d); x.setDate(d.getDate() - (day === 0 ? 6 : day - 1)); return x.toISOString().split('T')[0] })()
       const viernesStr = (() => { const x = new Date(d); x.setDate(d.getDate() + (day === 0 ? 0 : 7 - day)); return x.toISOString().split('T')[0] })()
-      const { data: todas } = await supabase.from('appointments').select('*, children(name)').gte('appointment_date', hoyStr).order('appointment_date').order('appointment_time').limit(100)
+      const hace30 = new Date(); hace30.setDate(hace30.getDate() - 30); const hace30Str = hace30.toISOString().split('T')[0]
+      const { data: todas } = await supabase.from('appointments').select('*, children(name)').gte('appointment_date', hace30Str).order('appointment_date', {ascending: false}).limit(200)
       const { data: pacientes } = await supabase.from('children').select('id').eq('is_active', true)
       const allApts = todas || []
       const hoy = allApts.filter(a => a.appointment_date === hoyStr)
+      const futuras = allApts.filter(a => a.appointment_date >= hoyStr)
       const semana = allApts.filter(a => a.appointment_date >= lunesStr && a.appointment_date <= viernesStr)
       setCitasHoy(hoy)
-      setProximasCitas(allApts.slice(0, 8))
+      setProximasCitas(futuras.slice(0, 8))
+      const pasadas = allApts.filter(a => a.appointment_date < hoyStr)
+      setCitasRecientes(pasadas.slice(0, 6))
       setStats({ hoy: hoy.length, semana: semana.length, pendientes: allApts.filter(a => a.status === 'pending').length, canceladas: allApts.filter(a => a.status === 'cancelled').length, pacientes: pacientes?.length || 0, completadas: allApts.filter(a => a.status === 'completed' || a.status === 'realizada').length })
     } catch (e: any) { toast.error('Error cargando datos: ' + e.message) }
     finally { setLoading(false) }
@@ -197,22 +202,22 @@ export default function SecretariaHome({ onNavigate }: Props) {
           </div>
         </div>
 
-        {/* Próximas citas */}
+        {/* Próximas citas / Recientes */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-100">
             <div className="flex items-center gap-2.5">
               <Calendar size={14} className="text-slate-400" />
-              <h3 className="font-black text-sm text-slate-800">Próximas citas</h3>
+              <h3 className="font-black text-sm text-slate-800">{proximasCitas.length > 0 ? 'Próximas citas' : 'Citas recientes'}</h3>
             </div>
           </div>
           <div className="p-3 space-y-0.5 min-h-[120px]">
-            {proximasCitas.length === 0 ? (
+            {(proximasCitas.length > 0 ? proximasCitas : citasRecientes).length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 text-slate-300">
                 <Calendar size={28} className="mb-2" />
-                <p className="text-xs font-semibold text-slate-400">Sin citas próximas</p>
+                <p className="text-xs font-semibold text-slate-400">Sin citas registradas</p>
               </div>
             ) : (
-              proximasCitas.slice(0, 6).map(apt => <AppointmentRow key={apt.id} apt={apt} />)
+              (proximasCitas.length > 0 ? proximasCitas : citasRecientes).slice(0, 6).map(apt => <AppointmentRow key={apt.id} apt={apt} />)
             )}
           </div>
           <div className="px-5 py-2.5 border-t border-slate-50 bg-slate-50/50">

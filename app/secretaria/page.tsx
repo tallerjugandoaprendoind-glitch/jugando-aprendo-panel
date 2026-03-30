@@ -256,7 +256,7 @@ export default function SecretariaDashboard() {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-4 md:p-6 max-w-5xl mx-auto pb-24 md:pb-8">
+          <div className="p-4 md:p-6 pb-24 md:pb-8">
             {renderView()}
           </div>
         </div>
