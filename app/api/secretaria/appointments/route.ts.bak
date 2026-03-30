@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { notifyAsync, notifyParentDirect } from '@/lib/notifications'
+import { notifyAsync } from '@/lib/notifications'
 
 // ── Helper: crear notificación in-app para un usuario ─────────────────────────
 async function crearNotifInApp(userId: string, payload: {
@@ -74,19 +74,18 @@ async function notificarPadre(childId: string, tipo: 'nueva' | 'cancelada' | 'ac
       metadata: { appointment_id: apt.id, fecha, hora },
     })
 
-    // 3. WhatsApp al canal del admin (template formateado con todos los datos)
-    const wspTipo = tipo === 'cancelada' ? 'cita_cancelada' : 'cita_confirmada'
-    const wspVars = {
-      fecha,
-      hora,
-      paciente: childName,
-      tipo: apt.modalidad || apt.service_type || 'Presencial',
-      ...(apt.video_link ? { link: apt.video_link } : {}),
-    }
-    notifyAsync({ tipo: wspTipo, vars: wspVars })
+    // 3. Telegram/WhatsApp al canal del admin (incluye datos del padre y paciente)
+    notifyAsync({
+      tipo: tipo === 'cancelada' ? 'cita_cancelada' : 'cita_confirmada',
+      vars: {
+        fecha,
+        hora,
+        paciente: childName,
+        tipo: apt.modalidad || apt.service_type || 'Presencial',
+      },
+    })
 
-    // 4. Notificar directo al padre por WhatsApp usando el mismo sistema que el admin
-    //    (template formateado con ✅ emojis, negrita, link de videollamada si aplica)
+    // 4. Intentar notificar directo al padre por WhatsApp si tiene número
     try {
       const { data: parentProfile } = await supabaseAdmin
         .from('profiles')
@@ -94,8 +93,20 @@ async function notificarPadre(childId: string, tipo: 'nueva' | 'cancelada' | 'ac
         .eq('id', child.parent_id)
         .maybeSingle()
 
-      if (parentProfile?.wsp_notif !== false) {
-        await notifyParentDirect(parentProfile?.phone ?? null, wspTipo, wspVars)
+      if (parentProfile?.phone && parentProfile?.wsp_notif !== false) {
+        const wspUrl = process.env.WSP_SERVICE_URL
+        if (wspUrl) {
+          const message = notif.mensaje
+          await fetch(`${wspUrl}/send`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-service-secret': process.env.WSP_SERVICE_SECRET || '',
+            },
+            body: JSON.stringify({ to: parentProfile.phone, message }),
+            signal: AbortSignal.timeout(6000),
+          }).catch(() => {})
+        }
       }
     } catch { /* silencioso */ }
 
