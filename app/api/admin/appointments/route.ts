@@ -57,18 +57,24 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error
 
-    // Notificar al padre por cada cita creada (await para que no se corte en serverless)
-    for (const apt of (data || [])) {
-      if (apt.child_id) {
-        const childName = (apt as any).children?.name || 'Paciente'
-        const fecha = apt.appointment_date || ''
-        const hora  = apt.appointment_time || ''
+    // Notificar al padre — fire-and-forget para no bloquear la respuesta al cliente
+    // (cada notificación puede tardar hasta 8 s por el timeout de Baileys)
+    Promise.all(
+      (data || []).map((apt: any) => {
+        if (!apt.child_id) return Promise.resolve()
+        const childName = apt.children?.name || 'Paciente'
+        const fecha     = apt.appointment_date || ''
+        const hora      = apt.appointment_time || ''
         const modalidad = apt.modalidad === 'virtual' ? 'Virtual 📹' : (apt.appointment_type || 'Presencial')
-        const videoLink  = apt.video_link || apt.videoLink || null
-        await notificarPadre(apt.child_id, 'cita_confirmada', { fecha, hora, paciente: childName, tipo: modalidad, ...(videoLink ? { link: videoLink } : {}) })
-      }
-    }
+        const videoLink = apt.video_link || apt.videoLink || null
+        return notificarPadre(apt.child_id, 'cita_confirmada', {
+          fecha, hora, paciente: childName, tipo: modalidad,
+          ...(videoLink ? { link: videoLink } : {}),
+        })
+      })
+    ).catch(err => console.error('[notif fire-and-forget]', err))
 
+    // Responder inmediatamente — las notificaciones corren en background
     return NextResponse.json({ data })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

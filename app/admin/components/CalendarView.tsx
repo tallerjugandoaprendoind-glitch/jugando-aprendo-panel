@@ -234,12 +234,11 @@ function MonthlyCalendarView() {
           const savedApts = Array.isArray(json) ? json : (json.data || [])
           const firstApt  = savedApts[0]
 
+          // FIX: usar el video_link que guardó el servidor en DB, no generar uno nuevo en el cliente
+          // Esto garantiza que el link en el portal del padre y en el calendario sean el mismo
           const roomLink = modalidadCita === 'virtual'
-            ? `https://meet.jit.si/JugandoAprendo-${firstApt?.id || Date.now()}`
+            ? (firstApt?.video_link || firstApt?.videoLink || null)
             : null
-
-          // ✅ El servidor ya notifica al padre, pero si es virtual necesita pasar el link
-          // El servidor ahora genera el link en el insert, así que no hace falta notificar de nuevo
 
           // Para sesión grupal, usar el primer participante para el sync del calendario del padre
           const childIdParaCalendario = tipoSesion === 'grupal'
@@ -264,12 +263,19 @@ function MonthlyCalendarView() {
           }
 
           // ── Sync calendarios ────────────────────────────────────────────
-          // Para grupal: sincronizar cada cita individualmente con su propio childId
-          // Para individual: una sola cita
-          const gcalStatus = await fetch(`/api/google-calendar?action=status&userId=${calSession.user.id}`)
+          // FIX: usar createdBy (el especialista/admin asignado) como userId para el sync,
+          // NO calSession.user.id (que puede ser la secretaria sin calendario conectado)
+          const syncUserId = createdBy || calSession.user.id
+
+          const gcalStatus = await fetch(`/api/google-calendar?action=status&userId=${syncUserId}`)
           const gcalData   = await gcalStatus.json()
-          const msStatus   = await fetch(`/api/microsoft-calendar?action=status&userId=${calSession.user.id}`)
+          const msStatus   = await fetch(`/api/microsoft-calendar?action=status&userId=${syncUserId}`)
           const msData     = await msStatus.json()
+
+          // Avisar si ningún calendario está conectado para el especialista
+          if (!gcalData.connected && !msData.connected) {
+            toast('⚠️ El especialista no tiene Google ni Outlook Calendar conectado. La cita se guardó correctamente.', { icon: '📅' })
+          }
 
           // Construir lista de citas a sincronizar (una por participante en grupal)
           const aptsToSync = tipoSesion === 'grupal'
@@ -277,14 +283,21 @@ function MonthlyCalendarView() {
                 id:      apt.id,
                 childId: selectedParticipants[i] || selectedParticipants[0] || null,
                 name:    ninos.find((n: any) => n.id === selectedParticipants[i])?.name || aptData.patientName,
+                // Cada cita grupal puede tener su propio video_link
+                videoLink: apt.video_link || apt.videoLink || roomLink,
               }))
-            : [{ id: firstApt?.id, childId: childIdParaCalendario, name: aptData.patientName }]
+            : [{ id: firstApt?.id, childId: childIdParaCalendario, name: aptData.patientName, videoLink: roomLink }]
 
           let gcalSynced = 0
           let msSynced   = 0
 
           for (const aptSync of aptsToSync) {
-            const syncData = { ...aptData, childId: aptSync.childId, patientName: aptSync.name }
+            const syncData = {
+              ...aptData,
+              childId:    aptSync.childId,
+              patientName: aptSync.name,
+              videoLink:  aptSync.videoLink,
+            }
 
             if (gcalData.connected) {
               const gcalRes = await fetch('/api/google-calendar', {
@@ -292,13 +305,14 @@ function MonthlyCalendarView() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   action:        'sync-appointment',
-                  userId:        calSession.user.id,
+                  userId:        syncUserId,
                   appointmentId: aptSync.id,
                   appointment:   syncData,
                 }),
               })
               const gcalResult = await gcalRes.json()
               if (gcalResult.ok) gcalSynced++
+              else console.error('[CalendarSync] GCal error:', gcalResult.error)
             }
 
             if (msData.connected) {
@@ -307,13 +321,14 @@ function MonthlyCalendarView() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   action:        'sync-appointment',
-                  userId:        calSession.user.id,
+                  userId:        syncUserId,
                   appointmentId: aptSync.id,
                   appointment:   syncData,
                 }),
               })
               const msResult = await msRes.json()
               if (msResult.ok) msSynced++
+              else console.error('[CalendarSync] MS error:', msResult.error)
             }
           }
 
