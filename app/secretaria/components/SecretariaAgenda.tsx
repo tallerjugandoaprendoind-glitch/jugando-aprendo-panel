@@ -184,7 +184,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
   }, [])
 
   const emptyForm = {
-    child_id: '', service: SERVICES[0], date: '', time: '',
+    child_id: '', child_ids: [] as string[], service: SERVICES[0], date: '', time: '',
     status: 'confirmed', notes: '', modality: 'presencial', session_type: 'individual'
   }
   const [form, setForm] = useState(emptyForm)
@@ -240,30 +240,34 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
 
   // ── Guardar (crear / editar) ───────────────────────────────────────────────
   const handleSave = async () => {
-    if (!form.child_id || !form.date || !form.time) {
+    const isGrupal = form.session_type === 'grupal'
+    const idsAUsar = isGrupal ? form.child_ids : [form.child_id]
+    if (idsAUsar.length === 0 || !form.date || !form.time) {
       toast.warning('Paciente, fecha y hora son obligatorios')
       return
     }
     setIsSaving(true)
     try {
-      const payload = {
-        child_id:         form.child_id,
+      const makePayload = (cid: string) => ({
+        child_id:         cid,
         appointment_date: form.date,
         appointment_time: form.time + ':00',
         service_type:     form.service,
         status:           form.status,
         notes:            form.notes,
         modalidad:        form.modality,
-        is_group:         form.session_type === 'grupal',
-        secretaria_name:  secretariaName,   // usado por la API para la notificación
-      }
+        is_group:         isGrupal,
+        secretaria_name:  secretariaName,
+      })
 
       if (editingApt) {
-        await aptAPI('PATCH', { id: editingApt.id, accion: 'updated', ...payload })
+        await aptAPI('PATCH', { id: editingApt.id, accion: 'updated', ...makePayload(form.child_id) })
         toast.success('✅ Cita actualizada · Padre y administrador notificados')
       } else {
-        await aptAPI('POST', payload)
-        toast.success('✅ Cita creada · Padre y administrador notificados')
+        for (const cid of idsAUsar) {
+          await aptAPI('POST', makePayload(cid))
+        }
+        toast.success(isGrupal ? \`✅ \${idsAUsar.length} citas grupales creadas\` : '✅ Cita creada · Padre y administrador notificados')
         setDia(form.date)
       }
 
@@ -651,12 +655,38 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Paciente <span className="text-red-400">*</span></label>
-                <select value={form.child_id} onChange={e=>setForm(p=>({...p,child_id:e.target.value}))}
-                  className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
-                  <option value="">Seleccionar paciente...</option>
-                  {ninos.map(n=><option key={n.id} value={n.id}>{n.name}</option>)}
-                </select>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">
+                  {form.session_type === 'grupal' ? 'Pacientes del grupo' : 'Paciente'} <span className="text-red-400">*</span>
+                  {form.session_type === 'grupal' && form.child_ids.length > 0 && (
+                    <span className="ml-2 bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full text-[10px] font-black">{form.child_ids.length} seleccionados</span>
+                  )}
+                </label>
+                {form.session_type === 'grupal' ? (
+                  <div className="max-h-48 overflow-y-auto rounded-2xl border-2 border-slate-200 bg-slate-50 divide-y divide-slate-100">
+                    {ninos.map(n => {
+                      const checked = form.child_ids.includes(n.id)
+                      return (
+                        <button key={n.id} type="button"
+                          onClick={() => setForm(p => ({
+                            ...p,
+                            child_ids: checked ? p.child_ids.filter((id:string) => id !== n.id) : [...p.child_ids, n.id]
+                          }))}
+                          className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm font-bold transition-colors text-left ${checked ? 'bg-violet-50 text-violet-700' : 'text-slate-700 hover:bg-white'}`}>
+                          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${checked ? 'bg-violet-600 border-violet-600' : 'border-slate-300'}`}>
+                            {checked && <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>}
+                          </div>
+                          {n.name}
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <select value={form.child_id} onChange={e=>setForm(p=>({...p,child_id:e.target.value}))}
+                    className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
+                    <option value="">Seleccionar paciente...</option>
+                    {ninos.map(n=><option key={n.id} value={n.id}>{n.name}</option>)}
+                  </select>
+                )}
               </div>
 
               <div>
