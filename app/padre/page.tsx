@@ -711,7 +711,7 @@ export default function ParentDashboard() {
                   {showMoreMenu && (
                     <div className="absolute bottom-14 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 w-52 z-50 flex flex-col gap-1">
                       {[
-                        { id: 'actividades', icon: <Zap size={18}/>, label: 'Act. en Casa' },
+                        { id: 'engagement', icon: <Zap size={18}/>, label: 'Act. en Casa' },
                         { id: 'chat',        icon: <Sparkles size={18}/>, label: 'Asistente IA' },
                         { id: 'mensajes',    icon: <MessageCircle size={18}/>, label: 'Mensajes' },
                         { id: 'resources',   icon: <Book size={18}/>, label: 'Centro de Recursos' },
