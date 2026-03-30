@@ -707,11 +707,8 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
                 </div>
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Hora <span className="text-red-400">*</span></label>
-                  <select value={form.time} onChange={e=>setForm(p=>({...p,time:e.target.value}))}
-                    className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
-                    <option value="">Seleccionar...</option>
-                    {HORARIOS.map(h=><option key={h} value={h}>{h}</option>)}
-                  </select>
+                  <input type="time" value={form.time} onChange={e=>setForm(p=>({...p,time:e.target.value}))}
+                    className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors" />
                 </div>
               </div>
 
