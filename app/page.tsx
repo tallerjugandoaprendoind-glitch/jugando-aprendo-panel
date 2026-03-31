@@ -249,22 +249,46 @@ export default function LandingPage() {
         .lp-nav-links a:hover { color: #f97316; }
         .lp-btn-ghost { padding: 8px 20px; border: 2px solid #fed7aa; border-radius: 99px; font-family: 'Baloo 2',cursive; font-size: 13px; font-weight: 700; color: #78350f; text-decoration: none; transition: all .2s; background: #fff; }
         .lp-btn-ghost:hover { border-color: #f97316; color: #f97316; }
-        .lp-btn-fill { padding: 8px 20px; background: linear-gradient(135deg,#f97316,#ea580c); border-radius: 99px; font-family: 'Baloo 2',cursive; font-size: 13px; font-weight: 700; color: #fff; text-decoration: none; transition: all .2s; box-shadow: 0 4px 14px rgba(249,115,22,.3); }
+        .lp-btn-fill { padding: 8px 20px; background: linear-gradient(135deg,#f97316,#ea580c); border-radius: 10px; font-family: 'Baloo 2',cursive; font-size: 13px; font-weight: 700; color: #fff; text-decoration: none; transition: transform 200ms cubic-bezier(0.23,1,0.32,1), box-shadow 200ms cubic-bezier(0.23,1,0.32,1); box-shadow: 0 3px 12px rgba(249,115,22,.3); display: inline-block; }
         .lp-btn-fill:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(249,115,22,.4); }
+        .lp-btn-fill:active { transform: scale(0.97); }
 
         /* ─ HERO ─ */
-        .lp-hero { min-height: 92vh; display: flex; align-items: center; background: linear-gradient(160deg,#fff7ed 0%,#fffbf5 55%,#ecfdf5 100%); position: relative; overflow: hidden; padding: 80px 20px 60px; }
-        .lp-hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; gap: 48px; position: relative; z-index: 1; align-items: center; }
-        @media(min-width:900px){ .lp-hero-inner { grid-template-columns: 1fr 1fr; } }
+        .lp-hero { min-height: 96vh; display: flex; align-items: center; background: linear-gradient(155deg,#fff7ed 0%,#fffbf5 50%,#f0fdf4 100%); position: relative; overflow: hidden; padding: 88px 20px 72px; }
+        .lp-hero-inner { max-width: 1200px; margin: 0 auto; width: 100%; display: grid; gap: 56px; position: relative; z-index: 1; align-items: center; }
+        @media(min-width:900px){ .lp-hero-inner { grid-template-columns: 1.05fr 0.95fr; gap: 64px; } }
+
+        /* ─ HERO BADGE ─ */
+        .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border: 1.5px solid #fed7aa; border-radius: 99px; padding: 7px 18px; font-family: 'Baloo 2',cursive; font-size: 13px; font-weight: 700; color: #c2410c; margin-bottom: 22px; box-shadow: 0 2px 12px rgba(249,115,22,.1); transition: transform 200ms cubic-bezier(0.23,1,0.32,1), box-shadow 200ms cubic-bezier(0.23,1,0.32,1); }
+        .hero-badge:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(249,115,22,.15); }
+
+        /* ─ HERO PILL STATS ─ */
+        .hero-pills { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 32px; }
+        .hero-pill { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(255,255,255,0.9); border: 1.5px solid #fef3c7; border-radius: 12px; backdrop-filter: blur(8px); transition: transform 200ms cubic-bezier(0.23,1,0.32,1), border-color 200ms ease, box-shadow 200ms cubic-bezier(0.23,1,0.32,1); }
+        .hero-pill:hover { transform: translateY(-2px); border-color: #fed7aa; box-shadow: 0 6px 18px rgba(249,115,22,.1); }
+
+        /* ─ HERO IMAGE FRAME ─ */
+        .hero-img-frame { border-radius: 28px; overflow: hidden; box-shadow: 0 32px 80px rgba(0,0,0,.13); aspect-ratio: 4/3; position: relative; border: 5px solid #fff; transition: transform 500ms cubic-bezier(0.23,1,0.32,1), box-shadow 500ms cubic-bezier(0.23,1,0.32,1); }
+        .hero-img-frame:hover { transform: translateY(-6px) rotate(.3deg); box-shadow: 0 48px 100px rgba(0,0,0,.18); }
+
+        /* ─ HERO FLOATING CHIPS ─ */
+        .hero-chip { position: absolute; background: rgba(255,255,255,0.95); backdrop-filter: blur(16px); border-radius: 16px; padding: 11px 16px; box-shadow: 0 8px 32px rgba(0,0,0,.1); display: flex; align-items: center; gap: 9px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 12px; color: #1c1917; border: 2px solid #fef3c7; transition: transform 300ms cubic-bezier(0.23,1,0.32,1); }
+        .hero-chip-top { top: -16px; left: -12px; animation: chipFloat1 5s ease-in-out infinite; }
+        .hero-chip-bot { bottom: -16px; right: -12px; animation: chipFloat2 4.5s ease-in-out infinite 0.7s; border-color: #d1fae5; }
+        @keyframes chipFloat1 { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-8px) rotate(0deg)} }
+        @keyframes chipFloat2 { 0%,100%{transform:translateY(0) rotate(1deg)} 50%{transform:translateY(-6px) rotate(0deg)} }
 
         /* ─ BOTONES ─ */
-        .btn-wa { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; background: #25d366; color: #fff; border-radius: 99px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 15px; text-decoration: none; transition: all .25s; box-shadow: 0 6px 20px rgba(37,211,102,.3); }
-        .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(37,211,102,.4); }
-        .btn-orange { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; background: linear-gradient(135deg,#f97316,#ea580c); color: #fff; border-radius: 99px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 15px; text-decoration: none; transition: all .25s; box-shadow: 0 6px 20px rgba(249,115,22,.3); }
-        .btn-orange:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(249,115,22,.4); }
-        .btn-outline { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; border: 2.5px solid #fed7aa; color: #78350f; border-radius: 99px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 15px; text-decoration: none; background: #fff; transition: all .25s; cursor: pointer; }
-        .btn-outline:hover { border-color: #f97316; color: #f97316; }
-        @keyframes lp-up { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        .btn-wa { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; background: #25d366; color: #fff; border-radius: 14px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 15px; text-decoration: none; transition: transform 200ms cubic-bezier(0.23,1,0.32,1), box-shadow 200ms cubic-bezier(0.23,1,0.32,1); box-shadow: 0 4px 16px rgba(37,211,102,.3), inset 0 1px 0 rgba(255,255,255,.2); }
+        .btn-wa:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(37,211,102,.4), inset 0 1px 0 rgba(255,255,255,.2); }
+        .btn-wa:active { transform: scale(0.97); }
+        .btn-orange { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; background: linear-gradient(135deg,#f97316,#ea580c); color: #fff; border-radius: 14px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 15px; text-decoration: none; transition: transform 200ms cubic-bezier(0.23,1,0.32,1), box-shadow 200ms cubic-bezier(0.23,1,0.32,1); box-shadow: 0 4px 16px rgba(249,115,22,.3), inset 0 1px 0 rgba(255,255,255,.15); }
+        .btn-orange:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(249,115,22,.4), inset 0 1px 0 rgba(255,255,255,.15); }
+        .btn-orange:active { transform: scale(0.97); }
+        .btn-outline { display: inline-flex; align-items: center; gap: 8px; padding: 14px 26px; border: 2px solid #e7d9cc; color: #78350f; border-radius: 14px; font-family: 'Baloo 2',cursive; font-weight: 700; font-size: 15px; text-decoration: none; background: rgba(255,255,255,0.85); backdrop-filter: blur(8px); transition: transform 200ms cubic-bezier(0.23,1,0.32,1), border-color 200ms ease, box-shadow 200ms cubic-bezier(0.23,1,0.32,1); cursor: pointer; }
+        .btn-outline:hover { border-color: #f97316; color: #f97316; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(249,115,22,.1); }
+        .btn-outline:active { transform: scale(0.97); }
+        @keyframes lp-up { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
 
         /* ─ STATS ─ */
         .lp-stats-inner { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: repeat(2,1fr); gap: 24px; }
@@ -438,30 +462,43 @@ export default function LandingPage() {
 
       {/* HERO */}
       <header className="lp-hero">
-        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle,rgba(249,115,22,.08) 2px,transparent 2px)', backgroundSize: '40px 40px' }} />
-        <div style={{ position: 'absolute', width: 500, height: 500, background: 'radial-gradient(circle,rgba(251,191,36,.14) 0%,transparent 70%)', top: -140, right: -60, borderRadius: '50%' }} />
-        <div style={{ position: 'absolute', width: 340, height: 340, background: 'radial-gradient(circle,rgba(16,185,129,.1) 0%,transparent 70%)', bottom: -80, left: -60, borderRadius: '50%' }} />
+        {/* Background dot grid */}
+        <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle,rgba(249,115,22,.06) 1.5px,transparent 1.5px)', backgroundSize: '36px 36px', pointerEvents: 'none' }} />
+        {/* Gradient orbs */}
+        <div style={{ position: 'absolute', width: 600, height: 600, background: 'radial-gradient(circle,rgba(251,191,36,.12) 0%,transparent 65%)', top: -180, right: -80, borderRadius: '50%', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', width: 400, height: 400, background: 'radial-gradient(circle,rgba(16,185,129,.09) 0%,transparent 65%)', bottom: -100, left: -60, borderRadius: '50%', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', width: 300, height: 300, background: 'radial-gradient(circle,rgba(249,115,22,.07) 0%,transparent 65%)', top: '30%', left: '38%', borderRadius: '50%', pointerEvents: 'none' }} />
         {/* Floating shapes */}
-        <div style={{ position: 'absolute', top: 90, left: '8%', width: 56, height: 56, background: '#fef08a', borderRadius: '50%', opacity: .55, animation: 'shapeFloat1 6s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', bottom: 130, right: '10%', width: 38, height: 38, background: '#bbf7d0', borderRadius: '12px', opacity: .6, animation: 'shapeFloat2 5s ease-in-out infinite 1s', transform: 'rotate(25deg)' }} />
-        <div style={{ position: 'absolute', top: '40%', left: '4%', width: 26, height: 26, background: '#fecdd3', borderRadius: '50%', opacity: .7, animation: 'shapeFloat1 7s ease-in-out infinite .5s' }} />
+        <div style={{ position: 'absolute', top: 100, left: '7%', width: 52, height: 52, background: 'linear-gradient(135deg,#fef08a,#fde047)', borderRadius: '50%', opacity: .5, animation: 'shapeFloat1 6s ease-in-out infinite', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: 140, right: '9%', width: 36, height: 36, background: 'linear-gradient(135deg,#bbf7d0,#86efac)', borderRadius: '12px', opacity: .55, animation: 'shapeFloat2 5s ease-in-out infinite 1s', transform: 'rotate(25deg)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: '45%', left: '3%', width: 22, height: 22, background: 'linear-gradient(135deg,#fecdd3,#fda4af)', borderRadius: '50%', opacity: .65, animation: 'shapeFloat1 7s ease-in-out infinite .5s', pointerEvents: 'none' }} />
 
         <div className="lp-hero-inner">
-          <div style={{ animation: 'lp-up .6s ease both' }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#fff7ed', border: '2px solid #fed7aa', borderRadius: 99, padding: '6px 16px', fontFamily: "'Baloo 2',cursive", fontSize: 13, fontWeight: 700, color: '#c2410c', marginBottom: 18 }}>
+          {/* LEFT: Copy */}
+          <div style={{ animation: 'lp-up .55s cubic-bezier(0.23,1,0.32,1) both' }}>
+            {/* Badge */}
+            <div className="hero-badge" style={{ cursor: 'default' }}>
               <Heart size={13} style={{ fill: 'currentColor' }} /> Terapia · Tecnología · Amor
             </div>
-            <h1 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(34px,5vw,58px)', fontWeight: 800, lineHeight: 1.15, color: '#1c1917', marginBottom: 18 }}>
+
+            {/* Headline */}
+            <h1 style={{ fontFamily: "'Baloo 2',cursive", fontSize: 'clamp(36px,5vw,60px)', fontWeight: 800, lineHeight: 1.12, color: '#1c1917', marginBottom: 22, letterSpacing: '-0.02em' }}>
               Impulsando el potencial de{' '}
-              <span style={{ color: '#f97316', position: 'relative', display: 'inline-block' }}>
+              <span style={{ color: '#f97316', position: 'relative', display: 'inline-block', whiteSpace: 'nowrap' }}>
                 mentes brillantes.
-                <span style={{ position: 'absolute', bottom: 3, left: 0, right: 0, height: 7, background: '#fef08a', borderRadius: 99, zIndex: -1 }} />
+                <svg style={{ position: 'absolute', bottom: 2, left: 0, width: '100%', height: 10, overflow: 'visible' }} viewBox="0 0 300 10" preserveAspectRatio="none">
+                  <path d="M0,8 Q75,2 150,7 Q225,12 300,5" stroke="#fef08a" strokeWidth="7" fill="none" strokeLinecap="round" style={{ opacity: .85 }} />
+                </svg>
               </span>
             </h1>
-            <p style={{ fontSize: 17, color: '#57534e', lineHeight: 1.85, marginBottom: 32, maxWidth: 480 }}>
+
+            {/* Subtitle */}
+            <p style={{ fontSize: 17, color: '#57534e', lineHeight: 1.85, marginBottom: 36, maxWidth: 490 }}>
               Centro especializado en neurodivergencia en Pisco. Combinamos terapia ABA basada en evidencia, seguimiento digital en tiempo real y la calidez de nuestro equipo.
             </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 36 }}>
+
+            {/* CTA buttons */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 0 }}>
               <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn-wa">
                 <Phone size={16} /> {t('landing.contact_us')}
               </a>
@@ -469,50 +506,73 @@ export default function LandingPage() {
                 <Sparkles size={16} color="#f97316" /> ¿Qué ofrecemos?
               </button>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 14 }}>
+
+            {/* Trust pills */}
+            <div className="hero-pills">
               {[
-                { bg: '#dcfce7', icon: <CheckCircle size={16} color="#16a34a" />, label: 'Metodología ABA' },
-                { bg: '#fef9c3', icon: <Star size={16} color="#ca8a04" fill="#ca8a04" />, label: '+50 Familias' },
-                { bg: '#fce7f3', icon: <Brain size={16} color="#db2777" />, label: 'IA Incluida' },
+                { bg: 'linear-gradient(135deg,#dcfce7,#bbf7d0)', icon: <CheckCircle size={15} color="#16a34a" />, label: 'Metodología ABA' },
+                { bg: 'linear-gradient(135deg,#fef9c3,#fef08a)', icon: <Star size={15} color="#ca8a04" fill="#ca8a04" />, label: '+50 Familias' },
+                { bg: 'linear-gradient(135deg,#fce7f3,#fbcfe8)', icon: <Brain size={15} color="#db2777" />, label: 'IA Incluida' },
               ].map(({ bg, icon, label }) => (
-                <div key={label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 36, height: 36, background: bg, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{icon}</div>
+                <div key={label} className="hero-pill">
+                  <div style={{ width: 30, height: 30, background: bg, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{icon}</div>
                   <span style={{ fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 13, color: '#44403c' }}>{label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div style={{ position: 'relative', animation: 'lp-up .7s .15s ease both' }}>
-            <div style={{ borderRadius: 28, overflow: 'hidden', boxShadow: '0 28px 72px rgba(0,0,0,.14)', aspectRatio: '4/3', position: 'relative', border: '5px solid #fff', transition: 'transform .4s' }}
-              onMouseEnter={e => (e.currentTarget.style.transform = 'rotate(0deg)')}
-              onMouseLeave={e => (e.currentTarget.style.transform = '')}>
-              <Image src="/images/hero-image.jpg?v=2" alt="Niños en terapia ABA" fill style={{ objectFit: 'cover' }} priority unoptimized />
-            </div>
-            <div style={{ position: 'absolute', top: 18, left: 10, background: '#fff', borderRadius: 14, padding: '10px 14px', boxShadow: '0 8px 28px rgba(0,0,0,.1)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#1c1917', border: '2px solid #fef3c7' }}>
-              <div style={{ width: 30, height: 30, background: '#fef9c3', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Brain size={15} color="#d97706" /></div>
-              Metodología ABA
-            </div>
-            <div style={{ position: 'absolute', bottom: 18, right: 10, background: '#fff', borderRadius: 14, padding: '10px 14px', boxShadow: '0 8px 28px rgba(0,0,0,.1)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: "'Baloo 2',cursive", fontWeight: 700, fontSize: 12, color: '#1c1917', border: '2px solid #d1fae5' }}>
-              <CheckCircle size={18} color="#10b981" style={{ flexShrink: 0 }} /> 100% Personalizado
+          {/* RIGHT: Image */}
+          <div style={{ position: 'relative', animation: 'lp-up .65s .12s cubic-bezier(0.23,1,0.32,1) both' }}>
+            {/* Decorative dashed ring */}
+            <div style={{ position: 'absolute', inset: -18, borderRadius: 38, border: '2px dashed #fed7aa', opacity: .4, pointerEvents: 'none' }} />
+            <div style={{ position: 'relative', padding: 8 }}>
+              <div className="hero-img-frame">
+                <Image src="/images/hero-image.jpg?v=2" alt="Niños en terapia ABA" fill style={{ objectFit: 'cover' }} priority unoptimized />
+                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg,transparent 60%,rgba(28,25,23,.05) 100%)', pointerEvents: 'none' }} />
+              </div>
+
+              {/* Floating chip — top left */}
+              <div className="hero-chip hero-chip-top">
+                <div style={{ width: 32, height: 32, background: '#fef9c3', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Brain size={16} color="#d97706" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 800 }}>Metodología ABA</div>
+                  <div style={{ fontSize: 10, color: '#a8a29e', fontWeight: 600 }}>Basada en evidencia</div>
+                </div>
+              </div>
+
+              {/* Floating chip — bottom right */}
+              <div className="hero-chip hero-chip-bot">
+                <div style={{ width: 32, height: 32, background: '#dcfce7', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <CheckCircle size={16} color="#16a34a" />
+                </div>
+                <div>
+                  <div style={{ fontSize: 12, fontWeight: 800 }}>100% Personalizado</div>
+                  <div style={{ fontSize: 10, color: '#a8a29e', fontWeight: 600 }}>Plan a tu medida</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
       {/* STATS */}
-      <div ref={statsRef} style={{ background: '#fff', borderTop: '1.5px solid #fef3c7', borderBottom: '1.5px solid #fef3c7', padding: '48px 20px' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 24 }} className="lp-stats-inner">
+      <div ref={statsRef} style={{ background: '#fff', borderTop: '1px solid #fef3c7', borderBottom: '1px solid #fef3c7', padding: '40px 20px' }}>
+        <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16 }} className="lp-stats-inner">
           {[
             { num: `+${count50}`, lbl: 'Familias felices', icon: '👨‍👩‍👧' },
             { num: '100%', lbl: 'Personalizado', icon: '🎯' },
             { num: 'ABA', lbl: 'Metodología', icon: '🧠' },
             { num: 'Pisco', lbl: 'Sede Central', icon: '📍' },
           ].map(({ num, lbl, icon }) => (
-            <div key={lbl} style={{ textAlign: 'center', padding: '24px 16px', background: '#fff7ed', borderRadius: 20, border: '2px solid #fed7aa' }}>
-              <div style={{ fontSize: 28, marginBottom: 6 }}>{icon}</div>
-              <div style={{ fontFamily: "'Baloo 2',cursive", fontSize: 38, fontWeight: 800, color: '#f97316', lineHeight: 1, marginBottom: 6 }}>{num}</div>
-              <div style={{ fontSize: 12, color: '#a8a29e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{lbl}</div>
+            <div key={lbl} style={{ textAlign: 'center', padding: '22px 16px', background: 'linear-gradient(135deg,#fff7ed,#fffbf5)', borderRadius: 18, border: '1.5px solid #fed7aa', transition: 'transform 200ms cubic-bezier(0.23,1,0.32,1), box-shadow 200ms cubic-bezier(0.23,1,0.32,1)' }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-3px)'; (e.currentTarget as HTMLElement).style.boxShadow = '0 10px 28px rgba(249,115,22,.1)'; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = ''; (e.currentTarget as HTMLElement).style.boxShadow = ''; }}>
+              <div style={{ fontSize: 26, marginBottom: 6 }}>{icon}</div>
+              <div style={{ fontFamily: "'Baloo 2',cursive", fontSize: 36, fontWeight: 800, color: '#f97316', lineHeight: 1, marginBottom: 6 }}>{num}</div>
+              <div style={{ fontSize: 11, color: '#a8a29e', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{lbl}</div>
             </div>
           ))}
         </div>
