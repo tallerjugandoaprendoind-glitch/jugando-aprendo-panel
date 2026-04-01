@@ -16,7 +16,7 @@ async function sincronizarCalendario(apt: any, childName: string) {
     const { data: admins } = await supabaseAdmin
       .from('profiles')
       .select('id, google_calendar_token, microsoft_calendar_token')
-      .eq('role', 'admin')
+      .in('role', ['admin', 'jefe'])
 
     if (!admins || admins.length === 0) return
 
@@ -152,7 +152,7 @@ async function notificarPadre(childId: string, tipo: 'nueva' | 'cancelada' | 'ac
 async function notificarAdmins(accion: string, apt: any, childName: string, secretariaName: string) {
   try {
     const { data: admins } = await supabaseAdmin
-      .from('profiles').select('id, full_name, email, google_calendar_email, microsoft_calendar_email').eq('role', 'admin')
+      .from('profiles').select('id, full_name, email, google_calendar_email, microsoft_calendar_email').in('role', ['admin', 'jefe'])
     if (!admins || admins.length === 0) return
 
     const fecha = apt.appointment_date || ''
