@@ -246,25 +246,6 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
         ))}
       </div>
 
-      {/* ── ACCIONES RÁPIDAS ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {[
-          { label: 'Mis pacientes',    icon: Users,     view: 'pacientes',    color: '#8b5cf6', bg: '#f5f3ff' },
-          { label: 'Mi agenda',        icon: Calendar,  view: 'agenda',       color: '#0ea5e9', bg: '#f0f9ff' },
-          { label: 'Mis evaluaciones', icon: FileText,  view: 'evaluaciones', color: '#10b981', bg: '#ecfdf5' },
-          { label: 'Mis formularios',  icon: BookOpen,  view: 'formularios',  color: '#f59e0b', bg: '#fffbeb' },
-        ].map(({ label, icon: Icon, view, color, bg }) => (
-          <button key={view} onClick={() => setActiveView(view)}
-            className="bg-white rounded-2xl p-4 flex items-center gap-3 hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all border border-slate-100 group">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: bg }}>
-              <Icon size={16} style={{ color }} />
-            </div>
-            <span className="text-sm font-black text-slate-700 text-left leading-tight flex-1">{label}</span>
-            <ChevronRight size={14} className="text-slate-300 group-hover:translate-x-0.5 transition-transform" />
-          </button>
-        ))}
-      </div>
-
       {/* ── CONTENIDO PRINCIPAL ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
