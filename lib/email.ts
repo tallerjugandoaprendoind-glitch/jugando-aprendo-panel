@@ -1,20 +1,23 @@
 // lib/email.ts
-// Envío de emails via Gmail + Nodemailer
-// Variables requeridas: GMAIL_USER, GMAIL_PASS (contraseña de aplicación)
+// Envío de emails via Gmail SMTP + Nodemailer v8
+// Variables requeridas: GMAIL_USER, GMAIL_PASS (contraseña de aplicación de 16 chars)
 
-import nodemailer from 'nodemailer'
+import { createTransport } from 'nodemailer'
 
 const CENTRO = process.env.CENTRO_NOMBRE || 'Jugando Aprendo'
 
 function getTransporter() {
   const user = process.env.GMAIL_USER
-  const pass = process.env.GMAIL_PASS
+  const pass = process.env.GMAIL_PASS?.replace(/\s/g, '') // quita espacios de la app password
   if (!user || !pass) {
     console.log('[Email] GMAIL_USER / GMAIL_PASS no configurados — omitido')
     return null
   }
-  return nodemailer.createTransport({
-    service: 'gmail',
+  // Nodemailer v8: usar SMTP directo, NO service:'gmail' (fue eliminado en v8)
+  return createTransport({
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: { user, pass },
   })
 }
@@ -33,7 +36,7 @@ export async function sendEmail(to: string, subject: string, html: string): Prom
     console.log(`[Email] ✅ Enviado → ${to}`)
     return true
   } catch (e) {
-    console.error('[Email] Error:', e)
+    console.error('[Email] Error enviando:', e)
     return false
   }
 }
@@ -66,22 +69,16 @@ function wrapHTML(content: string): string {
   </div></body></html>`
 }
 
-// ── Templates por acción ──────────────────────────────────────────────────────
+// ── Templates ─────────────────────────────────────────────────────────────────
 interface CitaVars {
-  paciente: string
-  fecha: string
-  hora: string
-  servicio?: string
-  modalidad?: string
-  link?: string
-  secretaria?: string
+  paciente: string; fecha: string; hora: string
+  servicio?: string; modalidad?: string; link?: string; secretaria?: string
 }
 
 export function buildEmailCita(accion: 'nueva' | 'actualizada' | 'cancelada', vars: CitaVars) {
   const { paciente, fecha, hora, servicio = 'Terapia', modalidad = 'Presencial', link } = vars
-
-  const emojis   = { nueva: '📅', actualizada: '🔄', cancelada: '❌' }
-  const titulos  = {
+  const emojis  = { nueva: '📅', actualizada: '🔄', cancelada: '❌' }
+  const titulos = {
     nueva:       `Nueva cita programada para ${paciente}`,
     actualizada: `Cita actualizada — ${paciente}`,
     cancelada:   `Cita cancelada — ${paciente}`,
@@ -89,9 +86,8 @@ export function buildEmailCita(accion: 'nueva' | 'actualizada' | 'cancelada', va
   const mensajes = {
     nueva:       `Se ha programado una nueva cita para <strong>${paciente}</strong>.`,
     actualizada: `Los datos de la cita de <strong>${paciente}</strong> han sido actualizados.`,
-    cancelada:   `La cita de <strong>${paciente}</strong> ha sido cancelada. Por favor contactá al centro para reprogramar.`,
+    cancelada:   `La cita de <strong>${paciente}</strong> ha sido cancelada. Contactá al centro para reprogramar.`,
   }
-
   const subject = `${emojis[accion]} ${titulos[accion]} — ${CENTRO}`
   const html = wrapHTML(`
     <p>${mensajes[accion]}</p>
@@ -113,9 +109,7 @@ export function buildEmailCita(accion: 'nueva' | 'actualizada' | 'cancelada', va
 export function buildEmailAdmin(accion: 'nueva' | 'actualizada' | 'cancelada', vars: CitaVars) {
   const { paciente, fecha, hora, servicio = 'Terapia', secretaria = 'Secretaria' } = vars
   const labels = {
-    nueva:       '✅ Nueva cita creada',
-    actualizada: '🔄 Cita actualizada',
-    cancelada:   '❌ Cita cancelada',
+    nueva: '✅ Nueva cita creada', actualizada: '🔄 Cita actualizada', cancelada: '❌ Cita cancelada',
   }
   const subject = `${labels[accion]} — ${paciente} | ${CENTRO}`
   const html = wrapHTML(`
