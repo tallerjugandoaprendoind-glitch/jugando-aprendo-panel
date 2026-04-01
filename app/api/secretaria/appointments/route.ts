@@ -195,6 +195,15 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
     const { secretaria_name, ...aptPayload } = body
+
+    // Generar link Jitsi si es virtual (igual que el admin)
+    if (aptPayload.modalidad === 'virtual' && !aptPayload.video_link) {
+      const tempId = crypto.randomUUID()
+      const fecha  = (aptPayload.appointment_date || '').replace(/-/g, '-')
+      const hora   = (aptPayload.appointment_time || '').slice(0, 5).replace(':', '-')
+      aptPayload.video_link = `https://meet.jit.si/JugandoAprendo-${tempId}-${fecha}-${hora}`
+    }
+
     const { data: apt, error } = await supabaseAdmin
       .from('appointments').insert(aptPayload).select('*, children(name)').single()
     if (error) throw error
