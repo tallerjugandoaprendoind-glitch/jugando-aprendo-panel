@@ -5,9 +5,80 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { notifyAsync, notifyParentDirect } from '@/lib/notifications'
 import { sendEmail, buildEmailCita, buildEmailAdmin } from '@/lib/email'
-import { addGoogleCalendarEvent, addMicrosoftCalendarEvent } from '@/lib/calendar-integration'
 
 const CENTRO_EMAIL = 'tallerjugandoaprendoind@gmail.com'
+const APP_URL      = process.env.NEXT_PUBLIC_APP_URL || 'https://taller-jugando-aprendo.vercel.app'
+
+// ── Sincronizar cita al calendario (Google o Microsoft) del admin ─────────────
+async function sincronizarCalendario(apt: any, childName: string) {
+  try {
+    // Buscar el admin que tiene Google Calendar o Microsoft Calendar conectado
+    const { data: admins } = await supabaseAdmin
+      .from('profiles')
+      .select('id, google_calendar_token, microsoft_calendar_token')
+      .eq('role', 'admin')
+
+    if (!admins || admins.length === 0) return
+
+    for (const admin of admins) {
+      // Google Calendar
+      if (admin.google_calendar_token) {
+        const res = await fetch(`${APP_URL}/api/google-calendar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action:        'sync-appointment',
+            userId:        admin.id,
+            appointmentId: apt.id,
+            appointment: {
+              date:        apt.appointment_date,
+              time:        apt.appointment_time?.slice(0, 5),
+              patientName: childName,
+              serviceType: apt.service_type || 'Terapia',
+              notes:       apt.notes || '',
+              modality:    apt.modalidad || 'presencial',
+              sessionType: apt.is_group ? 'grupal' : 'individual',
+              childId:     apt.child_id,
+              videoLink:   apt.video_link || '',
+            },
+          }),
+        })
+        const data = await res.json()
+        console.log(`[Calendar] Google → ${data.ok ? '✅' : '❌'}`, data.error || '')
+        break // solo el primer admin con Google Calendar
+      }
+
+      // Microsoft Calendar
+      if (admin.microsoft_calendar_token) {
+        const res = await fetch(`${APP_URL}/api/microsoft-calendar`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action:        'sync-appointment',
+            userId:        admin.id,
+            appointmentId: apt.id,
+            appointment: {
+              date:        apt.appointment_date,
+              time:        apt.appointment_time?.slice(0, 5),
+              patientName: childName,
+              serviceType: apt.service_type || 'Terapia',
+              notes:       apt.notes || '',
+              modality:    apt.modalidad || 'presencial',
+              sessionType: apt.is_group ? 'grupal' : 'individual',
+              childId:     apt.child_id,
+              videoLink:   apt.video_link || '',
+            },
+          }),
+        })
+        const data = await res.json()
+        console.log(`[Calendar] Microsoft → ${data.ok ? '✅' : '❌'}`, data.error || '')
+        break
+      }
+    }
+  } catch (e) {
+    console.error('[Calendar] Error sincronizando:', e)
+  }
+}
 
 async function crearNotifInApp(userId: string, payload: {
   tipo: string; titulo: string; mensaje: string; prioridad?: number; metadata?: Record<string, any>
@@ -38,17 +109,15 @@ async function notificarPadre(childId: string, tipo: 'nueva' | 'cancelada' | 'ac
       actualizada: { titulo: '🔄 Cita actualizada',        mensaje: `La cita de ${childName} fue actualizada: ${fecha} a las ${hora}. Servicio: ${servicio}.` },
     }
 
-    // 1. Notificación in-app
     await crearNotifInApp(child.parent_id, {
       tipo: `cita_${tipo}`, titulo: mensajes[tipo].titulo, mensaje: mensajes[tipo].mensaje,
       prioridad: tipo === 'cancelada' ? 1 : 2,
       metadata: { appointment_id: apt.id, fecha, hora },
     })
 
-    // 2. Obtener perfil completo del padre
     const { data: parentProfile } = await supabaseAdmin
       .from('profiles')
-      .select('phone, email, wsp_notif, google_calendar_token, google_calendar_email, microsoft_calendar_token, microsoft_calendar_email')
+      .select('phone, email, wsp_notif, google_calendar_email, microsoft_calendar_email')
       .eq('id', child.parent_id)
       .maybeSingle()
 
@@ -58,52 +127,19 @@ async function notificarPadre(childId: string, tipo: 'nueva' | 'cancelada' | 'ac
       ...(apt.video_link ? { link: apt.video_link } : {}),
     }
 
-    // 3. EMAIL al padre (usa email real de Google/Outlook si el registrado es falso)
+    // EMAIL al padre
     const emailPadre = (!parentProfile?.email || parentProfile.email.includes('@prueba'))
       ? (parentProfile?.google_calendar_email || parentProfile?.microsoft_calendar_email || null)
       : parentProfile.email
 
-    if (emailPadre) {
-      const { subject, html } = buildEmailCita(tipo, citaVars)
-      await sendEmail(emailPadre, subject, html)
-    }
-    // Copia siempre al centro
-    const { subject: subj, html: htmlCopia } = buildEmailCita(tipo, citaVars)
-    await sendEmail(CENTRO_EMAIL, subj, htmlCopia)
+    const { subject, html } = buildEmailCita(tipo, citaVars)
+    if (emailPadre) await sendEmail(emailPadre, subject, html)
+    await sendEmail(CENTRO_EMAIL, subject, html)
 
-    // 4. ── AGREGAR AL CALENDARIO DEL PADRE ────────────────────────────────────
-    if (tipo === 'nueva') {
-      const start = `${fecha}T${hora}:00`
-      const endDate = new Date(new Date(`${fecha}T${hora}`).getTime() + 60 * 60000)
-      const end = endDate.toISOString().slice(0, 19)
-      const title = `🧩 Cita — ${childName} | Jugando Aprendo`
-      const desc  = `Servicio: ${servicio}<br/>Modalidad: ${apt.modalidad || 'Presencial'}`
-
-      if (parentProfile?.google_calendar_token) {
-        const result = await addGoogleCalendarEvent({
-          accessToken: parentProfile.google_calendar_token,
-          title, description: desc,
-          startDateTime: start, endDateTime: end,
-          attendeeEmail: emailPadre || undefined,
-        })
-        console.log(`[Calendar] Google → ${result.ok ? '✅' : '❌'} ${result.error || ''}`)
-      } else if (parentProfile?.microsoft_calendar_token) {
-        const result = await addMicrosoftCalendarEvent({
-          accessToken: parentProfile.microsoft_calendar_token,
-          title, description: desc,
-          startDateTime: start, endDateTime: end,
-          attendeeEmail: emailPadre || undefined,
-        })
-        console.log(`[Calendar] Microsoft → ${result.ok ? '✅' : '❌'} ${result.error || ''}`)
-      }
-    }
-
-    // 5. WhatsApp al admin
+    // WhatsApp
     const wspTipo = tipo === 'cancelada' ? 'cita_cancelada' : 'cita_confirmada'
     const wspVars = { fecha, hora, paciente: childName, tipo: apt.modalidad || servicio, ...(apt.video_link ? { link: apt.video_link } : {}) }
     notifyAsync({ tipo: wspTipo, vars: wspVars })
-
-    // 6. WhatsApp directo al padre
     try {
       if (parentProfile?.wsp_notif !== false) {
         await notifyParentDirect(parentProfile?.phone ?? null, wspTipo, wspVars)
@@ -125,10 +161,10 @@ async function notificarAdmins(accion: string, apt: any, childName: string, secr
       created: 'Nueva cita creada', updated: 'Cita actualizada',
       cancelled: 'Cita cancelada',  status_changed: 'Estado de cita cambiado',
     }
-    const label = accionLabels[accion] || 'Cambio en cita'
     const accionMap: Record<string, 'nueva' | 'actualizada' | 'cancelada'> = {
       created: 'nueva', updated: 'actualizada', cancelled: 'cancelada', status_changed: 'actualizada',
     }
+    const label = accionLabels[accion] || 'Cambio en cita'
 
     for (const admin of admins) {
       await crearNotifInApp(admin.id, {
@@ -148,7 +184,6 @@ async function notificarAdmins(accion: string, apt: any, childName: string, secr
         servicio: apt.service_type || 'Terapia',
         secretaria: secretariaName,
       })
-
       if (adminEmail) await sendEmail(adminEmail, subject, html)
       if (adminEmail !== CENTRO_EMAIL) await sendEmail(CENTRO_EMAIL, subject, html)
     }
@@ -164,10 +199,13 @@ export async function POST(req: NextRequest) {
       .from('appointments').insert(aptPayload).select('*, children(name)').single()
     if (error) throw error
     const childName = (apt as any).children?.name || 'Paciente'
+
     await Promise.all([
       notificarPadre(apt.child_id, 'nueva', apt),
       notificarAdmins('created', apt, childName, secretaria_name || 'Secretaria'),
+      sincronizarCalendario(apt, childName), // ← agrega al Google/Outlook del admin y del padre
     ])
+
     return NextResponse.json({ data: apt })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
@@ -185,10 +223,12 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error
     const childName = (apt as any).children?.name || 'Paciente'
     const tipo = accion === 'status_changed' && updates.status === 'cancelled' ? 'cancelada' : 'actualizada'
+
     await Promise.all([
       notificarPadre(apt.child_id, tipo, apt),
       notificarAdmins(accion || 'updated', apt, childName, secretaria_name || 'Secretaria'),
     ])
+
     return NextResponse.json({ data: apt })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
