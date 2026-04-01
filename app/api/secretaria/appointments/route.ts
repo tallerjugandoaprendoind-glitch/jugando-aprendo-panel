@@ -1,10 +1,13 @@
 // app/api/secretaria/appointments/route.ts
-// Notifica al PADRE (in-app + WhatsApp + EMAIL) Y al ADMIN (in-app + EMAIL)
+// Notifica al PADRE (in-app + WhatsApp + EMAIL + CALENDAR) Y al ADMIN (in-app + EMAIL)
 
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { notifyAsync, notifyParentDirect } from '@/lib/notifications'
 import { sendEmail, buildEmailCita, buildEmailAdmin } from '@/lib/email'
+import { addGoogleCalendarEvent, addMicrosoftCalendarEvent } from '@/lib/calendar-integration'
+
+const CENTRO_EMAIL = 'tallerjugandoaprendoind@gmail.com'
 
 async function crearNotifInApp(userId: string, payload: {
   tipo: string; titulo: string; mensaje: string; prioridad?: number; metadata?: Record<string, any>
@@ -42,9 +45,12 @@ async function notificarPadre(childId: string, tipo: 'nueva' | 'cancelada' | 'ac
       metadata: { appointment_id: apt.id, fecha, hora },
     })
 
-    // 2. Obtener email y teléfono del padre
+    // 2. Obtener perfil completo del padre
     const { data: parentProfile } = await supabaseAdmin
-      .from('profiles').select('phone, email, wsp_notif').eq('id', child.parent_id).maybeSingle()
+      .from('profiles')
+      .select('phone, email, wsp_notif, google_calendar_token, google_calendar_email, microsoft_calendar_token, microsoft_calendar_email')
+      .eq('id', child.parent_id)
+      .maybeSingle()
 
     const citaVars = {
       paciente: childName, fecha, hora, servicio,
@@ -52,18 +58,52 @@ async function notificarPadre(childId: string, tipo: 'nueva' | 'cancelada' | 'ac
       ...(apt.video_link ? { link: apt.video_link } : {}),
     }
 
-    // 3. EMAIL al padre — await para que Vercel no lo corte
-    if (parentProfile?.email) {
+    // 3. EMAIL al padre (usa email real de Google/Outlook si el registrado es falso)
+    const emailPadre = (!parentProfile?.email || parentProfile.email.includes('@prueba'))
+      ? (parentProfile?.google_calendar_email || parentProfile?.microsoft_calendar_email || null)
+      : parentProfile.email
+
+    if (emailPadre) {
       const { subject, html } = buildEmailCita(tipo, citaVars)
-      await sendEmail(parentProfile.email, subject, html)
+      await sendEmail(emailPadre, subject, html)
+    }
+    // Copia siempre al centro
+    const { subject: subj, html: htmlCopia } = buildEmailCita(tipo, citaVars)
+    await sendEmail(CENTRO_EMAIL, subj, htmlCopia)
+
+    // 4. ── AGREGAR AL CALENDARIO DEL PADRE ────────────────────────────────────
+    if (tipo === 'nueva') {
+      const start = `${fecha}T${hora}:00`
+      const endDate = new Date(new Date(`${fecha}T${hora}`).getTime() + 60 * 60000)
+      const end = endDate.toISOString().slice(0, 19)
+      const title = `🧩 Cita — ${childName} | Jugando Aprendo`
+      const desc  = `Servicio: ${servicio}<br/>Modalidad: ${apt.modalidad || 'Presencial'}`
+
+      if (parentProfile?.google_calendar_token) {
+        const result = await addGoogleCalendarEvent({
+          accessToken: parentProfile.google_calendar_token,
+          title, description: desc,
+          startDateTime: start, endDateTime: end,
+          attendeeEmail: emailPadre || undefined,
+        })
+        console.log(`[Calendar] Google → ${result.ok ? '✅' : '❌'} ${result.error || ''}`)
+      } else if (parentProfile?.microsoft_calendar_token) {
+        const result = await addMicrosoftCalendarEvent({
+          accessToken: parentProfile.microsoft_calendar_token,
+          title, description: desc,
+          startDateTime: start, endDateTime: end,
+          attendeeEmail: emailPadre || undefined,
+        })
+        console.log(`[Calendar] Microsoft → ${result.ok ? '✅' : '❌'} ${result.error || ''}`)
+      }
     }
 
-    // 4. WhatsApp al admin
+    // 5. WhatsApp al admin
     const wspTipo = tipo === 'cancelada' ? 'cita_cancelada' : 'cita_confirmada'
     const wspVars = { fecha, hora, paciente: childName, tipo: apt.modalidad || servicio, ...(apt.video_link ? { link: apt.video_link } : {}) }
     notifyAsync({ tipo: wspTipo, vars: wspVars })
 
-    // 5. WhatsApp directo al padre
+    // 6. WhatsApp directo al padre
     try {
       if (parentProfile?.wsp_notif !== false) {
         await notifyParentDirect(parentProfile?.phone ?? null, wspTipo, wspVars)
@@ -76,7 +116,7 @@ async function notificarPadre(childId: string, tipo: 'nueva' | 'cancelada' | 'ac
 async function notificarAdmins(accion: string, apt: any, childName: string, secretariaName: string) {
   try {
     const { data: admins } = await supabaseAdmin
-      .from('profiles').select('id, full_name, email').eq('role', 'admin')
+      .from('profiles').select('id, full_name, email, google_calendar_email, microsoft_calendar_email').eq('role', 'admin')
     if (!admins || admins.length === 0) return
 
     const fecha = apt.appointment_date || ''
@@ -86,9 +126,11 @@ async function notificarAdmins(accion: string, apt: any, childName: string, secr
       cancelled: 'Cita cancelada',  status_changed: 'Estado de cita cambiado',
     }
     const label = accionLabels[accion] || 'Cambio en cita'
+    const accionMap: Record<string, 'nueva' | 'actualizada' | 'cancelada'> = {
+      created: 'nueva', updated: 'actualizada', cancelled: 'cancelada', status_changed: 'actualizada',
+    }
 
     for (const admin of admins) {
-      // In-app
       await crearNotifInApp(admin.id, {
         tipo: `admin_secretaria_${accion}`,
         titulo: `${label} — ${childName}`,
@@ -97,18 +139,18 @@ async function notificarAdmins(accion: string, apt: any, childName: string, secr
         metadata: { appointment_id: apt.id, secretaria: secretariaName, accion },
       })
 
-      // EMAIL al admin — await para que Vercel no lo corte
-      if (admin.email) {
-        const accionMap: Record<string, 'nueva' | 'actualizada' | 'cancelada'> = {
-          created: 'nueva', updated: 'actualizada', cancelled: 'cancelada', status_changed: 'actualizada',
-        }
-        const { subject, html } = buildEmailAdmin(accionMap[accion] ?? 'actualizada', {
-          paciente: childName, fecha, hora,
-          servicio: apt.service_type || 'Terapia',
-          secretaria: secretariaName,
-        })
-        await sendEmail(admin.email, subject, html)
-      }
+      const adminEmail = (!admin.email || admin.email.includes('@prueba'))
+        ? (admin.google_calendar_email || admin.microsoft_calendar_email || null)
+        : admin.email
+
+      const { subject, html } = buildEmailAdmin(accionMap[accion] ?? 'actualizada', {
+        paciente: childName, fecha, hora,
+        servicio: apt.service_type || 'Terapia',
+        secretaria: secretariaName,
+      })
+
+      if (adminEmail) await sendEmail(adminEmail, subject, html)
+      if (adminEmail !== CENTRO_EMAIL) await sendEmail(CENTRO_EMAIL, subject, html)
     }
   } catch (e) { console.error('[notif admin] error:', e) }
 }
@@ -122,13 +164,10 @@ export async function POST(req: NextRequest) {
       .from('appointments').insert(aptPayload).select('*, children(name)').single()
     if (error) throw error
     const childName = (apt as any).children?.name || 'Paciente'
-
-    // await para que Vercel no corte la ejecución antes de enviar emails
     await Promise.all([
       notificarPadre(apt.child_id, 'nueva', apt),
       notificarAdmins('created', apt, childName, secretaria_name || 'Secretaria'),
     ])
-
     return NextResponse.json({ data: apt })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
@@ -146,12 +185,10 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error
     const childName = (apt as any).children?.name || 'Paciente'
     const tipo = accion === 'status_changed' && updates.status === 'cancelled' ? 'cancelada' : 'actualizada'
-
     await Promise.all([
       notificarPadre(apt.child_id, tipo, apt),
       notificarAdmins(accion || 'updated', apt, childName, secretaria_name || 'Secretaria'),
     ])
-
     return NextResponse.json({ data: apt })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
