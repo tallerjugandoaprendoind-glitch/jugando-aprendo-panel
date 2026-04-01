@@ -297,37 +297,24 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
             </div>
           ) : recientes.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-12 px-6 text-center">
-              <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5"
+            <div className="flex-1 flex flex-col items-center justify-center py-16 px-8 text-center">
+              <div className="w-28 h-28 rounded-3xl flex items-center justify-center mb-6"
                 style={{ background: 'linear-gradient(135deg,#f0f9ff,#e0f2fe)' }}>
-                <FileText size={32} className="text-sky-300" />
+                <FileText size={48} className="text-sky-300" />
               </div>
-              <p className="text-slate-700 font-black text-base mb-1">Sin evaluaciones aún</p>
-              <p className="text-slate-400 text-sm mb-6 max-w-xs leading-relaxed">
+              <p className="text-slate-700 font-black text-xl mb-2">Sin evaluaciones aún</p>
+              <p className="text-slate-400 text-sm mb-8 max-w-sm leading-relaxed">
                 Creá tu primera evaluación. Pasará por revisión antes de llegar a los padres.
               </p>
               <button onClick={() => setActiveView('evaluaciones')}
-                className="inline-flex items-center gap-2 px-6 py-3 text-white text-sm font-black rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-lg"
+                className="inline-flex items-center gap-2 px-8 py-3.5 text-white text-sm font-black rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)' }}>
                 <Plus size={15} /> Nueva evaluación
               </button>
 
-              {/* Accesos directos cuando no hay evaluaciones */}
-              <div className="mt-8 w-full grid grid-cols-3 gap-3">
-                {[
-                  { label: 'Ver pacientes', icon: Users,    view: 'pacientes',  color: '#8b5cf6', bg: '#f5f3ff' },
-                  { label: 'Mi agenda',     icon: Calendar, view: 'agenda',     color: '#0ea5e9', bg: '#f0f9ff' },
-                  { label: 'Formularios',   icon: BookOpen, view: 'formularios',color: '#f59e0b', bg: '#fffbeb' },
-                ].map(({ label, icon: Icon, view, color, bg }) => (
-                  <button key={view} onClick={() => setActiveView(view)}
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-slate-100 hover:shadow-md hover:-translate-y-0.5 transition-all">
-                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: bg }}>
-                      <Icon size={18} style={{ color }} />
-                    </div>
-                    <span className="text-xs font-black text-slate-600">{label}</span>
-                  </button>
-                ))}
-              </div>
+              <p className="mt-6 text-xs text-slate-300 font-medium">
+                Las evaluaciones pasan por revisión antes de ser enviadas a los padres
+              </p>
             </div>
           ) : (
             <>
