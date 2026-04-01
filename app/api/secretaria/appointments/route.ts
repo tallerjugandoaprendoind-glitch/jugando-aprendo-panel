@@ -52,10 +52,10 @@ async function notificarPadre(childId: string, tipo: 'nueva' | 'cancelada' | 'ac
       ...(apt.video_link ? { link: apt.video_link } : {}),
     }
 
-    // 3. EMAIL al padre
+    // 3. EMAIL al padre — await para que Vercel no lo corte
     if (parentProfile?.email) {
       const { subject, html } = buildEmailCita(tipo, citaVars)
-      sendEmail(parentProfile.email, subject, html).catch(() => {})
+      await sendEmail(parentProfile.email, subject, html)
     }
 
     // 4. WhatsApp al admin
@@ -97,7 +97,7 @@ async function notificarAdmins(accion: string, apt: any, childName: string, secr
         metadata: { appointment_id: apt.id, secretaria: secretariaName, accion },
       })
 
-      // EMAIL al admin
+      // EMAIL al admin — await para que Vercel no lo corte
       if (admin.email) {
         const accionMap: Record<string, 'nueva' | 'actualizada' | 'cancelada'> = {
           created: 'nueva', updated: 'actualizada', cancelled: 'cancelada', status_changed: 'actualizada',
@@ -107,7 +107,7 @@ async function notificarAdmins(accion: string, apt: any, childName: string, secr
           servicio: apt.service_type || 'Terapia',
           secretaria: secretariaName,
         })
-        sendEmail(admin.email, subject, html).catch(() => {})
+        await sendEmail(admin.email, subject, html)
       }
     }
   } catch (e) { console.error('[notif admin] error:', e) }
@@ -122,10 +122,13 @@ export async function POST(req: NextRequest) {
       .from('appointments').insert(aptPayload).select('*, children(name)').single()
     if (error) throw error
     const childName = (apt as any).children?.name || 'Paciente'
-    Promise.all([
+
+    // await para que Vercel no corte la ejecución antes de enviar emails
+    await Promise.all([
       notificarPadre(apt.child_id, 'nueva', apt),
       notificarAdmins('created', apt, childName, secretaria_name || 'Secretaria'),
-    ]).catch(() => {})
+    ])
+
     return NextResponse.json({ data: apt })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
@@ -143,10 +146,12 @@ export async function PATCH(req: NextRequest) {
     if (error) throw error
     const childName = (apt as any).children?.name || 'Paciente'
     const tipo = accion === 'status_changed' && updates.status === 'cancelled' ? 'cancelada' : 'actualizada'
-    Promise.all([
+
+    await Promise.all([
       notificarPadre(apt.child_id, tipo, apt),
       notificarAdmins(accion || 'updated', apt, childName, secretaria_name || 'Secretaria'),
-    ]).catch(() => {})
+    ])
+
     return NextResponse.json({ data: apt })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
@@ -165,10 +170,10 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error
     if (apt) {
       const childName = (apt as any).children?.name || 'Paciente'
-      Promise.all([
+      await Promise.all([
         notificarPadre(apt.child_id, 'cancelada', apt),
         notificarAdmins('cancelled', apt, childName, secretaria_name || 'Secretaria'),
-      ]).catch(() => {})
+      ])
     }
     return NextResponse.json({ success: true })
   } catch (e: any) {
