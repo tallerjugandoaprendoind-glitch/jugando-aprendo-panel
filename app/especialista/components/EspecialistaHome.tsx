@@ -2,13 +2,12 @@
 
 import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
-
 import { useState, useEffect } from 'react'
 import {
   FileText, Clock, CheckCircle2, XCircle, Calendar, Baby,
-  AlertTriangle, ChevronRight, Activity, Sparkles, ArrowUpRight,
-  TrendingUp, Target, Heart, Bell, Zap, Trophy, Star,
-  MessageCircle, BookOpen, Plus, Brain
+  AlertTriangle, ChevronRight, Activity, ArrowUpRight,
+  TrendingUp, Plus, Brain, Sparkles, Users, Star,
+  Zap, Target, BarChart3, BookOpen
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
@@ -18,69 +17,11 @@ interface Props {
   setActiveView: (v: string) => void
 }
 
-// ── Tarjeta de estadística clicable ────────────────────────────────────────
-function StatCard({ label, value, sub, color, bg, border, icon: Icon, onClick, loading, pulse }: any) {
-  const { t, locale } = useI18n()
-
-  return (
-    <button onClick={onClick}
-      className={`bg-white rounded-2xl p-5 text-left group hover:shadow-lg transition-all duration-200 border ${border} hover:scale-[1.02] active:scale-[.98] relative overflow-hidden`}>
-      {pulse && (
-        <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-amber-400 rounded-full animate-pulse" />
-      )}
-      <div className={`${bg} w-10 h-10 rounded-xl flex items-center justify-center mb-4`}>
-        <Icon size={18} className={color} />
-      </div>
-      <p className="text-3xl font-black text-slate-800 mb-1 tabular-nums">
-        {loading ? '—' : value}
-      </p>
-      <p className={`text-xs font-bold mb-0.5 ${color}`}>{label}</p>
-      <p className="text-xs text-slate-400">{sub}</p>
-    </button>
-  )
-}
-
-// ── Chip de productividad semanal ───────────────────────────────────────────
-function ProductividadSemanal({ aprobadas, pendientes, rechazadas }: any) {
-  const { t, locale } = useI18n()
-
-  const total = aprobadas + pendientes + rechazadas
-  if (total === 0) return null
-  const tasa = total > 0 ? Math.round((aprobadas / total) * 100) : 0
-  return (
-    <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 bg-violet-50 rounded-lg flex items-center justify-center">
-          <TrendingUp size={14} className="text-violet-600" />
-        </div>
-        <p className="text-xs font-black text-slate-400 uppercase tracking-widest">{t('ui.your_productivity')}</p>
-        <span className="ml-auto text-xs bg-violet-50 text-violet-700 font-black px-2 py-0.5 rounded-full">{total} total</span>
-      </div>
-      <div className="flex items-end gap-3 mb-3">
-        <p className="text-4xl font-black text-slate-800">{tasa}%</p>
-        <p className="text-sm text-slate-400 mb-1.5">{t('especialista.tasaAprobacion')}</p>
-      </div>
-      {/* Barra de progreso compuesta */}
-      <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden flex mb-3">
-        <div className="bg-emerald-500 transition-all duration-700 rounded-l-full" style={{ width: `${(aprobadas/total)*100}%` }} />
-        <div className="bg-amber-400 transition-all duration-700" style={{ width: `${(pendientes/total)*100}%` }} />
-        <div className="bg-red-400 transition-all duration-700 rounded-r-full" style={{ width: `${(rechazadas/total)*100}%` }} />
-      </div>
-      <div className="flex gap-4 text-xs font-bold">
-        <span className="flex items-center gap-1.5 text-emerald-700"><span className="w-2 h-2 bg-emerald-500 rounded-full inline-block" />{aprobadas} aprobadas</span>
-        <span className="flex items-center gap-1.5 text-amber-700"><span className="w-2 h-2 bg-amber-400 rounded-full inline-block" />{pendientes} en revisión</span>
-        <span className="flex items-center gap-1.5 text-red-700"><span className="w-2 h-2 bg-red-400 rounded-full inline-block" />{rechazadas} rechazadas</span>
-      </div>
-    </div>
-  )
-}
-
-// ── Tip clínico del día ─────────────────────────────────────────────────────
 const TIPS_CLINICOS = [
   { emoji: '🎯', texto: 'Registra las conductas objetivo con antecedente, conducta y consecuencia (ABC) para mejorar la calidad de tu análisis ABA.' },
   { emoji: '📊', texto: 'Cuando un objetivo supera el 80% de dominio por 3 sesiones consecutivas, es momento de proponer un nuevo objetivo al jefe.' },
   { emoji: '💙', texto: 'Recuerda preguntar brevemente al padre/madre cómo se ha sentido esta semana. El bienestar del cuidador afecta directamente el progreso del niño.' },
-  { emoji: '📝', texto: 'Las notas de sesión con observaciones específicas ("pidió agua 3 veces usando señas") son más útiles que las generales ("buena sesión").' },
+  { emoji: '📝', texto: 'Las notas de sesión con observaciones específicas son más útiles que las generales. Detalla cada avance.' },
   { emoji: '🏆', texto: 'Celebra los micro-logros con el niño y la familia. Un objetivo nuevo alcanzado, por pequeño que sea, merece reconocimiento.' },
 ]
 
@@ -93,12 +34,14 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
   const [tipIndex] = useState(() => Math.floor(Math.random() * TIPS_CLINICOS.length))
   const [saludo, setSaludo] = useState('')
   const [fechaStr, setFechaStr] = useState('')
+  const [hora, setHora] = useState('')
 
   useEffect(() => {
     const now = new Date()
     const h = now.getHours()
     setSaludo(h < 12 ? 'Buenos días' : h < 18 ? 'Buenas tardes' : 'Buenas noches')
     setFechaStr(now.toLocaleDateString(toBCP47(locale), { weekday: 'long', day: 'numeric', month: 'long' }))
+    setHora(now.toLocaleTimeString(toBCP47(locale), { hour: '2-digit', minute: '2-digit' }))
   }, [])
 
   useEffect(() => {
@@ -140,194 +83,251 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
   }, [userId])
 
   const tip = TIPS_CLINICOS[tipIndex]
-
-  const STAT_CARDS = [
-    { label: t('nav.pacientes'), value: stats.totalPacientes, color: 'text-purple-600', bg: 'bg-purple-50', border: 'border-purple-100', view: 'pacientes', icon: Baby, sub: 'Total activos' },
-    { label: 'Sesiones esta semana', value: stats.sesionesEstaSemana, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', view: 'agenda', icon: Activity, sub: 'Últimos 7 días' },
-    { label: 'En revisión', value: stats.pendientes, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100', view: 'evaluaciones', icon: Clock, sub: 'Esperando aprobación', pulse: stats.pendientes > 0 },
-    { label: 'Aprobadas', value: stats.aprobadas, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100', view: 'evaluaciones', icon: CheckCircle2, sub: 'Confirmadas' },
-  ]
+  const nombre = profile?.full_name?.split(' ')[0] || 'Especialista'
+  const total = stats.aprobadas + stats.pendientes + stats.rechazadas
+  const tasa = total > 0 ? Math.round((stats.aprobadas / total) * 100) : 0
 
   const STATUS_CFG: Record<string, any> = {
-    pending_approval: { label: 'En revisión', color: 'text-amber-700', bg: 'bg-amber-50 border border-amber-200' },
-    approved: { label: t('especialista.aprobado'), color: 'text-emerald-700', bg: 'bg-emerald-50 border border-emerald-200' },
-    rejected: { label: t('especialista.rechazado'), color: 'text-red-700', bg: 'bg-red-50 border border-red-200' },
+    pending_approval: { label: 'En revisión', color: 'text-amber-700', bg: 'bg-amber-50', dot: 'bg-amber-400', Icon: Clock },
+    approved: { label: 'Aprobada', color: 'text-emerald-700', bg: 'bg-emerald-50', dot: 'bg-emerald-500', Icon: CheckCircle2 },
+    rejected: { label: 'Rechazada', color: 'text-red-700', bg: 'bg-red-50', dot: 'bg-red-400', Icon: XCircle },
   }
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-5 pb-8">
 
-      {/* Hero con citas de hoy visibles */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-7 text-white relative overflow-hidden shadow-lg shadow-blue-200">
-        <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 rounded-full -translate-y-12 translate-x-12" />
-        <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/5 rounded-full translate-y-10 -translate-x-8" />
-        <div className="relative">
-          <p className="text-blue-200 text-sm font-bold uppercase tracking-widest mb-1">{saludo}</p>
-          <h2 className="text-3xl font-black mb-1 tracking-tight">
-            {profile?.full_name?.split(' ')[0] || 'Especialista'}
-          </h2>
-          <p className="text-blue-200 text-sm font-medium mb-5">
-            {profile?.specialty || 'Especialista Clínico'} · {fechaStr}
-          </p>
+      {/* ── HERO ──────────────────────────────────────────────────────────── */}
+      <div className="relative rounded-3xl overflow-hidden" style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0f4c75 100%)' }}>
+        {/* Decorative circles */}
+        <div className="absolute top-0 right-0 w-72 h-72 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #38bdf8, transparent)', transform: 'translate(30%, -30%)' }} />
+        <div className="absolute bottom-0 left-0 w-48 h-48 rounded-full opacity-10" style={{ background: 'radial-gradient(circle, #818cf8, transparent)', transform: 'translate(-30%, 30%)' }} />
+        <div className="absolute top-1/2 left-1/2 w-96 h-96 rounded-full opacity-5" style={{ background: 'radial-gradient(circle, #e879f9, transparent)', transform: 'translate(-50%, -50%)' }} />
 
-          <div className="flex flex-wrap gap-3">
-            {stats.citasHoy > 0 ? (
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-white/15 rounded-xl text-sm font-bold border border-white/20">
-                <Calendar size={14} />
-                {stats.citasHoy} cita{stats.citasHoy !== 1 ? 's' : ''} hoy
-                {proximasCitas.slice(0, 2).map((c: any, i: number) => (
-                  <span key={i} className="text-blue-200 text-xs">
-                    {i > 0 ? ' · ' : ' → '}{c.appointment_time?.slice(0, 5)} {c.children?.name?.split(' ')[0]}
-                  </span>
-                ))}
+        <div className="relative p-7 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div>
+              {/* Greeting */}
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{saludo}</span>
               </div>
-            ) : (
-              <div className="flex items-center gap-2 px-4 py-2 bg-white/15 rounded-xl text-sm font-semibold border border-white/20">
-                <CheckCircle2 size={14} /> Sin citas hoy
+              <h1 className="text-4xl font-black text-white mb-1 tracking-tight">{nombre}</h1>
+              <p className="text-slate-400 text-sm font-medium capitalize">{profile?.specialty || 'Especialista Clínico'} · {fechaStr}</p>
+
+              {/* Quick badges */}
+              <div className="flex flex-wrap gap-2 mt-5">
+                {stats.citasHoy > 0 ? (
+                  <button onClick={() => setActiveView('agenda')}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white border border-white/20 hover:bg-white/10 transition-all"
+                    style={{ background: 'rgba(255,255,255,0.08)' }}>
+                    <Calendar size={14} className="text-sky-400" />
+                    {stats.citasHoy} cita{stats.citasHoy !== 1 ? 's' : ''} hoy
+                    {proximasCitas.slice(0, 2).map((c: any, i: number) => (
+                      <span key={i} className="text-slate-400 text-xs">
+                        {i > 0 ? ' · ' : ' → '}{c.appointment_time?.slice(0, 5)} {c.children?.name?.split(' ')[0]}
+                      </span>
+                    ))}
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-400 border border-white/10"
+                    style={{ background: 'rgba(255,255,255,0.05)' }}>
+                    <CheckCircle2 size={14} className="text-emerald-400" /> Sin citas hoy
+                  </div>
+                )}
+
+                {stats.pendientes > 0 && (
+                  <button onClick={() => setActiveView('evaluaciones')}
+                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-amber-300 border border-amber-400/30 hover:bg-amber-400/10 transition-all"
+                    style={{ background: 'rgba(251,191,36,0.08)' }}>
+                    <Clock size={14} />
+                    {stats.pendientes} pendiente{stats.pendientes !== 1 ? 's' : ''}
+                    <ArrowUpRight size={13} />
+                  </button>
+                )}
               </div>
-            )}
-            {stats.pendientes > 0 && (
-              <button onClick={() => setActiveView('evaluaciones')}
-                className="flex items-center gap-2 px-4 py-2 bg-amber-400/20 hover:bg-amber-400/30 rounded-xl text-sm font-semibold text-amber-100 transition-all border border-amber-400/30">
-                <Clock size={14} />
-                {stats.pendientes} pendiente{stats.pendientes !== 1 ? 's' : ''} de aprobación
-                <ArrowUpRight size={13} />
-              </button>
-            )}
+            </div>
+
+            {/* Nueva evaluación CTA */}
             <button onClick={() => setActiveView('evaluaciones')}
-              className="flex items-center gap-2 px-4 py-2 bg-white/15 hover:bg-white/25 rounded-xl text-sm font-semibold transition-all border border-white/20">
-              <Plus size={14} /> {t('especialista.nuevaEvaluacion')}
+              className="flex items-center gap-2.5 px-5 py-3 rounded-2xl text-sm font-black text-slate-900 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-sky-500/30 whitespace-nowrap flex-shrink-0"
+              style={{ background: 'linear-gradient(135deg, #38bdf8, #818cf8)' }}>
+              <Sparkles size={16} />
+              Nueva evaluación
             </button>
           </div>
         </div>
       </div>
 
-      {/* Stat cards */}
+      {/* ── STATS GRID ────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {STAT_CARDS.map(card => (
-          <StatCard key={card.label} {...card} loading={loading} onClick={() => setActiveView(card.view)} />
+        {[
+          { label: 'Pacientes', value: stats.totalPacientes, sub: 'Total activos', icon: Users, color: '#8b5cf6', bg: '#f5f3ff', view: 'pacientes' },
+          { label: 'Sesiones', value: stats.sesionesEstaSemana, sub: 'Últimos 7 días', icon: Activity, color: '#10b981', bg: '#ecfdf5', view: 'agenda' },
+          { label: 'En revisión', value: stats.pendientes, sub: 'Esperando aprobación', icon: Clock, color: '#f59e0b', bg: '#fffbeb', view: 'evaluaciones', pulse: stats.pendientes > 0 },
+          { label: 'Aprobadas', value: stats.aprobadas, sub: 'Confirmadas', icon: CheckCircle2, color: '#3b82f6', bg: '#eff6ff', view: 'evaluaciones' },
+        ].map(({ label, value, sub, icon: Icon, color, bg, view, pulse }: any) => (
+          <button key={label} onClick={() => setActiveView(view)}
+            className="bg-white rounded-2xl p-5 text-left hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all duration-200 border border-slate-100 relative overflow-hidden group">
+            {pulse && <span className="absolute top-3 right-3 w-2 h-2 rounded-full animate-pulse" style={{ background: color }} />}
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: bg }}>
+              <Icon size={18} style={{ color }} />
+            </div>
+            <p className="text-3xl font-black text-slate-800 tabular-nums mb-0.5">{loading ? '—' : value}</p>
+            <p className="text-xs font-black mb-0.5" style={{ color }}>{label}</p>
+            <p className="text-xs text-slate-400">{sub}</p>
+            <div className="absolute bottom-0 right-0 w-16 h-16 rounded-full opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `radial-gradient(circle, ${bg}, transparent)`, transform: 'translate(30%, 30%)' }} />
+          </button>
         ))}
       </div>
 
-      {/* Productividad + Tip + Actividad reciente */}
+      {/* ── MAIN CONTENT ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Columna izquierda */}
         <div className="space-y-4">
-          {/* Productividad */}
-          <ProductividadSemanal
-            aprobadas={stats.aprobadas}
-            pendientes={stats.pendientes}
-            rechazadas={stats.rechazadas}
-          />
 
-          {/* Tip clínico del día */}
-          <div className="bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-100 rounded-2xl p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <Brain size={15} className="text-indigo-600" />
-              <p className="text-xs font-black text-indigo-600 uppercase tracking-widest">{t('ui.clinical_tip')}</p>
+          {/* Productividad */}
+          {total > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <BarChart3 size={15} className="text-slate-500" />
+                  <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Tu productividad</p>
+                </div>
+                <span className="text-xs bg-slate-50 text-slate-500 font-black px-2 py-0.5 rounded-full border border-slate-100">{total} total</span>
+              </div>
+              <div className="flex items-baseline gap-2 mb-4">
+                <p className="text-5xl font-black text-slate-800">{tasa}</p>
+                <p className="text-lg font-black text-slate-400">%</p>
+                <p className="text-xs text-slate-400 ml-1">tasa de aprobación</p>
+              </div>
+              <div className="h-2 bg-slate-100 rounded-full overflow-hidden flex mb-3">
+                <div className="bg-emerald-500 transition-all duration-700" style={{ width: `${(stats.aprobadas / total) * 100}%` }} />
+                <div className="bg-amber-400 transition-all duration-700" style={{ width: `${(stats.pendientes / total) * 100}%` }} />
+                <div className="bg-red-400 transition-all duration-700" style={{ width: `${(stats.rechazadas / total) * 100}%` }} />
+              </div>
+              <div className="flex gap-3 text-xs font-bold flex-wrap">
+                <span className="flex items-center gap-1 text-emerald-700"><span className="w-2 h-2 bg-emerald-500 rounded-full" />{stats.aprobadas} aprobadas</span>
+                <span className="flex items-center gap-1 text-amber-700"><span className="w-2 h-2 bg-amber-400 rounded-full" />{stats.pendientes} revisión</span>
+                {stats.rechazadas > 0 && <span className="flex items-center gap-1 text-red-700"><span className="w-2 h-2 bg-red-400 rounded-full" />{stats.rechazadas} rechazadas</span>}
+              </div>
             </div>
-            <div className="text-2xl mb-2">{tip.emoji}</div>
-            <p className="text-sm text-indigo-800 leading-relaxed font-medium">{tip.texto}</p>
+          )}
+
+          {/* Tip clínico */}
+          <div className="rounded-2xl p-5 border" style={{ background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)', borderColor: '#bae6fd' }}>
+            <div className="flex items-center gap-2 mb-3">
+              <Brain size={14} className="text-sky-600" />
+              <p className="text-xs font-black text-sky-600 uppercase tracking-widest">Tip clínico del día</p>
+            </div>
+            <div className="text-3xl mb-3">{tip.emoji}</div>
+            <p className="text-sm text-sky-900 leading-relaxed font-medium">{tip.texto}</p>
+          </div>
+
+          {/* Flujo de aprobación */}
+          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
+            <div className="flex items-center gap-2 mb-4">
+              <Target size={14} className="text-slate-500" />
+              <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Flujo de aprobación</p>
+            </div>
+            <div className="space-y-3">
+              {[
+                { n: '1', label: 'Vos creás', desc: 'Registrás la evaluación o nota', color: 'bg-violet-50 text-violet-700 border-violet-100' },
+                { n: '2', label: 'Jefe revisa', desc: 'El admin valida y aprueba', color: 'bg-amber-50 text-amber-700 border-amber-100' },
+                { n: '3', label: 'Padres ven', desc: 'La familia recibe el informe', color: 'bg-emerald-50 text-emerald-700 border-emerald-100' },
+              ].map(({ n, label, desc, color }) => (
+                <div key={n} className={`flex items-center gap-3 p-3 rounded-xl border ${color}`}>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center font-black text-sm flex-shrink-0" style={{ background: 'rgba(255,255,255,0.6)' }}>{n}</div>
+                  <div>
+                    <p className="text-xs font-black">{label}</p>
+                    <p className="text-[11px] opacity-70">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Actividad reciente — columna central+derecha */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
-          <div className="px-6 py-4 flex items-center justify-between border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
-                <Activity size={14} className="text-blue-600" />
+        {/* Evaluaciones recientes */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
+          <div className="px-6 py-4 flex items-center justify-between border-b border-slate-50">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: '#eff6ff' }}>
+                <BookOpen size={15} className="text-blue-600" />
               </div>
-              <h3 className="font-bold text-slate-800 text-sm">{t('ui.recent_evaluations')}</h3>
+              <h3 className="font-black text-slate-800 text-sm">Mis evaluaciones recientes</h3>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => setActiveView('evaluaciones')}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-all">
-                <Plus size={12} /> {t('especialista.nueva2')}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-white text-xs font-black rounded-xl transition-all hover:opacity-90"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>
+                <Plus size={12} /> Nueva
               </button>
               <button onClick={() => setActiveView('evaluaciones')}
-                className="text-xs font-bold text-blue-600 flex items-center gap-1 hover:underline">
-                {t('especialista.verTodo')} <ChevronRight size={13} />
+                className="text-xs font-bold text-slate-400 hover:text-blue-600 flex items-center gap-1 transition-colors">
+                Ver todo <ChevronRight size={13} />
               </button>
             </div>
           </div>
 
-          {recientes.length === 0 ? (
-            <div className="py-14 text-center">
-              <div className="w-16 h-16 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <FileText size={28} className="text-slate-300" />
+          {loading ? (
+            <div className="flex-1 flex items-center justify-center py-16">
+              <div className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+            </div>
+          ) : recientes.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center py-16 px-6 text-center">
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5" style={{ background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)' }}>
+                <FileText size={32} className="text-sky-300" />
               </div>
-              <p className="text-slate-400 text-sm font-bold mb-1">{t('ui.no_recent_evals')}</p>
-              <p className="text-slate-300 text-xs mb-4 max-w-xs mx-auto">{t('especialista.primeraEvaluacion').split('.')[0]}. Pasará por revisión antes de llegar a los padres.</p>
+              <p className="text-slate-700 font-black text-base mb-1">Sin evaluaciones aún</p>
+              <p className="text-slate-400 text-sm mb-6 max-w-xs leading-relaxed">Creá tu primera evaluación. Pasará por revisión antes de llegar a los padres.</p>
               <button onClick={() => setActiveView('evaluaciones')}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-all">
-                <Plus size={14} /> {t('especialista.nuevaEvaluacion')}
+                className="inline-flex items-center gap-2 px-6 py-3 text-white text-sm font-black rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-lg"
+                style={{ background: 'linear-gradient(135deg, #3b82f6, #6366f1)' }}>
+                <Plus size={15} /> Nueva evaluación
               </button>
             </div>
           ) : (
-            <div>
-              {recientes.map((r, idx) => {
-                const cfg = STATUS_CFG[r.status] || STATUS_CFG.pending_approval
-                const StatusIcon = r.status === 'approved' ? CheckCircle2 : r.status === 'rejected' ? XCircle : Clock
-                return (
-                  <div key={r.id}
-                    className={`px-6 py-4 flex items-center gap-4 hover:bg-slate-50 transition-colors cursor-pointer ${idx < recientes.length - 1 ? 'border-b border-slate-50' : ''}`}
-                    onClick={() => setActiveView('evaluaciones')}
-                  >
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
-                      <StatusIcon size={15} className={cfg.color} />
+            <>
+              <div className="flex-1 divide-y divide-slate-50">
+                {recientes.map((r, idx) => {
+                  const cfg = STATUS_CFG[r.status] || STATUS_CFG.pending_approval
+                  const { Icon: StatusIcon } = cfg
+                  return (
+                    <div key={r.id}
+                      className="px-6 py-4 flex items-center gap-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
+                      onClick={() => setActiveView('evaluaciones')}>
+                      <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
+                        <StatusIcon size={16} className={cfg.color} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-black text-slate-800 truncate">{r.titulo}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <Baby size={10} className="text-slate-300" />
+                          <p className="text-xs text-slate-400 font-medium">{r.children?.name}</p>
+                          <span className="text-slate-200">·</span>
+                          <p className="text-xs text-slate-400">
+                            {new Date(r.created_at).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className={`w-2 h-2 rounded-full ${cfg.dot}`} />
+                        <span className={`text-xs font-black ${cfg.color}`}>{cfg.label}</span>
+                        <ChevronRight size={13} className="text-slate-200" />
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-slate-800 truncate">{r.titulo}</p>
-                      <p className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                        <Baby size={10} /> {r.children?.name}
-                        <span className="mx-1">·</span>
-                        {new Date(r.created_at).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'short' })}
-                      </p>
-                    </div>
-                    <span className={`flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${cfg.bg} ${cfg.color}`}>
-                      {cfg.label}
-                    </span>
-                    <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Botón nueva evaluación si hay recientes */}
-          {recientes.length > 0 && (
-            <div className="px-6 py-4 border-t border-slate-50">
-              <button onClick={() => setActiveView('evaluaciones')}
-                className="w-full py-2.5 border-2 border-dashed border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-600 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2">
-                <Plus size={14} /> {t('especialista.nuevaEvaluacion')}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Info flujo — mejorado */}
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex gap-4">
-        <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5">
-          <AlertTriangle size={17} className="text-amber-600" />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-bold text-amber-800 mb-2">{t('especialista.flujoAprobacion')}</p>
-          <div className="grid grid-cols-3 gap-3">
-            {[
-              { step: '1', label: 'Tú creas', desc: 'Registra evaluación o nota de sesión', color: 'bg-amber-100 text-amber-800' },
-              { step: '2', label: 'Jefe revisa', desc: 'El admin valida y aprueba o da feedback', color: 'bg-orange-100 text-orange-800' },
-              { step: '3', label: 'Padres ven', desc: 'Al aprobarse, llega a la familia', color: 'bg-green-100 text-green-800' },
-            ].map(({ step, label, desc, color }) => (
-              <div key={step} className={`${color} rounded-xl p-3 text-center`}>
-                <div className="text-lg font-black mb-1">{step}</div>
-                <p className="text-xs font-black mb-0.5">{label}</p>
-                <p className="text-[10px] leading-tight">{desc}</p>
+                  )
+                })}
               </div>
-            ))}
-          </div>
+              <div className="px-6 py-4 border-t border-slate-50">
+                <button onClick={() => setActiveView('evaluaciones')}
+                  className="w-full py-2.5 border-2 border-dashed border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2">
+                  <Plus size={13} /> Nueva evaluación
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
