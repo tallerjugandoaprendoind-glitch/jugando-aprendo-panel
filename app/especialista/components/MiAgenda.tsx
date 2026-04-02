@@ -145,11 +145,19 @@ export default function MiAgenda() {
   const cargar = useCallback(async () => {
     setLoading(true)
     try {
-      const { data } = await supabase
+      // Obtener userId si no está disponible
+      let uid = userId
+      if (!uid) {
+        const { data: { session } } = await supabase.auth.getSession()
+        uid = session?.user?.id || null
+      }
+      const query = supabase
         .from('appointments')
         .select('*, children(name, profiles!children_parent_id_fkey(full_name))')
         .order('appointment_date')
         .order('appointment_time')
+      if (uid) query.eq('specialist_id', uid)
+      const { data } = await query
       setCitas(data || [])
     } catch (e: any) { toast.error('Error: ' + e.message) }
     finally { setLoading(false) }

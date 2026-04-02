@@ -92,7 +92,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
         supabase.from('appointments')
           .select('appointment_date, appointment_time, children(name)')
           .eq('appointment_date', hoy)
-          .eq('created_by', userId)
+          .eq('specialist_id', userId)
           .neq('status', 'cancelled')
           .order('appointment_time'),
         supabase.from('children').select('id', { count: 'exact', head: true }).eq('is_active', true),

@@ -117,8 +117,18 @@ function MonthlyCalendarView() {
   const [currentMonth, setCurrentMonth] = useState<Date | null>(null)
   const [tipoSesion, setTipoSesion] = useState<'individual'|'grupal'>('individual')
   const [modalidadCita, setModalidadCita] = useState<'presencial'|'virtual'>('presencial')
-  const [newApt, setNewApt] = useState({ child_id:'', date:'', time:'09:00', service:'Terapia ABA', notes:'', group_name:'', status:'confirmed' })
+  const [newApt, setNewApt] = useState({ child_id:'', date:'', time:'09:00', service:'Terapia ABA', notes:'', group_name:'', status:'confirmed', specialist_id:'' })
+  const [especialistas, setEspecialistas] = useState<any[]>([])
   const [recurrencia, setRecurrencia] = useState<'none'|'weekly'|'biweekly'>('none')
+
+  useEffect(() => {
+    supabase.from('profiles')
+      .select('id, full_name, specialty, role')
+      .in('role', ['especialista', 'terapeuta', 'admin', 'jefe'])
+      .eq('is_active', true)
+      .order('full_name')
+      .then(({ data }) => setEspecialistas(data || []))
+  }, [])
   const [recurrenciaSemanas, setRecurrenciaSemanas] = useState(4)
   const [selectedParticipants, setSelectedParticipants] = useState<string[]>([])
 
@@ -217,7 +227,7 @@ function MonthlyCalendarView() {
       const createdBy = currentSession?.user?.id || null
 
       let payload: any[]
-      const extra = { modalidad: modalidadCita, created_by: createdBy }
+      const extra = { modalidad: modalidadCita, created_by: createdBy, specialist_id: newApt.specialist_id || null }
       if (tipoSesion==='grupal') {
         payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (Grupal: ${newApt.group_name||'Sin nombre'})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, ...extra }))
       } else {
@@ -670,6 +680,13 @@ function MonthlyCalendarView() {
                   <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Servicio</label>
                   <select className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.service} onChange={e=>setNewApt(p=>({...p,service:e.target.value}))}>
                     {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Especialista asignado</label>
+                  <select className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.specialist_id} onChange={e=>setNewApt(p=>({...p,specialist_id:e.target.value}))}>
+                    <option value="">Sin asignar</option>
+                    {especialistas.map(e=><option key={e.id} value={e.id}>{e.full_name}{e.specialty ? ` · ${e.specialty}` : ''}</option>)}
                   </select>
                 </div>
                 <div className="grid grid-cols-2 gap-4">

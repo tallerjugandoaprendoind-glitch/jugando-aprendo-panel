@@ -174,6 +174,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
 
   const secretariaName = profile?.full_name || profile?.email || 'Secretaria'
   const [userId, setUserId] = useState<string | null>(profile?.id || null)
+  const [especialistas, setEspecialistas] = useState<any[]>([])
 
   useEffect(() => {
     if (!profile?.id) {
@@ -181,11 +182,19 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
         if (session?.user?.id) setUserId(session.user.id)
       })
     }
+    // Cargar especialistas y terapeutas
+    supabase.from('profiles')
+      .select('id, full_name, role, specialty')
+      .in('role', ['especialista', 'terapeuta', 'admin', 'jefe'])
+      .eq('is_active', true)
+      .order('full_name')
+      .then(({ data }) => setEspecialistas(data || []))
   }, [])
 
   const emptyForm = {
     child_id: '', child_ids: [] as string[], service: SERVICES[0], date: '', time: '',
-    status: 'confirmed', notes: '', modality: 'presencial', session_type: 'individual'
+    status: 'confirmed', notes: '', modality: 'presencial', session_type: 'individual',
+    specialist_id: '',
   }
   const [form, setForm] = useState(emptyForm)
 
@@ -258,6 +267,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
         modalidad:        form.modality,
         is_group:         isGrupal,
         secretaria_name:  secretariaName,
+        specialist_id:    form.specialist_id || null,
       })
 
       if (editingApt) {
@@ -324,6 +334,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
       notes:        apt.notes || '',
       modality:     apt.modalidad || 'presencial',
       session_type: apt.is_group ? 'grupal' : 'individual',
+      specialist_id: apt.specialist_id || '',
     })
     setEditingApt(apt); setShowForm(true); setActiveMenu(null)
   }
@@ -702,6 +713,15 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
                 <select value={form.service} onChange={e=>setForm(p=>({...p,service:e.target.value}))}
                   className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
                   {SERVICES.map(s=><option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Especialista asignado <span className="text-slate-300">(opcional)</span></label>
+                <select value={form.specialist_id} onChange={e=>setForm(p=>({...p,specialist_id:e.target.value}))}
+                  className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
+                  <option value="">Sin asignar</option>
+                  {especialistas.map(e=><option key={e.id} value={e.id}>{e.full_name}{e.specialty ? ` · ${e.specialty}` : ''}</option>)}
                 </select>
               </div>
 
