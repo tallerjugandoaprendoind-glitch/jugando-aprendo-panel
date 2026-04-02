@@ -247,10 +247,12 @@ export default function ChatConAdmin({
   userId,
   userName,
   userAvatarUrl,
+  onAvatarUpdate,
 }: {
   userId: string
   userName: string
   userAvatarUrl?: string | null
+  onAvatarUpdate?: (url: string) => void
 }) {
   const toast = useToast()
 
@@ -643,7 +645,7 @@ export default function ChatConAdmin({
             userId={userId}
             currentUrl={myAvatar}
             name={userName}
-            onUpdate={(url) => setMyAvatar(url)}
+            onUpdate={(url) => { setMyAvatar(url); onAvatarUpdate?.(url) }}
           />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-black text-slate-800">{userName}</p>

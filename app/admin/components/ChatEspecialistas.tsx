@@ -246,10 +246,12 @@ export default function ChatEspecialistas({
   userId,
   userName,
   userAvatarUrl,
+  onAvatarUpdate,
 }: {
   userId: string
   userName: string
   userAvatarUrl?: string | null
+  onAvatarUpdate?: (url: string) => void
 }) {
   const toast = useToast()
 
@@ -690,7 +692,7 @@ export default function ChatEspecialistas({
                 userId={userId}
                 currentUrl={myAvatar}
                 name={userName}
-                onUpdate={(url) => setMyAvatar(url)}
+                onUpdate={(url) => { setMyAvatar(url); onAvatarUpdate?.(url) }}
               />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-black text-slate-800 truncate">{userName}</p>

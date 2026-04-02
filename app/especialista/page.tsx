@@ -114,7 +114,7 @@ export default function EspecialistaDashboard() {
       case 'inicio':       return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
       case 'pacientes':    return <MisPacientes />
       case 'formularios':  return <MisFormularios userId={profile.id} />
-      case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} />
+      case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       case 'agenda':       return <MiAgenda />
       case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} />
       default:             return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />

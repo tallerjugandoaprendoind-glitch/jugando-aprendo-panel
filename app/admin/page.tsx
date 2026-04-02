@@ -467,7 +467,7 @@ export default function AdminDashboard() {
 
               {currentView === 'mensajes' && <MensajesPendientesPanel />}
               {currentView === 'chat-especialistas' && (
-                <ChatEspecialistas userId={userId} userName={userProfile?.full_name || 'Admin'} />
+                <ChatEspecialistas userId={userId} userName={userProfile?.full_name || 'Admin'} userAvatarUrl={userProfile?.avatar_url} onAvatarUpdate={(url) => setUserProfile((p: any) => ({ ...p, avatar_url: url }))} />
               )}
               {currentView === 'importar'     && <ExcelImportView />}
             </div>
