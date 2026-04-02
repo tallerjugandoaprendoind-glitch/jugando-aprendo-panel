@@ -92,11 +92,12 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
         supabase.from('appointments')
           .select('appointment_date, appointment_time, children(name)')
           .eq('appointment_date', hoy)
+          .eq('created_by', userId)
           .neq('status', 'cancelled')
           .order('appointment_time'),
-        supabase.from('children').select('id', { count: 'exact' }).eq('is_active', true),
-        supabase.from('aba_sessions_v2').select('id').gte('session_date', hace7dias),
-        supabase.from('aba_sessions_v2').select('session_date').gte('session_date', datesArr[0]),
+        supabase.from('children').select('id', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('aba_sessions_v2').select('id').eq('professional_id', userId).gte('session_date', hace7dias),
+        supabase.from('aba_sessions_v2').select('session_date').eq('professional_id', userId).gte('session_date', datesArr[0]),
       ])
 
       const subs = subRes.data || []
