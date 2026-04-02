@@ -149,8 +149,13 @@ export default function ChatConAdmin({ userId, userName }: { userId: string; use
     try {
       const ext = file.name.split('.').pop()
       const path = `chat/${userId}/${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('chat-files').upload(path, file)
-      if (upErr) throw upErr
+      const { error: upErr } = await supabase.storage
+        .from('chat-files')
+        .upload(path, file, { contentType: file.type, upsert: false })
+      if (upErr) {
+        console.error('❌ Error storage upload:', upErr)
+        throw new Error(upErr.message)
+      }
       const { data: { publicUrl } } = supabase.storage.from('chat-files').getPublicUrl(path)
       const isImage = file.type.startsWith('image/')
       const { error } = await supabase.from('chat_especialista_admin').insert({
@@ -165,10 +170,15 @@ export default function ChatConAdmin({ userId, userName }: { userId: string; use
         file_type: file.type,
         read_at: null,
       })
-      if (error) throw error
+      if (error) {
+        console.error('❌ Error insert mensaje archivo:', error)
+        throw new Error(error.message)
+      }
       toast.success('Archivo enviado')
-    } catch {
-      toast.error('Error al subir archivo')
+    } catch (err) {
+      console.error('❌ Error al subir archivo:', err)
+      const msg = err instanceof Error ? err.message : 'Error desconocido'
+      toast.error(`Error al subir archivo: ${msg}`)
     } finally {
       setSubiendo(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -215,9 +225,15 @@ export default function ChatConAdmin({ userId, userName }: { userId: string; use
     if (!audioBlob || !jefeSeleccionado) return
     setSubiendo(true)
     try {
-      const path = `chat/${userId}/audio_${Date.now()}.webm`
-      const { error: upErr } = await supabase.storage.from('chat-files').upload(path, audioBlob)
-      if (upErr) throw upErr
+      const audioName = `audio_${Date.now()}.webm`
+      const path = `chat/${userId}/${audioName}`
+      const { error: upErr } = await supabase.storage
+        .from('chat-files')
+        .upload(path, audioBlob, { contentType: 'audio/webm', upsert: false })
+      if (upErr) {
+        console.error('❌ Error storage audio upload:', upErr)
+        throw new Error(upErr.message)
+      }
       const { data: { publicUrl } } = supabase.storage.from('chat-files').getPublicUrl(path)
       const { error } = await supabase.from('chat_especialista_admin').insert({
         content: '🎤 Mensaje de voz',
@@ -227,15 +243,20 @@ export default function ChatConAdmin({ userId, userName }: { userId: string; use
         recipient_id: jefeSeleccionado.id,
         message_type: 'audio',
         file_url: publicUrl,
-        file_name: `audio_${Date.now()}.webm`,
+        file_name: audioName,
         file_type: 'audio/webm',
         read_at: null,
       })
-      if (error) throw error
+      if (error) {
+        console.error('❌ Error insert mensaje audio:', error)
+        throw new Error(error.message)
+      }
       cancelarAudio()
       toast.success('Audio enviado')
-    } catch {
-      toast.error('Error al enviar audio')
+    } catch (err) {
+      console.error('❌ Error al enviar audio:', err)
+      const msg = err instanceof Error ? err.message : 'Error desconocido'
+      toast.error(`Error al enviar audio: ${msg}`)
     } finally {
       setSubiendo(false)
     }
