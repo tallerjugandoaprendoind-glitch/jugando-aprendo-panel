@@ -37,6 +37,7 @@ import LocaleSelector from '@/app/components/LocaleSelector'
 import WhatsAppQRPanel from './components/WhatsAppQRPanel'
 import ConfiguracionView from './components/ConfiguracionView'
 import ARIAFloatingChat from './components/ARIAFloatingChat'
+import ChatEspecialistas from './components/ChatEspecialistas'
 
 // Roles: 'jefe'|'admin' ven todo. 'especialista'/'terapeuta' NO ven agenda ni tienda.
 
@@ -116,6 +117,7 @@ export default function AdminDashboard() {
     { id: 'cerebro',      icon: Database,        label: t('nav.cerebro'),         roles: ['jefe','admin'] },
     { id: 'recursos-adicionales', icon: BookOpen, label: 'Recursos Adicionales',  roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'config',       icon: Settings,        label: t('common.configuracion'),roles: ['jefe'] },
+    { id: 'chat-especialistas', icon: MessageCircle, label: 'Chat Especialistas', roles: ['jefe'] },
   ]
   const MOBILE_NAV = [
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio') },
@@ -134,6 +136,7 @@ export default function AdminDashboard() {
     mensajes: t('mensajes.titulo'), usuarios: t('nav.usuarios'),
     importar: 'Importar CSV', vadi: t('nav.aria'),
     cerebro: t('nav.cerebro'), inteligencia: t('nav.hub'),
+    'chat-especialistas': 'Chat con Especialistas',
   }
 
 
@@ -463,6 +466,9 @@ export default function AdminDashboard() {
               {currentView === 'inteligencia' && <InteligenciaHubView />}
 
               {currentView === 'mensajes' && <MensajesPendientesPanel />}
+              {currentView === 'chat-especialistas' && (
+                <ChatEspecialistas userId={userId} userName={userProfile?.full_name || 'Admin'} />
+              )}
               {currentView === 'importar'     && <ExcelImportView />}
             </div>
           )}

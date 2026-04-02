@@ -7,13 +7,13 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
   LayoutDashboard, Users, LogOut, Calendar, FileText,
-  User, Loader2, Menu, X, Stethoscope, Activity,
+  User, Loader2, Menu, X, Stethoscope, Activity, MessageCircle,
   Key, ChevronRight, Sparkles
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import EspecialistaHome from './components/EspecialistaHome'
 import MisPacientes from './components/MisPacientes'
-import MisEvaluaciones from './components/MisEvaluaciones'
+import ChatConAdmin from './components/ChatConAdmin'
 import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
 import MisFormularios from './components/MisFormularios'
@@ -50,7 +50,7 @@ export default function EspecialistaDashboard() {
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio') },
     { id: 'pacientes',    icon: Users,           label: t('nav.mispacientes') },
     { id: 'formularios',  icon: FileText,        label: t('nav.misformularios') },
-    { id: 'evaluaciones', icon: Activity,        label: t('nav.misevaluaciones') },
+    { id: 'evaluaciones', icon: MessageCircle,  label: 'Chat Admin' },
     { id: 'agenda',       icon: Calendar,        label: t('nav.miagenda') },
     { id: 'perfil',       icon: User,            label: t('nav.miperfil') },
   ]
@@ -59,7 +59,7 @@ export default function EspecialistaDashboard() {
     inicio:       'Panel Principal',
     pacientes:    'Mis Pacientes',
     formularios:  'Formularios Clínicos',
-    evaluaciones: 'Mis Evaluaciones',
+    evaluaciones: 'Chat con Administración',
     agenda:       'Mi Agenda',
     perfil:       'Mi Perfil',
   }
@@ -114,7 +114,7 @@ export default function EspecialistaDashboard() {
       case 'inicio':       return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
       case 'pacientes':    return <MisPacientes />
       case 'formularios':  return <MisFormularios userId={profile.id} />
-      case 'evaluaciones': return <MisEvaluaciones userId={profile.id} />
+      case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} />
       case 'agenda':       return <MiAgenda />
       case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} />
       default:             return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
