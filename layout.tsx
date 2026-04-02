@@ -1,6 +1,4 @@
-import React from 'react'
 import type { Metadata, Viewport } from "next";
-import { I18nProvider } from '@/lib/i18n-context'
 import { ToastProvider } from '@/components/Toast'
 import { ThemeProvider } from '@/components/ThemeContext'
 import "./globals.css";
@@ -26,9 +24,6 @@ export const metadata: Metadata = {
     startupImage: "/icons/apple-touch-icon.png",
   },
   formatDetection: { telephone: false },
-  verification: {
-    google: 'TasBD1QvgPC7uYxtTQFVg-vl4WV2uVmGHgnb_yAZrE0',
-  },
   openGraph: {
     title: "Vanty | Terapia ABA en Pisco, Ica",
     description: "Centro especializado en neurodivergencia. Terapia ABA con IA para niños en Pisco, Ica, Perú.",
@@ -62,62 +57,17 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
-        {/* ── PWA: Manifest ── */}
         <link rel="manifest" href="/manifest.json" />
-
-        {/* ── iOS / iPhone Safari PWA ── */}
-        {/* Habilitar modo standalone (sin barra de Safari) */}
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="mobile-web-app-capable" content="yes" />
-
-        {/* Nombre que aparece bajo el ícono en la pantalla de inicio */}
-        <meta name="apple-mobile-web-app-title" content="Vanty" />
-
-        {/* Barra de estado: default=blanca, black=negra, black-translucent=transparente sobre contenido */}
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-
-        {/* Ícono en pantalla de inicio — Apple requiere estos específicamente */}
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
-        <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
-        <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
-
-        {/* Splash screens para iPhone (evita pantalla blanca al abrir) */}
-        {/* iPhone SE, 6, 7, 8 */}
-        <link rel="apple-touch-startup-image"
-          media="screen and (device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)"
-          href="/icons/icon-512x512.png" />
-        {/* iPhone X, XS, 11 Pro, 12 mini, 13 mini */}
-        <link rel="apple-touch-startup-image"
-          media="screen and (device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)"
-          href="/icons/icon-512x512.png" />
-        {/* iPhone XR, 11 */}
-        <link rel="apple-touch-startup-image"
-          media="screen and (device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)"
-          href="/icons/icon-512x512.png" />
-        {/* iPhone 12, 13, 14 */}
-        <link rel="apple-touch-startup-image"
-          media="screen and (device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)"
-          href="/icons/icon-512x512.png" />
-        {/* iPhone 14 Plus, 15 Plus */}
-        <link rel="apple-touch-startup-image"
-          media="screen and (device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)"
-          href="/icons/icon-512x512.png" />
-        {/* iPhone 15 Pro, 15 Pro Max */}
-        <link rel="apple-touch-startup-image"
-          media="screen and (device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)"
-          href="/icons/icon-512x512.png" />
-
-        {/* Color de tema en Safari (barra de URL) */}
-        <meta name="theme-color" content="#5B3FC8" />
-
-        {/* Formato teléfono — evitar que Safari convierta números a links */}
-        <meta name="format-detection" content="telephone=no" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Vanty" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="antialiased">
         <ThemeProvider>
           <ToastProvider>
-            <I18nProvider>{children}</I18nProvider>
+            {children}
           </ToastProvider>
         </ThemeProvider>
         <script dangerouslySetInnerHTML={{
