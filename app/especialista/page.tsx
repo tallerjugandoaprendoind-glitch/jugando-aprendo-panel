@@ -116,7 +116,7 @@ export default function EspecialistaDashboard() {
       case 'formularios':  return <MisFormularios userId={profile.id} />
       case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       case 'agenda':       return <MiAgenda />
-      case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} />
+      case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       default:             return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
     }
   }
@@ -196,8 +196,10 @@ export default function EspecialistaDashboard() {
             className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors group"
             onClick={() => setShowProfileMenu(!showProfileMenu)}
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 shadow-md shadow-blue-200/60">
-              {userInitial}
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 shadow-md shadow-blue-200/60 overflow-hidden">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+              ) : userInitial}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold truncate text-slate-700">{userName}</p>
@@ -252,8 +254,10 @@ export default function EspecialistaDashboard() {
               className="flex items-center gap-2 hover:bg-slate-50 px-2 py-1.5 rounded-xl transition-colors ml-1"
             >
               <span className="text-xs font-semibold text-slate-500 hidden sm:block">{userName.split(' ')[0]}</span>
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black shadow-md shadow-blue-200/50">
-                {userInitial}
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black shadow-md shadow-blue-200/50 overflow-hidden">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                ) : userInitial}
               </div>
             </button>
           </div>

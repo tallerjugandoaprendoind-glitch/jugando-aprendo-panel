@@ -1,8 +1,8 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-import { useState, useEffect } from 'react'
-import { User, Mail, Phone, Stethoscope, Key, Eye, EyeOff, Save, Loader2, Shield, CheckCircle2, Edit3, CalendarDays, ChevronRight, Check, Unlink, Link2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { User, Mail, Phone, Stethoscope, Key, Eye, EyeOff, Save, Loader2, Shield, CheckCircle2, Edit3, CalendarDays, ChevronRight, Check, Unlink, Link2, Camera } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
@@ -175,7 +175,7 @@ function MicrosoftCalendarBlock({ userId }: { userId: string }) {
   )
 }
 
-export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate: () => void }) {
+export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: { profile: any; onUpdate: () => void; onAvatarUpdate?: (url: string) => void }) {
   const toast = useToast()
   const { t } = useI18n()
   const [editando, setEditando] = useState(false)
@@ -184,7 +184,22 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
   const [showPass, setShowPass] = useState(false)
   const [datos, setDatos] = useState({ full_name: profile?.full_name || '', phone: profile?.phone || '', specialty: profile?.specialty || '' })
   const [pass, setPass] = useState({ nueva: '', confirmar: '' })
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null)
+  const fileRef = useRef<HTMLInputElement>(null)
   const userId: string | null = profile?.id ?? null
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !userId) return
+    const ext = file.name.split('.').pop()
+    const path = `avatars/${userId}.${ext}`
+    await supabase.storage.from('store-images').upload(path, file, { upsert: true })
+    const url = supabase.storage.from('store-images').getPublicUrl(path).data.publicUrl
+    await supabase.from('profiles').update({ avatar_url: url }).eq('id', userId)
+    setAvatarUrl(url)
+    onAvatarUpdate?.(url)
+    toast.success('Foto actualizada ✓')
+  }
 
   const guardar = async () => {
     setGuardando(true)
@@ -221,8 +236,18 @@ export default function MiPerfil({ profile, onUpdate }: { profile: any; onUpdate
       {/* Hero card */}
       <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl p-8 text-center relative overflow-hidden shadow-lg shadow-blue-200">
         <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-10 translate-x-10" />
-        <div className="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center text-white font-black text-4xl mx-auto mb-5 shadow-xl border-2 border-white/30">
-          {profile?.full_name?.[0]?.toUpperCase() || 'E'}
+        <div className="relative w-24 h-24 mx-auto mb-5 group cursor-pointer" onClick={() => fileRef.current?.click()}>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt="avatar" className="w-24 h-24 rounded-3xl object-cover shadow-xl border-2 border-white/30" />
+          ) : (
+            <div className="w-24 h-24 bg-white/20 rounded-3xl flex items-center justify-center text-white font-black text-4xl shadow-xl border-2 border-white/30">
+              {profile?.full_name?.[0]?.toUpperCase() || 'E'}
+            </div>
+          )}
+          <div className="absolute inset-0 rounded-3xl bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <Camera size={20} className="text-white" />
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
         </div>
         <h3 className="text-2xl font-black text-white mb-1">{profile?.full_name}</h3>
         <p className="text-blue-200 text-sm font-medium mb-4">{profile?.specialty || t('especialista.especialistaClinico')}</p>

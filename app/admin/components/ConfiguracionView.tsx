@@ -69,7 +69,7 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
 }
 
 // ── Tab: Mi Perfil ────────────────────────────────────────────────────────────
-function TabPerfil() {
+function TabPerfil({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void }) {
   const { isDark } = useTheme()
   const toast = useToast()
   const [loading, setLoading] = useState(true)
@@ -155,6 +155,7 @@ function TabPerfil() {
               const url = supabase.storage.from('store-images').getPublicUrl(path).data.publicUrl
               await supabase.from('profiles').update({ avatar_url: url }).eq('id', user.id)
               setAvatarUrl(url)
+              onAvatarUpdate?.(url)
               toast.success('Foto actualizada')
             }} />
           </div>
@@ -477,7 +478,7 @@ function TabCuenta() {
 }
 
 // ── Componente principal ──────────────────────────────────────────────────────
-export default function ConfiguracionView() {
+export default function ConfiguracionView({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void }) {
   const { isDark } = useTheme()
   const [tab, setTab] = useState<Tab>('perfil')
 
@@ -502,7 +503,7 @@ export default function ConfiguracionView() {
 
       {/* Contenido */}
       <div className="flex-1 min-w-0">
-        {tab === 'perfil'         && <TabPerfil />}
+        {tab === 'perfil'         && <TabPerfil onAvatarUpdate={onAvatarUpdate} />}
         {tab === 'seguridad'      && <TabSeguridad />}
         {tab === 'notificaciones' && <TabNotificaciones />}
         {tab === 'apariencia'     && <TabApariencia />}

@@ -310,8 +310,12 @@ export default function AdminDashboard() {
               ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-50'}`}
             onClick={() => setShowProfileMenu(!showProfileMenu)}
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0">
-              {userInitial}
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 overflow-hidden">
+              {userProfile?.avatar_url ? (
+                <img src={userProfile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+              ) : (
+                userInitial
+              )}
             </div>
             <div className="flex-1 min-w-0">
               <p className={`text-xs font-bold truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
@@ -447,7 +451,7 @@ export default function AdminDashboard() {
               {currentView === 'tienda'       && <StoreManagementView />}
               {currentView === 'recursos-adicionales' && <RecursosAdicionalesView isDark={isDark} />}
               {currentView === 'config'       && (
-                <ConfiguracionView />
+                <ConfiguracionView onAvatarUpdate={(url) => setUserProfile((p: any) => ({ ...p, avatar_url: url }))} />
               )}
               {currentView === 'programas'    && (
                 <div className="max-w-4xl mx-auto">

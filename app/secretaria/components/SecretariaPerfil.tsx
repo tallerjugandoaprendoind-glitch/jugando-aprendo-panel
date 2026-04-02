@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { User, Key, Save, Loader2, Mail, Phone, Check, CalendarDays, ChevronRight, Unlink, Link2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { User, Key, Save, Loader2, Mail, Phone, Check, CalendarDays, ChevronRight, Unlink, Link2, Camera } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
@@ -174,7 +174,7 @@ function MicrosoftCalendarBlock({ userId }: { userId: string }) {
   )
 }
 
-export default function SecretariaPerfil({ profile, onUpdate }: { profile: any; onUpdate?: () => void }) {
+export default function SecretariaPerfil({ profile, onUpdate, onAvatarUpdate }: { profile: any; onUpdate?: () => void; onAvatarUpdate?: (url: string) => void }) {
   const toast = useToast()
   const [editMode, setEditMode] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -186,6 +186,21 @@ export default function SecretariaPerfil({ profile, onUpdate }: { profile: any; 
   const [changingPass, setChangingPass] = useState(false)
   const [showPassSection, setShowPassSection] = useState(false)
   const [userId, setUserId] = useState<string | null>(profile?.id || null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !userId) return
+    const ext = file.name.split('.').pop()
+    const path = `avatars/${userId}.${ext}`
+    await supabase.storage.from('store-images').upload(path, file, { upsert: true })
+    const url = supabase.storage.from('store-images').getPublicUrl(path).data.publicUrl
+    await supabase.from('profiles').update({ avatar_url: url }).eq('id', userId)
+    setAvatarUrl(url)
+    onAvatarUpdate?.(url)
+    toast.success('Foto actualizada ✓')
+  }
 
   useEffect(() => {
     if (!profile?.id) {
@@ -241,8 +256,18 @@ export default function SecretariaPerfil({ profile, onUpdate }: { profile: any; 
         <div className="absolute top-6 right-28 w-28 h-28 bg-white/5 rounded-full pointer-events-none" />
         <div className="absolute -bottom-10 left-40 w-40 h-40 bg-white/5 rounded-full pointer-events-none" />
         <div className="relative flex items-center gap-5">
-          <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white text-2xl md:text-3xl font-black shadow-xl flex-shrink-0">
-            {initial}
+          <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-2xl flex-shrink-0 group cursor-pointer" onClick={() => fileRef.current?.click()}>
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="avatar" className="w-full h-full rounded-2xl object-cover shadow-xl border-2 border-white/30" />
+            ) : (
+              <div className="w-full h-full rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white text-2xl md:text-3xl font-black shadow-xl">
+                {initial}
+              </div>
+            )}
+            <div className="absolute inset-0 rounded-2xl bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <Camera size={18} className="text-white" />
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-black text-white leading-tight">{profile?.full_name || 'Secretaria(o)'}</h1>
@@ -409,8 +434,10 @@ export default function SecretariaPerfil({ profile, onUpdate }: { profile: any; 
             {/* Account summary */}
             <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl border border-violet-100 p-5">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-base font-black shadow-lg shadow-violet-200 flex-shrink-0">
-                  {initial}
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white text-base font-black shadow-lg shadow-violet-200 flex-shrink-0 overflow-hidden">
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                  ) : initial}
                 </div>
                 <div className="min-w-0">
                   <p className="font-black text-slate-800 truncate">{profile?.full_name || 'Secretaria(o)'}</p>
