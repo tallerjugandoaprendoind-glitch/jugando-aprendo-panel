@@ -269,7 +269,7 @@ export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: {
   const strength = passwordStrength(pass.nueva)
 
   return (
-    <div className="pb-20 md:pb-8 max-w-5xl">
+    <div className="pb-20 md:pb-8 w-full">
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -279,7 +279,7 @@ export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
 
         {/* ── COLUMNA IZQUIERDA ── */}
         <div className="lg:col-span-1 space-y-4">
@@ -382,7 +382,7 @@ export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: {
         </div>
 
         {/* ── COLUMNA DERECHA ── */}
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-3 space-y-4">
 
           {/* Información personal */}
           <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
@@ -407,26 +407,28 @@ export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: {
             </div>
 
             {editando ? (
-              <div className="p-6 space-y-4">
-                {[
-                  { label: 'Nombre completo', icon: User, key: 'full_name', placeholder: 'Tu nombre completo', type: 'text' },
-                  { label: 'Teléfono', icon: Phone, key: 'phone', placeholder: '+51 999 999 999', type: 'tel' },
-                  { label: t('perfil.especialidad'), icon: Stethoscope, key: 'specialty', placeholder: 'Ej: Terapeuta ABA', type: 'text' },
-                ].map(f => (
-                  <div key={f.key}>
-                    <label className="flex items-center gap-1.5 text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                      <f.icon size={10} /> {f.label}
-                    </label>
-                    <input
-                      type={f.type}
-                      value={(datos as any)[f.key]}
-                      onChange={e => setDatos(d => ({ ...d, [f.key]: e.target.value }))}
-                      placeholder={f.placeholder}
-                      className={inputCls}
-                    />
-                  </div>
-                ))}
-                <div className="flex gap-3 pt-2">
+              <div className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                  {[
+                    { label: 'Nombre completo', icon: User, key: 'full_name', placeholder: 'Tu nombre completo', type: 'text' },
+                    { label: 'Teléfono', icon: Phone, key: 'phone', placeholder: '+51 999 999 999', type: 'tel' },
+                    { label: t('perfil.especialidad'), icon: Stethoscope, key: 'specialty', placeholder: 'Ej: Terapeuta ABA', type: 'text' },
+                  ].map(f => (
+                    <div key={f.key}>
+                      <label className="flex items-center gap-1.5 text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                        <f.icon size={10} /> {f.label}
+                      </label>
+                      <input
+                        type={f.type}
+                        value={(datos as any)[f.key]}
+                        onChange={e => setDatos(d => ({ ...d, [f.key]: e.target.value }))}
+                        placeholder={f.placeholder}
+                        className={inputCls}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-3">
                   <button
                     onClick={cancelarEdicion}
                     className="flex-1 py-3 rounded-2xl font-bold text-sm text-slate-500 border border-slate-200 hover:bg-slate-50 transition-all"
@@ -444,16 +446,16 @@ export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: {
                 </div>
               </div>
             ) : (
-              <div className="p-2">
+              <div className="p-3 grid grid-cols-1 sm:grid-cols-2 gap-1">
                 {[
                   { label: 'Email', icon: Mail, value: profile?.email, accent: 'text-blue-600', bg: 'bg-blue-50' },
                   { label: t('common.nombre'), icon: User, value: profile?.full_name, accent: 'text-purple-600', bg: 'bg-purple-50' },
                   { label: 'Teléfono', icon: Phone, value: profile?.phone || 'No registrado', accent: 'text-emerald-600', bg: 'bg-emerald-50' },
                   { label: t('perfil.especialidad'), icon: Stethoscope, value: profile?.specialty || 'No registrado', accent: 'text-orange-600', bg: 'bg-orange-50' },
-                ].map((item, idx) => (
-                  <div key={item.label} className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl hover:bg-slate-50 transition-colors ${idx !== 3 ? '' : ''}`}>
-                    <div className={`w-9 h-9 ${item.bg} rounded-2xl flex items-center justify-center flex-shrink-0`}>
-                      <item.icon size={15} className={item.accent} />
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-4 px-4 py-4 rounded-2xl hover:bg-slate-50 transition-colors">
+                    <div className={`w-10 h-10 ${item.bg} rounded-2xl flex items-center justify-center flex-shrink-0`}>
+                      <item.icon size={16} className={item.accent} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</p>
@@ -501,6 +503,7 @@ export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: {
                   </p>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Nueva contraseña */}
                 <div>
                   <label className="block text-[11px] font-black text-slate-400 uppercase tracking-widest mb-2">Nueva contraseña</label>
@@ -558,6 +561,7 @@ export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: {
                       <Check size={10} /> Las contraseñas coinciden
                     </p>
                   )}
+                </div>
                 </div>
 
                 <div className="flex gap-3 pt-1">
