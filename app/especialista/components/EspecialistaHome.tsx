@@ -377,16 +377,13 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               </div>
               <p className="text-slate-700 font-black text-xl mb-2">Sin evaluaciones aún</p>
               <p className="text-slate-400 text-sm mb-8 max-w-sm leading-relaxed">
-                Creá tu primera evaluación. Pasará por revisión antes de llegar a los padres.
+                Registrá el progreso de tus pacientes creando tu primera evaluación.
               </p>
               <button onClick={() => setActiveView('evaluaciones')}
                 className="inline-flex items-center gap-2 px-8 py-3.5 text-white text-sm font-black rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)' }}>
                 <Plus size={15} /> Nueva evaluación
               </button>
-              <p className="mt-6 text-xs text-slate-300 font-medium">
-                Las evaluaciones pasan por revisión antes de ser enviadas a los padres
-              </p>
             </div>
           ) : (
             <>
