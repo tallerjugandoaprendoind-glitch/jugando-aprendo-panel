@@ -154,20 +154,20 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
       {/* ── HERO ─────────────────────────────────────────────────────────── */}
       <div className="relative rounded-3xl overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #0f4c75 100%)' }}>
-        <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-10 pointer-events-none"
+        <div className="absolute top-0 right-0 w-48 sm:w-80 h-48 sm:h-80 rounded-full opacity-10 pointer-events-none"
           style={{ background: 'radial-gradient(circle, #38bdf8, transparent)', transform: 'translate(35%,-35%)' }} />
         <div className="absolute bottom-0 left-0 w-56 h-56 rounded-full opacity-10 pointer-events-none"
           style={{ background: 'radial-gradient(circle, #818cf8, transparent)', transform: 'translate(-30%,30%)' }} />
 
-        <div className="relative p-7 md:p-8">
-          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+        <div className="relative p-4 sm:p-6 md:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{saludo}</span>
               </div>
-              <h1 className="text-4xl font-black text-white mb-1 tracking-tight">{nombre}</h1>
-              <p className="text-slate-400 text-sm font-medium capitalize mb-5">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 tracking-tight">{nombre}</h1>
+              <p className="text-slate-400 text-xs sm:text-sm font-medium capitalize mb-4 sm:mb-5">
                 {profile?.specialty || 'Especialista Clínico'} · {fechaStr}
               </p>
 
@@ -203,19 +203,19 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             </div>
 
             {/* Reloj + CTA */}
-            <div className="flex flex-col items-end gap-3 flex-shrink-0">
+            <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-3 flex-shrink-0">
               {horaActual && (
                 <div className="text-right">
-                  <p className="text-5xl font-black text-white tabular-nums tracking-tight leading-none">{horaFmt}</p>
+                  <p className="text-3xl sm:text-4xl md:text-5xl font-black text-white tabular-nums tracking-tight leading-none">{horaFmt}</p>
                   <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest">
                     {String(horaActual.getSeconds()).padStart(2,'0')}s
                   </p>
                 </div>
               )}
               <button onClick={() => setActiveView('evaluaciones')}
-                className="flex items-center gap-2.5 px-5 py-3 rounded-2xl text-sm font-black text-slate-900 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-sky-500/30 whitespace-nowrap"
+                className="flex items-center gap-2 sm:gap-2.5 px-3 sm:px-5 py-2 sm:py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black text-slate-900 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-sky-500/30 whitespace-nowrap"
                 style={{ background: 'linear-gradient(135deg, #38bdf8, #818cf8)' }}>
-                <Sparkles size={16} /> Nueva evaluación
+                <Sparkles size={14} /> Nueva evaluación
               </button>
             </div>
           </div>
@@ -231,14 +231,14 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           { label: 'Aprobadas',   value: stats.aprobadas,          sub: 'Evaluaciones aprobadas', icon: CheckCircle2, color: '#3b82f6', bg: '#eff6ff', view: 'evaluaciones' },
         ].map(({ label, value, sub, icon: Icon, color, bg, view, pulse }: any) => (
           <button key={label} onClick={() => setActiveView(view)}
-            className="bg-white rounded-2xl p-5 text-left hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all duration-200 border border-slate-100 relative overflow-hidden group">
+            className="bg-white rounded-2xl p-3 sm:p-5 text-left hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all duration-200 border border-slate-100 relative overflow-hidden group">
             {pulse && <span className="absolute top-3 right-3 w-2 h-2 rounded-full animate-pulse" style={{ background: color }} />}
             <div className="absolute top-0 left-0 w-1 h-full rounded-l-2xl" style={{ background: color }} />
             <div className="pl-2">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: bg }}>
-                <Icon size={16} style={{ color }} />
+              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center mb-2 sm:mb-3" style={{ background: bg }}>
+                <Icon size={14} style={{ color }} />
               </div>
-              <p className="text-3xl font-black text-slate-800 tabular-nums mb-0.5">{loading ? '—' : value}</p>
+              <p className="text-2xl sm:text-3xl font-black text-slate-800 tabular-nums mb-0.5">{loading ? '—' : value}</p>
               <p className="text-xs font-black mb-0.5" style={{ color }}>{label}</p>
               <p className="text-xs text-slate-400">{sub}</p>
             </div>
