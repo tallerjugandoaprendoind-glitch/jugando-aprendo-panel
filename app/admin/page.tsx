@@ -537,7 +537,7 @@ export default function AdminDashboard() {
 
       {/* ── ARIA FLOTANTE ── */}
       {ariaOpen && (
-        <div className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[90] w-[calc(100vw-2rem)] max-w-sm md:max-w-md rounded-3xl shadow-2xl overflow-hidden border flex flex-col transition-all duration-300
+        <div className={`fixed bottom-6 md:bottom-6 right-4 md:right-6 z-[90] w-[calc(100vw-2rem)] max-w-sm md:max-w-md rounded-3xl shadow-2xl overflow-hidden border flex flex-col transition-all duration-300
           ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}
           style={{ height: '560px' }}>
           {/* Header */}
@@ -587,7 +587,7 @@ export default function AdminDashboard() {
       {!ariaOpen && (
         <button
           onClick={() => setAriaOpen(true)}
-          className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-[91] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 bg-gradient-to-br from-violet-600 to-indigo-600"
+          className="fixed bottom-6 md:bottom-6 right-4 md:right-6 z-[91] w-14 h-14 rounded-full shadow-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 bg-gradient-to-br from-violet-600 to-indigo-600"
           title="ARIA — Asistente IA">
           <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
             <rect x="6" y="9" width="16" height="13" rx="3" fill="white" fillOpacity="0.9"/>
