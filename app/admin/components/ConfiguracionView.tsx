@@ -133,7 +133,7 @@ function TabPerfil({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void 
     <div className="space-y-4">
       {/* Avatar & nombre */}
       <Card title="Foto y Nombre" subtitle="Tu identidad en el sistema" icon={User} iconColor="bg-gradient-to-br from-blue-500 to-indigo-600">
-        <div className="flex items-center gap-5 mb-6">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6 text-center sm:text-left">
           <div className="relative group cursor-pointer" onClick={() => fileRef.current?.click()}>
             {avatarUrl ? (
               <img src={avatarUrl} alt="Avatar" className="w-20 h-20 rounded-2xl object-cover ring-4 ring-blue-100" />
@@ -483,19 +483,31 @@ export default function ConfiguracionView({ onAvatarUpdate }: { onAvatarUpdate?:
   const [tab, setTab] = useState<Tab>('perfil')
 
   return (
-    <div className="w-full flex gap-6">
-      {/* Sidebar */}
-      <aside className={`w-52 shrink-0 rounded-2xl border p-2 h-fit sticky top-4 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-        <p className={`text-[10px] font-black uppercase tracking-widest px-3 pt-2 pb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Mi cuenta</p>
-        <div className="space-y-0.5">
+    <div className="w-full flex flex-col md:flex-row gap-4 md:gap-6">
+
+      {/* Sidebar — horizontal scroll en móvil, vertical en desktop */}
+      <aside className={`shrink-0 rounded-2xl border md:w-52 md:h-fit md:sticky md:top-4
+        ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+
+        {/* Label solo en desktop */}
+        <p className={`hidden md:block text-[10px] font-black uppercase tracking-widest px-3 pt-3 pb-2
+          ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Mi cuenta</p>
+
+        {/* En móvil: fila scrollable de tabs con icono + label */}
+        <div className="flex md:flex-col md:space-y-0.5 overflow-x-auto md:overflow-x-visible p-2 gap-1 md:gap-0">
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all text-left ${tab === t.id
-                ? 'bg-blue-600 text-white shadow-md'
-                : isDark ? 'text-slate-400 hover:bg-[#21262d] hover:text-slate-200' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}`}>
+              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap
+                md:w-full md:text-left
+                ${tab === t.id
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : isDark
+                    ? 'text-slate-400 hover:bg-[#21262d] hover:text-slate-200'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
+                }`}>
               <t.icon size={15} className="shrink-0" />
-              {t.label}
-              {tab === t.id && <ChevronRight size={13} className="ml-auto opacity-60" />}
+              <span>{t.label}</span>
+              {tab === t.id && <ChevronRight size={13} className="ml-auto opacity-60 hidden md:block" />}
             </button>
           ))}
         </div>
