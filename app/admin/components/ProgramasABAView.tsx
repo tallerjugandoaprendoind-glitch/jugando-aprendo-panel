@@ -128,10 +128,20 @@ export default function ProgramasABAView({ childId, childName }: { childId: stri
     ? programas
     : programas.filter(p => p.area === filtroArea)
 
+  // Helper: misma lógica que el badge "Criterio alcanzado" en ProgramaCard
+  const programaCriterioAlcanzado = (p: any) => {
+    const sesiones = p.sesiones_datos_aba || []
+    const crit = p.criterio_dominio_pct || 90
+    const critSesiones = p.criterio_sesiones_consecutivas || 2
+    if (sesiones.length < critSesiones) return false
+    const last = sesiones.slice(-critSesiones)
+    return last.every((s: any) => (s.porcentaje_exito ?? 0) >= crit)
+  }
+
   const stats = {
     activos: programas.filter(p => p.estado === 'activo').length,
-    dominados: programas.filter(p => p.estado === 'dominado').length,
-    enIntervencion: programas.filter(p => p.fase_actual === 'intervencion').length,
+    dominados: programas.filter(p => p.estado === 'dominado' || programaCriterioAlcanzado(p)).length,
+    enIntervencion: programas.filter(p => p.fase_actual === 'intervencion' || p.fase_actual === 'linea_base').length,
     alertas: aiAnalysis?.alertas?.length || 0,
   }
 
