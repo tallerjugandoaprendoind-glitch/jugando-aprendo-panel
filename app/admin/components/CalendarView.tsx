@@ -427,7 +427,19 @@ function MonthlyCalendarView() {
   }).sort((a,b) => ((a.appointment_date||'')+(a.appointment_time||'')).localeCompare((b.appointment_date||'')+(b.appointment_time||'')))
 
   const todayApts = apts.filter(a => a.appointment_date===todayStr)
-  const weekApts = apts.filter(a => { const d=new Date(a.appointment_date); const diff=(d.getTime()-new Date().getTime())/86400000; return diff>=0&&diff<=7 })
+  const weekApts = apts.filter(a => {
+    const d = new Date(a.appointment_date)
+    const hoy = new Date()
+    // Lunes de la semana actual
+    const lunes = new Date(hoy)
+    lunes.setDate(hoy.getDate() - ((hoy.getDay() + 6) % 7))
+    lunes.setHours(0, 0, 0, 0)
+    // Domingo de la semana actual
+    const domingo = new Date(lunes)
+    domingo.setDate(lunes.getDate() + 6)
+    domingo.setHours(23, 59, 59, 999)
+    return d >= lunes && d <= domingo
+  })
   const virtualApts = apts.filter(a => a.modalidad==='virtual')
 
   return (
