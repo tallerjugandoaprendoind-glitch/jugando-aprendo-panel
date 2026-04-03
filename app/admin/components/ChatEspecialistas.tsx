@@ -302,7 +302,8 @@ export default function ChatEspecialistas({
       const { data: perfiles } = await supabase
         .from('profiles')
         .select('id, full_name, specialty, role, avatar_url')
-        .in('role', ['especialista', 'terapeuta'])
+        .in('role', ['especialista', 'terapeuta', 'admin', 'jefe'])
+        .neq('id', userId)
         .order('full_name')
       if (!perfiles) return
 
@@ -656,6 +657,8 @@ export default function ChatEspecialistas({
   const filtrados = especialistas.filter((e) =>
     e.full_name.toLowerCase().includes(busqueda.toLowerCase())
   )
+  const filtradosAdmins = filtrados.filter((e) => ['admin', 'jefe'].includes(e.role))
+  const filtradosEspecialistas = filtrados.filter((e) => ['especialista', 'terapeuta'].includes(e.role))
 
   const contextMsg = contextMsgId ? mensajes.find((m) => m.id === contextMsgId) : null
 
@@ -708,7 +711,7 @@ export default function ChatEspecialistas({
 
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-xs font-black text-slate-600 flex items-center gap-1.5">
-                <Users size={13} className="text-blue-500" /> Especialistas
+                <Users size={13} className="text-blue-500" /> Contactos
               </h2>
             </div>
             <div className="relative">
@@ -722,7 +725,7 @@ export default function ChatEspecialistas({
             </div>
           </div>
 
-          {/* Lista especialistas */}
+          {/* Lista contactos */}
           <div className="flex-1 overflow-y-auto">
             {loadingEsp ? (
               <div className="flex justify-center py-10">
@@ -730,49 +733,114 @@ export default function ChatEspecialistas({
               </div>
             ) : filtrados.length === 0 ? (
               <div className="text-center py-10 px-4">
-                <p className="text-xs text-slate-400">No hay especialistas registrados</p>
+                <p className="text-xs text-slate-400">No hay contactos registrados</p>
               </div>
             ) : (
-              filtrados.map((esp) => (
-                <button
-                  key={esp.id}
-                  onClick={() => setSeleccionado(esp)}
-                  className={`w-full text-left px-4 py-3.5 border-b border-slate-100/70 transition-colors relative
-                    ${seleccionado?.id === esp.id
-                      ? 'bg-blue-50 border-l-[3px] border-l-blue-500'
-                      : 'hover:bg-white/80'
-                    }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="relative flex-shrink-0">
-                      <Avatar name={esp.full_name} avatarUrl={esp.avatar_url} size="sm" />
-                      {esp.unread > 0 && (
-                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-sm">
-                          {esp.unread > 9 ? '9+' : esp.unread}
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-xs font-bold truncate ${esp.unread > 0 ? 'text-slate-900' : 'text-slate-700'}`}>
-                        {esp.full_name}
+              <>
+                {/* ── Sección Admins ── */}
+                {filtradosAdmins.length > 0 && (
+                  <>
+                    <div className="px-4 py-2 bg-slate-100/80 border-b border-slate-200/60 sticky top-0 z-10">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-violet-500 rounded-full inline-block" />
+                        Administradores
                       </p>
-                      <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                        {esp.specialty || esp.role}
-                      </p>
-                      {esp.lastMessage && (
-                        <p className={`text-[10px] truncate mt-0.5 ${esp.unread > 0 ? 'text-slate-600 font-semibold' : 'text-slate-400'}`}>
-                          {esp.lastMessage}
-                        </p>
-                      )}
                     </div>
-                    {esp.lastTime && (
-                      <span className="text-[9px] text-slate-400 flex-shrink-0 mt-0.5">
-                        {formatHora(esp.lastTime)}
-                      </span>
-                    )}
-                  </div>
-                </button>
-              ))
+                    {filtradosAdmins.map((esp) => (
+                      <button
+                        key={esp.id}
+                        onClick={() => setSeleccionado(esp)}
+                        className={`w-full text-left px-4 py-3.5 border-b border-slate-100/70 transition-colors relative
+                          ${seleccionado?.id === esp.id
+                            ? 'bg-violet-50 border-l-[3px] border-l-violet-500'
+                            : 'hover:bg-white/80'
+                          }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="relative flex-shrink-0">
+                            <Avatar name={esp.full_name} avatarUrl={esp.avatar_url} size="sm" />
+                            {esp.unread > 0 && (
+                              <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-sm">
+                                {esp.unread > 9 ? '9+' : esp.unread}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-bold truncate ${esp.unread > 0 ? 'text-slate-900' : 'text-slate-700'}`}>
+                              {esp.full_name}
+                            </p>
+                            <p className="text-[10px] text-violet-400 truncate mt-0.5 font-semibold">
+                              {esp.specialty || (esp.role === 'jefe' ? 'Jefe' : 'Admin')}
+                            </p>
+                            {esp.lastMessage && (
+                              <p className={`text-[10px] truncate mt-0.5 ${esp.unread > 0 ? 'text-slate-600 font-semibold' : 'text-slate-400'}`}>
+                                {esp.lastMessage}
+                              </p>
+                            )}
+                          </div>
+                          {esp.lastTime && (
+                            <span className="text-[9px] text-slate-400 flex-shrink-0 mt-0.5">
+                              {formatHora(esp.lastTime)}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {/* ── Sección Especialistas ── */}
+                {filtradosEspecialistas.length > 0 && (
+                  <>
+                    <div className="px-4 py-2 bg-slate-100/80 border-b border-slate-200/60 sticky top-0 z-10">
+                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-blue-500 rounded-full inline-block" />
+                        Especialistas
+                      </p>
+                    </div>
+                    {filtradosEspecialistas.map((esp) => (
+                      <button
+                        key={esp.id}
+                        onClick={() => setSeleccionado(esp)}
+                        className={`w-full text-left px-4 py-3.5 border-b border-slate-100/70 transition-colors relative
+                          ${seleccionado?.id === esp.id
+                            ? 'bg-blue-50 border-l-[3px] border-l-blue-500'
+                            : 'hover:bg-white/80'
+                          }`}
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="relative flex-shrink-0">
+                            <Avatar name={esp.full_name} avatarUrl={esp.avatar_url} size="sm" />
+                            {esp.unread > 0 && (
+                              <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-sm">
+                                {esp.unread > 9 ? '9+' : esp.unread}
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs font-bold truncate ${esp.unread > 0 ? 'text-slate-900' : 'text-slate-700'}`}>
+                              {esp.full_name}
+                            </p>
+                            <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                              {esp.specialty || esp.role}
+                            </p>
+                            {esp.lastMessage && (
+                              <p className={`text-[10px] truncate mt-0.5 ${esp.unread > 0 ? 'text-slate-600 font-semibold' : 'text-slate-400'}`}>
+                                {esp.lastMessage}
+                              </p>
+                            )}
+                          </div>
+                          {esp.lastTime && (
+                            <span className="text-[9px] text-slate-400 flex-shrink-0 mt-0.5">
+                              {formatHora(esp.lastTime)}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -785,9 +853,9 @@ export default function ChatEspecialistas({
                 <MessageCircle size={40} className="text-blue-200" />
               </div>
               <div>
-                <p className="text-slate-700 font-black text-base">Selecciona un especialista</p>
+                <p className="text-slate-700 font-black text-base">Selecciona un contacto</p>
                 <p className="text-slate-400 text-sm mt-1">
-                  Elige un especialista de la lista para ver su conversación
+                  Elige un especialista o administrador de la lista para ver su conversación
                 </p>
               </div>
             </div>
