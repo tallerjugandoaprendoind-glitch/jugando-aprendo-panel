@@ -29,6 +29,7 @@ interface Mensaje {
   id: string
   content: string
   sender_id: string
+  recipient_id: string
   sender_role: string
   sender_name: string
   created_at: string
