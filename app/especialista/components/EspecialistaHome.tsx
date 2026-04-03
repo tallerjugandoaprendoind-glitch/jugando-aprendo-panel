@@ -160,70 +160,67 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           style={{ background: 'radial-gradient(circle, #818cf8, transparent)', transform: 'translate(-30%,30%)' }} />
 
         <div className="relative p-4 sm:p-6 md:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 sm:gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{saludo}</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 tracking-tight">{nombre}</h1>
-              <p className="text-slate-400 text-xs sm:text-sm font-medium capitalize mb-4 sm:mb-5">
-                {profile?.specialty || 'Especialista Clínico'} · {fechaStr}
-              </p>
 
-              <div className="flex flex-wrap gap-2">
-                {stats.citasHoy > 0 ? (
-                  <button onClick={() => setActiveView('agenda')}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white border border-white/20 hover:bg-white/10 transition-all"
-                    style={{ background: 'rgba(255,255,255,0.08)' }}>
-                    <Calendar size={14} className="text-sky-400" />
-                    {stats.citasHoy} cita{stats.citasHoy !== 1 ? 's' : ''} hoy
-                    {proximasCitas.slice(0, 2).map((c: any, i: number) => (
-                      <span key={i} className="text-slate-400 text-xs">
-                        {i > 0 ? ' · ' : ' → '}{c.appointment_time?.slice(0, 5)} {c.children?.name?.split(' ')[0]}
-                      </span>
-                    ))}
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-slate-400 border border-white/10"
-                    style={{ background: 'rgba(255,255,255,0.05)' }}>
-                    <CheckCircle2 size={14} className="text-emerald-400" /> Sin citas hoy
-                  </div>
-                )}
-                {stats.pendientes > 0 && (
-                  <button onClick={() => setActiveView('evaluaciones')}
-                    className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-amber-300 border border-amber-400/30 hover:bg-amber-400/10 transition-all"
-                    style={{ background: 'rgba(251,191,36,0.08)' }}>
-                    <Clock size={14} />
-                    {stats.pendientes} pendiente{stats.pendientes !== 1 ? 's' : ''}
-                    <ArrowUpRight size={13} />
-                  </button>
-                )}
+          {/* Fila 1: saludo + reloj */}
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{saludo}</span>
+            </div>
+            {horaActual && (
+              <div className="text-right">
+                <p className="text-xl sm:text-2xl md:text-3xl font-black text-white tabular-nums tracking-tight leading-none">{horaFmt}</p>
+                <p className="text-[9px] text-slate-500 uppercase tracking-widest text-right">
+                  {String(horaActual.getSeconds()).padStart(2,'0')}s
+                </p>
               </div>
-            </div>
-
-            {/* Reloj + CTA */}
-            <div className="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-3 flex-shrink-0">
-              {horaActual && (
-                <div className="text-right">
-                  <p className="text-3xl sm:text-4xl md:text-5xl font-black text-white tabular-nums tracking-tight leading-none">{horaFmt}</p>
-                  <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-widest">
-                    {String(horaActual.getSeconds()).padStart(2,'0')}s
-                  </p>
-                </div>
-              )}
-              <button onClick={() => setActiveView('evaluaciones')}
-                className="flex items-center gap-2 sm:gap-2.5 px-3 sm:px-5 py-2 sm:py-3 rounded-xl sm:rounded-2xl text-xs sm:text-sm font-black text-slate-900 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-sky-500/30 whitespace-nowrap"
-                style={{ background: 'linear-gradient(135deg, #38bdf8, #818cf8)' }}>
-                <Sparkles size={14} /> Nueva evaluación
-              </button>
-            </div>
+            )}
           </div>
+
+          {/* Fila 2: nombre */}
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white mb-1 tracking-tight">{nombre}</h1>
+
+          {/* Fila 3: especialidad + fecha (compacta) */}
+          <p className="text-slate-400 text-xs font-medium capitalize mb-4 leading-snug">
+            {profile?.specialty || 'Especialista Clínico'} · {fechaStr}
+          </p>
+
+          {/* Fila 4: badges + CTA */}
+          <div className="flex flex-wrap items-center gap-2">
+            {stats.citasHoy > 0 ? (
+              <button onClick={() => setActiveView('agenda')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white border border-white/20 hover:bg-white/10 transition-all"
+                style={{ background: 'rgba(255,255,255,0.08)' }}>
+                <Calendar size={12} className="text-sky-400" />
+                {stats.citasHoy} cita{stats.citasHoy !== 1 ? 's' : ''} hoy
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 border border-white/10"
+                style={{ background: 'rgba(255,255,255,0.05)' }}>
+                <CheckCircle2 size={12} className="text-emerald-400" /> Sin citas hoy
+              </div>
+            )}
+            {stats.pendientes > 0 && (
+              <button onClick={() => setActiveView('evaluaciones')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-300 border border-amber-400/30 hover:bg-amber-400/10 transition-all"
+                style={{ background: 'rgba(251,191,36,0.08)' }}>
+                <Clock size={12} />
+                {stats.pendientes} pendiente{stats.pendientes !== 1 ? 's' : ''}
+                <ArrowUpRight size={11} />
+              </button>
+            )}
+            <button onClick={() => setActiveView('evaluaciones')}
+              className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-slate-900 hover:scale-105 active:scale-95 transition-all shadow-md shadow-sky-500/30 whitespace-nowrap"
+              style={{ background: 'linear-gradient(135deg, #38bdf8, #818cf8)' }}>
+              <Sparkles size={12} /> Nueva evaluación
+            </button>
+          </div>
+
         </div>
       </div>
 
       {/* ── KPIs ─────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         {[
           { label: 'Pacientes',   value: stats.totalPacientes,     sub: 'Total activos',         icon: Users,        color: '#8b5cf6', bg: '#f5f3ff', view: 'pacientes'    },
           { label: 'Citas',       value: stats.sesionesEstaSemana, sub: 'Últimos 7 días',         icon: Activity,     color: '#10b981', bg: '#ecfdf5', view: 'agenda'       },
@@ -231,16 +228,16 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           { label: 'Aprobadas',   value: stats.aprobadas,          sub: 'Evaluaciones aprobadas', icon: CheckCircle2, color: '#3b82f6', bg: '#eff6ff', view: 'evaluaciones' },
         ].map(({ label, value, sub, icon: Icon, color, bg, view, pulse }: any) => (
           <button key={label} onClick={() => setActiveView(view)}
-            className="bg-white rounded-2xl p-3 sm:p-5 text-left hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all duration-200 border border-slate-100 relative overflow-hidden group">
-            {pulse && <span className="absolute top-3 right-3 w-2 h-2 rounded-full animate-pulse" style={{ background: color }} />}
+            className="bg-white rounded-2xl p-3 sm:p-4 text-left hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all duration-200 border border-slate-100 relative overflow-hidden group">
+            {pulse && <span className="absolute top-2 right-2 w-2 h-2 rounded-full animate-pulse" style={{ background: color }} />}
             <div className="absolute top-0 left-0 w-1 h-full rounded-l-2xl" style={{ background: color }} />
             <div className="pl-2">
-              <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center mb-2 sm:mb-3" style={{ background: bg }}>
-                <Icon size={14} style={{ color }} />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center mb-2" style={{ background: bg }}>
+                <Icon size={13} style={{ color }} />
               </div>
               <p className="text-2xl sm:text-3xl font-black text-slate-800 tabular-nums mb-0.5">{loading ? '—' : value}</p>
-              <p className="text-xs font-black mb-0.5" style={{ color }}>{label}</p>
-              <p className="text-xs text-slate-400">{sub}</p>
+              <p className="text-xs font-black mb-0.5 leading-tight" style={{ color }}>{label}</p>
+              <p className="text-[10px] text-slate-400 leading-tight">{sub}</p>
             </div>
           </button>
         ))}
