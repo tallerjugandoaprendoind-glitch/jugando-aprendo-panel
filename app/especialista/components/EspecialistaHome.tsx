@@ -52,6 +52,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
   })
   const [recientes, setRecientes]         = useState<any[]>([])
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
+  const [ultimaSesion, setUltimaSesion]   = useState<string | null>(null)
   const [sesSemanales, setSesSemanales]   = useState<number[]>([0,0,0,0,0,0,0])
   const [diasLabels, setDiasLabels]       = useState<string[]>(['L','M','M','J','V','S','D'])
   const [loading, setLoading]             = useState(true)
@@ -87,7 +88,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
       }
       setDiasLabels(labels)
 
-      const [subRes, citRes, nRes, sesRes, sesDetalle] = await Promise.all([
+      const [subRes, citRes, nRes, sesRes, sesDetalle, ultSesRes] = await Promise.all([
         supabase.from('specialist_submissions').select('status').eq('specialist_id', userId),
         supabase.from('appointments')
           .select('appointment_date, appointment_time, children(name)')
@@ -97,9 +98,19 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
         supabase.from('children').select('id', { count: 'exact', head: true }).eq('is_active', true),
         supabase.from('appointments').select('id').neq('status', 'cancelled').gte('appointment_date', hace7dias),
         supabase.from('appointments').select('appointment_date').neq('status', 'cancelled').gte('appointment_date', datesArr[0]),
+        supabase.from('appointments').select('appointment_date').neq('status', 'cancelled').lt('appointment_date', hoy).order('appointment_date', { ascending: false }).limit(1),
       ])
 
       const subs = subRes.data || []
+
+      // Última sesión
+      const ultDate = ultSesRes.data?.[0]?.appointment_date
+      if (ultDate) {
+        const d = new Date(ultDate + 'T00:00:00')
+        setUltimaSesion(d.toLocaleDateString('es-PE', { day: 'numeric', month: 'short' }))
+      } else {
+        setUltimaSesion(null)
+      }
 
       // Gráfico semanal
       const sesMap: Record<string, number> = {}
@@ -222,20 +233,21 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
       {/* ── KPIs ─────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         {[
-          { label: 'Pacientes',   value: stats.totalPacientes,     sub: 'Total activos',         icon: Users,        color: '#8b5cf6', bg: '#f5f3ff', view: 'pacientes'    },
-          { label: 'Citas',       value: stats.sesionesEstaSemana, sub: 'Últimos 7 días',         icon: Activity,     color: '#10b981', bg: '#ecfdf5', view: 'agenda'       },
-          { label: 'En revisión', value: stats.pendientes,         sub: 'Esperando aprobación',   icon: Clock,        color: '#f59e0b', bg: '#fffbeb', view: 'evaluaciones', pulse: stats.pendientes > 0 },
-          { label: 'Aprobadas',   value: stats.aprobadas,          sub: 'Evaluaciones aprobadas', icon: CheckCircle2, color: '#3b82f6', bg: '#eff6ff', view: 'evaluaciones' },
-        ].map(({ label, value, sub, icon: Icon, color, bg, view, pulse }: any) => (
+          { label: 'Pacientes',          value: stats.totalPacientes,                      sub: 'Total activos',        icon: Users,        color: '#8b5cf6', bg: '#f5f3ff', view: 'pacientes'    },
+          { label: 'Citas',              value: stats.sesionesEstaSemana,                  sub: 'Últimos 7 días',       icon: Activity,     color: '#10b981', bg: '#ecfdf5', view: 'agenda'       },
+          { label: 'Evaluaciones',       value: total,                                     sub: 'Total registradas',    icon: FileText,     color: '#f59e0b', bg: '#fffbeb', view: 'evaluaciones' },
+          { label: 'Última sesión',      value: ultimaSesion ?? '—',                       sub: 'Fecha más reciente',   icon: Calendar,     color: '#3b82f6', bg: '#eff6ff', view: 'agenda',      isText: true },
+        ].map(({ label, value, sub, icon: Icon, color, bg, view, isText }: any) => (
           <button key={label} onClick={() => setActiveView(view)}
             className="bg-white rounded-2xl p-3 sm:p-4 text-left hover:shadow-md hover:-translate-y-0.5 active:scale-95 transition-all duration-200 border border-slate-100 relative overflow-hidden group">
-            {pulse && <span className="absolute top-2 right-2 w-2 h-2 rounded-full animate-pulse" style={{ background: color }} />}
             <div className="absolute top-0 left-0 w-1 h-full rounded-l-2xl" style={{ background: color }} />
             <div className="pl-2">
               <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center mb-2" style={{ background: bg }}>
                 <Icon size={13} style={{ color }} />
               </div>
-              <p className="text-2xl sm:text-3xl font-black text-slate-800 tabular-nums mb-0.5">{loading ? '—' : value}</p>
+              <p className={`${isText ? 'text-base sm:text-lg' : 'text-2xl sm:text-3xl'} font-black text-slate-800 tabular-nums mb-0.5`}>
+                {loading ? '—' : value}
+              </p>
               <p className="text-xs font-black mb-0.5 leading-tight" style={{ color }}>{label}</p>
               <p className="text-[10px] text-slate-400 leading-tight">{sub}</p>
             </div>
