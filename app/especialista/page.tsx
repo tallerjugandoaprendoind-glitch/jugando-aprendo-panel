@@ -17,7 +17,6 @@ import ChatConAdmin from './components/ChatConAdmin'
 import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
 import MisFormularios from './components/MisFormularios'
-import ProgramasABAView from '@/app/admin/components/ProgramasABAView'
 import LocaleSelector from '@/app/components/LocaleSelector'
 import { ThemeToggleButton } from '@/components/ThemeContext'
 
@@ -63,12 +62,10 @@ export default function EspecialistaDashboard() {
     evaluaciones: 'Chat con Administración',
     agenda:       'Mi Agenda',
     perfil:       'Mi Perfil',
-    programas_aba: 'Programas ABA',
   }
 
   const [activeView, setActiveView]                 = useState('inicio')
   const [profile, setProfile]                       = useState<any>(null)
-  const [activeChild, setActiveChild]               = useState<{id: string, name: string} | null>(null)
   const [loading, setLoading]                       = useState(true)
   const [sidebarOpen, setSidebarOpen]               = useState(false)
   const [showProfileMenu, setShowProfileMenu]       = useState(false)
@@ -94,7 +91,6 @@ export default function EspecialistaDashboard() {
   }
 
   useEffect(() => { loadProfile() }, [])
-  useEffect(() => { if (activeView !== 'programas_aba' && activeView !== 'pacientes') setActiveChild(null) }, [activeView])
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
@@ -116,14 +112,10 @@ export default function EspecialistaDashboard() {
     if (!profile) return null
     switch (activeView) {
       case 'inicio':       return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
-      case 'pacientes':    return <MisPacientes onPatientSelect={(id: string, name: string) => { setActiveChild({ id, name }); setActiveView('programas_aba') }} />
+      case 'pacientes':    return <MisPacientes />
       case 'formularios':  return <MisFormularios userId={profile.id} />
       case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       case 'agenda':       return <MiAgenda />
-      case 'programas_aba':
-        return activeChild
-          ? <ProgramasABAView childId={activeChild.id} childName={activeChild.name} />
-          : <MisPacientes onPatientSelect={(id: string, name: string) => { setActiveChild({ id, name }); setActiveView('programas_aba') }} />
       case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       default:             return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
     }
@@ -192,7 +184,7 @@ export default function EspecialistaDashboard() {
               key={item.id}
               icon={item.icon}
               label={item.label}
-              active={activeView === item.id || (activeView === 'programas_aba' && item.id === 'pacientes')}
+              active={activeView === item.id}
               onClick={() => { setActiveView(item.id); setSidebarOpen(false) }}
             />
           ))}
@@ -283,7 +275,7 @@ export default function EspecialistaDashboard() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-100 px-2 py-1.5">
         <div className="flex items-center">
           {NAV_ITEMS.map(item => {
-            const isActive = activeView === item.id || (activeView === 'programas_aba' && item.id === 'pacientes')
+            const isActive = activeView === item.id
             return (
               <button key={item.id} onClick={() => setActiveView(item.id)}
                 className="flex flex-col items-center gap-1 py-1 flex-1 min-w-0 transition-all active:scale-95">

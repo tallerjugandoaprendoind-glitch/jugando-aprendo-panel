@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
+import ProgramasABAView from '@/app/admin/components/ProgramasABAView'
 
 function calcularEdad(fecha: string) {
   if (!fecha) return 'N/D'
@@ -610,7 +611,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
-export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (id: string, name: string) => void } = {}) {
+export default function MisPacientes() {
   const toast = useToast()
   const { t } = useI18n()
   const [ninos, setNinos] = useState<any[]>([])
@@ -620,7 +621,7 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
   const [registros, setRegistros] = useState<any[]>([])
   const [wordReports, setWordReports] = useState<any[]>([])
   const [loadingRegistros, setLoadingRegistros] = useState(false)
-  const [activeTab, setActiveTab] = useState<'resumen'|'historial'|'evaluaciones'|'reportes'>('resumen')
+  const [activeTab, setActiveTab] = useState<'resumen'|'historial'|'evaluaciones'|'reportes'|'programas_aba'>('resumen')
   const [filterType, setFilterType] = useState('all')
 
   const cargar = useCallback(async () => {
@@ -747,6 +748,7 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
       { id: 'historial', label: 'Historial', icon: Activity, count: registros.length },
       { id: 'evaluaciones', label: t('nav.evaluaciones'), icon: Brain, count: evalItems.length },
       { id: 'reportes', label: t('nav.reportes'), icon: Download, count: wordReports.length },
+      { id: 'programas_aba', label: 'Programas ABA', icon: Target, count: null },
     ]
 
     return (
@@ -760,13 +762,6 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t('especialista.expediente')}</p>
             <h2 className="text-xl font-black text-slate-800">{seleccionado.name}</h2>
           </div>
-          {onPatientSelect && (
-            <button
-              onClick={() => onPatientSelect(seleccionado.id, seleccionado.name)}
-              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md transition-all active:scale-95">
-              <Activity size={13} /> Programas ABA
-            </button>
-          )}
         </div>
 
         <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
@@ -917,6 +912,9 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
                   )
                 })}
               </div>
+            )}
+            {activeTab === 'programas_aba' && (
+              <ProgramasABAView childId={seleccionado.id} childName={seleccionado.name} />
             )}
           </>
         )}
