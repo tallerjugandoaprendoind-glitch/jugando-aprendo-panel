@@ -8,8 +8,7 @@ import Image from 'next/image'
 import {
   LayoutDashboard, Users, LogOut, Calendar, FileText,
   User, Loader2, Menu, X, Stethoscope, Activity, MessageCircle,
-  Key, ChevronRight, Sparkles
-  Activity,
+  Key, ChevronRight, Sparkles,
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import EspecialistaHome from './components/EspecialistaHome'
