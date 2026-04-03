@@ -400,7 +400,7 @@ function MonthlyCalendarView() {
 
   const resetForm = () => {
     setShow(false); setTipoSesion('individual'); setModalidadCita('presencial'); setRecurrencia('none'); setRecurrenciaSemanas(4)
-    setNewApt({ child_id:'', date:new Date().toISOString().split('T')[0], time:'09:00', service:'Terapia ABA', notes:'', group_name:'', status:'confirmed' })
+    setNewApt({ child_id:'', date:new Date().toISOString().split('T')[0], time:'09:00', service:'Terapia ABA', notes:'', group_name:'', status:'confirmed', specialist_id:'' })
     setSelectedParticipants([])
   }
 
