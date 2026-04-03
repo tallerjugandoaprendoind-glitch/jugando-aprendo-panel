@@ -53,6 +53,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
   const [recientes, setRecientes]         = useState<any[]>([])
   const [proximasCitas, setProximasCitas] = useState<any[]>([])
   const [ultimaSesion, setUltimaSesion]   = useState<string | null>(null)
+  const [pacientesRecientes, setPacientesRecientes] = useState<any[]>([])
   const [sesSemanales, setSesSemanales]   = useState<number[]>([0,0,0,0,0,0,0])
   const [diasLabels, setDiasLabels]       = useState<string[]>(['L','M','M','J','V','S','D'])
   const [loading, setLoading]             = useState(true)
@@ -137,6 +138,14 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
         .order('created_at', { ascending: false })
         .limit(5)
       setRecientes(rec || [])
+
+      const { data: pacs } = await supabase
+        .from('children')
+        .select('id, name, birth_date, is_active')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(4)
+      setPacientesRecientes(pacs || [])
 
     } finally { setLoading(false) }
   }, [userId])
@@ -279,45 +288,74 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
             )}
           </div>
 
-          {/* Productividad */}
-          <div className="bg-white rounded-2xl border border-slate-100 p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+          {/* Mis pacientes recientes */}
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+            <div className="px-4 py-3 flex items-center justify-between border-b border-slate-50">
               <div className="flex items-center gap-2">
-                <TrendingUp size={14} className="text-slate-400" />
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest">Tu productividad</p>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: '#f5f3ff' }}>
+                  <Users size={13} className="text-violet-600" />
+                </div>
+                <p className="text-xs font-black text-slate-700">Mis pacientes</p>
               </div>
-              <span className="text-xs bg-slate-50 text-slate-400 font-black px-2 py-0.5 rounded-full border border-slate-100">
-                {total} total
-              </span>
+              <button onClick={() => setActiveView('pacientes')}
+                className="text-xs font-bold text-slate-400 hover:text-violet-600 flex items-center gap-1 transition-colors">
+                Ver todos <ChevronRight size={12} />
+              </button>
             </div>
-            {total === 0 ? (
-              <div className="text-center py-3">
-                <div className="text-3xl mb-2">📈</div>
-                <p className="text-sm font-black text-slate-400">Aún sin evaluaciones</p>
-                <p className="text-xs text-slate-300 mt-1">Creá tu primera para ver estadísticas</p>
-                <button onClick={() => setActiveView('evaluaciones')}
-                  className="mt-3 text-xs font-black text-blue-600 hover:underline">
-                  Crear ahora →
+            {loading ? (
+              <div className="divide-y divide-slate-50">
+                {[1,2,3].map(i => (
+                  <div key={i} className="px-4 py-3 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 animate-pulse flex-shrink-0" />
+                    <div className="flex-1 space-y-1.5">
+                      <div className="h-2.5 bg-slate-100 rounded animate-pulse w-3/4" />
+                      <div className="h-2 bg-slate-100 rounded animate-pulse w-1/2" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : pacientesRecientes.length === 0 ? (
+              <div className="px-4 py-6 text-center">
+                <p className="text-xs text-slate-400 font-medium">Sin pacientes activos</p>
+                <button onClick={() => setActiveView('pacientes')}
+                  className="mt-2 text-xs font-black text-violet-600 hover:underline">
+                  Agregar paciente →
                 </button>
               </div>
             ) : (
-              <>
-                <div className="flex items-baseline gap-2 mb-3">
-                  <p className="text-4xl font-black text-slate-800">{tasa}</p>
-                  <p className="text-lg font-black text-slate-400">%</p>
-                  <p className="text-xs text-slate-400 ml-1">aprobación</p>
-                </div>
-                <div className="h-2 bg-slate-100 rounded-full overflow-hidden flex mb-3">
-                  <div className="bg-emerald-500 transition-all duration-700" style={{ width: `${(stats.aprobadas/total)*100}%` }} />
-                  <div className="bg-amber-400 transition-all duration-700"  style={{ width: `${(stats.pendientes/total)*100}%` }} />
-                  <div className="bg-red-400 transition-all duration-700"    style={{ width: `${(stats.rechazadas/total)*100}%` }} />
-                </div>
-                <div className="flex gap-3 text-xs font-bold flex-wrap">
-                  <span className="flex items-center gap-1 text-emerald-700"><span className="w-2 h-2 bg-emerald-500 rounded-full" />{stats.aprobadas} aprobadas</span>
-                  <span className="flex items-center gap-1 text-amber-700"><span className="w-2 h-2 bg-amber-400 rounded-full" />{stats.pendientes} revisión</span>
-                  {stats.rechazadas > 0 && <span className="flex items-center gap-1 text-red-700"><span className="w-2 h-2 bg-red-400 rounded-full" />{stats.rechazadas} rechazadas</span>}
-                </div>
-              </>
+              <div className="divide-y divide-slate-50">
+                {pacientesRecientes.map((p: any) => {
+                  const edad = p.birth_date
+                    ? Math.floor((Date.now() - new Date(p.birth_date).getTime()) / (365.25 * 24 * 3600 * 1000))
+                    : null
+                  const initials = p.name?.split(' ').map((w: string) => w[0]).slice(0,2).join('').toUpperCase() || '?'
+                  const colors = ['#8b5cf6','#3b82f6','#10b981','#f59e0b']
+                  const color  = colors[p.id?.charCodeAt(0) % colors.length] || '#8b5cf6'
+                  return (
+                    <button key={p.id}
+                      onClick={() => setActiveView('pacientes')}
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-50/70 transition-colors text-left">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white text-xs font-black"
+                        style={{ background: color }}>
+                        {initials}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black text-slate-800 truncate">{p.name}</p>
+                        {edad !== null && (
+                          <p className="text-[10px] text-slate-400">{edad} año{edad !== 1 ? 's' : ''}</p>
+                        )}
+                      </div>
+                      <ChevronRight size={12} className="text-slate-200 flex-shrink-0" />
+                    </button>
+                  )
+                })}
+                {stats.totalPacientes > 4 && (
+                  <button onClick={() => setActiveView('pacientes')}
+                    className="w-full px-4 py-2.5 text-center text-xs font-black text-violet-600 hover:bg-violet-50 transition-colors">
+                    +{stats.totalPacientes - 4} más
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
