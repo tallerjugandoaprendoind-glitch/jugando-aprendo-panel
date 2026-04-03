@@ -610,7 +610,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
-export default function MisPacientes() {
+export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (id: string, name: string) => void } = {}) {
   const toast = useToast()
   const { t } = useI18n()
   const [ninos, setNinos] = useState<any[]>([])
