@@ -299,13 +299,14 @@ export default function ChatEspecialistas({
   // ── Cargar especialistas ──────────────────────────────────────────────────
   const cargarEspecialistas = useCallback(async () => {
     try {
-      const { data: perfiles } = await supabase
+      const { data: perfilesRaw } = await supabase
         .from('profiles')
         .select('id, full_name, specialty, role, avatar_url')
         .in('role', ['especialista', 'terapeuta', 'admin', 'jefe'])
-        .neq('id', userId)
         .order('full_name')
-      if (!perfiles) return
+      if (!perfilesRaw) return
+      // Excluir al propio usuario de la lista de contactos
+      const perfiles = perfilesRaw.filter((p) => p.id !== userId)
 
       const conInfo = await Promise.all(
         perfiles.map(async (p) => {
@@ -344,7 +345,7 @@ export default function ChatEspecialistas({
     } finally {
       setLoadingEsp(false)
     }
-  }, [])
+  }, [userId])
 
   // ── Cargar mensajes ───────────────────────────────────────────────────────
   const cargarMensajes = useCallback(
