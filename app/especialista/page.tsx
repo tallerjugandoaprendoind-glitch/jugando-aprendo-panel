@@ -264,11 +264,17 @@ export default function EspecialistaDashboard() {
         </header>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="p-4 md:p-6 pb-24 md:pb-8">
+        {activeView === 'evaluaciones' ? (
+          <div className="flex-1 overflow-hidden p-4 md:p-6">
             {renderView()}
           </div>
-        </div>
+        ) : (
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-4 md:p-6 pb-24 md:pb-8">
+              {renderView()}
+            </div>
+          </div>
+        )}
       </main>
 
       {/* ── MOBILE BOTTOM NAV ── */}
