@@ -9,6 +9,7 @@ import {
   LayoutDashboard, Users, LogOut, Calendar, FileText,
   User, Loader2, Menu, X, Stethoscope, Activity, MessageCircle,
   Key, ChevronRight, Sparkles
+  Activity,
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import EspecialistaHome from './components/EspecialistaHome'
@@ -17,6 +18,7 @@ import ChatConAdmin from './components/ChatConAdmin'
 import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
 import MisFormularios from './components/MisFormularios'
+import ProgramasABAView from '@/app/admin/components/ProgramasABAView'
 import LocaleSelector from '@/app/components/LocaleSelector'
 import { ThemeToggleButton } from '@/components/ThemeContext'
 
@@ -52,6 +54,7 @@ export default function EspecialistaDashboard() {
     { id: 'formularios',  icon: FileText,        label: t('nav.misformularios') },
     { id: 'evaluaciones', icon: MessageCircle,  label: 'Chat Admin' },
     { id: 'agenda',       icon: Calendar,        label: t('nav.miagenda') },
+    { id: 'programas_aba', icon: Activity,        label: 'Programas ABA' },
     { id: 'perfil',       icon: User,            label: t('nav.miperfil') },
   ]
 
@@ -66,6 +69,7 @@ export default function EspecialistaDashboard() {
 
   const [activeView, setActiveView]                 = useState('inicio')
   const [profile, setProfile]                       = useState<any>(null)
+  const [activeChild, setActiveChild]               = useState<{id: string, name: string} | null>(null)
   const [loading, setLoading]                       = useState(true)
   const [sidebarOpen, setSidebarOpen]               = useState(false)
   const [showProfileMenu, setShowProfileMenu]       = useState(false)
@@ -91,6 +95,7 @@ export default function EspecialistaDashboard() {
   }
 
   useEffect(() => { loadProfile() }, [])
+  useEffect(() => { if (activeView !== 'programas_aba') setActiveChild(null) }, [activeView])
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
@@ -116,6 +121,10 @@ export default function EspecialistaDashboard() {
       case 'formularios':  return <MisFormularios userId={profile.id} />
       case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       case 'agenda':       return <MiAgenda />
+      case 'programas_aba':
+        return activeChild
+          ? <ProgramasABAView childId={activeChild.id} childName={activeChild.name} />
+          : <MisPacientes onPatientSelect={(id: string, name: string) => { setActiveChild({ id, name }); setActiveView('programas_aba') }} />
       case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       default:             return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
     }

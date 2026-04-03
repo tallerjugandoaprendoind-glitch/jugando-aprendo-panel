@@ -756,10 +756,17 @@ export default function MisPacientes() {
             className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 shadow-sm">
             <ChevronRight size={18} className="rotate-180 text-slate-600" />
           </button>
-          <div>
+          <div className="flex-1">
             <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t('especialista.expediente')}</p>
             <h2 className="text-xl font-black text-slate-800">{seleccionado.name}</h2>
           </div>
+          {onPatientSelect && (
+            <button
+              onClick={() => onPatientSelect(seleccionado.id, seleccionado.name)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black shadow-md transition-all active:scale-95">
+              <Activity size={13} /> Programas ABA
+            </button>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
