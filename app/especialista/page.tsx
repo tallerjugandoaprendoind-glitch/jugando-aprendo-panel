@@ -149,10 +149,8 @@ export default function EspecialistaDashboard() {
 
       {/* ── SIDEBAR ── */}
       <aside className={`
-        fixed md:static z-40 h-full w-[215px] flex flex-col
+        hidden md:flex z-50 h-full w-[215px] flex-col
         bg-white border-r border-slate-100 shadow-sm
-        transition-transform duration-300 ease-in-out
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
 
         {/* Logo */}
@@ -164,7 +162,7 @@ export default function EspecialistaDashboard() {
             <p className="font-black text-[13px] leading-tight text-slate-800">Jugando Aprendo</p>
             <p className="text-[10px] text-slate-400">Panel Clínico</p>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-slate-600 p-1">
+          <button onClick={() => setSidebarOpen(false)} className="hidden text-slate-400 hover:text-slate-600 p-1">
             <X size={16} />
           </button>
         </div>
@@ -227,10 +225,7 @@ export default function EspecialistaDashboard() {
         </div>
       </aside>
 
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 md:hidden" onClick={() => setSidebarOpen(false)} />
-      )}
+      {/* Mobile overlay - removed, sidebar is desktop only */}
 
       {/* ── MAIN ── */}
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
