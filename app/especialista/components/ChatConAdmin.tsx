@@ -552,7 +552,7 @@ export default function ChatConAdmin({
               )}
 
               {/* Área mensajes */}
-              <div className="flex-1 overflow-y-auto px-4 py-4" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(239,246,255,0.6) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(238,242,255,0.4) 0%, transparent 60%), #f8fafc' }}>
+              <div className="flex-1 overflow-y-auto px-4 py-4 pr-6" style={{ background: 'radial-gradient(ellipse at 20% 50%, rgba(239,246,255,0.6) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(238,242,255,0.4) 0%, transparent 60%), #f8fafc' }}>
                 {loadingMsg ? (
                   <div className="flex justify-center py-10"><Loader2 size={20} className="animate-spin text-blue-400" /></div>
                 ) : mensajes.length === 0 ? (
@@ -576,7 +576,7 @@ export default function ChatConAdmin({
                           const siguiente = grupo.msgs[idx + 1]
                           const mismoEmisor = siguiente?.sender_id === msg.sender_id
                           return (
-                            <div key={msg.id} className={`flex items-end gap-2 ${esMio ? 'flex-row-reverse' : 'flex-row'} ${mismoEmisor ? 'mb-0.5' : 'mb-3'}`}
+                            <div key={msg.id} className={`flex items-end gap-2 ${esMio ? 'flex-row-reverse pr-1' : 'flex-row'} ${mismoEmisor ? 'mb-0.5' : 'mb-3'}`}
                               onContextMenu={(e) => openContextMenu(e, msg.id)}>
                               {/* Avatar */}
                               {!esMio && (
