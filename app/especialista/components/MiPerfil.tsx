@@ -6,7 +6,7 @@ import {
   User, Mail, Phone, Stethoscope, Eye, EyeOff,
   Save, Loader2, CheckCircle2, Edit3, CalendarDays,
   ChevronRight, Check, Unlink, Camera, X, Lock,
-  AlertCircle, BadgeCheck, Globe, Shield
+  AlertCircle, BadgeCheck, Globe, Shield, LogOut
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
@@ -187,8 +187,8 @@ function InfoRow({ label, icon: Icon, value, accent, bg }: {
 }
 
 /* ─── Componente principal ─── */
-export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: {
-  profile: any; onUpdate: () => void; onAvatarUpdate?: (url: string) => void
+export default function MiPerfil({ profile, onUpdate, onAvatarUpdate, onLogout }: {
+  profile: any; onUpdate: () => void; onAvatarUpdate?: (url: string) => void; onLogout?: () => void
 }) {
   const toast = useToast()
   const { t } = useI18n()
@@ -480,6 +480,22 @@ export default function MiPerfil({ profile, onUpdate, onAvatarUpdate }: {
               </div>
             )}
           </div>
+
+          {/* Cerrar sesión */}
+          {onLogout && (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+              <button onClick={onLogout}
+                className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-red-50 transition-colors text-left group">
+                <div className="w-8 h-8 bg-red-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-red-100 transition-colors">
+                  <LogOut size={13} className="text-red-500" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-red-500">Cerrar sesión</p>
+                  <p className="text-[11px] text-slate-400">Salir de tu cuenta</p>
+                </div>
+              </button>
+            </div>
+          )}
 
           {/* Zona de peligro — inline, compacta */}
           <div className="bg-white rounded-2xl border border-red-100 shadow-sm px-5 py-3 flex items-center gap-3">
