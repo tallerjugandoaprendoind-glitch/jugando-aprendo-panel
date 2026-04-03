@@ -368,32 +368,25 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       </div>
 
       {/* ── MÉTRICAS MEDIAS ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
 
-        {/* Sesiones 7 días */}
-        <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+        {/* Sesiones 7 días + Retención — combinados en fila */}
+        <div className="rounded-xl p-5 flex flex-col justify-center" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center justify-between mb-1">
             <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Sesiones — últimos 7 días</p>
             <span className="text-lg font-black" style={{ color: '#3a68a0' }}>{totalSes7d}</span>
           </div>
           <BarChart values={sesSemanales} labels={diasLabels} color="#3a68a0" />
-        </div>
-
-        {/* Retención y asistencia */}
-        <div className="rounded-xl p-5 flex items-center gap-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-          <Donut value={totalPacientes - sinSesion.length} total={totalPacientes} color="#2e7a56" size={72} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>Retención activa</p>
-            <p className="text-lg font-black leading-none" style={{ color: 'var(--text-primary)' }}>
-              {totalPacientes - sinSesion.length}
-              <span className="text-sm font-medium ml-1" style={{ color: 'var(--text-muted)' }}>/ {totalPacientes}</span>
-            </p>
-            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>pacientes con sesión reciente</p>
-            {metricas?.tareas?.total > 0 && (
-              <p className="text-xs mt-2" style={{ color: '#2e7a56' }}>
-                ✓ {metricas.tareas.completadas} tareas completadas
+          <div className="mt-4 pt-4 border-t flex items-center gap-4" style={{ borderColor: 'var(--card-border)' }}>
+            <Donut value={totalPacientes - sinSesion.length} total={totalPacientes} color="#2e7a56" size={56} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-black uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Retención activa</p>
+              <p className="text-base font-black leading-none" style={{ color: 'var(--text-primary)' }}>
+                {totalPacientes - sinSesion.length}
+                <span className="text-sm font-medium ml-1" style={{ color: 'var(--text-muted)' }}>/ {totalPacientes}</span>
               </p>
-            )}
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>pacientes con sesión reciente</p>
+            </div>
           </div>
         </div>
 

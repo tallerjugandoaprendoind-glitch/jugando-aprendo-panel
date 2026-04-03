@@ -1430,7 +1430,6 @@ export default function InteligenciaHubView() {
     { id: 'objetivos' as Tab, icon: Target, label: 'Objetivos IA', color: 'amber' },
     { id: 'sugerencias' as Tab, icon: Sparkles, label: 'Alertas Proactivas', color: 'orange' },
     { id: 'reportes' as Tab, icon: BookOpen, label: 'Reportes IA', color: 'teal' },
-    { id: 'seguridad' as Tab, icon: Shield, label: 'Seguridad', color: 'emerald' },
   ]
 
   return (
@@ -1442,7 +1441,7 @@ export default function InteligenciaHubView() {
         </div>
         <div>
           <h1 className="text-xl font-black text-slate-800" style={{ color: "var(--text-primary)" }}>{t('hub.hubInteligencia')}</h1>
-          <p className="text-xs text-slate-400">6 agentes IA · Predicciones · Patrones · Objetivos · Reportes · Seguridad</p>
+          <p className="text-xs text-slate-400">6 agentes IA · Predicciones · Patrones · Objetivos · Reportes</p>
         </div>
       </div>
 
