@@ -116,7 +116,6 @@ export default function AdminDashboard() {
     { id: 'inteligencia', icon: Zap,             label: t('nav.hub'),             roles: ['jefe','admin','especialista'] },
     { id: 'cerebro',      icon: Database,        label: t('nav.cerebro'),         roles: ['jefe','admin'] },
     { id: 'recursos-adicionales', icon: BookOpen, label: 'Recursos Adicionales',  roles: ['jefe','admin','especialista','terapeuta'] },
-    { id: 'config',       icon: Settings,        label: t('common.configuracion'),roles: ['jefe'] },
     { id: 'chat-especialistas', icon: MessageCircle, label: 'Chat Especialistas', roles: ['jefe'] },
   ]
   const MOBILE_NAV = [
@@ -127,6 +126,7 @@ export default function AdminDashboard() {
   ]
   const SECONDARY_NAV = [
     { id: 'usuarios', icon: Key, label: t('nav.usuarios') },
+    { id: 'config',   icon: Settings, label: t('common.configuracion') },
     { id: 'importar', icon: Upload, label: t('nav.importarCSV'), hidden: true },
   ]
   const PAGE_TITLES: Record<string, string> = {
