@@ -221,7 +221,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               </div>
             )}
             {stats.pendientes > 0 && (
-              <button onClick={() => setActiveView('evaluaciones')}
+              <button onClick={() => setActiveView('formularios')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-300 border border-amber-400/30 hover:bg-amber-400/10 transition-all"
                 style={{ background: 'rgba(251,191,36,0.08)' }}>
                 <Clock size={12} />
@@ -229,7 +229,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
                 <ArrowUpRight size={11} />
               </button>
             )}
-            <button onClick={() => setActiveView('evaluaciones')}
+            <button onClick={() => setActiveView('formularios')}
               className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black text-slate-900 hover:scale-105 active:scale-95 transition-all shadow-md shadow-sky-500/30 whitespace-nowrap"
               style={{ background: 'linear-gradient(135deg, #38bdf8, #818cf8)' }}>
               <Sparkles size={12} /> Nueva evaluación
@@ -244,7 +244,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
         {[
           { label: 'Pacientes',          value: stats.totalPacientes,                      sub: 'Total activos',        icon: Users,        color: '#8b5cf6', bg: '#f5f3ff', view: 'pacientes'    },
           { label: 'Citas',              value: stats.sesionesEstaSemana,                  sub: 'Últimos 7 días',       icon: Activity,     color: '#10b981', bg: '#ecfdf5', view: 'agenda'       },
-          { label: 'Evaluaciones',       value: total,                                     sub: 'Total registradas',    icon: FileText,     color: '#f59e0b', bg: '#fffbeb', view: 'evaluaciones' },
+          { label: 'Evaluaciones',       value: total,                                     sub: 'Total registradas',    icon: FileText,     color: '#f59e0b', bg: '#fffbeb', view: 'formularios' },
           { label: 'Última sesión',      value: ultimaSesion ?? '—',                       sub: 'Fecha más reciente',   icon: Calendar,     color: '#3b82f6', bg: '#eff6ff', view: 'agenda',      isText: true },
         ].map(({ label, value, sub, icon: Icon, color, bg, view, isText }: any) => (
           <button key={label} onClick={() => setActiveView(view)}
@@ -391,12 +391,12 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               <h3 className="font-black text-slate-800 text-sm">Mis evaluaciones recientes</h3>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setActiveView('evaluaciones')}
+              <button onClick={() => setActiveView('formularios')}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-white text-xs font-black rounded-xl transition-all hover:opacity-90"
                 style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)' }}>
                 <Plus size={12} /> Nueva
               </button>
-              <button onClick={() => setActiveView('evaluaciones')}
+              <button onClick={() => setActiveView('formularios')}
                 className="text-xs font-bold text-slate-400 hover:text-blue-600 flex items-center gap-1 transition-colors">
                 Ver todo <ChevronRight size={13} />
               </button>
@@ -417,7 +417,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               <p className="text-slate-400 text-sm mb-8 max-w-sm leading-relaxed">
                 Registrá el progreso de tus pacientes creando tu primera evaluación.
               </p>
-              <button onClick={() => setActiveView('evaluaciones')}
+              <button onClick={() => setActiveView('formularios')}
                 className="inline-flex items-center gap-2 px-8 py-3.5 text-white text-sm font-black rounded-2xl hover:opacity-90 active:scale-95 transition-all shadow-lg"
                 style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)' }}>
                 <Plus size={15} /> Nueva evaluación
@@ -432,7 +432,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
                   return (
                     <div key={r.id}
                       className="px-6 py-4 flex items-center gap-4 hover:bg-slate-50/70 transition-colors cursor-pointer"
-                      onClick={() => setActiveView('evaluaciones')}>
+                      onClick={() => setActiveView('formularios')}>
                       <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
                         <StatusIcon size={16} className={cfg.color} />
                       </div>
@@ -492,7 +492,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
               )}
 
               <div className="px-6 py-4 border-t border-slate-50">
-                <button onClick={() => setActiveView('evaluaciones')}
+                <button onClick={() => setActiveView('formularios')}
                   className="w-full py-2.5 border-2 border-dashed border-slate-200 hover:border-blue-300 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2">
                   <Plus size={13} /> Nueva evaluación
                 </button>
