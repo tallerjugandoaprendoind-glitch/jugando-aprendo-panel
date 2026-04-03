@@ -5,22 +5,12 @@ import { useState, useEffect, useRef } from 'react'
 import {
   User, Lock, Bell, Palette, Shield, Eye, EyeOff,
   Save, Loader2, CheckCircle, Camera, Mail, Phone,
-  Globe, ChevronRight, LogOut, Trash2, AlertTriangle,
+  Globe, LogOut, AlertTriangle,
 } from 'lucide-react'
 import { useTheme } from '@/components/ThemeContext'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import WhatsAppConfigView from './WhatsAppConfigView'
-
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-const TABS = [
-  { id: 'perfil',        label: 'Mi Perfil',      icon: User    },
-  { id: 'seguridad',     label: 'Contraseña',     icon: Lock    },
-  { id: 'notificaciones',label: 'Notificaciones', icon: Bell    },
-  { id: 'apariencia',    label: 'Apariencia',     icon: Palette },
-  { id: 'cuenta',        label: 'Cuenta',         icon: Shield  },
-] as const
-type Tab = typeof TABS[number]['id']
 
 // ── Card genérica ─────────────────────────────────────────────────────────────
 function Card({ title, subtitle, icon: Icon, iconColor, children }: {
@@ -40,6 +30,16 @@ function Card({ title, subtitle, icon: Icon, iconColor, children }: {
       </div>
       <div className="p-6">{children}</div>
     </div>
+  )
+}
+
+// ── Separador de sección ──────────────────────────────────────────────────────
+function SectionTitle({ label }: { label: string }) {
+  const { isDark } = useTheme()
+  return (
+    <p className={`text-[10px] font-black uppercase tracking-widest pt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+      {label}
+    </p>
   )
 }
 
@@ -68,8 +68,8 @@ function Input({ className = '', ...props }: React.InputHTMLAttributes<HTMLInput
   )
 }
 
-// ── Tab: Mi Perfil ────────────────────────────────────────────────────────────
-function TabPerfil({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void }) {
+// ── Sección: Mi Perfil ────────────────────────────────────────────────────────
+function SeccionPerfil({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void }) {
   const { isDark } = useTheme()
   const toast = useToast()
   const [loading, setLoading] = useState(true)
@@ -124,13 +124,15 @@ function TabPerfil({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void 
   const initial = form.full_name?.charAt(0)?.toUpperCase() || '?'
 
   if (loading) return (
-    <div className="flex items-center justify-center py-20">
+    <div className="flex items-center justify-center py-12">
       <Loader2 size={24} className="animate-spin text-blue-600" />
     </div>
   )
 
   return (
     <div className="space-y-4">
+      <SectionTitle label="Mi Perfil" />
+
       {/* Avatar & nombre */}
       <Card title="Foto y Nombre" subtitle="Tu identidad en el sistema" icon={User} iconColor="bg-gradient-to-br from-blue-500 to-indigo-600">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6 text-center sm:text-left">
@@ -200,7 +202,7 @@ function TabPerfil({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void 
         </p>
       </Card>
 
-      {/* Guardar */}
+      {/* Guardar perfil */}
       <button
         onClick={handleSave}
         disabled={saving}
@@ -213,14 +215,13 @@ function TabPerfil({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void 
   )
 }
 
-// ── Tab: Contraseña ───────────────────────────────────────────────────────────
-function TabSeguridad() {
+// ── Sección: Contraseña ───────────────────────────────────────────────────────
+function SeccionSeguridad() {
   const { isDark } = useTheme()
   const toast = useToast()
-  const [form, setForm] = useState({ current: '', nueva: '', confirmar: '' })
-  const [show, setShow] = useState({ current: false, nueva: false, confirmar: false })
+  const [form, setForm] = useState({ nueva: '', confirmar: '' })
+  const [show, setShow] = useState({ nueva: false, confirmar: false })
   const [saving, setSaving] = useState(false)
-  const [strength, setStrength] = useState(0)
 
   const calcStrength = (pwd: string) => {
     let s = 0
@@ -240,7 +241,7 @@ function TabSeguridad() {
       const { error } = await supabase.auth.updateUser({ password: form.nueva })
       if (error) throw error
       toast.success('¡Contraseña actualizada!')
-      setForm({ current: '', nueva: '', confirmar: '' })
+      setForm({ nueva: '', confirmar: '' })
     } catch (e: any) {
       toast.error('Error: ' + e.message)
     } finally {
@@ -254,6 +255,8 @@ function TabSeguridad() {
 
   return (
     <div className="space-y-4">
+      <SectionTitle label="Seguridad" />
+
       <Card title="Cambiar Contraseña" subtitle="Mantén tu cuenta segura con una contraseña fuerte" icon={Lock} iconColor="bg-gradient-to-br from-violet-500 to-purple-600">
         <div className="space-y-4">
           <Field label="Nueva contraseña">
@@ -337,32 +340,37 @@ function TabSeguridad() {
   )
 }
 
-// ── Tab: Notificaciones ───────────────────────────────────────────────────────
-function TabNotificaciones() {
+// ── Sección: Notificaciones ───────────────────────────────────────────────────
+function SeccionNotificaciones() {
   const { isDark } = useTheme()
   return (
-    <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-      <div className={`px-6 py-5 border-b flex items-center gap-4 ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-          <Bell size={18} className="text-white" />
+    <div className="space-y-4">
+      <SectionTitle label="Notificaciones" />
+      <div className={`rounded-2xl border overflow-hidden ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
+        <div className={`px-6 py-5 border-b flex items-center gap-4 ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+            <Bell size={18} className="text-white" />
+          </div>
+          <div>
+            <h3 className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>WhatsApp & Notificaciones</h3>
+            <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Configuración de mensajería con las familias</p>
+          </div>
         </div>
-        <div>
-          <h3 className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>WhatsApp & Notificaciones</h3>
-          <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Configuración de mensajería con las familias</p>
+        <div className="p-6">
+          <WhatsAppConfigView />
         </div>
-      </div>
-      <div className="p-6">
-        <WhatsAppConfigView />
       </div>
     </div>
   )
 }
 
-// ── Tab: Apariencia ───────────────────────────────────────────────────────────
-function TabApariencia() {
+// ── Sección: Apariencia ───────────────────────────────────────────────────────
+function SeccionApariencia() {
   const { isDark, toggleTheme } = useTheme()
   return (
     <div className="space-y-4">
+      <SectionTitle label="Apariencia" />
+
       <Card title="Tema de la Interfaz" subtitle="Personaliza cómo se ve el panel" icon={Palette} iconColor="bg-gradient-to-br from-indigo-500 to-blue-600">
         <div className="grid grid-cols-2 gap-3">
           {[
@@ -406,8 +414,8 @@ function TabApariencia() {
   )
 }
 
-// ── Tab: Cuenta ───────────────────────────────────────────────────────────────
-function TabCuenta() {
+// ── Sección: Cuenta ───────────────────────────────────────────────────────────
+function SeccionCuenta() {
   const { isDark } = useTheme()
   const toast = useToast()
   const [email, setEmail] = useState('')
@@ -438,7 +446,8 @@ function TabCuenta() {
 
   return (
     <div className="space-y-4">
-      {/* Info de la cuenta */}
+      <SectionTitle label="Cuenta" />
+
       <Card title="Información de Cuenta" subtitle="Detalles de tu acceso al sistema" icon={Shield} iconColor="bg-gradient-to-br from-slate-500 to-slate-700">
         <div className="space-y-3">
           <div className={`flex items-center gap-3 p-4 rounded-xl ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
@@ -461,7 +470,6 @@ function TabCuenta() {
         </div>
       </Card>
 
-      {/* Cerrar sesión */}
       <Card title="Sesión" subtitle="Administra tu sesión activa" icon={LogOut} iconColor="bg-gradient-to-br from-orange-500 to-red-500">
         <div className="space-y-3">
           <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
@@ -479,48 +487,13 @@ function TabCuenta() {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function ConfiguracionView({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void }) {
-  const { isDark } = useTheme()
-  const [tab, setTab] = useState<Tab>('perfil')
-
   return (
-    <div className="w-full flex flex-col md:flex-row gap-4 md:gap-6">
-
-      {/* Sidebar — horizontal scroll en móvil, vertical en desktop */}
-      <aside className={`shrink-0 rounded-2xl border md:w-52 md:h-fit md:sticky md:top-4
-        ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200/80 shadow-sm'}`}>
-
-        {/* Label solo en desktop */}
-        <p className={`hidden md:block text-[10px] font-black uppercase tracking-widest px-3 pt-3 pb-2
-          ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Mi cuenta</p>
-
-        {/* En móvil: fila scrollable de tabs con icono + label */}
-        <div className="flex md:flex-col md:space-y-0.5 overflow-x-auto md:overflow-x-visible p-2 gap-1 md:gap-0">
-          {TABS.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap
-                md:w-full md:text-left
-                ${tab === t.id
-                  ? 'bg-blue-600 text-white shadow-md'
-                  : isDark
-                    ? 'text-slate-400 hover:bg-[#21262d] hover:text-slate-200'
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'
-                }`}>
-              <t.icon size={15} className="shrink-0" />
-              <span>{t.label}</span>
-              {tab === t.id && <ChevronRight size={13} className="ml-auto opacity-60 hidden md:block" />}
-            </button>
-          ))}
-        </div>
-      </aside>
-
-      {/* Contenido */}
-      <div className="flex-1 min-w-0">
-        {tab === 'perfil'         && <TabPerfil onAvatarUpdate={onAvatarUpdate} />}
-        {tab === 'seguridad'      && <TabSeguridad />}
-        {tab === 'notificaciones' && <TabNotificaciones />}
-        {tab === 'apariencia'     && <TabApariencia />}
-        {tab === 'cuenta'         && <TabCuenta />}
-      </div>
+    <div className="w-full max-w-3xl mx-auto space-y-8 pb-10">
+      <SeccionPerfil onAvatarUpdate={onAvatarUpdate} />
+      <SeccionSeguridad />
+      <SeccionNotificaciones />
+      <SeccionApariencia />
+      <SeccionCuenta />
     </div>
   )
 }
