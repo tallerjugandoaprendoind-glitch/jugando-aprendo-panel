@@ -303,7 +303,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         }
       }
       setDone(true)
-      toast.success('✅ Enviado al jefe para aprobación')
+      toast.success('✅ Formulario guardado correctamente')
     } catch (e: any) { toast.error('Error: ' + e.message) }
     finally { setSaving(false) }
   }
@@ -316,13 +316,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       <div>
         <h3 className="text-2xl font-black text-slate-800 mb-2">{t('evaluaciones.formularioEnviado')}</h3>
         <p className="text-sm text-slate-500 max-w-xs mx-auto leading-relaxed">
-          El análisis fue guardado. El jefe lo revisará antes de enviarlo al padre/madre.
-        </p>
-      </div>
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 max-w-xs flex gap-3 text-left">
-        <AlertTriangle size={15} className="text-amber-600 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700 leading-relaxed">
-          {t('ui.approval_notice')}
+          El análisis fue guardado y está disponible en el expediente del paciente.
         </p>
       </div>
       <button onClick={onBack}
@@ -585,15 +579,7 @@ export default function MisFormularios({ userId }: { userId: string }) {
       <div>
         <h2 className="text-2xl font-black text-slate-800">{t('especialista.formsClinicos')}</h2>
         <p className="text-sm text-slate-500 mt-1">
-          Todos los instrumentos de evaluación — el jefe aprueba antes de enviar a los padres
-        </p>
-      </div>
-
-      {/* Banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex gap-3 items-start">
-        <AlertTriangle size={15} className="text-amber-600 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700 leading-relaxed">
-          {t('ui.approval_flow_notice')}
+          Todos los instrumentos de evaluación clínica
         </p>
       </div>
 
