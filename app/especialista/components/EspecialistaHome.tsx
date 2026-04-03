@@ -95,8 +95,8 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
           .neq('status', 'cancelled')
           .order('appointment_time'),
         supabase.from('children').select('id', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('aba_sessions_v2').select('id').eq('professional_id', userId).gte('session_date', hace7dias),
-        supabase.from('aba_sessions_v2').select('session_date').eq('professional_id', userId).gte('session_date', datesArr[0]),
+        supabase.from('appointments').select('id').neq('status', 'cancelled').gte('appointment_date', hace7dias),
+        supabase.from('appointments').select('appointment_date').neq('status', 'cancelled').gte('appointment_date', datesArr[0]),
       ])
 
       const subs = subRes.data || []
@@ -105,7 +105,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
       const sesMap: Record<string, number> = {}
       datesArr.forEach(d => { sesMap[d] = 0 })
       ;(sesDetalle.data || []).forEach((s: any) => {
-        if (sesMap[s.session_date] !== undefined) sesMap[s.session_date]++
+        if (sesMap[s.appointment_date] !== undefined) sesMap[s.appointment_date]++
       })
       setSesSemanales(Object.values(sesMap))
 
@@ -226,7 +226,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { label: 'Pacientes',   value: stats.totalPacientes,     sub: 'Total activos',         icon: Users,        color: '#8b5cf6', bg: '#f5f3ff', view: 'pacientes'    },
-          { label: 'Sesiones',    value: stats.sesionesEstaSemana, sub: 'Últimos 7 días',         icon: Activity,     color: '#10b981', bg: '#ecfdf5', view: 'agenda'       },
+          { label: 'Citas',       value: stats.sesionesEstaSemana, sub: 'Últimos 7 días',         icon: Activity,     color: '#10b981', bg: '#ecfdf5', view: 'agenda'       },
           { label: 'En revisión', value: stats.pendientes,         sub: 'Esperando aprobación',   icon: Clock,        color: '#f59e0b', bg: '#fffbeb', view: 'evaluaciones', pulse: stats.pendientes > 0 },
           { label: 'Aprobadas',   value: stats.aprobadas,          sub: 'Evaluaciones aprobadas', icon: CheckCircle2, color: '#3b82f6', bg: '#eff6ff', view: 'evaluaciones' },
         ].map(({ label, value, sub, icon: Icon, color, bg, view, pulse }: any) => (
