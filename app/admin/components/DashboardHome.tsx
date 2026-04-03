@@ -125,6 +125,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
   const [alertasClinicas, setAlertasClinicas] = useState<any[]>([])
   const [actividadReciente, setActividadReciente] = useState<any[]>([])
   const [programasActivos, setProgramasActivos] = useState<any[]>([])
+  const [totalProgramasAba, setTotalProgramasAba] = useState<number>(0)
   const [sesSemanales, setSesSemanales] = useState<number[]>([0,0,0,0,0,0,0])
   const [diasLabels, setDiasLabels] = useState<string[]>(['L','M','M','J','V','S','D'])
   const [sinSesion, setSinSesion] = useState<any[]>([])
@@ -222,6 +223,13 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
         .eq('estado', 'activo')
         .order('updated_at', { ascending: false })
         .limit(5)
+
+      // Contar total de programas ABA activos
+      const { count: countProgramas } = await supabase
+        .from('programas_aba')
+        .select('id', { count: 'exact', head: true })
+        .eq('estado', 'activo')
+      setTotalProgramasAba(countProgramas || 0)
 
       if (progData && progData.length > 0) {
         const enriquecidos = progData.map((p: any) => {
@@ -356,7 +364,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
         <KPI label="Pacientes" value={totalPacientes} sub="Total registrados" icon={Users} bar="#3a68a0" onClick={() => navigateTo('ninos')} />
         <KPI label="Sesiones hoy" value={totalSesHoy} sub={`${realizadasHoy} realizadas`} icon={Calendar} bar="#2e7a56" onClick={() => navigateTo('agenda')} />
         <KPI label="Sin sesión 30d" value={sinSesion.length} sub="Requieren seguimiento" icon={AlertTriangle} bar="#b07830" urgent={sinSesion.length > 0} onClick={() => navigateTo('ninos')} />
-        <KPI label="Forms pendientes" value={mensajesPendientes} sub="Sin revisar" icon={ClipboardList} bar="#6355a0" urgent={mensajesPendientes > 2} onClick={() => navigateTo('evaluaciones')} />
+        <KPI label="Programas ABA" value={totalProgramasAba} sub="Activos" icon={ClipboardList} bar="#6355a0" onClick={() => navigateTo('ninos')} />
       </div>
 
       {/* ── MÉTRICAS MEDIAS ── */}
