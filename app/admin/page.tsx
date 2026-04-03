@@ -485,45 +485,7 @@ export default function AdminDashboard() {
         </div>
       </main>
 
-      {/* ── BOTTOM NAV MÓVIL (admin) ── */}
-      <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-2 border-t shadow-[0_-4px_20px_rgba(0,0,0,0.08)]
-        ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}
-        style={{ paddingBottom: 'max(8px, env(safe-area-inset-bottom))' }}>
-        {MOBILE_NAV.map(item => {
-          const Icon = item.icon
-          const active = currentView === item.id
-          return (
-            <button key={item.id} onClick={() => navigateTo(item.id)}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all relative
-                ${active
-                  ? isDark ? 'text-blue-400' : 'text-blue-600'
-                  : isDark ? 'text-slate-500' : 'text-slate-400'
-                }`}>
-              <div className={`p-1.5 rounded-xl transition-all ${active ? isDark ? 'bg-blue-900/50' : 'bg-blue-50' : ''}`}>
-                <Icon size={20} />
-              </div>
-              <span className="text-[10px] font-bold">{item.label}</span>
-              {active && (
-                <div className={`absolute -top-0.5 left-1/2 -translate-x-1/2 w-4 h-0.5 rounded-full ${isDark ? 'bg-blue-400' : 'bg-blue-600'}`} />
-              )}
-            </button>
-          )
-        })}
-        {/* Botón "Más" para el resto de vistas */}
-        <button onClick={() => setSidebarOpen(true)}
-          className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all
-            ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-          <div className="p-1.5 rounded-xl relative">
-            <ChevronRight size={20} />
-            {pendingMessages > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center">
-                {pendingMessages}
-              </span>
-            )}
-          </div>
-          <span className="text-[10px] font-bold">{t('ui.more')}</span>
-        </button>
-      </nav>
+
 
       {/* Change Password Modal */}
       {showChangePassword && (
