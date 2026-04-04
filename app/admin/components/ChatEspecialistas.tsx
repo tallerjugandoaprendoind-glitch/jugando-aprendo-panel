@@ -1160,7 +1160,7 @@ export default function ChatEspecialistas({
               )}
 
               {/* Input */}
-              <div className={`border-t px-4 py-3 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
+              <div className={`border-t px-4 py-3 ${isDark ? 'bg-[#161b22] border-[#161b22]' : 'bg-white border-slate-100'}`}>
                 <div className="flex items-end gap-2">
                   <button
                     onClick={() => fileInputRef.current?.click()}
@@ -1183,7 +1183,7 @@ export default function ChatEspecialistas({
                     accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                   />
 
-                  <div className={`flex-1 rounded-2xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-blue-400 transition-all ${isDark ? 'bg-[#0d1117] border border-[#30363d] focus-within:border-blue-500' : 'bg-slate-50 border border-slate-200 focus-within:border-blue-400'}`}>
+                  <div className={`flex-1 rounded-2xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-blue-500/60 transition-all ${isDark ? 'bg-[#21262d] border border-[#21262d] focus-within:border-blue-500/50' : 'bg-slate-50 border border-slate-200 focus-within:border-blue-400'}`}>
                     <textarea
                       ref={textareaRef}
                       value={texto}
