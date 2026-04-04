@@ -1,38 +1,27 @@
 /**
- * Vanty WhatsApp Microservice — Sesión en Supabase
- * ─────────────────────────────────────────────────────────────────────────────
- * Guarda las credenciales de WhatsApp en Supabase para sobrevivir reinicios.
- *
- * Variables de entorno requeridas:
- *   WSP_SERVICE_SECRET     → clave secreta (la misma que en Vercel)
- *   SUPABASE_URL           → https://xxxx.supabase.co
- *   SUPABASE_SERVICE_KEY   → service_role key de Supabase
- *   PORT                   → Railway lo setea automáticamente
+ * Vanty WhatsApp Microservice — ES Module version
+ * Variables requeridas en Railway:
+ *   WSP_SERVICE_SECRET, SUPABASE_URL, SUPABASE_SERVICE_KEY
  */
 
-const express = require('express')
-const makeWASocket = require('@whiskeysockets/baileys').default
-const {
+import express from 'express'
+import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
   initAuthCreds,
   BufferJSON,
   proto,
-} = require('@whiskeysockets/baileys')
-const QRCode = require('qrcode')
-const pino   = require('pino')
+} from '@whiskeysockets/baileys'
+import QRCode from 'qrcode'
+import pino from 'pino'
 
-// ── Config ───────────────────────────────────────────────────────────────────
-const PORT    = process.env.PORT || 3000
-const SECRET  = process.env.WSP_SERVICE_SECRET || 'dev-secret'
-const SB_URL  = process.env.SUPABASE_URL
-const SB_KEY  = process.env.SUPABASE_SERVICE_KEY
+const PORT   = process.env.PORT || 3000
+const SECRET = process.env.WSP_SERVICE_SECRET || 'dev-secret'
+const SB_URL = process.env.SUPABASE_URL
+const SB_KEY = process.env.SUPABASE_SERVICE_KEY
 
-if (!SB_URL || !SB_KEY) {
-  console.error('FALTAN SUPABASE_URL o SUPABASE_SERVICE_KEY')
-}
+if (!SB_URL || !SB_KEY) console.error('FALTAN SUPABASE_URL o SUPABASE_SERVICE_KEY')
 
-// ── Estado global ─────────────────────────────────────────────────────────────
 let sock           = null
 let qrBase64       = null
 let isConnected    = false
@@ -41,7 +30,7 @@ let reconnecting   = false
 
 const logger = pino({ level: 'silent' })
 
-// ── Supabase helpers (fetch nativo, sin SDK) ──────────────────────────────────
+// ── Supabase helpers ──────────────────────────────────────────────────────────
 async function sbGet(key) {
   try {
     const res = await fetch(
@@ -86,17 +75,12 @@ async function sbDelAll() {
   } catch {}
 }
 
-// ── Auth state guardado en Supabase ───────────────────────────────────────────
+// ── Auth state en Supabase ────────────────────────────────────────────────────
 async function useSupabaseAuthState() {
   const credsRaw = await sbGet('creds')
-  const creds = credsRaw
-    ? JSON.parse(credsRaw, BufferJSON.reviver)
-    : initAuthCreds()
+  const creds = credsRaw ? JSON.parse(credsRaw, BufferJSON.reviver) : initAuthCreds()
 
-  const readData  = async (key) => {
-    const raw = await sbGet(key)
-    return raw ? JSON.parse(raw, BufferJSON.reviver) : null
-  }
+  const readData   = async (key) => { const r = await sbGet(key); return r ? JSON.parse(r, BufferJSON.reviver) : null }
   const writeData  = async (key, data) => sbSet(key, JSON.stringify(data, BufferJSON.replacer))
   const removeData = async (key) => sbDel(key)
 
@@ -107,49 +91,43 @@ async function useSupabaseAuthState() {
         const data = {}
         await Promise.all(ids.map(async (id) => {
           let value = await readData(`${type}-${id}`)
-          if (type === 'app-state-sync-key' && value) {
+          if (type === 'app-state-sync-key' && value)
             value = proto.Message.AppStateSyncKeyData.fromObject(value)
-          }
           data[id] = value
         }))
         return data
       },
       set: async (data) => {
         const tasks = []
-        for (const category of Object.keys(data)) {
+        for (const category of Object.keys(data))
           for (const id of Object.keys(data[category])) {
             const value = data[category][id]
             tasks.push(value ? writeData(`${category}-${id}`, value) : removeData(`${category}-${id}`))
           }
-        }
         await Promise.all(tasks)
       },
     },
   }
 
   const saveCreds = async () => writeData('creds', state.creds)
-
   return { state, saveCreds }
 }
 
-// ── Iniciar / reconectar WhatsApp ─────────────────────────────────────────────
+// ── WhatsApp ──────────────────────────────────────────────────────────────────
 async function startWhatsApp() {
   if (reconnecting) return
   reconnecting = true
 
   try {
-    console.log('[WA] Iniciando conexion...')
+    console.log('[WA] Iniciando...')
     const { state, saveCreds } = await useSupabaseAuthState()
     const { version } = await fetchLatestBaileysVersion()
 
     sock = makeWASocket({
-      version,
-      logger,
-      auth: state,
+      version, logger, auth: state,
       printQRInTerminal: false,
       browser: ['Vanty', 'Chrome', '120.0.0'],
       connectTimeoutMs: 30_000,
-      defaultQueryTimeoutMs: 20_000,
       keepAliveIntervalMs: 25_000,
     })
 
@@ -166,23 +144,15 @@ async function startWhatsApp() {
 
       if (connection === 'open') {
         console.log('[WA] Conectado!')
-        isConnected  = true
-        qrBase64     = null
-        reconnecting = false
-        try {
-          connectedPhone = (sock.user?.id || '').split(':')[0].split('@')[0]
-          console.log(`[WA] Numero: ${connectedPhone}`)
-        } catch {}
+        isConnected = true; qrBase64 = null; reconnecting = false
+        try { connectedPhone = (sock.user?.id || '').split(':')[0].split('@')[0] } catch {}
       }
 
       if (connection === 'close') {
-        isConnected    = false
-        connectedPhone = null
-        reconnecting   = false
+        isConnected = false; connectedPhone = null; reconnecting = false
         const code = lastDisconnect?.error?.output?.statusCode
-
         if (code === DisconnectReason.loggedOut) {
-          console.log('[WA] Sesion cerrada — limpiando...')
+          console.log('[WA] Deslogueado — limpiando sesion...')
           await sbDelAll()
           setTimeout(startWhatsApp, 2000)
           return
@@ -205,20 +175,16 @@ app.use(express.json())
 
 app.use((req, res, next) => {
   if (req.path === '/' || req.path === '/health') return next()
-  if (req.headers['x-service-secret'] !== SECRET) {
+  if (req.headers['x-service-secret'] !== SECRET)
     return res.status(401).json({ error: 'No autorizado' })
-  }
   next()
 })
 
-app.get('/',       (req, res) => res.json({ status: 'ok', service: 'vanty-whatsapp' }))
-app.get('/health', (req, res) => res.json({ status: 'ok' }))
+app.get('/',       (_, res) => res.json({ status: 'ok', service: 'vanty-whatsapp' }))
+app.get('/health', (_, res) => res.json({ status: 'ok' }))
+app.get('/status', (_, res) => res.json({ connected: isConnected, phone: connectedPhone }))
 
-app.get('/status', (req, res) => {
-  res.json({ connected: isConnected, phone: connectedPhone })
-})
-
-app.get('/qr', (req, res) => {
+app.get('/qr', (_, res) => {
   if (isConnected) return res.json({ connected: true })
   if (qrBase64)   return res.json({ qr: qrBase64 })
   res.json({ waiting: true })
@@ -228,28 +194,24 @@ app.post('/send', async (req, res) => {
   const { to, message } = req.body
   if (!to || !message) return res.status(400).json({ error: 'to y message requeridos' })
   if (!isConnected || !sock) return res.status(503).json({ error: 'WhatsApp no conectado' })
-
   try {
     const number = to.replace(/[^0-9]/g, '')
     await sock.sendMessage(`${number}@s.whatsapp.net`, { text: message })
     console.log(`[WA] Enviado a ${number}`)
     res.json({ success: true, to: number })
   } catch (err) {
-    console.error('[WA] Error enviando:', err.message)
     res.status(500).json({ error: err.message })
   }
 })
 
-app.post('/disconnect', async (req, res) => {
+app.post('/disconnect', async (_, res) => {
   try {
     if (sock) sock.logout()
     await sbDelAll()
     isConnected = false; qrBase64 = null; connectedPhone = null
     res.json({ success: true })
     setTimeout(startWhatsApp, 2000)
-  } catch (e) {
-    res.status(500).json({ error: e.message })
-  }
+  } catch (e) { res.status(500).json({ error: e.message }) }
 })
 
 app.listen(PORT, () => {
