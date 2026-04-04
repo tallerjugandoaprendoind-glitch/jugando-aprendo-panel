@@ -1,5 +1,6 @@
 // lib/vanty-agent.ts
 // El Agente IA de Vanty — cerebro clínico con memoria, herramientas y análisis proactivo
+// FIX: mayor límite de contexto para childCtx (4000 → 8000) y triggers de herramientas mejorados
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { buildKnowledgeContext, searchKnowledge } from '@/lib/knowledge-base'
@@ -23,15 +24,21 @@ const AGENT_TOOLS = {
   async obtenerDatosPrograma(programaId: string) {
     const { data: programa } = await supabaseAdmin
       .from('programas_aba')
-      .select('*, sesiones_datos_aba(fecha, porcentaje_exito, frecuencia_valor, fase, notas, nivel_ayuda)')
+      .select('id, titulo, area, fase_actual, estado, criterio_dominio_pct, criterio_sesiones_consecutivas, objetivo_lp')
       .eq('id', programaId)
-      .order('sesiones_datos_aba.fecha', { ascending: true })
       .single()
 
     if (!programa) return 'Programa no encontrado.'
 
-    const sesiones = (programa as any).sesiones_datos_aba || []
-    const tendencia = await calcularTendenciaLocal(sesiones)
+    // FIX: query separada y ordenada para sesiones
+    const { data: sesiones } = await supabaseAdmin
+      .from('sesiones_datos_aba')
+      .select('fecha, porcentaje_exito, frecuencia_valor, fase, notas, nivel_ayuda')
+      .eq('programa_id', programaId)
+      .order('fecha', { ascending: true })
+
+    const sesionesList = sesiones || []
+    const tendencia = calcularTendenciaLocal(sesionesList)
 
     return JSON.stringify({
       titulo: (programa as any).titulo,
@@ -39,10 +46,10 @@ const AGENT_TOOLS = {
       fase_actual: (programa as any).fase_actual,
       estado: (programa as any).estado,
       criterio_dominio: `${(programa as any).criterio_dominio_pct}% en ${(programa as any).criterio_sesiones_consecutivas} sesiones`,
-      total_sesiones: sesiones.length,
-      ultima_sesion: sesiones[sesiones.length - 1],
+      total_sesiones: sesionesList.length,
+      ultima_sesion: sesionesList[sesionesList.length - 1],
       tendencia,
-      sesiones_recientes: sesiones.slice(-5),
+      sesiones_recientes: sesionesList.slice(-5),
     }, null, 2)
   },
 
@@ -50,21 +57,33 @@ const AGENT_TOOLS = {
   async obtenerProgramasNino(childId: string) {
     const { data } = await supabaseAdmin
       .from('programas_aba')
-      .select(`
-        id, titulo, area, estado, fase_actual,
-        sesiones_datos_aba(porcentaje_exito, fecha)
-      `)
+      .select('id, titulo, area, estado, fase_actual')
       .eq('child_id', childId)
       .eq('estado', 'activo')
       .order('created_at', { ascending: false })
 
     if (!data || data.length === 0) return 'No hay programas activos para este paciente.'
 
+    // FIX: query separada para últimas sesiones por programa
+    const ids = (data as any[]).map(p => p.id)
+    const { data: sesiones } = await supabaseAdmin
+      .from('sesiones_datos_aba')
+      .select('programa_id, porcentaje_exito, fecha')
+      .in('programa_id', ids)
+      .order('fecha', { ascending: false })
+      .limit(50)
+
+    const ultimaPorPrograma: Record<string, number | null> = {}
+    if (sesiones) {
+      for (const s of sesiones as any[]) {
+        if (!(s.programa_id in ultimaPorPrograma)) {
+          ultimaPorPrograma[s.programa_id] = s.porcentaje_exito
+        }
+      }
+    }
+
     return (data as any[]).map(p => {
-      const sesiones = p.sesiones_datos_aba || []
-      const ultimoPct = sesiones.length > 0
-        ? sesiones[sesiones.length - 1]?.porcentaje_exito
-        : null
+      const ultimoPct = ultimaPorPrograma[p.id] ?? null
       return `- ${p.titulo} (${p.area}) | Fase: ${p.fase_actual} | Último %: ${ultimoPct ?? 'sin datos'}`
     }).join('\n')
   },
@@ -186,7 +205,6 @@ function calcularTendenciaLocal(sesiones: any[]) {
 
 // ── Sistema prompt del agente ─────────────────────────────────────────────────
 
-// Helper para obtener el nombre del idioma para el prompt de ARIA
 function getLocaleLabel(locale: string): string {
   const labels: Record<string, string> = {
     es: 'español',
@@ -199,7 +217,6 @@ function getLocaleLabel(locale: string): string {
   return labels[locale] || 'español'
 }
 
-// El system prompt base de ARIA — el idioma se agrega dinámicamente según el locale del usuario
 const SYSTEM_PROMPT_BASE = `Eres ARIA, asistente clínica de Vanty 🧠 — plataforma de intervención infantil especializada en ABA, TEA, TDAH y neurodesarrollo.
 
 🎯 IDENTIDAD:
@@ -246,7 +263,7 @@ Al citar diagnósticos, SIEMPRE incluye el código CIE-11 y DSM-5 cuando corresp
 - Lenguaje técnico-clínico apropiado para terapeutas profesionales, fluido y natural
 
 🗂️ ACCESO A DATOS DEL SISTEMA:
-- Si el contexto contiene "RESUMEN DEL SISTEMA" o "HISTORIAL CLÍNICO" → úsalos DIRECTAMENTE
+- Si el contexto contiene "RESUMEN DEL SISTEMA" o "HISTORIAL CLÍNICO" o "Programas ABA activos" → úsalos DIRECTAMENTE
 - Nunca digas "no tengo acceso" si los datos están en el contexto
 - Para análisis de pacientes: usa alertas, última sesión, % de logro y programas activos del contexto
 - Para comparaciones: analiza todos los pacientes del resumen con nombres reales
@@ -262,7 +279,6 @@ Al citar diagnósticos, SIEMPRE incluye el código CIE-11 y DSM-5 cuando corresp
 
 // ── Clase principal del Agente ────────────────────────────────────────────────
 
-// i18n: responder en el idioma del usuario
 function getLangInstruction(locale: string): string {
   return ''
 }
@@ -270,7 +286,6 @@ function getLangInstruction(locale: string): string {
 export class VantyAgent {
   private conversacionId: string | null = null
 
-  // Iniciar o continuar una conversación
   async chat(
     userMessage: string,
     options: {
@@ -293,32 +308,33 @@ export class VantyAgent {
       )
 
       // 2. Construir contexto dinámico
-      // FIX: detectar preguntas sobre pacientes para cargar datos del sistema
       const preguntaSobrePacientes = /paciente|peor|mejor|progreso|todos|lista|quien|quién|comparar|estado|sesion|sesión|avance|regresion|regresión|alert/i.test(userMessage)
 
       const [knowledgeCtx, childCtx, globalCtx] = await Promise.all([
         buildKnowledgeContext(userMessage),
         options.childId ? AGENT_TOOLS.obtenerHistorialNino(options.childId) : Promise.resolve(''),
-        // FIX: Si no hay paciente específico pero preguntan sobre pacientes, cargar todos
         (!options.childId && preguntaSobrePacientes)
           ? AGENT_TOOLS.obtenerResumenTodosPacientes()
           : Promise.resolve(''),
       ])
 
-      // 3. Preparar mensajes con historial (formato Groq/OpenAI)
+      // 3. Preparar mensajes con historial
       const messages = conversacion.mensajes as any[]
-      const historialReciente = messages.slice(-6) // reducido para ahorrar tokens
+      const historialReciente = messages.slice(-6)
 
-      // Construir contexto completo
-      // Detectar idioma del usuario y ajustar respuesta de ARIA
+      // FIX: límites de contexto aumentados para que los programas ABA no sean truncados
+      // childCtx: 4000 → 8000 (child-history ya pone programas ABA primero)
+      // knowledgeCtx: 6000 → 5000 (cedemos espacio a datos del paciente)
+      // globalCtx: 3000 → 3000 (sin cambio)
       const userLocale = (options as any).locale || 'es'
-      const localeInstruction = userLocale !== 'es' 
+      const localeInstruction = userLocale !== 'es'
         ? `\n\n[IDIOMA OBLIGATORIO: Responde SIEMPRE en ${getLocaleLabel(userLocale)}. Nunca respondas en español si el idioma configurado es diferente.]`
         : ''
-      // CONTROL DE TOKENS: limitar contexto para no exceder 6k TPM de Groq gratuito
-      const knowledgeCtxTrimmed = knowledgeCtx.slice(0, 6000)
-      const childCtxTrimmed = childCtx ? childCtx.slice(0, 4000) : ''
+
+      const knowledgeCtxTrimmed = knowledgeCtx.slice(0, 5000)
+      const childCtxTrimmed = childCtx ? childCtx.slice(0, 8000) : ''       // FIX: 4000 → 8000
       const globalCtxTrimmed = globalCtx ? globalCtx.slice(0, 3000) : ''
+
       let systemContext = SYSTEM_PROMPT_BASE + localeInstruction + '\n\n' + knowledgeCtxTrimmed
       if (childCtxTrimmed) systemContext += '\nPACIENTE ACTIVO:\n' + childCtxTrimmed
       if (globalCtxTrimmed) systemContext += '\n\n' + globalCtxTrimmed
@@ -329,18 +345,18 @@ export class VantyAgent {
         { role: 'user' as const, content: userMessage },
       ]
 
-      // 4. Llamar a Groq — siempre SMART (70B) para calidad clínica
+      // 4. Llamar a Groq
       const aiResponse = await callGroq(groqMessages, {
         model: GROQ_MODELS.SMART,
         temperature: 0.6,
         maxTokens: 1500,
       }) || 'No pude generar una respuesta.'
 
-      // 6. Detectar si necesita usar herramientas
+      // 5. Detectar si necesita usar herramientas
       const toolResult = await this.detectAndUseTool(userMessage, aiResponse, options.childId)
       const finalResponse = toolResult ? `${aiResponse}\n\n${toolResult}` : aiResponse
 
-      // 7. Guardar en historial (silencioso si tabla no existe)
+      // 6. Guardar en historial
       const updatedMessages = [
         ...messages,
         { role: 'user', content: userMessage, timestamp: new Date().toISOString() },
@@ -390,16 +406,12 @@ export class VantyAgent {
     }
   }
 
-  // Análisis proactivo de un paciente (ejecutar al abrir ficha)
+  // Análisis proactivo de un paciente
   async analizarPacienteProactivo(childId: string): Promise<ProactiveAnalysis> {
     try {
-      // Obtener todos los programas activos
       const { data: programas } = await supabaseAdmin
         .from('programas_aba')
-        .select(`
-          id, titulo, area, fase_actual, criterio_dominio_pct,
-          sesiones_datos_aba(fecha, porcentaje_exito, fase)
-        `)
+        .select('id, titulo, area, fase_actual, criterio_dominio_pct')
         .eq('child_id', childId)
         .eq('estado', 'activo')
 
@@ -407,16 +419,31 @@ export class VantyAgent {
         return { alertas: [], sugerencias: [], resumen: 'No hay programas activos para analizar.' }
       }
 
+      // FIX: query separada y ordenada para sesiones de análisis proactivo
+      const programaIds = (programas as any[]).map(p => p.id)
+      const { data: todasSesiones } = await supabaseAdmin
+        .from('sesiones_datos_aba')
+        .select('programa_id, fecha, porcentaje_exito, fase')
+        .in('programa_id', programaIds)
+        .order('fecha', { ascending: true })
+
+      const sesionesPorPrograma: Record<string, any[]> = {}
+      if (todasSesiones) {
+        for (const s of todasSesiones as any[]) {
+          if (!sesionesPorPrograma[s.programa_id]) sesionesPorPrograma[s.programa_id] = []
+          sesionesPorPrograma[s.programa_id].push(s)
+        }
+      }
+
       const alertas: Alerta[] = []
       const sugerencias: string[] = []
 
       for (const prog of programas as any[]) {
-        const sesiones = prog.sesiones_datos_aba || []
+        const sesiones = sesionesPorPrograma[prog.id] || []
         if (sesiones.length < 2) continue
 
         const tendencia = calcularTendenciaLocal(sesiones)
 
-        // Detectar regresión
         if (tendencia.tendencia === 'regresion' && (tendencia.cambio || 0) < -10) {
           alertas.push({
             tipo: 'regresion',
@@ -427,7 +454,6 @@ export class VantyAgent {
           })
         }
 
-        // Detectar estancamiento (>5 sesiones sin cambio)
         if (sesiones.length >= 5 && tendencia.tendencia === 'estable' && (tendencia.promedio_reciente || 0) < 70) {
           alertas.push({
             tipo: 'estancamiento',
@@ -438,12 +464,10 @@ export class VantyAgent {
           })
         }
 
-        // Detectar criterio próximo a cumplirse
         if ((tendencia.promedio_reciente || 0) >= prog.criterio_dominio_pct - 5) {
           sugerencias.push(`"${prog.titulo}" está al ${tendencia.promedio_reciente}% — cerca del criterio de dominio (${prog.criterio_dominio_pct}%). ¡Excelente progreso!`)
         }
 
-        // Sin sesiones en 7+ días
         const ultimaFecha = sesiones[sesiones.length - 1]?.fecha
         if (ultimaFecha) {
           const diasSinSesion = Math.floor((Date.now() - new Date(ultimaFecha).getTime()) / 86400000)
@@ -459,7 +483,6 @@ export class VantyAgent {
         }
       }
 
-      // Guardar alertas nuevas en BD
       if (alertas.length > 0) {
         await supabaseAdmin.from('agente_alertas').upsert(
           alertas.map(a => ({
@@ -474,7 +497,6 @@ export class VantyAgent {
         )
       }
 
-      // Resumen general con IA
       const childHistory = await getChildHistory(childId)
       const resumenPrompt = `Eres ARIA, analista de conducta. Resume el estado clínico actual de ${childHistory.nombre} en 2-3 oraciones basándote en estos datos:
       - ${programas.length} programas activos
@@ -495,7 +517,7 @@ export class VantyAgent {
     }
   }
 
-  // Detectar si la pregunta requiere usar una herramienta
+  // FIX: triggers de herramientas más amplios para capturar más tipos de preguntas sobre programas
   private async detectAndUseTool(
     userMessage: string,
     aiResponse: string,
@@ -503,16 +525,17 @@ export class VantyAgent {
   ): Promise<string | null> {
     const msg = userMessage.toLowerCase()
 
-    // Con paciente específico: mostrar programas activos
-    if ((msg.includes('tendencia') || msg.includes('progreso') || msg.includes('programa')) && childId) {
+    // FIX: regex ampliado — antes solo era "tendencia|progreso|programa"
+    const preguntaSobrePrograma = /tendencia|progreso|programa|objetivo|set|avance|sesion|sesión|porcentaje|logro|área|area|habilidad|skill|fase|criterio|dominio/i.test(userMessage)
+
+    if (preguntaSobrePrograma && childId) {
       const programas = await AGENT_TOOLS.obtenerProgramasNino(childId)
       if (programas !== 'No hay programas activos para este paciente.') {
         return `\n**Programas ABA activos:**\n${programas}`
       }
     }
 
-    // FIX: Sin paciente, preguntas sobre quién está peor/mejor → ya se maneja en el contexto
-    // Si la respuesta de la IA aún dice "no tengo acceso", forzar la carga
+    // Sin paciente, preguntas sobre quién está peor/mejor
     if (!childId && (
       aiResponse.includes('no tengo acceso') ||
       aiResponse.includes('no puedo proporcionar') ||
@@ -525,7 +548,6 @@ export class VantyAgent {
     return null
   }
 
-  // Extraer fuentes mencionadas en la respuesta
   private async extractSources(response: string): Promise<string[]> {
     const sources: string[] = []
     const patterns = [/Malott/i, /DSM-5/i, /IBAO/i, /LuTr/i, /IBA/i]
@@ -535,7 +557,6 @@ export class VantyAgent {
     return sources
   }
 
-  // Cargar o crear conversación (resiliente si la tabla no existe aún)
   private async loadOrCreateConversacion(
     conversacionId?: string,
     userId?: string,
@@ -567,7 +588,6 @@ export class VantyAgent {
       if (error) throw error
       return data!
     } catch (e: any) {
-      // Si la tabla no existe aún, usar objeto temporal en memoria
       console.warn('agente_conversaciones no disponible:', e.message)
       return { id: `temp-${Date.now()}`, mensajes: [], user_id: userId, child_id: childId }
     }
@@ -597,5 +617,4 @@ export interface ProactiveAnalysis {
   resumen: string
 }
 
-// Instancia singleton
 export const vantyAgent = new VantyAgent()
