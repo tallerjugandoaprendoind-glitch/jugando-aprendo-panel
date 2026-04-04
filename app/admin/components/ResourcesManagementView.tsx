@@ -80,7 +80,7 @@ export default function ResourcesManagementView() {
 
       if (editingId) {
         // Update existing resource
-        const { error } = await supabase.from('resources').update({
+        const { error } = await supabase.from('parent_resources').update({
           title: newResource.title,
           description: newResource.description,
           resource_type: newResource.resource_type,
