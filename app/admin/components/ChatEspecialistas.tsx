@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
+import { useTheme } from '@/components/ThemeContext'
 import {
   Send, Loader2, MessageCircle, CheckCheck, Check,
   Search, RefreshCw, Users, Circle, Paperclip, Mic,
@@ -254,8 +255,7 @@ export default function ChatEspecialistas({
   onAvatarUpdate?: (url: string) => void
 }) {
   const toast = useToast()
-
-  // Estado principal
+  const { isDark } = useTheme()
   const [especialistas, setEspecialistas] = useState<Especialista[]>([])
   const [seleccionado, setSeleccionado] = useState<Especialista | null>(null)
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
@@ -683,13 +683,13 @@ export default function ChatEspecialistas({
         />
       )}
 
-      <div className="flex h-[calc(100vh-140px)] min-h-[500px] bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+      <div className={`flex h-[calc(100vh-140px)] min-h-[500px] rounded-2xl border overflow-hidden shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
 
         {/* ── Panel izquierdo ── */}
-        <div className="w-[280px] flex-shrink-0 border-r border-slate-100 flex flex-col bg-slate-50/50">
+        <div className={`w-[280px] flex-shrink-0 border-r flex flex-col ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50/50 border-slate-100'}`}>
 
           {/* Header del panel con avatar propio */}
-          <div className="px-4 py-4 border-b border-slate-100 bg-white">
+          <div className={`px-4 py-4 border-b ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
             <div className="flex items-center gap-3 mb-3">
               {/* Avatar propio con opción de cambiar foto */}
               <AvatarUpload
@@ -699,19 +699,19 @@ export default function ChatEspecialistas({
                 onUpdate={(url) => { setMyAvatar(url); onAvatarUpdate?.(url) }}
               />
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-black text-slate-800 truncate">{userName}</p>
-                <p className="text-[10px] text-slate-400">Toca la foto para cambiarla</p>
+                <p className={`text-xs font-black truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{userName}</p>
+                <p className={`text-[10px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Toca la foto para cambiarla</p>
               </div>
               <button
                 onClick={cargarEspecialistas}
-                className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 transition-colors"
+                className={`p-1.5 rounded-lg transition-colors ${isDark ? 'hover:bg-[#21262d] text-slate-500' : 'hover:bg-slate-100 text-slate-400'}`}
               >
                 <RefreshCw size={13} />
               </button>
             </div>
 
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xs font-black text-slate-600 flex items-center gap-1.5">
+              <h2 className={`text-xs font-black flex items-center gap-1.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                 <Users size={13} className="text-blue-500" /> Contactos
               </h2>
             </div>
@@ -721,7 +721,7 @@ export default function ChatEspecialistas({
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
                 placeholder="Buscar..."
-                className="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 text-slate-700 shadow-sm"
+                className={`w-full pl-8 pr-3 py-2 text-xs rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-sm ${isDark ? 'bg-[#0d1117] border border-[#30363d] text-slate-300 placeholder-slate-600' : 'bg-white border border-slate-200 text-slate-700'}`}
               />
             </div>
           </div>
@@ -741,8 +741,8 @@ export default function ChatEspecialistas({
                 {/* ── Sección Admins ── */}
                 {filtradosAdmins.length > 0 && (
                   <>
-                    <div className="px-4 py-2 bg-slate-100/80 border-b border-slate-200/60 sticky top-0 z-10">
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <div className={`px-4 py-2 border-b sticky top-0 z-10 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-slate-100/80 border-slate-200/60'}`}>
+                      <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
                         <span className="w-1.5 h-1.5 bg-violet-500 rounded-full inline-block" />
                         Administradores
                       </p>
@@ -751,10 +751,10 @@ export default function ChatEspecialistas({
                       <button
                         key={esp.id}
                         onClick={() => setSeleccionado(esp)}
-                        className={`w-full text-left px-4 py-3.5 border-b border-slate-100/70 transition-colors relative
+                        className={`w-full text-left px-4 py-3.5 border-b transition-colors relative
                           ${seleccionado?.id === esp.id
-                            ? 'bg-violet-50 border-l-[3px] border-l-violet-500'
-                            : 'hover:bg-white/80'
+                            ? isDark ? 'bg-violet-900/30 border-l-[3px] border-l-violet-500 border-[#21262d]' : 'bg-violet-50 border-l-[3px] border-l-violet-500 border-slate-100/70'
+                            : isDark ? 'hover:bg-[#21262d] border-[#21262d]' : 'hover:bg-white/80 border-slate-100/70'
                           }`}
                       >
                         <div className="flex items-start gap-3">
@@ -767,20 +767,20 @@ export default function ChatEspecialistas({
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-xs font-bold truncate ${esp.unread > 0 ? 'text-slate-900' : 'text-slate-700'}`}>
+                            <p className={`text-xs font-bold truncate ${esp.unread > 0 ? (isDark ? 'text-white' : 'text-slate-900') : (isDark ? 'text-slate-300' : 'text-slate-700')}`}>
                               {esp.full_name}
                             </p>
                             <p className="text-[10px] text-violet-400 truncate mt-0.5 font-semibold">
                               {esp.specialty || (esp.role === 'jefe' ? 'Jefe' : 'Admin')}
                             </p>
                             {esp.lastMessage && (
-                              <p className={`text-[10px] truncate mt-0.5 ${esp.unread > 0 ? 'text-slate-600 font-semibold' : 'text-slate-400'}`}>
+                              <p className={`text-[10px] truncate mt-0.5 ${esp.unread > 0 ? (isDark ? 'text-slate-400 font-semibold' : 'text-slate-600 font-semibold') : (isDark ? 'text-slate-600' : 'text-slate-400')}`}>
                                 {esp.lastMessage}
                               </p>
                             )}
                           </div>
                           {esp.lastTime && (
-                            <span className="text-[9px] text-slate-400 flex-shrink-0 mt-0.5">
+                            <span className={`text-[9px] flex-shrink-0 mt-0.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
                               {formatHora(esp.lastTime)}
                             </span>
                           )}
@@ -793,8 +793,8 @@ export default function ChatEspecialistas({
                 {/* ── Sección Especialistas ── */}
                 {filtradosEspecialistas.length > 0 && (
                   <>
-                    <div className="px-4 py-2 bg-slate-100/80 border-b border-slate-200/60 sticky top-0 z-10">
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+                    <div className={`px-4 py-2 border-b sticky top-0 z-10 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-slate-100/80 border-slate-200/60'}`}>
+                      <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
                         <span className="w-1.5 h-1.5 bg-blue-500 rounded-full inline-block" />
                         Especialistas
                       </p>
@@ -803,10 +803,10 @@ export default function ChatEspecialistas({
                       <button
                         key={esp.id}
                         onClick={() => setSeleccionado(esp)}
-                        className={`w-full text-left px-4 py-3.5 border-b border-slate-100/70 transition-colors relative
+                        className={`w-full text-left px-4 py-3.5 border-b transition-colors relative
                           ${seleccionado?.id === esp.id
-                            ? 'bg-blue-50 border-l-[3px] border-l-blue-500'
-                            : 'hover:bg-white/80'
+                            ? isDark ? 'bg-blue-900/30 border-l-[3px] border-l-blue-500 border-[#21262d]' : 'bg-blue-50 border-l-[3px] border-l-blue-500 border-slate-100/70'
+                            : isDark ? 'hover:bg-[#21262d] border-[#21262d]' : 'hover:bg-white/80 border-slate-100/70'
                           }`}
                       >
                         <div className="flex items-start gap-3">
@@ -819,20 +819,20 @@ export default function ChatEspecialistas({
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-xs font-bold truncate ${esp.unread > 0 ? 'text-slate-900' : 'text-slate-700'}`}>
+                            <p className={`text-xs font-bold truncate ${esp.unread > 0 ? (isDark ? 'text-white' : 'text-slate-900') : (isDark ? 'text-slate-300' : 'text-slate-700')}`}>
                               {esp.full_name}
                             </p>
-                            <p className="text-[10px] text-slate-400 truncate mt-0.5">
+                            <p className={`text-[10px] truncate mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                               {esp.specialty || esp.role}
                             </p>
                             {esp.lastMessage && (
-                              <p className={`text-[10px] truncate mt-0.5 ${esp.unread > 0 ? 'text-slate-600 font-semibold' : 'text-slate-400'}`}>
+                              <p className={`text-[10px] truncate mt-0.5 ${esp.unread > 0 ? (isDark ? 'text-slate-400 font-semibold' : 'text-slate-600 font-semibold') : (isDark ? 'text-slate-600' : 'text-slate-400')}`}>
                                 {esp.lastMessage}
                               </p>
                             )}
                           </div>
                           {esp.lastTime && (
-                            <span className="text-[9px] text-slate-400 flex-shrink-0 mt-0.5">
+                            <span className={`text-[9px] flex-shrink-0 mt-0.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
                               {formatHora(esp.lastTime)}
                             </span>
                           )}
@@ -849,13 +849,13 @@ export default function ChatEspecialistas({
         {/* ── Panel derecho ── */}
         <div className="flex-1 flex flex-col min-w-0">
           {!seleccionado ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-5 text-center px-8 bg-gradient-to-br from-slate-50 to-blue-50/30">
-              <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-sm border border-slate-100">
+            <div className={`flex-1 flex flex-col items-center justify-center gap-5 text-center px-8 ${isDark ? 'bg-[#0d1117]' : 'bg-gradient-to-br from-slate-50 to-blue-50/30'}`}>
+              <div className={`w-24 h-24 rounded-3xl flex items-center justify-center shadow-sm border ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
                 <MessageCircle size={40} className="text-blue-200" />
               </div>
               <div>
-                <p className="text-slate-700 font-black text-base">Selecciona un contacto</p>
-                <p className="text-slate-400 text-sm mt-1">
+                <p className={`font-black text-base ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Selecciona un contacto</p>
+                <p className={`text-sm mt-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                   Elige un especialista o administrador de la lista para ver su conversación
                 </p>
               </div>
@@ -863,7 +863,7 @@ export default function ChatEspecialistas({
           ) : (
             <>
               {/* Header conversación */}
-              <div className="px-5 py-3.5 border-b border-slate-100 bg-white flex items-center gap-3 shadow-sm">
+              <div className={`px-5 py-3.5 border-b flex items-center gap-3 shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
                 {/* Avatar del especialista seleccionado (también actualizable) */}
                 <AvatarUpload
                   userId={seleccionado.id}
@@ -877,28 +877,28 @@ export default function ChatEspecialistas({
                   }}
                 />
                 <div className="flex-1">
-                  <p className="text-sm font-black text-slate-800">{seleccionado.full_name}</p>
+                  <p className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{seleccionado.full_name}</p>
                   <p className="text-[11px] text-emerald-500 font-semibold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block" />
                     {seleccionado.specialty || seleccionado.role}
                   </p>
                 </div>
-                <button className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 transition-colors">
+                <button className={`p-2 rounded-xl transition-colors ${isDark ? 'hover:bg-[#21262d] text-slate-500' : 'hover:bg-slate-100 text-slate-400'}`}>
                   <MoreVertical size={16} />
                 </button>
               </div>
 
               {/* Banner reply */}
               {replyTo && (
-                <div className="bg-blue-50 border-b border-blue-100 px-4 py-2 flex items-start gap-2">
+                <div className={`border-b px-4 py-2 flex items-start gap-2 ${isDark ? 'bg-blue-900/20 border-blue-800/40' : 'bg-blue-50 border-blue-100'}`}>
                   <Reply size={14} className="text-blue-500 mt-0.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] font-black text-blue-600">{replyTo.sender_name}</p>
-                    <p className="text-[11px] text-slate-600 truncate">{replyTo.content.slice(0, 80)}</p>
+                    <p className="text-[10px] font-black text-blue-500">{replyTo.sender_name}</p>
+                    <p className={`text-[11px] truncate ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{replyTo.content.slice(0, 80)}</p>
                   </div>
                   <button
                     onClick={() => setReplyTo(null)}
-                    className="p-1 rounded-lg hover:bg-blue-100 text-blue-400"
+                    className={`p-1 rounded-lg ${isDark ? 'hover:bg-blue-900/40 text-blue-400' : 'hover:bg-blue-100 text-blue-400'}`}
                   >
                     <X size={12} />
                   </button>
@@ -909,8 +909,9 @@ export default function ChatEspecialistas({
               <div
                 className="flex-1 overflow-y-auto px-4 py-4"
                 style={{
-                  background:
-                    'radial-gradient(ellipse at 20% 50%, rgba(239,246,255,0.6) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(238,242,255,0.4) 0%, transparent 60%), #f8fafc',
+                  background: isDark
+                    ? '#0d1117'
+                    : 'radial-gradient(ellipse at 20% 50%, rgba(239,246,255,0.6) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(238,242,255,0.4) 0%, transparent 60%), #f8fafc',
                 }}
               >
                 {loadingMsg ? (
@@ -919,21 +920,21 @@ export default function ChatEspecialistas({
                   </div>
                 ) : mensajes.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full gap-3 text-center px-8">
-                    <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm border border-slate-100">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-sm border ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
                       <MessageCircle size={24} className="text-blue-300" />
                     </div>
-                    <p className="text-slate-400 text-sm">Sin mensajes aún con este especialista</p>
+                    <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Sin mensajes aún con este especialista</p>
                   </div>
                 ) : (
                   mensajesAgrupados.map((grupo) => (
                     <div key={grupo.fecha}>
                       {/* Separador de fecha */}
                       <div className="flex items-center gap-3 my-4">
-                        <div className="flex-1 h-px bg-slate-200/70" />
-                        <span className="text-[10px] font-bold text-slate-500 bg-white px-3 py-1 rounded-full shadow-sm border border-slate-100">
+                        <div className={`flex-1 h-px ${isDark ? 'bg-[#21262d]' : 'bg-slate-200/70'}`} />
+                        <span className={`text-[10px] font-bold px-3 py-1 rounded-full shadow-sm border ${isDark ? 'text-slate-500 bg-[#161b22] border-[#21262d]' : 'text-slate-500 bg-white border-slate-100'}`}>
                           {grupo.fecha}
                         </span>
-                        <div className="flex-1 h-px bg-slate-200/70" />
+                        <div className={`flex-1 h-px ${isDark ? 'bg-[#21262d]' : 'bg-slate-200/70'}`} />
                       </div>
 
                       <div className="space-y-0.5">
@@ -1005,19 +1006,21 @@ export default function ChatEspecialistas({
                                     className={`flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-sm hover:opacity-80 transition-opacity
                                       ${esMio
                                         ? 'bg-blue-600 text-white border-blue-500'
-                                        : 'bg-white text-slate-800 border-slate-200'
+                                        : isDark
+                                          ? 'bg-[#21262d] text-slate-200 border-[#30363d]'
+                                          : 'bg-white text-slate-800 border-slate-200'
                                       }`}
                                   >
                                     <div
-                                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${esMio ? 'bg-blue-500' : 'bg-slate-100'}`}
+                                      className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${esMio ? 'bg-blue-500' : isDark ? 'bg-[#30363d]' : 'bg-slate-100'}`}
                                     >
-                                      <FileText size={16} className={esMio ? 'text-white' : 'text-slate-500'} />
+                                      <FileText size={16} className={esMio ? 'text-white' : isDark ? 'text-slate-400' : 'text-slate-500'} />
                                     </div>
                                     <div className="min-w-0">
                                       <p className="text-xs font-bold truncate max-w-[150px]">
                                         {msg.file_name}
                                       </p>
-                                      <p className={`text-[10px] ${esMio ? 'text-blue-200' : 'text-slate-400'}`}>
+                                      <p className={`text-[10px] ${esMio ? 'text-blue-200' : isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                                         Toca para abrir
                                       </p>
                                     </div>
@@ -1028,7 +1031,12 @@ export default function ChatEspecialistas({
                                 {isAudio && msg.file_url && (
                                   <div
                                     className={`flex items-center gap-3 px-4 py-3 rounded-2xl border shadow-sm min-w-[200px]
-                                      ${esMio ? 'bg-blue-600 border-blue-500' : 'bg-white border-slate-200'}`}
+                                      ${esMio
+                                        ? 'bg-blue-600 border-blue-500'
+                                        : isDark
+                                          ? 'bg-[#21262d] border-[#30363d]'
+                                          : 'bg-white border-slate-200'
+                                      }`}
                                   >
                                     <button
                                       onClick={() => toggleAudio(msg.id, msg.file_url!)}
@@ -1042,13 +1050,13 @@ export default function ChatEspecialistas({
                                       )}
                                     </button>
                                     <div className="flex-1">
-                                      <div className={`h-1.5 rounded-full ${esMio ? 'bg-blue-400' : 'bg-slate-200'}`}>
+                                      <div className={`h-1.5 rounded-full ${esMio ? 'bg-blue-400' : isDark ? 'bg-[#30363d]' : 'bg-slate-200'}`}>
                                         <div
                                           className={`h-full rounded-full transition-all ${esMio ? 'bg-white/60' : 'bg-blue-400'}`}
                                           style={{ width: reproduciendo === msg.id ? '60%' : '0%' }}
                                         />
                                       </div>
-                                      <p className={`text-[10px] mt-1 ${esMio ? 'text-blue-200' : 'text-slate-400'}`}>
+                                      <p className={`text-[10px] mt-1 ${esMio ? 'text-blue-200' : isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                                         Nota de voz
                                       </p>
                                     </div>
@@ -1062,13 +1070,15 @@ export default function ChatEspecialistas({
                                       className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed shadow-sm
                                         ${esMio
                                           ? 'bg-blue-600 text-white rounded-br-sm'
-                                          : 'bg-white text-slate-800 border border-slate-100 rounded-bl-sm shadow-sm'
+                                          : isDark
+                                            ? 'bg-[#21262d] text-slate-200 border border-[#30363d] rounded-bl-sm'
+                                            : 'bg-white text-slate-800 border border-slate-100 rounded-bl-sm shadow-sm'
                                         }`}
                                     >
                                       <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                                     </div>
                                     {msg.reaction && (
-                                      <span className="absolute -bottom-2 -right-1 text-base bg-white rounded-full shadow-sm px-1 border border-slate-100">
+                                      <span className={`absolute -bottom-2 -right-1 text-base rounded-full shadow-sm px-1 border ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
                                         {msg.reaction}
                                       </span>
                                     )}
@@ -1079,14 +1089,14 @@ export default function ChatEspecialistas({
                                 <div
                                   className={`flex items-center gap-1 mt-1.5 ${esMio ? 'flex-row-reverse' : 'flex-row'}`}
                                 >
-                                  <span className="text-[10px] text-slate-400">
+                                  <span className={`text-[10px] ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
                                     {formatHora(msg.created_at)}
                                   </span>
                                   {esMio &&
                                     (msg.read_at ? (
                                       <CheckCheck size={11} className="text-blue-400" />
                                     ) : (
-                                      <Check size={11} className="text-slate-300" />
+                                      <Check size={11} className={isDark ? 'text-slate-600' : 'text-slate-300'} />
                                     ))}
                                 </div>
                               </div>
@@ -1109,12 +1119,12 @@ export default function ChatEspecialistas({
 
               {/* Preview audio grabado */}
               {audioUrl && !grabando && (
-                <div className="bg-blue-50 border-t border-blue-100 px-4 py-3 flex items-center gap-3">
+                <div className={`border-t px-4 py-3 flex items-center gap-3 ${isDark ? 'bg-blue-900/20 border-blue-800/40' : 'bg-blue-50 border-blue-100'}`}>
                   <Mic size={16} className="text-blue-500 flex-shrink-0" />
                   <audio src={audioUrl} controls className="flex-1 h-8" style={{ minWidth: 0 }} />
                   <button
                     onClick={cancelarAudio}
-                    className="p-1.5 rounded-lg hover:bg-blue-100 text-blue-400 flex-shrink-0"
+                    className={`p-1.5 rounded-lg flex-shrink-0 ${isDark ? 'hover:bg-blue-900/40 text-blue-400' : 'hover:bg-blue-100 text-blue-400'}`}
                   >
                     <X size={14} />
                   </button>
@@ -1150,12 +1160,13 @@ export default function ChatEspecialistas({
               )}
 
               {/* Input */}
-              <div className="bg-white border-t border-slate-100 px-4 py-3">
+              <div className={`border-t px-4 py-3 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
                 <div className="flex items-end gap-2">
                   <button
                     onClick={() => fileInputRef.current?.click()}
                     disabled={subiendo || grabando}
-                    className="w-9 h-9 flex-shrink-0 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition-colors disabled:opacity-40"
+                    className={`w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center transition-colors disabled:opacity-40
+                      ${isDark ? 'hover:bg-[#21262d] text-slate-500 hover:text-slate-300' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'}`}
                     title="Adjuntar archivo"
                   >
                     {subiendo ? (
@@ -1172,7 +1183,7 @@ export default function ChatEspecialistas({
                     accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt"
                   />
 
-                  <div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-blue-400 transition-all">
+                  <div className={`flex-1 rounded-2xl px-4 py-2.5 focus-within:ring-2 focus-within:ring-blue-400 transition-all ${isDark ? 'bg-[#0d1117] border border-[#30363d] focus-within:border-blue-500' : 'bg-slate-50 border border-slate-200 focus-within:border-blue-400'}`}>
                     <textarea
                       ref={textareaRef}
                       value={texto}
@@ -1181,7 +1192,7 @@ export default function ChatEspecialistas({
                       placeholder={`Escribe a ${seleccionado.full_name.split(' ')[0]}…`}
                       rows={1}
                       disabled={grabando}
-                      className="w-full bg-transparent text-sm text-slate-800 resize-none focus:outline-none placeholder:text-slate-400 max-h-32 disabled:opacity-50"
+                      className={`w-full bg-transparent text-sm resize-none focus:outline-none max-h-32 disabled:opacity-50 ${isDark ? 'text-slate-200 placeholder-slate-600' : 'text-slate-800 placeholder-slate-400'}`}
                       style={{ lineHeight: '1.5' }}
                     />
                   </div>
@@ -1195,7 +1206,7 @@ export default function ChatEspecialistas({
                     className={`w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center transition-all disabled:opacity-40
                       ${grabando
                         ? 'bg-red-500 text-white animate-pulse'
-                        : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'
+                        : isDark ? 'hover:bg-[#21262d] text-slate-500 hover:text-slate-300' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'
                       }`}
                     title="Mantén presionado para grabar"
                   >
@@ -1216,7 +1227,7 @@ export default function ChatEspecialistas({
                     </button>
                   )}
                 </div>
-                <p className="text-[10px] text-slate-400 mt-1.5 ml-1">
+                <p className={`text-[10px] mt-1.5 ml-1 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
                   Shift+Enter nueva línea · Mantén 🎤 para grabar · Clic derecho en mensaje para más opciones
                 </p>
               </div>
