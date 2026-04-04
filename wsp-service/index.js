@@ -1,72 +1,156 @@
-// wsp-service/index.js — ESM version
-// Microservicio WhatsApp Baileys — Jugando Aprendo
+/**
+ * Vanty WhatsApp Microservice — Sesión en Supabase
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Guarda las credenciales de WhatsApp en Supabase para sobrevivir reinicios.
+ *
+ * Variables de entorno requeridas:
+ *   WSP_SERVICE_SECRET     → clave secreta (la misma que en Vercel)
+ *   SUPABASE_URL           → https://xxxx.supabase.co
+ *   SUPABASE_SERVICE_KEY   → service_role key de Supabase
+ *   PORT                   → Railway lo setea automáticamente
+ */
 
-import { createRequire } from 'module'
-import { fileURLToPath } from 'url'
-import { dirname } from 'path'
-import { existsSync, rmSync } from 'fs'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname  = dirname(__filename)
-
-import makeWASocket, {
-  useMultiFileAuthState,
+const express = require('express')
+const makeWASocket = require('@whiskeysockets/baileys').default
+const {
   DisconnectReason,
-  fetchLatestBaileysVersion
-} from '@whiskeysockets/baileys'
+  fetchLatestBaileysVersion,
+  initAuthCreds,
+  BufferJSON,
+  proto,
+} = require('@whiskeysockets/baileys')
+const QRCode = require('qrcode')
+const pino   = require('pino')
 
-import express from 'express'
-import pino    from 'pino'
-import QRCode  from 'qrcode'
-import dotenv  from 'dotenv'
+// ── Config ───────────────────────────────────────────────────────────────────
+const PORT    = process.env.PORT || 3000
+const SECRET  = process.env.WSP_SERVICE_SECRET || 'dev-secret'
+const SB_URL  = process.env.SUPABASE_URL
+const SB_KEY  = process.env.SUPABASE_SERVICE_KEY
 
-dotenv.config()
-
-const PORT   = process.env.PORT || 3001
-const SECRET = process.env.SERVICE_SECRET || 'changeme'
-
-const logger = pino({ level: 'warn' })
-const app    = express()
-app.use(express.json())
-
-// ── Estado global ─────────────────────────────────────────────────
-let sock        = null
-let qrBase64    = null
-let isConnected = false
-let isWaiting   = true
-
-// ── Autenticación ─────────────────────────────────────────────────
-function auth(req, res, next) {
-  const secret = req.headers['x-service-secret']
-  if (secret !== SECRET) return res.status(401).json({ error: 'Unauthorized' })
-  next()
+if (!SB_URL || !SB_KEY) {
+  console.error('FALTAN SUPABASE_URL o SUPABASE_SERVICE_KEY')
 }
 
-// ── WhatsApp ──────────────────────────────────────────────────────
-async function startWhatsApp() {
-  try {
-    const { state, saveCreds } = await useMultiFileAuthState('./auth_info')
+// ── Estado global ─────────────────────────────────────────────────────────────
+let sock           = null
+let qrBase64       = null
+let isConnected    = false
+let connectedPhone = null
+let reconnecting   = false
 
-    let version = [2, 3000, 1015901307]
-    try {
-      const result = await Promise.race([
-        fetchLatestBaileysVersion(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10_000))
-      ])
-      version = result.version
-    } catch (e) {
-      console.log('⚠️ Usando versión fallback de WA:', version)
-    }
+const logger = pino({ level: 'silent' })
+
+// ── Supabase helpers (fetch nativo, sin SDK) ──────────────────────────────────
+async function sbGet(key) {
+  try {
+    const res = await fetch(
+      `${SB_URL}/rest/v1/wsp_sessions?key=eq.${encodeURIComponent(key)}&select=value`,
+      { headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+    )
+    const rows = await res.json()
+    return rows?.[0]?.value ?? null
+  } catch { return null }
+}
+
+async function sbSet(key, value) {
+  try {
+    await fetch(`${SB_URL}/rest/v1/wsp_sessions`, {
+      method: 'POST',
+      headers: {
+        apikey: SB_KEY,
+        Authorization: `Bearer ${SB_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates',
+      },
+      body: JSON.stringify({ key, value }),
+    })
+  } catch (e) { console.error('[SB] Error guardando:', e.message) }
+}
+
+async function sbDel(key) {
+  try {
+    await fetch(
+      `${SB_URL}/rest/v1/wsp_sessions?key=eq.${encodeURIComponent(key)}`,
+      { method: 'DELETE', headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` } }
+    )
+  } catch {}
+}
+
+async function sbDelAll() {
+  try {
+    await fetch(`${SB_URL}/rest/v1/wsp_sessions`, {
+      method: 'DELETE',
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
+    })
+  } catch {}
+}
+
+// ── Auth state guardado en Supabase ───────────────────────────────────────────
+async function useSupabaseAuthState() {
+  const credsRaw = await sbGet('creds')
+  const creds = credsRaw
+    ? JSON.parse(credsRaw, BufferJSON.reviver)
+    : initAuthCreds()
+
+  const readData  = async (key) => {
+    const raw = await sbGet(key)
+    return raw ? JSON.parse(raw, BufferJSON.reviver) : null
+  }
+  const writeData  = async (key, data) => sbSet(key, JSON.stringify(data, BufferJSON.replacer))
+  const removeData = async (key) => sbDel(key)
+
+  const state = {
+    creds,
+    keys: {
+      get: async (type, ids) => {
+        const data = {}
+        await Promise.all(ids.map(async (id) => {
+          let value = await readData(`${type}-${id}`)
+          if (type === 'app-state-sync-key' && value) {
+            value = proto.Message.AppStateSyncKeyData.fromObject(value)
+          }
+          data[id] = value
+        }))
+        return data
+      },
+      set: async (data) => {
+        const tasks = []
+        for (const category of Object.keys(data)) {
+          for (const id of Object.keys(data[category])) {
+            const value = data[category][id]
+            tasks.push(value ? writeData(`${category}-${id}`, value) : removeData(`${category}-${id}`))
+          }
+        }
+        await Promise.all(tasks)
+      },
+    },
+  }
+
+  const saveCreds = async () => writeData('creds', state.creds)
+
+  return { state, saveCreds }
+}
+
+// ── Iniciar / reconectar WhatsApp ─────────────────────────────────────────────
+async function startWhatsApp() {
+  if (reconnecting) return
+  reconnecting = true
+
+  try {
+    console.log('[WA] Iniciando conexion...')
+    const { state, saveCreds } = await useSupabaseAuthState()
+    const { version } = await fetchLatestBaileysVersion()
 
     sock = makeWASocket({
       version,
       logger,
-      printQRInTerminal: true,
       auth: state,
-      browser: ['Jugando Aprendo', 'Chrome', '120.0.0'],
-      connectTimeoutMs: 60_000,
+      printQRInTerminal: false,
+      browser: ['Vanty', 'Chrome', '120.0.0'],
+      connectTimeoutMs: 30_000,
+      defaultQueryTimeoutMs: 20_000,
       keepAliveIntervalMs: 25_000,
-      retryRequestDelayMs: 2_000,
     })
 
     sock.ev.on('creds.update', saveCreds)
@@ -75,119 +159,100 @@ async function startWhatsApp() {
       const { connection, lastDisconnect, qr } = update
 
       if (qr) {
-        qrBase64    = await QRCode.toDataURL(qr)
-        isWaiting   = false
+        console.log('[WA] QR generado')
         isConnected = false
-        console.log('📱 QR generado — escaneá desde el panel admin')
+        qrBase64 = await QRCode.toDataURL(qr)
       }
 
       if (connection === 'open') {
-        isConnected = true
-        isWaiting   = false
-        qrBase64    = null
-        console.log('✅ WhatsApp conectado')
+        console.log('[WA] Conectado!')
+        isConnected  = true
+        qrBase64     = null
+        reconnecting = false
+        try {
+          connectedPhone = (sock.user?.id || '').split(':')[0].split('@')[0]
+          console.log(`[WA] Numero: ${connectedPhone}`)
+        } catch {}
       }
 
       if (connection === 'close') {
-        isConnected = false
+        isConnected    = false
+        connectedPhone = null
+        reconnecting   = false
         const code = lastDisconnect?.error?.output?.statusCode
-        const shouldReconnect = code !== DisconnectReason.loggedOut
-        console.log(`⚠️ Desconectado (código ${code}) — reconectando: ${shouldReconnect}`)
-        if (shouldReconnect) {
-          isWaiting = true
-          setTimeout(startWhatsApp, 3000)
-        } else {
-          if (existsSync('./auth_info')) {
-            rmSync('./auth_info', { recursive: true, force: true })
-          }
-          isWaiting = true
-          setTimeout(startWhatsApp, 3000)
+
+        if (code === DisconnectReason.loggedOut) {
+          console.log('[WA] Sesion cerrada — limpiando...')
+          await sbDelAll()
+          setTimeout(startWhatsApp, 2000)
+          return
         }
+        console.log(`[WA] Desconectado (${code}) — reconectando...`)
+        setTimeout(startWhatsApp, 4000)
       }
     })
+
   } catch (err) {
-    console.error('❌ Error en startWhatsApp:', err.message)
-    isWaiting = true
+    console.error('[WA] Error:', err.message)
+    reconnecting = false
     setTimeout(startWhatsApp, 5000)
   }
 }
 
-// ── Formatear teléfono ────────────────────────────────────────────
-function formatPhone(phone) {
-  let digits = phone.replace(/\D/g, '')
-  if (digits.length === 9 && !digits.startsWith('51')) {
-    digits = '51' + digits
+// ── Express ───────────────────────────────────────────────────────────────────
+const app = express()
+app.use(express.json())
+
+app.use((req, res, next) => {
+  if (req.path === '/' || req.path === '/health') return next()
+  if (req.headers['x-service-secret'] !== SECRET) {
+    return res.status(401).json({ error: 'No autorizado' })
   }
-  return `${digits}@s.whatsapp.net`
-}
-
-// ── ENDPOINTS ─────────────────────────────────────────────────────
-
-app.get('/status', auth, (req, res) => {
-  res.json({
-    connected: isConnected,
-    waiting:   isWaiting && !isConnected,
-    hasQr:     !!qrBase64,
-  })
+  next()
 })
 
-app.get('/qr', auth, (req, res) => {
+app.get('/',       (req, res) => res.json({ status: 'ok', service: 'vanty-whatsapp' }))
+app.get('/health', (req, res) => res.json({ status: 'ok' }))
+
+app.get('/status', (req, res) => {
+  res.json({ connected: isConnected, phone: connectedPhone })
+})
+
+app.get('/qr', (req, res) => {
   if (isConnected) return res.json({ connected: true })
-  if (!qrBase64)   return res.json({ waiting: true })
-  res.json({ qr: qrBase64 })
+  if (qrBase64)   return res.json({ qr: qrBase64 })
+  res.json({ waiting: true })
 })
 
-app.post('/send', auth, async (req, res) => {
+app.post('/send', async (req, res) => {
   const { to, message } = req.body
-  if (!to || !message)
-    return res.status(400).json({ error: 'to y message son requeridos' })
-  if (!isConnected || !sock)
-    return res.status(503).json({ error: 'WhatsApp no conectado', connected: false })
+  if (!to || !message) return res.status(400).json({ error: 'to y message requeridos' })
+  if (!isConnected || !sock) return res.status(503).json({ error: 'WhatsApp no conectado' })
+
   try {
-    const jid = formatPhone(to)
-    await sock.sendMessage(jid, { text: message })
-    console.log(`✅ Mensaje enviado a ${to}`)
-    res.json({ ok: true, to })
+    const number = to.replace(/[^0-9]/g, '')
+    await sock.sendMessage(`${number}@s.whatsapp.net`, { text: message })
+    console.log(`[WA] Enviado a ${number}`)
+    res.json({ success: true, to: number })
+  } catch (err) {
+    console.error('[WA] Error enviando:', err.message)
+    res.status(500).json({ error: err.message })
+  }
+})
+
+app.post('/disconnect', async (req, res) => {
+  try {
+    if (sock) sock.logout()
+    await sbDelAll()
+    isConnected = false; qrBase64 = null; connectedPhone = null
+    res.json({ success: true })
+    setTimeout(startWhatsApp, 2000)
   } catch (e) {
-    console.error(`❌ Error enviando a ${to}:`, e.message)
     res.status(500).json({ error: e.message })
   }
 })
 
-app.post('/broadcast', auth, async (req, res) => {
-  const { phones, message } = req.body
-  if (!phones?.length || !message)
-    return res.status(400).json({ error: 'phones[] y message son requeridos' })
-  if (!isConnected || !sock)
-    return res.status(503).json({ error: 'WhatsApp no conectado' })
-
-  const results = await Promise.allSettled(
-    phones.map(async (phone) => {
-      const jid = formatPhone(phone)
-      await sock.sendMessage(jid, { text: message })
-      return phone
-    })
-  )
-  const sent   = results.filter(r => r.status === 'fulfilled').length
-  const failed = results.length - sent
-  res.json({ ok: true, sent, failed, total: phones.length })
-})
-
-// Sin autenticación — Railway lo llama directamente
-app.get('/health', (req, res) => res.json({ ok: true }))
-
-// ── Arrancar ──────────────────────────────────────────────────────
-process.on('unhandledRejection', (reason) => {
-  console.error('⚠️ unhandledRejection:', reason?.message || reason)
-})
-process.on('uncaughtException', (err) => {
-  console.error('⚠️ uncaughtException:', err.message)
-})
-
 app.listen(PORT, () => {
-  console.log(`🚀 wsp-service corriendo en puerto ${PORT}`)
-  startWhatsApp().catch(err => {
-    console.error('❌ startWhatsApp falló al inicio:', err.message)
-    setTimeout(startWhatsApp, 5000)
-  })
+  console.log(`[Server] Puerto ${PORT}`)
+  startWhatsApp()
 })
