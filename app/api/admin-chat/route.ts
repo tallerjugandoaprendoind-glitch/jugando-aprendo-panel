@@ -146,6 +146,37 @@ export async function POST(req: Request) {
       .single();
 
     // ===========================================================================
+    // 5b. CARGAR PROGRAMAS ABA ACTIVOS CON SESIONES
+    // ===========================================================================
+    const { data: programasABA } = await supabase
+      .from('programas_aba')
+      .select(`
+        id, titulo, area, fase_actual, estado, criterio_dominio_pct, objetivo_lp,
+        objetivos_cp(numero_set, descripcion, estado)
+      `)
+      .eq('child_id', childId)
+      .order('updated_at', { ascending: false })
+      .limit(10)
+
+    // Sesiones por programa (ordenadas, últimas 8 por programa)
+    let sesionesPorPrograma: Record<string, any[]> = {}
+    if (programasABA && programasABA.length > 0) {
+      const pIds = (programasABA as any[]).map((p: any) => p.id)
+      const { data: sesionesABA } = await supabase
+        .from('sesiones_datos_aba')
+        .select('programa_id, fecha, porcentaje_exito, fase, nivel_ayuda, notas')
+        .in('programa_id', pIds)
+        .order('fecha', { ascending: false })
+        .limit(80)
+      if (sesionesABA) {
+        for (const s of sesionesABA as any[]) {
+          if (!sesionesPorPrograma[s.programa_id]) sesionesPorPrograma[s.programa_id] = []
+          if (sesionesPorPrograma[s.programa_id].length < 8) sesionesPorPrograma[s.programa_id].push(s)
+        }
+      }
+    }
+
+    // ===========================================================================
     // 6. CARGAR FORMULARIOS COMPLETADOS (NeuroFormas y formularios de padres)
     // ===========================================================================
     const { data: formResponses } = await supabase
@@ -291,7 +322,25 @@ ${historyEntorno && historyEntorno.length > 0 ?
 }
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📝 5. FORMULARIOS Y NEUROFORMAS COMPLETADAS (Últimos 15)
+🎯 5. PROGRAMAS ABA ACTIVOS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${programasABA && programasABA.length > 0 ?
+  (programasABA as any[]).map((p: any) => {
+    const sets = (p.objetivos_cp || []).map((o: any) => `    Set ${o.numero_set}: ${o.descripcion} [${o.estado}]`).join('\n')
+    const sesiones = (sesionesPorPrograma[p.id] || []).map((s: any) =>
+      `    ${s.fecha}: ${s.porcentaje_exito != null ? s.porcentaje_exito + '%' : 'sin %'} | Fase: ${s.fase || '-'} | Ayuda: ${s.nivel_ayuda || '-'}${s.notas ? ' | ' + s.notas : ''}`
+    ).join('\n')
+    const ultimoPct = (sesionesPorPrograma[p.id] || [])[0]?.porcentaje_exito
+    return `  • ${p.titulo} (${p.area}) | Estado: ${p.estado} | Fase: ${p.fase_actual} | Último %: ${ultimoPct ?? 'sin datos'} | Criterio: ${p.criterio_dominio_pct}%
+  Objetivo LP: ${p.objetivo_lp || 'no especificado'}
+${sets ? '  Sets:\n' + sets : '  Sin sets'}
+${sesiones ? '  Últimas sesiones (reciente→antiguo):\n' + sesiones : '  Sin sesiones registradas'}`
+  }).join('\n\n')
+  : 'Sin programas ABA registrados para este paciente'
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 6. FORMULARIOS Y NEUROFORMAS COMPLETADAS (Últimos 15)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${formResponses && formResponses.length > 0 ?
   formResponses.map((fr, idx) => `
@@ -370,8 +419,10 @@ RESPONDE AHORA:
     
     const response = await callGroqSimple(
         'Eres ARIA, neuropsicóloga clínica especializada en ABA, TEA y neurodesarrollo. ' +
-        'Cuando el Cerebro IA provea fuentes clínicas (Cooper, Malott, etc.), ÚSALAS para fundamentar tu respuesta y cita el libro. ' +
-        'Responde siempre en español con lenguaje clínico profesional.',
+        'Responde siempre en español con lenguaje clínico profesional. ' +
+        'NUNCA cites fuentes bibliográficas (Cooper, Malott, JABA, etc.) en tus respuestas — el conocimiento está integrado. ' +
+        'Si el contexto incluye datos del Cerebro IA, úsalos directamente sin mencionar de dónde vienen. ' +
+        'Responde con datos concretos del paciente; si no hay datos, dilo claramente.',
         contextConCerebro,
         { model: GROQ_MODELS.SMART, temperature: 0.5, maxTokens: 2000 }
       );
