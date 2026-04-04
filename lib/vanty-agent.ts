@@ -307,7 +307,7 @@ export class VantyAgent {
 
       // 3. Preparar mensajes con historial (formato Groq/OpenAI)
       const messages = conversacion.mensajes as any[]
-      const historialReciente = messages.slice(-10)
+      const historialReciente = messages.slice(-6) // reducido para ahorrar tokens
 
       // Construir contexto completo
       // Detectar idioma del usuario y ajustar respuesta de ARIA
@@ -315,9 +315,13 @@ export class VantyAgent {
       const localeInstruction = userLocale !== 'es' 
         ? `\n\n[IDIOMA OBLIGATORIO: Responde SIEMPRE en ${getLocaleLabel(userLocale)}. Nunca respondas en español si el idioma configurado es diferente.]`
         : ''
-      let systemContext = SYSTEM_PROMPT_BASE + localeInstruction + '\n\n' + knowledgeCtx
-      if (childCtx) systemContext += '\nPACIENTE ACTIVO:\n' + childCtx
-      if (globalCtx) systemContext += '\n\n' + globalCtx
+      // CONTROL DE TOKENS: limitar contexto para no exceder 6k TPM de Groq gratuito
+      const knowledgeCtxTrimmed = knowledgeCtx.slice(0, 6000)
+      const childCtxTrimmed = childCtx ? childCtx.slice(0, 4000) : ''
+      const globalCtxTrimmed = globalCtx ? globalCtx.slice(0, 3000) : ''
+      let systemContext = SYSTEM_PROMPT_BASE + localeInstruction + '\n\n' + knowledgeCtxTrimmed
+      if (childCtxTrimmed) systemContext += '\nPACIENTE ACTIVO:\n' + childCtxTrimmed
+      if (globalCtxTrimmed) systemContext += '\n\n' + globalCtxTrimmed
 
       const groqMessages = [
         { role: 'system' as const, content: systemContext },
@@ -325,55 +329,63 @@ export class VantyAgent {
         { role: 'user' as const, content: userMessage },
       ]
 
-      // 4. Llamar a Groq (gratis, rápido)
+      // 4. Llamar a Groq — siempre SMART (70B) para calidad clínica
       const aiResponse = await callGroq(groqMessages, {
         model: GROQ_MODELS.SMART,
         temperature: 0.6,
-        maxTokens: 2000,
+        maxTokens: 1500,
       }) || 'No pude generar una respuesta.'
 
       // 6. Detectar si necesita usar herramientas
       const toolResult = await this.detectAndUseTool(userMessage, aiResponse, options.childId)
       const finalResponse = toolResult ? `${aiResponse}\n\n${toolResult}` : aiResponse
 
-      // 7. Guardar en historial
+      // 7. Guardar en historial (silencioso si tabla no existe)
       const updatedMessages = [
         ...messages,
         { role: 'user', content: userMessage, timestamp: new Date().toISOString() },
         { role: 'assistant', content: finalResponse, timestamp: new Date().toISOString() },
       ]
 
-      await supabaseAdmin
-        .from('agente_conversaciones')
-        .update({
-          mensajes: updatedMessages,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', conversacion.id)
+      if (!String(conversacion.id).startsWith('temp-')) {
+        try {
+          await supabaseAdmin
+            .from('agente_conversaciones')
+            .update({ mensajes: updatedMessages, updated_at: new Date().toISOString() })
+            .eq('id', conversacion.id)
 
-      // 8. Log de acción
-      await supabaseAdmin.from('agente_acciones').insert({
-        conversacion_id: conversacion.id,
-        child_id: options.childId,
-        tipo_accion: 'chat',
-        input_data: { mensaje: userMessage },
-        output_data: { respuesta: finalResponse, tiempo_ms: Date.now() - startTime },
-      })
+          await supabaseAdmin.from('agente_acciones').insert({
+            conversacion_id: conversacion.id,
+            child_id: options.childId,
+            tipo_accion: 'chat',
+            input_data: { mensaje: userMessage },
+            output_data: { respuesta: finalResponse, tiempo_ms: Date.now() - startTime },
+          })
+        } catch (saveErr: any) {
+          console.warn('No se pudo guardar historial del agente:', saveErr.message)
+        }
+      }
 
       return {
         respuesta: finalResponse,
-        conversacionId: conversacion.id,
+        conversacionId: String(conversacion.id).startsWith('temp-') ? null : conversacion.id,
         fuentesUsadas: await this.extractSources(finalResponse),
         tiempoMs: Date.now() - startTime,
       }
     } catch (error: any) {
       console.error('Error agente:', error)
+      const esRateLimit = error.message?.includes('429') || error.message?.includes('rate')
+      const esContextoLargo = error.message?.includes('400') || error.message?.includes('context')
+      const mensajeUsuario = esRateLimit
+        ? '⏳ ARIA está procesando muchas consultas en este momento. Espera unos segundos e intenta de nuevo.'
+        : esContextoLargo
+        ? '📝 La consulta es muy extensa. Intenta reformularla de forma más concisa.'
+        : 'Lo siento, hubo un problema al procesar tu consulta. Por favor intenta de nuevo.'
       return {
-        respuesta: 'Hubo un error procesando tu consulta. Por favor intenta de nuevo.',
+        respuesta: mensajeUsuario,
         conversacionId: options.conversacionId || null,
         fuentesUsadas: [],
         tiempoMs: Date.now() - startTime,
-        error: error.message,
       }
     }
   }
@@ -523,35 +535,42 @@ export class VantyAgent {
     return sources
   }
 
-  // Cargar o crear conversación
+  // Cargar o crear conversación (resiliente si la tabla no existe aún)
   private async loadOrCreateConversacion(
     conversacionId?: string,
     userId?: string,
     childId?: string,
     contexto?: string
   ) {
-    if (conversacionId) {
-      const { data } = await supabaseAdmin
+    try {
+      if (conversacionId) {
+        const { data } = await supabaseAdmin
+          .from('agente_conversaciones')
+          .select('*')
+          .eq('id', conversacionId)
+          .single()
+        if (data) return data
+      }
+
+      const { data, error } = await supabaseAdmin
         .from('agente_conversaciones')
-        .select('*')
-        .eq('id', conversacionId)
+        .insert({
+          user_id: userId,
+          child_id: childId,
+          contexto: contexto || 'general',
+          mensajes: [],
+          titulo: `Consulta ${new Date().toLocaleDateString('es-PE')}`,
+        })
+        .select()
         .single()
-      if (data) return data
+
+      if (error) throw error
+      return data!
+    } catch (e: any) {
+      // Si la tabla no existe aún, usar objeto temporal en memoria
+      console.warn('agente_conversaciones no disponible:', e.message)
+      return { id: `temp-${Date.now()}`, mensajes: [], user_id: userId, child_id: childId }
     }
-
-    const { data } = await supabaseAdmin
-      .from('agente_conversaciones')
-      .insert({
-        user_id: userId,
-        child_id: childId,
-        contexto: contexto || 'general',
-        mensajes: [],
-        titulo: `Consulta ${new Date().toLocaleDateString('es-PE')}`,
-      })
-      .select()
-      .single()
-
-    return data!
   }
 }
 

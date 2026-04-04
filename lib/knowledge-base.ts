@@ -378,7 +378,7 @@ export async function searchKnowledge(
   query: string,
   options: { maxResults?: number; threshold?: number } = {}
 ): Promise<KnowledgeResult[]> {
-  const { maxResults = 6, threshold = 0.55 } = options
+  const { maxResults = 3, threshold = 0.55 } = options // reducido de 6 para ahorrar tokens Groq
 
   try {
     // Intentar búsqueda semántica (requiere cuota de embeddings)
