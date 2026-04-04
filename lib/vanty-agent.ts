@@ -55,11 +55,11 @@ const AGENT_TOOLS = {
 
   // Obtener todos los programas de un niño
   async obtenerProgramasNino(childId: string) {
+    // FIX: sin filtro de estado — evita fallos por case mismatch
     const { data } = await supabaseAdmin
       .from('programas_aba')
       .select('id, titulo, area, estado, fase_actual')
       .eq('child_id', childId)
-      .eq('estado', 'activo')
       .order('created_at', { ascending: false })
 
     if (!data || data.length === 0) return 'No hay programas activos para este paciente.'
@@ -131,11 +131,12 @@ const AGENT_TOOLS = {
         .maybeSingle()
 
       // Programas activos
+      // FIX: sin filtro de estado
       const { data: programas } = await supabaseAdmin
         .from('programas_aba')
         .select('id, titulo, estado')
         .eq('child_id', p.id)
-        .eq('estado', 'activo')
+        .order('updated_at', { ascending: false })
         .limit(3)
 
       // Alertas activas
@@ -409,11 +410,11 @@ export class VantyAgent {
   // Análisis proactivo de un paciente
   async analizarPacienteProactivo(childId: string): Promise<ProactiveAnalysis> {
     try {
+      // FIX: sin filtro de estado
       const { data: programas } = await supabaseAdmin
         .from('programas_aba')
         .select('id, titulo, area, fase_actual, criterio_dominio_pct')
         .eq('child_id', childId)
-        .eq('estado', 'activo')
 
       if (!programas || programas.length === 0) {
         return { alertas: [], sugerencias: [], resumen: 'No hay programas activos para analizar.' }

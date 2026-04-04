@@ -39,6 +39,7 @@ export async function getChildHistory(childId: string, childNameFallback?: strin
   // ── FIX PRIORIDAD 1: Programas ABA PRIMERO ───────────────────────────────
   // Se ubican al inicio del texto para no ser truncados por el límite de tokens.
   // La query de sesiones_datos_aba ahora trae solo las últimas 8, ordenadas desc.
+  // FIX: sin filtro de estado — evita fallos por mayúsculas o valores distintos en BD
   const { data: programasAba } = await supabaseAdmin
     .from('programas_aba')
     .select(`
@@ -46,9 +47,8 @@ export async function getChildHistory(childId: string, childNameFallback?: strin
       objetivos_cp(numero_set, descripcion, estado)
     `)
     .eq('child_id', childId)
-    .in('estado', ['activo', 'en_progreso', 'mantenimiento'])
     .order('updated_at', { ascending: false })
-    .limit(6)
+    .limit(10)
 
   // FIX: query separada para sesiones ordenadas y limitadas por programa
   let sesionesPorPrograma: Record<string, any[]> = {}
