@@ -96,6 +96,7 @@ function CitaRow({ cita }: any) {
   const dia = fecha.getDate()
   const nombre = cita.children?.name || cita.paciente || 'Paciente'
   const hora = cita.hora_inicio || cita.appointment_time
+  const servicio = cita.service_type || cita.tipo || ''
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg transition-all"
       style={{ background: esHoy ? 'rgba(58,104,160,0.06)' : 'transparent', border: esHoy ? '1px solid rgba(58,104,160,0.15)' : '1px solid transparent' }}>
@@ -108,7 +109,8 @@ function CitaRow({ cita }: any) {
         <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{nombre}</p>
         <p className="text-[11px] flex items-center gap-1" style={{ color: 'var(--text-muted)' }}>
           {hora && <><Clock size={9} /> {hora.slice(0, 5)}</>}
-          {esHoy && <span className="font-bold" style={{ color: '#3a68a0' }}> · Hoy</span>}
+          {servicio && <span className="truncate"> · {servicio}</span>}
+          {esHoy && <span className="font-bold flex-shrink-0" style={{ color: '#3a68a0' }}> · Hoy</span>}
         </p>
       </div>
     </div>
@@ -129,6 +131,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
   const [sesSemanales, setSesSemanales] = useState<number[]>([0,0,0,0,0,0,0])
   const [diasLabels, setDiasLabels] = useState<string[]>(['L','M','M','J','V','S','D'])
   const [sinSesion, setSinSesion] = useState<any[]>([])
+  const [sesHoyCount, setSesHoyCount] = useState(0)
   const [horaActual, setHoraActual] = useState<Date | null>(null)
   const [diaStr, setDiaStr] = useState('')
   const [saludo, setSaludo] = useState('')
@@ -155,21 +158,29 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       const dataM = resM.ok ? await resM.json() : null
       setMetricas(dataM)
 
-      // Próximas citas del API
-      if (dataM?.proximasSesiones?.length > 0) {
+      // Próximas citas — siempre de appointments (misma fuente que CalendarView)
+      const hoyStr = new Date().toISOString().split('T')[0]
+      const { data: citasDirectas } = await supabase
+        .from('appointments')
+        .select('*, children(name)')
+        .gte('appointment_date', hoyStr)
+        .neq('status', 'cancelled')
+        .order('appointment_date').order('appointment_time')
+        .limit(6)
+      if (citasDirectas && citasDirectas.length > 0) {
+        setProximasCitas(citasDirectas)
+      } else if (dataM?.proximasSesiones?.length > 0) {
+        // Fallback: agenda_sesiones via API métricas
         setProximasCitas(dataM.proximasSesiones)
-      } else {
-        // Fallback: appointments table
-        const hoy = new Date().toISOString().split('T')[0]
-        const { data: citas } = await supabase
-          .from('appointments')
-          .select('*, children(name)')
-          .gte('appointment_date', hoy)
-          .neq('status', 'cancelled')
-          .order('appointment_date').order('appointment_time')
-          .limit(6)
-        setProximasCitas(citas || [])
       }
+
+      // Sesiones hoy desde appointments
+      const { data: aptsHoy } = await supabase
+        .from('appointments')
+        .select('id')
+        .eq('appointment_date', hoyStr)
+        .neq('status', 'cancelled')
+      setSesHoyCount(aptsHoy?.length ?? dataM?.hoy?.sesiones?.total ?? 0)
 
       // Alertas del API
       if (dataM?.alertas?.recientes?.length > 0) {
@@ -181,7 +192,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
         })))
       }
 
-      // 2. Sesiones por día (agenda_sesiones)
+      // 2. Sesiones por día — usa appointments (misma fuente que el calendario)
       const labels: string[] = []
       const datesArr: string[] = []
       for (let i = 6; i >= 0; i--) {
@@ -191,13 +202,27 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       }
       setDiasLabels(labels)
 
-      if (dataM?.graficas?.sesionesXFecha?.length > 0) {
+      // Fuente primaria: appointments (misma tabla que el CalendarView)
+      const { data: aptsSemanales } = await supabase
+        .from('appointments')
+        .select('appointment_date, status')
+        .gte('appointment_date', datesArr[0])
+        .lte('appointment_date', datesArr[6])
+        .neq('status', 'cancelled')
+
+      if (aptsSemanales && aptsSemanales.length > 0) {
+        const map: Record<string, number> = {}
+        datesArr.forEach(d => { map[d] = 0 })
+        aptsSemanales.forEach((a: any) => { if (map[a.appointment_date] !== undefined) map[a.appointment_date]++ })
+        setSesSemanales(Object.values(map))
+      } else if (dataM?.graficas?.sesionesXFecha?.length > 0) {
+        // Fallback: API métricas (agenda_sesiones)
         const map: Record<string, number> = {}
         datesArr.forEach(d => { map[d] = 0 })
         dataM.graficas.sesionesXFecha.forEach((s: any) => { if (map[s.fecha] !== undefined) map[s.fecha] = s.total })
         setSesSemanales(Object.values(map))
       } else {
-        // Fallback: registro_aba
+        // Último fallback: registro_aba
         const { data: sesABA } = await supabase
           .from('registro_aba')
           .select('fecha_sesion')
@@ -311,7 +336,7 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
   useEffect(() => { cargar() }, [cargar])
 
   // Derived stats
-  const totalSesHoy = metricas?.hoy?.sesiones?.total ?? 0
+  const totalSesHoy = sesHoyCount || metricas?.hoy?.sesiones?.total || 0
   const realizadasHoy = metricas?.hoy?.sesiones?.realizadas ?? 0
   const totalPacientes = metricas?.pacientes?.total ?? 0
   const alertasUrgentes = metricas?.alertas?.urgentes ?? 0
