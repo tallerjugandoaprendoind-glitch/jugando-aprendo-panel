@@ -11,10 +11,26 @@ type Status = 'loading' | 'connected' | 'qr' | 'waiting' | 'error' | 'unconfigur
 
 export default function WhatsAppQRPanel() {
   const { t } = useI18n()
-  const [status, setStatus]   = useState<Status>('loading')
-  const [qr, setQr]           = useState<string | null>(null)
-  const [polling, setPolling] = useState(false)
-  const [error, setError]     = useState('')
+  const [status, setStatus]     = useState<Status>('loading')
+  const [qr, setQr]             = useState<string | null>(null)
+  const [polling, setPolling]   = useState(false)
+  const [error, setError]       = useState('')
+  const [disconnecting, setDisconnecting] = useState(false)
+  const [showConfirm, setShowConfirm]     = useState(false)
+
+  const handleDisconnect = async () => {
+    setDisconnecting(true)
+    setShowConfirm(false)
+    try {
+      await fetch('/api/whatsapp-service/disconnect', { method: 'POST' })
+      setStatus('loading')
+      setTimeout(checkStatus, 3000)
+    } catch {
+      setError('No se pudo desconectar')
+    } finally {
+      setDisconnecting(false)
+    }
+  }
 
   const checkStatus = useCallback(async () => {
     try {
@@ -114,12 +130,40 @@ export default function WhatsAppQRPanel() {
               </p>
             ))}
           </div>
-          <button
-            onClick={checkStatus}
-            className="mt-4 flex items-center gap-2 text-xs text-green-600 hover:text-green-800 transition-colors"
-          >
-            <RefreshCw size={12}/> Verificar conexión
-          </button>
+          <div className="mt-4 flex items-center gap-3">
+            <button
+              onClick={checkStatus}
+              className="flex items-center gap-2 text-xs text-green-600 hover:text-green-800 transition-colors"
+            >
+              <RefreshCw size={12}/> Verificar conexión
+            </button>
+            <span className="text-green-300">|</span>
+            {!showConfirm ? (
+              <button
+                onClick={() => setShowConfirm(true)}
+                className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 transition-colors"
+              >
+                <WifiOff size={12}/> Desconectar
+              </button>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-red-600 font-medium">¿Seguro?</span>
+                <button
+                  onClick={handleDisconnect}
+                  disabled={disconnecting}
+                  className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 disabled:opacity-50 font-bold"
+                >
+                  {disconnecting ? '...' : 'Sí, desconectar'}
+                </button>
+                <button
+                  onClick={() => setShowConfirm(false)}
+                  className="px-2 py-0.5 text-xs text-slate-500 hover:text-slate-700"
+                >
+                  Cancelar
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
