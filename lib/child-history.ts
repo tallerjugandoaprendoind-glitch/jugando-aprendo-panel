@@ -3,7 +3,7 @@
 
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-export async function getChildHistory(childId: string) {
+export async function getChildHistory(childId: string, childNameFallback?: string, childAgeFallback?: string | number) {
   // 1. Datos básicos del niño
   const { data: child } = await supabaseAdmin
     .from('children')
@@ -13,8 +13,8 @@ export async function getChildHistory(childId: string) {
 
   if (!child) {
     return {
-      nombre: 'Paciente no encontrado',
-      edad: '',
+      nombre: childNameFallback || 'Paciente no encontrado',
+      edad: childAgeFallback ? String(childAgeFallback) : '',
       diagnostico: '',
       historialTexto: '',
     }
