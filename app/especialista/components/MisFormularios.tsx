@@ -269,7 +269,12 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
       if (form.isSoft || table === 'form_responses') payload.responses = responses
       else { payload.datos = responses; payload.responses = responses }
 
-      await supabase.from(table).insert([payload])
+      // FIX: fecha_sesion es requerida en registro_aba
+      if (table === 'registro_aba') payload.fecha_sesion = new Date().toISOString().split('T')[0]
+
+      // FIX: verificar error del insert para no continuar si falla
+      const { error: insertError } = await supabase.from(table).insert([payload])
+      if (insertError) throw insertError
 
       await supabase.from('specialist_submissions').insert([{
         specialist_id: userId, child_id: childId, tipo: 'sesion',
