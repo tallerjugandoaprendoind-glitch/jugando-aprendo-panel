@@ -690,9 +690,7 @@ function MonthlyCalendarView() {
                 {/* Servicio, fecha, hora, estado */}
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Servicio</label>
-                  <select className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.service} onChange={e=>setNewApt(p=>({...p,service:e.target.value}))}>
-                    {SERVICES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  <input type="text" className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.service} onChange={e=>setNewApt(p=>({...p,service:e.target.value}))} placeholder="Ej: Terapia ABA, Evaluación..." />
                 </div>
                 <div>
                   <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Especialista asignado</label>
