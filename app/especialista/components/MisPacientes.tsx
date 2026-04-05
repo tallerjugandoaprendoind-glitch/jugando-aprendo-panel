@@ -9,7 +9,8 @@ import {
   AlertCircle, X, Brain, Heart, Home, ClipboardList, BarChart3,
   Calendar, User, Phone, Mail, ChevronDown, ChevronUp,
   BookOpen, CheckCircle2, Download, Sparkles, Stethoscope, Target, MessageSquare,
-  TrendingUp, Lightbulb, Shield, Star, Zap, ArrowRight, RefreshCw, Clock
+  TrendingUp, Lightbulb, Shield, Star, Zap, ArrowRight, RefreshCw, Clock,
+  Plus, Link2, UserPlus
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
@@ -624,6 +625,19 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
   const [activeTab, setActiveTab] = useState<'resumen'|'historial'|'evaluaciones'|'reportes'|'programas_aba'>('resumen')
   const [filterType, setFilterType] = useState('all')
 
+  // ── Crear paciente ──
+  const [showCrear, setShowCrear] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [newForm, setNewForm] = useState({ name: '', birth_date: '', diagnosis: '' })
+
+  // ── Vincular cuenta padre ──
+  const [showVincular, setShowVincular] = useState(false)
+  const [pacienteVincular, setPacienteVincular] = useState<any>(null)
+  const [emailBusqueda, setEmailBusqueda] = useState('')
+  const [parentEncontrado, setParentEncontrado] = useState<any>(null)
+  const [buscandoPadre, setBuscandoPadre] = useState(false)
+  const [vinculando, setVinculando] = useState(false)
+
   const cargar = useCallback(async () => {
     setLoading(true)
     try {
@@ -635,6 +649,59 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
     } catch (e: any) { toast.error('Error: ' + e.message) }
     finally { setLoading(false) }
   }, [])
+
+  const handleCrear = async () => {
+    if (!newForm.name.trim()) { toast.error('El nombre es requerido'); return }
+    setSaving(true)
+    try {
+      const { data, error } = await supabase.from('children').insert({
+        name: newForm.name.trim(),
+        birth_date: newForm.birth_date || null,
+        diagnosis: newForm.diagnosis.trim() || null,
+        is_active: true,
+      }).select().single()
+      if (error) throw error
+      toast.success('✅ Paciente creado correctamente')
+      setNewForm({ name: '', birth_date: '', diagnosis: '' })
+      setShowCrear(false)
+      await cargar()
+      verPaciente(data)
+    } catch (e: any) { toast.error(e.message) }
+    finally { setSaving(false) }
+  }
+
+  const buscarPadre = async () => {
+    if (!emailBusqueda.trim()) return
+    setBuscandoPadre(true)
+    setParentEncontrado(null)
+    try {
+      const { data } = await supabase.from('profiles')
+        .select('id, full_name, email, role')
+        .ilike('email', emailBusqueda.trim())
+        .single()
+      if (data) setParentEncontrado(data)
+      else toast.error('No se encontró ningún usuario con ese email')
+    } catch { toast.error('No se encontró ningún usuario con ese email') }
+    finally { setBuscandoPadre(false) }
+  }
+
+  const handleVincular = async () => {
+    if (!parentEncontrado || !pacienteVincular) return
+    setVinculando(true)
+    try {
+      const { error } = await supabase.from('children')
+        .update({ parent_id: parentEncontrado.id })
+        .eq('id', pacienteVincular.id)
+      if (error) throw error
+      toast.success(`✅ ${pacienteVincular.name} vinculado a ${parentEncontrado.full_name || parentEncontrado.email}`)
+      setShowVincular(false)
+      setEmailBusqueda('')
+      setParentEncontrado(null)
+      setPacienteVincular(null)
+      await cargar()
+    } catch (e: any) { toast.error(e.message) }
+    finally { setVinculando(false) }
+  }
 
   const verPaciente = async (nino: any) => {
     setSeleccionado(nino)
@@ -928,11 +995,12 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="text-2xl font-black text-slate-800">{t('nav.mispacientes')}</h2>
-          <p className="text-sm text-slate-500 mt-1">Expedientes clínicos completos · Solo lectura</p>
+          <p className="text-sm text-slate-500 mt-1">Expedientes clínicos completos</p>
         </div>
-        <div className="flex items-center gap-1.5 text-xs font-bold text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-full flex-shrink-0">
-          <AlertCircle size={11} /> Consulta
-        </div>
+        <button onClick={() => setShowCrear(true)}
+          className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-sm flex-shrink-0">
+          <Plus size={15} /> Nuevo paciente
+        </button>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-200 flex items-center gap-3 px-4 py-3 shadow-sm">
@@ -969,6 +1037,11 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
                 <div className="flex items-center gap-1 text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-1 rounded-lg">
                   <Sparkles size={10} /> IA
                 </div>
+                <button onClick={e => { e.stopPropagation(); setPacienteVincular(n); setShowVincular(true) }}
+                  className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl hover:bg-emerald-100 transition-colors"
+                  title="Vincular cuenta de padre/tutor">
+                  <Link2 size={13} /> Vincular
+                </button>
                 <div className="flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl group-hover:bg-blue-100 transition-colors">
                   <BookOpen size={13} /> Expediente
                 </div>
@@ -981,6 +1054,112 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
               <p className="text-slate-400 text-sm font-semibold">{t('common.sinResultados')}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ── Modal: Crear paciente ── */}
+      {showCrear && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
+                  <UserPlus size={18} className="text-blue-600" />
+                </div>
+                <h3 className="text-lg font-black text-slate-800">Nuevo paciente</h3>
+              </div>
+              <button onClick={() => setShowCrear(false)} className="p-2 rounded-xl hover:bg-slate-100">
+                <X size={16} className="text-slate-400" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {[
+                { key: 'name',       label: 'Nombre completo',     type: 'text', placeholder: 'Ej: María García', req: true },
+                { key: 'birth_date', label: 'Fecha de nacimiento', type: 'date', placeholder: '',                 req: false },
+                { key: 'diagnosis',  label: 'Diagnóstico',         type: 'text', placeholder: 'Ej: TEA Nivel 2', req: false },
+              ].map(f => (
+                <div key={f.key}>
+                  <label className="block text-xs font-black uppercase tracking-widest mb-1.5 text-slate-500">
+                    {f.label}{f.req && <span className="text-red-400 ml-0.5">*</span>}
+                  </label>
+                  <input type={f.type} placeholder={f.placeholder}
+                    value={(newForm as any)[f.key]}
+                    onChange={e => setNewForm(fm => ({ ...fm, [f.key]: e.target.value }))}
+                    className="w-full px-4 py-3 rounded-xl text-sm outline-none border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition-colors text-slate-800" />
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => setShowCrear(false)}
+                className="flex-1 py-3 rounded-xl font-bold text-sm border border-slate-200 text-slate-500 hover:bg-slate-50">
+                Cancelar
+              </button>
+              <button onClick={handleCrear} disabled={saving || !newForm.name.trim()}
+                className="flex-1 py-3 rounded-xl font-bold text-sm bg-blue-600 text-white disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-blue-700">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : <Plus size={14} />}
+                Crear paciente
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal: Vincular cuenta padre ── */}
+      {showVincular && pacienteVincular && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
+                  <Link2 size={18} className="text-emerald-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-800">Vincular cuenta</h3>
+                  <p className="text-xs text-slate-500">{pacienteVincular.name}</p>
+                </div>
+              </div>
+              <button onClick={() => { setShowVincular(false); setEmailBusqueda(''); setParentEncontrado(null) }}
+                className="p-2 rounded-xl hover:bg-slate-100">
+                <X size={16} className="text-slate-400" />
+              </button>
+            </div>
+            <p className="text-sm text-slate-500">Busca la cuenta del padre/tutor por su email registrado en la plataforma.</p>
+            <div className="flex gap-2">
+              <input type="email" placeholder="Email del padre/tutor..."
+                value={emailBusqueda}
+                onChange={e => { setEmailBusqueda(e.target.value); setParentEncontrado(null) }}
+                onKeyDown={e => e.key === 'Enter' && buscarPadre()}
+                className="flex-1 px-4 py-3 rounded-xl text-sm outline-none border border-slate-200 bg-slate-50 focus:border-emerald-400 focus:bg-white transition-colors text-slate-800" />
+              <button onClick={buscarPadre} disabled={buscandoPadre || !emailBusqueda.trim()}
+                className="px-4 py-3 rounded-xl bg-slate-800 text-white font-bold text-sm disabled:opacity-50 flex items-center gap-2 hover:bg-slate-700">
+                {buscandoPadre ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
+                Buscar
+              </button>
+            </div>
+            {parentEncontrado && (
+              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-200 flex items-center justify-center font-black text-emerald-700">
+                  {parentEncontrado.full_name?.[0] || parentEncontrado.email[0].toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-slate-800 text-sm">{parentEncontrado.full_name || 'Sin nombre'}</p>
+                  <p className="text-xs text-slate-500 truncate">{parentEncontrado.email}</p>
+                </div>
+                <CheckCircle2 size={18} className="text-emerald-500 flex-shrink-0" />
+              </div>
+            )}
+            <div className="flex gap-3 pt-1">
+              <button onClick={() => { setShowVincular(false); setEmailBusqueda(''); setParentEncontrado(null) }}
+                className="flex-1 py-3 rounded-xl font-bold text-sm border border-slate-200 text-slate-500 hover:bg-slate-50">
+                Cancelar
+              </button>
+              <button onClick={handleVincular} disabled={!parentEncontrado || vinculando}
+                className="flex-1 py-3 rounded-xl font-bold text-sm bg-emerald-600 text-white disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-emerald-700">
+                {vinculando ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
+                Vincular cuenta
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
