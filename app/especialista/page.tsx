@@ -77,6 +77,7 @@ export default function EspecialistaDashboard() {
   const [ariaOpen, setAriaOpen]                     = useState(false)
   const [ariaExpanded, setAriaExpanded]             = useState(false)
   const [ariaMinimized, setAriaMinimized]           = useState(false)
+  const [activeChild, setActiveChild]               = useState<{id: string, name: string} | null>(null)
 
   const loadProfile = async () => {
     try {
@@ -116,7 +117,7 @@ export default function EspecialistaDashboard() {
     if (!profile) return null
     switch (activeView) {
       case 'inicio':       return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
-      case 'pacientes':    return <MisPacientes />
+      case 'pacientes':    return <MisPacientes onPatientSelect={(id, name) => id && name ? setActiveChild({ id, name }) : setActiveChild(null)} />
       case 'formularios':  return <MisFormularios userId={profile.id} />
       case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       case 'agenda':       return <MiAgenda />
@@ -353,7 +354,7 @@ export default function EspecialistaDashboard() {
                 </p>
                 <div className="flex items-center gap-1">
                   <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"/>
-                  <p className="text-violet-200 text-[10px] font-medium">Asistente Clínico · Activa</p>
+                  <p className="text-violet-200 text-[10px] font-medium">{activeChild ? `Caso: ${activeChild.name}` : 'Asistente Clínico · Activa'}</p>
                 </div>
               </div>
             </div>
@@ -371,7 +372,10 @@ export default function EspecialistaDashboard() {
           </div>
           {!ariaMinimized && (
             <div className="flex-1 min-h-0">
-              <ARIAAgentChat userId={profile?.id || ''} compact={true} contexto="general" />
+              <ARIAAgentChat userId={profile?.id || ''} compact={true}
+                childId={activeChild?.id}
+                childName={activeChild?.name}
+                contexto={activeChild ? 'paciente' : 'general'} />
             </div>
           )}
         </div>

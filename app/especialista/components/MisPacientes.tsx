@@ -611,7 +611,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
 }
 
 // ── Main ───────────────────────────────────────────────────────────────────────
-export default function MisPacientes() {
+export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (id: string | null, name: string | null) => void }) {
   const toast = useToast()
   const { t } = useI18n()
   const [ninos, setNinos] = useState<any[]>([])
@@ -638,6 +638,7 @@ export default function MisPacientes() {
 
   const verPaciente = async (nino: any) => {
     setSeleccionado(nino)
+    onPatientSelect?.(nino.id, nino.name)
     setRegistros([])
     setWordReports([])
     setActiveTab('resumen')
@@ -754,7 +755,7 @@ export default function MisPacientes() {
     return (
       <div className="space-y-5 pb-24 md:pb-8">
         <div className="flex items-center gap-3">
-          <button onClick={() => { setSeleccionado(null); setRegistros([]) }}
+          <button onClick={() => { setSeleccionado(null); setRegistros([]); onPatientSelect?.(null, null) }}
             className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 shadow-sm">
             <ChevronRight size={18} className="rotate-180 text-slate-600" />
           </button>
