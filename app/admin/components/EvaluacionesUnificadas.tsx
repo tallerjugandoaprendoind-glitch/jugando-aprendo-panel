@@ -1092,11 +1092,17 @@ function FormFillView({ form, children, onBack, toast }: any) {
               <h2 className="font-black text-xl">{form.title}</h2>
               <p className="text-white/80 text-sm mt-0.5">{form.subtitle}</p>
             </div>
-            <select value={selectedChild} onChange={e => setSelectedChild(e.target.value)}
-              className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:bg-white/30 transition-all min-w-[180px]">
-              <option value="" className="text-slate-800" style={{ color: "var(--text-primary)" }}>{t('evaluaciones.selecPac')}</option>
-              {children.map((c: any) => <option key={c.id} value={c.id} className="text-slate-800" style={{ color: "var(--text-primary)" }}>{c.name}</option>)}
-            </select>
+            {initialChildId ? (
+              <div className="bg-white/20 backdrop-blur-sm border-2 border-white/30 rounded-xl px-4 py-2.5 text-sm font-bold text-white min-w-[180px] text-center">
+                {initialChildName || children.find((c: any) => c.id === selectedChild)?.name || '—'}
+              </div>
+            ) : (
+              <select value={selectedChild} onChange={e => setSelectedChild(e.target.value)}
+                className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:bg-white/30 transition-all min-w-[180px]">
+                <option value="" className="text-slate-800" style={{ color: "var(--text-primary)" }}>{t('evaluaciones.selecPac')}</option>
+                {children.map((c: any) => <option key={c.id} value={c.id} className="text-slate-800" style={{ color: "var(--text-primary)" }}>{c.name}</option>)}
+              </select>
+            )}
           </div>
         </div>
 

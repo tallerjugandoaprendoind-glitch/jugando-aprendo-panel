@@ -135,6 +135,7 @@ function AIReportView({ onChildSelect, initialChildId }: { onChildSelect?: (chil
   const [reportesHistorial, setReportesHistorial] = useState<any[]>([])
   const [loadingReportes, setLoadingReportes] = useState(false)
   const [showReportPanel, setShowReportPanel] = useState(true)
+  const [showAnamnesisReport, setShowAnamnesisReport] = useState(false)
   const [mobileTab, setMobileTab] = useState<'chat' | 'history' | 'reports' | 'graficas'>('chat')
   
   const [messages, setMessages] = useState<any[]>([
@@ -518,14 +519,14 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
                     </div>
                     {isExpanded && (
                       <div className="px-4 pb-4 border-t pt-3 animate-fade-in space-y-3" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
-                        <DetailBox title={t('ui.people_present')} content={d.personas_presentes} icon={<Users size={13}/>} color="bg-blue-500/10 border-blue-500/20 text-blue-300" full/>
-                        <DetailBox title={t('ui.behavior')} content={d.comportamiento_observado} icon={<Eye size={13}/>} color="bg-purple-500/10 border-purple-500/20 text-purple-300" full/>
-                        <DetailBox title={t('ui.ai_impression')} content={d.impresion_general} icon={<Brain size={13}/>} color="bg-indigo-500/10 border-indigo-500/20 text-indigo-300" full/>
+                        <DetailBox title={t('ui.people_present')} content={d.personas_presentes} icon={<Users size={13}/>} color="bg-blue-50 border-blue-200 text-blue-700" full/>
+                        <DetailBox title={t('ui.behavior')} content={d.comportamiento_observado} icon={<Eye size={13}/>} color="bg-purple-50 border-purple-200 text-purple-700" full/>
+                        <DetailBox title={t('ui.ai_impression')} content={d.impresion_general} icon={<Brain size={13}/>} color="bg-indigo-50 border-indigo-200 text-indigo-700" full/>
                         <div className="grid grid-cols-2 gap-3">
-                          <DetailBox title={t('ui.barriers')} content={d.barreras_identificadas} icon={<ShieldAlert size={13}/>} color="bg-red-500/10 border-red-500/20 text-red-300"/>
-                          <DetailBox title={t('ui.facilitators')} content={d.facilitadores} icon={<CheckCircle2 size={13}/>} color="bg-green-500/10 border-green-500/20 text-green-300"/>
+                          <DetailBox title={t('ui.barriers')} content={d.barreras_identificadas} icon={<ShieldAlert size={13}/>} color="bg-red-50 border-red-200 text-red-700"/>
+                          <DetailBox title={t('ui.facilitators')} content={d.facilitadores} icon={<CheckCircle2 size={13}/>} color="bg-emerald-50 border-emerald-200 text-emerald-700"/>
                         </div>
-                        <DetailBox title="Mensaje Padres" content={d.mensaje_padres_entorno} icon={<MessageCircle size={13}/>} color="bg-green-500/10 border-green-500/20 text-green-300" full/>
+                        <DetailBox title="Mensaje Padres" content={d.mensaje_padres_entorno} icon={<MessageCircle size={13}/>} color="bg-emerald-50 border-emerald-200 text-emerald-700" full/>
                       </div>
                     )}
                   </div>
@@ -549,19 +550,19 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
                     </div>
                     {isExpanded && (
                       <div className="px-4 pb-4 border-t pt-3 animate-fade-in space-y-3" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
-                        <DetailBox title="Objetivo" content={d.objetivo_principal} icon={<Target size={13}/>} color="bg-blue-500/10 border-blue-500/20 text-blue-300" full/>
-                        <DetailBox title={t('ui.observations')} content={d.observaciones_tecnicas} icon={<Eye size={13}/>} color="bg-slate-500/10 border-slate-500/20 text-slate-300" full/>
+                        <DetailBox title="Objetivo" content={d.objetivo_principal} icon={<Target size={13}/>} color="bg-blue-50 border-blue-200 text-blue-700" full/>
+                        <DetailBox title={t('ui.observations')} content={d.observaciones_tecnicas} icon={<Eye size={13}/>} color="bg-slate-50 border-slate-200 text-slate-700" full/>
                         <div className="grid grid-cols-2 gap-3">
-                          <DetailBox title="ABC" content={d.antecedente} icon={<Activity size={13}/>} color="bg-purple-500/10 border-purple-500/20 text-purple-300"/>
-                          <DetailBox title={t('ui.intervencion')} content={d.estrategias_manejo} icon={<Zap size={13}/>} color="bg-orange-500/10 border-orange-500/20 text-orange-300"/>
+                          <DetailBox title="ABC" content={d.antecedente} icon={<Activity size={13}/>} color="bg-purple-50 border-purple-200 text-purple-700"/>
+                          <DetailBox title={t('ui.intervencion')} content={d.estrategias_manejo} icon={<Zap size={13}/>} color="bg-orange-50 border-orange-200 text-orange-700"/>
                         </div>
-                        <div className="rounded-xl p-3" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)' }}>
+                        <div className="rounded-xl p-3 bg-amber-50 border border-amber-200">
                           <div className="flex items-center gap-2 mb-1.5">
-                            <MessageCircle size={11} className="text-amber-400"/>
-                            <span className="text-[10px] font-black text-amber-400 uppercase tracking-widest">{t('ui.mensajePadresLabel')}</span>
-                            <span className="ml-auto text-[9px] font-black text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded-full">{t('ui.enBandeja')}</span>
+                            <MessageCircle size={11} className="text-amber-600"/>
+                            <span className="text-[10px] font-black text-amber-700 uppercase tracking-widest">{t('ui.mensajePadresLabel')}</span>
+                            <span className="ml-auto text-[9px] font-black text-amber-700 bg-amber-100 border border-amber-300 px-1.5 py-0.5 rounded-full">{t('ui.enBandeja')}</span>
                           </div>
-                          <p className="text-xs text-amber-300 italic">"{d.mensaje_padres}"</p>
+                          <p className="text-xs text-amber-800 italic">"{d.mensaje_padres}"</p>
                         </div>
                       </div>
                     )}
@@ -583,6 +584,14 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
             title={t('ui.fichaIngreso')}
             icon={<FileText size={16} className="text-blue-400"/>}
             defaultOpen={false}
+            badge={historyData.anamnesis && selectedChild ? (
+              <button
+                onClick={e => { e.stopPropagation(); setShowAnamnesisReport(true) }}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <FileText size={11}/> Generar reporte Word
+              </button>
+            ) : undefined}
           >
             <div className="p-4 space-y-2" style={{ background: 'var(--background)' }}>
               {historyData.anamnesis ? Object.entries(historyData.anamnesis).slice(0, 20).map(([key, value]: any) => (
@@ -643,6 +652,23 @@ const nombre = listaNinos.find(n => n.id === childId)?.name || t('nav.pacientes'
               <Brain size={120} className="mb-8 text-slate-200"/>
               <p className="text-2xl font-black uppercase tracking-[0.4em] text-slate-300">{t('ui.seleccionarPacienteOpc')}</p>
           </div>
+      )}
+
+      {/* ══ MODAL: REPORTE WORD ANAMNESIS ══ */}
+      {showAnamnesisReport && selectedChild && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[200] p-4">
+          <div className="w-full max-w-xl animate-fade-in-up">
+            <ReportGenerator
+              childId={selectedChild}
+              childName={listaNinos.find(n => n.id === selectedChild)?.name || ''}
+              evaluationType="anamnesis"
+              evaluationData={historyData.anamnesis || {}}
+              evaluationId={selectedChild}
+              compact={false}
+              onClose={() => setShowAnamnesisReport(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   )
@@ -784,14 +810,14 @@ function ReporteHistorialCard({ reporte }: { reporte: any; key?: any }) {
 function DetailBox({ title, content, icon, color, full }: any) {
     const safeContent = content ? String(content) : ""; 
     const isEmpty = safeContent === "" || safeContent === "undefined";
-    const finalStyle = isEmpty ? "bg-slate-50 border-slate-100 text-slate-400" : color;
+    const finalStyle = isEmpty ? "bg-slate-50 border-slate-200 text-slate-400" : color;
 
     return (
         <div className={`p-4 rounded-2xl border ${finalStyle} shadow-sm transition-all ${full ? 'w-full' : ''}`}>
-            <p className={`font-black uppercase mb-2 flex items-center gap-2 text-[10px] tracking-widest`}>
+            <p className={`font-black uppercase mb-2 flex items-center gap-2 text-[10px] tracking-widest opacity-80`}>
               {icon} {title}
             </p>
-            <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap font-medium" style={{ color: 'inherit' }}>
               {isEmpty ? "SIN REGISTRO" : safeContent}
             </p>
         </div>
