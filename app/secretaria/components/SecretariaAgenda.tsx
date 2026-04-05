@@ -182,13 +182,17 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
         if (session?.user?.id) setUserId(session.user.id)
       })
     }
-    // Cargar especialistas y terapeutas
-    supabase.from('profiles')
-      .select('id, full_name, role, specialty')
-      .in('role', ['especialista', 'terapeuta', 'admin', 'jefe'])
-      .eq('is_active', true)
-      .order('full_name')
-      .then(({ data }) => setEspecialistas(data || []))
+    // Cargar especialistas vía API con service role (evita restricciones RLS)
+    fetch('/api/admin/users')
+      .then(r => r.json())
+      .then(({ data }) => {
+        const filtrados = (data || [])
+          .filter((u: any) => u.profile?.is_active && ['especialista','terapeuta','admin','jefe'].includes(u.profile?.role))
+          .map((u: any) => ({ id: u.id, full_name: u.profile?.full_name || u.email, specialty: u.profile?.specialty || '' }))
+          .sort((a: any, b: any) => a.full_name.localeCompare(b.full_name))
+        setEspecialistas(filtrados)
+      })
+      .catch(() => {})
   }, [])
 
   const emptyForm = {
