@@ -716,7 +716,7 @@ const PATRON_CONFIG: Record<string, {
   label: string; icon: string; accent: string; lightBg: string; lightBorder: string; lightText: string; darkBg: string; darkBorder: string; darkText: string
 }> = {
   regresion:     { label: 'Regresión Conductual',   icon: '↘', accent: '#c0524a', lightBg: '#fdf3f3', lightBorder: '#f0b8b5', lightText: '#9a3030', darkBg: 'rgba(192,82,74,0.12)',   darkBorder: 'rgba(192,82,74,0.3)',   darkText: '#e8a0a0' },
-  estancamiento: { label: 'Plateau de Aprendizaje', icon: '→', accent: '#b07830', lightBg: '#fdf8ee', lightBorder: '#e8cc90', lightText: '#7a5010', darkBg: 'rgba(176,120,48,0.12)',  darkBorder: 'rgba(176,120,48,0.3)',  darkText: '#d9b87a' },
+  estancamiento: { label: 'Estancamiento de Aprendizaje', icon: '→', accent: '#b07830', lightBg: '#fdf8ee', lightBorder: '#e8cc90', lightText: '#7a5010', darkBg: 'rgba(176,120,48,0.12)',  darkBorder: 'rgba(176,120,48,0.3)',  darkText: '#d9b87a' },
   aceleracion:   { label: 'Aceleración del Logro',  icon: '↗', accent: '#2e7a56', lightBg: '#f3faf6', lightBorder: '#a0d4b8', lightText: '#1a5c38', darkBg: 'rgba(46,122,86,0.12)',   darkBorder: 'rgba(46,122,86,0.3)',   darkText: '#7ec4a4' },
   inconsistencia:{ label: 'Variabilidad Alta',      icon: '⟺', accent: '#6355a0', lightBg: '#f7f5fc', lightBorder: '#c0b8e0', lightText: '#42357a', darkBg: 'rgba(99,85,160,0.12)',   darkBorder: 'rgba(99,85,160,0.3)',   darkText: '#c4b8e8' },
   dominio:       { label: 'Criterio de Dominio',    icon: '★', accent: '#3a68a0', lightBg: '#f3f7fc', lightBorder: '#a8c4e0', lightText: '#1e4878', darkBg: 'rgba(58,104,160,0.12)',  darkBorder: 'rgba(58,104,160,0.3)',  darkText: '#90b8d8' },
@@ -982,7 +982,7 @@ function TabPatrones({ pacientes }: { pacientes: Paciente[] }) {
         <div className="flex flex-wrap gap-3 mt-3 pt-3" style={{ borderTop: '1px solid var(--card-border)' }}>
           {[
             { icon: '↘', label: 'Regresión',   color: '#c0524a' },
-            { icon: '→', label: 'Plateau',      color: '#fbbf24' },
+            { icon: '→', label: 'Estancamiento',      color: '#fbbf24' },
             { icon: '↗', label: 'Aceleración',  color: '#2e7a56' },
             { icon: '⟺', label: 'Variabilidad', color: '#6355a0' },
             { icon: '★', label: 'Dominio',      color: '#3a68a0' },
