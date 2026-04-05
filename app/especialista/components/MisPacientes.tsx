@@ -153,20 +153,20 @@ function ABADetail({ r }: { r: any }) {
   const toast = useToast()
 
   const descargarReporteWord = async () => {
-    if (!r.child_id) { toast.error('No se encontró el ID del paciente'); return }
+    if (!r.id) { toast.error('No se encontró el ID del registro'); return }
     setDownloading(true)
     try {
-      const res = await fetch('/api/reporte-word', {
+      const res = await fetch('/api/reporte-sesion-aba', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ childId: r.child_id, tipo: 'padres' }),
+        body: JSON.stringify({ registroId: r.id }),
       })
       if (!res.ok) throw new Error('Error al generar el reporte')
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = Object.assign(document.createElement('a'), {
         href: url,
-        download: `Reporte_ABA_${new Date().toISOString().slice(0,10)}.docx`,
+        download: `Sesion_ABA_${new Date().toISOString().slice(0,10)}.docx`,
       })
       a.click()
       URL.revokeObjectURL(url)
@@ -219,6 +219,34 @@ function ABADetail({ r }: { r: any }) {
 
 function AnamnesisDetail({ r }: { r: any }) {
   const { t } = useI18n()
+  const [downloading, setDownloading] = useState(false)
+  const toast = useToast()
+
+  const descargarReporteWord = async () => {
+    if (!r.id) { toast.error('No se encontró el ID del registro'); return }
+    setDownloading(true)
+    try {
+      const res = await fetch('/api/reporte-anamnesis', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ registroId: r.id }),
+      })
+      if (!res.ok) throw new Error('Error al generar el reporte')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = Object.assign(document.createElement('a'), {
+        href: url,
+        download: `Historia_Clinica_${new Date().toISOString().slice(0,10)}.docx`,
+      })
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Historia Clínica descargada')
+    } catch (e: any) {
+      toast.error('Error: ' + e.message)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   const d = r.datos || r
   return (
@@ -253,6 +281,14 @@ function AnamnesisDetail({ r }: { r: any }) {
         <Field label={t("ui.relacionPares")} value={d.pares} />
       </Bloque>
       <AIBlock analysis={r.ai_analysis} />
+      <button
+        onClick={descargarReporteWord}
+        disabled={downloading}
+        className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+      >
+        <Download size={13} />
+        {downloading ? 'Generando Historia Clínica...' : 'Descargar Historia Clínica (Word)'}
+      </button>
     </div>
   )
 }
