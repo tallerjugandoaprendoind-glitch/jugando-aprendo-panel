@@ -720,12 +720,28 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Especialista asignado <span className="text-slate-300">(opcional)</span></label>
-                <select value={form.specialist_id} onChange={e=>setForm(p=>({...p,specialist_id:e.target.value}))}
-                  className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
-                  <option value="">Sin asignar</option>
-                  {especialistas.map(e=><option key={e.id} value={e.id}>{e.full_name}{e.specialty ? ` · ${e.specialty}` : ''}</option>)}
-                </select>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Especialista asignado <span className="text-slate-300">(puedes elegir varios)</span></label>
+                <div className="flex flex-wrap gap-2 p-3 rounded-2xl border-2 border-slate-200 min-h-[48px] focus-within:border-violet-400 bg-slate-50 transition-colors">
+                  {form.specialist_id && form.specialist_id.split(',').filter(Boolean).map(sid => {
+                    const esp = especialistas.find(e => e.id === sid)
+                    return esp ? (
+                      <span key={sid} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-violet-600 text-white">
+                        {esp.full_name.split(' ')[0]}
+                        <button type="button" onClick={()=>setForm(p=>({...p,specialist_id:p.specialist_id.split(',').filter(id=>id!==sid).join(',')}))} className="ml-1 opacity-80 hover:opacity-100">×</button>
+                      </span>
+                    ) : null
+                  })}
+                  <select className="flex-1 min-w-[160px] text-sm font-bold outline-none bg-transparent text-slate-700"
+                    value="" onChange={e=>{
+                      const v = e.target.value
+                      if(!v) return
+                      const current = form.specialist_id ? form.specialist_id.split(',').filter(Boolean) : []
+                      if(!current.includes(v)) setForm(p=>({...p,specialist_id:[...current,v].join(',')}))
+                    }}>
+                    <option value="">+ Agregar especialista...</option>
+                    {especialistas.filter(e=>!form.specialist_id?.split(',').includes(e.id)).map(e=><option key={e.id} value={e.id}>{e.full_name}{e.specialty ? ` · ${e.specialty}` : ''}</option>)}
+                  </select>
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

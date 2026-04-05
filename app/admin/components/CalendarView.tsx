@@ -693,11 +693,28 @@ function MonthlyCalendarView() {
                   <input type="text" className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.service} onChange={e=>setNewApt(p=>({...p,service:e.target.value}))} placeholder="Ej: Terapia ABA, Evaluación..." />
                 </div>
                 <div>
-                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Especialista asignado</label>
-                  <select className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }} value={newApt.specialist_id} onChange={e=>setNewApt(p=>({...p,specialist_id:e.target.value}))}>
-                    <option value="">Sin asignar</option>
-                    {especialistas.map(e=><option key={e.id} value={e.id}>{e.full_name}{e.specialty ? ` · ${e.specialty}` : ''}</option>)}
-                  </select>
+                  <label className="text-xs font-black uppercase tracking-widest block mb-2" style={{ color: "var(--text-muted)" }}>Especialista asignado <span style={{color:'var(--text-muted)',fontWeight:400,fontSize:10}}>(puedes elegir varios)</span></label>
+                  <div className="flex flex-wrap gap-2 p-3 rounded-xl min-h-[52px]" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)" }}>
+                    {newApt.specialist_id && newApt.specialist_id.split(',').filter(Boolean).map(sid => {
+                      const esp = especialistas.find(e => e.id === sid)
+                      return esp ? (
+                        <span key={sid} className="flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold" style={{background:'var(--primary)',color:'#fff'}}>
+                          {esp.full_name.split(' ')[0]}
+                          <button type="button" onClick={()=>setNewApt(p=>({...p,specialist_id:p.specialist_id.split(',').filter(id=>id!==sid).join(',')}))} className="ml-1 opacity-80 hover:opacity-100">×</button>
+                        </span>
+                      ) : null
+                    })}
+                    <select className="flex-1 min-w-[140px] text-sm font-bold outline-none bg-transparent" style={{color:'var(--text-primary)'}}
+                      value="" onChange={e=>{
+                        const v = e.target.value
+                        if(!v) return
+                        const current = newApt.specialist_id ? newApt.specialist_id.split(',').filter(Boolean) : []
+                        if(!current.includes(v)) setNewApt(p=>({...p,specialist_id:[...current,v].join(',')}))
+                      }}>
+                      <option value="">+ Agregar especialista...</option>
+                      {especialistas.filter(e=>!newApt.specialist_id?.split(',').includes(e.id)).map(e=><option key={e.id} value={e.id}>{e.full_name}{e.specialty ? ` · ${e.specialty}` : ''}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
