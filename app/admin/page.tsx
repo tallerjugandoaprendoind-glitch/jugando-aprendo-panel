@@ -543,9 +543,9 @@ export default function AdminDashboard() {
           ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}
           style={{
             right: '24px',
-            top: '72px',
+            bottom: '24px',
             width: ariaExpanded ? 'min(560px, calc(100vw - 48px))' : 'min(380px, calc(100vw - 48px))',
-            height: ariaMinimized ? '54px' : ariaExpanded ? 'calc(100vh - 96px)' : 'min(500px, calc(100vh - 96px))',
+            height: ariaMinimized ? '54px' : `min(${ariaExpanded ? '680px' : '500px'}, calc(100vh - 100px))`,
           }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex-shrink-0">
