@@ -542,8 +542,8 @@ export default function AdminDashboard() {
         <div className={`fixed bottom-6 md:bottom-6 right-4 md:right-6 z-[90] w-[calc(100vw-2rem)] rounded-3xl shadow-2xl overflow-hidden border flex flex-col transition-all duration-300
           ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}
           style={{
-            maxWidth: ariaExpanded ? '560px' : '448px',
-            height: ariaMinimized ? '54px' : ariaExpanded ? 'calc(100vh - 96px)' : '560px',
+            maxWidth: ariaExpanded ? '720px' : '448px',
+            height: ariaMinimized ? '54px' : '560px',
           }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex-shrink-0">
