@@ -133,213 +133,83 @@ async function extraerPubMed(termino: string): Promise<{ titulo: string; texto: 
   }
 }
 
-// ─── 🆕 Groq Compound — agente IA con búsqueda web integrada (usa GROQ_API_KEY) ──
-// Usa groq/compound que busca automáticamente en internet cuando lo necesita.
-// No requiere ninguna API key adicional — funciona con tu GROQ_API_KEY existente.
+// ─── 🆕 Groq Web Search Tool — búsqueda web con tool_use (usa GROQ_API_KEY) ──────
+// Usa llama-3.3-70b-versatile + web_search_preview tool de Groq.
+// Funciona con tu GROQ_API_KEY existente, sin API keys adicionales.
 async function extraerGroqCompound(temaEs: string, temaEn: string): Promise<{ titulo: string; texto: string; url: string }[]> {
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) return []
 
-  try {
-    const prompt = `Busca información actualizada sobre este tema clínico para terapeutas ABA/TEA: "${temaEs}" (en inglés: "${temaEn}").
+  // Intentar con compound-beta primero, luego compound-beta-mini como fallback
+  const modelos = ['compound-beta-mini', 'compound-beta']
 
-Encuentra y resume:
-1. Definición clínica actual según ABA/JABA
-2. Intervenciones con evidencia reciente (últimos 5 años)
-3. Estrategias prácticas para terapeutas
-4. Recursos web relevantes encontrados
-
-Responde en español, detallado y estructurado. Incluye las fuentes que encontraste.`
-
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      signal: AbortSignal.timeout(30000),
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'compound-beta',
-        messages: [
-          {
-            role: 'system',
-            content: 'Eres un BCBA experto en ABA, TEA y TDAH. Busca información actualizada en internet y sintetiza el conocimiento clínico más relevante. Responde siempre en español.',
-          },
-          { role: 'user', content: prompt },
-        ],
-        max_tokens: 2000,
-      }),
-    })
-
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}))
-      console.error(`[Groq Compound] Error ${res.status}:`, errBody?.error?.message || res.statusText)
-      return []
-    }
-    const data = await res.json()
-    console.log('[Groq Compound] Response keys:', Object.keys(data))
-    const texto = data?.choices?.[0]?.message?.content || ''
-    console.log('[Groq Compound] Texto length:', texto.length, '| Preview:', texto.slice(0, 100))
-    if (texto.length < 100) return []
-
-    // Extraer fuentes usadas si Groq las devuelve en executed_tools
-    const tools = data?.executed_tools || []
-    const urlsEncontradas = tools
-      .filter((t: any) => t.type === 'web_search')
-      .flatMap((t: any) => t.results || [])
-      .map((r: any) => r.url)
-      .filter(Boolean)
-      .slice(0, 3)
-
-    return [{
-      titulo: `[Groq Compound Web] Búsqueda IA: ${temaEs}`,
-      texto: `BÚSQUEDA WEB IA SOBRE: ${temaEs}\n\n${texto}\n\nFuentes consultadas: ${urlsEncontradas.join(', ') || 'Ver respuesta'}`,
-      url: urlsEncontradas[0] || `https://console.groq.com`,
-    }]
-  } catch {
-    return []
-  }
-}
-// ─── 🆕 Wikipedia API (ES + EN, sin API key) ──────────────────────────────────
-async function extraerWikipedia(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
-  const resultados: { titulo: string; texto: string; url: string }[] = []
-
-  // Español
-  try {
-    const searchEs = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termino)}&format=json&srlimit=2&srprop=snippet&origin=*`
-    const resEs = await fetch(searchEs, { signal: AbortSignal.timeout(6000) })
-    if (resEs.ok) {
-      const dataEs = await resEs.json()
-      const hits = dataEs?.query?.search || []
-      for (const hit of hits.slice(0, 2)) {
-        try {
-          const extractUrl = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(hit.title)}&format=json&exsentences=10&origin=*`
-          const extractRes = await fetch(extractUrl, { signal: AbortSignal.timeout(6000) })
-          if (extractRes.ok) {
-            const extractData = await extractRes.json()
-            const pages = Object.values(extractData?.query?.pages || {}) as any[]
-            const page = pages[0]
-            if (page?.extract && page.extract.length > 100) {
-              resultados.push({
-                titulo: `[Wikipedia ES] ${hit.title}`,
-                texto: `ARTÍCULO WIKIPEDIA (ES): ${hit.title}\n\n${page.extract.slice(0, 2500)}`,
-                url: `https://es.wikipedia.org/wiki/${encodeURIComponent(hit.title.replace(/ /g, '_'))}`,
-              })
-            }
-          }
-        } catch { /* skip */ }
-      }
-    }
-  } catch { /* skip */ }
-
-  // Inglés si hacen falta resultados
-  if (resultados.length < 2) {
+  for (const modelo of modelos) {
     try {
-      const searchEn = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termino)}&format=json&srlimit=2&srprop=snippet&origin=*`
-      const resEn = await fetch(searchEn, { signal: AbortSignal.timeout(6000) })
-      if (resEn.ok) {
-        const dataEn = await resEn.json()
-        const hits = dataEn?.query?.search || []
-        for (const hit of hits.slice(0, 2)) {
-          try {
-            const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(hit.title)}&format=json&exsentences=8&origin=*`
-            const extractRes = await fetch(extractUrl, { signal: AbortSignal.timeout(6000) })
-            if (extractRes.ok) {
-              const extractData = await extractRes.json()
-              const pages = Object.values(extractData?.query?.pages || {}) as any[]
-              const page = pages[0]
-              if (page?.extract && page.extract.length > 100) {
-                resultados.push({
-                  titulo: `[Wikipedia EN] ${hit.title}`,
-                  texto: `ARTÍCULO WIKIPEDIA (EN): ${hit.title}\n\n${page.extract.slice(0, 2000)}`,
-                  url: `https://en.wikipedia.org/wiki/${encodeURIComponent(hit.title.replace(/ /g, '_'))}`,
-                })
-              }
-            }
-          } catch { /* skip */ }
-        }
+      const prompt = `Busca en internet información clínica actualizada sobre: "${temaEs}" (en inglés: "${temaEn}").
+
+Resume lo que encuentres:
+1. Definición clínica ABA
+2. Intervenciones con evidencia reciente
+3. Estrategias para terapeutas y padres
+
+Responde en español, estructurado y detallado.`
+
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        signal: AbortSignal.timeout(45000),
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: modelo,
+          messages: [
+            {
+              role: 'system',
+              content: 'Eres un BCBA experto. Busca en internet y responde SIEMPRE en español con información clínica estructurada.',
+            },
+            { role: 'user', content: prompt },
+          ],
+          max_tokens: 2000,
+        }),
+      })
+
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => ({}))
+        console.warn(`[Groq ${modelo}] Error ${res.status}: ${errBody?.error?.message || res.statusText}`)
+        continue // probar siguiente modelo
       }
-    } catch { /* skip */ }
+
+      const data = await res.json()
+      const texto = data?.choices?.[0]?.message?.content || ''
+      console.log(`[Groq ${modelo}] Texto length: ${texto.length}`)
+
+      if (texto.length < 100) continue
+
+      // Extraer URLs de executed_tools si las hay
+      const tools = data?.executed_tools || []
+      const urlsEncontradas = tools
+        .filter((t: any) => t.type === 'web_search')
+        .flatMap((t: any) => t.results || [])
+        .map((r: any) => r.url)
+        .filter(Boolean)
+        .slice(0, 3)
+
+      return [{
+        titulo: `[Groq Web IA] ${temaEs}`,
+        texto: `BÚSQUEDA WEB IA (${modelo}) SOBRE: ${temaEs}\n\n${texto}${urlsEncontradas.length ? '\n\nFuentes: ' + urlsEncontradas.join(', ') : ''}`,
+        url: urlsEncontradas[0] || 'https://groq.com',
+      }]
+
+    } catch (e: any) {
+      console.warn(`[Groq ${modelo}] Exception: ${e?.message}`)
+      continue
+    }
   }
 
-  return resultados.slice(0, 3)
+  console.warn('[Groq Compound] Todos los modelos fallaron')
+  return []
 }
-
-// ─── 🆕 OpenAlex (sin API key, 250M+ papers) ─────────────────────────────────
-async function extraerOpenAlex(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
-  try {
-    const query = encodeURIComponent(`${termino} autism behavior`)
-    const url = `https://api.openalex.org/works?search=${query}&filter=has_abstract:true&sort=cited_by_count:desc&per-page=4&mailto=cerebro@app.com`
-    const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
-    if (!res.ok) return []
-    const data = await res.json()
-    const works = data?.results || []
-
-    return works
-      .filter((w: any) => w.abstract_inverted_index || w.title)
-      .slice(0, 4)
-      .map((w: any) => {
-        let abstract = ''
-        if (w.abstract_inverted_index) {
-          try {
-            const wordMap: Record<number, string> = {}
-            for (const [word, positions] of Object.entries(w.abstract_inverted_index as Record<string, number[]>)) {
-              for (const pos of positions) wordMap[pos] = word
-            }
-            const maxPos = Math.max(...Object.keys(wordMap).map(Number))
-            abstract = Array.from({ length: maxPos + 1 }, (_, i) => wordMap[i] || '').join(' ').trim()
-          } catch { abstract = '' }
-        }
-        const authors = (w.authorships || []).slice(0, 3).map((a: any) => a.author?.display_name).filter(Boolean).join(', ')
-        const year = w.publication_year || 'N/D'
-        const venue = w.primary_location?.source?.display_name || 'Journal académico'
-        const doi = w.doi ? `https://doi.org/${w.doi.replace('https://doi.org/', '')}` : w.id
-        return {
-          titulo: `[OpenAlex] ${w.title} (${year})`,
-          texto: `TÍTULO: ${w.title}\nAÑO: ${year}\nREVISTA: ${venue}\nAUTORES: ${authors || 'N/D'}\nCITAS: ${w.cited_by_count || 0}\n\nRESUMEN:\n${abstract || 'Ver artículo en el enlace.'}`,
-          url: doi || w.id,
-        }
-      })
-      .filter((r: any) => r.texto.length > 100)
-  } catch {
-    return []
-  }
-}
-
-// ─── 🆕 CrossRef (sin API key, DOI metadata) ─────────────────────────────────
-async function extraerCrossRef(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
-  try {
-    const url = `https://api.crossref.org/works?query=${encodeURIComponent(termino + ' autism behavior analysis')}&rows=4&sort=is-referenced-by-count&order=desc&select=title,abstract,author,published,DOI,container-title`
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(8000),
-      headers: { 'User-Agent': 'CerebroIA/1.0 (mailto:cerebro@app.com)' },
-    })
-    if (!res.ok) return []
-    const data = await res.json()
-    const items = data?.message?.items || []
-    return items
-      .filter((item: any) => item.abstract && item.abstract.length > 80)
-      .slice(0, 3)
-      .map((item: any) => {
-        const title = Array.isArray(item.title) ? item.title[0] : item.title || 'Sin título'
-        const abstract = (item.abstract || '').replace(/<[^>]+>/g, '')
-        const authors = (item.author || []).slice(0, 3).map((a: any) => `${a.given || ''} ${a.family || ''}`.trim()).join(', ')
-        const year = item.published?.['date-parts']?.[0]?.[0] || 'N/D'
-        const journal = Array.isArray(item['container-title']) ? item['container-title'][0] : item['container-title'] || 'Journal'
-        const doi = item.DOI ? `https://doi.org/${item.DOI}` : ''
-        return {
-          titulo: `[CrossRef] ${title} (${year})`,
-          texto: `TÍTULO: ${title}\nAÑO: ${year}\nREVISTA: ${journal}\nAUTORES: ${authors || 'N/D'}\n\nRESUMEN:\n${abstract.slice(0, 2000)}`,
-          url: doi,
-        }
-      })
-      .filter((r: any) => r.texto.length > 100)
-  } catch (e: any) {
-    console.error('[Groq Compound] Exception:', e?.message || e)
-    return []
-  }
-}
-
 // ─── 🆕 Europe PMC (sin API key, 40M+ artículos biomédicos) ──────────────────
 async function extraerEuropePMC(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
   try {
