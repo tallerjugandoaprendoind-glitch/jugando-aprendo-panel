@@ -710,10 +710,9 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
 
               <div>
                 <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Servicio</label>
-                <select value={form.service} onChange={e=>setForm(p=>({...p,service:e.target.value}))}
-                  className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors">
-                  {SERVICES.map(s=><option key={s} value={s}>{s}</option>)}
-                </select>
+                <input type="text" value={form.service} onChange={e=>setForm(p=>({...p,service:e.target.value}))}
+                  className="w-full p-3 rounded-2xl border-2 border-slate-200 text-sm font-bold focus:border-violet-400 focus:outline-none bg-slate-50 transition-colors"
+                  placeholder="Ej: Terapia ABA, Evaluación..." />
               </div>
 
               <div>
