@@ -52,7 +52,7 @@ export function telegramTemplate(
     cita_cancelada:    `❌ *Cita cancelada*\n📅 ${v.fecha} a las ${v.hora}\n👤 Paciente: ${v.paciente}\n\nContactar recepción para reagendar.\n_${centro} · Vanty_`,
     formulario_nuevo:  `📋 *Formulario subido*\nTipo: ${v.tipo}\nPaciente: ${v.paciente}${v.especialista ? `\nEspecialista: ${v.especialista}` : ''}\n\nRevisar en portal 👆\n_${centro} · Vanty_`,
     informe_nuevo:     `📊 *Nuevo informe disponible*\nPaciente: ${v.paciente}${v.periodo ? `\nPeríodo: ${v.periodo}` : ''}\n\nVer en Vanty 👆\n_${centro}_`,
-    alerta_clinica:    `⚠️ *Alerta clínica*\nPaciente: ${v.paciente}\n${v.descripcion}\n\nRevisar Hub IA 🤖\n_${centro} · Vanty_`,
+    alerta_clinica:    `⚠️ *Alerta clínica*\nPaciente: ${v.paciente}\n${v.descripcion}\n\nRevisar Análisis Predictivo 🤖\n_${centro} · Vanty_`,
     mensaje_terapeuta: `💬 *Mensaje del terapeuta*\n👤 ${v.terapeuta}\n\n"${v.preview}"\n\nResponder en Vanty 👆\n_${centro}_`,
     recurso_nuevo:     `📚 *Nuevo recurso disponible*\n${v.titulo}${v.descripcion ? `\n${v.descripcion}` : ''}\n\nBiblioteca 📖\n_${centro} · Vanty_`,
     custom:            v.mensaje || '',

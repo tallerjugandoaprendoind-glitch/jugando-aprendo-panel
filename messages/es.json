@@ -7,7 +7,7 @@
     "evaluaciones": "Evaluaciones",
     "historial": "Historial & IA",
     "aria": "ARIA Agente",
-    "hub": "Hub IA",
+    "hub": "Análisis Predictivo",
     "cerebro": "Cerebro IA",
     "recursos": "Recursos",
     "tienda": "Tienda",
@@ -592,7 +592,7 @@
     "detenerVoz": "Detener voz de ARIA"
   },
   "hub": {
-    "titulo": "Hub de Inteligencia",
+    "titulo": "Análisis Predictivo",
     "predicciones": "Predicciones IA",
     "patrones": "Patrones detectados",
     "recomendaciones": "Recomendaciones",
@@ -632,7 +632,7 @@
     "todosPacientesOk": "Todos los pacientes están en progreso normal",
     "tipoReporte": "Tipo de reporte",
     "genDescarga": "Generar y Descargar .docx",
-    "hubInteligencia": "Hub de Inteligencia"
+    "hubInteligencia": "Análisis Predictivo"
   },
   "reportes": {
     "titulo": "Reportes Clínicos",
@@ -944,7 +944,7 @@
     "citaCancelada": "❌ Cita cancelada en Vanty\n📅 {fecha} a las {hora}\n👤 Paciente: {paciente}\n\nContactá a recepción para reagendar.\nJugando Aprendo 💜",
     "formularioNuevo": "📋 Nuevo formulario en Vanty\nTipo: {tipo}\nPaciente: {paciente}\n\nRevisalo en tu portal.\nJugando Aprendo 💜",
     "informeNuevo": "📊 Nuevo informe disponible\nPaciente: {paciente}\n\nYa podés verlo en Vanty.\nJugando Aprendo 💜",
-    "alertaClinica": "⚠️ Alerta clínica en Vanty\nPaciente: {paciente}\n{descripcion}\n\nRevisá el Hub IA.\nJugando Aprendo 💜",
+    "alertaClinica": "⚠️ Alerta clínica en Vanty\nPaciente: {paciente}\n{descripcion}\n\nRevisá el Análisis Predictivo.\nJugando Aprendo 💜",
     "notifOk": "Notificaciones funcionando correctamente.",
     "activoConTelefono": "Activo",
     "arrastraCSV": "Arrastra tu CSV aquí",

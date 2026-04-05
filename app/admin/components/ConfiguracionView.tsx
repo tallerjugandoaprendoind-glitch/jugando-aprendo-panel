@@ -437,8 +437,8 @@ function SeccionCuenta() {
 
   const ROLE_INFO: Record<string, { label: string; color: string; perms: string[] }> = {
     jefe:        { label: '👑 Jefe / Owner',   color: isDark ? 'bg-yellow-900/20 text-yellow-300 border-yellow-800/40' : 'bg-yellow-50 text-yellow-800 border-yellow-200', perms: ['Todo el sistema', 'Usuarios', 'Configuración', 'Tienda', 'Agenda'] },
-    admin:       { label: '🛡️ Administrador', color: isDark ? 'bg-blue-900/20 text-blue-300 border-blue-800/40'       : 'bg-blue-50 text-blue-800 border-blue-200',         perms: ['Pacientes', 'Agenda', 'Recursos', 'Reportes', 'Hub IA'] },
-    especialista:{ label: '🩺 Especialista',   color: isDark ? 'bg-violet-900/20 text-violet-300 border-violet-800/40': 'bg-violet-50 text-violet-800 border-violet-200',   perms: ['Pacientes asignados', 'Evaluaciones', 'Hub IA', 'Recursos'] },
+    admin:       { label: '🛡️ Administrador', color: isDark ? 'bg-blue-900/20 text-blue-300 border-blue-800/40'       : 'bg-blue-50 text-blue-800 border-blue-200',         perms: ['Pacientes', 'Agenda', 'Recursos', 'Reportes', 'Análisis Predictivo'] },
+    especialista:{ label: '🩺 Especialista',   color: isDark ? 'bg-violet-900/20 text-violet-300 border-violet-800/40': 'bg-violet-50 text-violet-800 border-violet-200',   perms: ['Pacientes asignados', 'Evaluaciones', 'Análisis Predictivo', 'Recursos'] },
     terapeuta:   { label: '💚 Terapeuta',       color: isDark ? 'bg-green-900/20 text-green-300 border-green-800/40'  : 'bg-green-50 text-green-800 border-green-200',       perms: ['Pacientes asignados', 'Evaluaciones', 'Recursos'] },
   }
 
