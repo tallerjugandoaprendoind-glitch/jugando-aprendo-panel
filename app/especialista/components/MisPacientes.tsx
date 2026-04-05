@@ -15,6 +15,8 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import ProgramasABAView from '@/app/admin/components/ProgramasABAView'
+import EvaluacionesUnificadas from '@/app/admin/components/EvaluacionesUnificadas'
+import AIReportView from '@/app/admin/components/AIReportView'
 
 function calcularEdad(fecha: string) {
   if (!fecha) return 'N/D'
@@ -683,6 +685,99 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
   )
 }
 
+
+// ── Vista de información general del paciente (especialista) ──────────────────
+function PatientInfoViewEspecialista({ paciente, onRefresh }: { paciente: any; onRefresh: () => void }) {
+  const { t } = useI18n()
+  const toast = useToast()
+  const [editing, setEditing] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [form, setForm] = useState({
+    name: paciente.name || '',
+    birth_date: paciente.birth_date || '',
+    diagnosis: paciente.diagnosis || '',
+  })
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const { error } = await supabase.from('children').update({
+        name: form.name.trim(),
+        birth_date: form.birth_date || null,
+        diagnosis: form.diagnosis.trim() || null,
+      }).eq('id', paciente.id)
+      if (error) throw error
+      toast.success('✅ Paciente actualizado')
+      setEditing(false)
+      onRefresh()
+    } catch (e: any) { toast.error(e.message) }
+    finally { setSaving(false) }
+  }
+
+  return (
+    <div className="p-6 space-y-4 max-w-2xl">
+      <div className="flex items-center justify-between">
+        <h3 className="font-black text-sm uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Datos del paciente</h3>
+        {!editing && (
+          <button onClick={() => setEditing(true)}
+            className="text-xs font-bold text-blue-600 hover:text-blue-700 px-3 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 transition-colors">
+            Editar
+          </button>
+        )}
+      </div>
+
+      {editing ? (
+        <div className="space-y-3">
+          {[
+            { key: 'name',       label: 'Nombre completo',     type: 'text', req: true },
+            { key: 'birth_date', label: 'Fecha de nacimiento', type: 'date', req: false },
+            { key: 'diagnosis',  label: 'Diagnóstico',         type: 'text', req: false },
+          ].map(f => (
+            <div key={f.key}>
+              <label className="block text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                {f.label}{f.req && <span className="text-red-400 ml-0.5">*</span>}
+              </label>
+              <input type={f.type}
+                value={(form as any)[f.key]}
+                onChange={e => setForm(fm => ({ ...fm, [f.key]: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl text-sm outline-none border"
+                style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }} />
+            </div>
+          ))}
+          <div className="flex gap-3 pt-2">
+            <button onClick={() => setEditing(false)}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold border" style={{ borderColor: 'var(--card-border)', color: 'var(--text-muted)' }}>
+              Cancelar
+            </button>
+            <button onClick={handleSave} disabled={saving || !form.name.trim()}
+              className="flex-1 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white disabled:opacity-50 flex items-center justify-center gap-2 hover:bg-blue-700">
+              {saving ? <Loader2 size={14} className="animate-spin" /> : null}
+              Guardar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {[
+            { label: 'Nombre', value: paciente.name },
+            { label: 'Edad', value: calcularEdad(paciente.birth_date) },
+            { label: 'Fecha de nacimiento', value: formatDate(paciente.birth_date) },
+            { label: 'Diagnóstico', value: paciente.diagnosis || '—' },
+            { label: 'Tutor / Padre', value: paciente.profiles?.full_name || '—' },
+            { label: 'Email tutor', value: paciente.profiles?.email || '—' },
+            { label: 'Teléfono tutor', value: paciente.profiles?.phone || '—' },
+          ].map(({ label, value }) => (
+            <div key={label} className="flex items-start gap-3 py-2.5 border-b" style={{ borderColor: 'var(--card-border)' }}>
+              <span className="text-xs font-black uppercase tracking-widest w-40 flex-shrink-0 pt-0.5" style={{ color: 'var(--text-muted)' }}>{label}</span>
+              <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (id: string | null, name: string | null) => void }) {
   const toast = useToast()
@@ -876,192 +971,83 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
   )
 
   if (seleccionado) {
-    const colorClass = AVATAR_COLORS[seleccionado.name?.charCodeAt(0) % AVATAR_COLORS.length]
-    const typeCounts: Record<string, number> = {}
-    registros.forEach(r => { typeCounts[r._type] = (typeCounts[r._type] || 0) + 1 })
-    const evalItems = registros.filter(r => ['BRIEF-2','ADOS-2','Vineland-3','WISC-V','BASC-3'].includes(r._type))
-    const uniqueTypes = [...new Set(registros.map(r => r._type))]
-    const filtered = filterType === 'all' ? registros : registros.filter(r => r._type === filterType)
-
-    const tabs = [
-      { id: 'resumen', label: 'Resumen IA', icon: Sparkles, count: null },
-      { id: 'historial', label: 'Historial', icon: Activity, count: registros.length },
-      { id: 'evaluaciones', label: t('nav.evaluaciones'), icon: Brain, count: evalItems.length },
-      { id: 'reportes', label: t('nav.reportes'), icon: Download, count: wordReports.length },
-      { id: 'programas_aba', label: 'Programas ABA', icon: Target, count: null },
-    ]
+    const TABS_DETAIL = [
+      { id: 'info',         label: 'Información general', icon: User },
+      { id: 'programas',    label: 'Programas ABA',       icon: Target },
+      { id: 'evaluaciones', label: 'Evaluaciones',         icon: ClipboardList },
+      { id: 'historial',    label: 'Historial & IA',      icon: Brain },
+    ] as const
+    type DetailTab = typeof TABS_DETAIL[number]['id']
+    const [detailTab, setDetailTab] = [activeTab as unknown as DetailTab, (v: DetailTab) => setActiveTab(v as any)]
 
     return (
-      <div className="space-y-5 pb-24 md:pb-8">
-        <div className="flex items-center gap-3">
-          <button onClick={() => { setSeleccionado(null); setRegistros([]); onPatientSelect?.(null, null) }}
-            className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 shadow-sm">
-            <ChevronRight size={18} className="rotate-180 text-slate-600" />
-          </button>
-          <div className="flex-1">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wide">{t('especialista.expediente')}</p>
-            <h2 className="text-xl font-black text-slate-800">{seleccionado.name}</h2>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full -translate-y-12 translate-x-12 pointer-events-none" />
-          <div className="relative flex items-start gap-4">
-            <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${colorClass} flex items-center justify-center text-white font-black text-2xl shadow-lg flex-shrink-0`}>
+      <div className="flex flex-col h-full" style={{ minHeight: '100%' }}>
+        {/* Header paciente */}
+        <div className="flex-shrink-0 border-b pb-0" style={{ borderColor: 'var(--card-border)', background: 'var(--card)' }}>
+          <div className="flex items-center gap-3 px-4 pt-4 pb-3">
+            <button onClick={() => { setSeleccionado(null); setRegistros([]); onPatientSelect?.(null, null); setActiveTab('resumen' as any) }}
+              className="p-2 rounded-xl hover:bg-slate-100 transition-all flex-shrink-0">
+              <ChevronRight size={18} className="rotate-180 text-slate-600" />
+            </button>
+            <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${AVATAR_COLORS[seleccionado.name?.charCodeAt(0) % AVATAR_COLORS.length]} flex items-center justify-center text-white font-black text-lg flex-shrink-0 shadow`}>
               {seleccionado.name?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="font-black text-xl mb-1">{seleccionado.name}</h3>
-              <div className="flex flex-wrap gap-2 mb-3">
-                <span className="text-xs font-bold text-white/70 bg-white/10 px-2.5 py-1 rounded-full">
-                  <Baby size={11} className="inline mr-1" />{calcularEdad(seleccionado.birth_date)}
-                </span>
+              <h1 className="text-lg font-black truncate" style={{ color: 'var(--text-primary)' }}>{seleccionado.name}</h1>
+              <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                 {seleccionado.diagnosis && (
-                  <span className="text-xs font-bold text-amber-300 bg-amber-900/40 px-2.5 py-1 rounded-full">
-                    <Stethoscope size={11} className="inline mr-1" />{seleccionado.diagnosis}
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-violet-100 text-violet-700">
+                    {seleccionado.diagnosis}
                   </span>
                 )}
-                <span className="text-xs font-bold text-white/70 bg-white/10 px-2.5 py-1 rounded-full">
-                  {registros.length} registros
-                </span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                {seleccionado.profiles?.full_name && <span className="text-xs text-white/60 flex items-center gap-1"><User size={10} />{seleccionado.profiles.full_name}</span>}
-                {seleccionado.profiles?.email && <span className="text-xs text-white/60 flex items-center gap-1"><Mail size={10} />{seleccionado.profiles.email}</span>}
-                {seleccionado.profiles?.phone && <span className="text-xs text-white/60 flex items-center gap-1"><Phone size={10} />{seleccionado.profiles.phone}</span>}
-                {seleccionado.birth_date && <span className="text-xs text-white/60 flex items-center gap-1"><Calendar size={10} />{formatDate(seleccionado.birth_date)}</span>}
+                <span className="text-xs text-slate-400">{calcularEdad(seleccionado.birth_date)}</span>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="flex gap-1 bg-slate-100 rounded-2xl p-1">
-          {tabs.map(({ id, label, icon: Icon, count }) => (
-            <button key={id} onClick={() => setActiveTab(id as any)}
-              className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition-all ${activeTab === id ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-              <Icon size={13} />
-              <span className="hidden sm:inline">{label}</span>
-              {count !== null && (count as number) > 0 && (
-                <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full ${activeTab === id ? 'bg-violet-100 text-violet-700' : 'bg-slate-200 text-slate-500'}`}>{count}</span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        {loadingRegistros ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <Loader2 size={28} className="animate-spin text-blue-600" />
-            <p className="text-sm text-slate-400">{t('especialista.cargandoExpediente')}</p>
+          {/* Tabs */}
+          <div className="flex border-b" style={{ borderColor: 'var(--card-border)' }}>
+            {TABS_DETAIL.map(tb => (
+              <button key={tb.id} onClick={() => setDetailTab(tb.id)}
+                className={`flex-1 flex flex-col items-center gap-0.5 py-2.5 font-bold border-b-2 transition-all min-w-0
+                  ${detailTab === tb.id ? 'border-blue-500 text-blue-600' : 'border-transparent'}`}
+                style={{ color: detailTab === tb.id ? undefined : 'var(--text-muted)' }}
+                title={tb.label}>
+                <tb.icon size={14} />
+                <span className="text-[9px] truncate w-full text-center px-0.5">{
+                  tb.id === 'info'         ? 'Info' :
+                  tb.id === 'programas'    ? 'ABA' :
+                  tb.id === 'evaluaciones' ? 'Eval.' :
+                  'Hist.'
+                }</span>
+              </button>
+            ))}
           </div>
-        ) : (
-          <>
-            {activeTab === 'resumen' && <ResumenIA records={registros} paciente={seleccionado} />}
+        </div>
 
-            {activeTab === 'historial' && (
-              <div className="space-y-3">
-                {uniqueTypes.length > 1 && (
-                  <div className="flex flex-wrap gap-2">
-                    <button onClick={() => setFilterType('all')}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all ${filterType === 'all' ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-600 border-slate-200'}`}>
-                      Todos ({registros.length})
-                    </button>
-                    {uniqueTypes.map(t => {
-                      const tStr = t as string
-                      const cfg = getTypeCfg(tStr)
-                      return (
-                        <button key={tStr} onClick={() => setFilterType(tStr)}
-                          className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-all ${filterType === tStr ? `${cfg.bg} ${cfg.text} ${cfg.border}` : 'bg-white text-slate-600 border-slate-200'}`}>
-                          {tStr} ({typeCounts[tStr] || 0})
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-                {filtered.length === 0 ? (
-                  <div className="py-16 text-center bg-white rounded-2xl border border-slate-100">
-                    <FileText size={22} className="text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-400 text-sm font-semibold">Sin registros</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {filtered.map((item, idx) => <RecordCard key={`${item.id}-${idx}`} item={item} />)}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'evaluaciones' && (
-              <div className="space-y-3">
-                {['BRIEF-2','ADOS-2','Vineland-3','WISC-V','BASC-3'].map(tipo => {
-                  const item = registros.find(r => r._type === tipo)
-                  const cfg = getTypeCfg(tipo)
-                  const Icon = cfg.icon
-                  return (
-                    <div key={tipo} className={`bg-white rounded-2xl border overflow-hidden shadow-sm ${item ? cfg.border : 'border-slate-100'}`}>
-                      <div className={`flex items-center gap-3 px-5 py-4 ${item ? cfg.bg : 'bg-slate-50'}`}>
-                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${item ? `${cfg.bg} ${cfg.border}` : 'bg-slate-100 border-slate-200'}`}>
-                          <Icon size={16} className={item ? cfg.text : 'text-slate-400'} />
-                        </div>
-                        <div className="flex-1">
-                          <p className={`font-black text-sm ${item ? 'text-slate-800' : 'text-slate-400'}`}>{tipo}</p>
-                          {item && <p className="text-xs text-slate-500 mt-0.5">{item._content}</p>}
-                        </div>
-                        {item
-                          ? <CheckCircle2 size={18} className="text-emerald-500" />
-                          : <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-full font-bold">{t('common.pendiente')}</span>}
-                      </div>
-                      {item && (
-                        <div className="px-5 py-4 space-y-3">
-                          <EvalDetail r={item._fullData} tipo={tipo} />
-                          {item._wordReport && <WordBtn report={item._wordReport} />}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {activeTab === 'reportes' && (
-              <div className="space-y-2">
-                {wordReports.length === 0 ? (
-                  <div className="py-16 text-center bg-white rounded-2xl border border-slate-100">
-                    <FileText size={22} className="text-slate-300 mx-auto mb-2" />
-                    <p className="text-slate-400 text-sm font-semibold">No hay reportes generados</p>
-                  </div>
-                ) : wordReports.map((r: any) => {
-                  const cfg = getTypeCfg(r.tipo_reporte)
-                  const Icon = cfg.icon
-                  return (
-                    <div key={r.id} className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-4 shadow-sm hover:border-blue-200 transition-all">
-                      <div className={`w-10 h-10 rounded-xl ${cfg.bg} border ${cfg.border} flex items-center justify-center flex-shrink-0`}>
-                        <Icon size={16} className={cfg.text} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-sm text-slate-800 truncate">{r.titulo || r.nombre_archivo}</p>
-                        <p className="text-xs text-slate-400 mt-0.5">{formatDate(r.created_at)}</p>
-                      </div>
-                      <button onClick={() => {
-                        const blob = new Blob([Uint8Array.from(atob(r.file_data), c => c.charCodeAt(0))], { type: r.mime_type })
-                        const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: r.nombre_archivo || 'reporte.docx' })
-                        a.click(); URL.revokeObjectURL(a.href)
-                      }} className="flex items-center gap-1.5 text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-2 rounded-xl hover:bg-blue-100 flex-shrink-0">
-                        <Download size={13} /> Descargar
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-            {activeTab === 'programas_aba' && (
+        {/* Contenido */}
+        <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
+          {detailTab === 'info' && (
+            <PatientInfoViewEspecialista paciente={seleccionado} onRefresh={async () => { await cargar(); const upd = ninos.find(n => n.id === seleccionado.id); if (upd) setSeleccionado(upd) }} />
+          )}
+          {detailTab === 'programas' && (
+            <div style={{ padding: '20px 24px' }}>
               <ProgramasABAView childId={seleccionado.id} childName={seleccionado.name} />
-            )}
-          </>
-        )}
+            </div>
+          )}
+          {detailTab === 'evaluaciones' && (
+            <div style={{ padding: '20px 24px' }}>
+              <EvaluacionesUnificadas initialChildId={seleccionado.id} initialChildName={seleccionado.name} />
+            </div>
+          )}
+          {detailTab === 'historial' && (
+            <div style={{ padding: '20px 24px' }}>
+              <AIReportView initialChildId={seleccionado.id} />
+            </div>
+          )}
+        </div>
       </div>
     )
   }
-
   return (
     <div className="space-y-5 pb-20 md:pb-6">
       <div className="flex items-start justify-between gap-4">
