@@ -159,7 +159,7 @@ Responde en español, detallado y estructurado. Incluye las fuentes que encontra
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'groq/compound',
+        model: 'compound-beta',
         messages: [
           {
             role: 'system',
@@ -168,15 +168,18 @@ Responde en español, detallado y estructurado. Incluye las fuentes que encontra
           { role: 'user', content: prompt },
         ],
         max_tokens: 2000,
-        search_settings: {
-          country: 'us',
-        },
       }),
     })
 
-    if (!res.ok) return []
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}))
+      console.error(`[Groq Compound] Error ${res.status}:`, errBody?.error?.message || res.statusText)
+      return []
+    }
     const data = await res.json()
+    console.log('[Groq Compound] Response keys:', Object.keys(data))
     const texto = data?.choices?.[0]?.message?.content || ''
+    console.log('[Groq Compound] Texto length:', texto.length, '| Preview:', texto.slice(0, 100))
     if (texto.length < 100) return []
 
     // Extraer fuentes usadas si Groq las devuelve en executed_tools
@@ -331,7 +334,8 @@ async function extraerCrossRef(termino: string): Promise<{ titulo: string; texto
         }
       })
       .filter((r: any) => r.texto.length > 100)
-  } catch {
+  } catch (e: any) {
+    console.error('[Groq Compound] Exception:', e?.message || e)
     return []
   }
 }
