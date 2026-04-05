@@ -261,7 +261,8 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
     }
     setIsSaving(true)
     try {
-      const makePayload = (cid: string) => ({
+      const specialistIds = form.specialist_id ? form.specialist_id.split(',').filter(Boolean) : [null]
+      const makePayload = (cid: string, sid: string | null) => ({
         child_id:         cid,
         appointment_date: form.date,
         appointment_time: form.time + ':00',
@@ -271,15 +272,17 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
         modalidad:        form.modality,
         is_group:         isGrupal,
         secretaria_name:  secretariaName,
-        specialist_id:    form.specialist_id || null,
+        specialist_id:    sid || null,
       })
 
       if (editingApt) {
-        await aptAPI('PATCH', { id: editingApt.id, accion: 'updated', ...makePayload(form.child_id) })
+        await aptAPI('PATCH', { id: editingApt.id, accion: 'updated', ...makePayload(form.child_id, specialistIds[0]) })
         toast.success('✅ Cita actualizada · Padre y administrador notificados')
       } else {
         for (const cid of idsAUsar) {
-          await aptAPI('POST', makePayload(cid))
+          for (const sid of specialistIds) {
+            await aptAPI('POST', makePayload(cid, sid))
+          }
         }
         const msg = isGrupal ? idsAUsar.length + ' citas grupales creadas' : 'Cita creada · Padre y administrador notificados'
         toast.success('✅ ' + msg)
