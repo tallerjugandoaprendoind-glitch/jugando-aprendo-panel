@@ -2,7 +2,7 @@
 import React from 'react'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Brain, X, Send, Loader2, User, BookOpen, Minus } from 'lucide-react'
+import { Brain, X, Send, Loader2, User, BookOpen, Minus, Maximize2, Minimize2 } from 'lucide-react'
 import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
 
@@ -17,6 +17,7 @@ export default function ARIAFloatingChat({ userId, childId, childName }: { userI
   const { t, locale } = useI18n()
   const [open, setOpen]         = useState(false)
   const [minimized, setMinimized] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput]       = useState('')
   const [loading, setLoading]   = useState(false)
@@ -114,10 +115,13 @@ export default function ARIAFloatingChat({ userId, childId, childName }: { userI
       {/* ── Panel flotante ── */}
       {open && (
         <div
-          className={`fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 flex flex-col rounded-3xl overflow-hidden shadow-2xl transition-all duration-300
-            ${minimized ? 'h-14' : 'h-[520px] md:h-[580px]'}`}
+          className={`fixed z-50 flex flex-col rounded-3xl overflow-hidden shadow-2xl transition-all duration-300
+            ${expanded
+              ? 'bottom-0 right-0 md:bottom-4 md:right-4 rounded-2xl'
+              : 'bottom-20 md:bottom-6 right-4 md:right-6'}
+            ${minimized ? 'h-14' : expanded ? 'h-[92vh] md:h-[85vh]' : 'h-[520px] md:h-[580px]'}`}
           style={{
-            width: 'min(360px, calc(100vw - 32px))',
+            width: expanded ? 'min(720px, calc(100vw - 32px))' : 'min(360px, calc(100vw - 32px))',
             background: 'var(--card)',
             border: '1px solid var(--card-border)',
           }}
@@ -138,7 +142,12 @@ export default function ARIAFloatingChat({ userId, childId, childName }: { userI
                 className="p-1 hover:bg-white/20 rounded-lg transition-all text-white/70 hover:text-white">
                 <Minus size={14} />
               </button>
-              <button onClick={e => { e.stopPropagation(); setOpen(false) }}
+              <button onClick={e => { e.stopPropagation(); setExpanded(x => !x); setMinimized(false) }}
+                className="p-1 hover:bg-white/20 rounded-lg transition-all text-white/70 hover:text-white"
+                title={expanded ? 'Reducir' : 'Ampliar'}>
+                {expanded ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
+              </button>
+              <button onClick={e => { e.stopPropagation(); setOpen(false); setExpanded(false) }}
                 className="p-1 hover:bg-white/20 rounded-lg transition-all text-white/70 hover:text-white">
                 <X size={14} />
               </button>

@@ -33,7 +33,6 @@ export default function SecretariaCronograma() {
   const [referenceDate, setReferenceDate] = useState(new Date())
   const [apts, setApts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [sending, setSending] = useState(false)
 
   const weekStart = getMondayOfWeek(referenceDate)
   const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6)
@@ -99,18 +98,7 @@ export default function SecretariaCronograma() {
 
   const handlePrint = () => window.print()
 
-  const handleSendToFamilies = async () => {
-    setSending(true)
-    try {
-      // Simulate sending — in production this would call a notification API
-      await new Promise(r => setTimeout(r, 1500))
-      toast.success('✅ Cronograma enviado a las familias')
-    } catch {
-      toast.error('Error al enviar')
-    } finally {
-      setSending(false)
-    }
-  }
+
 
   return (
     <div className="space-y-6">
@@ -125,13 +113,7 @@ export default function SecretariaCronograma() {
           <button onClick={handlePrint} className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-bold transition-colors">
             <Printer size={15} /> Imprimir
           </button>
-          <button
-            onClick={handleSendToFamilies} disabled={sending}
-            className="flex items-center gap-2 px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-bold text-sm transition-colors shadow-lg shadow-violet-200 disabled:opacity-50"
-          >
-            {sending ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
-            {sending ? 'Enviando...' : 'Enviar a familias'}
-          </button>
+
         </div>
       </div>
 
