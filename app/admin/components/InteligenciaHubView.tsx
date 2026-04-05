@@ -935,7 +935,7 @@ function ResumenIACard({ texto }: { texto: string }) {
 
       <div className="px-6 py-3 flex items-center justify-between"
         style={{ background: 'var(--muted-bg)', borderTop: '1px solid var(--card-border)' }}>
-        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Generado por IA clínica · No reemplaza evaluación profesional certificada</p>
+        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Generado por Analista Conductual IA · No reemplaza evaluación profesional certificada</p>
         <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('es-PE', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
       </div>
     </div>
