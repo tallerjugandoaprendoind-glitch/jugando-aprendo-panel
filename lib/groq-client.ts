@@ -7,7 +7,7 @@ const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions'
 // se prueba automáticamente el siguiente en la lista.
 export const GROQ_MODELS = {
   SMART: 'llama-3.3-70b-versatile',   // reportes, análisis clínicos
-  FAST:  'llama3-8b-8192',            // chats rápidos
+  FAST:  'llama-3.1-8b-instant',      // chats rápidos
   LONG:  'llama-3.3-70b-versatile',   // contexto largo
 }
 
@@ -15,8 +15,8 @@ export const GROQ_MODELS = {
 // Se prueban en orden hasta encontrar uno disponible
 const FALLBACK_CHAIN = [
   'llama-3.3-70b-versatile',   // mejor calidad
-  'llama3-70b-8192',           // alternativa 70b
-  'llama3-8b-8192',            // rápido, menor límite
+  'llama-3.1-70b-versatile',   // alternativa 70b
+  'llama-3.1-8b-instant',      // rápido, menor límite
   'gemma2-9b-it',              // Google Gemma (disponible en Groq)
   'mixtral-8x7b-32768',        // Mixtral contexto largo
 ]
