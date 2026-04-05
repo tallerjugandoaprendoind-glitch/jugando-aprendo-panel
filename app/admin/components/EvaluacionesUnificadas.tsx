@@ -550,7 +550,14 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         responses: fullRecord?.responses || fullRecord?.datos || {},
         ai_analysis: fullRecord?.ai_analysis,
       }
-      const reportType = fullRecord?.form_type || sf.form_type || 'formulario'
+      // Mapear _source a form_type cuando la tabla clínica no tiene columna form_type
+      const sourceToType: Record<string, string> = {
+        registro_aba: 'aba',
+        anamnesis_completa: 'anamnesis',
+        registro_entorno_hogar: 'entorno_hogar',
+      }
+      const reportType = fullRecord?.form_type || sf.form_type ||
+        sourceToType[sf._source || ''] || 'aba'
       const formTitle  = fullRecord?.form_title  || sf.form_title  || 'Formulario'
 
       // Call generate-report from browser (no serverless timeout issue)
@@ -584,7 +591,6 @@ function HistorialFormCard({ sf, onReportGenerated }: { sf: any; onReportGenerat
         source_id:        sf.id,
       }])
       if (insertError) {
-        const { t, locale } = useI18n()
         console.error('❌ Error guardando reporte en BD:', insertError)
         toast.error('Reporte descargado pero no se pudo guardar en historial: ' + insertError.message)
       }
