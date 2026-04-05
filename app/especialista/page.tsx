@@ -20,6 +20,7 @@ import MisFormularios from './components/MisFormularios'
 import LocaleSelector from '@/app/components/LocaleSelector'
 import { ThemeToggleButton } from '@/components/ThemeContext'
 import ARIAAgentChat from '@/app/admin/components/ARIAAgentChat'
+import InteligenciaHubView from '@/app/admin/components/InteligenciaHubView'
 
 function SidebarLink({ icon: Icon, label, active, onClick, badge }: any) {
   return (
@@ -50,6 +51,7 @@ export default function EspecialistaDashboard() {
   const NAV_ITEMS = [
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio') },
     { id: 'pacientes',    icon: Users,           label: t('nav.mispacientes') },
+    { id: 'prediccion',   icon: Sparkles,        label: 'Análisis Predictivo' },
     { id: 'formularios',  icon: FileText,        label: t('nav.misformularios') },
     { id: 'evaluaciones', icon: MessageCircle,  label: 'Chat Admin' },
     { id: 'agenda',       icon: Calendar,        label: t('nav.miagenda') },
@@ -59,6 +61,7 @@ export default function EspecialistaDashboard() {
   const PAGE_TITLES: Record<string, string> = {
     inicio:       'Panel Principal',
     pacientes:    'Mis Pacientes',
+    prediccion:   'Análisis Predictivo',
     formularios:  'Formularios Clínicos',
     evaluaciones: 'Chat con Administración',
     agenda:       'Mi Agenda',
@@ -120,6 +123,7 @@ export default function EspecialistaDashboard() {
     switch (activeView) {
       case 'inicio':       return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
       case 'pacientes':    return <MisPacientes onPatientSelect={(id, name) => id && name ? setActiveChild({ id, name }) : setActiveChild(null)} />
+      case 'prediccion':   return <InteligenciaHubView />
       case 'formularios':  return <MisFormularios userId={profile.id} />
       case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       case 'agenda':       return <MiAgenda />
