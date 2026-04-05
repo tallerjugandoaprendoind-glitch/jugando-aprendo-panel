@@ -1,5 +1,7 @@
 'use client'
+
 import { useI18n } from '@/lib/i18n-context'
+import DiagnosticoBuscador from './DiagnosticoBuscador'
 import { useState, useEffect, useRef } from 'react'
 import { supabase as supabasePublic } from '@/lib/supabase'
 import {
@@ -10,7 +12,7 @@ import {
 import { useToast } from '@/components/Toast'
 
 type InputMode = 'archivo' | 'url' | 'texto' | 'buscar'
-type Tab = 'aprender' | 'biblioteca'
+type Tab = 'aprender' | 'biblioteca' | 'diagnosticos'
 
 export default function KnowledgeBaseView() {
   const toast = useToast()
@@ -74,8 +76,8 @@ export default function KnowledgeBaseView() {
     try {
       const res = await fetch('/api/knowledge/aprender', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keywords: keywords.trim(), modo }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ keywords: keywords.trim(), modo , locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.error) throw new Error(json.error)
@@ -93,8 +95,8 @@ export default function KnowledgeBaseView() {
     try {
       const res = await fetch('/api/knowledge/ingest', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id }),
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+        body: JSON.stringify({ id, locale: localStorage.getItem('vanty_locale') || 'es' }),
       })
       const json = await res.json()
       if (json.ok) { toast.success(`✅ Re-indexado: ${json.chunks} fragmentos`); await loadDocs() }
@@ -112,7 +114,7 @@ export default function KnowledgeBaseView() {
       try { hostname = new URL(urlAprender).hostname } catch { /* keep raw */ }
       const res = await fetch('/api/knowledge/ingest', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
         body: JSON.stringify({
           titulo: `Página web: ${hostname}`,
           tipo: 'articulo',
@@ -149,6 +151,44 @@ export default function KnowledgeBaseView() {
     finally { setBuscando(false) }
   }
 
+  // ── Extraer texto de PDF en el navegador usando pdfjs-dist (npm) ────────────
+  const extractPdfTextInBrowser = async (file: File, onProgress: (p: string) => void): Promise<string> => {
+    onProgress('Cargando lector de PDF...')
+
+    const pdfjs = await import('pdfjs-dist')
+    // Worker inline — evita problemas de CORS con archivos externos
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      'pdfjs-dist/build/pdf.worker.min.mjs',
+      import.meta.url
+    ).toString()
+
+    const arrayBuffer = await file.arrayBuffer()
+    const loadingTask = pdfjs.getDocument({ data: arrayBuffer })
+    const pdf = await loadingTask.promise
+
+    const totalPages = pdf.numPages
+    onProgress(`Leyendo ${totalPages} páginas...`)
+
+    const textos: string[] = []
+    for (let i = 1; i <= totalPages; i++) {
+      if (i % 30 === 0 || i === totalPages) {
+        onProgress(`Leyendo página ${i} de ${totalPages}...`)
+      }
+      const page = await pdf.getPage(i)
+      const textContent = await page.getTextContent()
+      const pageText = textContent.items
+        .map((item: any) => item.str || '')
+        .join(' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+      if (pageText.length > 10) textos.push(pageText)
+    }
+
+    const fullText = textos.join('\n\n')
+    onProgress(`✅ ${totalPages} páginas leídas — ${Math.round(fullText.length / 1000)}k caracteres`)
+    return fullText
+  }
+
   const handleUpload = async () => {
     if (!form.titulo) { toast.error('El título es requerido'); return }
     if (inputMode === 'archivo' && !selectedFile) { toast.error('Selecciona un archivo'); return }
@@ -158,16 +198,46 @@ export default function KnowledgeBaseView() {
     setUploading(true)
     try {
       const body: Record<string, any> = { titulo: form.titulo, tipo: form.tipo, descripcion: form.descripcion }
+
       if (inputMode === 'archivo' && selectedFile) {
-        setUploadProgress('Subiendo archivo...')
-        const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
-        const { data: up, error: upErr } = await supabasePublic.storage
-          .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
-        if (upErr) throw new Error(`Upload error: ${upErr.message}`)
-        const { data: signed } = await supabasePublic.storage
-          .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
-        body.storageUrl = signed?.signedUrl
-        body.fileName = selectedFile.name
+        const isPdf = selectedFile.name.toLowerCase().endsWith('.pdf')
+        const isBig = selectedFile.size > 10 * 1024 * 1024 // >10MB
+
+        if (isPdf && isBig) {
+          // ── Archivos grandes: extraer texto en el navegador ──────────────
+          setUploadProgress(`Archivo grande (${Math.round(selectedFile.size / 1024 / 1024)}MB) — extrayendo texto localmente...`)
+          try {
+            const texto = await extractPdfTextInBrowser(selectedFile, setUploadProgress)
+            if (!texto || texto.trim().length < 100) {
+              throw new Error('No se pudo extraer texto del PDF. El archivo puede estar escaneado o protegido.')
+            }
+            body.texto = texto
+            body.fileName = selectedFile.name
+          } catch (pdfErr: any) {
+            // Si pdfjs falla, intentar subir a Storage de todas formas
+            console.warn('pdfjs falló, subiendo archivo directo:', pdfErr.message)
+            setUploadProgress('Subiendo archivo a servidor...')
+            const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
+            const { data: up, error: upErr } = await supabasePublic.storage
+              .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
+            if (upErr) throw new Error(`Error al subir: ${upErr.message}`)
+            const { data: signed } = await supabasePublic.storage
+              .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
+            body.storageUrl = signed?.signedUrl
+            body.fileName = selectedFile.name
+          }
+        } else {
+          // ── Archivos pequeños (<10MB): subir a Storage normal ────────────
+          setUploadProgress('Subiendo archivo...')
+          const safeName = `${Date.now()}-${selectedFile.name.replace(/[^a-z0-9._-]/gi, '_')}`
+          const { data: up, error: upErr } = await supabasePublic.storage
+            .from('knowledge-base').upload(safeName, selectedFile, { upsert: false })
+          if (upErr) throw new Error(`Error al subir: ${upErr.message}`)
+          const { data: signed } = await supabasePublic.storage
+            .from('knowledge-base').createSignedUrl(up.path, 60 * 60 * 24 * 7)
+          body.storageUrl = signed?.signedUrl
+          body.fileName = selectedFile.name
+        }
       } else if (inputMode === 'url') {
         body.sourceUrl = form.url.trim()
       } else if (inputMode === 'texto') {
@@ -176,14 +246,61 @@ export default function KnowledgeBaseView() {
         body.sourceUrl = libroSeleccionado.url
         if (!form.titulo) body.titulo = libroSeleccionado.titulo
       }
-      setUploadProgress('Procesando e indexando...')
-      const res = await fetch('/api/knowledge/ingest', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-      const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Error')
-      toast.success(`✅ ${json.chunks || 0} fragmentos indexados`)
+
+      // Si el texto es muy grande, dividirlo en partes de 300KB
+      // para no superar el límite de 4.5MB de Vercel por request
+      const MAX_BODY_BYTES = 300 * 1024 // 300KB de texto por parte
+      const textoCompleto: string | undefined = body.texto
+
+      if (textoCompleto && new Blob([textoCompleto]).size > MAX_BODY_BYTES) {
+        // Dividir en partes
+        const partes: string[] = []
+        let offset = 0
+        while (offset < textoCompleto.length) {
+          // Cortar en el siguiente punto/salto de línea para no romper frases
+          let end = offset + MAX_BODY_BYTES
+          if (end < textoCompleto.length) {
+            const nextBreak = textoCompleto.indexOf('\n', end)
+            if (nextBreak !== -1 && nextBreak - end < 2000) end = nextBreak
+          }
+          partes.push(textoCompleto.slice(offset, end))
+          offset = end
+        }
+
+        let totalChunksIndexados = 0
+        for (let i = 0; i < partes.length; i++) {
+          setUploadProgress(`Indexando parte ${i + 1} de ${partes.length}...`)
+          const partBody = {
+            ...body,
+            titulo: partes.length > 1 ? `${body.titulo} (Parte ${i + 1}/${partes.length})` : body.titulo,
+            texto: partes[i],
+          }
+          const res = await fetch('/api/knowledge/ingest', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+            body: JSON.stringify(partBody),
+          })
+          let json: any
+          try { json = await res.json() }
+          catch { throw new Error(await res.text() || `Error HTTP ${res.status}`) }
+          if (!res.ok) throw new Error(json.error || `Error en parte ${i + 1}`)
+          totalChunksIndexados += json.chunks || 0
+        }
+        toast.success(`✅ ${totalChunksIndexados} fragmentos indexados en ${partes.length} partes`)
+      } else {
+        // Texto pequeño o no es texto → request único normal
+        setUploadProgress('Indexando en el Cerebro IA... (puede tardar 1-3 min)')
+        const res = await fetch('/api/knowledge/ingest', {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+          body: JSON.stringify(body),
+        })
+        let json: any
+        try { json = await res.json() }
+        catch { throw new Error(await res.text() || `Error HTTP ${res.status}`) }
+        if (!res.ok) throw new Error(json.error || 'Error al indexar')
+        if (!json.success) throw new Error(json.error || 'El indexado falló')
+        toast.success(`✅ ${json.chunks} fragmentos indexados correctamente`)
+      }
+
       setShowForm(false)
       setForm({ titulo: '', tipo: 'libro', descripcion: '', texto: '', url: '' })
       setSelectedFile(null); setLibroSeleccionado(null)
@@ -195,8 +312,8 @@ export default function KnowledgeBaseView() {
   const handleDelete = async (id: string) => {
     if (!confirm('¿Eliminar este documento?')) return
     await fetch('/api/knowledge/ingest', {
-      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
+      method: 'DELETE', headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+      body: JSON.stringify({ id, locale: localStorage.getItem('vanty_locale') || 'es' }),
     })
     toast.success('Documento eliminado')
     await loadDocs()
@@ -216,18 +333,18 @@ export default function KnowledgeBaseView() {
             <Brain size={28} className="text-white" />
           </div>
           <div className="flex-1">
-            <h2 className="text-xl md:text-2xl font-black">Cerebro IA</h2>
+            <h2 className="text-xl md:text-2xl font-black">{t('nav.cerebro')}</h2>
             <p className="text-violet-200 text-sm mt-1">{t('ui.baseConocimiento')}</p>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3 mt-5">
           <div className="bg-white/10 rounded-xl p-3 text-center">
             <p className="text-2xl font-black">{documentos.length}</p>
-            <p className="text-violet-200 text-xs mt-0.5">Documentos</p>
+            <p className="text-violet-200 text-xs mt-0.5">{t('ui.documents')}</p>
           </div>
           <div className="bg-white/10 rounded-xl p-3 text-center">
             <p className="text-2xl font-black">{totalChunks.toLocaleString()}</p>
-            <p className="text-violet-200 text-xs mt-0.5">Fragmentos</p>
+            <p className="text-violet-200 text-xs mt-0.5">{t('ui.fragments')}</p>
           </div>
           <div className="bg-white/10 rounded-xl p-3 text-center">
             <p className="text-2xl font-black">{docsAuto.length}</p>
@@ -237,10 +354,15 @@ export default function KnowledgeBaseView() {
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-white rounded-2xl p-1 border border-slate-100 shadow-sm gap-1">
+      <div className="flex bg-white dark:bg-slate-800 rounded-2xl p-1 border border-slate-100 dark:border-slate-700 shadow-sm gap-1">
         <button onClick={() => setTab('aprender')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'aprender' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
-          <Sparkles size={15} /> Aprender de Internet
+          <Sparkles size={15} /> {t('whatsapp.aprenderInternet')}
+        </button>
+        <button onClick={() => setTab('diagnosticos')}
+          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${tab === 'diagnosticos' ? 'bg-violet-600 text-white' : ''}`}
+          style={tab !== 'diagnosticos' ? { color: 'var(--text-secondary)' } : {}}>
+          🏥 CIE-11 / DSM-5
         </button>
         <button onClick={() => setTab('biblioteca')}
           className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'biblioteca' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
@@ -261,11 +383,11 @@ export default function KnowledgeBaseView() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {[
                 { icon: '🔍', t: 'Expande palabras clave', d: 'La IA genera 8-12 términos técnicos relacionados' },
-                { icon: '🌐', t: 'Busca en internet', d: 'DuckDuckGo + Wikipedia ES/EN + PubMed + OpenAlex + CrossRef (sin API key)' },
+                { icon: '🌐', t: 'Busca en internet', d: 'Groq IA Web + PubMed + EuropePMC + OpenAlex + CORE + ERIC + CrossRef + BASE + Wikipedia + Semantic Scholar' },
                 { icon: '🤖', t: 'Sintetiza con IA', d: 'Genera resumen clínico estructurado para ABA' },
                 { icon: '🧠', t: 'Indexa en el Cerebro', d: 'ARIA y todos los agentes ya saben ese tema' },
               ].map((s, i) => (
-                <div key={i} className="bg-white rounded-xl p-3 border border-violet-100">
+                <div key={i} className="bg-white dark:bg-slate-700 rounded-xl p-3 border border-violet-100 dark:border-violet-900/30">
                   <p className="text-xl mb-1">{s.icon}</p>
                   <p className="text-xs font-bold text-violet-700">{s.t}</p>
                   <p className="text-[11px] text-slate-500 mt-0.5">{s.d}</p>
@@ -275,7 +397,7 @@ export default function KnowledgeBaseView() {
           </div>
 
           {/* Input box */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-4">
 
             {/* Selector keywords vs URL */}
             <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
@@ -298,7 +420,7 @@ export default function KnowledgeBaseView() {
                 <textarea
                   value={keywords}
                   onChange={e => setKeywords(e.target.value)}
-                  placeholder="{t('ui.ejemplosRefuerzo')}"
+                  {...{placeholder: t('ui.search_resource')}}
                   className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-violet-400"
                   rows={3}
                   disabled={aprendiendo}
@@ -364,7 +486,7 @@ export default function KnowledgeBaseView() {
           {/* Log */}
           {logAprender.length > 0 && (
             <div className="bg-slate-900 rounded-2xl p-4 font-mono text-xs space-y-1.5">
-              <p className="text-slate-400 text-[10px] uppercase tracking-widest mb-2">{t('ui.progresoTiempoReal')}</p>
+              <p className="text-slate-400 text-[10px] uppercase tracking-widest mb-2">{t('ui.real_time_progress')}</p>
               {logAprender.map((line, i) => (
                 <p key={i} className={
                   line.startsWith('✅') ? 'text-emerald-400' :
@@ -383,7 +505,7 @@ export default function KnowledgeBaseView() {
             <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 size={20} className="text-emerald-500" />
-                <span className="font-black text-emerald-800">{t('ui.aprendizajeComp')}</span>
+                <span className="font-black text-emerald-800">{t('whatsapp.aprendizajeCompleto')}</span>
               </div>
               <div className="grid grid-cols-3 gap-3 mb-3">
                 {[
@@ -415,7 +537,7 @@ export default function KnowledgeBaseView() {
 
           {/* Temas ya aprendidos */}
           {docsAuto.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4">
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
                 Temas ya aprendidos por la IA ({docsAuto.length})
               </p>
@@ -443,17 +565,33 @@ export default function KnowledgeBaseView() {
         </div>
       )}
 
+      {/* ══ TAB: CIE-11 / DSM-5 ══ */}
+      {tab === 'diagnosticos' && (
+        <div className="space-y-4">
+          <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">🏥</span>
+              <span className="font-bold text-violet-800 text-sm">Buscador de Diagnósticos — CIE-11 / DSM-5 / ICD-10</span>
+            </div>
+            <p className="text-xs text-violet-600">
+              Busca por nombre, código CIE-11 (ej: <b>6A02</b>), ICD-10 (ej: <b>F84</b>), DSM-5 o sinónimo. Haz clic en los códigos para copiarlos directamente.
+            </p>
+          </div>
+          <DiagnosticoBuscador />
+        </div>
+      )}
+
       {/* ══ TAB: BIBLIOTECA ══ */}
       {tab === 'biblioteca' && (
         <div className="space-y-4">
           <button onClick={() => setShowForm(v => !v)}
             className="w-full py-3 bg-violet-600 hover:bg-violet-700 text-white rounded-2xl font-bold flex items-center justify-center gap-2 text-sm transition">
-            {showForm ? <><X size={16} /> Cancelar</> : <><Plus size={16} /> {t('ui.agregarDocManual')}</>}
+            {showForm ? <><X size={16} /> {t('common.cancelar')}</> : <><Plus size={16} /> Agregar documento manualmente</>}
           </button>
 
           {showForm && (
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-              <p className="font-bold text-slate-700 text-sm">Agregar documento</p>
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-4">
+              <p className="font-bold text-slate-700 text-sm">{t('ui.add_document')}</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {(['archivo', 'url', 'texto', 'buscar'] as const).map(m => {
                   const icons: Record<string, string> = { archivo: '📎', url: '🔗', texto: '📝', buscar: '🔍' }
@@ -468,7 +606,7 @@ export default function KnowledgeBaseView() {
               </div>
 
               <input className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                placeholder="{t('ui.tituloDoc')}"
+                {...{placeholder: t('ui.document_title')}}
                 value={form.titulo} onChange={e => setForm(p => ({ ...p, titulo: e.target.value }))} />
 
               <div className="flex gap-2">
@@ -484,14 +622,35 @@ export default function KnowledgeBaseView() {
                 <div onClick={() => fileRef.current?.click()}
                   className="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center cursor-pointer hover:border-violet-300 hover:bg-violet-50 transition">
                   <Upload size={20} className="text-slate-400 mx-auto mb-2" />
-                  {selectedFile
-                    ? <p className="text-sm font-semibold text-slate-700">{selectedFile.name}</p>
-                    : <p className="text-sm text-slate-400">Click para seleccionar PDF o TXT</p>}
-                  <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt,.doc,.docx"
+                  {selectedFile ? (
+                    <div>
+                      <p className="text-sm font-semibold text-slate-700">{selectedFile.name}</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
+                        {selectedFile.size > 10 * 1024 * 1024 && (
+                          <span className="ml-2 text-violet-500 font-medium">{t('ui.extractaLocal')}</span>
+                        )}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm text-slate-400">{t('whatsapp.clickPDF')}</p>
+                      <p className="text-xs text-slate-300 mt-1">{t('ui.sinLimite')}</p>
+                    </div>
+                  )}
+                  <input ref={fileRef} type="file" className="hidden" accept=".pdf,.txt,.md"
                     onChange={e => {
                       const f = e.target.files?.[0]
                       if (f) { setSelectedFile(f); if (!form.titulo) setForm(p => ({ ...p, titulo: f.name.replace(/\.[^.]+$/, '') })) }
                     }} />
+                </div>
+              )}
+              {uploading && uploadProgress && (
+                <div className="bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 mt-2">
+                  <div className="flex items-center gap-2">
+                    <Loader2 size={14} className="animate-spin text-violet-500 flex-shrink-0" />
+                    <p className="text-xs text-violet-700 font-medium">{uploadProgress}</p>
+                  </div>
                 </div>
               )}
 
@@ -503,7 +662,7 @@ export default function KnowledgeBaseView() {
 
               {inputMode === 'texto' && (
                 <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"
-                  placeholder="{t('ui.pegaContenido')}"
+                  {...{placeholder: t('ui.paste_content')}}
                   rows={6} value={form.texto} onChange={e => setForm(p => ({ ...p, texto: e.target.value }))} />
               )}
 
@@ -511,7 +670,7 @@ export default function KnowledgeBaseView() {
                 <div className="space-y-2">
                   <div className="flex gap-2">
                     <input className="flex-1 border border-slate-200 rounded-xl px-3 py-2 text-sm"
-                      placeholder="{t('ui.buscarArchive')}" value={busqueda}
+                      {...{placeholder: t('ui.search_book')}} value={busqueda}
                       onChange={e => setBusqueda(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && buscarLibros()} />
                     <button onClick={buscarLibros} disabled={buscando}
@@ -533,7 +692,7 @@ export default function KnowledgeBaseView() {
               )}
 
               <textarea className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm resize-none"
-                placeholder="{t('ui.descripcionOpcional')}" rows={2}
+                placeholder={t('ui.paste_content')} rows={2}
                 value={form.descripcion} onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))} />
 
               <button onClick={handleUpload} disabled={uploading}
@@ -548,10 +707,10 @@ export default function KnowledgeBaseView() {
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-violet-400" /></div>
           ) : documentos.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-dashed border-slate-200 p-10 text-center">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600 p-10 text-center">
               <Brain size={32} className="text-slate-200 mx-auto mb-3" />
-              <p className="text-slate-400 font-semibold">{t('ui.baseVacia')}</p>
-              <p className="text-slate-400 text-sm mt-1">{t('ui.usarAprender')}</p>
+              <p className="text-slate-400 font-semibold">{t('ui.bibliotecaVacia')}</p>
+              <p className="text-slate-400 text-sm mt-1">Usa "{t('whatsapp.aprenderInternet')}" para empezar</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -581,12 +740,14 @@ export default function KnowledgeBaseView() {
 
 function DocCard({ doc, onDelete, onRetry }: {
   doc: any
-  onDelete: (id: string) => void
-  onRetry?: (id: string) => void
+  onDelete: (id: string) => void | Promise<void>
+  onRetry?: (id: string) => void | Promise<void>
+  key?: any
 }) {
+  const { t } = useI18n()
   const isAuto = doc.source_url?.startsWith('auto:')
   return (
-    <div className="bg-white rounded-xl border border-slate-100 p-3.5 flex items-center justify-between gap-3 hover:border-slate-200 transition">
+    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3.5 flex items-center justify-between gap-3 hover:border-slate-200 transition">
       <div className="flex items-center gap-3 min-w-0">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isAuto ? 'bg-violet-100' : 'bg-slate-100'}`}>
           {isAuto
@@ -607,16 +768,16 @@ function DocCard({ doc, onDelete, onRetry }: {
       <div className="flex items-center gap-2 flex-shrink-0">
         {doc.procesado && doc.total_chunks > 0 ? (
           <span className="flex items-center gap-1 text-[10px] text-emerald-600 font-bold">
-            <CheckCircle2 size={12} />Listo
+            <CheckCircle2 size={12} />{t('ui.ready')}
           </span>
         ) : doc.procesado && doc.total_chunks === 0 ? (
           <button onClick={() => onRetry?.(doc.id)}
             className="flex items-center gap-1 text-[10px] text-red-500 font-bold hover:underline">
-            <RefreshCw size={11} />Re-indexar
+            <RefreshCw size={11} />{t('ui.reindex')}
           </button>
         ) : (
           <span className="flex items-center gap-1 text-[10px] text-amber-500 font-bold">
-            <Clock size={12} />Pendiente
+            <Clock size={12} />{t('ui.pending_status')}
           </span>
         )}
         <button onClick={() => onDelete(doc.id)}

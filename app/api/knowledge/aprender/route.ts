@@ -15,7 +15,7 @@ import { getLangInstruction } from '@/lib/lang'
 
 // ─── Fuentes de conocimiento ──────────────────────────────────────────────────
 // Clínicas: PubMed, ERIC, Semantic Scholar, OpenAlex, CrossRef
-// Generales (sin API key): DuckDuckGo, Wikipedia ES/EN
+// Generales: Groq Compound (búsqueda web IA), Wikipedia ES/EN (sin key)
 const FUENTES_BASE = [
   {
     nombre: 'PubMed',
@@ -133,56 +133,70 @@ async function extraerPubMed(termino: string): Promise<{ titulo: string; texto: 
   }
 }
 
-// ─── 🆕 DuckDuckGo Instant Answer API (sin API key) ──────────────────────────
-async function extraerDuckDuckGo(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
+// ─── 🆕 Groq Compound — agente IA con búsqueda web integrada (usa GROQ_API_KEY) ──
+// Usa groq/compound que busca automáticamente en internet cuando lo necesita.
+// No requiere ninguna API key adicional — funciona con tu GROQ_API_KEY existente.
+async function extraerGroqCompound(temaEs: string, temaEn: string): Promise<{ titulo: string; texto: string; url: string }[]> {
+  const apiKey = process.env.GROQ_API_KEY
+  if (!apiKey) return []
+
   try {
-    const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(termino)}&format=json&no_html=1&skip_disambig=1&no_redirect=1`
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(8000),
-      headers: { 'Accept-Language': 'es,en;q=0.9' },
+    const prompt = `Busca información actualizada sobre este tema clínico para terapeutas ABA/TEA: "${temaEs}" (en inglés: "${temaEn}").
+
+Encuentra y resume:
+1. Definición clínica actual según ABA/JABA
+2. Intervenciones con evidencia reciente (últimos 5 años)
+3. Estrategias prácticas para terapeutas
+4. Recursos web relevantes encontrados
+
+Responde en español, detallado y estructurado. Incluye las fuentes que encontraste.`
+
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      signal: AbortSignal.timeout(30000),
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'groq/compound',
+        messages: [
+          {
+            role: 'system',
+            content: 'Eres un BCBA experto en ABA, TEA y TDAH. Busca información actualizada en internet y sintetiza el conocimiento clínico más relevante. Responde siempre en español.',
+          },
+          { role: 'user', content: prompt },
+        ],
+        max_tokens: 2000,
+        search_settings: {
+          country: 'us',
+        },
+      }),
     })
+
     if (!res.ok) return []
     const data = await res.json()
-    const resultados: { titulo: string; texto: string; url: string }[] = []
+    const texto = data?.choices?.[0]?.message?.content || ''
+    if (texto.length < 100) return []
 
-    if (data.Abstract && data.Abstract.length > 80) {
-      resultados.push({
-        titulo: `[Web] ${data.Heading || termino}`,
-        texto: `TEMA: ${data.Heading || termino}\n\nRESUMEN WEB:\n${data.Abstract}\n\nFUENTE: ${data.AbstractSource || 'Web'}`,
-        url: data.AbstractURL || `https://duckduckgo.com/?q=${encodeURIComponent(termino)}`,
-      })
-    }
-
-    const topicsConTexto = (data.RelatedTopics || [])
-      .filter((t: any) => t.Text && t.Text.length > 60 && t.FirstURL)
+    // Extraer fuentes usadas si Groq las devuelve en executed_tools
+    const tools = data?.executed_tools || []
+    const urlsEncontradas = tools
+      .filter((t: any) => t.type === 'web_search')
+      .flatMap((t: any) => t.results || [])
+      .map((r: any) => r.url)
+      .filter(Boolean)
       .slice(0, 3)
 
-    for (const topic of topicsConTexto) {
-      resultados.push({
-        titulo: `[Web relacionado] ${topic.Text.slice(0, 80)}`,
-        texto: `CONTENIDO RELACIONADO:\n${topic.Text}`,
-        url: topic.FirstURL,
-      })
-    }
-
-    const directResults = (data.Results || [])
-      .filter((r: any) => r.Text && r.Text.length > 40)
-      .slice(0, 2)
-
-    for (const r of directResults) {
-      resultados.push({
-        titulo: `[Web resultado] ${r.Text.slice(0, 80)}`,
-        texto: `RESULTADO WEB:\n${r.Text}`,
-        url: r.FirstURL || '',
-      })
-    }
-
-    return resultados.slice(0, 4)
+    return [{
+      titulo: `[Groq Compound Web] Búsqueda IA: ${temaEs}`,
+      texto: `BÚSQUEDA WEB IA SOBRE: ${temaEs}\n\n${texto}\n\nFuentes consultadas: ${urlsEncontradas.join(', ') || 'Ver respuesta'}`,
+      url: urlsEncontradas[0] || `https://console.groq.com`,
+    }]
   } catch {
     return []
   }
 }
-
 // ─── 🆕 Wikipedia API (ES + EN, sin API key) ──────────────────────────────────
 async function extraerWikipedia(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
   const resultados: { titulo: string; texto: string; url: string }[] = []
@@ -321,6 +335,72 @@ async function extraerCrossRef(termino: string): Promise<{ titulo: string; texto
     return []
   }
 }
+
+// ─── 🆕 Europe PMC (sin API key, 40M+ artículos biomédicos) ──────────────────
+async function extraerEuropePMC(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
+  try {
+    const url = `https://www.ebi.ac.uk/europepmc/webservices/rest/search?query=${encodeURIComponent(termino + ' autism behavior')}&format=json&pageSize=4&sort=CITED&resultType=core`
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
+    if (!res.ok) return []
+    const data = await res.json()
+    const results = data?.resultList?.result || []
+    return results
+      .filter((r: any) => r.abstractText && r.abstractText.length > 80)
+      .slice(0, 4)
+      .map((r: any) => ({
+        titulo: `[EuropePMC] ${r.title} (${r.pubYear || 'N/D'})`,
+        texto: `TÍTULO: ${r.title}\nAÑO: ${r.pubYear || 'N/D'}\nREVISTA: ${r.journalTitle || 'N/D'}\nAUTORES: ${r.authorString || 'N/D'}\n\nRESUMEN:\n${r.abstractText.slice(0, 2500)}`,
+        url: `https://europepmc.org/article/${r.source || 'MED'}/${r.id}`,
+      }))
+  } catch { return [] }
+}
+
+// ─── 🆕 CORE (sin API key, 200M+ artículos open access) ──────────────────────
+async function extraerCORE(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
+  try {
+    const url = `https://api.core.ac.uk/v3/search/works?q=${encodeURIComponent(termino + ' autism ABA')}&limit=4&sort=citationCount:desc`
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(10000),
+      headers: { 'User-Agent': 'CerebroIA/1.0' },
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    const results = data?.results || []
+    return results
+      .filter((r: any) => r.abstract && r.abstract.length > 80)
+      .slice(0, 4)
+      .map((r: any) => ({
+        titulo: `[CORE] ${r.title} (${r.yearPublished || 'N/D'})`,
+        texto: `TÍTULO: ${r.title}\nAÑO: ${r.yearPublished || 'N/D'}\nREVISTA: ${r.publisher || 'Open Access'}\nAUTORES: ${(r.authors || []).slice(0, 3).map((a: any) => a.name || a).join(', ') || 'N/D'}\n\nRESUMEN:\n${r.abstract.slice(0, 2500)}`,
+        url: r.downloadUrl || r.sourceFulltextUrls?.[0] || `https://core.ac.uk/works/${r.id}`,
+      }))
+  } catch { return [] }
+}
+
+// ─── 🆕 BASE Bielefeld Academic Search Engine (sin API key) ──────────────────
+async function extraerBASE(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
+  try {
+    const url = `https://api.base-search.net/cgi-bin/BaseHttpSearchInterface.fcgi?func=PerformSearch&query=${encodeURIComponent(termino + ' autism behavior analysis')}&hits=4&format=json`
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) })
+    if (!res.ok) return []
+    const data = await res.json()
+    const docs = data?.response?.docs || []
+    return docs
+      .filter((d: any) => d.dcdescription && d.dcdescription.length > 80)
+      .slice(0, 3)
+      .map((d: any) => {
+        const desc = Array.isArray(d.dcdescription) ? d.dcdescription[0] : d.dcdescription
+        const title = Array.isArray(d.dctitle) ? d.dctitle[0] : d.dctitle || 'Sin título'
+        const author = Array.isArray(d.dccreator) ? d.dccreator.slice(0, 3).join(', ') : d.dccreator || 'N/D'
+        return {
+          titulo: `[BASE] ${title} (${d.dcdateyear || 'N/D'})`,
+          texto: `TÍTULO: ${title}\nAÑO: ${d.dcdateyear || 'N/D'}\nAUTORES: ${author}\n\nRESUMEN:\n${String(desc).slice(0, 2000)}`,
+          url: d.dcidentifier?.[0] || '',
+        }
+      })
+  } catch { return [] }
+}
+
 // ─── Extraer tema limpio de frases conversacionales ───────────────────────────
 async function extraerTemaLimpio(keywords: string): Promise<{ es: string; en: string; terminos: string[] }> {
   const prompt = `Eres un BCBA experto. El usuario escribió: "${keywords}"
@@ -442,7 +522,7 @@ export async function POST(req: NextRequest) {
 
     // ── PASO 3: Fuentes web generales (sin API key) ───────────────────────────
     if (incluirWeb !== false) {
-      log.push(`🌐 Buscando en fuentes web generales (sin API key)...`)
+      log.push(`🌐 Buscando en fuentes web generales + agente IA Groq Compound...`)
 
       // OpenAlex con término EN principal
       try {
@@ -462,23 +542,16 @@ export async function POST(req: NextRequest) {
         }
       } catch { log.push('⚠️ CrossRef no disponible') }
 
-      // DuckDuckGo ES con tema limpio en español
+      // Groq Compound — agente IA que busca en internet automáticamente
       try {
-        const ddgEs = await extraerDuckDuckGo(temaEs)
-        for (const art of ddgEs) {
-          textosRecopilados.push({ ...art, fuente: 'DuckDuckGo Web' })
-          log.push(`✅ DuckDuckGo (ES): ${art.titulo}`)
+        log.push(`🤖 Groq Compound buscando en internet...`)
+        const compoundResults = await extraerGroqCompound(temaEs, temaEn)
+        for (const art of compoundResults) {
+          textosRecopilados.push({ ...art, fuente: 'Groq Compound Web' })
+          log.push(`✅ Groq Compound Web: ${art.titulo}`)
         }
-      } catch { log.push('⚠️ DuckDuckGo (ES) no disponible') }
-
-      // DuckDuckGo EN con tema en inglés
-      try {
-        const ddgEn = await extraerDuckDuckGo(temaEn)
-        for (const art of ddgEn) {
-          textosRecopilados.push({ ...art, fuente: 'DuckDuckGo Web' })
-          log.push(`✅ DuckDuckGo (EN): ${art.titulo}`)
-        }
-      } catch { log.push('⚠️ DuckDuckGo (EN) no disponible') }
+        if (compoundResults.length === 0) log.push('⚠️ Groq Compound: sin resultados')
+      } catch { log.push('⚠️ Groq Compound no disponible') }
 
       // Wikipedia con tema ES
       try {
@@ -497,6 +570,33 @@ export async function POST(req: NextRequest) {
           log.push(`✅ Wikipedia (EN): ${art.titulo}`)
         }
       } catch { log.push('⚠️ Wikipedia (EN) no disponible') }
+
+      // Europe PMC — 40M+ artículos biomédicos open access
+      try {
+        const europePMC = await extraerEuropePMC(temaEn)
+        for (const art of europePMC) {
+          textosRecopilados.push({ ...art, fuente: 'EuropePMC' })
+          log.push(`✅ EuropePMC: ${art.titulo}`)
+        }
+      } catch { log.push('⚠️ EuropePMC no disponible') }
+
+      // CORE — 200M+ artículos open access
+      try {
+        const coreArticles = await extraerCORE(temaEn)
+        for (const art of coreArticles) {
+          textosRecopilados.push({ ...art, fuente: 'CORE' })
+          log.push(`✅ CORE: ${art.titulo}`)
+        }
+      } catch { log.push('⚠️ CORE no disponible') }
+
+      // BASE — Bielefeld Academic Search Engine
+      try {
+        const baseArticles = await extraerBASE(temaEn)
+        for (const art of baseArticles) {
+          textosRecopilados.push({ ...art, fuente: 'BASE' })
+          log.push(`✅ BASE: ${art.titulo}`)
+        }
+      } catch { log.push('⚠️ BASE no disponible') }
     }
 
     if (textosRecopilados.length === 0) {
