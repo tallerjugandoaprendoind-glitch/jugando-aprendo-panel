@@ -331,6 +331,9 @@ export default function NeuroFormsView() {
   const [isSaving, setIsSaving] = useState(false)
   const [sendFormModal, setSendFormModal] = useState<FormDefinition | null>(null)
   const [expandedResponse, setExpandedResponse] = useState<string | null>(null)
+  const [showSuccessScreen, setShowSuccessScreen] = useState(false)
+  const [savedRecordId, setSavedRecordId] = useState<string | null>(null)
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false)
 
   useEffect(() => {
     supabase.from('children').select('id, name, age, diagnosis').order('name').then(({ data }: { data: any[] | null }) => data && setChildren(data))
@@ -396,14 +399,14 @@ export default function NeuroFormsView() {
     if (!selectedForm || !selectedChild) { toast.error('Selecciona un paciente'); return }
     setIsSaving(true)
     try {
-      await supabase.from('form_responses').insert([{
+      const { data: savedRecord } = await supabase.from('form_responses').insert([{
         child_id: selectedChild,
         form_type: selectedForm.id,
         form_title: selectedForm.title,
         responses,
         ai_analysis: aiAnalysis,
         created_at: new Date().toISOString(),
-      }])
+      }]).select('id').single()
 
       // Queue AI message for admin approval (if analysis has a parent message)
       if (aiAnalysis?.mensaje_padres) {
@@ -425,9 +428,9 @@ export default function NeuroFormsView() {
         }
       }
 
-      toast.success('Formulario guardado correctamente')
-      setSelectedForm(null)
-      setAiAnalysis(null)
+      setSavedRecordId((savedRecord as any)?.id || null)
+      setShowSuccessScreen(true)
+      toast.success('✅ Formulario guardado correctamente')
     } catch (err: any) {
       toast.error('Error al guardar: ' + err.message)
     } finally {
@@ -473,6 +476,109 @@ export default function NeuroFormsView() {
   const totalSteps = selectedForm?.sections.length || 0
   const progress = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0
   const answeredCount = Object.keys(responses).length
+
+  // ── SUCCESS SCREEN CON BOTÓN WORD ─────────────────────────────────────────
+  if (showSuccessScreen && selectedForm) {
+    const handleGenerateAndDownload = async () => {
+      setIsGeneratingReport(true)
+      try {
+        const child = children.find((c: any) => c.id === selectedChild) as any
+        const childName = child?.name || 'Paciente'
+        const childAge = child?.birth_date
+          ? Math.floor((Date.now() - new Date(child.birth_date).getTime()) / (1000 * 60 * 60 * 24 * 365))
+          : undefined
+
+        const res = await fetch('/api/generate-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-locale': typeof window !== 'undefined' ? (localStorage.getItem('vanty_locale') || 'es') : 'es' },
+          body: JSON.stringify({
+            reportType: selectedForm.id,
+            childName,
+            childAge,
+            reportData: { responses, ai_analysis: aiAnalysis },
+            evaluationId: savedRecordId || '',
+            formTitle: selectedForm.title,
+          }),
+        })
+        const json = await res.json()
+        if (!json.success || !json.fileData) throw new Error(json.error || 'Sin datos')
+
+        await supabase.from('reportes_generados').insert([{
+          child_id: selectedChild,
+          tipo_reporte: selectedForm.id,
+          titulo: selectedForm.title + ' - ' + (children.find((c: any) => c.id === selectedChild) as any)?.name,
+          nombre_archivo: json.fileName,
+          file_data: json.fileData,
+          mime_type: json.mimeType,
+          tamano_bytes: Math.round((json.fileData.length * 3) / 4),
+          fecha_generacion: new Date().toISOString(),
+          generado_por: 'IA + Psicólogo',
+          source_id: savedRecordId,
+        }])
+
+        const byteChars = atob(json.fileData)
+        const bytes = new Uint8Array(byteChars.length)
+        for (let i = 0; i < byteChars.length; i++) bytes[i] = byteChars.charCodeAt(i)
+        const blob = new Blob([bytes], { type: json.mimeType })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url; a.download = json.fileName
+        document.body.appendChild(a); a.click()
+        URL.revokeObjectURL(url); document.body.removeChild(a)
+
+        toast.success('✅ Reporte Word descargado')
+      } catch (err: any) {
+        toast.error('Error generando reporte: ' + (err.message || 'Intenta de nuevo'))
+      } finally {
+        setIsGeneratingReport(false)
+      }
+    }
+
+    const resetAll = () => {
+      setShowSuccessScreen(false)
+      setSelectedForm(null)
+      setAiAnalysis(null)
+      setResponses({})
+      setSavedRecordId(null)
+      setCurrentStep(0)
+    }
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 p-8">
+        <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
+          <CheckCircle2 size={40} className="text-emerald-500" />
+        </div>
+        <div className="text-center">
+          <h2 className="text-2xl font-black text-slate-800 mb-2" style={{ color: 'var(--text-primary)' }}>Formulario guardado</h2>
+          <p className="text-slate-500 font-medium">{selectedForm.title}</p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+          <button
+            onClick={handleGenerateAndDownload}
+            disabled={isGeneratingReport}
+            className="flex-1 flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl font-black text-sm shadow-lg hover:shadow-xl transition-all disabled:opacity-60 disabled:cursor-not-allowed active:scale-95"
+          >
+            {isGeneratingReport ? (
+              <><Loader2 size={18} className="animate-spin" /> Generando reporte...</>
+            ) : (
+              <><FileText size={18} /> Generar y Descargar Reporte Word</>
+            )}
+          </button>
+          <button
+            onClick={resetAll}
+            className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-2xl font-black text-sm transition-all"
+          >
+            <ChevronLeft size={18} /> Volver
+          </button>
+        </div>
+        {aiAnalysis && (
+          <p className="text-xs text-violet-600 font-bold flex items-center gap-1">
+            <Sparkles size={12} /> Análisis IA disponible — se incluirá en el reporte
+          </p>
+        )}
+      </div>
+    )
+  }
 
   // ── FORM FILL MODE ──────────────────────────────────────────────────────────
   if (selectedForm) {
