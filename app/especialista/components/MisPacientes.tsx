@@ -149,6 +149,34 @@ function WordBtn({ report }: { report: any }) {
 
 function ABADetail({ r }: { r: any }) {
   const { t } = useI18n()
+  const [downloading, setDownloading] = useState(false)
+  const toast = useToast()
+
+  const descargarReporteWord = async () => {
+    if (!r.child_id) { toast.error('No se encontró el ID del paciente'); return }
+    setDownloading(true)
+    try {
+      const res = await fetch('/api/reporte-word', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId: r.child_id, tipo: 'padres' }),
+      })
+      if (!res.ok) throw new Error('Error al generar el reporte')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = Object.assign(document.createElement('a'), {
+        href: url,
+        download: `Reporte_ABA_${new Date().toISOString().slice(0,10)}.docx`,
+      })
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Reporte Word descargado')
+    } catch (e: any) {
+      toast.error('Error: ' + e.message)
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   const d = r.datos || r
   return (
@@ -177,6 +205,14 @@ function ABADetail({ r }: { r: any }) {
         <div className="col-span-2"><Field label={t("pacientes.mensajeFamilia")} value={d.mensaje_familia} /></div>
       </Bloque>
       <AIBlock analysis={r.ai_analysis} />
+      <button
+        onClick={descargarReporteWord}
+        disabled={downloading}
+        className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+      >
+        <Download size={13} />
+        {downloading ? 'Generando reporte...' : 'Descargar Reporte Word'}
+      </button>
     </div>
   )
 }
