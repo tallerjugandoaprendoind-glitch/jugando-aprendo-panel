@@ -543,11 +543,10 @@ export default function AdminDashboard() {
           ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}
           style={{
             right: '24px',
-            top: ariaMinimized ? 'auto' : '80px',
-            bottom: '24px',
+            top: ariaMinimized ? 'auto' : '68px',
+            bottom: ariaMinimized ? '24px' : 'auto',
             width: ariaExpanded ? 'min(560px, calc(100vw - 48px))' : 'min(380px, calc(100vw - 48px))',
-            height: ariaMinimized ? '54px' : undefined,
-            maxHeight: ariaMinimized ? '54px' : ariaExpanded ? 'calc(100vh - 104px)' : '520px',
+            height: ariaMinimized ? '54px' : ariaExpanded ? 'calc(100vh - 92px)' : 'min(520px, calc(100vh - 92px))',
           }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex-shrink-0">
