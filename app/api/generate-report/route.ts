@@ -280,16 +280,19 @@ async function generarContenidoReporte(
 
 REGLAS DE FORMATO DEL INFORME:
 - Redacta el informe completo en español clínico peruano
-- Cada sección debe estar claramente delimitada
-- Usa párrafos completos, no bullets en el cuerpo (excepto en listas de recomendaciones)
+- Cada sección debe iniciar exactamente con su número romano y nombre: "I. NOMBRE DE SECCIÓN"
+- Usa párrafos completos con texto fluido. NO uses bullets excesivos en el cuerpo narrativo
+- Para listas de recomendaciones usa guiones: "- recomendación"
+- Para resaltar términos importantes usa **negrita** (doble asterisco)
+- NO uses ### ni ## ni # para títulos — usa los números romanos indicados
+- NO uses bloques de código ni triple backtick
 - El tono es profesional, empático y orientado a fortalezas
 - Incluye siempre el nombre del paciente en las secciones narrativas
 - Las conclusiones deben ser accionables y específicas
-- Extensión mínima: 600 palabras para mantener profundidad clínica
+- Extensión mínima: 700 palabras para mantener profundidad clínica
 - Fecha del informe: ${fechaHoy}
-- Formato de las secciones: usar el formato "SECCIÓN: [número]. [NOMBRE EN MAYÚSCULAS]"
 
-SECCIONES A DESARROLLAR:
+SECCIONES A DESARROLLAR (usar exactamente este formato para los títulos):
 ${config.secciones.map((s, i) => `${i + 1}. ${s}`).join('\n')}
 `
 
@@ -306,9 +309,11 @@ ${datosTexto}
 HISTORIAL CLÍNICO PREVIO:
 ${contextoClinico || 'Sin historial previo disponible.'}
 
-Redacta el informe completo con todas las secciones. Sé específico con los datos proporcionados.
-Si algún dato no está disponible, indica "Pendiente de evaluación" o "A determinar en sesión".
-El informe debe poder entregarse directamente a padres, médicos o colegios.`
+Redacta el informe completo con TODAS las secciones indicadas. Usa EXACTAMENTE el formato de título de sección:
+"I. NOMBRE DE LA SECCIÓN" (número romano + punto + espacio + nombre en mayúsculas).
+Sé específico con los datos proporcionados. Si algún dato no está disponible, indica "Pendiente de evaluación".
+El informe debe poder entregarse directamente a padres, médicos o colegios sin edición adicional.
+Usa **negrita** para resaltar diagnósticos, puntajes clave y conclusiones importantes.`
 
   const contenido = await callGroqSimple(systemPrompt + getLangInstruction(userLocale),userPrompt, {
     model: GROQ_MODELS.SMART,
@@ -479,104 +484,116 @@ async function generarDocx(
     new Paragraph({ children: [new PageBreak()], spacing: { after: 0 } })
   )
 
-  // ── CUERPO DEL REPORTE ───────────────────────────────────────────────────
-  let enSeccion = false
+  // ── PARSER INLINE: convierte **negrita** e *cursiva* en TextRun array ───────
+  function parseInline(text: string, baseSize = 20, baseColor = '374151'): any[] {
+    const runs: any[] = []
+    // Eliminar markdown restante que no queremos mostrar (###, ##, #)
+    const clean = text.replace(/^#{1,6}\s*/, '').trim()
+    const regex = /\*\*\*(.+?)\*\*\*|\*\*(.+?)\*\*|\*(.+?)\*|_(.+?)_/g
+    let last = 0
+    let match: RegExpExecArray | null
+    while ((match = regex.exec(clean)) !== null) {
+      if (match.index > last) {
+        runs.push(new TextRun({ text: clean.slice(last, match.index), size: baseSize, font: 'Calibri', color: baseColor }))
+      }
+      if (match[1]) {
+        // ***bold+italic***
+        runs.push(new TextRun({ text: match[1], bold: true, italics: true, size: baseSize, font: 'Calibri', color: baseColor }))
+      } else if (match[2]) {
+        // **bold**
+        runs.push(new TextRun({ text: match[2], bold: true, size: baseSize, font: 'Calibri', color: baseColor }))
+      } else if (match[3] || match[4]) {
+        // *italic* or _italic_
+        runs.push(new TextRun({ text: match[3] || match[4], italics: true, size: baseSize, font: 'Calibri', color: baseColor }))
+      }
+      last = match.index + match[0].length
+    }
+    if (last < clean.length) {
+      runs.push(new TextRun({ text: clean.slice(last), size: baseSize, font: 'Calibri', color: baseColor }))
+    }
+    return runs.length > 0 ? runs : [new TextRun({ text: clean, size: baseSize, font: 'Calibri', color: baseColor })]
+  }
 
+  // ── CUERPO DEL REPORTE ───────────────────────────────────────────────────
   for (const linea of lineas) {
     const trimmed = linea.trim()
     if (!trimmed) {
-      children.push(new Paragraph({ spacing: { after: 120 } }))
+      children.push(new Paragraph({ spacing: { after: 80 } }))
       continue
     }
 
-    // Detectar encabezados de sección (patrones: "I. NOMBRE", "1. NOMBRE", "SECCIÓN:", etc.)
-    const esSeccion =
-      /^(I{1,3}V?|VI{0,3}|IX|X{1,3}|[0-9]+)\.\s+[A-ZÁÉÍÓÚÑ]/.test(trimmed) ||
+    // ── 1. Títulos markdown: ###, ##, # → encabezado de sección
+    const mdHeading = trimmed.match(/^(#{1,6})\s+(.+)/)
+    // ── 2. Encabezados clásicos tipo "I. NOMBRE", "1. NOMBRE", "SECCIÓN: X"
+    const esSeccionNumerada =
+      /^(I{1,3}V?|VI{0,3}|IX|X{1,3}|[0-9]+)\.\s+[A-ZÁÉÍÓÚÑ\*]/.test(trimmed) ||
       /^SECCIÓN\s*[:.]?\s*\d*\s*[-.]?\s*[A-ZÁÉÍÓÚÑ]/i.test(trimmed) ||
-      /^[IVX]+\.\s+[A-ZÁÉÍÓÚÑ]/.test(trimmed)
+      /^[IVX]+\.\s+[A-ZÁÉÍÓÚÑ\*]/.test(trimmed)
+    // ── 3. Línea en MAYÚSCULAS completa (no muy larga) → subtítulo
+    const esTodoMayusculas = trimmed === trimmed.toUpperCase() && trimmed.length > 4 && trimmed.length < 120 && /[A-ZÁÉÍÓÚÑ]{3,}/.test(trimmed) && !trimmed.match(/^\d/)
 
-    if (esSeccion) {
-      // Espaciado antes de sección
-      if (enSeccion) {
-        children.push(new Paragraph({ spacing: { before: 400 } }))
-      }
-      enSeccion = true
-
+    if (mdHeading || esSeccionNumerada) {
+      const rawText = mdHeading ? mdHeading[2] : trimmed
+      // Limpiar posibles ** del texto del título
+      const cleanTitle = rawText.replace(/\*\*/g, '').trim().toUpperCase()
       children.push(
         new Paragraph({
           children: [
-            new TextRun({
-              text: trimmed.toUpperCase(),
-              bold: true,
-              size: 24,
-              color: COLOR_PRIMARIO,
-              font: 'Calibri',
-            }),
+            new TextRun({ text: cleanTitle, bold: true, size: 24, color: COLOR_PRIMARIO, font: 'Calibri' }),
           ],
           heading: HeadingLevel.HEADING_2,
-          border: {
-            bottom: { style: BorderStyle.SINGLE, size: 2, color: COLOR_SECUNDARIO },
-          },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 2, color: COLOR_SECUNDARIO } },
           spacing: { before: 480, after: 200 },
         })
       )
-    } else if (trimmed.startsWith('•') || trimmed.startsWith('-') || trimmed.startsWith('*')) {
-      // Elemento de lista
+    } else if (esTodoMayusculas && !trimmed.startsWith('•') && !trimmed.startsWith('-')) {
+      // Sub-encabezado en mayúsculas
       children.push(
         new Paragraph({
-          children: [
-            new TextRun({
-              text: trimmed.replace(/^[•\-*]\s*/, ''),
-              size: 20,
-              font: 'Calibri',
-            }),
-          ],
+          children: [new TextRun({ text: trimmed.replace(/\*\*/g, ''), bold: true, size: 22, color: COLOR_ACENTO, font: 'Calibri' })],
+          spacing: { before: 300, after: 120 },
+        })
+      )
+    } else if (trimmed.startsWith('•') || trimmed.startsWith('–') || (trimmed.startsWith('-') && !trimmed.startsWith('---'))) {
+      // Bullet list
+      const bulletText = trimmed.replace(/^[•\-–]\s*/, '')
+      children.push(
+        new Paragraph({
+          children: parseInline(bulletText),
           bullet: { level: 0 },
           spacing: { after: 100 },
         })
       )
-    } else if (trimmed.match(/^\d+\.\s+/) && trimmed.length < 200) {
-      // Lista numerada
+    } else if (trimmed.match(/^\d+\.\s+\S/) && trimmed.length < 300 && !esSeccionNumerada) {
+      // Lista numerada (línea corta que empieza con "1. texto")
       children.push(
         new Paragraph({
-          children: [
-            new TextRun({
-              text: trimmed,
-              size: 20,
-              font: 'Calibri',
-            }),
-          ],
+          children: parseInline(trimmed),
           numbering: { reference: 'default-numbering', level: 0 },
           spacing: { after: 100 },
         })
       )
-    } else if (trimmed.endsWith(':') && trimmed.length < 80) {
-      // Sub-título dentro de sección
+    } else if (trimmed.endsWith(':') && trimmed.length < 100 && !trimmed.includes('**')) {
+      // Sub-label (ej: "Recomendaciones:")
       children.push(
         new Paragraph({
-          children: [
-            new TextRun({
-              text: trimmed,
-              bold: true,
-              size: 22,
-              color: COLOR_ACENTO,
-              font: 'Calibri',
-            }),
-          ],
-          spacing: { before: 240, after: 120 },
+          children: [new TextRun({ text: trimmed, bold: true, size: 21, color: COLOR_ACENTO, font: 'Calibri' })],
+          spacing: { before: 240, after: 100 },
+        })
+      )
+    } else if (trimmed.startsWith('---') || trimmed.startsWith('___')) {
+      // Separador horizontal → línea
+      children.push(
+        new Paragraph({
+          border: { bottom: { style: BorderStyle.SINGLE, size: 1, color: 'DDDDDD' } },
+          spacing: { before: 160, after: 160 },
         })
       )
     } else {
-      // Párrafo de texto normal
+      // Párrafo de texto normal — con soporte **bold** inline
       children.push(
         new Paragraph({
-          children: [
-            new TextRun({
-              text: trimmed,
-              size: 20,
-              font: 'Calibri',
-            }),
-          ],
+          children: parseInline(trimmed),
           alignment: AlignmentType.JUSTIFIED,
           spacing: { after: 160 },
         })
