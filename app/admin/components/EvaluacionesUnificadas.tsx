@@ -328,8 +328,6 @@ function QuestionRenderer({ question, value, onChange }: any) {
 
 // ─── HELPER: convierte string con guiones/saltos o array → array limpio ───────
 function toArray(val: any): string[] {
-  const { t, locale } = useI18n()
-
   if (!val) return []
   if (Array.isArray(val)) return val.filter(Boolean)
   if (typeof val === 'string') {
@@ -763,8 +761,6 @@ function FormFillView({ form, children, onBack, toast }: any) {
   const answeredCount = Object.keys(responses).length
 
   const handleResponse = (id: string, value: any) => {
-    const { t } = useI18n()
-
     setResponses(prev => ({ ...prev, [id]: value }))
   }
 
@@ -911,7 +907,6 @@ function FormFillView({ form, children, onBack, toast }: any) {
         insertPayload.form_title     = form.title
       } else if (table === 'registro_aba') {
         // registro_aba: child_id, fecha_sesion, datos, form_title
-        const { t } = useI18n()
         insertPayload.datos        = responses
         insertPayload.fecha_sesion = responses['fecha_sesion'] || now.split('T')[0]
         insertPayload.form_title   = form.title
@@ -940,7 +935,6 @@ function FormFillView({ form, children, onBack, toast }: any) {
 
       // Queue AI-generated parent message for admin approval (if it exists)
       if (aiAnalysis?.mensaje_padres) {
-        const { t } = useI18n()
         const { data: child } = await supabase.from('children').select('parent_id').eq('id', selectedChild).single()
         if ((child as any)?.parent_id) {
           await fetch('/api/admin/parent-messages', {
@@ -970,11 +964,10 @@ function FormFillView({ form, children, onBack, toast }: any) {
   // ── PANTALLA DE ÉXITO CON BOTÓN DE REPORTE ──────────────────────────────
   if (showSuccessScreen) {
     const handleGenerateAndDownload = async () => {
-      const { t } = useI18n()
       setIsGeneratingReport(true)
       try {
         const child = children.find((c: any) => c.id === savedChildId) as any
-        const childName = child?.name || t('nav.pacientes')
+        const childName = child?.name || 'Paciente'
         const childAge  = child?.age  || calcularEdadNumerica(child?.birth_date)
         const reportType = isClinicalForm ? (form.id || 'neuroforma') : (form.formKey || form.id)
 
@@ -1319,7 +1312,6 @@ export default function EvaluacionesUnificadas({ initialChildId, initialChildNam
   }
 
   const handleSendForm = async (form: any, { childId, message, deadline }: any) => {
-    const { t, locale } = useI18n()
     try {
       // Derive parent_id from child record
       const { data: child } = await supabase.from('children').select('parent_id').eq('id', childId).single()

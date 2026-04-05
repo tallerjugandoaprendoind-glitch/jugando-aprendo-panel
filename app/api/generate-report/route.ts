@@ -210,6 +210,294 @@ internalización (ansiedad, depresión, somatización) y escalas adaptativas.
 Conecta los resultados con el diagnóstico de base y las necesidades de intervención.
 Diferencia recomendaciones para hogar, colegio y clínica.`,
   },
+
+  // ── Formularios NeuroForma ────────────────────────────────────────────────
+  screening_tdah: {
+    titulo: 'INFORME DE SCREENING — TDAH (Conners Adaptado)',
+    subtitulo: 'Evaluación de síntomas de inatención e hiperactividad',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. MOTIVO DE EVALUACIÓN',
+      'III. SÍNTOMAS DE INATENCIÓN',
+      'IV. SÍNTOMAS DE HIPERACTIVIDAD E IMPULSIVIDAD',
+      'V. RESULTADOS DEL SCREENING',
+      'VI. IMPACTO FUNCIONAL',
+      'VII. ORIENTACIÓN DIAGNÓSTICA Y PRÓXIMOS PASOS',
+    ],
+    instrucciones: `Eres neuropsicólogo infantil especializado en TDAH. Analiza los resultados del screening Conners adaptado.
+Usa criterios del DSM-5-TR para TDAH (presentación inatenta, hiperactiva-impulsiva o combinada).
+Incluye intensidad de síntomas, áreas de impacto (académico, social, hogar) y recomendaciones de derivación.
+Lenguaje técnico pero accesible para padres y médicos derivantes.`,
+  },
+
+  conducta_casa_tdah: {
+    titulo: 'INFORME — CONDUCTA EN CASA (TDAH)',
+    subtitulo: 'Informe parental de conductas en el entorno doméstico',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. SÍNTOMAS OBSERVADOS EN EL HOGAR',
+      'III. RUTINAS Y ESTRUCTURA DIARIA',
+      'IV. MANEJO PARENTAL ACTUAL',
+      'V. ANÁLISIS CLÍNICO',
+      'VI. RECOMENDACIONES PARA EL HOGAR',
+    ],
+    instrucciones: `Eres terapeuta ABA y psicólogo infantil especializado en TDAH.
+Analiza el reporte de los padres sobre conductas en el hogar. Identifica patrones, factores ambientales y estrategias de manejo.
+Sugiere modificaciones ambientales y estrategias conductuales basadas en evidencia para el hogar.
+Lenguaje empático y práctico para las familias.`,
+  },
+
+  screening_tea: {
+    titulo: 'INFORME DE SCREENING — TEA (M-CHAT-R/F Adaptado)',
+    subtitulo: 'Detección temprana del espectro autista',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. MOTIVO DE EVALUACIÓN',
+      'III. INDICADORES DE COMUNICACIÓN SOCIAL',
+      'IV. INDICADORES DE CONDUCTAS RESTRINGIDAS Y REPETITIVAS',
+      'V. RESULTADO DEL SCREENING',
+      'VI. NIVEL DE RIESGO Y RECOMENDACIONES',
+      'VII. PRÓXIMOS PASOS',
+    ],
+    instrucciones: `Eres neuropsicólogo especializado en TEA y diagnóstico temprano.
+Analiza los resultados del M-CHAT-R/F adaptado. Clasifica el nivel de riesgo (bajo, medio, alto).
+Usa criterios del DSM-5-TR para TEA (dominios A y B). Indica si se requiere evaluación diagnóstica completa.
+Lenguaje claro para padres, con enfoque en la importancia de la detección temprana.`,
+  },
+
+  conducta_casa_tea: {
+    titulo: 'INFORME — MI HIJO EN CASA (TEA)',
+    subtitulo: 'Reporte familiar del día a día en el hogar',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. RUTINAS Y ESTRUCTURA DIARIA',
+      'III. COMUNICACIÓN Y SOCIALIZACIÓN EN CASA',
+      'IV. CONDUCTAS REPETITIVAS Y SENSORIALIDAD',
+      'V. FORTALEZAS OBSERVADAS',
+      'VI. ANÁLISIS CLÍNICO',
+      'VII. ESTRATEGIAS RECOMENDADAS PARA EL HOGAR',
+    ],
+    instrucciones: `Eres terapeuta ABA y psicólogo infantil especializado en TEA.
+Analiza el reporte parental del funcionamiento diario. Identifica fortalezas, rutinas efectivas y áreas de desafío.
+Proporciona estrategias concretas y visuales basadas en ABA y EIBI para implementar en casa.
+Lenguaje cálido y empático, orientado a empoderar a la familia.`,
+  },
+
+  perfil_sensorial: {
+    titulo: 'INFORME DE PERFIL SENSORIAL',
+    subtitulo: 'Evaluación de integración sensorial (Dunn adaptado)',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. DESCRIPCIÓN DEL INSTRUMENTO',
+      'III. PERFIL POR SISTEMA SENSORIAL',
+      'IV. PATRONES DE PROCESAMIENTO',
+      'V. IMPACTO EN EL FUNCIONAMIENTO DIARIO',
+      'VI. RECOMENDACIONES DE INTEGRACIÓN SENSORIAL',
+    ],
+    instrucciones: `Eres terapeuta ocupacional y neuropsicólogo especializado en procesamiento sensorial (Modelo de Dunn).
+Analiza el perfil sensorial: sistemas táctil, propioceptivo, vestibular, auditivo, visual, gustativo/olfativo.
+Identifica patrones (registro bajo, sensibilidad, evitación, búsqueda sensorial).
+Proporciona recomendaciones de integración sensorial para el hogar, colegio y terapia.`,
+  },
+
+  habilidades_sociales: {
+    titulo: 'INFORME DE EVALUACIÓN DE HABILIDADES SOCIALES',
+    subtitulo: 'Inventario de competencias sociales y comunicativas',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. COMUNICACIÓN VERBAL Y NO VERBAL',
+      'III. INTERACCIÓN CON PARES',
+      'IV. HABILIDADES DE JUEGO',
+      'V. REGULACIÓN EMOCIONAL Y SOCIAL',
+      'VI. FORTALEZAS SOCIALES',
+      'VII. OBJETIVOS Y RECOMENDACIONES',
+    ],
+    instrucciones: `Eres psicólogo infantil y especialista en habilidades sociales y TEA/TDAH.
+Analiza las competencias sociales del niño. Identifica fortalezas y áreas de desarrollo.
+Usa marco de referencia de comunicación social del DSM-5-TR.
+Proporciona objetivos concretos y técnicas para el entrenamiento en habilidades sociales.`,
+  },
+
+  informe_padres_general: {
+    titulo: 'INFORME SEMANAL DE PROGRESO',
+    subtitulo: 'Reporte parental — ¿Cómo está mi hijo esta semana?',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. CONDUCTA Y ESTADO EMOCIONAL',
+      'III. PROGRESO EN OBJETIVOS TERAPÉUTICOS',
+      'IV. SITUACIONES DESTACADAS DE LA SEMANA',
+      'V. ANÁLISIS CLÍNICO',
+      'VI. RECOMENDACIONES PARA LA PRÓXIMA SEMANA',
+    ],
+    instrucciones: `Eres terapeuta ABA y psicólogo infantil. Analiza el reporte semanal de los padres.
+Conecta las observaciones parentales con los objetivos terapéuticos en curso.
+Identifica avances, retrocesos y situaciones que requieren atención clínica.
+Proporciona retroalimentación práctica y motivadora para la familia.`,
+  },
+
+  historia_familiar: {
+    titulo: 'HISTORIA FAMILIAR Y DEL DESARROLLO',
+    subtitulo: 'Anamnesis familiar — Formulario inicial',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN FAMILIAR',
+      'II. HISTORIA DEL DESARROLLO',
+      'III. ANTECEDENTES MÉDICOS Y FAMILIARES',
+      'IV. DINÁMICA FAMILIAR',
+      'V. RECURSOS Y FORTALEZAS FAMILIARES',
+      'VI. IMPRESIÓN INICIAL',
+      'VII. PLAN DE INTERVENCIÓN PROPUESTO',
+    ],
+    instrucciones: `Eres psicólogo clínico infantil y terapeuta familiar.
+Analiza la historia familiar y del desarrollo con enfoque sistémico.
+Identifica factores de riesgo y protectores, dinámica familiar, recursos disponibles.
+Elabora una impresión inicial clínica y propuesta de intervención con enfoque en fortalezas.`,
+  },
+
+  fba: {
+    titulo: 'EVALUACIÓN FUNCIONAL DE CONDUCTA (FBA)',
+    subtitulo: 'Análisis de la función de conductas problemáticas',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. DEFINICIÓN OPERACIONAL DE LA CONDUCTA',
+      'III. RECOPILACIÓN DE DATOS (ABC)',
+      'IV. HIPÓTESIS FUNCIONAL',
+      'V. FACTORES AMBIENTALES',
+      'VI. ANÁLISIS FUNCIONAL',
+      'VII. IMPLICACIONES PARA LA INTERVENCIÓN',
+    ],
+    instrucciones: `Eres BCBA (Board Certified Behavior Analyst) con especialidad en análisis funcional.
+Redacta una FBA completa con rigor científico. Incluye definición operacional, datos ABC, hipótesis funcionales.
+Identifica la función de la conducta (atención, acceso a tangibles, escape, automáticas).
+Usa terminología ABA estándar (Cooper, Heron y Heward). El informe debe fundamentar el BIP.`,
+  },
+
+  bip: {
+    titulo: 'PLAN DE INTERVENCIÓN CONDUCTUAL (BIP)',
+    subtitulo: 'Diseño de intervención basado en análisis funcional',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. RESUMEN DE LA FBA',
+      'III. CONDUCTAS OBJETIVO',
+      'IV. ESTRATEGIAS ANTECEDENTES',
+      'V. ESTRATEGIAS DE ENSEÑANZA DE CONDUCTAS ALTERNATIVAS',
+      'VI. ESTRATEGIAS DE CONSECUENCIAS',
+      'VII. PROTOCOLO DE CRISIS',
+      'VIII. PLAN DE GENERALIZACIÓN',
+      'IX. MONITOREO Y EVALUACIÓN',
+    ],
+    instrucciones: `Eres BCBA especializado en diseño de planes de intervención conductual.
+Diseña un BIP completo basado en análisis funcional. Incluye estrategias antecedentes, de enseñanza y consecuentes.
+Especifica conductas de reemplazo (CRF), programas de reforzamiento diferencial y protocolos de crisis.
+El plan debe ser implementable por terapeutas, padres y docentes con instrucciones claras.`,
+  },
+
+  iep: {
+    titulo: 'PLAN DE INTERVENCIÓN INDIVIDUAL (PII/IEP)',
+    subtitulo: 'Objetivos funcionales anuales con métricas de progreso',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. NIVELES DE DESEMPEÑO ACTUAL',
+      'III. OBJETIVOS ANUALES',
+      'IV. SERVICIOS Y APOYOS',
+      'V. ADAPTACIONES Y MODIFICACIONES',
+      'VI. CRITERIOS DE EVALUACIÓN',
+      'VII. PARTICIPACIÓN EN ENTORNOS INCLUSIVOS',
+    ],
+    instrucciones: `Eres especialista en educación especial y terapeuta ABA.
+Redacta un PII/IEP completo con objetivos SMART (específicos, medibles, alcanzables, relevantes, temporales).
+Incluye niveles actuales de desempeño, objetivos funcionales por área, criterios de dominio y métodos de evaluación.
+Lenguaje técnico-educativo. Cada objetivo debe incluir condición, conducta y criterio.`,
+  },
+
+  lenguaje_verbal: {
+    titulo: 'EVALUACIÓN DE CONDUCTA VERBAL (VB-MAPP Adaptado)',
+    subtitulo: 'Perfil de habilidades de lenguaje y comunicación',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. DESCRIPCIÓN DEL INSTRUMENTO',
+      'III. OPERANTES VERBALES EVALUADOS',
+      'IV. RESULTADOS POR MILESTONE',
+      'V. BARRERAS AL APRENDIZAJE',
+      'VI. PERFIL DE COMUNICACIÓN',
+      'VII. OBJETIVOS Y PLAN DE INTERVENCIÓN',
+    ],
+    instrucciones: `Eres especialista en conducta verbal y comunicación aumentativa/alternativa (CAA).
+Analiza el perfil VB-MAPP. Evalúa operantes verbales: mando, tacto, ecoico, intraverbal, oyente, lector/escritor.
+Identifica el nivel (1-3), barreras al aprendizaje y necesidades de CAA.
+Usa terminología de Skinner (Verbal Behavior) y recomienda objetivos priorizados por función comunicativa.`,
+  },
+
+  informe_mensual_prog: {
+    titulo: 'INFORME DE PROGRESO MENSUAL',
+    subtitulo: 'Reporte clínico de avances — Mes en curso',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. RESUMEN EJECUTIVO DEL MES',
+      'III. PROGRESO POR PROGRAMA',
+      'IV. INDICADORES CONDUCTUALES',
+      'V. ANÁLISIS DE TENDENCIAS',
+      'VI. AJUSTES AL PLAN',
+      'VII. OBJETIVOS PARA EL PRÓXIMO MES',
+    ],
+    instrucciones: `Eres supervisor ABA (BCBA) redactando el informe mensual de progreso.
+Sintetiza los avances, dificultades y tendencias del mes. Compara con objetivos planteados.
+Analiza datos de forma objetiva (porcentajes, criterios de dominio, curvas de aprendizaje).
+Propón ajustes al plan de intervención basados en evidencia. Tono profesional para padres y supervisores.`,
+  },
+
+  habilidades_adaptativas: {
+    titulo: 'EVALUACIÓN DE HABILIDADES ADAPTATIVAS',
+    subtitulo: 'Funcionamiento en vida diaria y autonomía',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. AUTOCUIDADO Y VIDA DIARIA',
+      'III. COMUNICACIÓN FUNCIONAL',
+      'IV. HABILIDADES DOMÉSTICAS',
+      'V. HABILIDADES COMUNITARIAS',
+      'VI. SALUD Y SEGURIDAD',
+      'VII. ANÁLISIS Y RECOMENDACIONES',
+    ],
+    instrucciones: `Eres neuropsicólogo y terapeuta ocupacional especializado en habilidades adaptativas.
+Evalúa el funcionamiento adaptativo en todas las áreas de la vida diaria.
+Usa marco de referencia de conducta adaptativa del DSM-5-TR y Vineland-3.
+Identifica fortalezas, necesidades de apoyo y objetivos prioritarios para la autonomía.`,
+  },
+
+  sensorial_avanzado: {
+    titulo: 'PERFIL SENSORIAL AVANZADO',
+    subtitulo: 'Evaluación detallada de procesamiento sensorial (Dunn adaptado)',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. SISTEMAS SENSORIALES — ANÁLISIS DETALLADO',
+      'III. PATRONES DE MODULACIÓN',
+      'IV. IMPACTO EN APRENDIZAJE Y CONDUCTA',
+      'V. IMPACTO EN ACTIVIDADES DE VIDA DIARIA',
+      'VI. DIETA SENSORIAL RECOMENDADA',
+      'VII. ADAPTACIONES AMBIENTALES',
+    ],
+    instrucciones: `Eres terapeuta ocupacional certificado en integración sensorial y neuropsicólogo.
+Analiza el perfil sensorial avanzado de todos los sistemas. Identifica hiposensibilidad, hipersensibilidad y disfunciones.
+Diseña una dieta sensorial personalizada con actividades de regulación para hogar, colegio y terapia.
+Incluye adaptaciones ambientales específicas y estrategias de calma y activación.`,
+  },
+
+  abc_avanzado: {
+    titulo: 'REGISTRO ABC AVANZADO + ANÁLISIS FUNCIONAL',
+    subtitulo: 'Antecedente → Conducta → Consecuencia con análisis funcional',
+    secciones: [
+      'I. DATOS DE IDENTIFICACIÓN',
+      'II. DEFINICIÓN OPERACIONAL DE LA CONDUCTA',
+      'III. ANÁLISIS DE ANTECEDENTES',
+      'IV. ANÁLISIS DE LA CONDUCTA',
+      'V. ANÁLISIS DE CONSECUENCIAS',
+      'VI. HIPÓTESIS FUNCIONAL',
+      'VII. RECOMENDACIONES DE INTERVENCIÓN',
+    ],
+    instrucciones: `Eres BCBA especializado en análisis funcional de conducta.
+Analiza el registro ABC avanzado con rigor metodológico. Identifica patrones en antecedentes y consecuentes.
+Formula hipótesis funcionales (atención, acceso, escape, automáticas) con justificación en los datos.
+Proporciona recomendaciones de intervención directamente derivadas del análisis funcional.`,
+  },
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -738,10 +1026,8 @@ export async function POST(request: NextRequest) {
     }
 
     if (!REPORTE_CONFIG[reportType]) {
-      return NextResponse.json(
-        { error: `Tipo de reporte no reconocido: ${reportType}` },
-        { status: 400 }
-      )
+      // Fallback: usar config genérica ABA en vez de bloquear con error 400
+      console.warn(`[generate-report] Tipo desconocido: "${reportType}" — usando fallback 'aba'`)
     }
 
     // 1. Obtener childId desde múltiples fuentes posibles
