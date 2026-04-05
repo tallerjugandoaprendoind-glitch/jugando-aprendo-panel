@@ -227,14 +227,18 @@ function MonthlyCalendarView() {
       const createdBy = currentSession?.user?.id || null
 
       let payload: any[]
-      // Si hay múltiples especialistas, crear una cita por cada uno
-      const specialistIds = newApt.specialist_id ? newApt.specialist_id.split(',').filter(Boolean) : [null]
+      // Un solo specialist_id (el primero), nombres de todos concatenados en notes si hay varios
+      const specialistIds = newApt.specialist_id ? newApt.specialist_id.split(',').filter(Boolean) : []
+      const firstSpecialistId = specialistIds[0] || null
+      const specialistNames = specialistIds.map(sid => especialistas.find(e=>e.id===sid)?.full_name).filter(Boolean).join(', ')
+      const notasConEspecialistas = specialistIds.length > 1
+        ? `[Especialistas: ${specialistNames}]${newApt.notes ? ' ' + newApt.notes : ''}`
+        : newApt.notes
+      const extra = { modalidad: modalidadCita, created_by: createdBy, specialist_id: firstSpecialistId }
       if (tipoSesion==='grupal') {
-        payload = selectedParticipants.flatMap(cid =>
-          specialistIds.map(sid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (Grupal: ${newApt.group_name||'Sin nombre'})`, is_group:true, group_name:newApt.group_name, notes:newApt.notes, status:newApt.status, modalidad:modalidadCita, created_by:createdBy, specialist_id:sid||null }))
-        )
+        payload = selectedParticipants.map(cid => ({ child_id:cid, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:`${newApt.service} (Grupal: ${newApt.group_name||'Sin nombre'})`, is_group:true, group_name:newApt.group_name, notes:notasConEspecialistas, status:newApt.status, ...extra }))
       } else {
-        payload = specialistIds.map(sid => ({ child_id:newApt.child_id, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:newApt.service, is_group:false, notes:newApt.notes, status:newApt.status, modalidad:modalidadCita, created_by:createdBy, specialist_id:sid||null }))
+        payload = [{ child_id:newApt.child_id, appointment_date:newApt.date, appointment_time:newApt.time+':00', service_type:newApt.service, is_group:false, notes:notasConEspecialistas, status:newApt.status, ...extra }]
       }
       const res = await fetch('/api/admin/appointments', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) })
       const json = await res.json()
