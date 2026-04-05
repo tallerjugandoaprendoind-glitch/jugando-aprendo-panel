@@ -12,7 +12,7 @@ import {
   LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen, MessageCircle,
   X, User, FileText, Loader2, Key, BarChart3, ShieldCheck, Upload,
   ChevronRight, Settings, Crown, Stethoscope, ShoppingBag, Activity,
-  Database, Sparkles, Zap
+  Database, Sparkles, Zap, Maximize2, Minimize2, Minus
 } from 'lucide-react'
 
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
@@ -156,6 +156,8 @@ export default function AdminDashboard() {
   const [pendingMessages, setPendingMessages] = useState(0)
   const [userId, setUserId] = useState('')
   const [ariaOpen, setAriaOpen] = useState(false)
+  const [ariaExpanded, setAriaExpanded] = useState(false)
+  const [ariaMinimized, setAriaMinimized] = useState(false)
   const [activeChild, setActiveChild] = useState<{id: string, name: string} | null>(null)
   // Clear patient context when leaving patients view
   useEffect(() => { if (currentView !== 'ninos') setActiveChild(null) }, [currentView])
@@ -537,9 +539,15 @@ export default function AdminDashboard() {
 
       {/* ── ARIA FLOTANTE ── */}
       {ariaOpen && (
-        <div className={`fixed bottom-6 md:bottom-6 right-4 md:right-6 z-[90] w-[calc(100vw-2rem)] max-w-sm md:max-w-md rounded-3xl shadow-2xl overflow-hidden border flex flex-col transition-all duration-300
+        <div className={`fixed z-[90] rounded-3xl shadow-2xl overflow-hidden border flex flex-col transition-all duration-300
+          ${ariaExpanded
+            ? 'bottom-0 right-0 md:bottom-4 md:right-4'
+            : 'bottom-6 md:bottom-6 right-4 md:right-6'}
           ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}
-          style={{ height: '560px' }}>
+          style={{
+            width: ariaExpanded ? 'min(720px, calc(100vw - 32px))' : 'min(calc(100vw-2rem), 28rem)',
+            height: ariaMinimized ? '56px' : ariaExpanded ? 'min(85vh, 860px)' : '560px',
+          }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex-shrink-0">
             <div className="flex items-center gap-2.5">
@@ -567,19 +575,29 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className="flex items-center gap-1">
-              <button onClick={() => setAriaOpen(false)}
+              <button onClick={() => setAriaMinimized(m => !m)}
+                className="p-1.5 hover:bg-white/20 rounded-xl transition-all" title={ariaMinimized ? 'Restaurar' : 'Minimizar'}>
+                <Minus size={15} className="text-white"/>
+              </button>
+              <button onClick={() => { setAriaExpanded(x => !x); setAriaMinimized(false) }}
+                className="p-1.5 hover:bg-white/20 rounded-xl transition-all" title={ariaExpanded ? 'Reducir' : 'Ampliar'}>
+                {ariaExpanded ? <Minimize2 size={15} className="text-white"/> : <Maximize2 size={15} className="text-white"/>}
+              </button>
+              <button onClick={() => { setAriaOpen(false); setAriaExpanded(false); setAriaMinimized(false) }}
                 className="p-1.5 hover:bg-white/20 rounded-xl transition-all" title="Cerrar">
                 <X size={16} className="text-white"/>
               </button>
             </div>
           </div>
           {/* Chat */}
+          {!ariaMinimized && (
           <div className="flex-1 min-h-0">
             <ARIAAgentChat userId={userId} compact={true}
               childId={currentView === 'ninos' ? activeChild?.id : undefined}
               childName={currentView === 'ninos' ? activeChild?.name : undefined}
               contexto={currentView === 'ninos' && activeChild ? 'paciente' : 'general'} />
           </div>
+          )}
         </div>
       )}
 
