@@ -539,14 +539,11 @@ export default function AdminDashboard() {
 
       {/* ── ARIA FLOTANTE ── */}
       {ariaOpen && (
-        <div className={`fixed z-[90] rounded-2xl shadow-2xl overflow-hidden border flex flex-col transition-all duration-300
+        <div className={`fixed bottom-6 right-4 md:right-6 z-[90] rounded-3xl shadow-2xl overflow-hidden border flex flex-col transition-all duration-300
           ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}
           style={{
-            right: '24px',
-            top: ariaMinimized ? 'auto' : '64px',
-            bottom: ariaMinimized ? '24px' : 'auto',
-            width: ariaExpanded ? 'min(560px, calc(100vw - 48px))' : 'min(380px, calc(100vw - 48px))',
-            height: ariaMinimized ? '54px' : ariaExpanded ? 'calc(100vh - 88px)' : 'min(460px, calc(100vh - 88px))',
+            width: ariaExpanded ? 'min(560px, calc(100vw - 2rem))' : 'min(400px, calc(100vw - 2rem))',
+            height: ariaMinimized ? '54px' : ariaExpanded ? 'min(680px, calc(100vh - 80px))' : 'min(480px, calc(100vh - 80px))',
           }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex-shrink-0">
@@ -591,12 +588,12 @@ export default function AdminDashboard() {
           </div>
           {/* Chat */}
           {!ariaMinimized && (
-          <div className="flex-1 min-h-0">
-            <ARIAAgentChat userId={userId} compact={true}
-              childId={currentView === 'ninos' ? activeChild?.id : undefined}
-              childName={currentView === 'ninos' ? activeChild?.name : undefined}
-              contexto={currentView === 'ninos' && activeChild ? 'paciente' : 'general'} />
-          </div>
+            <div className="flex-1 min-h-0">
+              <ARIAAgentChat userId={userId} compact={true}
+                childId={currentView === 'ninos' ? activeChild?.id : undefined}
+                childName={currentView === 'ninos' ? activeChild?.name : undefined}
+                contexto={currentView === 'ninos' && activeChild ? 'paciente' : 'general'} />
+            </div>
           )}
         </div>
       )}
