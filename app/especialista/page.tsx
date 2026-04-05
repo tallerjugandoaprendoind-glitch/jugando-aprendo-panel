@@ -333,7 +333,7 @@ export default function EspecialistaDashboard() {
         <div className="fixed bottom-6 right-4 md:right-6 z-[90] w-[calc(100vw-2rem)] rounded-3xl shadow-2xl overflow-hidden border flex flex-col transition-all duration-300 bg-white dark:bg-[#161b22] border-slate-200 dark:border-[#30363d]"
           style={{
             maxWidth: ariaExpanded ? '900px' : '448px',
-            height: ariaMinimized ? '54px' : '560px',
+            height: ariaMinimized ? '54px' : ariaExpanded ? '860px' : '560px',
           }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex-shrink-0">
