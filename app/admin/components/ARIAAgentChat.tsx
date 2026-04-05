@@ -103,7 +103,7 @@ export default function ARIAAgentChat({
 
   return (
     <div
-      className={`flex flex-col overflow-hidden ${compact ? 'rounded-2xl border h-[500px]' : 'h-full'}`}
+      className={`flex flex-col overflow-hidden ${compact ? 'rounded-2xl border h-full' : 'h-full'}`}
       style={compact ? {
         background: 'var(--card)',
         borderColor: 'var(--card-border)',
