@@ -321,6 +321,39 @@ async function extraerCrossRef(termino: string): Promise<{ titulo: string; texto
     return []
   }
 }
+// ─── Extraer tema limpio de frases conversacionales ───────────────────────────
+async function extraerTemaLimpio(keywords: string): Promise<{ es: string; en: string; terminos: string[] }> {
+  const prompt = `Eres un BCBA experto. El usuario escribió: "${keywords}"
+
+Tu tarea:
+1. Extraer el tema clínico real (ignorar frases como "quiero que aprendas", "conviértete en experto", "busca sobre", etc.)
+2. Traducir al inglés técnico ABA
+3. Generar 6-8 términos de búsqueda en inglés para PubMed
+
+RESPONDE SOLO JSON (sin markdown):
+{
+  "tema_es": "funciones ejecutivas",
+  "tema_en": "executive functions",
+  "terminos": ["executive function autism", "self-regulation children ABA", "cognitive flexibility ASD", "inhibitory control autism", "working memory ADHD ABA", "executive dysfunction behavior intervention"]
+}`
+
+  try {
+    const raw = await callGroqSimple(
+      'BCBA expert. Respond ONLY with valid JSON. No preamble, no markdown.',
+      prompt,
+      { model: GROQ_MODELS.FAST, temperature: 0.2, maxTokens: 400 }
+    )
+    const clean = raw.replace(/```json|```/g, '').trim()
+    const parsed = JSON.parse(clean)
+    return {
+      es: parsed.tema_es?.trim() || keywords,
+      en: parsed.tema_en?.trim() || keywords,
+      terminos: Array.isArray(parsed.terminos) && parsed.terminos.length > 0 ? parsed.terminos : [parsed.tema_en || keywords],
+    }
+  } catch {
+    return { es: keywords, en: keywords, terminos: [keywords] }
+  }
+}
 
 // ─── Generar resumen estructurado con IA ──────────────────────────────────────
 async function generarResumenEstructurado(tema: string, textos: string[], locale = 'es'): Promise<string> {
@@ -370,29 +403,35 @@ export async function POST(req: NextRequest) {
     const resultados: { fuente: string; titulo: string; chunks: number }[] = []
     let totalChunks = 0
 
-    log.push(`🔍 Expandiendo: "${keywords}"...`)
-    const terminos = await expandirConceptos(keywords)
-    log.push(`📋 Términos: ${terminos.join(', ')}`)
+    // ── PASO 1: Extraer tema limpio + términos EN ─────────────────────────────
+    log.push(`🔍 Analizando: "${keywords}"...`)
+    const { es: temaEs, en: temaEn, terminos } = await extraerTemaLimpio(keywords)
+    log.push(`🎯 Tema: "${temaEs}" → "${temaEn}"`)
+    log.push(`📋 Términos EN: ${terminos.join(', ')}`)
 
     const textosRecopilados: { titulo: string; texto: string; url: string; fuente: string }[] = []
 
-    // ── Fuentes científicas especializadas ───────────────────────────────────
-    for (const termino of terminos.slice(0, 6)) {
-      if (/^[a-zA-Z\s]+$/.test(termino)) {
-        const pubmedArticles = await extraerPubMed(termino)
-        for (const art of pubmedArticles) {
-          textosRecopilados.push({ ...art, fuente: 'PubMed' })
-          log.push(`✅ PubMed: ${art.titulo}`)
-        }
+    // ── PASO 2: Fuentes académicas especializadas (usar términos EN) ──────────
+    log.push(`🔬 Buscando en fuentes académicas especializadas...`)
+    for (const termino of terminos.slice(0, 5)) {
+      // PubMed — siempre en inglés, sin regex check que lo bloquee
+      const pubmedArticles = await extraerPubMed(termino)
+      for (const art of pubmedArticles) {
+        textosRecopilados.push({ ...art, fuente: 'PubMed' })
+        log.push(`✅ PubMed: ${art.titulo}`)
       }
-      if (terminos.indexOf(termino) < 3) {
+
+      // Semantic Scholar — primeros 2 términos
+      if (terminos.indexOf(termino) < 2) {
         const ssArticles = await extraerSemanticScholar(termino)
         for (const art of ssArticles) {
           textosRecopilados.push({ ...art, fuente: 'Semantic Scholar / JABA' })
           log.push(`✅ Semantic Scholar: ${art.titulo}`)
         }
       }
-      if (terminos.indexOf(termino) < 3) {
+
+      // ERIC — primeros 2 términos
+      if (terminos.indexOf(termino) < 2) {
         const ericArticles = await extraerERIC(termino)
         for (const art of ericArticles) {
           textosRecopilados.push({ ...art, fuente: 'ERIC' })
@@ -401,64 +440,68 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── 🆕 Fuentes web generales (sin API key) ───────────────────────────────
+    // ── PASO 3: Fuentes web generales (sin API key) ───────────────────────────
     if (incluirWeb !== false) {
       log.push(`🌐 Buscando en fuentes web generales (sin API key)...`)
 
-      // OpenAlex — 250M+ papers gratuitos
+      // OpenAlex con término EN principal
       try {
-        const openAlexArticles = await extraerOpenAlex(terminos[0])
+        const openAlexArticles = await extraerOpenAlex(temaEn)
         for (const art of openAlexArticles) {
           textosRecopilados.push({ ...art, fuente: 'OpenAlex' })
           log.push(`✅ OpenAlex: ${art.titulo}`)
         }
       } catch { log.push('⚠️ OpenAlex no disponible') }
 
-      // CrossRef — metadata de papers con DOI
+      // CrossRef con término EN principal
       try {
-        const crossRefArticles = await extraerCrossRef(terminos[0])
+        const crossRefArticles = await extraerCrossRef(temaEn)
         for (const art of crossRefArticles) {
           textosRecopilados.push({ ...art, fuente: 'CrossRef' })
           log.push(`✅ CrossRef: ${art.titulo}`)
         }
       } catch { log.push('⚠️ CrossRef no disponible') }
 
-      // DuckDuckGo — búsqueda web general (sin API key)
+      // DuckDuckGo ES con tema limpio en español
       try {
-        const ddgEs = await extraerDuckDuckGo(keywords)
+        const ddgEs = await extraerDuckDuckGo(temaEs)
         for (const art of ddgEs) {
           textosRecopilados.push({ ...art, fuente: 'DuckDuckGo Web' })
           log.push(`✅ DuckDuckGo (ES): ${art.titulo}`)
         }
-        if (terminos[0] && terminos[0] !== keywords) {
-          const ddgEn = await extraerDuckDuckGo(terminos[0])
-          for (const art of ddgEn) {
-            textosRecopilados.push({ ...art, fuente: 'DuckDuckGo Web' })
-            log.push(`✅ DuckDuckGo (EN): ${art.titulo}`)
-          }
-        }
-      } catch { log.push('⚠️ DuckDuckGo no disponible') }
+      } catch { log.push('⚠️ DuckDuckGo (ES) no disponible') }
 
-      // Wikipedia ES + EN
+      // DuckDuckGo EN con tema en inglés
       try {
-        const wikiEs = await extraerWikipedia(keywords)
+        const ddgEn = await extraerDuckDuckGo(temaEn)
+        for (const art of ddgEn) {
+          textosRecopilados.push({ ...art, fuente: 'DuckDuckGo Web' })
+          log.push(`✅ DuckDuckGo (EN): ${art.titulo}`)
+        }
+      } catch { log.push('⚠️ DuckDuckGo (EN) no disponible') }
+
+      // Wikipedia con tema ES
+      try {
+        const wikiEs = await extraerWikipedia(temaEs)
         for (const art of wikiEs) {
           textosRecopilados.push({ ...art, fuente: 'Wikipedia' })
           log.push(`✅ Wikipedia (ES): ${art.titulo}`)
         }
-        if (terminos[0] && terminos[0] !== keywords) {
-          const wikiEn = await extraerWikipedia(terminos[0])
-          for (const art of wikiEn) {
-            textosRecopilados.push({ ...art, fuente: 'Wikipedia' })
-            log.push(`✅ Wikipedia (EN): ${art.titulo}`)
-          }
+      } catch { log.push('⚠️ Wikipedia (ES) no disponible') }
+
+      // Wikipedia con tema EN
+      try {
+        const wikiEn = await extraerWikipedia(temaEn)
+        for (const art of wikiEn) {
+          textosRecopilados.push({ ...art, fuente: 'Wikipedia' })
+          log.push(`✅ Wikipedia (EN): ${art.titulo}`)
         }
-      } catch { log.push('⚠️ Wikipedia no disponible') }
+      } catch { log.push('⚠️ Wikipedia (EN) no disponible') }
     }
 
     if (textosRecopilados.length === 0) {
       return NextResponse.json({
-        error: 'No se encontró contenido para esas palabras clave. Intenta con términos más específicos.',
+        error: 'No se encontró contenido. Intenta con términos más específicos como "reforzamiento positivo" o "análisis funcional".',
         log,
       }, { status: 404 })
     }
@@ -466,26 +509,26 @@ export async function POST(req: NextRequest) {
     const fuentesUsadas = [...new Set(textosRecopilados.map(t => t.fuente))]
     log.push(`📚 ${textosRecopilados.length} fuentes encontradas (${fuentesUsadas.join(', ')}). Generando síntesis IA...`)
 
-    // ── Generar resumen con IA ────────────────────────────────────────────────
+    // ── PASO 4: Generar síntesis con IA ──────────────────────────────────────
     const todosLosTextos = textosRecopilados.map(t => `=== ${t.titulo} ===\n${t.texto}`)
-    const resumenIA = await generarResumenEstructurado(keywords, todosLosTextos, locale)
+    const resumenIA = await generarResumenEstructurado(temaEs, todosLosTextos, locale)
     log.push(`🤖 Síntesis IA generada (${resumenIA.length} chars)`)
 
-    // ── Indexar síntesis principal ────────────────────────────────────────────
+    // ── PASO 5: Indexar síntesis principal ────────────────────────────────────
     const { data: docPrincipal } = await supabaseAdmin
       .from('knowledge_documents')
       .insert({
-        titulo: `[IA] ${keywords} — Síntesis completa`,
+        titulo: `[IA] ${temaEs} — Síntesis completa`,
         tipo: 'articulo',
-        descripcion: `Aprendizaje automático desde internet. Fuentes: ${fuentesUsadas.join(', ')}. Términos: ${terminos.join(', ')}`,
+        descripcion: `Aprendizaje automático. Fuentes: ${fuentesUsadas.join(', ')}. Términos: ${terminos.join(', ')}`,
         procesado: false,
-        source_url: `auto:${keywords}`,
+        source_url: `auto:${temaEs}`,
         texto_extraido: resumenIA,
       })
       .select().single()
 
     if (docPrincipal) {
-      const idx = await indexDocument(docPrincipal.id, resumenIA, { keywords, tipo: 'síntesis_ia', terminos })
+      const idx = await indexDocument(docPrincipal.id, resumenIA, { keywords: temaEs, tipo: 'síntesis_ia', terminos })
       if (idx.success) {
         totalChunks += idx.chunks
         resultados.push({ fuente: 'Síntesis IA', titulo: docPrincipal.titulo, chunks: idx.chunks })
@@ -493,7 +536,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── Indexar fuentes individuales en modo completo ─────────────────────────
+    // ── PASO 6: Indexar fuentes individuales (modo completo) ──────────────────
     if (modo === 'completo') {
       for (const fuente of textosRecopilados.slice(0, 8)) {
         try {
@@ -502,7 +545,7 @@ export async function POST(req: NextRequest) {
             .insert({
               titulo: fuente.titulo,
               tipo: 'articulo',
-              descripcion: `Auto-aprendido desde ${fuente.fuente}. Keywords: ${keywords}`,
+              descripcion: `Auto-aprendido desde ${fuente.fuente}. Keywords: ${temaEs}`,
               procesado: false,
               source_url: fuente.url,
               texto_extraido: fuente.texto,
@@ -510,7 +553,7 @@ export async function POST(req: NextRequest) {
             .select().single()
 
           if (doc) {
-            const idx = await indexDocument(doc.id, fuente.texto, { keywords, fuente: fuente.fuente })
+            const idx = await indexDocument(doc.id, fuente.texto, { keywords: temaEs, fuente: fuente.fuente })
             if (idx.success) {
               totalChunks += idx.chunks
               resultados.push({ fuente: fuente.fuente, titulo: fuente.titulo, chunks: idx.chunks })
@@ -523,11 +566,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    log.push(`🎉 Listo. Total: ${totalChunks} fragmentos de conocimiento indexados`)
+    log.push(`🎉 Listo. Total: ${totalChunks} fragmentos indexados`)
 
     return NextResponse.json({
       ok: true,
-      keywords,
+      keywords: temaEs,
       terminos,
       fuentes: textosRecopilados.length,
       fuentesUsadas,
