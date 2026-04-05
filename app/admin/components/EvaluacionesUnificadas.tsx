@@ -725,12 +725,12 @@ function SendFormModal({ form, children, onSend, onClose }: any) {
 }
 
 // ─── FORM FILL VIEW ─────────────────────────────────────────────────────────
-function FormFillView({ form, children, onBack, toast }: any) {
+function FormFillView({ form, children, onBack, toast, initialChildId, initialChildName }: any) {
   const { t } = useI18n()
 
   const [currentStep, setCurrentStep] = useState(0)
   const [responses, setResponses] = useState<Record<string, any>>({})
-  const [selectedChild, setSelectedChild] = useState('')
+  const [selectedChild, setSelectedChild] = useState(initialChildId || '')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [aiAnalysis, setAiAnalysis] = useState<any>(null)
@@ -1360,7 +1360,7 @@ export default function EvaluacionesUnificadas({ initialChildId, initialChildNam
 
   // If filling a form
   if (selectedForm) {
-    return <FormFillView form={selectedForm} children={children} onBack={() => setSelectedForm(null)} toast={toast} />
+    return <FormFillView form={selectedForm} children={children} onBack={() => setSelectedForm(null)} toast={toast} initialChildId={initialChildId} initialChildName={initialChildName} />
   }
 
   const stats = {
