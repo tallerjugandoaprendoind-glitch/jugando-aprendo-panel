@@ -5,7 +5,7 @@ import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect } from 'react'
 import {
   Search, ChevronLeft, ChevronRight, X, Loader2,
-  Send, Sparkles, CheckCircle2, FileText, Baby, Clock, AlertTriangle, Brain
+  Send, Sparkles, CheckCircle2, FileText, Baby, Clock, Brain
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
@@ -288,7 +288,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         contenido: Object.entries(responses).slice(0, 6).map(([k, v]) => `${k}: ${Array.isArray(v) ? (v as string[]).join(', ') : v}`).join('\n'),
         observaciones: aiAnalysis?.analisis_clinico || aiAnalysis?.resumen_ejecutivo || '',
         recomendaciones: Array.isArray(aiAnalysis?.recomendaciones) ? (aiAnalysis.recomendaciones as string[]).join('\n') : (aiAnalysis?.recomendaciones || ''),
-        status: 'pending_approval',
+        status: 'approved',
       }])
 
       const msgToSend = editedMsg || aiAnalysis?.mensaje_padres
@@ -464,12 +464,7 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
                 <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">
                   💬 Mensaje al padre/madre (editable)
                 </label>
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-3 flex gap-2">
-                  <AlertTriangle size={13} className="text-amber-600 flex-shrink-0 mt-0.5" />
-                  <p className="text-xs text-amber-700 leading-relaxed">
-                    {t('ui.pending_approval')}
-                  </p>
-                </div>
+
                 <textarea value={editedMsg} onChange={e => setEditedMsg(e.target.value)} rows={5}
                   className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none" />
               </div>
