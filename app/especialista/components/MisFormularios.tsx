@@ -4,8 +4,8 @@ import { useI18n } from '@/lib/i18n-context'
 
 import { useState, useEffect } from 'react'
 import {
-  Search, ChevronLeft, ChevronRight, X, Loader2,
-  Send, Sparkles, CheckCircle2, FileText, Baby, Clock, Brain
+  Search, ChevronLeft, X, Loader2,
+  Send, Sparkles, CheckCircle2, FileText, Clock, Brain
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
@@ -16,30 +16,18 @@ import {
 } from '@/app/admin/data/formConstants'
 import { calcularEdadNumerica } from '@/app/admin/utils/helpers'
 
-// ─── COLORES POR CATEGORÍA (light theme) ────────────────────────────────────
-const CAT_STYLES: Record<string, { pill: string; icon: string; activePill: string }> = {
-  tdah:        { pill: 'bg-amber-50  text-amber-700  border-amber-200',  icon: 'bg-amber-100  text-amber-600',  activePill: 'bg-amber-600  text-white border-amber-600' },
-  tea:         { pill: 'bg-purple-50 text-purple-700 border-purple-200', icon: 'bg-purple-100 text-purple-600', activePill: 'bg-purple-600 text-white border-purple-600' },
-  conductual:  { pill: 'bg-red-50    text-red-700    border-red-200',    icon: 'bg-red-100    text-red-600',    activePill: 'bg-red-600    text-white border-red-600' },
-  sensorial:   { pill: 'bg-cyan-50   text-cyan-700   border-cyan-200',   icon: 'bg-cyan-100   text-cyan-600',   activePill: 'bg-cyan-600   text-white border-cyan-600' },
-  habilidades: { pill: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: 'bg-emerald-100 text-emerald-600', activePill: 'bg-emerald-600 text-white border-emerald-600' },
-  familia:     { pill: 'bg-pink-50   text-pink-700   border-pink-200',   icon: 'bg-pink-100   text-pink-600',   activePill: 'bg-pink-600   text-white border-pink-600' },
-  seguimiento: { pill: 'bg-slate-100 text-slate-600  border-slate-200',  icon: 'bg-slate-100  text-slate-500',  activePill: 'bg-slate-600  text-white border-slate-600' },
-  clinico:     { pill: 'bg-blue-50   text-blue-700   border-blue-200',   icon: 'bg-blue-100   text-blue-600',   activePill: 'bg-blue-600   text-white border-blue-600' },
-  cognitivo:   { pill: 'bg-indigo-50 text-indigo-700 border-indigo-200', icon: 'bg-indigo-100 text-indigo-600', activePill: 'bg-indigo-600 text-white border-indigo-600' },
-}
-const defaultS = { pill: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'bg-blue-100 text-blue-600', activePill: 'bg-blue-600 text-white border-blue-600' }
+
 
 // ─── FORMULARIOS CLÍNICOS PROFESIONALES ─────────────────────────────────────
 const CLINICAL_FORMS: any[] = [
-  { id: 'anamnesis',    formKey: 'anamnesis',    title: 'Historia Clínica',              subtitle: 'Historia clínica integral del paciente',         category: 'clinico',   icon: '📋', estimatedMinutes: 30, sections: ANAMNESIS_DATA },
-  { id: 'aba',          formKey: 'aba',          title: 'Registro ABA',                    subtitle: 'Análisis Aplicado de la Conducta',               category: 'conductual',icon: '🎯', estimatedMinutes: 20, sections: ABA_DATA },
-  { id: 'entorno_hogar',formKey: 'entorno_hogar',title: 'Evaluación del Entorno del Hogar',subtitle: 'Visita domiciliaria y entorno familiar',          category: 'familia',   icon: '🏠', estimatedMinutes: 25, sections: ENTORNO_HOGAR_DATA },
-  { id: 'brief2',       formKey: 'brief2',       title: 'BRIEF-2',                         subtitle: 'Evaluación de Funciones Ejecutivas',             category: 'cognitivo', icon: '🧠', estimatedMinutes: 25, sections: BRIEF2_DATA, evalType: 'BRIEF2' },
-  { id: 'ados2',        formKey: 'ados2',        title: 'ADOS-2',                          subtitle: 'Diagnóstico del Espectro Autista',               category: 'tea',       icon: '🧩', estimatedMinutes: 30, sections: ADOS2_DATA,  evalType: 'ADOS2' },
-  { id: 'vineland3',    formKey: 'vineland3',    title: 'Vineland-3',                      subtitle: 'Conducta Adaptativa',                           category: 'habilidades',icon: '🤝', estimatedMinutes: 25, sections: VINELAND3_DATA, evalType: 'VINELAND3' },
-  { id: 'wiscv',        formKey: 'wiscv',        title: 'WISC-V',                          subtitle: 'Escala de Inteligencia para Niños',             category: 'cognitivo', icon: '📊', estimatedMinutes: 35, sections: WISCV_DATA,  evalType: 'WISCV' },
-  { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                          subtitle: 'Sistema de Evaluación Conductual',              category: 'conductual',icon: '📈', estimatedMinutes: 30, sections: BASC3_DATA,  evalType: 'BASC3' },
+  { id: 'anamnesis',    formKey: 'anamnesis',    title: 'Historia Clínica',               subtitle: 'Datos relevantes del cliente y contexto familiar',    category: 'clinico',    icon: '📋', estimatedMinutes: 30, sections: ANAMNESIS_DATA,    targetRole: 'admin', description: 'Historia clínica completa del paciente, antecedentes familiares y desarrollo temprano', tags: ['Historia', 'Inicial', 'Completo'] },
+  { id: 'aba',          formKey: 'aba',          title: 'Sesión ABA',                     subtitle: 'Registro de sesión conductual',                        category: 'conductual', icon: '🎯', estimatedMinutes: 15, sections: ABA_DATA,          targetRole: 'admin', description: 'Registro estructurado de sesión de Análisis Conductual Aplicado', tags: ['ABA', 'Sesión', 'Conductual'] },
+  { id: 'entorno_hogar',formKey: 'entorno_hogar',title: 'Entorno en el Hogar',            subtitle: 'Observación del ambiente familiar',                    category: 'familia',    icon: '🏠', estimatedMinutes: 20, sections: ENTORNO_HOGAR_DATA, targetRole: 'both',  description: 'Análisis del entorno familiar y su impacto en el desarrollo del niño', tags: ['Hogar', 'Familia', 'Ambiente'] },
+  { id: 'brief2',       formKey: 'brief2',       title: 'BRIEF-2',                        subtitle: 'Evaluación de Funciones Ejecutivas',                   category: 'cognitivo',  icon: '🧠', estimatedMinutes: 25, sections: BRIEF2_DATA,       targetRole: 'admin', description: 'Evaluación profesional estandarizada de funciones ejecutivas', tags: ['Ejecutivo', 'Cognitivo', 'BRIEF'], evalType: 'BRIEF2', externalPlatform: true },
+  { id: 'ados2',        formKey: 'ados2',        title: 'ADOS-2',                         subtitle: 'Registro de resultados diagnósticos',                  category: 'tea',        icon: '🧩', estimatedMinutes: 10, sections: ADOS2_DATA,        targetRole: 'admin', description: 'Corre en plataforma oficial ADOS-2. Aquí solo registrá los resultados y puntuaciones.', tags: ['TEA', 'ADOS', 'Diagnóstico'], evalType: 'ADOS2', externalPlatform: true },
+  { id: 'vineland3',    formKey: 'vineland3',    title: 'Vineland-3',                     subtitle: 'Registro de conducta adaptativa',                      category: 'habilidades',icon: '🤝', estimatedMinutes: 10, sections: VINELAND3_DATA,    targetRole: 'admin', description: 'Corre en plataforma oficial Vineland-3. Aquí solo registrá puntuaciones compuestas y perfil.', tags: ['Adaptativo', 'Vineland', 'Funcional'], evalType: 'VINELAND3', externalPlatform: true },
+  { id: 'wiscv',        formKey: 'wiscv',        title: 'WISC-V',                         subtitle: 'Registro de inteligencia (6-16 años)',                 category: 'cognitivo',  icon: '📊', estimatedMinutes: 10, sections: WISCV_DATA,        targetRole: 'admin', description: 'Corre en plataforma oficial WISC-V. Aquí solo registrá IQ y percentiles.', tags: ['CI', 'Inteligencia', 'WISC'], evalType: 'WISCV', externalPlatform: true },
+  { id: 'basc3',        formKey: 'basc3',        title: 'BASC-3',                         subtitle: 'Registro de evaluación conductual',                    category: 'conductual', icon: '📈', estimatedMinutes: 10, sections: BASC3_DATA,        targetRole: 'admin', description: 'Corre en plataforma oficial BASC-3. Aquí solo registrá T-scores y escalas.', tags: ['Conductual', 'BASC', 'Emocional'], evalType: 'BASC3', externalPlatform: true },
 ]
 
 const ALL_SPECIALIST_FORMS = [
@@ -192,7 +180,8 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
   const total = sections.length
   const section = sections[step]
   const progress = total > 0 ? ((step + 1) / total) * 100 : 0
-  const styles = CAT_STYLES[(form as any).category] || defaultS
+  const CAT_COLOR: Record<string, string> = { tdah: '#f59e0b', tea: '#8b5cf6', conductual: '#ef4444', sensorial: '#06b6d4', habilidades: '#10b981', familia: '#ec4899', seguimiento: '#64748b', clinico: '#3b82f6', cognitivo: '#6366f1' }
+  const accentColor = CAT_COLOR[(form as any).category] || '#3b82f6'
 
   const answer = (id: string, val: any) => setResponses(p => ({ ...p, [id]: val }))
 
@@ -327,81 +316,100 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
   )
 
   return (
-    <div className="space-y-5 pb-20 md:pb-6">
-      {/* Progress bar */}
-      <div className="flex items-center gap-4">
-        <button onClick={onBack}
-          className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 transition-colors flex-shrink-0 shadow-sm">
-          <ChevronLeft size={18} />
-        </button>
-        <div className="flex-1">
-          <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="flex justify-between mt-1.5">
-            <p className="text-xs text-slate-400 font-medium truncate max-w-[60%]">{form.title}</p>
-            <p className="text-xs font-bold text-blue-600">{step + 1} / {total}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Patient selector */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-        <label className="flex items-center gap-1.5 text-xs font-black text-slate-500 uppercase tracking-widest mb-3">
-          <Baby size={12} /> Paciente *
-        </label>
-        <select value={childId} onChange={e => setChildId(e.target.value)}
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">{t('ui.select_patient_option')}</option>
-          {children.map((c: any) => (
-            <option key={c.id} value={c.id}>{c.name}{c.age ? ` · ${c.age} años` : ''}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Section questions */}
-      {section && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-5">
-          <div>
-            <h4 className="font-black text-slate-800 text-base leading-tight">{section.title}</h4>
-            {section.description && <p className="text-sm text-slate-500 mt-1">{section.description}</p>}
-          </div>
-          {(section.questions || []).map((q: any) => (
-            <div key={q.id} className="space-y-2">
-              <label className="block text-sm font-semibold text-slate-700 leading-snug">
-                {q.label}{q.required && <span className="text-red-500"> *</span>}
-              </label>
-              {q.helpText && <p className="text-xs text-slate-400">{q.helpText}</p>}
-              <QuestionField q={q} value={responses[q.id]} onChange={(v: any) => answer(q.id, v)} />
+    <div className="flex flex-col h-full pb-20 md:pb-6">
+      {/* Top progress bar */}
+      <div className="flex-shrink-0 border-b border-slate-200 bg-white shadow-sm z-20">
+        <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-4">
+          <button onClick={onBack} className="flex items-center gap-1.5 text-slate-500 hover:text-violet-600 font-bold transition-all text-sm group">
+            <ChevronLeft size={18} className="group-hover:-translate-x-1 transition-transform" /> Volver
+          </button>
+          <div className="flex-1">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-black uppercase tracking-widest text-slate-400">
+                Sección {step + 1} de {total}
+              </p>
+              <p className="text-xs font-bold text-violet-600">{Math.round(progress)}% completado</p>
             </div>
-          ))}
+            <div className="h-1.5 bg-slate-200 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-violet-500 to-indigo-500 rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+            </div>
+          </div>
         </div>
-      )}
-
-      {/* Navigation */}
-      <div className="flex gap-3">
-        {step > 0 && (
-          <button onClick={() => setStep(s => s - 1)}
-            className="flex-1 py-3 rounded-xl border border-slate-200 bg-white font-bold text-sm text-slate-600 hover:bg-slate-50 transition-colors shadow-sm">
-            ← Anterior
-          </button>
-        )}
-        {step < total - 1 ? (
-          <button onClick={() => setStep(s => s + 1)}
-            className="flex-1 py-3 rounded-xl bg-blue-50 border border-blue-200 font-bold text-sm text-blue-700 hover:bg-blue-100 transition-colors">
-            Siguiente →
-          </button>
-        ) : (
-          <button onClick={handleAnalyze} disabled={analyzing || !childId}
-            className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:opacity-90 text-white font-bold text-sm disabled:opacity-50 shadow-md transition-all">
-            {analyzing ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-            {analyzing ? 'Analizando con IA...' : '✨ Analizar con IA'}
-          </button>
-        )}
       </div>
 
-      {/* AI Result */}
-      {aiAnalysis && (() => {
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-3xl mx-auto px-4 py-6 space-y-6">
+
+          {/* Color banner with patient selector — identical to admin */}
+          <div className={`bg-gradient-to-r ${form.color || 'from-violet-600 to-indigo-600'} rounded-2xl p-5 text-white shadow-lg`}>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <p className="text-white/70 text-xs font-bold uppercase tracking-widest mb-1">{form.icon} {(form.category || 'clínico').toUpperCase()}</p>
+                <h2 className="font-black text-xl">{form.title}</h2>
+                <p className="text-white/80 text-sm mt-0.5">{form.subtitle}</p>
+              </div>
+              <select value={childId} onChange={e => setChildId(e.target.value)}
+                className="bg-white/20 backdrop-blur-sm text-white border-2 border-white/30 rounded-xl px-4 py-2.5 text-sm font-bold outline-none focus:bg-white/30 transition-all min-w-[180px]">
+                <option value="" className="text-slate-800">{t('ui.select_patient_option')}</option>
+                {children.map((c: any) => (
+                  <option key={c.id} value={c.id} className="text-slate-800">{c.name}{c.age ? ` · ${c.age} años` : ''}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Section questions */}
+          {section && (
+            <div className="rounded-2xl shadow-sm overflow-hidden bg-white border border-slate-200">
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50">
+                <h3 className="font-black text-lg text-slate-800">{section.title}</h3>
+                {section.description && <p className="text-sm text-slate-500 mt-1">{section.description}</p>}
+              </div>
+              <div className="p-6 space-y-6">
+                {(section.questions || []).map((q: any) => (
+                  <div key={q.id} className="space-y-2">
+                    <label className="block text-sm font-semibold text-slate-700 leading-snug">
+                      {q.label}{q.required && <span className="text-red-500"> *</span>}
+                    </label>
+                    {q.helpText && <p className="text-xs text-slate-400">{q.helpText}</p>}
+                    <QuestionField q={q} value={responses[q.id]} onChange={(v: any) => answer(q.id, v)} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Navigation */}
+          <div className="flex items-center justify-between gap-4">
+            <button onClick={() => setStep(s => s - 1)} disabled={step === 0}
+              className="flex items-center gap-2 px-6 py-3 border-2 border-slate-200 bg-white text-slate-600 rounded-xl font-bold hover:border-violet-300 disabled:opacity-40 transition-all">
+              <ChevronLeft size={18} /> Anterior
+            </button>
+            <div className="flex items-center gap-3">
+              {(step === total - 1 || (form.formKey === 'aba' && step >= 5)) && (
+                <button onClick={handleAnalyze} disabled={analyzing || !childId}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold disabled:opacity-40 transition-all shadow-lg shadow-violet-200 hover:opacity-90">
+                  {analyzing ? <Loader2 size={18} className="animate-spin" /> : <Sparkles size={18} />}
+                  {analyzing ? 'Analizando...' : 'Analizar con IA'}
+                </button>
+              )}
+              {step < total - 1 ? (
+                <button onClick={() => setStep(s => s + 1)}
+                  className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-bold transition-all shadow-lg shadow-violet-200 hover:opacity-90">
+                  Siguiente <ChevronLeft size={18} className="rotate-180" />
+                </button>
+              ) : (
+                <button onClick={handleSave} disabled={saving || !childId}
+                  className="flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold disabled:opacity-40 transition-all">
+                  {saving ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                  Guardar
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* AI Result */}
+          {aiAnalysis && (() => {
         // Helper: convierte string con guiones/saltos o array → array limpio
         const toArr = (val: any): string[] => {
           if (!val) return []
@@ -520,12 +528,14 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
 
           <button onClick={handleSave} disabled={saving}
             className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm disabled:opacity-50 shadow-md transition-colors">
-            {saving ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-            {saving ? 'Guardando...' : '✅ Guardar y Enviar para Aprobación'}
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle2 size={16} />}
+            {saving ? 'Guardando...' : '✅ Guardar formulario'}
           </button>
         </div>
         )
       })()}
+        </div>{/* end max-w-3xl */}
+      </div>{/* end flex-1 overflow-y-auto */}
     </div>
   )
 }
@@ -614,36 +624,90 @@ export default function MisFormularios({ userId }: { userId: string }) {
           <p className="text-slate-400 text-sm font-semibold">{t('ui.no_forms')}</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((form: any) => {
-            const s = CAT_STYLES[form.category] || defaultS
+            const isExternal = !!form.externalPlatform
+            const isPro = !!form.formKey && !isExternal
+            const isParent = form.targetRole === 'parent' || form.targetRole === 'both'
             return (
-              <button key={form.id}
-                onClick={() => setSelectedForm(form)}
-                className="bg-white rounded-2xl border border-slate-200 p-5 text-left group hover:shadow-md hover:border-blue-300 transition-all duration-200 shadow-sm">
-                <div className="flex items-start gap-3">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0 ${s.icon}`}>
-                    {form.icon || '📋'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-slate-800 leading-tight">{form.title}</p>
-                    <p className="text-xs text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">
-                      {form.subtitle || form.description || ''}
-                    </p>
-                    <div className="flex items-center gap-2 mt-2.5">
-                      <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${s.pill} uppercase tracking-wide`}>
-                        {form.category || 'clínico'}
-                      </span>
-                      {form.estimatedMinutes && (
-                        <span className="flex items-center gap-1 text-[10px] text-slate-400">
-                          <Clock size={9} /> ~{form.estimatedMinutes} min
+              <div key={form.id}
+                className="rounded-xl overflow-hidden transition-all hover:shadow-md group bg-white"
+                style={{ border: '1px solid #e2e8f0' }}>
+                {/* Top accent bar */}
+                <div className="h-0.5" style={{ background: `linear-gradient(90deg, ${isExternal ? '#b07830' : isPro ? '#7a4a4a' : '#4a6eaa'}, transparent)` }} />
+                <div className="p-4">
+                  {/* Header row */}
+                  <div className="flex items-start justify-between gap-2 mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-base flex-shrink-0 bg-slate-100">
+                        {form.icon || '📋'}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-sm leading-tight truncate text-slate-800">{form.title}</h3>
+                        <p className="text-[11px] truncate mt-0.5 text-slate-400">{form.subtitle}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {isParent && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide"
+                          style={{ background: 'rgba(74,110,170,0.1)', color: '#4a6eaa', border: '1px solid rgba(74,110,170,0.2)' }}>
+                          Padres
+                        </span>
+                      )}
+                      {isExternal && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide"
+                          style={{ background: 'rgba(176,120,48,0.1)', color: '#b07830', border: '1px solid rgba(176,120,48,0.2)' }}>
+                          Ext.
+                        </span>
+                      )}
+                      {isPro && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wide"
+                          style={{ background: 'rgba(122,74,74,0.1)', color: '#7a4a4a', border: '1px solid rgba(122,74,74,0.2)' }}>
+                          PRO
                         </span>
                       )}
                     </div>
                   </div>
-                  <ChevronRight size={14} className="text-slate-300 group-hover:text-blue-500 flex-shrink-0 mt-1 transition-colors" />
+
+                  {/* External warning */}
+                  {isExternal && (
+                    <p className="text-xs leading-relaxed mb-3 text-amber-700 bg-amber-50 rounded-lg px-3 py-2 border border-amber-100">
+                      ⚠️ {form.description}
+                    </p>
+                  )}
+                  {!isExternal && (
+                    <p className="text-xs leading-relaxed mb-3 line-clamp-2 text-slate-500">{form.description}</p>
+                  )}
+
+                  {/* Tags + time */}
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {(form.tags || []).slice(0, 3).map((tag: string) => (
+                      <span key={tag} className="px-2 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                        {tag}
+                      </span>
+                    ))}
+                    {form.estimatedMinutes && (
+                      <span className="px-2 py-0.5 rounded text-[9px] font-semibold flex items-center gap-1 bg-slate-100 text-slate-500 border border-slate-200">
+                        <Clock size={8} /> {form.estimatedMinutes}m
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2">
+                    <button onClick={() => setSelectedForm(form)}
+                      className="flex-1 py-2.5 rounded-lg font-bold text-xs transition-all flex items-center justify-center gap-1.5 bg-slate-900 text-white hover:bg-slate-700">
+                      <FileText size={12} /> Completar
+                    </button>
+                    {isParent && (
+                      <button className="px-3 py-2.5 rounded-lg transition-all bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200"
+                        title="Enviar a padres">
+                        <Send size={12} />
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>
