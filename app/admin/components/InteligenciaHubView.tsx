@@ -303,11 +303,10 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                   {/* Métricas clave */}
                   {prog.total_sesiones > 0 ? (
                     <>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         {[
                           { label: t('hub.ultimaSesion'), value: `${prog.ultimo_porcentaje}%`, highlight: prog.ultimo_porcentaje >= prog.criterio_dominio },
                           { label: "Media", value: `${prog.media}%`, highlight: false },
-                          { label: "Mediana", value: `${prog.mediana}%`, highlight: false },
                         ].map(m => (
                           <div key={m.label} className="rounded-xl p-2.5 text-center border" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
                             <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>{m.label}</p>
