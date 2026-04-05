@@ -114,6 +114,7 @@ function MonthlyCalendarView() {
   const [show, setShow] = useState(false)
   const [filterDate, setFilterDate] = useState('')
   const [filterStatus, setFilterStatus] = useState('todos')
+  const [filterEspecialista, setFilterEspecialista] = useState('todos')
   const [currentMonth, setCurrentMonth] = useState<Date | null>(null)
   const [tipoSesion, setTipoSesion] = useState<'individual'|'grupal'>('individual')
   const [modalidadCita, setModalidadCita] = useState<'presencial'|'virtual'>('presencial')
@@ -430,7 +431,8 @@ function MonthlyCalendarView() {
   const filteredApts = apts.filter(a => {
     const matchDate = !filterDate || a.appointment_date===filterDate
     const matchStatus = filterStatus==='todos' || (a.status||'confirmed')===filterStatus
-    return matchDate && matchStatus
+    const matchEsp = filterEspecialista==='todos' || a.specialist_id===filterEspecialista
+    return matchDate && matchStatus && matchEsp
   }).sort((a,b) => ((a.appointment_date||'')+(a.appointment_time||'')).localeCompare((b.appointment_date||'')+(b.appointment_time||'')))
 
   const todayApts = apts.filter(a => a.appointment_date===todayStr)
@@ -548,7 +550,11 @@ function MonthlyCalendarView() {
                 <option value="completed">{t('ui.completed_pl')}</option>
                 <option value="cancelled">{t('ui.cancelled_pl')}</option>
               </select>
-              {(filterDate||filterStatus!=='todos') && <button onClick={()=>{setFilterDate('');setFilterStatus('todos')}} className="text-xs text-blue-600 font-bold hover:underline">{t('ui.clear_filters')}</button>}
+              <select value={filterEspecialista} onChange={e=>setFilterEspecialista(e.target.value)} className="w-full p-3 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all" style={{ background: "var(--input-bg)", border: "2px solid var(--input-border)", color: "var(--text-primary)" }}>
+                <option value="todos">Todos los especialistas</option>
+                {especialistas.map(e=><option key={e.id} value={e.id}>{e.full_name}{e.specialty ? ` · ${e.specialty}` : ''}</option>)}
+              </select>
+              {(filterDate||filterStatus!=='todos'||filterEspecialista!=='todos') && <button onClick={()=>{setFilterDate('');setFilterStatus('todos');setFilterEspecialista('todos')}} className="text-xs text-blue-600 font-bold hover:underline">{t('ui.clear_filters')}</button>}
             </div>
 
             {/* Lista citas */}

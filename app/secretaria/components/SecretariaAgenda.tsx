@@ -170,6 +170,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
   const [isSaving, setIsSaving]           = useState(false)
   const [searchText, setSearchText]       = useState('')
   const [filterStatus, setFilterStatus]   = useState('todos')
+  const [filterEspecialista, setFilterEspecialista] = useState('todos')
   const [activeMenu, setActiveMenu]       = useState<string | null>(null)
 
   const secretariaName = profile?.full_name || profile?.email || 'Secretaria'
@@ -247,6 +248,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
     ? apts.filter(a =>
         a.appointment_date === diaSeleccionado &&
         (filterStatus === 'todos' || a.status === filterStatus) &&
+        (filterEspecialista === 'todos' || a.specialist_id === filterEspecialista) &&
         (searchText === '' || a.children?.name?.toLowerCase().includes(searchText.toLowerCase()))
       )
     : []
@@ -534,6 +536,11 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
                     className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-violet-300 font-semibold text-slate-600 transition-all">
                     <option value="todos">Todos</option>
                     {Object.entries(STATUS_CFG).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}
+                  </select>
+                  <select value={filterEspecialista} onChange={e=>setFilterEspecialista(e.target.value)}
+                    className="px-3 py-2 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-violet-300 font-semibold text-slate-600 transition-all">
+                    <option value="todos">Especialista</option>
+                    {especialistas.map(e=><option key={e.id} value={e.id}>{e.full_name.split(' ').slice(0,2).join(' ')}</option>)}
                   </select>
                 </div>
               </div>
