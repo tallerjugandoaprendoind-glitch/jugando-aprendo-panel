@@ -79,6 +79,8 @@ export default function EspecialistaDashboard() {
   const [ariaMinimized, setAriaMinimized]           = useState(false)
   const [activeChild, setActiveChild]               = useState<{id: string, name: string} | null>(null)
 
+  useEffect(() => { if (activeView !== 'pacientes') setActiveChild(null) }, [activeView])
+
   const loadProfile = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession()
