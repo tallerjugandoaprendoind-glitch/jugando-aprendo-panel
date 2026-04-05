@@ -261,7 +261,7 @@ export default function KnowledgeBaseView() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {[
                 { icon: '🔍', t: 'Expande palabras clave', d: 'La IA genera 8-12 términos técnicos relacionados' },
-                { icon: '🌐', t: 'Busca en internet', d: 'Wikipedia ES/EN + artículos PubMed científicos' },
+                { icon: '🌐', t: 'Busca en internet', d: 'DuckDuckGo + Wikipedia ES/EN + PubMed + OpenAlex + CrossRef (sin API key)' },
                 { icon: '🤖', t: 'Sintetiza con IA', d: 'Genera resumen clínico estructurado para ABA' },
                 { icon: '🧠', t: 'Indexa en el Cerebro', d: 'ARIA y todos los agentes ya saben ese tema' },
               ].map((s, i) => (

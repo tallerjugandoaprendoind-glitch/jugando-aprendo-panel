@@ -1,6 +1,6 @@
 // app/api/knowledge/aprender/route.ts
 // 🧠 CEREBRO IA — Aprendizaje automático desde internet
-// 
+//
 // El usuario da palabras clave → el sistema:
 // 1. Busca fuentes especializadas (PubMed, Wikipedia, libros ABA, artículos)
 // 2. Descarga y extrae el contenido de cada fuente
@@ -13,25 +13,22 @@ import { indexDocument } from '@/lib/knowledge-base'
 import { callGroqSimple, GROQ_MODELS } from '@/lib/groq-client'
 import { getLangInstruction } from '@/lib/lang'
 
-// ─── Fuentes de conocimiento ABA especializadas ───────────────────────────────
-// Wikipedia fue removida por no ser fuente clínica confiable.
-// Se prioriza: JABA, PubMed (ABA/TEA), Eric (educación especial), SemanticScholar
+// ─── Fuentes de conocimiento ──────────────────────────────────────────────────
+// Clínicas: PubMed, ERIC, Semantic Scholar, OpenAlex, CrossRef
+// Generales (sin API key): DuckDuckGo, Wikipedia ES/EN
 const FUENTES_BASE = [
-  // PubMed — artículos científicos ABA, TEA, TDAH (principal fuente médica)
   {
     nombre: 'PubMed',
     tipo: 'pubmed',
     buildUrl: (q: string) => `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(q)}&retmax=5&retmode=json&sort=relevance`,
     buildFullUrl: (q: string) => `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(q)}&retmax=5&retmode=json&sort=relevance`,
   },
-  // ERIC — base de datos de educación especial e intervención conductual
   {
     nombre: 'ERIC (Educación Especial)',
     tipo: 'eric',
     buildUrl: (q: string) => `https://api.ies.ed.gov/eric/?search=${encodeURIComponent(q)}&format=json&rows=5`,
     buildFullUrl: (q: string) => `https://api.ies.ed.gov/eric/?search=${encodeURIComponent(q)}&format=json&rows=5`,
   },
-  // Semantic Scholar — papers ABA/conducta con acceso abierto
   {
     nombre: 'Semantic Scholar (ABA)',
     tipo: 'semantic_scholar',
@@ -40,7 +37,7 @@ const FUENTES_BASE = [
   },
 ]
 
-// ─── Expandir palabras clave con IA (enfoque ABA clínico) ────────────────────
+// ─── Expandir palabras clave con IA ──────────────────────────────────────────
 async function expandirConceptos(keywords: string): Promise<string[]> {
   const prompt = `Eres un BCBA experto en ABA, TEA, TDAH y terapia conductual infantil.
 
@@ -68,17 +65,15 @@ Sin texto adicional, sin markdown.`
   }
 }
 
-// ─── Extraer papers de Semantic Scholar (ABA especializado) ─────────────────
+// ─── Semantic Scholar ─────────────────────────────────────────────────────────
 async function extraerSemanticScholar(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
   try {
-    // Añadir "applied behavior analysis" para forzar contexto ABA
     const query = `${termino} applied behavior analysis autism`
     const url = `https://api.semanticscholar.org/graph/v1/paper/search?query=${encodeURIComponent(query)}&limit=5&fields=title,abstract,year,authors,venue`
     const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
     if (!res.ok) return []
     const data = await res.json()
     const papers = data?.data || []
-
     return papers
       .filter((p: any) => p.abstract && p.abstract.length > 100)
       .slice(0, 4)
@@ -92,7 +87,7 @@ async function extraerSemanticScholar(termino: string): Promise<{ titulo: string
   }
 }
 
-// ─── Extraer recursos ERIC (educación especial y conducta) ──────────────────
+// ─── ERIC ─────────────────────────────────────────────────────────────────────
 async function extraerERIC(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
   try {
     const url = `https://api.ies.ed.gov/eric/?search=${encodeURIComponent(termino + ' behavior intervention')}&format=json&rows=3`
@@ -100,7 +95,6 @@ async function extraerERIC(termino: string): Promise<{ titulo: string; texto: st
     if (!res.ok) return []
     const data = await res.json()
     const docs = data?.response?.docs || []
-
     return docs
       .filter((d: any) => d.description && d.description.length > 80)
       .slice(0, 3)
@@ -114,27 +108,21 @@ async function extraerERIC(termino: string): Promise<{ titulo: string; texto: st
   }
 }
 
-// ─── Extraer abstracts de PubMed ──────────────────────────────────────────────
+// ─── PubMed ───────────────────────────────────────────────────────────────────
 async function extraerPubMed(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
   try {
-    // 1. Buscar IDs
     const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term=${encodeURIComponent(termino + '[Title/Abstract]')}&retmax=4&retmode=json&sort=relevance`
     const searchRes = await fetch(searchUrl, { signal: AbortSignal.timeout(8000) })
     if (!searchRes.ok) return []
     const searchData = await searchRes.json()
     const ids: string[] = searchData?.esearchresult?.idlist || []
     if (ids.length === 0) return []
-
-    // 2. Obtener abstracts
     const fetchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${ids.join(',')}&rettype=abstract&retmode=text`
     const fetchRes = await fetch(fetchUrl, { signal: AbortSignal.timeout(10000) })
     if (!fetchRes.ok) return []
     const texto = await fetchRes.text()
     if (texto.length < 100) return []
-
-    // Dividir por artículo (cada uno empieza con número de pubmed)
     const articulos = texto.split(/\n\n\d+\.\s/).filter(a => a.trim().length > 100)
-
     return articulos.slice(0, 4).map((a, i) => ({
       titulo: `PubMed: ${termino} (artículo ${i + 1})`,
       texto: a.slice(0, 3000),
@@ -145,17 +133,202 @@ async function extraerPubMed(termino: string): Promise<{ titulo: string; texto: 
   }
 }
 
+// ─── 🆕 DuckDuckGo Instant Answer API (sin API key) ──────────────────────────
+async function extraerDuckDuckGo(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
+  try {
+    const url = `https://api.duckduckgo.com/?q=${encodeURIComponent(termino)}&format=json&no_html=1&skip_disambig=1&no_redirect=1`
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'Accept-Language': 'es,en;q=0.9' },
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    const resultados: { titulo: string; texto: string; url: string }[] = []
+
+    if (data.Abstract && data.Abstract.length > 80) {
+      resultados.push({
+        titulo: `[Web] ${data.Heading || termino}`,
+        texto: `TEMA: ${data.Heading || termino}\n\nRESUMEN WEB:\n${data.Abstract}\n\nFUENTE: ${data.AbstractSource || 'Web'}`,
+        url: data.AbstractURL || `https://duckduckgo.com/?q=${encodeURIComponent(termino)}`,
+      })
+    }
+
+    const topicsConTexto = (data.RelatedTopics || [])
+      .filter((t: any) => t.Text && t.Text.length > 60 && t.FirstURL)
+      .slice(0, 3)
+
+    for (const topic of topicsConTexto) {
+      resultados.push({
+        titulo: `[Web relacionado] ${topic.Text.slice(0, 80)}`,
+        texto: `CONTENIDO RELACIONADO:\n${topic.Text}`,
+        url: topic.FirstURL,
+      })
+    }
+
+    const directResults = (data.Results || [])
+      .filter((r: any) => r.Text && r.Text.length > 40)
+      .slice(0, 2)
+
+    for (const r of directResults) {
+      resultados.push({
+        titulo: `[Web resultado] ${r.Text.slice(0, 80)}`,
+        texto: `RESULTADO WEB:\n${r.Text}`,
+        url: r.FirstURL || '',
+      })
+    }
+
+    return resultados.slice(0, 4)
+  } catch {
+    return []
+  }
+}
+
+// ─── 🆕 Wikipedia API (ES + EN, sin API key) ──────────────────────────────────
+async function extraerWikipedia(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
+  const resultados: { titulo: string; texto: string; url: string }[] = []
+
+  // Español
+  try {
+    const searchEs = `https://es.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termino)}&format=json&srlimit=2&srprop=snippet&origin=*`
+    const resEs = await fetch(searchEs, { signal: AbortSignal.timeout(6000) })
+    if (resEs.ok) {
+      const dataEs = await resEs.json()
+      const hits = dataEs?.query?.search || []
+      for (const hit of hits.slice(0, 2)) {
+        try {
+          const extractUrl = `https://es.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(hit.title)}&format=json&exsentences=10&origin=*`
+          const extractRes = await fetch(extractUrl, { signal: AbortSignal.timeout(6000) })
+          if (extractRes.ok) {
+            const extractData = await extractRes.json()
+            const pages = Object.values(extractData?.query?.pages || {}) as any[]
+            const page = pages[0]
+            if (page?.extract && page.extract.length > 100) {
+              resultados.push({
+                titulo: `[Wikipedia ES] ${hit.title}`,
+                texto: `ARTÍCULO WIKIPEDIA (ES): ${hit.title}\n\n${page.extract.slice(0, 2500)}`,
+                url: `https://es.wikipedia.org/wiki/${encodeURIComponent(hit.title.replace(/ /g, '_'))}`,
+              })
+            }
+          }
+        } catch { /* skip */ }
+      }
+    }
+  } catch { /* skip */ }
+
+  // Inglés si hacen falta resultados
+  if (resultados.length < 2) {
+    try {
+      const searchEn = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(termino)}&format=json&srlimit=2&srprop=snippet&origin=*`
+      const resEn = await fetch(searchEn, { signal: AbortSignal.timeout(6000) })
+      if (resEn.ok) {
+        const dataEn = await resEn.json()
+        const hits = dataEn?.query?.search || []
+        for (const hit of hits.slice(0, 2)) {
+          try {
+            const extractUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(hit.title)}&format=json&exsentences=8&origin=*`
+            const extractRes = await fetch(extractUrl, { signal: AbortSignal.timeout(6000) })
+            if (extractRes.ok) {
+              const extractData = await extractRes.json()
+              const pages = Object.values(extractData?.query?.pages || {}) as any[]
+              const page = pages[0]
+              if (page?.extract && page.extract.length > 100) {
+                resultados.push({
+                  titulo: `[Wikipedia EN] ${hit.title}`,
+                  texto: `ARTÍCULO WIKIPEDIA (EN): ${hit.title}\n\n${page.extract.slice(0, 2000)}`,
+                  url: `https://en.wikipedia.org/wiki/${encodeURIComponent(hit.title.replace(/ /g, '_'))}`,
+                })
+              }
+            }
+          } catch { /* skip */ }
+        }
+      }
+    } catch { /* skip */ }
+  }
+
+  return resultados.slice(0, 3)
+}
+
+// ─── 🆕 OpenAlex (sin API key, 250M+ papers) ─────────────────────────────────
+async function extraerOpenAlex(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
+  try {
+    const query = encodeURIComponent(`${termino} autism behavior`)
+    const url = `https://api.openalex.org/works?search=${query}&filter=has_abstract:true&sort=cited_by_count:desc&per-page=4&mailto=cerebro@app.com`
+    const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
+    if (!res.ok) return []
+    const data = await res.json()
+    const works = data?.results || []
+
+    return works
+      .filter((w: any) => w.abstract_inverted_index || w.title)
+      .slice(0, 4)
+      .map((w: any) => {
+        let abstract = ''
+        if (w.abstract_inverted_index) {
+          try {
+            const wordMap: Record<number, string> = {}
+            for (const [word, positions] of Object.entries(w.abstract_inverted_index as Record<string, number[]>)) {
+              for (const pos of positions) wordMap[pos] = word
+            }
+            const maxPos = Math.max(...Object.keys(wordMap).map(Number))
+            abstract = Array.from({ length: maxPos + 1 }, (_, i) => wordMap[i] || '').join(' ').trim()
+          } catch { abstract = '' }
+        }
+        const authors = (w.authorships || []).slice(0, 3).map((a: any) => a.author?.display_name).filter(Boolean).join(', ')
+        const year = w.publication_year || 'N/D'
+        const venue = w.primary_location?.source?.display_name || 'Journal académico'
+        const doi = w.doi ? `https://doi.org/${w.doi.replace('https://doi.org/', '')}` : w.id
+        return {
+          titulo: `[OpenAlex] ${w.title} (${year})`,
+          texto: `TÍTULO: ${w.title}\nAÑO: ${year}\nREVISTA: ${venue}\nAUTORES: ${authors || 'N/D'}\nCITAS: ${w.cited_by_count || 0}\n\nRESUMEN:\n${abstract || 'Ver artículo en el enlace.'}`,
+          url: doi || w.id,
+        }
+      })
+      .filter((r: any) => r.texto.length > 100)
+  } catch {
+    return []
+  }
+}
+
+// ─── 🆕 CrossRef (sin API key, DOI metadata) ─────────────────────────────────
+async function extraerCrossRef(termino: string): Promise<{ titulo: string; texto: string; url: string }[]> {
+  try {
+    const url = `https://api.crossref.org/works?query=${encodeURIComponent(termino + ' autism behavior analysis')}&rows=4&sort=is-referenced-by-count&order=desc&select=title,abstract,author,published,DOI,container-title`
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
+      headers: { 'User-Agent': 'CerebroIA/1.0 (mailto:cerebro@app.com)' },
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    const items = data?.message?.items || []
+    return items
+      .filter((item: any) => item.abstract && item.abstract.length > 80)
+      .slice(0, 3)
+      .map((item: any) => {
+        const title = Array.isArray(item.title) ? item.title[0] : item.title || 'Sin título'
+        const abstract = (item.abstract || '').replace(/<[^>]+>/g, '')
+        const authors = (item.author || []).slice(0, 3).map((a: any) => `${a.given || ''} ${a.family || ''}`.trim()).join(', ')
+        const year = item.published?.['date-parts']?.[0]?.[0] || 'N/D'
+        const journal = Array.isArray(item['container-title']) ? item['container-title'][0] : item['container-title'] || 'Journal'
+        const doi = item.DOI ? `https://doi.org/${item.DOI}` : ''
+        return {
+          titulo: `[CrossRef] ${title} (${year})`,
+          texto: `TÍTULO: ${title}\nAÑO: ${year}\nREVISTA: ${journal}\nAUTORES: ${authors || 'N/D'}\n\nRESUMEN:\n${abstract.slice(0, 2000)}`,
+          url: doi,
+        }
+      })
+      .filter((r: any) => r.texto.length > 100)
+  } catch {
+    return []
+  }
+}
+
 // ─── Generar resumen estructurado con IA ──────────────────────────────────────
 async function generarResumenEstructurado(tema: string, textos: string[], locale = 'es'): Promise<string> {
   if (textos.length === 0) return ''
-  
   const contexto = textos.join('\n\n---\n\n').slice(0, 12000)
-  
-  // Fuentes ABA especializadas: JABA, PubMed, Semantic Scholar, ERIC
-  // Wikipedia NO se usa como fuente clínica
   const prompt = `Eres un BCBA especializado en ABA, TEA y TDAH. Tu conocimiento se basa en el Journal of Applied Behavior Analysis (JABA), Cooper et al. (2020), Malott, y guías IBAO/BACB.
 
-Basándote en el siguiente material científico sobre "${tema}", genera un RESUMEN CLÍNICO ESTRUCTURADO para la base de conocimiento de ARIA:
+Basándote en el siguiente material científico y web sobre "${tema}", genera un RESUMEN CLÍNICO ESTRUCTURADO para la base de conocimiento de ARIA:
 
 MATERIAL:
 ${contexto}
@@ -170,11 +343,11 @@ GENERA un resumen de 800-1200 palabras con estas secciones:
 7. ERRORES COMUNES: qué evitar en la intervención
 8. REFERENCIAS CLAVE: autores y journals principales sobre este tema
 
-Escribe en español técnico-clínico. NO cites Wikipedia.`
+Escribe en español técnico-clínico. Integra información de todas las fuentes disponibles.`
 
   try {
     return await callGroqSimple(
-      'BCBA experto en síntesis de conocimiento clínico basado en evidencia ABA. NO usas Wikipedia.' + getLangInstruction(locale),
+      'BCBA experto en síntesis de conocimiento clínico basado en evidencia ABA.' + getLangInstruction(locale),
       prompt,
       { model: GROQ_MODELS.SMART, temperature: 0.3, maxTokens: 1500 }
     )
@@ -187,7 +360,7 @@ Escribe en español técnico-clínico. NO cites Wikipedia.`
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { keywords, modo = 'completo' } = body
+    const { keywords, modo = 'completo', incluirWeb = true } = body
     const locale = body.locale || req.headers.get('x-locale') || 'es'
     if (!keywords?.trim()) {
       return NextResponse.json({ error: 'keywords requerido' }, { status: 400 })
@@ -201,13 +374,10 @@ export async function POST(req: NextRequest) {
     const terminos = await expandirConceptos(keywords)
     log.push(`📋 Términos: ${terminos.join(', ')}`)
 
-    // ── 1. Recopilar textos de fuentes ABA especializadas ────────────────────
-    // Fuentes: PubMed (artículos ABA/TEA), Semantic Scholar (papers JABA), ERIC (educación especial)
-    // Wikipedia fue removida — no es fuente clínica confiable para ABA
     const textosRecopilados: { titulo: string; texto: string; url: string; fuente: string }[] = []
 
-    for (const termino of terminos.slice(0, 6)) { // máx 6 términos
-      // PubMed — artículos ABA/TEA con filtro aplicado behavior analysis
+    // ── Fuentes científicas especializadas ───────────────────────────────────
+    for (const termino of terminos.slice(0, 6)) {
       if (/^[a-zA-Z\s]+$/.test(termino)) {
         const pubmedArticles = await extraerPubMed(termino)
         for (const art of pubmedArticles) {
@@ -215,8 +385,6 @@ export async function POST(req: NextRequest) {
           log.push(`✅ PubMed: ${art.titulo}`)
         }
       }
-
-      // Semantic Scholar — papers JABA y ABA con acceso abierto
       if (terminos.indexOf(termino) < 3) {
         const ssArticles = await extraerSemanticScholar(termino)
         for (const art of ssArticles) {
@@ -224,8 +392,6 @@ export async function POST(req: NextRequest) {
           log.push(`✅ Semantic Scholar: ${art.titulo}`)
         }
       }
-
-      // ERIC — recursos de educación especial e intervención conductual
       if (terminos.indexOf(termino) < 3) {
         const ericArticles = await extraerERIC(termino)
         for (const art of ericArticles) {
@@ -235,27 +401,83 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // ── 🆕 Fuentes web generales (sin API key) ───────────────────────────────
+    if (incluirWeb !== false) {
+      log.push(`🌐 Buscando en fuentes web generales (sin API key)...`)
+
+      // OpenAlex — 250M+ papers gratuitos
+      try {
+        const openAlexArticles = await extraerOpenAlex(terminos[0])
+        for (const art of openAlexArticles) {
+          textosRecopilados.push({ ...art, fuente: 'OpenAlex' })
+          log.push(`✅ OpenAlex: ${art.titulo}`)
+        }
+      } catch { log.push('⚠️ OpenAlex no disponible') }
+
+      // CrossRef — metadata de papers con DOI
+      try {
+        const crossRefArticles = await extraerCrossRef(terminos[0])
+        for (const art of crossRefArticles) {
+          textosRecopilados.push({ ...art, fuente: 'CrossRef' })
+          log.push(`✅ CrossRef: ${art.titulo}`)
+        }
+      } catch { log.push('⚠️ CrossRef no disponible') }
+
+      // DuckDuckGo — búsqueda web general (sin API key)
+      try {
+        const ddgEs = await extraerDuckDuckGo(keywords)
+        for (const art of ddgEs) {
+          textosRecopilados.push({ ...art, fuente: 'DuckDuckGo Web' })
+          log.push(`✅ DuckDuckGo (ES): ${art.titulo}`)
+        }
+        if (terminos[0] && terminos[0] !== keywords) {
+          const ddgEn = await extraerDuckDuckGo(terminos[0])
+          for (const art of ddgEn) {
+            textosRecopilados.push({ ...art, fuente: 'DuckDuckGo Web' })
+            log.push(`✅ DuckDuckGo (EN): ${art.titulo}`)
+          }
+        }
+      } catch { log.push('⚠️ DuckDuckGo no disponible') }
+
+      // Wikipedia ES + EN
+      try {
+        const wikiEs = await extraerWikipedia(keywords)
+        for (const art of wikiEs) {
+          textosRecopilados.push({ ...art, fuente: 'Wikipedia' })
+          log.push(`✅ Wikipedia (ES): ${art.titulo}`)
+        }
+        if (terminos[0] && terminos[0] !== keywords) {
+          const wikiEn = await extraerWikipedia(terminos[0])
+          for (const art of wikiEn) {
+            textosRecopilados.push({ ...art, fuente: 'Wikipedia' })
+            log.push(`✅ Wikipedia (EN): ${art.titulo}`)
+          }
+        }
+      } catch { log.push('⚠️ Wikipedia no disponible') }
+    }
+
     if (textosRecopilados.length === 0) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'No se encontró contenido para esas palabras clave. Intenta con términos más específicos.',
-        log 
+        log,
       }, { status: 404 })
     }
 
-    log.push(`📚 ${textosRecopilados.length} fuentes encontradas. Generando síntesis IA...`)
+    const fuentesUsadas = [...new Set(textosRecopilados.map(t => t.fuente))]
+    log.push(`📚 ${textosRecopilados.length} fuentes encontradas (${fuentesUsadas.join(', ')}). Generando síntesis IA...`)
 
-    // ── 2. Generar resumen estructurado con IA (el conocimiento real) ─────────
+    // ── Generar resumen con IA ────────────────────────────────────────────────
     const todosLosTextos = textosRecopilados.map(t => `=== ${t.titulo} ===\n${t.texto}`)
     const resumenIA = await generarResumenEstructurado(keywords, todosLosTextos, locale)
     log.push(`🤖 Síntesis IA generada (${resumenIA.length} chars)`)
 
-    // ── 3. Indexar el resumen IA como documento principal ─────────────────────
+    // ── Indexar síntesis principal ────────────────────────────────────────────
     const { data: docPrincipal } = await supabaseAdmin
       .from('knowledge_documents')
       .insert({
         titulo: `[IA] ${keywords} — Síntesis completa`,
         tipo: 'articulo',
-        descripcion: `Aprendizaje automático desde internet. Fuentes: ${[...new Set(textosRecopilados.map(t => t.fuente))].join(', ')}. Términos: ${terminos.join(', ')}`,
+        descripcion: `Aprendizaje automático desde internet. Fuentes: ${fuentesUsadas.join(', ')}. Términos: ${terminos.join(', ')}`,
         procesado: false,
         source_url: `auto:${keywords}`,
         texto_extraido: resumenIA,
@@ -271,15 +493,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── 4. Indexar fuentes individuales en modo 'completo' ────────────────────
+    // ── Indexar fuentes individuales en modo completo ─────────────────────────
     if (modo === 'completo') {
-      for (const fuente of textosRecopilados.slice(0, 6)) { // máx 6 fuentes individuales
+      for (const fuente of textosRecopilados.slice(0, 8)) {
         try {
           const { data: doc } = await supabaseAdmin
             .from('knowledge_documents')
             .insert({
               titulo: fuente.titulo,
-              tipo: fuente.fuente.includes('PubMed') ? 'articulo' : 'libro',
+              tipo: 'articulo',
               descripcion: `Auto-aprendido desde ${fuente.fuente}. Keywords: ${keywords}`,
               procesado: false,
               source_url: fuente.url,
@@ -308,6 +530,7 @@ export async function POST(req: NextRequest) {
       keywords,
       terminos,
       fuentes: textosRecopilados.length,
+      fuentesUsadas,
       documentos: resultados.length,
       totalChunks,
       resultados,
@@ -320,7 +543,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// ─── GET: ver temas aprendidos ──────────────────────────────────────────────
+// ─── GET: ver temas aprendidos ────────────────────────────────────────────────
 export async function GET() {
   const { data } = await supabaseAdmin
     .from('knowledge_documents')
@@ -328,6 +551,5 @@ export async function GET() {
     .ilike('source_url', 'auto:%')
     .order('created_at', { ascending: false })
     .limit(50)
-  
   return NextResponse.json({ data: data || [] })
 }
