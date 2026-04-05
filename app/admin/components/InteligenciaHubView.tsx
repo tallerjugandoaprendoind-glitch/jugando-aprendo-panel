@@ -303,14 +303,21 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                   {/* Métricas clave */}
                   {prog.total_sesiones > 0 ? (
                     <>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
                         {[
-                          { label: t('hub.ultimaSesion'), value: `${prog.ultimo_porcentaje}%`, highlight: prog.ultimo_porcentaje >= prog.criterio_dominio },
-                          { label: "Media", value: `${prog.media}%`, highlight: false },
+                          { label: t('hub.ultimaSesion'), value: `${prog.ultimo_porcentaje}%`, highlight: prog.ultimo_porcentaje >= prog.criterio_dominio, color: null },
+                          { label: "Media", value: `${prog.media}%`, highlight: false, color: null },
+                          {
+                            label: "Tendencia",
+                            value: prog.tendencia_slope > 0 ? '▲ Creciente' : prog.tendencia_slope < 0 ? '▼ Decreciente' : '● Nula',
+                            highlight: false,
+                            color: prog.tendencia_slope > 0 ? '#34d399' : prog.tendencia_slope < 0 ? '#f87171' : '#94a3b8',
+                          },
                         ].map(m => (
                           <div key={m.label} className="rounded-xl p-2.5 text-center border" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
                             <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>{m.label}</p>
-                            <p className={`text-lg font-black ${m.highlight ? "text-emerald-400" : ""}`} style={!m.highlight ? { color: "var(--text-primary)" } : {}}>
+                            <p className={`text-lg font-black ${m.highlight ? "text-emerald-400" : ""}`}
+                              style={m.color ? { color: m.color, fontSize: m.label === 'Tendencia' ? '11px' : undefined } : !m.highlight ? { color: "var(--text-primary)" } : {}}>
                               {m.value}
                             </p>
                           </div>
