@@ -543,7 +543,7 @@ export default function AdminDashboard() {
           ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}
           style={{
             maxWidth: ariaExpanded ? '560px' : '448px',
-            height: ariaMinimized ? '54px' : '560px',
+            height: ariaMinimized ? '54px' : ariaExpanded ? 'calc(100vh - 96px)' : '560px',
           }}>
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 flex-shrink-0">
