@@ -265,14 +265,46 @@ function FormFillView({ form, children, onBack, userId, toast }: any) {
         form.formKey === 'aba' ? 'registro_aba' :
         form.formKey === 'entorno_hogar' ? 'registro_entorno_hogar' : 'form_responses')
 
-      const payload: any = { child_id: childId, form_type: form.formKey || form.id, form_title: form.title, created_at: new Date().toISOString(), ai_analysis: aiAnalysis }
-      if (form.isSoft || table === 'form_responses') payload.responses = responses
-      else { payload.datos = responses; payload.responses = responses }
+      // Construir payload según columnas reales de cada tabla
+      let payload: any
+      if (table === 'registro_aba') {
+        // Columnas reales: id, child_id, fecha_sesion, datos, creado_por, form_title
+        payload = {
+          child_id:     childId,
+          form_title:   form.title,
+          fecha_sesion: new Date().toISOString().split('T')[0],
+          datos:        responses,
+          creado_por:   userId,
+        }
+      } else if (table === 'registro_entorno_hogar') {
+        payload = {
+          child_id:    childId,
+          form_title:  form.title,
+          fecha_visita: new Date().toISOString(),
+          datos:       responses,
+          ai_analysis: aiAnalysis,
+        }
+      } else if (table === 'anamnesis_completa') {
+        payload = {
+          child_id:       childId,
+          form_title:     form.title,
+          fecha_creacion: new Date().toISOString(),
+          datos:          responses,
+          ai_analysis:    aiAnalysis,
+        }
+      } else {
+        // form_responses (isSoft o fallback)
+        payload = {
+          child_id:   childId,
+          form_type:  form.formKey || form.id,
+          form_title: form.title,
+          created_at: new Date().toISOString(),
+          ai_analysis: aiAnalysis,
+          responses,
+        }
+      }
 
-      // FIX: fecha_sesion es requerida en registro_aba
-      if (table === 'registro_aba') payload.fecha_sesion = new Date().toISOString().split('T')[0]
-
-      // FIX: verificar error del insert para no continuar si falla
+      // Verificar error del insert para no continuar si falla
       const { error: insertError } = await supabase.from(table).insert([payload])
       if (insertError) throw insertError
 
