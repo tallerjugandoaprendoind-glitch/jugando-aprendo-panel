@@ -413,7 +413,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
       </div>
 
       {/* Calendar + Detail */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-5 items-start">
 
         {/* Calendar */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
@@ -499,7 +499,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
         <div className="lg:col-span-3 bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col">
 
           {!diaSeleccionado ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-20 text-slate-300">
+            <div className="flex-1 flex flex-col items-center justify-center py-10 text-slate-300">
               <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mb-4">
                 <CalendarDays size={36} className="text-slate-200"/>
               </div>
@@ -538,7 +538,7 @@ export default function SecretariaAgenda({ profile }: { profile?: any }) {
                 </div>
               </div>
 
-              <div className="flex-1 divide-y divide-slate-50 overflow-y-auto" style={{maxHeight:480}}>
+              <div className="flex-1 divide-y divide-slate-50 overflow-y-auto" style={{maxHeight:'calc(100vh - 380px)'}}>
                 {selectedApts.length === 0 ? (
                   <div className="py-14 text-center">
                     <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
