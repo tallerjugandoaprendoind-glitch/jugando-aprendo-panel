@@ -291,7 +291,7 @@ export default function EspecialistaDashboard() {
 
         {/* Content */}
         {activeView === 'evaluaciones' ? (
-          <div className="flex-1 overflow-hidden p-4 md:p-6">
+          <div className="flex-1 overflow-hidden p-3 md:p-4">
             {renderView()}
           </div>
         ) : activeView === 'pacientes' ? (
@@ -300,7 +300,7 @@ export default function EspecialistaDashboard() {
           </div>
         ) : (
           <div className={`flex-1 overflow-y-auto ${isDark ? 'bg-[#0d1117]' : 'bg-[#f8f8fb]'}`}>
-            <div className="p-4 md:p-6 pb-24 md:pb-8">
+            <div className="p-3 md:p-4 pb-20 md:pb-4">
               {renderView()}
             </div>
           </div>
