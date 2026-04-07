@@ -131,7 +131,7 @@ export default function EspecialistaDashboard() {
   const renderView = () => {
     if (!profile) return null
     switch (activeView) {
-      case 'inicio':       return <DashboardHome navigateTo={adminNavigateTo} />
+      case 'inicio':       return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
       case 'pacientes':    return <PatientsView onPatientSelect={(id, name) => id && name ? setActiveChild({ id, name }) : setActiveChild(null)} />
       case 'prediccion':   return <InteligenciaHubView />
       case 'formularios':  return <MisFormularios userId={profile.id} />
