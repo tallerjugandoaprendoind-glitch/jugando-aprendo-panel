@@ -6,8 +6,8 @@ import { toBCP47 } from '@/lib/i18n'
 import { useState, useEffect, useCallback } from 'react'
 import {
   ArrowLeft, Baby, BarChart3, Brain, Calendar, Check, ChevronRight,
-  ClipboardList, Edit, Loader2, Plus, Save, Search, Sparkles,
-  Stethoscope, User, Users, X
+  ClipboardList, Edit, Link, Link2Off, Loader2, Mail, Plus, Save,
+  Search, Sparkles, Stethoscope, User, UserCheck, Users, X
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
@@ -53,6 +53,223 @@ function InfoPill({ label, value, icon }: { label: string; value: string; icon: 
       </div>
       <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>{value || '—'}</p>
     </div>
+  )
+}
+
+// ── Sección vinculación de cuenta ─────────────────────────────────────────
+function LinkedAccountSection({ nino, onLinked }: { nino: any; onLinked: () => void }) {
+  const toast = useToast()
+  const [linkedUser, setLinkedUser] = useState<any>(null)
+  const [loadingUser, setLoadingUser] = useState(false)
+  const [showLinkModal, setShowLinkModal] = useState(false)
+  const [emailSearch, setEmailSearch] = useState('')
+  const [searchResults, setSearchResults] = useState<any[]>([])
+  const [searching, setSearching] = useState(false)
+  const [linking, setLinking] = useState(false)
+  const [unlinking, setUnlinking] = useState(false)
+
+  // Cargar usuario vinculado
+  useEffect(() => {
+    const fetchLinked = async () => {
+      if (!nino.parent_id) { setLinkedUser(null); return }
+      setLoadingUser(true)
+      const { data } = await supabase.from('profiles').select('id, full_name, email, role').eq('id', nino.parent_id).single()
+      setLinkedUser(data || null)
+      setLoadingUser(false)
+    }
+    fetchLinked()
+  }, [nino.id, nino.parent_id])
+
+  const handleSearch = async () => {
+    if (!emailSearch.trim()) return
+    setSearching(true)
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id, full_name, email, role')
+        .ilike('email', `%${emailSearch.trim()}%`)
+        .in('role', ['padre', 'jefe', 'especialista', 'admin'])
+        .limit(8)
+      setSearchResults(data || [])
+    } catch (e: any) { toast.error(e.message) }
+    finally { setSearching(false) }
+  }
+
+  const handleLink = async (user: any) => {
+    setLinking(true)
+    try {
+      const res = await fetch('/api/admin/children', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId: nino.id, parentId: user.id }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      toast.success(`✅ ${nino.name} vinculado a ${user.full_name || user.email}`)
+      setLinkedUser(user)
+      setShowLinkModal(false)
+      setEmailSearch(''); setSearchResults([])
+      onLinked()
+    } catch (e: any) { toast.error(e.message) }
+    finally { setLinking(false) }
+  }
+
+  const handleUnlink = async () => {
+    setUnlinking(true)
+    try {
+      const res = await fetch('/api/admin/children', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ childId: nino.id, parentId: null }),
+      })
+      const json = await res.json()
+      if (json.error) throw new Error(json.error)
+      toast.success('Paciente desvinculado de la cuenta')
+      setLinkedUser(null)
+      onLinked()
+    } catch (e: any) { toast.error(e.message) }
+    finally { setUnlinking(false) }
+  }
+
+  return (
+    <>
+      <div className="rounded-xl p-4 mt-3" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            <UserCheck size={13} style={{ color: 'var(--text-muted)' }} />
+            <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+              Cuenta vinculada
+            </p>
+          </div>
+          {!loadingUser && (
+            linkedUser
+              ? <button onClick={handleUnlink} disabled={unlinking}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all"
+                  style={{ background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5' }}>
+                  {unlinking ? <Loader2 size={10} className="animate-spin"/> : <Link2Off size={10}/>}
+                  Desvincular
+                </button>
+              : <button onClick={() => setShowLinkModal(true)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold transition-all"
+                  style={{ background: '#dbeafe', color: '#2563eb', border: '1px solid #93c5fd' }}>
+                  <Link size={10}/> Vincular cuenta
+                </button>
+          )}
+        </div>
+
+        {loadingUser
+          ? <div className="flex justify-center py-2"><Loader2 size={16} className="animate-spin" style={{ color: 'var(--text-muted)' }}/></div>
+          : linkedUser
+            ? <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: '#f0fdf4', border: '1px solid #bbf7d0' }}>
+                <div className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                  <User size={16} className="text-white"/>
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold truncate" style={{ color: '#065f46' }}>
+                    {linkedUser.full_name || '(sin nombre)'}
+                  </p>
+                  <p className="text-xs truncate flex items-center gap-1" style={{ color: '#059669' }}>
+                    <Mail size={10}/>{linkedUser.email}
+                  </p>
+                </div>
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0"
+                  style={{ background: '#d1fae5', color: '#065f46' }}>
+                  {linkedUser.role}
+                </span>
+              </div>
+            : <div className="flex flex-col items-center py-3 gap-2 text-center">
+                <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: 'var(--muted-bg)' }}>
+                  <Link size={16} style={{ color: 'var(--text-muted)' }}/>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>Sin cuenta vinculada</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                    Vincula una cuenta para que el padre/tutor acceda al portal
+                  </p>
+                </div>
+              </div>
+        }
+      </div>
+
+      {/* Modal de búsqueda y vinculación */}
+      {showLinkModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+          <div className="rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md shadow-2xl p-5 space-y-4"
+            style={{ background: 'var(--card)' }}>
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-black" style={{ color: 'var(--text-primary)' }}>
+                  Vincular cuenta a {nino.name}
+                </h3>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                  Busca por email del padre, tutor o familiar
+                </p>
+              </div>
+              <button onClick={() => { setShowLinkModal(false); setEmailSearch(''); setSearchResults([]) }}
+                className="p-2 rounded-xl hover:bg-slate-100">
+                <X size={16} style={{ color: 'var(--text-muted)' }}/>
+              </button>
+            </div>
+
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }}/>
+                <input
+                  type="email"
+                  placeholder="correo@ejemplo.com"
+                  value={emailSearch}
+                  onChange={e => setEmailSearch(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                  className="w-full pl-9 pr-3 py-2.5 rounded-xl text-sm border outline-none"
+                  style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)', color: 'var(--text-primary)' }}
+                />
+              </div>
+              <button onClick={handleSearch} disabled={searching || !emailSearch.trim()}
+                className="px-4 py-2.5 rounded-xl text-sm font-bold bg-blue-600 text-white disabled:opacity-50 flex items-center gap-1.5">
+                {searching ? <Loader2 size={13} className="animate-spin"/> : <Search size={13}/>}
+                Buscar
+              </button>
+            </div>
+
+            {searchResults.length > 0 && (
+              <div className="space-y-1.5 max-h-56 overflow-y-auto">
+                {searchResults.map(u => (
+                  <div key={u.id}
+                    className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all"
+                    style={{ borderColor: 'var(--card-border)' }}>
+                    <div className="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center flex-shrink-0">
+                      <User size={14} className="text-white"/>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                        {u.full_name || '(sin nombre)'}
+                      </p>
+                      <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>{u.email}</p>
+                    </div>
+                    <button onClick={() => handleLink(u)} disabled={linking}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-600 text-white disabled:opacity-50 flex-shrink-0">
+                      {linking ? <Loader2 size={10} className="animate-spin"/> : <Link size={10}/>}
+                      Vincular
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {searchResults.length === 0 && emailSearch && !searching && (
+              <div className="text-center py-4">
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                  No se encontraron usuarios con ese email
+                </p>
+                <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                  Primero crea la cuenta del padre desde Gestión de Usuarios
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
@@ -206,6 +423,9 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
               </p>
             </div>
           </div>
+
+          {/* ── Cuenta vinculada ── */}
+          <LinkedAccountSection nino={nino} onLinked={onSaved} />
         </div>
       ) : (
         <div className="space-y-3 rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
