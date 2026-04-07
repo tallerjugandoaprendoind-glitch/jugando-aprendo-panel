@@ -269,7 +269,7 @@ export default function MiAgenda({ isDark = false }: { isDark?: boolean }) {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className={`text-2xl font-black ${txt1}`}>Mi Agenda</h2>
+          <h2 className={`text-2xl font-black ${txt1}`}>Agenda</h2>
           <p className={`text-sm mt-0.5 ${txt3}`}>Calendario de citas y sesiones</p>
         </div>
         {userId && (
@@ -476,7 +476,7 @@ export default function MiAgenda({ isDark = false }: { isDark?: boolean }) {
                 ${isDark ? 'bg-emerald-900/40' : 'bg-emerald-50'}`}>
                 <Clock size={15} className={isDark ? 'text-emerald-400' : 'text-emerald-600'} />
               </div>
-              <h3 className={`font-black text-sm flex-1 ${txt1}`}>Próximas citas</h3>
+              <h3 className={`font-black text-sm flex-1 ${txt1}`}>Citas</h3>
               <span className={`text-xs font-black px-2 py-0.5 rounded-full border
                 ${isDark
                   ? 'bg-[#21262d] text-slate-500 border-[#30363d]'
