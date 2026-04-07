@@ -25,20 +25,21 @@ import { ThemeToggleButton, useTheme } from '@/components/ThemeContext'
 import ARIAAgentChat from '@/app/admin/components/ARIAAgentChat'
 import InteligenciaHubView from '@/app/admin/components/InteligenciaHubView'
 
-function SidebarLink({ icon: Icon, label, active, onClick, badge }: any) {
+function SidebarLink({ icon: Icon, label, active, onClick, small, badge }: any) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group text-left text-sm
+      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group text-left
         ${active
-          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-200/50'
-          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
-        }`}
+          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-200/50 dark:shadow-blue-900/50'
+          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'
+        } ${small ? 'text-xs' : 'text-sm'}`}
     >
-      <Icon size={17} className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-blue-500'}`} />
-      <span className={`font-semibold truncate flex-1 ${active ? 'text-white' : ''}`}>{label}</span>
-      {badge && (
-        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${active ? 'bg-white/25 text-white' : 'bg-blue-100 text-blue-700'}`}>
+      <Icon size={small ? 15 : 17} className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-blue-500'}`} />
+      <span className={`font-semibold truncate flex-1 ${small ? 'text-xs' : ''}`}>{label}</span>
+      {badge > 0 && (
+        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0
+          ${active ? 'bg-white/20 text-white' : 'bg-red-500 text-white'}`}>
           {badge}
         </span>
       )}
@@ -170,20 +171,28 @@ export default function EspecialistaDashboard() {
 
       {/* ── SIDEBAR ── */}
       <aside className={`
-        hidden md:flex z-50 h-full w-[215px] flex-col
-        bg-white border-r border-slate-100 shadow-sm
+        fixed md:static z-40 h-full w-[215px] flex flex-col sidebar-transition
+        border-r transition-transform duration-300
+        ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'} shadow-sm
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
 
         {/* Logo */}
-        <div className="flex items-center gap-3 px-4 h-[60px] border-b border-slate-100/80 flex-shrink-0">
+        <div className={`flex items-center gap-3 px-4 h-[60px] border-b flex-shrink-0
+          ${isDark ? 'border-[#21262d]' : 'border-slate-100/80'}`}>
           <div className="relative w-8 h-8 flex-shrink-0">
             <Image src="/images/logo.png" alt="Logo" fill className="object-contain" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-black text-[13px] leading-tight text-slate-800">Jugando Aprendo</p>
-            <p className="text-[10px] text-slate-400">Panel Clínico</p>
+            <p className={`font-black text-[13px] leading-tight truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+              Jugando Aprendo
+            </p>
+            <p className={`text-[10px] font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+              Panel Clínico
+            </p>
           </div>
-          <button onClick={() => setSidebarOpen(false)} className="hidden text-slate-400 hover:text-slate-600 p-1">
+          <button onClick={() => setSidebarOpen(false)}
+            className="ml-auto md:hidden text-slate-400 hover:text-slate-600">
             <X size={16} />
           </button>
         </div>
@@ -201,37 +210,44 @@ export default function EspecialistaDashboard() {
           ))}
         </nav>
 
-        {/* User */}
-        <div className="p-3 border-t border-slate-100 flex-shrink-0">
+        {/* User footer */}
+        <div className={`p-3 border-t flex-shrink-0 ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
           <div
-            className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors group"
+            className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-colors
+              ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-50'}`}
             onClick={() => setShowProfileMenu(!showProfileMenu)}
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 shadow-md shadow-blue-200/60 overflow-hidden">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 overflow-hidden">
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
               ) : userInitial}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold truncate text-slate-700">{userName}</p>
-              <p className="text-[10px] truncate text-slate-400">{profile?.specialty || t('especialista.especialistaClinico')}</p>
+              <p className={`text-xs font-bold truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                {userName}
+              </p>
+              <p className={`text-[10px] truncate ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+                {profile?.specialty || t('especialista.especialistaClinico')}
+              </p>
             </div>
-            <ChevronRight size={13} className="text-slate-300 group-hover:text-slate-500 transition-all group-hover:translate-x-0.5" />
+            <ChevronRight size={14} className="text-slate-400 flex-shrink-0" />
           </div>
           {showProfileMenu && (
-            <div className="mt-2 bg-white rounded-xl shadow-xl overflow-hidden border border-slate-100 ring-1 ring-black/5">
+            <div className={`mt-1 rounded-xl shadow-lg overflow-hidden border
+              ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}>
               <button
                 onClick={() => { setShowChangePassword(true); setShowProfileMenu(false) }}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors
+                  ${isDark ? 'text-slate-300 hover:bg-[#21262d]' : 'text-slate-600 hover:bg-slate-50'}`}
               >
-                <Key size={13} className="text-slate-400" /> Cambiar contraseña
+                <Key size={14} /> Cambiar contraseña
               </button>
-              <div className="h-px bg-slate-50 mx-2" />
+              <div className={`h-px mx-2 ${isDark ? 'bg-[#21262d]' : 'bg-slate-100'}`} />
               <button
                 onClick={handleLogout}
-                className="w-full flex items-center gap-2.5 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
               >
-                <LogOut size={13} /> {t('common.cerrarSesion')}
+                <LogOut size={14} /> {t('common.cerrarSesion')}
               </button>
             </div>
           )}
@@ -244,22 +260,29 @@ export default function EspecialistaDashboard() {
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
 
         {/* Topbar */}
-        <header className="h-[60px] flex items-center justify-between px-4 md:px-6 flex-shrink-0 bg-white border-b border-slate-100 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)} className="md:hidden p-2 rounded-xl hover:bg-slate-100 text-slate-500 transition-colors">
+        <header className={`h-14 md:h-16 flex items-center justify-between px-3 md:px-6 flex-shrink-0 border-b
+          ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
+          <div className="flex items-center gap-2 md:gap-3">
+            <button onClick={() => setSidebarOpen(true)} className={`md:hidden p-2 rounded-lg transition-colors
+              ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-600'}`}>
               <Menu size={18} />
             </button>
             <div>
-              <h1 className="text-sm font-black text-slate-800">{PAGE_TITLES[activeView] || 'Panel'}</h1>
-              <p className="text-[10px] hidden sm:block text-slate-400">Jugando Aprendo · {t('especialista.titulo')}</p>
+              <h1 className={`text-sm md:text-base font-black ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+                {PAGE_TITLES[activeView] || 'Panel'}
+              </h1>
+              <p className={`text-[10px] hidden sm:block ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+                Jugando Aprendo · {t('especialista.titulo')}
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <LocaleSelector compact={true} />
             <ThemeToggleButton />
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="p-2 rounded-lg relative transition-colors hover:bg-slate-100 text-slate-500"
+              className={`p-2 rounded-lg relative transition-colors
+                ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
             >
               <Bell size={18} />
             </button>
