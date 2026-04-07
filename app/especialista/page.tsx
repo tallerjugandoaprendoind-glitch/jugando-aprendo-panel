@@ -13,12 +13,14 @@ import {
 import { useToast } from '@/components/Toast'
 import EspecialistaHome from './components/EspecialistaHome'
 import MisPacientes from './components/MisPacientes'
+import DashboardHome from '@/app/admin/components/DashboardHome'
+import PatientsView from '@/app/admin/components/PatientsView'
 import ChatConAdmin from './components/ChatConAdmin'
 import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
 import MisFormularios from './components/MisFormularios'
 import LocaleSelector from '@/app/components/LocaleSelector'
-import { ThemeToggleButton } from '@/components/ThemeContext'
+import { ThemeToggleButton, useTheme } from '@/components/ThemeContext'
 import ARIAAgentChat from '@/app/admin/components/ARIAAgentChat'
 import InteligenciaHubView from '@/app/admin/components/InteligenciaHubView'
 
@@ -47,6 +49,7 @@ export default function EspecialistaDashboard() {
   const router = useRouter()
   const toast = useToast()
   const { t } = useI18n()
+  const { isDark } = useTheme()
 
   const NAV_ITEMS = [
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio') },
@@ -118,11 +121,18 @@ export default function EspecialistaDashboard() {
     finally { setChangingPassword(false) }
   }
 
+  // Adapta los destinos del admin ('ninos','agenda') al sistema del especialista
+  const adminNavigateTo = (view: string) => {
+    if (view === 'ninos') setActiveView('pacientes')
+    else if (view === 'agenda') setActiveView('agenda')
+    else setActiveView(view)
+  }
+
   const renderView = () => {
     if (!profile) return null
     switch (activeView) {
-      case 'inicio':       return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
-      case 'pacientes':    return <MisPacientes onPatientSelect={(id, name) => id && name ? setActiveChild({ id, name }) : setActiveChild(null)} />
+      case 'inicio':       return <DashboardHome navigateTo={adminNavigateTo} />
+      case 'pacientes':    return <PatientsView onPatientSelect={(id, name) => id && name ? setActiveChild({ id, name }) : setActiveChild(null)} />
       case 'prediccion':   return <InteligenciaHubView />
       case 'formularios':  return <MisFormularios userId={profile.id} />
       case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
@@ -274,8 +284,12 @@ export default function EspecialistaDashboard() {
           <div className="flex-1 overflow-hidden p-4 md:p-6">
             {renderView()}
           </div>
+        ) : activeView === 'pacientes' ? (
+          <div className={`flex-1 overflow-hidden flex flex-col ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
+            {renderView()}
+          </div>
         ) : (
-          <div className="flex-1 overflow-y-auto">
+          <div className={`flex-1 overflow-y-auto ${isDark ? 'bg-[#0d1117]' : 'bg-[#f8f8fb]'}`}>
             <div className="p-4 md:p-6 pb-24 md:pb-8">
               {renderView()}
             </div>
