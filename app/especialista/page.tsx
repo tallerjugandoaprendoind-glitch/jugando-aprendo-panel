@@ -308,7 +308,11 @@ export default function EspecialistaDashboard() {
       </main>
 
       {/* ── MOBILE BOTTOM NAV ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/95 backdrop-blur-md border-t border-slate-100 px-2 py-1.5">
+      <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-md border-t px-2 py-1.5
+        ${isDark
+          ? 'bg-[#161b22]/95 border-[#21262d]'
+          : 'bg-white/95 border-slate-100'
+        }`}>
         <div className="flex items-center">
           {NAV_ITEMS.map(item => {
             const isActive = activeView === item.id
@@ -316,11 +320,17 @@ export default function EspecialistaDashboard() {
               <button key={item.id} onClick={() => setActiveView(item.id)}
                 className="flex flex-col items-center gap-1 py-1 flex-1 min-w-0 transition-all active:scale-95">
                 <div className={`w-8 h-6 rounded-lg flex items-center justify-center transition-all
-                  ${isActive ? 'bg-blue-600 text-white shadow-sm shadow-blue-300' : 'text-slate-400'}`}>
+                  ${isActive
+                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-300'
+                    : isDark ? 'text-slate-500' : 'text-slate-400'
+                  }`}>
                   <item.icon size={15} />
                 </div>
                 <span className={`font-bold truncate w-full text-center px-0.5 transition-colors
-                  ${isActive ? 'text-blue-600' : 'text-slate-400'}`} style={{ fontSize: 9 }}>
+                  ${isActive
+                    ? 'text-blue-600'
+                    : isDark ? 'text-slate-500' : 'text-slate-400'
+                  }`} style={{ fontSize: 9 }}>
                   {item.label.replace('Mi ', '').replace('Mis ', '')}
                 </span>
               </button>
@@ -332,23 +342,34 @@ export default function EspecialistaDashboard() {
       {/* Password Modal */}
       {showChangePassword && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 border border-slate-100">
+          <div className={`rounded-2xl shadow-2xl w-full max-w-sm p-6 border
+            ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="font-black text-slate-800">{t('especialista.cambiarPass')}</h3>
-                <p className="text-xs text-slate-400 mt-0.5">Mínimo 6 caracteres</p>
+                <h3 className={`font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{t('especialista.cambiarPass')}</h3>
+                <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Mínimo 6 caracteres</p>
               </div>
-              <button onClick={() => setShowChangePassword(false)} className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-500 transition-colors">
+              <button onClick={() => setShowChangePassword(false)}
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors
+                  ${isDark ? 'bg-[#21262d] hover:bg-[#30363d] text-slate-400' : 'bg-slate-100 hover:bg-slate-200 text-slate-500'}`}>
                 <X size={15} />
               </button>
             </div>
             <div className="space-y-3">
               <input type="password" placeholder={t('ui.new_password')} value={newPassword} onChange={e => setNewPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all
+                  ${isDark
+                    ? 'bg-[#0d1117] border-[#30363d] text-slate-200 placeholder:text-slate-600'
+                    : 'bg-slate-50 border-slate-200 text-slate-800'
+                  }`} />
               <input type="password" placeholder={t('ui.confirm_password')} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all" />
+                className={`w-full px-4 py-3 rounded-xl border text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all
+                  ${isDark
+                    ? 'bg-[#0d1117] border-[#30363d] text-slate-200 placeholder:text-slate-600'
+                    : 'bg-slate-50 border-slate-200 text-slate-800'
+                  }`} />
               <button onClick={handleChangePassword} disabled={changingPassword}
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl font-bold text-sm disabled:opacity-50 transition-all flex items-center justify-center gap-2 shadow-lg shadow-blue-200/40">
                 {changingPassword ? <Loader2 size={15} className="animate-spin" /> : null}
                 {changingPassword ? 'Actualizando...' : 'Actualizar contraseña'}
               </button>
