@@ -272,13 +272,6 @@ export default function AdminDashboard() {
           </button>
         </div>
 
-        {/* Role badge */}
-        <div className="px-4 pt-4 pb-2">
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${isDark ? 'bg-blue-900/30 border border-blue-800/40' : 'bg-blue-50 border border-blue-100/80'}`}>
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
-            <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{roleName}</span>
-          </div>
-        </div>
 
         {/* Main nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
@@ -295,7 +288,7 @@ export default function AdminDashboard() {
           <div className={`pt-4 mt-2 border-t ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
             <p className={`text-[10px] font-bold uppercase tracking-widest px-3 mb-2
               ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-              Configuración
+              Sistema
             </p>
             {SECONDARY_NAV.filter((item: any) => !item.hidden).map(item => (
               <SidebarLink
