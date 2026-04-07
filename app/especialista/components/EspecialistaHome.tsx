@@ -248,7 +248,7 @@ export default function EspecialistaHome({ userId, profile, setActiveView }: Pro
       </div>
 
       {/* ── KPIs — mismos estilos que admin ── */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KPI label="Pacientes"     value={loading ? '—' : stats.totalPacientes}     sub="Total activos"      icon={Users}          bar="#3a68a0" onClick={() => setActiveView('pacientes')} />
         <KPI label="Citas"         value={loading ? '—' : stats.sesionesEstaSemana} sub="Últimos 7 días"     icon={Calendar}       bar="#2e7a56" onClick={() => setActiveView('agenda')} />
         <KPI label="Evaluaciones"  value={loading ? '—' : total}                   sub="Total registradas"  icon={FileText}       bar="#b07830" urgent={stats.pendientes > 0} onClick={() => setActiveView('formularios')} />
