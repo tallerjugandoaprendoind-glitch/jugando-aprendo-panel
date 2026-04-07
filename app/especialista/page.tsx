@@ -8,7 +8,8 @@ import Image from 'next/image'
 import {
   LayoutDashboard, Users, LogOut, Calendar, FileText,
   User, Loader2, Menu, X, Stethoscope, MessageCircle,
-  Key, ChevronRight, Sparkles, Maximize2, Minimize2, Minus
+  Key, ChevronRight, Sparkles, Maximize2, Minimize2, Minus,
+  Zap, Bell
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import EspecialistaHome from './components/EspecialistaHome'
@@ -55,7 +56,7 @@ export default function EspecialistaDashboard() {
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio') },
     { id: 'agenda',       icon: Calendar,        label: 'Agenda' },
     { id: 'pacientes',    icon: Users,           label: 'Pacientes' },
-    { id: 'prediccion',   icon: Sparkles,        label: 'Análisis Predictivo' },
+    { id: 'prediccion',   icon: Zap,             label: 'Análisis Predictivo' },
     { id: 'evaluaciones', icon: MessageCircle,   label: 'Chat Equipo' },
     { id: 'perfil',       icon: User,            label: t('nav.miperfil') },
   ]
@@ -74,6 +75,7 @@ export default function EspecialistaDashboard() {
   const [loading, setLoading]                       = useState(true)
   const [sidebarOpen, setSidebarOpen]               = useState(false)
   const [showProfileMenu, setShowProfileMenu]       = useState(false)
+  const [showNotifications, setShowNotifications]   = useState(false)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [newPassword, setNewPassword]               = useState('')
   const [confirmPassword, setConfirmPassword]       = useState('')
@@ -256,15 +258,10 @@ export default function EspecialistaDashboard() {
             <LocaleSelector compact={true} />
             <ThemeToggleButton />
             <button
-              onClick={() => setActiveView('perfil')}
-              className="flex items-center gap-2 hover:bg-slate-50 px-2 py-1.5 rounded-xl transition-colors ml-1"
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 rounded-lg relative transition-colors hover:bg-slate-100 text-slate-500"
             >
-              <span className="text-xs font-semibold text-slate-500 hidden sm:block">{userName.split(' ')[0]}</span>
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black shadow-md shadow-blue-200/50 overflow-hidden">
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
-                ) : userInitial}
-              </div>
+              <Bell size={18} />
             </button>
           </div>
         </header>
