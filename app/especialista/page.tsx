@@ -53,21 +53,19 @@ export default function EspecialistaDashboard() {
 
   const NAV_ITEMS = [
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio') },
-    { id: 'pacientes',    icon: Users,           label: t('nav.mispacientes') },
+    { id: 'agenda',       icon: Calendar,        label: 'Agenda' },
+    { id: 'pacientes',    icon: Users,           label: 'Pacientes' },
     { id: 'prediccion',   icon: Sparkles,        label: 'Análisis Predictivo' },
-    { id: 'formularios',  icon: FileText,        label: t('nav.misformularios') },
-    { id: 'evaluaciones', icon: MessageCircle,  label: 'Chat Admin' },
-    { id: 'agenda',       icon: Calendar,        label: t('nav.miagenda') },
+    { id: 'evaluaciones', icon: MessageCircle,   label: 'Chat Equipo' },
     { id: 'perfil',       icon: User,            label: t('nav.miperfil') },
   ]
 
   const PAGE_TITLES: Record<string, string> = {
     inicio:       'Panel Principal',
-    pacientes:    'Mis Pacientes',
+    agenda:       'Agenda',
+    pacientes:    'Pacientes',
     prediccion:   'Análisis Predictivo',
-    formularios:  'Formularios Clínicos',
-    evaluaciones: 'Chat con Administración',
-    agenda:       'Mi Agenda',
+    evaluaciones: 'Chat Equipo',
     perfil:       'Mi Perfil',
   }
 
@@ -186,14 +184,6 @@ export default function EspecialistaDashboard() {
           <button onClick={() => setSidebarOpen(false)} className="hidden text-slate-400 hover:text-slate-600 p-1">
             <X size={16} />
           </button>
-        </div>
-
-        {/* Role badge */}
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100/80">
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
-            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Especialista</span>
-          </div>
         </div>
 
         {/* Nav */}

@@ -56,13 +56,13 @@ function SidebarLink({ icon: Icon, label, active, onClick, small, badge }: any) 
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-150 group text-left
+      className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group text-left
         ${active
-          ? 'bg-blue-600 text-white shadow-md shadow-blue-200 dark:shadow-blue-900'
-          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'
+          ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-200/50 dark:shadow-blue-900/50'
+          : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-slate-200'
         } ${small ? 'text-xs' : 'text-sm'}`}
     >
-      <Icon size={small ? 15 : 18} className={`flex-shrink-0 ${active ? 'text-white' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300'}`} />
+      <Icon size={small ? 15 : 17} className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-blue-500'}`} />
       <span className={`font-semibold truncate flex-1 ${small ? 'text-xs' : ''}`}>{label}</span>
       {badge > 0 && (
         <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0
@@ -116,7 +116,7 @@ export default function AdminDashboard() {
     { id: 'inteligencia', icon: Zap,             label: t('nav.hub'),             roles: ['jefe','admin','especialista'] },
     { id: 'cerebro',      icon: Database,        label: t('nav.cerebro'),         roles: ['jefe','admin'] },
     { id: 'recursos-adicionales', icon: BookOpen, label: 'Recursos Adicionales',  roles: ['jefe','admin','especialista','terapeuta'] },
-    { id: 'chat-especialistas', icon: MessageCircle, label: 'Chat Especialistas', roles: ['jefe'] },
+    { id: 'chat-especialistas', icon: MessageCircle, label: 'Chat Equipo', roles: ['jefe'] },
   ]
   const MOBILE_NAV = [
     { id: 'inicio',       icon: LayoutDashboard, label: t('nav.inicio') },
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
     mensajes: t('mensajes.titulo'), usuarios: t('nav.usuarios'),
     importar: 'Importar CSV', vadi: t('nav.aria'),
     cerebro: t('nav.cerebro'), inteligencia: t('nav.hub'),
-    'chat-especialistas': 'Chat con Especialistas',
+    'chat-especialistas': 'Chat Equipo',
   }
 
 
@@ -247,35 +247,41 @@ export default function AdminDashboard() {
 
       {/* SIDEBAR */}
       <aside className={`
-        fixed md:static z-40 h-full w-64 flex flex-col sidebar-transition
+        fixed md:static z-40 h-full w-[215px] flex flex-col sidebar-transition
         border-r transition-transform duration-300
-        ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}
+        ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'} shadow-sm
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {/* Logo */}
-        <div className={`flex items-center gap-3 px-5 h-16 border-b flex-shrink-0
-          ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+        <div className={`flex items-center gap-3 px-4 h-[60px] border-b flex-shrink-0
+          ${isDark ? 'border-[#21262d]' : 'border-slate-100/80'}`}>
           <div className="relative w-8 h-8 flex-shrink-0">
             <Image src="/images/logo.png" alt="Logo" fill className="object-contain" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className={`font-black text-sm leading-tight truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
+            <p className={`font-black text-[13px] leading-tight truncate ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>
               Jugando Aprendo
             </p>
-            <p className={`text-[10px] font-medium flex items-center gap-1
-              ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-              <RoleIcon size={9} />
+            <p className={`text-[10px] font-medium ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
               Panel {roleName}
             </p>
           </div>
           <button onClick={() => setSidebarOpen(false)}
             className="ml-auto md:hidden text-slate-400 hover:text-slate-600">
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
+        {/* Role badge */}
+        <div className="px-4 pt-4 pb-2">
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${isDark ? 'bg-blue-900/30 border border-blue-800/40' : 'bg-blue-50 border border-blue-100/80'}`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
+            <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{roleName}</span>
+          </div>
+        </div>
+
         {/* Main nav */}
-        <nav className="flex-1 overflow-y-auto p-3 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
           {NAV_ITEMS.filter(item => item.roles.includes(role) || role === 'admin' || role === 'jefe').map(item => (
             <SidebarLink
               key={item.id}
