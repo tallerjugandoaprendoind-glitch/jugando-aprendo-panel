@@ -466,20 +466,32 @@ function MonthlyCalendarView() {
       <div className="min-h-screen p-4 md:p-6 lg:p-8 animate-fade-in-up" style={{ background: "var(--background)" }}>
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+          {/* Título */}
           <div>
             <h2 className="font-black text-2xl md:text-3xl tracking-tight flex items-center gap-3" style={{ color: "var(--text-primary)" }}>
-              <div className="p-2.5 rounded-2xl" style={{ background: "rgba(37,99,235,0.15)" }}><Calendar className="text-blue-500" size={28}/></div>
+              <div className="p-2.5 rounded-2xl flex-shrink-0" style={{ background: "rgba(37,99,235,0.15)" }}>
+                <Calendar className="text-blue-500" size={28}/>
+              </div>
               Agenda
             </h2>
-            <p className="text-slate-400 text-sm font-medium mt-1 ml-1">{apts.length} citas · {todayApts.length} hoy · {virtualApts.length} virtuales</p>
+            <p className="text-slate-400 text-sm font-medium mt-1 ml-1">
+              {apts.length} citas · {todayApts.length} hoy · {virtualApts.length} virtuales
+            </p>
           </div>
-          <div className="flex gap-3 flex-wrap items-center">
+
+          {/* Controles — una sola fila */}
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
             <GoogleCalendarSync />
             <MicrosoftCalendarSync />
-            <button onClick={cargarCitas} className="p-3 rounded-xl border-2 border-slate-200 hover:border-blue-400 text-slate-400 hover:text-blue-600 transition-all"><RefreshCw size={18}/></button>
-            <button onClick={() => setShow(true)} className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:from-blue-700 shadow-lg shadow-blue-200/50 transition-all flex items-center gap-2">
-              <Plus size={18}/> {t('agenda.nuevaCita2')}
+            <div className="w-px h-6 bg-slate-200 dark:bg-[#30363d] hidden sm:block" />
+            <button
+              onClick={() => setShow(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white
+                bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700
+                shadow-lg shadow-blue-500/25 transition-all whitespace-nowrap"
+            >
+              <Plus size={16}/> {t('agenda.nuevaCita2')}
             </button>
           </div>
         </div>

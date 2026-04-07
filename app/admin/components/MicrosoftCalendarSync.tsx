@@ -3,14 +3,22 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
-import { Check, Loader2, RefreshCw, Unlink, CalendarDays } from 'lucide-react'
+import { Check, Loader2, RefreshCw } from 'lucide-react'
+
+const MSIcon = ({ size = 14 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 21 21">
+    <rect x="1" y="1" width="9" height="9" fill="#f25022"/>
+    <rect x="11" y="1" width="9" height="9" fill="#7fba00"/>
+    <rect x="1" y="11" width="9" height="9" fill="#00a4ef"/>
+    <rect x="11" y="11" width="9" height="9" fill="#ffb900"/>
+  </svg>
+)
 
 export default function MicrosoftCalendarSync() {
   const toast = useToast()
-  const [status, setStatus] = useState<'loading'|'connected'|'disconnected'>('loading')
-  const [msEmail, setMsEmail] = useState<string|null>(null)
-  const [userId, setUserId] = useState<string|null>(null)
-  const [syncing, setSyncing] = useState(false)
+  const [status,     setStatus]     = useState<'loading' | 'connected' | 'disconnected'>('loading')
+  const [userId,     setUserId]     = useState<string | null>(null)
+  const [syncing,    setSyncing]    = useState(false)
   const [connecting, setConnecting] = useState(false)
 
   const checkStatus = async () => {
@@ -21,14 +29,13 @@ export default function MicrosoftCalendarSync() {
       const res  = await fetch(`/api/microsoft-calendar?action=status&userId=${session.user.id}`)
       const data = await res.json()
       setStatus(data.connected ? 'connected' : 'disconnected')
-      setMsEmail(data.email)
     } catch { setStatus('disconnected') }
   }
 
   useEffect(() => {
     checkStatus()
     const params = new URLSearchParams(window.location.search)
-    const mscal = params.get('mscal')
+    const mscal  = params.get('mscal')
     if (mscal === 'connected') {
       toast.success('✅ Microsoft Calendar conectado')
       checkStatus()
@@ -46,17 +53,14 @@ export default function MicrosoftCalendarSync() {
       const res  = await fetch(`/api/microsoft-calendar?action=auth-url&userId=${userId}`)
       const data = await res.json()
       if (data.url) window.location.href = data.url
-    } catch {
-      toast.error('Error iniciando conexión con Microsoft')
-      setConnecting(false)
-    }
+    } catch { toast.error('Error iniciando conexión'); setConnecting(false) }
   }
 
   const handleDisconnect = async () => {
-    if (!userId || !confirm('¿Desconectar Microsoft Calendar?')) return
+    if (!userId || !confirm('¿Desconectar Outlook Calendar?')) return
     await fetch(`/api/microsoft-calendar?action=disconnect&userId=${userId}`)
-    setStatus('disconnected'); setMsEmail(null)
-    toast.success('Microsoft Calendar desconectado')
+    setStatus('disconnected')
+    toast.success('Outlook Calendar desconectado')
   }
 
   const handleSync = async () => {
@@ -69,16 +73,10 @@ export default function MicrosoftCalendarSync() {
         body: JSON.stringify({ action: 'sync-all', userId }),
       })
       const data = await res.json()
-      if (data.ok) {
-        toast.success(`✅ ${data.synced} cita${data.synced !== 1 ? 's' : ''} sincronizada${data.synced !== 1 ? 's' : ''} con Outlook`)
-      } else {
-        toast.error(data.error || 'Error al sincronizar')
-      }
-    } catch (e: any) {
-      toast.error('Error: ' + e.message)
-    } finally {
-      setSyncing(false)
-    }
+      if (data.ok) toast.success(`✅ ${data.synced} cita${data.synced !== 1 ? 's' : ''} sincronizadas`)
+      else toast.error(data.error || 'Error al sincronizar')
+    } catch (e: any) { toast.error('Error: ' + e.message) }
+    finally { setSyncing(false) }
   }
 
   if (status === 'loading') return null
@@ -88,37 +86,40 @@ export default function MicrosoftCalendarSync() {
       <button
         onClick={handleConnect}
         disabled={connecting}
-        className="flex items-center gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-sm font-semibold transition-all disabled:opacity-50"
+        className="flex items-center gap-2 px-3 py-2 rounded-xl border transition-all disabled:opacity-50
+          border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-semibold
+          dark:bg-[#21262d] dark:border-[#30363d] dark:text-slate-300 dark:hover:bg-[#30363d]"
       >
-        {connecting
-          ? <Loader2 size={15} className="animate-spin text-blue-600" />
-          : <svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>
-        }
-        {connecting ? 'Conectando...' : 'Conectar Outlook Calendar'}
+        {connecting ? <Loader2 size={14} className="animate-spin text-blue-500" /> : <MSIcon />}
+        {connecting ? 'Conectando...' : 'Conectar Outlook'}
       </button>
     )
   }
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold">
-        <Check size={12} />
-        <span className="hidden sm:inline">Outlook</span>
-        {msEmail && <span className="text-blue-500 font-normal hidden md:inline">· {msEmail}</span>}
-      </div>
+    <div className="flex items-center gap-1.5">
+      {/* Estado conectado */}
+      <button
+        onClick={handleDisconnect}
+        title="Click para desconectar"
+        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all
+          bg-blue-50 text-blue-700 border border-blue-200
+          hover:bg-red-50 hover:text-red-600 hover:border-red-200
+          dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800
+          dark:hover:bg-red-900/30 dark:hover:text-red-400 dark:hover:border-red-800"
+      >
+        <MSIcon /> Outlook
+      </button>
+      {/* Sync */}
       <button
         onClick={handleSync}
         disabled={syncing}
-        className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-600 text-xs font-semibold hover:bg-slate-50 transition-all disabled:opacity-50"
+        title="Sincronizar con Outlook"
+        className="p-2 rounded-xl border transition-all disabled:opacity-50
+          border-slate-200 text-slate-400 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50
+          dark:border-[#30363d] dark:text-slate-500 dark:hover:text-blue-400 dark:hover:border-blue-700 dark:hover:bg-blue-900/20"
       >
-        {syncing ? <Loader2 size={13} className="animate-spin" /> : <RefreshCw size={13} />}
-        <span className="hidden sm:inline">{syncing ? 'Sincronizando...' : 'Sincronizar'}</span>
-      </button>
-      <button
-        onClick={handleDisconnect}
-        className="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all"
-      >
-        <Unlink size={13} />
+        {syncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
       </button>
     </div>
   )

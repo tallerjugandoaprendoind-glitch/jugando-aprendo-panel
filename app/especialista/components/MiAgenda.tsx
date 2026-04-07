@@ -266,12 +266,24 @@ export default function MiAgenda({ isDark = false }: { isDark?: boolean }) {
   return (
     <div className="space-y-5 pb-20 md:pb-6">
 
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* ── Header — idéntico al admin ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-2">
+        {/* Título con icono grande */}
         <div>
-          <h2 className={`text-2xl font-black ${txt1}`}>Agenda</h2>
-          <p className={`text-sm mt-0.5 ${txt3}`}>Calendario de citas y sesiones</p>
+          <h2 className={`font-black text-2xl md:text-3xl tracking-tight flex items-center gap-3 ${txt1}`}>
+            <div className="p-2.5 rounded-2xl flex-shrink-0"
+              style={{ background: 'rgba(37,99,235,0.15)' }}>
+              <Calendar className="text-blue-500" size={28} />
+            </div>
+            Agenda
+          </h2>
+          <p className={`text-sm font-medium mt-1 ml-1 ${txt3}`}>
+            {citas.length} citas · {citasDelDia.length > 0 ? citasDelDia.length : 0} hoy ·{' '}
+            {citas.filter(c => c.is_virtual).length} virtuales
+          </p>
         </div>
+
+        {/* Botones sync — misma fila */}
         {userId && (
           <div className="flex items-center gap-2">
             <GoogleCalendarMini userId={userId} isDark={isDark} />
