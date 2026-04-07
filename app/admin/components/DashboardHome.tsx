@@ -393,10 +393,10 @@ export default function DashboardHome({ navigateTo }: { navigateTo: (view: strin
       </div>
 
       {/* ── MÉTRICAS MEDIAS ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
 
         {/* Sesiones 7 días + Retención — combinados en fila */}
-        <div className="rounded-xl p-5 flex flex-col justify-center" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+        <div className="rounded-xl p-5 flex flex-col justify-between" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center justify-between mb-1">
             <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Sesiones — últimos 7 días</p>
             <span className="text-lg font-black" style={{ color: '#3a68a0' }}>{totalSes7d}</span>
