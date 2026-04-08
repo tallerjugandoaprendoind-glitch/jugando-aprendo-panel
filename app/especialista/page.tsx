@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, LogOut, Calendar, FileText,
   User, Loader2, Menu, X, Stethoscope, MessageCircle,
   Key, ChevronRight, Sparkles, Maximize2, Minimize2, Minus,
-  Zap, Bell
+  Zap, Bell, Settings
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import EspecialistaHome from './components/EspecialistaHome'
@@ -100,7 +100,7 @@ export default function EspecialistaDashboard() {
         if (prof?.role === 'secretaria') { router.push('/secretaria'); return }
         router.push('/login'); return
       }
-      setProfile(prof)
+      setProfile({ ...prof, email: session.user.email })
     } catch { router.push('/login') }
     finally { setLoading(false) }
   }
@@ -232,7 +232,7 @@ export default function EspecialistaDashboard() {
           <div
             className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-colors
               ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-50'}`}
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            onClick={() => setActiveView('perfil')}
           >
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 overflow-hidden">
               {profile?.avatar_url ? (
@@ -244,30 +244,11 @@ export default function EspecialistaDashboard() {
                 {userName}
               </p>
               <p className={`text-[10px] truncate ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                {profile?.specialty || t('especialista.especialistaClinico')}
+                {profile?.email || profile?.specialty || ''}
               </p>
             </div>
-            <ChevronRight size={14} className="text-slate-400 flex-shrink-0" />
+            <Settings size={14} className="text-slate-400 flex-shrink-0" />
           </div>
-          {showProfileMenu && (
-            <div className={`mt-1 rounded-xl shadow-lg overflow-hidden border
-              ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}>
-              <button
-                onClick={() => { setShowChangePassword(true); setShowProfileMenu(false) }}
-                className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors
-                  ${isDark ? 'text-slate-300 hover:bg-[#21262d]' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <Key size={14} /> Cambiar contraseña
-              </button>
-              <div className={`h-px mx-2 ${isDark ? 'bg-[#21262d]' : 'bg-slate-100'}`} />
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors"
-              >
-                <LogOut size={14} /> {t('common.cerrarSesion')}
-              </button>
-            </div>
-          )}
         </div>
       </aside>
 

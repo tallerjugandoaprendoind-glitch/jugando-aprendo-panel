@@ -126,7 +126,7 @@ export default function AdminDashboard() {
   ]
   const SECONDARY_NAV = [
     { id: 'usuarios', icon: Key, label: t('nav.usuarios') },
-    { id: 'config',   icon: Settings, label: t('common.configuracion') },
+    { id: 'config',   icon: Settings, label: 'Mi Perfil' },
     { id: 'importar', icon: Upload, label: t('nav.importarCSV'), hidden: true },
   ]
   const PAGE_TITLES: Record<string, string> = {
@@ -136,7 +136,7 @@ export default function AdminDashboard() {
     mensajes: t('mensajes.titulo'), usuarios: t('nav.usuarios'),
     importar: 'Importar CSV', vadi: t('nav.aria'),
     cerebro: t('nav.cerebro'), inteligencia: t('nav.hub'),
-    'chat-especialistas': 'Chat Equipo',
+    'chat-especialistas': 'Chat Equipo', config: 'Mi Perfil',
   }
 
 
