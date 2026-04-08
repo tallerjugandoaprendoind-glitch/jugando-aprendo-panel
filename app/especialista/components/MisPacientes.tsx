@@ -60,8 +60,8 @@ function Field({ label, value }: { label: string; value: any; key?: any }) {
   if (!display || display === 'undefined' || display === 'null') return null
   return (
     <div>
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{label}</p>
-      <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{display}</p>
+      <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">{label}</p>
+      <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">{display}</p>
     </div>
   )
 }
@@ -72,10 +72,10 @@ function Bloque({ title, icon: Icon, color, children }: any) {
   const hasChildren = Array.isArray(children) ? children.some(Boolean) : !!children
   if (!hasChildren) return null
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div className="bg-white dark:bg-[#161b22] rounded-xl border border-slate-200 dark:border-[#21262d] overflow-hidden">
       <div className={`flex items-center gap-2 px-4 py-3 ${color || 'bg-slate-50'} border-b border-slate-100`}>
         {Icon && <Icon size={13} className="text-slate-600" />}
-        <p className="text-xs font-black text-slate-700 uppercase tracking-widest">{title}</p>
+        <p className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">{title}</p>
       </div>
       <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">{children}</div>
     </div>
@@ -112,7 +112,7 @@ function AIBlock({ analysis }: { analysis: any }) {
   const visible = fields.filter(({ k }) => analysis[k])
   if (!visible.length) return null
   return (
-    <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-200 rounded-xl overflow-hidden">
+    <div className="bg-gradient-to-br from-violet-50 dark:from-violet-950/40 to-indigo-50 dark:to-indigo-950/40 border border-violet-200 dark:border-violet-800 rounded-xl overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-violet-100">
         <Sparkles size={13} className="text-violet-600" />
         <p className="text-xs font-black text-violet-700 uppercase tracking-widest">{t('especialista.analisisDeIA')}</p>
@@ -124,7 +124,7 @@ function AIBlock({ analysis }: { analysis: any }) {
           return (
             <div key={k}>
               <p className="text-[10px] font-bold text-violet-500 uppercase tracking-widest mb-1">{l}</p>
-              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{txt}</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">{txt}</p>
             </div>
           )
         })}
@@ -403,9 +403,9 @@ function RecordCard({ item }: { item: any; key?: any }) {
   }
 
   return (
-    <div className={`border rounded-2xl overflow-hidden transition-all ${open ? 'border-slate-300 shadow-md' : 'border-slate-100 hover:border-slate-200'}`}>
+    <div className={`border rounded-2xl overflow-hidden transition-all ${open ? 'border-slate-300 dark:border-slate-600 shadow-md' : 'border-slate-100 dark:border-[#21262d] hover:border-slate-200 dark:hover:border-[#30363d]'}`}>
       <button onClick={() => hasFull && setOpen(o => !o)}
-        className={`w-full flex items-start gap-4 p-4 text-left transition-colors ${hasFull ? 'cursor-pointer hover:bg-slate-50/80' : 'cursor-default'}`}>
+        className={`w-full flex items-start gap-4 p-4 text-left transition-colors ${hasFull ? 'cursor-pointer hover:bg-slate-50/80 dark:hover:bg-[#1c2128]' : 'cursor-default'}`}>
         <div className={`w-9 h-9 rounded-xl ${cfg.bg} border ${cfg.border} flex items-center justify-center flex-shrink-0 mt-0.5`}>
           <Icon size={15} className={cfg.text} />
         </div>
@@ -423,7 +423,7 @@ function RecordCard({ item }: { item: any; key?: any }) {
           : <ChevronDown size={16} className="text-slate-400 flex-shrink-0 mt-1" />)}
       </button>
       {open && item._fullData && (
-        <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-4 space-y-4">
+        <div className="border-t border-slate-100 dark:border-[#21262d] bg-slate-50/60 dark:bg-[#1c2128]/60 px-4 py-4 space-y-4">
           {renderDetail()}
           {item._wordReport && <WordBtn report={item._wordReport} />}
         </div>
@@ -494,16 +494,16 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
 
   if (!summary && !loading) {
     return (
-      <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl border border-violet-200 p-8 text-center">
+      <div className="bg-gradient-to-br from-violet-50 dark:from-violet-950/40 to-indigo-50 dark:to-indigo-950/40 rounded-2xl border border-violet-200 dark:border-violet-800 p-8 text-center">
         <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <Sparkles size={28} className="text-white" />
         </div>
-        <h3 className="font-black text-slate-800 text-lg mb-2">{t('especialista.resumenClinico')}</h3>
-        <p className="text-sm text-slate-500 mb-6 max-w-sm mx-auto leading-relaxed">
+        <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg mb-2">{t('especialista.resumenClinico')}</h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-sm mx-auto leading-relaxed">
           Genera un análisis completo del paciente con perfil clínico, áreas prioritarias, plan de tratamiento personalizado y estrategias para el hogar.
         </p>
         {records.length === 0 ? (
-          <p className="text-sm text-slate-400 italic">{t('pacientes.sinRegistros').split('para')[0]} resumen.</p>
+          <p className="text-sm text-slate-400 dark:text-slate-500 italic">{t('pacientes.sinRegistros').split('para')[0]} resumen.</p>
         ) : (
           <button onClick={generarResumen}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-bold text-sm shadow-md transition-all">
@@ -517,7 +517,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-violet-50 to-indigo-50 rounded-2xl border border-violet-200 p-12 text-center">
+      <div className="bg-gradient-to-br from-violet-50 dark:from-violet-950/40 to-indigo-50 dark:to-indigo-950/40 rounded-2xl border border-violet-200 dark:border-violet-800 p-12 text-center">
         <div className="w-14 h-14 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <Loader2 size={24} className="text-white animate-spin" />
         </div>
@@ -534,10 +534,10 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
           <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-xl flex items-center justify-center">
             <Sparkles size={14} className="text-white" />
           </div>
-          <p className="font-black text-slate-800 text-sm">{t('especialista.resumenClinico2')}</p>
+          <p className="font-black text-slate-800 dark:text-slate-100 text-sm">{t('especialista.resumenClinico2')}</p>
         </div>
         <button onClick={generarResumen}
-          className="flex items-center gap-1.5 text-xs font-bold text-violet-600 bg-violet-50 border border-violet-200 px-3 py-1.5 rounded-xl hover:bg-violet-100 transition-colors">
+          className="flex items-center gap-1.5 text-xs font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800 px-3 py-1.5 rounded-xl hover:bg-violet-100 dark:hover:bg-violet-900/40 transition-colors">
           <RefreshCw size={11} /> Regenerar
         </button>
       </div>
@@ -560,7 +560,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {summary.perfil_fortalezas?.length > 0 && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+          <div className="bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800 rounded-2xl p-4">
             <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
               <Star size={10} /> Fortalezas
             </p>
@@ -568,14 +568,14 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
               {summary.perfil_fortalezas.map((f: string, i: number) => (
                 <div key={i} className="flex items-start gap-2">
                   <CheckCircle2 size={13} className="text-emerald-500 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-emerald-800 leading-relaxed">{f}</p>
+                  <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed">{f}</p>
                 </div>
               ))}
             </div>
           </div>
         )}
         {summary.perfil_desafios?.length > 0 && (
-          <div className="bg-rose-50 border border-rose-200 rounded-2xl p-4">
+          <div className="bg-rose-50 dark:bg-rose-900/30 border border-rose-200 dark:border-rose-800 rounded-2xl p-4">
             <p className="text-[10px] font-black text-rose-600 uppercase tracking-widest mb-3 flex items-center gap-1.5">
               <AlertCircle size={10} /> Desafíos
             </p>
@@ -583,7 +583,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
               {summary.perfil_desafios.map((f: string, i: number) => (
                 <div key={i} className="flex items-start gap-2">
                   <AlertCircle size={13} className="text-rose-400 mt-0.5 flex-shrink-0" />
-                  <p className="text-xs text-rose-800 leading-relaxed">{f}</p>
+                  <p className="text-xs text-rose-800 dark:text-rose-300 leading-relaxed">{f}</p>
                 </div>
               ))}
             </div>
@@ -592,10 +592,10 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
       </div>
 
       {summary.areas_prioridad?.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 border-b border-slate-100">
+        <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#21262d] rounded-2xl overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-[#1c2128] border-b border-slate-100 dark:border-[#21262d]">
             <Target size={13} className="text-slate-600" />
-            <p className="text-xs font-black text-slate-700 uppercase tracking-widest">{t('especialista.areasPrioritarias')}</p>
+            <p className="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">{t('especialista.areasPrioritarias')}</p>
           </div>
           <div className="p-4 space-y-3">
             {summary.areas_prioridad.map((a: any, i: number) => (
@@ -604,8 +604,8 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
                   {a.nivel}
                 </span>
                 <div>
-                  <p className="text-sm font-bold text-slate-800">{a.area}</p>
-                  <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{a.descripcion}</p>
+                  <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{a.area}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{a.descripcion}</p>
                 </div>
               </div>
             ))}
@@ -614,19 +614,19 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
       )}
 
       {summary.recomendaciones_terapeuticas?.length > 0 && (
-        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden">
+        <div className="bg-white dark:bg-[#161b22] border border-slate-200 dark:border-[#21262d] rounded-2xl overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 bg-violet-50 border-b border-violet-100">
             <Lightbulb size={13} className="text-violet-600" />
             <p className="text-xs font-black text-violet-700 uppercase tracking-widest">{t('especialista.planTratamiento')}</p>
           </div>
           <div className="p-4 space-y-3">
             {summary.recomendaciones_terapeuticas.map((r: any, i: number) => (
-              <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+              <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-[#1c2128] rounded-xl">
                 <span className={`text-[10px] font-black px-2 py-0.5 rounded-lg flex-shrink-0 mt-0.5 ${catColor[r.categoria] || 'bg-slate-200 text-slate-600'}`}>
                   {r.categoria}
                 </span>
                 <div className="flex-1">
-                  <p className="text-sm text-slate-700 leading-relaxed">{r.accion}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">{r.accion}</p>
                   {r.frecuencia && (
                     <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
                       <Clock size={10} /> {r.frecuencia}
@@ -674,7 +674,7 @@ function ResumenIA({ records, paciente }: { records: any[]; paciente: any }) {
       )}
 
       {summary.mensaje_equipo && (
-        <div className="bg-gradient-to-br from-indigo-50 to-violet-50 border border-indigo-200 rounded-2xl p-4">
+        <div className="bg-gradient-to-br from-indigo-50 dark:from-indigo-950/30 to-violet-50 dark:to-violet-950/30 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4">
           <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-2 flex items-center gap-1.5">
             <Shield size={10} /> Mensaje al Equipo Terapéutico
           </p>
@@ -986,21 +986,21 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
         <div className="flex-shrink-0 border-b pb-0" style={{ borderColor: 'var(--card-border)', background: 'var(--card)' }}>
           <div className="flex items-center gap-3 px-4 pt-4 pb-3">
             <button onClick={() => { setSeleccionado(null); setRegistros([]); onPatientSelect?.(null, null); setActiveTab('resumen' as any) }}
-              className="p-2 rounded-xl hover:bg-slate-100 transition-all flex-shrink-0">
+              className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#21262d] transition-all flex-shrink-0">
               <ChevronRight size={18} className="rotate-180 text-slate-600" />
             </button>
             <div className={`w-10 h-10 rounded-2xl bg-gradient-to-br ${AVATAR_COLORS[seleccionado.name?.charCodeAt(0) % AVATAR_COLORS.length]} flex items-center justify-center text-white font-black text-lg flex-shrink-0 shadow`}>
               {seleccionado.name?.[0]?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-black truncate" style={{ color: 'var(--text-primary)' }}>{seleccionado.name}</h1>
+              <h1 className="text-lg font-black truncate dark:text-slate-100" style={{ color: 'var(--text-primary)' }}>{seleccionado.name}</h1>
               <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                 {seleccionado.diagnosis && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-violet-100 text-violet-700">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-violet-100 dark:bg-violet-900/40 text-violet-700 dark:text-violet-300">
                     {seleccionado.diagnosis}
                   </span>
                 )}
-                <span className="text-xs text-slate-400">{calcularEdad(seleccionado.birth_date)}</span>
+                <span className="text-xs text-slate-400 dark:text-slate-500">{calcularEdad(seleccionado.birth_date)}</span>
               </div>
             </div>
           </div>
@@ -1052,8 +1052,8 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
     <div className="space-y-5 pb-20 md:pb-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-slate-800">{t('nav.mispacientes')}</h2>
-          <p className="text-sm text-slate-500 mt-1">Expedientes clínicos completos</p>
+          <h2 className="text-2xl font-black text-slate-800 dark:text-slate-100">{t('nav.mispacientes')}</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Expedientes clínicos completos</p>
         </div>
         <button onClick={() => setShowCrear(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-sm flex-shrink-0">
@@ -1061,17 +1061,17 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
         </button>
       </div>
 
-      <div className="bg-white rounded-2xl border border-slate-200 flex items-center gap-3 px-4 py-3 shadow-sm">
+      <div className="bg-white dark:bg-[#161b22] rounded-2xl border border-slate-200 dark:border-[#21262d] flex items-center gap-3 px-4 py-3 shadow-sm">
         <Search size={15} className="text-slate-400" />
         <input value={busqueda} onChange={e => setBusqueda(e.target.value)}
           placeholder="Buscar por nombre o diagnóstico..."
-          className="flex-1 text-sm text-slate-800 bg-transparent outline-none placeholder-slate-400" />
+          className="flex-1 text-sm text-slate-800 dark:text-slate-100 bg-transparent outline-none placeholder-slate-400 dark:placeholder-slate-600" />
         {busqueda && <button onClick={() => setBusqueda('')}><X size={14} className="text-slate-400 hover:text-slate-600" /></button>}
       </div>
 
       {!loading && (
         <p className="text-xs text-slate-500 font-semibold px-1">
-          <span className="font-black text-slate-800">{filtrados.length}</span> paciente{filtrados.length !== 1 ? 's' : ''}
+          <span className="font-black text-slate-800 dark:text-slate-100">{filtrados.length}</span> paciente{filtrados.length !== 1 ? 's' : ''}
           {busqueda && <span className="text-slate-400"> · "{busqueda}"</span>}
         </p>
       )}
@@ -1082,17 +1082,17 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
         <div className="grid gap-2">
           {filtrados.map((n, idx) => (
             <div key={n.id} onClick={() => verPaciente(n)}
-              className="bg-white rounded-2xl border border-slate-200 p-4 flex items-center gap-4 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer group shadow-sm">
+              className="bg-white dark:bg-[#161b22] rounded-2xl border border-slate-200 dark:border-[#21262d] p-4 flex items-center gap-4 hover:border-blue-300 hover:shadow-sm transition-all cursor-pointer group shadow-sm">
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${AVATAR_COLORS[idx % AVATAR_COLORS.length]} flex items-center justify-center text-white font-black text-lg flex-shrink-0 shadow`}>
                 {n.name?.[0]?.toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm text-slate-800">{n.name}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{calcularEdad(n.birth_date)} · {n.diagnosis || 'Sin diagnóstico'}</p>
+                <p className="font-bold text-sm text-slate-800 dark:text-slate-100">{n.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{calcularEdad(n.birth_date)} · {n.diagnosis || 'Sin diagnóstico'}</p>
                 <p className="text-xs text-slate-400 truncate">{n.profiles?.full_name || 'Sin tutor'}</p>
               </div>
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-[10px] font-bold text-violet-600 bg-violet-50 border border-violet-200 px-2 py-1 rounded-lg">
+                <div className="flex items-center gap-1 text-[10px] font-bold text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-900/30 border border-violet-200 dark:border-violet-800 px-2 py-1 rounded-lg">
                   <Sparkles size={10} /> IA
                 </div>
                 <button onClick={e => { e.stopPropagation(); setPacienteVincular(n); setShowVincular(true) }}
@@ -1107,7 +1107,7 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
             </div>
           ))}
           {filtrados.length === 0 && (
-            <div className="text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm">
+            <div className="text-center py-16 bg-white dark:bg-[#161b22] rounded-2xl border border-slate-200 dark:border-[#21262d] shadow-sm">
               <Baby size={22} className="text-slate-300 mx-auto mb-2" />
               <p className="text-slate-400 text-sm font-semibold">{t('common.sinResultados')}</p>
             </div>
@@ -1118,13 +1118,13 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
       {/* ── Modal: Crear paciente ── */}
       {showCrear && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 space-y-4">
+          <div className="bg-white dark:bg-[#161b22] rounded-3xl w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 bg-blue-100 rounded-xl flex items-center justify-center">
                   <UserPlus size={18} className="text-blue-600" />
                 </div>
-                <h3 className="text-lg font-black text-slate-800">Nuevo paciente</h3>
+                <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">Nuevo paciente</h3>
               </div>
               <button onClick={() => setShowCrear(false)} className="p-2 rounded-xl hover:bg-slate-100">
                 <X size={16} className="text-slate-400" />
@@ -1143,13 +1143,13 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
                   <input type={f.type} placeholder={f.placeholder}
                     value={(newForm as any)[f.key]}
                     onChange={e => setNewForm(fm => ({ ...fm, [f.key]: e.target.value }))}
-                    className="w-full px-4 py-3 rounded-xl text-sm outline-none border border-slate-200 bg-slate-50 focus:border-blue-400 focus:bg-white transition-colors text-slate-800" />
+                    className="w-full px-4 py-3 rounded-xl text-sm outline-none border border-slate-200 dark:border-[#30363d] bg-slate-50 dark:bg-[#0d1117] focus:border-blue-400 focus:bg-white dark:focus:bg-[#1c2128] transition-colors text-slate-800 dark:text-slate-200" />
                 </div>
               ))}
             </div>
             <div className="flex gap-3 pt-1">
               <button onClick={() => setShowCrear(false)}
-                className="flex-1 py-3 rounded-xl font-bold text-sm border border-slate-200 text-slate-500 hover:bg-slate-50">
+                className="flex-1 py-3 rounded-xl font-bold text-sm border border-slate-200 dark:border-[#30363d] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1c2128]">
                 Cancelar
               </button>
               <button onClick={handleCrear} disabled={saving || !newForm.name.trim()}
@@ -1165,14 +1165,14 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
       {/* ── Modal: Vincular cuenta padre ── */}
       {showVincular && pacienteVincular && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl w-full max-w-md shadow-2xl p-6 space-y-4">
+          <div className="bg-white dark:bg-[#161b22] rounded-3xl w-full max-w-md shadow-2xl p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-9 h-9 bg-emerald-100 rounded-xl flex items-center justify-center">
                   <Link2 size={18} className="text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-800">Vincular cuenta</h3>
+                  <h3 className="text-lg font-black text-slate-800 dark:text-slate-100">Vincular cuenta</h3>
                   <p className="text-xs text-slate-500">{pacienteVincular.name}</p>
                 </div>
               </div>
@@ -1187,7 +1187,7 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
                 value={emailBusqueda}
                 onChange={e => { setEmailBusqueda(e.target.value); setParentEncontrado(null) }}
                 onKeyDown={e => e.key === 'Enter' && buscarPadre()}
-                className="flex-1 px-4 py-3 rounded-xl text-sm outline-none border border-slate-200 bg-slate-50 focus:border-emerald-400 focus:bg-white transition-colors text-slate-800" />
+                className="flex-1 px-4 py-3 rounded-xl text-sm outline-none border border-slate-200 bg-slate-50 focus:border-emerald-400 focus:bg-white dark:focus:bg-[#1c2128] transition-colors text-slate-800 dark:text-slate-200" />
               <button onClick={buscarPadre} disabled={buscandoPadre || !emailBusqueda.trim()}
                 className="px-4 py-3 rounded-xl bg-slate-800 text-white font-bold text-sm disabled:opacity-50 flex items-center gap-2 hover:bg-slate-700">
                 {buscandoPadre ? <Loader2 size={14} className="animate-spin" /> : <Search size={14} />}
@@ -1208,7 +1208,7 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
             )}
             <div className="flex gap-3 pt-1">
               <button onClick={() => { setShowVincular(false); setEmailBusqueda(''); setParentEncontrado(null) }}
-                className="flex-1 py-3 rounded-xl font-bold text-sm border border-slate-200 text-slate-500 hover:bg-slate-50">
+                className="flex-1 py-3 rounded-xl font-bold text-sm border border-slate-200 dark:border-[#30363d] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1c2128]">
                 Cancelar
               </button>
               <button onClick={handleVincular} disabled={!parentEncontrado || vinculando}
