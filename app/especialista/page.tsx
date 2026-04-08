@@ -295,7 +295,7 @@ export default function EspecialistaDashboard() {
             {renderView()}
           </div>
         ) : activeView === 'pacientes' ? (
-          <div className={`flex-1 overflow-hidden flex flex-col ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
+          <div className={`flex-1 overflow-hidden flex flex-col admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
             {renderView()}
           </div>
         ) : (
