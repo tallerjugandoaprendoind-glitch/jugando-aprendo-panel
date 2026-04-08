@@ -463,10 +463,10 @@ function MonthlyCalendarView() {
         />
       )}
 
-      <div className="min-h-screen p-4 md:p-6 lg:p-8 animate-fade-in-up" style={{ background: "var(--background)" }}>
+      <div className="min-h-screen px-5 pt-5 pb-8 animate-fade-in-up" style={{ background: "var(--background)" }}>
 
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
           {/* Título */}
           <div>
             <h2 className="font-black text-2xl md:text-3xl tracking-tight flex items-center gap-3" style={{ color: "var(--text-primary)" }}>

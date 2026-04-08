@@ -300,7 +300,7 @@ export default function EspecialistaDashboard() {
           </div>
         ) : (
           <div className={`flex-1 overflow-y-auto ${isDark ? 'bg-[#0d1117]' : 'bg-[#f8f8fb]'}`}>
-            <div className="p-3 md:p-4 pb-20 md:pb-4">
+            <div className="px-5 pt-5 pb-20 md:pb-6">
               {renderView()}
             </div>
           </div>
