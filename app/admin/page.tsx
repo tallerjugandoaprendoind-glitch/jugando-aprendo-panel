@@ -126,7 +126,7 @@ export default function AdminDashboard() {
   ]
   const SECONDARY_NAV = [
     { id: 'usuarios', icon: Key, label: t('nav.usuarios') },
-    { id: 'config',   icon: Settings, label: 'Mi Perfil' },
+    { id: 'config',   icon: User, label: 'Mi Perfil' },
     { id: 'importar', icon: Upload, label: t('nav.importarCSV'), hidden: true },
   ]
   const PAGE_TITLES: Record<string, string> = {
