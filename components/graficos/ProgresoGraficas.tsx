@@ -431,27 +431,27 @@ export default function ProgresoGraficas({ childId, modoParent = false }: Progre
 
       {/* Reporte IA */}
       {reporteSemanal && !modoParent && (
-        <div className="bg-gradient-to-r from-violet-50 to-purple-50 border border-violet-200 rounded-2xl p-4">
+        <div className="bg-gradient-to-r from-violet-50 dark:from-violet-950/40 to-purple-50 dark:to-purple-950/40 border border-violet-200 dark:border-violet-800 rounded-2xl p-4">
           <div className="flex items-center gap-2 mb-2">
             <span>🧠</span>
-            <p className="font-black text-violet-800 text-sm">{t('reportes.analisisARIA')}</p>
-            <span className="ml-auto text-[10px] bg-violet-100 text-violet-600 px-2 py-0.5 rounded-full font-bold">{t('reportes.iaClinica')}</span>
+            <p className="font-black text-violet-800 dark:text-violet-300 text-sm">{t('reportes.analisisARIA')}</p>
+            <span className="ml-auto text-[10px] bg-violet-100 dark:bg-violet-900/50 text-violet-600 dark:text-violet-400 px-2 py-0.5 rounded-full font-bold">{t('reportes.iaClinica')}</span>
           </div>
-          <p className="text-xs text-violet-700 leading-relaxed">{reporteSemanal}</p>
+          <p className="text-xs text-violet-700 dark:text-violet-300 leading-relaxed">{reporteSemanal}</p>
         </div>
       )}
 
       {/* Evaluaciones */}
       {!modoParent && evaluaciones && Object.keys(evaluaciones).length > 0 && (
         <div className="rounded-2xl p-4 shadow-sm" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-          <h3 className="font-black text-slate-700 text-sm mb-3">{t('ui.evalsNeurop')}</h3>
+          <h3 className="font-black text-slate-700 dark:text-slate-300 text-sm mb-3">{t('ui.evalsNeurop')}</h3>
           <div className="grid grid-cols-2 gap-2">
             {Object.entries(evaluaciones).map(([nombre, d]: [string, any]) => (
-              <div key={nombre} className="flex items-center gap-2 p-2.5 bg-violet-50 rounded-xl border border-violet-100">
-                <div className="w-7 h-7 bg-violet-100 rounded-lg flex items-center justify-center text-xs font-black text-violet-700">✓</div>
+              <div key={nombre} className="flex items-center gap-2 p-2.5 bg-violet-50 dark:bg-violet-900/20 rounded-xl border border-violet-100 dark:border-violet-800">
+                <div className="w-7 h-7 bg-violet-100 dark:bg-violet-800/50 rounded-lg flex items-center justify-center text-xs font-black text-violet-700 dark:text-violet-300">✓</div>
                 <div>
-                  <p className="font-black text-violet-800 text-xs">{nombre}</p>
-                  <p className="text-[10px] text-slate-400">{d[0]?.created_at ? new Date(d[0].created_at).toLocaleDateString('es-PE') : 'N/A'}</p>
+                  <p className="font-black text-violet-800 dark:text-violet-300 text-xs">{nombre}</p>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">{d[0]?.created_at ? new Date(d[0].created_at).toLocaleDateString('es-PE') : 'N/A'}</p>
                 </div>
               </div>
             ))}

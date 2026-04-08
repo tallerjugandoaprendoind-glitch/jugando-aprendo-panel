@@ -410,23 +410,50 @@ export default function AdminDashboard() {
                   ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}>
                   <div className="flex items-center justify-between mb-3">
                     <p className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                      Citas de hoy
+                      Notificaciones
                     </p>
                     <button onClick={() => setShowNotifications(false)}>
                       <X size={16} className="text-slate-400" />
                     </button>
                   </div>
 
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
-                    {notifications.length > 0 ? notifications.map(n => (
-                      <div key={n.id} className={`flex items-start gap-3 p-3 rounded-xl
-                        ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
-                        <p className={`text-xs font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                          {n.detalle}
+                  <div className="space-y-2 max-h-72 overflow-y-auto">
+                    {/* Citas de hoy */}
+                    {notifications.length > 0 && (
+                      <div className="space-y-1.5">
+                        <p className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Citas de hoy
                         </p>
+                        {notifications.map(n => (
+                          <div key={n.id} className={`flex items-start gap-3 p-3 rounded-xl
+                            ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                            <p className={`text-xs font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                              {n.detalle}
+                            </p>
+                          </div>
+                        ))}
                       </div>
-                    )) : (
+                    )}
+
+                    {/* Aprobaciones pendientes */}
+                    {pendingMessages > 0 && (
+                      <div className="space-y-1.5">
+                        <p className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Pendientes de aprobación
+                        </p>
+                        <div className={`flex items-start gap-3 p-3 rounded-xl
+                          ${isDark ? 'bg-amber-900/20' : 'bg-amber-50'}`}>
+                          <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
+                          <p className={`text-xs font-medium ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                            {pendingMessages} elemento{pendingMessages !== 1 ? 's' : ''} esperando revisión
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sin notificaciones */}
+                    {notifications.length === 0 && pendingMessages === 0 && (
                       <p className="text-xs text-slate-400 text-center py-4">{t('ui.no_appts_today')}</p>
                     )}
                   </div>
