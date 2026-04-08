@@ -77,6 +77,7 @@ export default function EspecialistaDashboard() {
   const [sidebarOpen, setSidebarOpen]               = useState(false)
   const [showProfileMenu, setShowProfileMenu]       = useState(false)
   const [showNotifications, setShowNotifications]   = useState(false)
+  const [citasHoy, setCitasHoy]                     = useState<any[]>([])
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [newPassword, setNewPassword]               = useState('')
   const [confirmPassword, setConfirmPassword]       = useState('')
@@ -105,6 +106,22 @@ export default function EspecialistaDashboard() {
   }
 
   useEffect(() => { loadProfile() }, [])
+
+  useEffect(() => {
+    const fetchCitasHoy = async () => {
+      const hoy = new Date().toISOString().split('T')[0]
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) return
+      const { data } = await supabase
+        .from('appointments')
+        .select('*, children(name)')
+        .eq('appointment_date', hoy)
+        .eq('specialist_id', session.user.id)
+        .order('appointment_time', { ascending: true })
+      if (data) setCitasHoy(data)
+    }
+    fetchCitasHoy()
+  }, [])
 
   const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
 
@@ -279,13 +296,51 @@ export default function EspecialistaDashboard() {
           <div className="flex items-center gap-2">
             <LocaleSelector compact={true} />
             <ThemeToggleButton />
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className={`p-2 rounded-lg relative transition-colors
-                ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
-            >
-              <Bell size={18} />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className={`p-2 rounded-lg relative transition-colors
+                  ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+              >
+                <Bell size={18} />
+                {citasHoy.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
+                )}
+              </button>
+              {showNotifications && (
+                <div className={`absolute right-0 top-11 w-72 rounded-2xl shadow-2xl border p-4 z-50
+                  ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <p className={`text-xs font-black uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                      Notificaciones
+                    </p>
+                    <button onClick={() => setShowNotifications(false)}>
+                      <X size={16} className="text-slate-400" />
+                    </button>
+                  </div>
+                  <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                    {citasHoy.length > 0 ? (
+                      <>
+                        <p className={`text-[10px] font-black uppercase tracking-widest px-1 mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Citas de hoy
+                        </p>
+                        {citasHoy.map(c => (
+                          <div key={c.id} className={`flex items-start gap-3 p-3 rounded-xl
+                            ${isDark ? 'bg-blue-900/20' : 'bg-blue-50'}`}>
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                            <p className={`text-xs font-medium ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                              {c.children?.name} · {c.appointment_time?.slice(0,5)}
+                            </p>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <p className="text-xs text-slate-400 text-center py-4">Sin citas para hoy</p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
