@@ -293,7 +293,7 @@ export default function AdminDashboard() {
           <div
             className={`flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-colors
               ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-50'}`}
-            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            onClick={() => { setCurrentView('config'); setSidebarOpen(false) }}
           >
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 overflow-hidden">
               {userProfile?.avatar_url ? (
@@ -312,24 +312,6 @@ export default function AdminDashboard() {
             </div>
             <Settings size={14} className="text-slate-400 flex-shrink-0" />
           </div>
-          {showProfileMenu && (
-            <div className={`mt-1 rounded-xl shadow-lg overflow-hidden border
-              ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}>
-              <button
-                onClick={() => { setShowChangePassword(true); setShowProfileMenu(false) }}
-                className={`w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold transition-colors
-                  ${isDark ? 'text-slate-300 hover:bg-[#21262d]' : 'text-slate-600 hover:bg-slate-50'}`}
-              >
-                <Key size={14} /> Cambiar contraseña
-              </button>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-              >
-                <LogOut size={14} /> {t('common.cerrarSesion')}
-              </button>
-            </div>
-          )}
         </div>
       </aside>
 
