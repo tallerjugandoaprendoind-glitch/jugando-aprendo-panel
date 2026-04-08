@@ -153,7 +153,6 @@ export default function AdminDashboard() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [changingPassword, setChangingPassword] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
-  const [pendingMessages, setPendingMessages] = useState(0)
   const [userId, setUserId] = useState('')
   const [ariaOpen, setAriaOpen] = useState(false)
   const [ariaExpanded, setAriaExpanded] = useState(false)
@@ -176,7 +175,6 @@ export default function AdminDashboard() {
       }
     })
     fetchNotifications()
-    fetchPendingCount()
   }, [])
 
   const fetchNotifications = async () => {
@@ -193,20 +191,6 @@ export default function AdminDashboard() {
         detalle: `${c.children?.name} · ${c.appointment_time?.slice(0, 5)}`,
       })))
     }
-  }
-
-  const fetchPendingCount = async () => {
-    try {
-      const [msgRes, subRes] = await Promise.all([
-        supabase.from('parent_message_approvals')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending_approval'),
-        supabase.from('specialist_submissions')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'pending_approval'),
-      ])
-      setPendingMessages((msgRes.count || 0) + (subRes.count || 0))
-    } catch { setPendingMessages(0) }
   }
 
   const handleLogout = async () => {
@@ -401,7 +385,7 @@ export default function AdminDashboard() {
                   ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
               >
                 <Bell size={18} />
-                {(notifications.length > 0 || pendingMessages > 0) && (
+                {notifications.length > 0 && (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
                 )}
               </button>
@@ -436,24 +420,10 @@ export default function AdminDashboard() {
                       </div>
                     )}
 
-                    {/* Aprobaciones pendientes */}
-                    {pendingMessages > 0 && (
-                      <div className="space-y-1.5">
-                        <p className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                          Pendientes de aprobación
-                        </p>
-                        <div className={`flex items-start gap-3 p-3 rounded-xl
-                          ${isDark ? 'bg-amber-900/20' : 'bg-amber-50'}`}>
-                          <div className="w-1.5 h-1.5 rounded-full bg-amber-500 mt-1.5 flex-shrink-0" />
-                          <p className={`text-xs font-medium ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-                            {pendingMessages} elemento{pendingMessages !== 1 ? 's' : ''} esperando revisión
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                    {/* Aprobaciones pendientes — eliminado, flujo no utilizado */}
 
                     {/* Sin notificaciones */}
-                    {notifications.length === 0 && pendingMessages === 0 && (
+                    {notifications.length === 0 && (
                       <p className="text-xs text-slate-400 text-center py-4">{t('ui.no_appts_today')}</p>
                     )}
                   </div>
