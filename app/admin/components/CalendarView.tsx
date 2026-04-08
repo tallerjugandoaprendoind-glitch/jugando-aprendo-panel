@@ -463,7 +463,7 @@ function MonthlyCalendarView() {
         />
       )}
 
-      <div className="min-h-screen px-5 pt-5 pb-8 animate-fade-in-up" style={{ background: "var(--background)" }}>
+      <div className="min-h-full overflow-y-auto px-5 pt-5 pb-8 animate-fade-in-up" style={{ background: "var(--background)" }}>
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">

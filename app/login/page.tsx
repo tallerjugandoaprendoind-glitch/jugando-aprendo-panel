@@ -3,7 +3,7 @@ import React from 'react'
 
 import { useI18n } from '@/lib/i18n-context'
 
-import { useState, use } from 'react'
+import { useState, use, useEffect } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
@@ -22,6 +22,11 @@ export default function LoginPage(props: PageProps) {
   const [errorMessage, setErrorMessage] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showForgotInfo, setShowForgotInfo] = useState(false)
+
+  // ── Forzar modo claro en login — sin importar el tema guardado ──
+  useEffect(() => {
+    document.documentElement.classList.remove('dark')
+  }, [])
 
   async function handleGoogleLogin() {
     setIsLoading(true)

@@ -23,9 +23,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
     const initial = stored || (prefersDark ? 'dark' : 'light')
     setTheme(initial)
-    // Solo aplica dark en rutas admin/padre, no en login
     const isLoginPage = window.location.pathname === '/login' || window.location.pathname === '/'
-    if (!isLoginPage) {
+    if (isLoginPage) {
+      // En login siempre modo claro — sin importar el tema guardado
+      document.documentElement.classList.remove('dark')
+    } else {
       document.documentElement.classList.toggle('dark', initial === 'dark')
     }
   }, [])
