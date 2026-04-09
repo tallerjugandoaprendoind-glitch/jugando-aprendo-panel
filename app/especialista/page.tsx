@@ -78,6 +78,7 @@ export default function EspecialistaDashboard() {
   const [showProfileMenu, setShowProfileMenu]       = useState(false)
   const [showNotifications, setShowNotifications]   = useState(false)
   const [citasHoy, setCitasHoy]                     = useState<any[]>([])
+  const [chatUnread, setChatUnread]                 = useState(0)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [newPassword, setNewPassword]               = useState('')
   const [confirmPassword, setConfirmPassword]       = useState('')
@@ -88,6 +89,9 @@ export default function EspecialistaDashboard() {
   const [activeChild, setActiveChild]               = useState<{id: string, name: string} | null>(null)
 
   useEffect(() => { if (activeView !== 'pacientes') setActiveChild(null) }, [activeView])
+
+  // Reset unread when entering chat
+  useEffect(() => { if (activeView === 'evaluaciones') setChatUnread(0) }, [activeView])
 
   const loadProfile = async () => {
     try {
@@ -119,6 +123,28 @@ export default function EspecialistaDashboard() {
         .eq('specialist_id', session.user.id)
         .order('appointment_time', { ascending: true })
       if (data) setCitasHoy(data)
+
+      // Load initial chat unread count
+      const { count } = await supabase
+        .from('chat_especialista_admin')
+        .select('id', { count: 'exact', head: true })
+        .eq('recipient_id', session.user.id)
+        .is('read_at', null)
+      setChatUnread(count || 0)
+
+      // Realtime: new messages → increment badge
+      const channel = supabase
+        .channel('esp-chat-unread')
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_especialista_admin',
+          filter: `recipient_id=eq.${session.user.id}`,
+        }, () => {
+          setChatUnread(prev => prev + 1)
+        })
+        .subscribe()
+      return () => { supabase.removeChannel(channel) }
     }
     fetchCitasHoy()
   }, [])
@@ -223,6 +249,7 @@ export default function EspecialistaDashboard() {
               label={item.label}
               active={activeView === item.id}
               onClick={() => { setActiveView(item.id); setSidebarOpen(false) }}
+              badge={item.id === 'evaluaciones' ? chatUnread : 0}
             />
           ))}
         </nav>
@@ -284,7 +311,7 @@ export default function EspecialistaDashboard() {
                   ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
               >
                 <Bell size={18} />
-                {citasHoy.length > 0 && (
+                {(citasHoy.length > 0 || chatUnread > 0) && (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
                 )}
               </button>
@@ -300,6 +327,23 @@ export default function EspecialistaDashboard() {
                     </button>
                   </div>
                   <div className="space-y-1.5 max-h-64 overflow-y-auto">
+                    {/* Mensajes no leídos */}
+                    {chatUnread > 0 && (
+                      <div className="space-y-1.5">
+                        <p className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Chat Equipo
+                        </p>
+                        <button
+                          onClick={() => { setActiveView('evaluaciones'); setShowNotifications(false) }}
+                          className={`w-full flex items-start gap-3 p-3 rounded-xl text-left transition-colors
+                            ${isDark ? 'bg-violet-900/20 hover:bg-violet-900/30' : 'bg-violet-50 hover:bg-violet-100'}`}>
+                          <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 flex-shrink-0" />
+                          <p className={`text-xs font-medium ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>
+                            {chatUnread} mensaje{chatUnread !== 1 ? 's' : ''} sin leer
+                          </p>
+                        </button>
+                      </div>
+                    )}
                     {citasHoy.length > 0 ? (
                       <>
                         <p className={`text-[10px] font-black uppercase tracking-widest px-1 mb-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
@@ -316,7 +360,7 @@ export default function EspecialistaDashboard() {
                         ))}
                       </>
                     ) : (
-                      <p className="text-xs text-slate-400 text-center py-4">Sin citas para hoy</p>
+                      chatUnread === 0 && <p className="text-xs text-slate-400 text-center py-4">Sin notificaciones</p>
                     )}
                   </div>
                 </div>
@@ -352,15 +396,21 @@ export default function EspecialistaDashboard() {
         <div className="flex items-center">
           {NAV_ITEMS.map(item => {
             const isActive = activeView === item.id
+            const unread = item.id === 'evaluaciones' ? chatUnread : 0
             return (
               <button key={item.id} onClick={() => setActiveView(item.id)}
                 className="flex flex-col items-center gap-1 py-1 flex-1 min-w-0 transition-all active:scale-95">
-                <div className={`w-8 h-6 rounded-lg flex items-center justify-center transition-all
+                <div className={`relative w-8 h-6 rounded-lg flex items-center justify-center transition-all
                   ${isActive
                     ? 'bg-blue-600 text-white shadow-sm shadow-blue-300'
                     : isDark ? 'text-slate-500' : 'text-slate-400'
                   }`}>
                   <item.icon size={15} />
+                  {unread > 0 && (
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-white text-[8px] font-black flex items-center justify-center">
+                      {unread > 9 ? '9+' : unread}
+                    </span>
+                  )}
                 </div>
                 <span className={`font-bold truncate w-full text-center px-0.5 transition-colors
                   ${isActive

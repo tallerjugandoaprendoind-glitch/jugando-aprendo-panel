@@ -154,12 +154,16 @@ export default function AdminDashboard() {
   const [changingPassword, setChangingPassword] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
   const [userId, setUserId] = useState('')
+  const [chatUnread, setChatUnread] = useState(0)
   const [ariaOpen, setAriaOpen] = useState(false)
   const [ariaExpanded, setAriaExpanded] = useState(false)
   const [ariaMinimized, setAriaMinimized] = useState(false)
   const [activeChild, setActiveChild] = useState<{id: string, name: string} | null>(null)
   // Clear patient context when leaving patients view
   useEffect(() => { if (currentView !== 'ninos') setActiveChild(null) }, [currentView])
+
+  // Reset unread when entering chat
+  useEffect(() => { if (currentView === 'chat-especialistas') setChatUnread(0) }, [currentView])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: any } }) => {
@@ -172,6 +176,28 @@ export default function AdminDashboard() {
           .eq('id', user.id)
           .single()
         if (profile) setUserProfile(profile)
+
+        // Load initial unread count
+        const { count } = await supabase
+          .from('chat_especialista_admin')
+          .select('id', { count: 'exact', head: true })
+          .eq('recipient_id', user.id)
+          .is('read_at', null)
+        setChatUnread(count || 0)
+
+        // Realtime: new messages → increment badge if not in chat
+        const channel = supabase
+          .channel('admin-chat-unread')
+          .on('postgres_changes', {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_especialista_admin',
+            filter: `recipient_id=eq.${user.id}`,
+          }, () => {
+            setChatUnread(prev => prev + 1)
+          })
+          .subscribe()
+        return () => { supabase.removeChannel(channel) }
       }
     })
     fetchNotifications()
@@ -266,6 +292,7 @@ export default function AdminDashboard() {
               label={item.label}
               active={currentView === item.id}
               onClick={() => navigateTo(item.id)}
+              badge={item.id === 'chat-especialistas' ? chatUnread : 0}
             />
           ))}
 
@@ -367,7 +394,7 @@ export default function AdminDashboard() {
                   ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
               >
                 <Bell size={18} />
-                {notifications.length > 0 && (
+                {(notifications.length > 0 || chatUnread > 0) && (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
                 )}
               </button>
@@ -384,6 +411,24 @@ export default function AdminDashboard() {
                   </div>
 
                   <div className="space-y-2 max-h-72 overflow-y-auto">
+                    {/* Mensajes no leídos */}
+                    {chatUnread > 0 && (
+                      <div className="space-y-1.5">
+                        <p className={`text-[10px] font-black uppercase tracking-widest px-1 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Chat Equipo
+                        </p>
+                        <button
+                          onClick={() => { navigateTo('chat-especialistas'); setShowNotifications(false) }}
+                          className={`w-full flex items-start gap-3 p-3 rounded-xl text-left transition-colors
+                            ${isDark ? 'bg-violet-900/20 hover:bg-violet-900/30' : 'bg-violet-50 hover:bg-violet-100'}`}>
+                          <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 flex-shrink-0" />
+                          <p className={`text-xs font-medium ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>
+                            {chatUnread} mensaje{chatUnread !== 1 ? 's' : ''} sin leer
+                          </p>
+                        </button>
+                      </div>
+                    )}
+
                     {/* Citas de hoy */}
                     {notifications.length > 0 && (
                       <div className="space-y-1.5">
