@@ -169,6 +169,93 @@ function LineChartProgreso({ sesiones, criterio = 90, color = '#7c3aed', titulo 
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// PROGRAMA CARD — colapsable
+// ═══════════════════════════════════════════════════════════════════════════════
+function ProgramaCard({ prog, t }: { prog: any; t: any }) {
+  const [open, setOpen] = useState(true)
+  const badge = prog.criterio_logrado
+    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+    : prog.ultimo_porcentaje >= prog.criterio_dominio
+    ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+    : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+
+  return (
+    <div className="rounded-2xl border overflow-hidden" style={{ background: 'var(--card)', borderColor: 'var(--card-border)' }}>
+      <button onClick={() => setOpen(o => !o)}
+        className="w-full px-4 py-3 border-b flex items-center justify-between text-left transition-opacity hover:opacity-80"
+        style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)' }}>
+        <div className="min-w-0 flex-1">
+          <p className="font-black text-sm truncate" style={{ color: 'var(--text-primary)' }}>{prog.nombre || prog.titulo || 'Sin nombre'}</p>
+          <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-muted)' }}>{prog.objetivo || prog.objetivo_lp || prog.descripcion || prog.area || ''}</p>
+        </div>
+        <div className="flex items-center gap-2 ml-3 shrink-0">
+          <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${badge}`}>{prog.estado_general}</span>
+          <span className="text-[10px] font-black" style={{ color: 'var(--text-muted)' }}>{open ? '▲' : '▼'}</span>
+        </div>
+      </button>
+
+      {open && (
+        <div className="p-4 space-y-3">
+          {prog.total_sesiones > 0 ? (
+            <>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: 'Última sesión', value: `${prog.ultimo_porcentaje}%`, highlight: prog.ultimo_porcentaje >= prog.criterio_dominio, color: null },
+                  { label: 'Media', value: `${prog.media}%`, highlight: false, color: null },
+                  {
+                    label: 'Tendencia',
+                    value: prog.tendencia_slope > 0 ? '▲ Creciente' : prog.tendencia_slope < 0 ? '▼ Decreciente' : '● Nula',
+                    highlight: false,
+                    color: prog.tendencia_slope > 0 ? '#34d399' : prog.tendencia_slope < 0 ? '#f87171' : '#94a3b8',
+                  },
+                ].map(m => (
+                  <div key={m.label} className="rounded-xl p-2.5 text-center border" style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)' }}>
+                    <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{m.label}</p>
+                    <p className={`text-lg font-black ${m.highlight ? 'text-emerald-400' : ''}`}
+                      style={m.color ? { color: m.color, fontSize: m.label === 'Tendencia' ? '11px' : undefined } : !m.highlight ? { color: 'var(--text-primary)' } : {}}>
+                      {m.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {prog.sets?.length > 0 && (
+                <div className="space-y-1.5">
+                  <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>SETS</p>
+                  {prog.sets.map((set: any) => (
+                    <div key={set.nombre} className="flex items-center justify-between rounded-lg px-3 py-2 border" style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)' }}>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`w-2 h-2 rounded-full shrink-0 ${set.criterio_logrado ? 'bg-emerald-400' : 'bg-amber-400'}`} />
+                        <span className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>{set.nombre}</span>
+                      </div>
+                      <div className="flex items-center gap-3 shrink-0 ml-2">
+                        <span className="text-xs" style={{ color: 'var(--text-muted)' }}>media {set.media}%</span>
+                        <span className={`text-xs font-black ${set.criterio_logrado ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          {set.criterio_logrado ? '✅ Logrado' : `${set.ultimo_pct}%`}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                Tendencia: <span className={`font-bold ${prog.tendencia_slope > 0 ? 'text-emerald-400' : prog.tendencia_slope < 0 ? 'text-red-400' : ''}`}>
+                  {prog.tendencia_descripcion}
+                </span>
+                {' · '}{prog.total_sesiones} sesiones
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-center py-3" style={{ color: 'var(--text-muted)' }}>Sin sesiones registradas</p>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // TAB: PREDICCIONES
 // ═══════════════════════════════════════════════════════════════════════════════
 function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
@@ -205,54 +292,66 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
     : prediccion?.tendencia === 'negativa' ? 'red' : 'blue'
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-      {/* Lista de pacientes */}
-      <div className="lg:col-span-1  rounded-2xl border border-slate-200 shadow-sm overflow-hidden" style={{ background: "var(--card)" }}>
-        <div className="p-4 border-b" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
-          <h3 className="font-black flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-            <Users size={16} className="text-blue-600" /> {t('ui.generarPrediccion2')}
+    <div className="flex h-full min-h-0 gap-0 rounded-2xl border overflow-hidden" style={{ border: '1px solid var(--card-border)', background: 'var(--card)' }}>
+
+      {/* ── Lista de pacientes — panel fijo izquierdo ── */}
+      <div className="w-64 flex-shrink-0 flex flex-col border-r" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
+        <div className="px-4 py-3.5 border-b flex-shrink-0" style={{ borderColor: 'var(--card-border)' }}>
+          <h3 className="font-black text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <Users size={15} className="text-blue-500" /> {t('ui.generarPrediccion2')}
           </h3>
-          <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>{t('hub.iaAnalizara')}</p>
+          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('hub.iaAnalizara')}</p>
         </div>
-        <div className="divide-y divide-slate-50 max-h-[500px] overflow-y-auto">
+        <div className="flex-1 overflow-y-auto">
           {pacientes.length === 0 && (
-            <p className="p-4 text-sm text-slate-400 text-center">{t('ui.no_patients')}</p>
+            <p className="p-4 text-sm text-center" style={{ color: 'var(--text-muted)' }}>{t('ui.no_patients')}</p>
           )}
           {pacientes.map(p => (
             <button key={p.id} onClick={() => generarPrediccion(p)}
-              className={`w-full text-left p-3.5 transition-colors flex items-center gap-3 ${selectedPaciente?.id === p.id ? 'border-l-2 border-blue-500' : ''}`} style={{ background: selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.1)' : 'transparent' }} onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.1)' : 'var(--muted-bg)'} onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.1)' : 'transparent'}>
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-black text-sm">{(p.name || p.nombre || '?').charAt(0)}</span>
+              className="w-full text-left px-3.5 py-3 transition-colors flex items-center gap-3 border-b"
+              style={{
+                borderColor: 'var(--card-border)',
+                borderLeft: selectedPaciente?.id === p.id ? '3px solid #3b82f6' : '3px solid transparent',
+                background: selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.12)' : 'transparent',
+              }}
+              onMouseEnter={e => { if (selectedPaciente?.id !== p.id) (e.currentTarget as HTMLElement).style.background = 'var(--card)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.12)' : 'transparent' }}
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-black text-xs">{(p.name || p.nombre || '?').charAt(0).toUpperCase()}</span>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="font-bold text-sm truncate" style={{ color: "var(--text-primary)" }}>{p.name}</p>
-                <p className="text-[11px] truncate" style={{ color: "var(--text-muted)" }}>{p.diagnosis || 'Sin diagnóstico'}</p>
+                <p className="font-bold text-xs truncate" style={{ color: 'var(--text-primary)' }}>{p.name}</p>
+                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{p.diagnosis || 'Sin diagnóstico'}</p>
               </div>
-              <ChevronRight size={14} className="text-slate-300 flex-shrink-0" />
+              {selectedPaciente?.id === p.id && (
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
+              )}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Panel predicciones */}
-      <div className="lg:col-span-2 space-y-4">
+      {/* ── Panel de predicciones — scrollable derecho ── */}
+      <div className="flex-1 overflow-y-auto min-h-0">
         {!selectedPaciente && !loading && (
-          <div className="rounded-2xl p-12 text-center" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
-            <Brain size={48} className="text-slate-200 mx-auto mb-4" />
-            <p className="font-medium" style={{ color: "var(--text-muted)" }}>{t('ui.seleccionaPacientePrediccion').replace(' para generar predicción','')} {t('ui.seleccionaPacientePrediccion').split(' para')[1] || ''} predicciones con IA</p>
+          <div className="flex flex-col items-center justify-center h-full p-12 text-center">
+            <Brain size={48} className="text-slate-300 mb-4" style={{ opacity: 0.4 }} />
+            <p className="font-black text-base" style={{ color: 'var(--text-muted)' }}>Selecciona un paciente</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>La IA analizará sus últimas 12 semanas</p>
           </div>
         )}
 
         {loading && (
-          <div className="rounded-2xl p-12 text-center" style={{ background: "var(--card)", border: "1px solid var(--card-border)" }}>
+          <div className="flex flex-col items-center justify-center h-full p-12 text-center">
             <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-600 font-medium">{t('hub.analizandoPatrones')}</p>
-            <p className="text-xs text-slate-400 mt-1">{t('ui.calculating')}</p>
+            <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>{t('hub.analizandoPatrones')}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{t('ui.calculating')}</p>
           </div>
         )}
 
         {prediccion && !loading && selectedPaciente && (
-          <>
+          <div className="p-5 space-y-4">
             {/* Header paciente */}
             <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 text-white">
               <div className="flex items-center justify-between">
@@ -279,85 +378,9 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
               </div>
             )}
 
-            {/* Por programa */}
+            {/* Por programa — colapsables */}
             {((prediccion as any).analisis_por_programa || []).map((prog: any) => (
-              <div key={prog.programa_id} className="rounded-2xl border overflow-hidden" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
-                {/* Header del programa */}
-                <div className="px-4 py-3 border-b flex items-center justify-between" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-black text-sm truncate" style={{ color: "var(--text-primary)" }}>{prog.nombre || prog.titulo || 'Sin nombre'}</p>
-                    <p className="text-xs truncate mt-0.5" style={{ color: "var(--text-muted)" }}>{prog.objetivo || prog.objetivo_lp || prog.descripcion || prog.area || ''}</p>
-                  </div>
-                  <span className={`ml-3 shrink-0 text-[10px] font-black px-2.5 py-1 rounded-full border ${
-                    prog.criterio_logrado
-                      ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                      : prog.ultimo_porcentaje >= prog.criterio_dominio
-                      ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
-                      : "bg-amber-500/10 text-amber-400 border-amber-500/30"
-                  }`}>
-                    {prog.estado_general}
-                  </span>
-                </div>
-
-                <div className="p-4 space-y-3">
-                  {/* Métricas clave */}
-                  {prog.total_sesiones > 0 ? (
-                    <>
-                      <div className="grid grid-cols-3 gap-2">
-                        {[
-                          { label: t('hub.ultimaSesion'), value: `${prog.ultimo_porcentaje}%`, highlight: prog.ultimo_porcentaje >= prog.criterio_dominio, color: null },
-                          { label: "Media", value: `${prog.media}%`, highlight: false, color: null },
-                          {
-                            label: "Tendencia",
-                            value: prog.tendencia_slope > 0 ? '▲ Creciente' : prog.tendencia_slope < 0 ? '▼ Decreciente' : '● Nula',
-                            highlight: false,
-                            color: prog.tendencia_slope > 0 ? '#34d399' : prog.tendencia_slope < 0 ? '#f87171' : '#94a3b8',
-                          },
-                        ].map(m => (
-                          <div key={m.label} className="rounded-xl p-2.5 text-center border" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
-                            <p className="text-[10px] uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>{m.label}</p>
-                            <p className={`text-lg font-black ${m.highlight ? "text-emerald-400" : ""}`}
-                              style={m.color ? { color: m.color, fontSize: m.label === 'Tendencia' ? '11px' : undefined } : !m.highlight ? { color: "var(--text-primary)" } : {}}>
-                              {m.value}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Sets */}
-                      {prog.sets && prog.sets.length > 0 && (
-                        <div className="space-y-1.5">
-                          <p className="text-[10px] font-black uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>{t('ui.sets')}</p>
-                          {prog.sets.map((set: any) => (
-                            <div key={set.nombre} className="flex items-center justify-between rounded-lg px-3 py-2 border" style={{ background: "var(--muted-bg)", borderColor: "var(--card-border)" }}>
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className={`w-2 h-2 rounded-full shrink-0 ${set.criterio_logrado ? "bg-emerald-400" : "bg-amber-400"}`}/>
-                                <span className="text-xs font-bold truncate" style={{ color: "var(--text-primary)" }}>{set.nombre}</span>
-                              </div>
-                              <div className="flex items-center gap-3 shrink-0 ml-2">
-                                <span className="text-xs" style={{ color: "var(--text-muted)" }}>media {set.media}%</span>
-                                <span className={`text-xs font-black ${set.criterio_logrado ? "text-emerald-400" : "text-amber-400"}`}>
-                                  {set.criterio_logrado ? "✅ Logrado" : `${set.ultimo_pct}%`}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Tendencia */}
-                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        Tendencia: <span className={`font-bold ${prog.tendencia_slope > 0 ? "text-emerald-400" : prog.tendencia_slope < 0 ? "text-red-400" : ""}`}>
-                          {prog.tendencia_descripcion}
-                        </span>
-                        {" · "}{prog.total_sesiones} sesiones
-                      </p>
-                    </>
-                  ) : (
-                    <p className="text-xs text-center py-3" style={{ color: "var(--text-muted)" }}>{t('ui.no_sessions')}</p>
-                  )}
-                </div>
-              </div>
+              <ProgramaCard key={prog.programa_id} prog={prog} t={t} />
             ))}
 
             {/* Análisis IA general */}
@@ -366,8 +389,8 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                 {/* Header */}
                 <div className="px-5 py-3 border-b flex items-center gap-2" style={{ background: "linear-gradient(135deg, #1e1b4b, #312e81)", borderColor: "var(--card-border)" }}>
                   <Sparkles size={14} className="text-violet-300" />
-                  <p className="text-xs font-black uppercase tracking-wider text-violet-200">Análisis Clínico IA — Supervisora ABA</p>
-                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-violet-500/30 text-violet-300 font-bold border border-violet-500/30">BCBA IA</span>
+                  <p className="text-xs font-black uppercase tracking-wider text-violet-200">Análisis Clínico IA — Analista Conductual ABA</p>
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-violet-500/30 text-violet-300 font-bold border border-violet-500/30">IA</span>
                 </div>
                 {/* Contenido renderizado */}
                 <div className="p-5 space-y-4">
@@ -446,7 +469,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>
@@ -856,12 +879,12 @@ function ResumenIACard({ texto }: { texto: string }) {
           </div>
           <div>
             <p className="text-sm font-black uppercase tracking-widest" style={{ color: '#d0d0e8' }}>Informe Neuropsicológico Clínico</p>
-            <p className="text-[11px]" style={{ color: '#7a7a9a' }}>Análisis ABA · Supervisión Conductual · BCBA IA</p>
+            <p className="text-[11px]" style={{ color: '#7a7a9a' }}>Análisis ABA · Supervisión Conductual</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] px-2.5 py-1 rounded-full font-black border hidden sm:inline-block"
-            style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)', borderColor: 'var(--card-border)' }}>BCBA IA</span>
+            style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)', borderColor: 'var(--card-border)' }}>IA</span>>
           <span className="text-[10px] px-2.5 py-1 rounded-full font-black border"
             style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)', borderColor: 'var(--card-border)' }}>CONFIDENCIAL</span>
         </div>
@@ -1474,7 +1497,11 @@ export default function InteligenciaHubView() {
       </div>
 
       {/* Tab Content */}
-      {tab === 'predicciones' && <TabPredicciones pacientes={pacientes} />}
+      {tab === 'predicciones' && (
+        <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 220px)' }}>
+          <TabPredicciones pacientes={pacientes} />
+        </div>
+      )}
       {tab === 'patrones' && <TabPatrones pacientes={pacientes} />}
       {tab === 'objetivos' && <TabObjetivos pacientes={pacientes} />}
       {tab === 'sugerencias' && <TabSugerencias />}
