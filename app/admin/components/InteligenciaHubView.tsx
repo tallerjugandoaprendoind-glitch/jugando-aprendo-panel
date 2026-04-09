@@ -884,7 +884,7 @@ function ResumenIACard({ texto }: { texto: string }) {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-[10px] px-2.5 py-1 rounded-full font-black border hidden sm:inline-block"
-            style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)', borderColor: 'var(--card-border)' }}>IA</span>>
+            style={{ background: 'var(--muted-bg)', color: 'var(--text-secondary)', borderColor: 'var(--card-border)' }}>IA</span>
           <span className="text-[10px] px-2.5 py-1 rounded-full font-black border"
             style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)', borderColor: 'var(--card-border)' }}>CONFIDENCIAL</span>
         </div>
