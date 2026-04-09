@@ -313,13 +313,14 @@ export default function ChatEspecialistas({
           const { data: msgs } = await supabase
             .from('chat_especialista_admin')
             .select('content, created_at, read_at, sender_id, message_type')
-            .or(`sender_id.eq.${p.id},recipient_id.eq.${p.id}`)
+            .or(`and(sender_id.eq.${userId},recipient_id.eq.${p.id}),and(sender_id.eq.${p.id},recipient_id.eq.${userId})`)
             .order('created_at', { ascending: false })
             .limit(1)
           const { count } = await supabase
             .from('chat_especialista_admin')
             .select('id', { count: 'exact', head: true })
             .eq('sender_id', p.id)
+            .eq('recipient_id', userId)
             .is('read_at', null)
           const last = msgs?.[0]
           let preview = last?.content || null
@@ -355,7 +356,7 @@ export default function ChatEspecialistas({
         const { data, error } = await supabase
           .from('chat_especialista_admin')
           .select('*')
-          .or(`sender_id.eq.${espId},recipient_id.eq.${espId}`)
+          .or(`and(sender_id.eq.${userId},recipient_id.eq.${espId}),and(sender_id.eq.${espId},recipient_id.eq.${userId})`)
           .order('created_at', { ascending: true })
         if (error) throw error
         setMensajes(data || [])
