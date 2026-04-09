@@ -91,7 +91,19 @@ export default function EspecialistaDashboard() {
   useEffect(() => { if (activeView !== 'pacientes') setActiveChild(null) }, [activeView])
 
   // Reset unread when entering chat
-  useEffect(() => { if (activeView === 'evaluaciones') setChatUnread(0) }, [activeView])
+  useEffect(() => {
+    if (activeView === 'evaluaciones') {
+      setChatUnread(0)
+      // Mark all as read in DB
+      if (profile?.id) {
+        supabase.from('chat_especialista_admin')
+          .update({ read_at: new Date().toISOString() })
+          .eq('recipient_id', profile.id)
+          .is('read_at', null)
+          .then(() => {})
+      }
+    }
+  }, [activeView, profile?.id])
 
   const loadProfile = async () => {
     try {

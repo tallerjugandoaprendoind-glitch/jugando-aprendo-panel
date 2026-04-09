@@ -163,7 +163,19 @@ export default function AdminDashboard() {
   useEffect(() => { if (currentView !== 'ninos') setActiveChild(null) }, [currentView])
 
   // Reset unread when entering chat
-  useEffect(() => { if (currentView === 'chat-especialistas') setChatUnread(0) }, [currentView])
+  useEffect(() => {
+    if (currentView === 'chat-especialistas') {
+      setChatUnread(0)
+      // Mark all as read in DB
+      if (userId) {
+        supabase.from('chat_especialista_admin')
+          .update({ read_at: new Date().toISOString() })
+          .eq('recipient_id', userId)
+          .is('read_at', null)
+          .then(() => {})
+      }
+    }
+  }, [currentView, userId])
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data: { user } }: { data: { user: any } }) => {
