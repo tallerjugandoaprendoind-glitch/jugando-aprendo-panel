@@ -2,7 +2,7 @@
 
 import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
-// Panel de configuración de notificaciones — Telegram (recomendado) + WhatsApp
+// Panel de configuración de notificaciones — WhatsApp
 import { useState, useEffect } from 'react'
 import { Bell, CheckCircle, XCircle, ExternalLink, Copy, Send, MessageCircle } from 'lucide-react'
 import WhatsAppQRPanel from './WhatsAppQRPanel'
@@ -100,7 +100,7 @@ export default function WhatsAppConfigView() {
           </p>
           {!configured && (
             <p className="text-xs text-amber-700 mt-0.5">
-              Seguí los pasos de abajo para activar Telegram (recomendado — gratis y confiable).
+              Seguí los pasos de abajo para conectar WhatsApp.
             </p>
           )}
         </div>
@@ -137,119 +137,12 @@ export default function WhatsAppConfigView() {
             }`}
           >
             {t.label}
-            <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${
-              t.id === 'telegram' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-            }`}>{t.badge}</span>
           </button>
         ))}
       </div>
 
       {/* ── BAILEYS QR ── */}
       {tab === 'baileys' && <WhatsAppQRPanel />}
-
-      {/* ── TELEGRAM ── */}
-      {tab === 'telegram' && (
-        <div className="space-y-4">
-          <div className="rounded-xl bg-green-50 border border-green-200 p-4">
-            <p className="text-sm font-bold text-green-800 mb-1">{t('ui.porqueTelegram')}</p>
-            <ul className="text-xs text-green-700 space-y-1">
-              <li>{t('ui.whatsapp_free')}</li>
-              <li>✅ No requiere verificar empresa ni esperar aprobaciones</li>
-              <li>{t('ui.whatsapp_peruvian')}</li>
-              <li>{t('ui.listoMinutos')}</li>
-            </ul>
-          </div>
-
-          <div className="rounded-xl border p-5 space-y-4" style={{ borderColor: 'var(--card-border)', background: 'var(--card)' }}>
-            <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-              ⚙️ Configuración paso a paso
-            </p>
-
-            {[
-              {
-                n: '1', title: 'Crear el bot',
-                desc: 'En Telegram buscá @BotFather → escribí /newbot → seguí los pasos.',
-                code: '/newbot',
-                note: 'Te va a pedir un nombre (ej: "Vanty Jugando Aprendo") y un username (ej: vanty_ja_bot). Al final te da el TOKEN.',
-              },
-              {
-                n: '2', title: 'Crear el grupo de alertas',
-                desc: 'Creá un grupo en Telegram llamado "Vanty Alertas" y agregá el bot que creaste.',
-                note: 'Podés agregar al grupo a todo el equipo del centro.',
-              },
-              {
-                n: '3', title: 'Obtener el Chat ID',
-                desc: 'Mandá cualquier mensaje en el grupo, luego abrí esta URL en el navegador:',
-                code: 'https://api.telegram.org/bot<TU_TOKEN>/getUpdates',
-                note: 'Buscá "chat" → "id" en la respuesta. Es un número negativo como -1001234567890.',
-              },
-              {
-                n: '4', title: 'Configurar en Vercel',
-                desc: 'Settings → Environment Variables → agregar:',
-                code: 'TELEGRAM_BOT_TOKEN = 7123456789:AAFxxxxxxxx\nTELEGRAM_CHAT_ID   = -1001234567890',
-                note: 'Después de guardar, hacé Redeploy en Vercel para que tome los cambios.',
-              },
-            ].map(step => (
-              <div key={step.n} className="flex gap-3">
-                <div className="w-6 h-6 rounded-full bg-violet-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <span className="text-xs font-black text-violet-600">{step.n}</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{step.title}</p>
-                  <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{step.desc}</p>
-                  {step.code && (
-                    <div className="flex items-start gap-2 mt-1.5">
-                      <code className="text-xs bg-slate-100 text-slate-700 px-2 py-1.5 rounded font-mono flex-1 whitespace-pre leading-relaxed">
-                        {step.code}
-                      </code>
-                      <button onClick={() => copy(step.code!)} className="p-1 hover:bg-slate-200 rounded mt-0.5 shrink-0">
-                        <Copy size={11} className="text-slate-400" />
-                      </button>
-                    </div>
-                  )}
-                  {step.note && (
-                    <p className="text-xs mt-1 text-violet-600 italic">{step.note}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ── WHATSAPP META ── */}
-      {tab === 'whatsapp' && (
-        <div className="space-y-4">
-          <div className="rounded-xl bg-blue-50 border border-blue-200 p-4">
-            <p className="text-sm font-bold text-blue-800 mb-1">Meta WhatsApp Cloud API</p>
-            <ul className="text-xs text-blue-700 space-y-1">
-              <li>{t('ui.milConversaciones')}</li>
-              <li>{t('ui.notificaWhatsApp')}</li>
-              <li>{t('ui.whatsapp_meta_warning')}</li>
-              <li>{t('ui.plantillasAprobadas')}</li>
-            </ul>
-          </div>
-
-          <div className="rounded-xl border p-5 space-y-3" style={{ borderColor: 'var(--card-border)', background: 'var(--card)' }}>
-            <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{t('ui.varEntorno')}</p>
-            <div className="flex items-start gap-2">
-              <code className="text-xs bg-slate-100 text-slate-700 px-2 py-2 rounded font-mono flex-1 whitespace-pre leading-relaxed">
-                {`META_WA_PHONE_ID = (de Meta Developer Console)\nMETA_WA_TOKEN    = (token de acceso permanente)`}
-              </code>
-              <button onClick={() => copy('META_WA_PHONE_ID=\nMETA_WA_TOKEN=')} className="p-1 hover:bg-slate-200 rounded mt-0.5 shrink-0">
-                <Copy size={11} className="text-slate-400" />
-              </button>
-            </div>
-            <a
-              href="https://developers.facebook.com/docs/whatsapp/cloud-api/get-started"
-              target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:underline"
-            >
-              {t('ui.verGuiaOficial')} <ExternalLink size={11} />
-            </a>
-          </div>
-        </div>
-      )}
 
       {/* Triggers activos */}
       <div className="rounded-xl border p-5" style={{ borderColor: 'var(--card-border)', background: 'var(--card)' }}>
