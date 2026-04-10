@@ -4,6 +4,7 @@ import React from 'react'
 import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
 import { useState, useEffect, useCallback } from 'react'
+import { useTheme } from '@/components/ThemeContext'
 import {
   ArrowLeft, Baby, BarChart3, Brain, Calendar, Check, ChevronRight,
   ClipboardList, Edit, Link, Link2Off, Loader2, Mail, Plus, Save,
@@ -474,6 +475,107 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL — Layout adaptativo móvil / desktop
 // ═══════════════════════════════════════════════════════════════════════════
+// ── FichasTab — dos secciones: Plantillas + Rellenar ─────────────────────────
+function FichasTab({ childId, childName, currentRole }: {
+  childId: string; childName: string; currentRole: string
+}) {
+  const { isDark } = useTheme()
+  const [subTab, setSubTab] = useState<'plantillas' | 'rellenar'>('rellenar')
+
+  const cc = {
+    txt1: isDark ? 'text-slate-100' : 'text-slate-800',
+    txt3: isDark ? 'text-slate-500' : 'text-slate-400',
+    tab:  isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-200',
+    activeTab: isDark ? 'bg-[#161b22] text-slate-100 shadow-sm' : 'bg-white text-slate-800 shadow-sm',
+    inactiveTab: isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600',
+  }
+
+  const canManage = ['jefe', 'admin'].includes(currentRole)
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Sub-tabs */}
+      <div className={`flex-shrink-0 px-5 pt-4 pb-0 border-b ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+        <div className={`inline-flex rounded-xl border p-1 gap-1 ${cc.tab}`}>
+          {canManage && (
+            <button onClick={() => setSubTab('plantillas')}
+              className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${subTab === 'plantillas' ? cc.activeTab : cc.inactiveTab}`}>
+              ⚙️ Gestionar fichas
+            </button>
+          )}
+          <button onClick={() => setSubTab('rellenar')}
+            className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${subTab === 'rellenar' ? cc.activeTab : cc.inactiveTab}`}>
+            📋 Fichas del paciente
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-5">
+        {subTab === 'plantillas' && canManage && (
+          <GestorPlantillas isDark={isDark} />
+        )}
+        {subTab === 'rellenar' && (
+          <RellenarFichaConWord childId={childId} childName={childName} isDark={isDark} />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── RellenarFichaConWord — guarda ficha + genera Word automáticamente ─────────
+function RellenarFichaConWord({ childId, childName, isDark }: {
+  childId: string; childName: string; isDark: boolean
+}) {
+  const toast = useToast()
+
+  const handleSaved = async (responseId: string) => {
+    // Auto-generar Word y guardar en patient_documents
+    try {
+      const res = await fetch('/api/reporte-ficha-clinica', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ responseId }),
+      })
+      if (!res.ok) return
+
+      const blob  = await res.blob()
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profile } = await supabase.from('profiles').select('full_name,role').eq('id', user!.id).single()
+
+      // Subir al bucket
+      const fileName = `Ficha_${childName.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.docx`
+      const path = `${childId}/${Date.now()}_${fileName}`
+      const file = new File([blob], fileName, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+
+      const { error: upErr } = await supabase.storage.from('patient-documents').upload(path, file, { upsert: false })
+      if (upErr) throw upErr
+
+      const { data: { publicUrl } } = supabase.storage.from('patient-documents').getPublicUrl(path)
+
+      await supabase.from('patient_documents').insert({
+        child_id:         childId,
+        uploaded_by:      user!.id,
+        uploader_role:    profile?.role || 'especialista',
+        uploader_name:    profile?.full_name || 'Clínico',
+        file_name:        fileName,
+        file_url:         publicUrl,
+        file_type:        'word',
+        file_size:        blob.size,
+        category:         'informe',
+        description:      'Ficha clínica generada automáticamente',
+        visible_to_parent: false,
+      })
+
+      toast.success('📄 Word generado y guardado en Documentos del paciente')
+    } catch (e: any) {
+      console.error('Error auto-generando Word:', e)
+    }
+  }
+
+  return <RellenarFicha childId={childId} childName={childName} isDark={isDark} onSaved={handleSaved} />
+}
+
 export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (id: string, name: string) => void } = {}) {
   const { t } = useI18n()
   const toast  = useToast()
@@ -696,10 +798,11 @@ export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (i
             {tab==='evaluaciones' && <div style={{ padding: '20px 24px' }}><EvaluacionesUnificadas initialChildId={selected.id} initialChildName={selected.name}/></div>}
             {tab==='historial' && <div style={{ padding: '20px 24px' }}><AIReportView initialChildId={selected.id} /></div>}
             {tab==='fichas' && (
-              <div style={{ padding: '20px 24px' }} className="space-y-8">
-                {['jefe','admin'].includes(currentRole) && <GestorPlantillas />}
-                <RellenarFicha childId={selected.id} childName={selected.name} isDark={false} />
-              </div>
+              <FichasTab
+                childId={selected.id}
+                childName={selected.name}
+                currentRole={currentRole}
+              />
             )}
             {tab==='documentos' && <div style={{ padding: '20px 24px' }}><DocumentosView childId={selected.id} childName={selected.name} currentRole="admin" /></div>}
           </div>

@@ -514,7 +514,7 @@ function FormPreview({ name, desc, sections, fields, isDark, onBack }: {
 export function RellenarFicha({
   childId, childName, isDark: isDarkProp = false, onSaved
 }: {
-  childId: string; childName: string; isDark?: boolean; onSaved?: () => void
+  childId: string; childName: string; isDark?: boolean; onSaved?: (responseId: string) => void
 }) {
   const { isDark: isDarkCtx } = useTheme()
   const isDark = isDarkProp ?? isDarkCtx
@@ -562,14 +562,16 @@ export function RellenarFicha({
     try {
       const { data: { user } } = await supabase.auth.getUser()
       const { data: profile } = await supabase.from('profiles').select('full_name,role').eq('id', user!.id).single()
-      const { error } = await supabase.from('clinical_template_responses').insert({
+      const { data: inserted, error } = await supabase.from('clinical_template_responses').insert({
         template_id: selected.id, child_id: childId, filled_by: user!.id,
         filler_role: profile?.role || 'especialista', filler_name: profile?.full_name || 'Clínico',
         responses: answers, notes: notes.trim() || null,
-      })
+      }).select('id').single()
       if (error) throw error
       toast.success('✅ Ficha guardada')
-      setAnswers({}); setNotes(''); setSelected(null); onSaved?.(); loadData()
+      setAnswers({}); setNotes(''); setSelected(null)
+      if (inserted?.id) onSaved?.(inserted.id)
+      loadData()
     } catch (e: any) { toast.error('Error: ' + e.message) }
     finally { setSaving(false) }
   }
