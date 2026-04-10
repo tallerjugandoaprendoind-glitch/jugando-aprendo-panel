@@ -62,7 +62,7 @@ function formatTiempo(s: number) {
   return `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
 }
 function roleLabel(role: string) {
-  const map: Record<string, string> = { jefe: 'Administrador', admin: 'Administrador', especialista: 'Especialista', terapeuta: 'Terapeuta' }
+  const map: Record<string, string> = { jefe: 'Director(a)', admin: 'Administrador', especialista: 'Especialista', terapeuta: 'Terapeuta' }
   return map[role] || role
 }
 
@@ -490,9 +490,9 @@ export default function ChatConAdmin({
                 {/* Admins */}
                 {admins.length > 0 && (
                   <>
-                    <div className="px-4 py-2 flex items-center gap-1.5">
+                    <div className={`px-4 py-2 flex items-center gap-1.5 border-b ${isDark ? 'border-[#21262d]' : 'border-slate-100/70'}`}>
                       <Shield size={11} className="text-blue-500" />
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Administración</p>
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Administración</p>
                     </div>
                     {admins.map(c => <ContactoItem key={c.id} c={c} seleccionado={seleccionado} onClick={() => setSeleccionado(c)} />)}
                   </>
@@ -500,9 +500,9 @@ export default function ChatConAdmin({
                 {/* Especialistas */}
                 {especialistas.length > 0 && (
                   <>
-                    <div className="px-4 py-2 flex items-center gap-1.5 mt-1">
+                    <div className={`px-4 py-2 flex items-center gap-1.5 border-b ${isDark ? 'border-[#21262d]' : 'border-slate-100/70'}`}>
                       <Users size={11} className="text-violet-500" />
-                      <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Especialistas</p>
+                      <p className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>Especialistas</p>
                     </div>
                     {especialistas.map(c => <ContactoItem key={c.id} c={c} seleccionado={seleccionado} onClick={() => setSeleccionado(c)} />)}
                   </>
@@ -530,7 +530,7 @@ export default function ChatConAdmin({
               <div className={`px-5 py-3.5 border-b flex items-center gap-3 shadow-sm ${isDark ? 'border-[#21262d] bg-[#161b22]' : 'border-slate-100 bg-white'}`}>
                 <Avatar name={seleccionado.full_name} avatarUrl={seleccionado.avatar_url} size="md" online />
                 <div className="flex-1">
-                  <p className="text-sm font-black text-slate-800">{seleccionado.full_name}</p>
+                  <p className={`text-sm font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{seleccionado.full_name}</p>
                   <p className="text-[11px] text-emerald-500 font-semibold flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full inline-block" />
                     {seleccionado.specialty || roleLabel(seleccionado.role)}
@@ -724,10 +724,15 @@ export default function ChatConAdmin({
 
 // ─── Sub-componente para item de contacto ─────────────────────────────────────
 function ContactoItem({ c, seleccionado, onClick }: { c: Contacto; seleccionado: Contacto | null; onClick: () => void }) {
+  const { isDark } = useTheme()
   return (
     <button onClick={onClick}
-      className={`w-full text-left px-4 py-3.5 border-b border-slate-100/70 transition-colors relative
-        ${seleccionado?.id === c.id ? 'bg-blue-50 border-l-[3px] border-l-blue-500' : 'hover:bg-white/80'}`}>
+      className={`w-full text-left px-4 py-3.5 border-b transition-colors relative
+        ${isDark ? 'border-[#21262d]' : 'border-slate-100/70'}
+        ${seleccionado?.id === c.id
+          ? isDark ? 'bg-blue-900/25 border-l-[3px] border-l-blue-500' : 'bg-blue-50 border-l-[3px] border-l-blue-500'
+          : isDark ? 'hover:bg-[#21262d]' : 'hover:bg-white/80'
+        }`}>
       <div className="flex items-start gap-3">
         <div className="relative flex-shrink-0">
           <Avatar name={c.full_name} avatarUrl={c.avatar_url} size="sm" />
@@ -738,13 +743,13 @@ function ContactoItem({ c, seleccionado, onClick }: { c: Contacto; seleccionado:
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <p className={`text-xs font-bold truncate ${c.unread > 0 ? 'text-slate-900' : 'text-slate-700'}`}>{c.full_name}</p>
-          <p className="text-[10px] text-slate-400 truncate mt-0.5">{c.specialty || roleLabel(c.role)}</p>
+          <p className={`text-xs font-bold truncate ${c.unread > 0 ? (isDark ? 'text-white' : 'text-slate-900') : (isDark ? 'text-slate-300' : 'text-slate-700')}`}>{c.full_name}</p>
+          <p className={`text-[10px] truncate mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{c.specialty || roleLabel(c.role)}</p>
           {c.lastMessage && (
-            <p className={`text-[10px] truncate mt-0.5 ${c.unread > 0 ? 'text-slate-600 font-semibold' : 'text-slate-400'}`}>{c.lastMessage}</p>
+            <p className={`text-[10px] truncate mt-0.5 ${c.unread > 0 ? (isDark ? 'text-slate-300 font-semibold' : 'text-slate-600 font-semibold') : (isDark ? 'text-slate-600' : 'text-slate-400')}`}>{c.lastMessage}</p>
           )}
         </div>
-        {c.lastTime && <span className="text-[9px] text-slate-400 flex-shrink-0 mt-0.5">{new Date(c.lastTime).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>}
+        {c.lastTime && <span className={`text-[9px] flex-shrink-0 mt-0.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>{new Date(c.lastTime).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>}
       </div>
     </button>
   )

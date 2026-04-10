@@ -772,7 +772,7 @@ export default function ChatEspecialistas({
                               {esp.full_name}
                             </p>
                             <p className="text-[10px] text-violet-400 truncate mt-0.5 font-semibold">
-                              {esp.specialty || (esp.role === 'jefe' ? 'Jefe' : 'Admin')}
+                              {esp.specialty || (esp.role === 'jefe' ? 'Director(a)' : 'Administrador')}
                             </p>
                             {esp.lastMessage && (
                               <p className={`text-[10px] truncate mt-0.5 ${esp.unread > 0 ? (isDark ? 'text-slate-400 font-semibold' : 'text-slate-600 font-semibold') : (isDark ? 'text-slate-600' : 'text-slate-400')}`}>

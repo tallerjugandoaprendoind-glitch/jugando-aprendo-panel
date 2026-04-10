@@ -136,12 +136,14 @@ export default function EspecialistaDashboard() {
         .order('appointment_time', { ascending: true })
       if (data) setCitasHoy(data)
 
-      // Load initial chat unread count
+      // Load initial chat unread count — solo mensajes recientes no leídos
+      const hace7dias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
       const { count } = await supabase
         .from('chat_especialista_admin')
         .select('id', { count: 'exact', head: true })
         .eq('recipient_id', session.user.id)
         .is('read_at', null)
+        .gte('created_at', hace7dias)
       setChatUnread(count || 0)
 
       // Realtime: new messages → increment badge

@@ -189,12 +189,14 @@ export default function AdminDashboard() {
           .single()
         if (profile) setUserProfile(profile)
 
-        // Load initial unread count
+        // Load initial unread count — solo mensajes recientes no leídos
+        const hace7dias = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
         const { count } = await supabase
           .from('chat_especialista_admin')
           .select('id', { count: 'exact', head: true })
           .eq('recipient_id', user.id)
           .is('read_at', null)
+          .gte('created_at', hace7dias)
         setChatUnread(count || 0)
 
         // Realtime: new messages → increment badge if not in chat
