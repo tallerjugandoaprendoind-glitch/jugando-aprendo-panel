@@ -399,7 +399,14 @@ function FieldEditor({ field, isDark, onChange, onDelete, onMoveUp, onMoveDown }
         <input value={field.label} onChange={e => onChange({ label: e.target.value })}
           placeholder="Pregunta o etiqueta del campo"
           className={`flex-1 px-3 py-2 rounded-lg text-sm border-2 outline-none focus:border-indigo-400 transition-all ${cc.input}`} />
-        <select value={field.type} onChange={e => onChange({ type: e.target.value as Field['type'] })}
+        <select value={field.type} onChange={e => {
+          const newType = e.target.value as Field['type']
+          const needsOptions = ['select', 'radio'].includes(newType)
+          onChange({
+            type: newType,
+            options: needsOptions && (!field.options || field.options.length === 0) ? [''] : field.options
+          })
+        }}
           className={`px-2 py-2 rounded-lg text-xs font-bold border-2 outline-none cursor-pointer ${isDark ? 'bg-[#161b22] border-[#21262d] text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}>
           {FIELD_TYPES.map(ft => <option key={ft.id} value={ft.id}>{ft.icon} {ft.label}</option>)}
         </select>
@@ -417,19 +424,51 @@ function FieldEditor({ field, isDark, onChange, onDelete, onMoveUp, onMoveDown }
           className={`w-full px-3 py-1.5 rounded-lg text-xs border-2 outline-none ${cc.input}`} />
       )}
       {['select', 'radio'].includes(field.type) && (
-        <div className="space-y-1">
-          <p className={`text-[9px] font-black uppercase tracking-widest ${cc.txt3}`}>Opciones separadas por coma</p>
-          <input value={(field.options || []).join(', ')}
-            onChange={e => onChange({ options: e.target.value.split(',').map(o => o.trim()).filter(Boolean) })}
-            placeholder="Ej: Leve, Moderado, Severo"
-            className={`w-full px-3 py-1.5 rounded-lg text-xs border-2 outline-none ${cc.input}`} />
-          {(field.options || []).length > 0 && (
-            <div className="flex flex-wrap gap-1">
-              {(field.options || []).map(o => (
-                <span key={o} className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${isDark ? 'bg-[#21262d] text-slate-400' : 'bg-slate-100 text-slate-600'}`}>{o}</span>
-              ))}
-            </div>
-          )}
+        <div className="space-y-1.5">
+          <p className={`text-[9px] font-black uppercase tracking-widest ${cc.txt3}`}>Opciones</p>
+          <div className="space-y-1">
+            {(field.options || []).map((opt, idx) => (
+              <div key={idx} className="flex items-center gap-1.5">
+                <span className={`text-[10px] ${cc.txt3} flex-shrink-0 w-4 text-right`}>{idx + 1}.</span>
+                <input
+                  value={opt}
+                  onChange={e => {
+                    const newOpts = [...(field.options || [])]
+                    newOpts[idx] = e.target.value
+                    onChange({ options: newOpts })
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      const newOpts = [...(field.options || []), '']
+                      onChange({ options: newOpts })
+                    }
+                    if (e.key === 'Backspace' && opt === '' && (field.options || []).length > 1) {
+                      const newOpts = (field.options || []).filter((_, i) => i !== idx)
+                      onChange({ options: newOpts })
+                    }
+                  }}
+                  placeholder={`Opción ${idx + 1}`}
+                  className={`flex-1 px-2.5 py-1.5 rounded-lg text-xs border-2 outline-none focus:border-indigo-400 transition-all ${cc.input}`}
+                  autoFocus={idx === (field.options || []).length - 1 && opt === ''}
+                />
+                <button
+                  onClick={() => {
+                    const newOpts = (field.options || []).filter((_, i) => i !== idx)
+                    onChange({ options: newOpts.length > 0 ? newOpts : [''] })
+                  }}
+                  className="p-1 rounded text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex-shrink-0">
+                  <X size={11} />
+                </button>
+              </div>
+            ))}
+            {/* Add option button */}
+            <button
+              onClick={() => onChange({ options: [...(field.options || []), ''] })}
+              className={`flex items-center gap-1 text-xs font-bold mt-1 px-2 py-1 rounded-lg transition-colors ${isDark ? 'text-indigo-400 hover:bg-indigo-900/20' : 'text-indigo-600 hover:bg-indigo-50'}`}>
+              <Plus size={11} /> Añadir opción
+            </button>
+          </div>
         </div>
       )}
     </div>
