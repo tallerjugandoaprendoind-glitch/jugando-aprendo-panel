@@ -187,8 +187,9 @@ export default function SecretariaDashboard() {
         </header>
 
         {/* Content */}
-        <div className={`flex-1 overflow-y-auto admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-[#f8f8fb]'}`}>
-          <div className="p-4 md:p-5 pb-24 md:pb-6">
+        <div className={`flex-1 overflow-y-auto admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-[#f8f8fb]'}
+          ${activeView === 'agenda' ? 'p-0 overflow-hidden' : ''}`}>
+          <div className={activeView === 'agenda' ? 'h-full' : 'p-4 md:p-5 pb-24 md:pb-6'}>
             {renderView()}
           </div>
         </div>
