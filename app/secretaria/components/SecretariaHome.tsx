@@ -6,9 +6,67 @@ import {
   ChevronRight, Loader2, AlertCircle, Plus, BarChart3,
   ArrowRight, RefreshCw
 } from 'lucide-react'
+import {
+  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
+} from 'recharts'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { useTheme } from '@/components/ThemeContext'
+
+function WeeklyChart({ isDark }: { isDark: boolean }) {
+  const [data, setData] = useState<any[]>([])
+
+  useEffect(() => {
+    const load = async () => {
+      const days = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
+      const today = new Date()
+      const dayOfWeek = today.getDay()
+      const monday = new Date(today)
+      monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+
+      const weekDates = Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(monday)
+        d.setDate(monday.getDate() + i)
+        return d.toISOString().split('T')[0]
+      })
+
+      const { data: apts } = await supabase
+        .from('appointments')
+        .select('appointment_date, status')
+        .in('appointment_date', weekDates)
+
+      const result = weekDates.map((date, i) => {
+        const dayApts = (apts || []).filter(a => a.appointment_date === date)
+        return {
+          day: days[i],
+          completadas: dayApts.filter(a => ['completed','realizada'].includes(a.status)).length,
+          pendientes:  dayApts.filter(a => a.status === 'pending').length,
+          canceladas:  dayApts.filter(a => a.status === 'cancelled').length,
+        }
+      })
+      setData(result)
+    }
+    load()
+  }, [])
+
+  return (
+    <ResponsiveContainer width="100%" height={180}>
+      <BarChart data={data} barSize={10} barGap={2}>
+        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? '#21262d' : '#f1f5f9'} vertical={false} />
+        <XAxis dataKey="day" tick={{ fontSize: 11, fill: isDark ? '#64748b' : '#94a3b8' }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 10, fill: isDark ? '#64748b' : '#94a3b8' }} axisLine={false} tickLine={false} width={20} allowDecimals={false} />
+        <Tooltip
+          contentStyle={{ background: isDark ? '#161b22' : '#fff', border: `1px solid ${isDark ? '#21262d' : '#e2e8f0'}`, borderRadius: 12, fontSize: 12 }}
+          labelStyle={{ color: isDark ? '#e2e8f0' : '#1e293b', fontWeight: 700 }}
+          cursor={{ fill: isDark ? '#21262d' : '#f8fafc' }}
+        />
+        <Bar dataKey="completadas" name="Completadas" fill="#10b981" radius={[4,4,0,0]} />
+        <Bar dataKey="pendientes"  name="Pendientes"  fill="#f59e0b" radius={[4,4,0,0]} />
+        <Bar dataKey="canceladas"  name="Canceladas"  fill="#f87171" radius={[4,4,0,0]} />
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
 
 function AppointmentRow({ apt, isDark }: { apt: any; isDark: boolean }) {
   const fecha = new Date(apt.appointment_date + 'T00:00:00')
@@ -135,40 +193,62 @@ export default function SecretariaHome({ onNavigate }: Props) {
         ))}
       </div>
 
-      {/* Citas */}
+      {/* Chart + Citas recientes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {[
-          { title: 'Citas de hoy', badge: citasHoy.length, list: citasHoy, dot: true },
-          { title: proximasCitas.length > 0 ? 'Próximas citas' : 'Citas recientes', badge: 0, list: proximasCitas.length > 0 ? proximasCitas : citasRecientes, dot: false },
-        ].map(({ title, badge, list, dot }) => (
-          <div key={title} className={`${cc.card} border rounded-2xl overflow-hidden`}>
-            <div className={`flex items-center justify-between px-5 py-3.5 border-b ${cc.divider}`}>
-              <div className="flex items-center gap-2.5">
-                {dot && <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />}
-                {!dot && <Calendar size={14} className={cc.txt3} />}
-                <h3 className={`font-black text-sm ${cc.txt1}`}>{title}</h3>
-                {badge > 0 && <span className="text-[10px] font-black bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">{badge}</span>}
-              </div>
-              {dot && <span className={`text-[11px] font-medium capitalize ${cc.txt3}`}>{new Date().toLocaleDateString('es', { weekday: 'short', day: 'numeric' })}</span>}
+
+        {/* Gráfica semanal */}
+        <div className={`${cc.card} border rounded-2xl overflow-hidden`}>
+          <div className={`flex items-center justify-between px-5 py-3.5 border-b ${cc.divider}`}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <h3 className={`font-black text-sm ${cc.txt1}`}>Citas esta semana</h3>
             </div>
-            <div className="p-3 space-y-0.5 min-h-[120px]">
-              {list.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8">
-                  <Calendar size={28} className={`mb-2 ${cc.txt3}`} />
-                  <p className={`text-xs font-semibold ${cc.txt3}`}>{dot ? 'Sin citas para hoy' : 'Sin citas registradas'}</p>
+            <span className={`text-[11px] font-bold ${cc.txt3}`}>{stats.semana} total</span>
+          </div>
+          <div className="p-5">
+            <WeeklyChart isDark={isDark} />
+          </div>
+          <div className={`px-5 py-3 border-t ${cc.footer}`}>
+            <div className="flex items-center gap-4 text-[11px]">
+              {[
+                { color: 'bg-emerald-500', label: 'Completadas' },
+                { color: 'bg-amber-400',  label: 'Pendientes' },
+                { color: 'bg-red-400',    label: 'Canceladas' },
+              ].map(l => (
+                <div key={l.label} className="flex items-center gap-1.5">
+                  <div className={`w-2 h-2 rounded-full ${l.color}`} />
+                  <span className={cc.txt3}>{l.label}</span>
                 </div>
-              ) : list.slice(0, 6).map(apt => <AppointmentRow key={apt.id} apt={apt} isDark={isDark} />)}
-            </div>
-            <div className={`px-5 py-2.5 border-t ${cc.footer}`}>
-              <button onClick={() => onNavigate?.('agenda')} className="text-xs font-bold text-blue-500 hover:text-blue-400 flex items-center gap-1 transition-colors">
-                {dot ? 'Ver agenda completa' : 'Ver todas'} <ArrowRight size={11} />
-              </button>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* Accesos rápidos */}
+        {/* Citas recientes */}
+        <div className={`${cc.card} border rounded-2xl overflow-hidden`}>
+          <div className={`flex items-center justify-between px-5 py-3.5 border-b ${cc.divider}`}>
+            <div className="flex items-center gap-2.5">
+              <Calendar size={14} className={cc.txt3} />
+              <h3 className={`font-black text-sm ${cc.txt1}`}>{proximasCitas.length > 0 ? 'Próximas citas' : 'Citas recientes'}</h3>
+            </div>
+          </div>
+          <div className="p-3 space-y-0.5 min-h-[120px]">
+            {(proximasCitas.length > 0 ? proximasCitas : citasRecientes).length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <Calendar size={28} className={`mb-2 ${cc.txt3}`} />
+                <p className={`text-xs font-semibold ${cc.txt3}`}>Sin citas registradas</p>
+              </div>
+            ) : (proximasCitas.length > 0 ? proximasCitas : citasRecientes).slice(0, 6).map(apt =>
+              <AppointmentRow key={apt.id} apt={apt} isDark={isDark} />
+            )}
+          </div>
+          <div className={`px-5 py-2.5 border-t ${cc.footer}`}>
+            <button onClick={() => onNavigate?.('agenda')} className="text-xs font-bold text-blue-500 hover:text-blue-400 flex items-center gap-1 transition-colors">
+              Ver todas <ArrowRight size={11} />
+            </button>
+          </div>
+        </div>
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
           { icon: Plus,         label: 'Nueva cita',  sub: 'Agendar sesión',       action: 'agenda',     color: 'text-blue-500',    bg: isDark ? 'bg-blue-900/20' : 'bg-blue-50' },
