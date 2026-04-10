@@ -475,49 +475,28 @@ function PatientInfoTab({ nino, onSaved }: { nino: any; onSaved: () => void }) {
 // ═══════════════════════════════════════════════════════════════════════════
 // COMPONENTE PRINCIPAL — Layout adaptativo móvil / desktop
 // ═══════════════════════════════════════════════════════════════════════════
-// ── FichasTab — dos secciones: Plantillas + Rellenar ─────────────────────────
+// ── FichasTab — dos paneles lado a lado ──────────────────────────────────────
 function FichasTab({ childId, childName, currentRole }: {
   childId: string; childName: string; currentRole: string
 }) {
   const { isDark } = useTheme()
-  const [subTab, setSubTab] = useState<'plantillas' | 'rellenar'>('rellenar')
-
-  const cc = {
-    txt1: isDark ? 'text-slate-100' : 'text-slate-800',
-    txt3: isDark ? 'text-slate-500' : 'text-slate-400',
-    tab:  isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-200',
-    activeTab: isDark ? 'bg-[#161b22] text-slate-100 shadow-sm' : 'bg-white text-slate-800 shadow-sm',
-    inactiveTab: isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600',
-  }
-
   const canManage = ['jefe', 'admin'].includes(currentRole)
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Sub-tabs */}
-      <div className={`flex-shrink-0 px-5 pt-4 pb-0 border-b ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
-        <div className={`inline-flex rounded-xl border p-1 gap-1 ${cc.tab}`}>
-          {canManage && (
-            <button onClick={() => setSubTab('plantillas')}
-              className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${subTab === 'plantillas' ? cc.activeTab : cc.inactiveTab}`}>
-              ⚙️ Gestionar fichas
-            </button>
-          )}
-          <button onClick={() => setSubTab('rellenar')}
-            className={`px-4 py-2 rounded-lg text-xs font-black transition-all ${subTab === 'rellenar' ? cc.activeTab : cc.inactiveTab}`}>
-            📋 Fichas del paciente
-          </button>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-5">
-        {subTab === 'plantillas' && canManage && (
-          <GestorPlantillas isDark={isDark} />
-        )}
-        {subTab === 'rellenar' && (
-          <RellenarFichaConWord childId={childId} childName={childName} isDark={isDark} />
-        )}
+    <div className="flex h-full overflow-hidden">
+      {/* Panel izquierdo — Gestionar fichas */}
+      {canManage && (
+        <>
+          <div className="flex-1 overflow-y-auto p-5 min-w-0">
+            <GestorPlantillas isDark={isDark} />
+          </div>
+          {/* Divisor */}
+          <div className={`w-px flex-shrink-0 ${isDark ? 'bg-[#21262d]' : 'bg-slate-200'}`} />
+        </>
+      )}
+      {/* Panel derecho — Fichas del paciente */}
+      <div className="flex-1 overflow-y-auto p-5 min-w-0">
+        <RellenarFichaConWord childId={childId} childName={childName} isDark={isDark} />
       </div>
     </div>
   )
