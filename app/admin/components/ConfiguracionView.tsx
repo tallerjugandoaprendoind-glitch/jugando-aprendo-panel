@@ -496,12 +496,6 @@ export default function ConfiguracionView({ onAvatarUpdate }: { onAvatarUpdate?:
       <SeccionNotificaciones />
       <SeccionApariencia />
       <SeccionCuenta />
-      <div className="space-y-4">
-        <p className={`text-[10px] font-black uppercase tracking-widest pt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-          Fichas Clínicas
-        </p>
-        <GestorPlantillas isDark={isDark} />
-      </div>
     </div>
   )
 }
