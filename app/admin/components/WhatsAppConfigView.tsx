@@ -124,7 +124,8 @@ export default function WhatsAppConfigView() {
 
       {/* Tabs — solo WhatsApp */}
       <div className="flex gap-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
-        {([\n          { id: 'baileys', label: '💬 WhatsApp Business', badge: '' },
+        {([
+          { id: 'baileys', label: '💬 WhatsApp Business', badge: '' },
         ] as const).map(t => (
           <button
             key={t.id}
