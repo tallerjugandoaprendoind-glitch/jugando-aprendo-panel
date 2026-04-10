@@ -493,15 +493,15 @@ function FichasTab({ childId, childName, currentRole }: {
     <div className="flex flex-col h-full overflow-hidden">
       {/* Sub-tabs */}
       <div className={`flex-shrink-0 px-5 pt-4 pb-3 border-b ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
-        <div className={`inline-flex rounded-2xl p-1.5 gap-1.5 border ${cc.bar}`}>
+        <div className={`flex rounded-2xl p-1.5 gap-1.5 border ${cc.bar}`}>
           {canManage && (
             <button onClick={() => setSubTab('plantillas')}
-              className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${subTab === 'plantillas' ? cc.active : cc.inactive}`}>
+              className={`flex-1 py-3 rounded-xl text-sm font-black transition-all ${subTab === 'plantillas' ? cc.active : cc.inactive}`}>
               ⚙️ Gestionar fichas
             </button>
           )}
           <button onClick={() => setSubTab('rellenar')}
-            className={`px-6 py-2.5 rounded-xl text-sm font-black transition-all ${subTab === 'rellenar' ? cc.active : cc.inactive}`}>
+            className={`flex-1 py-3 rounded-xl text-sm font-black transition-all ${subTab === 'rellenar' ? cc.active : cc.inactive}`}>
             📋 Fichas del paciente
           </button>
         </div>
