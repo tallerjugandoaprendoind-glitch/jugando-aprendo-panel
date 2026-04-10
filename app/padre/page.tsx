@@ -15,7 +15,7 @@ import {
   Award, Target, Smile, Book, Star, Zap, Bell, Download, Share2, Eye, Mail, Phone,
   Settings, HelpCircle, FileText, Video, Headphones, Image as ImageIcon, ExternalLink,
   Camera, Upload, Gift, PartyPopper, Flame, TrendingDown, Baby, Stethoscope, PlayCircle,
-  CalendarDays, ShoppingBag, BookOpen, MoreHorizontal
+  CalendarDays, ShoppingBag, BookOpen, MoreHorizontal, FolderOpen
 } from 'lucide-react'
 
 import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './components/shared'
@@ -30,6 +30,7 @@ import MisCitasView from './components/MisCitasView'
 import ProfileView from './components/ProfileView'
 import NotifWhatsAppPanel from './components/NotifWhatsAppPanel'
 import StoreView from './components/StoreView'
+import DocumentosView from '@/app/admin/components/DocumentosView'
 import ChatInterface from './components/ChatInterface'
 import MensajesView from './components/MensajesView'
 import EngagementView from './components/EngagementView'
@@ -528,6 +529,7 @@ export default function ParentDashboard() {
                 <NavBtnDesktop icon={<Bell size={17}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                 <NavBtnDesktop icon={<Book size={17}/>} label="Centro de Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
                 <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
+                <NavBtnDesktop icon={<FolderOpen size={17}/>} label="Documentos" active={activeView==='documentos'} onClick={()=>setActiveView('documentos')} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
 
@@ -661,6 +663,21 @@ export default function ParentDashboard() {
                     {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
                     {activeView === 'engagement' && <EngagementView childId={selectedChild?.id || ''} />}
+                    {activeView === 'documentos' && selectedChild && (
+                      <div className="p-4">
+                        <DocumentosView
+                          childId={selectedChild.id}
+                          childName={selectedChild.name}
+                          currentRole="padre"
+                        />
+                      </div>
+                    )}
+                    {activeView === 'documentos' && !selectedChild && (
+                      <div className="p-8 text-center text-slate-400">
+                        <FolderOpen size={36} className="mx-auto mb-3 opacity-40" />
+                        <p className="font-black text-sm">Selecciona un hijo/a para ver sus documentos</p>
+                      </div>
+                    )}
 
                     {activeView === 'profile' && (
                         <div className="space-y-4 pb-6">
@@ -700,6 +717,7 @@ export default function ParentDashboard() {
                     </button>
                 </div>
                 <NavBtnMobile icon={<User size={22}/>} label="Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
+                <NavBtnMobile icon={<FolderOpen size={22}/>} label="Docs" active={activeView==='documentos'} onClick={()=>setActiveView('documentos')} />
                 <div className="relative">
                   <button
                     onClick={()=>setShowMoreMenu(v=>!v)}

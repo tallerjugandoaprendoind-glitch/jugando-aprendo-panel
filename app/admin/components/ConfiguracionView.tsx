@@ -11,6 +11,7 @@ import { useTheme } from '@/components/ThemeContext'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import WhatsAppConfigView from './WhatsAppConfigView'
+import { GestorPlantillas } from './PlantillasClinicas'
 
 // ── Card genérica ─────────────────────────────────────────────────────────────
 function Card({ title, subtitle, icon: Icon, iconColor, children }: {
@@ -487,6 +488,7 @@ function SeccionCuenta() {
 
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function ConfiguracionView({ onAvatarUpdate }: { onAvatarUpdate?: (url: string) => void }) {
+  const { isDark } = useTheme()
   return (
     <div className="w-full max-w-3xl mx-auto space-y-8 pb-10">
       <SeccionPerfil onAvatarUpdate={onAvatarUpdate} />
@@ -494,6 +496,12 @@ export default function ConfiguracionView({ onAvatarUpdate }: { onAvatarUpdate?:
       <SeccionNotificaciones />
       <SeccionApariencia />
       <SeccionCuenta />
+      <div className="space-y-4">
+        <p className={`text-[10px] font-black uppercase tracking-widest pt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+          Fichas Clínicas
+        </p>
+        <GestorPlantillas isDark={isDark} />
+      </div>
     </div>
   )
 }

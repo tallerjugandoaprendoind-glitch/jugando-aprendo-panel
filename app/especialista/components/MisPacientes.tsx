@@ -10,13 +10,15 @@ import {
   Calendar, User, Phone, Mail, ChevronDown, ChevronUp,
   BookOpen, CheckCircle2, Download, Sparkles, Stethoscope, Target, MessageSquare,
   TrendingUp, Lightbulb, Shield, Star, Zap, ArrowRight, RefreshCw, Clock,
-  Plus, Link2, UserPlus
+  Plus, Link2, UserPlus, FolderOpen
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import ProgramasABAView from '@/app/admin/components/ProgramasABAView'
 import EvaluacionesUnificadas from '@/app/admin/components/EvaluacionesUnificadas'
 import AIReportView from '@/app/admin/components/AIReportView'
+import DocumentosView from '@/app/admin/components/DocumentosView'
+import { RellenarFicha } from '@/app/admin/components/PlantillasClinicas'
 
 function calcularEdad(fecha: string) {
   if (!fecha) return 'N/D'
@@ -976,6 +978,8 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
       { id: 'programas',    label: 'Programas ABA',       icon: Target },
       { id: 'evaluaciones', label: 'Evaluaciones',         icon: ClipboardList },
       { id: 'historial',    label: 'Historial & IA',      icon: Brain },
+      { id: 'fichas',       label: 'Fichas',              icon: FileText },
+      { id: 'documentos',   label: 'Documentos',          icon: FolderOpen },
     ] as const
     type DetailTab = typeof TABS_DETAIL[number]['id']
     const [detailTab, setDetailTab] = [activeTab as unknown as DetailTab, (v: DetailTab) => setActiveTab(v as any)]
@@ -1042,6 +1046,16 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
           {detailTab === 'historial' && (
             <div style={{ padding: '20px 24px' }}>
               <AIReportView initialChildId={seleccionado.id} />
+            </div>
+          )}
+          {detailTab === 'fichas' && (
+            <div style={{ padding: '20px 24px' }}>
+              <RellenarFicha childId={seleccionado.id} childName={seleccionado.name} />
+            </div>
+          )}
+          {detailTab === 'documentos' && (
+            <div style={{ padding: '20px 24px' }}>
+              <DocumentosView childId={seleccionado.id} childName={seleccionado.name} currentRole="especialista" />
             </div>
           )}
         </div>

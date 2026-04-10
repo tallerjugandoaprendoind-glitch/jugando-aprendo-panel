@@ -7,7 +7,8 @@ import { useState, useEffect, useCallback } from 'react'
 import {
   ArrowLeft, Baby, BarChart3, Brain, Calendar, Check, ChevronRight,
   ClipboardList, Edit, Link, Link2Off, Loader2, Mail, Plus, Save,
-  Search, Sparkles, Stethoscope, User, UserCheck, Users, X
+  Search, Sparkles, Stethoscope, User, UserCheck, Users, X,
+  FolderOpen, FileText
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
@@ -15,6 +16,8 @@ import { calcularEdad, calcularEdadNumerica } from '../utils/helpers'
 import ProgramasABAView from './ProgramasABAView'
 import EvaluacionesUnificadas from './EvaluacionesUnificadas'
 import AIReportView from './AIReportView'
+import DocumentosView from './DocumentosView'
+import { RellenarFicha } from './PlantillasClinicas'
 
 // ── Color badge por diagnóstico ────────────────────────────────────────────
 const DX_BORDER: Record<string, string> = {
@@ -483,7 +486,7 @@ export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (i
   // En móvil: 'list' | 'detail'. En desktop ambos visibles.
   const [mobileView, setMobileView] = useState<'list'|'detail'>('list')
   const [selected, setSelected] = useState<any>(null)
-  const [tab, setTab] = useState<'info'|'programas'|'evaluaciones'|'historial'>('info')
+  const [tab, setTab] = useState<'info'|'programas'|'evaluaciones'|'historial'|'fichas'|'documentos'>('info')
 
   // Nuevo paciente
   const [showNew, setShowNew] = useState(false)
@@ -543,6 +546,8 @@ export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (i
     { id:'programas',    icon:<BarChart3 size={14}/>,     label: t('nav.programas') },
     { id:'evaluaciones', icon:<ClipboardList size={14}/>, label: t('nav.evaluaciones') },
     { id:'historial',    icon:<Brain size={14}/>,         label: 'Historial & IA' },
+    { id:'fichas',       icon:<FileText size={14}/>,      label: 'Fichas' },
+    { id:'documentos',   icon:<FolderOpen size={14}/>,    label: 'Documentos' },
   ] as const
 
   // ── PANEL LISTA ───────────────────────────────────────────────────────────
@@ -681,6 +686,8 @@ export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (i
             {tab==='programas' && <div style={{ padding: '20px 24px' }}><ProgramasABAView childId={selected.id} childName={selected.name}/></div>}
             {tab==='evaluaciones' && <div style={{ padding: '20px 24px' }}><EvaluacionesUnificadas initialChildId={selected.id} initialChildName={selected.name}/></div>}
             {tab==='historial' && <div style={{ padding: '20px 24px' }}><AIReportView initialChildId={selected.id} /></div>}
+            {tab==='fichas' && <div style={{ padding: '20px 24px' }}><RellenarFicha childId={selected.id} childName={selected.name} isDark={false} /></div>}
+            {tab==='documentos' && <div style={{ padding: '20px 24px' }}><DocumentosView childId={selected.id} childName={selected.name} currentRole="admin" /></div>}
           </div>
         </>
       ) : (
