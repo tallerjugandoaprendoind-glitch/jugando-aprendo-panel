@@ -13,7 +13,7 @@ export default function WhatsAppConfigView() {
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; msg: string } | null>(null)
-  const [tab, setTab] = useState<'telegram' | 'whatsapp' | 'baileys'>('baileys')
+  const [tab, setTab] = useState<'baileys'>('baileys')
 
   useEffect(() => {
     fetch('/api/whatsapp').then(r => r.json()).then(d => { setStatus(d); setLoading(false) })
@@ -122,12 +122,9 @@ export default function WhatsAppConfigView() {
         }`}>{testResult.msg}</p>
       )}
 
-      {/* Tabs */}
+      {/* Tabs — solo WhatsApp */}
       <div className="flex gap-2 border-b" style={{ borderColor: 'var(--card-border)' }}>
-        {([
-          { id: 'baileys',   label: '💬 WhatsApp',  badge: 'Baileys' },
-          { id: 'telegram',  label: '✈️ Telegram', badge: 'Recomendado' },
-          { id: 'whatsapp',  label: '☁️ Meta Cloud API',  badge: '' },
+        {([\n          { id: 'baileys', label: '💬 WhatsApp Business', badge: '' },
         ] as const).map(t => (
           <button
             key={t.id}
