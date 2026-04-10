@@ -398,19 +398,6 @@ function SeccionApariencia() {
           })}
         </div>
       </Card>
-
-      <Card title="Idioma del Sistema" subtitle="El idioma del panel de administración" icon={Globe} iconColor="bg-gradient-to-br from-teal-500 to-emerald-600">
-        <div className={`rounded-xl p-4 text-sm ${isDark ? 'text-slate-300 bg-teal-900/10 border border-teal-800/30' : 'text-teal-800 bg-teal-50 border border-teal-200'}`}>
-          El idioma se cambia desde el selector <strong>ES / EN</strong> en la barra superior derecha. Se guarda automáticamente para tu sesión.
-        </div>
-        <div className="flex gap-2 mt-3">
-          {[{ label: '🇪🇸 Español', active: true }, { label: '🇺🇸 English', active: false }].map(l => (
-            <div key={l.label} className={`flex-1 text-center py-2.5 px-3 rounded-xl text-xs font-bold border-2 transition-all ${l.active
-              ? 'border-teal-500 bg-teal-50 text-teal-700'
-              : isDark ? 'border-[#30363d] text-slate-500' : 'border-slate-200 text-slate-400'}`}>{l.label}</div>
-          ))}
-        </div>
-      </Card>
     </div>
   )
 }
