@@ -578,20 +578,10 @@ export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (i
           <h2 className="text-xs font-black uppercase tracking-widest" style={{ color:'var(--text-muted)' }}>
             {t('nav.pacientes')} · <span className="font-normal">{filtrados.length}</span>
           </h2>
-          <div className="flex items-center gap-1.5">
-            {['jefe','admin'].includes(currentRole) && (
-              <button
-                onClick={() => setTab('fichas')}
-                title="Gestionar fichas clínicas"
-                className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 transition-all">
-                <FileText size={11} /> Fichas
-              </button>
-            )}
-            <button onClick={()=>setShowNew(true)}
-              className="w-7 h-7 rounded-lg bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition-all shadow-sm">
-              <Plus size={14} className="text-white"/>
-            </button>
-          </div>
+          <button onClick={()=>setShowNew(true)}
+            className="w-7 h-7 rounded-lg bg-blue-600 hover:bg-blue-700 flex items-center justify-center transition-all shadow-sm">
+            <Plus size={14} className="text-white"/>
+          </button>
         </div>
         <div className="relative">
           <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2" style={{ color:'var(--text-muted)' }}/>
@@ -705,7 +695,12 @@ export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (i
             {tab==='programas' && <div style={{ padding: '20px 24px' }}><ProgramasABAView childId={selected.id} childName={selected.name}/></div>}
             {tab==='evaluaciones' && <div style={{ padding: '20px 24px' }}><EvaluacionesUnificadas initialChildId={selected.id} initialChildName={selected.name}/></div>}
             {tab==='historial' && <div style={{ padding: '20px 24px' }}><AIReportView initialChildId={selected.id} /></div>}
-            {tab==='fichas' && <div style={{ padding: '20px 24px' }}><RellenarFicha childId={selected.id} childName={selected.name} isDark={false} /></div>}
+            {tab==='fichas' && (
+              <div style={{ padding: '20px 24px' }} className="space-y-8">
+                {['jefe','admin'].includes(currentRole) && <GestorPlantillas />}
+                <RellenarFicha childId={selected.id} childName={selected.name} isDark={false} />
+              </div>
+            )}
             {tab==='documentos' && <div style={{ padding: '20px 24px' }}><DocumentosView childId={selected.id} childName={selected.name} currentRole="admin" /></div>}
           </div>
         </>
@@ -723,11 +718,6 @@ export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (i
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-sm">
             <Plus size={15}/> {t('pacientes.nuevo')}
           </button>
-          {['jefe','admin'].includes(currentRole) && (
-            <div className="w-full max-w-2xl mt-4">
-              <GestorPlantillas />
-            </div>
-          )}
         </div>
       )}
     </div>
