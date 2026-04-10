@@ -25,14 +25,14 @@ function SidebarLink({ icon: Icon, label, active, onClick, badge }: any) {
       onClick={onClick}
       className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 group text-left text-sm relative overflow-hidden
         ${active
-          ? 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-200/50'
+          ? 'bg-blue-600 text-white shadow-sm shadow-blue-200/50'
           : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
         }`}
     >
-      <Icon size={17} className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-violet-500'}`} />
+      <Icon size={17} className={`flex-shrink-0 transition-colors ${active ? 'text-white' : 'text-slate-400 group-hover:text-blue-500'}`} />
       <span className={`font-semibold truncate flex-1 ${active ? 'text-white' : ''}`}>{label}</span>
       {badge && (
-        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${active ? 'bg-white/25 text-white' : 'bg-violet-100 text-violet-700'}`}>
+        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center ${active ? 'bg-white/25 text-white' : 'bg-blue-100 text-blue-700'}`}>
           {badge}
         </span>
       )}
@@ -166,9 +166,9 @@ export default function SecretariaDashboard() {
 
         {/* Role badge */}
         <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-50 border border-violet-100/80">
-            <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse flex-shrink-0" />
-            <span className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Secretaria</span>
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100/80">
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
+            <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Secretaria</span>
           </div>
         </div>
 
@@ -191,7 +191,7 @@ export default function SecretariaDashboard() {
             className="flex items-center gap-2.5 p-2.5 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors group"
             onClick={() => setShowProfileMenu(!showProfileMenu)}
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-purple-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 shadow-md shadow-violet-200/60 overflow-hidden">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 shadow-md shadow-blue-200/60 overflow-hidden">
               {profile?.avatar_url ? (
                 <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
               ) : userInitial}
@@ -249,7 +249,7 @@ export default function SecretariaDashboard() {
               className="flex items-center gap-2 hover:bg-slate-50 px-2 py-1.5 rounded-xl transition-colors ml-1"
             >
               <span className="text-xs font-semibold text-slate-500 hidden sm:block">{userName.split(' ')[0]}</span>
-              <div className="w-8 h-8 bg-gradient-to-br from-violet-500 to-purple-700 rounded-full flex items-center justify-center text-white text-xs font-black shadow-md shadow-violet-200/50 overflow-hidden">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black shadow-md shadow-blue-200/50 overflow-hidden">
                 {profile?.avatar_url ? (
                   <img src={profile.avatar_url} alt="avatar" className="w-full h-full object-cover" />
                 ) : userInitial}
