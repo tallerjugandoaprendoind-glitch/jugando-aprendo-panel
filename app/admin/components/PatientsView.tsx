@@ -773,8 +773,7 @@ export default function PatientsView({ onPatientSelect }: { onPatientSelect?: (i
                     tb.id === 'evaluaciones' ? 'Eval.' :
                     tb.id === 'historial'    ? 'Hist.' :
                     tb.id === 'fichas'       ? 'Fichas' :
-                    tb.id === 'documentos'   ? 'Docs' :
-                    tb.label
+                    'Docs'
                   }</span>
                   <span className="hidden @[500px]:block text-[11px] truncate w-full text-center px-1">{tb.label}</span>
                 </button>
