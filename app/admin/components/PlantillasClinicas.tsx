@@ -3,20 +3,27 @@
 import { useState, useEffect, useCallback } from 'react'
 import {
   Plus, Trash2, Edit2, Save, X, ChevronDown, ChevronUp,
-  Loader2, FileText, CheckCircle, Copy, Settings,
-  AlignLeft, List, ToggleLeft, Calendar, Hash, Type
+  Loader2, FileText, ArrowLeft, Eye, LayoutTemplate
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
+import { useTheme } from '@/components/ThemeContext'
 
 // ── Types ────────────────────────────────────────────────────────────────────
-interface FieldDef {
+interface Field {
   id: string
   label: string
-  type: 'text' | 'textarea' | 'select' | 'multiselect' | 'date' | 'number' | 'checkbox' | 'radio'
+  type: 'text' | 'textarea' | 'select' | 'radio' | 'date' | 'number' | 'checkbox'
   required: boolean
   placeholder?: string
   options?: string[]
+  section?: string
+}
+
+interface Section {
+  id: string
+  title: string
+  description?: string
 }
 
 interface Template {
@@ -24,7 +31,8 @@ interface Template {
   name: string
   description: string | null
   category: string
-  fields: FieldDef[]
+  fields: Field[]
+  sections?: Section[]
   is_active: boolean
   is_default: boolean
   created_at: string
@@ -40,17 +48,17 @@ interface TemplateResponse {
   responses: Record<string, any>
   notes: string | null
   created_at: string
-  clinical_templates?: { name: string }
+  clinical_templates?: { name: string; fields: Field[]; sections?: Section[] }
 }
 
 const FIELD_TYPES = [
-  { id: 'text',        label: 'Texto corto',       icon: Type },
-  { id: 'textarea',    label: 'Texto largo',        icon: AlignLeft },
-  { id: 'select',      label: 'Lista desplegable',  icon: List },
-  { id: 'radio',       label: 'Opción única',       icon: ToggleLeft },
-  { id: 'date',        label: 'Fecha',              icon: Calendar },
-  { id: 'number',      label: 'Número',             icon: Hash },
-  { id: 'checkbox',    label: 'Casilla de verificación', icon: CheckCircle },
+  { id: 'text',     label: 'Texto corto',  icon: '✏️' },
+  { id: 'textarea', label: 'Texto largo',  icon: '📝' },
+  { id: 'select',   label: 'Lista',        icon: '📋' },
+  { id: 'radio',    label: 'Opción única', icon: '🔘' },
+  { id: 'date',     label: 'Fecha',        icon: '📅' },
+  { id: 'number',   label: 'Número',       icon: '🔢' },
+  { id: 'checkbox', label: 'Casilla',      icon: '☑️' },
 ]
 
 const CATEGORIES = [
@@ -61,20 +69,27 @@ const CATEGORIES = [
   { id: 'otro',               label: 'Otro' },
 ]
 
-// ── Admin: Template Manager ─────────────────────────────────────────────────
-export function GestorPlantillas({ isDark = false }: { isDark?: boolean }) {
+function uid() { return `f_${Date.now()}_${Math.random().toString(36).slice(2, 7)}` }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// GESTOR DE PLANTILLAS — para Admin/Jefe
+// ══════════════════════════════════════════════════════════════════════════════
+export function GestorPlantillas({ isDark: isDarkProp }: { isDark?: boolean }) {
+  const { isDark: isDarkCtx } = useTheme()
+  const isDark = isDarkProp ?? isDarkCtx
   const toast = useToast()
+
   const [templates, setTemplates] = useState<Template[]>([])
   const [loading, setLoading]     = useState(true)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [showNew, setShowNew]     = useState(false)
+  const [view, setView]           = useState<'list' | 'create' | 'edit'>('list')
+  const [editing, setEditing]     = useState<Template | null>(null)
 
-  const card    = isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'
-  const txt1    = isDark ? 'text-slate-100' : 'text-slate-800'
-  const txt3    = isDark ? 'text-slate-500' : 'text-slate-400'
-  const inputCls = isDark
-    ? 'bg-[#0d1117] border-[#30363d] text-slate-200 placeholder:text-slate-600'
-    : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400'
+  const cc = {
+    card: isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200',
+    txt1: isDark ? 'text-slate-100' : 'text-slate-800',
+    txt3: isDark ? 'text-slate-500' : 'text-slate-400',
+    hover: isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-50',
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -86,93 +101,99 @@ export function GestorPlantillas({ isDark = false }: { isDark?: boolean }) {
   useEffect(() => { load() }, [load])
 
   const deleteTemplate = async (id: string) => {
-    if (!confirm('¿Eliminar esta plantilla?')) return
+    if (!confirm('¿Eliminar esta ficha? Esta acción no se puede deshacer.')) return
     await supabase.from('clinical_templates').delete().eq('id', id)
-    toast.success('Plantilla eliminada')
+    toast.success('Ficha eliminada')
     load()
   }
 
   const toggleActive = async (t: Template) => {
     await supabase.from('clinical_templates').update({ is_active: !t.is_active }).eq('id', t.id)
     setTemplates(prev => prev.map(tp => tp.id === t.id ? { ...tp, is_active: !tp.is_active } : tp))
+    toast.success(t.is_active ? 'Ficha desactivada' : 'Ficha activada')
+  }
+
+  if (view === 'create' || view === 'edit') {
+    return (
+      <FormBuilder
+        isDark={isDark}
+        template={editing || undefined}
+        onSave={() => { setView('list'); setEditing(null); load() }}
+        onCancel={() => { setView('list'); setEditing(null) }}
+      />
+    )
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h3 className={`font-black text-base ${txt1}`}>
-            <Settings size={16} className="inline mr-2 text-indigo-500" />
-            Plantillas de Fichas Clínicas
+          <h3 className={`font-black text-base flex items-center gap-2 ${cc.txt1}`}>
+            <LayoutTemplate size={18} className="text-indigo-500" />
+            Fichas Clínicas
           </h3>
-          <p className={`text-xs mt-0.5 ${txt3}`}>Crea y gestiona los modelos de historia clínica de tu centro</p>
+          <p className={`text-xs mt-0.5 ${cc.txt3}`}>Crea y gestiona los modelos de ficha de tu centro</p>
         </div>
-        <button onClick={() => setShowNew(true)}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white transition-all">
-          <Plus size={14} /> Nueva plantilla
+        <button onClick={() => { setEditing(null); setView('create') }}
+          className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl transition-all shadow-sm">
+          <Plus size={14} /> Nueva ficha
         </button>
       </div>
 
-      {showNew && (
-        <PlantillaEditor
-          isDark={isDark} onSave={() => { setShowNew(false); load() }} onCancel={() => setShowNew(false)}
-        />
-      )}
-
       {loading ? (
-        <div className="flex justify-center py-10"><Loader2 size={22} className="animate-spin text-indigo-500" /></div>
+        <div className="flex justify-center py-12"><Loader2 size={22} className="animate-spin text-indigo-500" /></div>
+      ) : templates.length === 0 ? (
+        <div className={`${cc.card} border rounded-2xl p-12 text-center`}>
+          <LayoutTemplate size={40} className={`mx-auto mb-3 ${cc.txt3}`} />
+          <p className={`font-black text-sm ${cc.txt3}`}>Sin fichas creadas</p>
+          <p className={`text-xs mt-1 ${cc.txt3} opacity-60`}>Crea la primera ficha clínica de tu centro</p>
+          <button onClick={() => setView('create')}
+            className="mt-4 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl">
+            Crear primera ficha
+          </button>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {templates.map(t => (
-            <div key={t.id} className={`${card} border rounded-2xl overflow-hidden`}>
-              {editingId === t.id ? (
-                <PlantillaEditor isDark={isDark} template={t}
-                  onSave={() => { setEditingId(null); load() }} onCancel={() => setEditingId(null)} />
-              ) : (
-                <div className="p-4 flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className={`font-black text-sm ${txt1}`}>{t.name}</p>
-                      {t.is_default && (
-                        <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
-                          Sistema
-                        </span>
-                      )}
-                      <span className={`text-[9px] font-black px-2 py-0.5 rounded-full
-                        ${t.is_active
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : isDark ? 'bg-[#21262d] text-slate-500' : 'bg-slate-100 text-slate-400'
-                        }`}>
-                        {t.is_active ? '✓ Activa' : '● Inactiva'}
-                      </span>
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full ${isDark ? 'bg-[#21262d] text-slate-500' : 'bg-slate-100 text-slate-500'}`}>
-                        {CATEGORIES.find(c => c.id === t.category)?.label}
-                      </span>
-                    </div>
-                    {t.description && <p className={`text-xs mt-1 ${txt3}`}>{t.description}</p>}
-                    <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                      {t.fields.length} campo{t.fields.length !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button onClick={() => toggleActive(t)} title={t.is_active ? 'Desactivar' : 'Activar'}
-                      className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-100'}
-                        ${t.is_active ? 'text-emerald-500' : txt3}`}>
-                      <ToggleLeft size={15} />
-                    </button>
-                    <button onClick={() => setEditingId(t.id)}
-                      className={`p-2 rounded-lg transition-colors ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}>
-                      <Edit2 size={14} />
-                    </button>
-                    {!t.is_default && (
-                      <button onClick={() => deleteTemplate(t.id)}
-                        className={`p-2 rounded-lg transition-colors text-red-400 ${isDark ? 'hover:bg-red-900/20' : 'hover:bg-red-50'}`}>
-                        <Trash2 size={14} />
-                      </button>
-                    )}
-                  </div>
+            <div key={t.id} className={`${cc.card} border rounded-2xl`}>
+              <div className="p-4 flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-indigo-900/30' : 'bg-indigo-50'}`}>
+                  <FileText size={18} className="text-indigo-500" />
                 </div>
-              )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className={`font-black text-sm ${cc.txt1}`}>{t.name}</p>
+                    {t.is_default && <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700">Sistema</span>}
+                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${t.is_active ? 'bg-emerald-100 text-emerald-700' : isDark ? 'bg-[#21262d] text-slate-500' : 'bg-slate-100 text-slate-400'}`}>
+                      {t.is_active ? '● Activa' : '○ Inactiva'}
+                    </span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${isDark ? 'bg-[#21262d] text-slate-500' : 'bg-slate-100 text-slate-500'}`}>
+                      {CATEGORIES.find(c => c.id === t.category)?.label}
+                    </span>
+                  </div>
+                  {t.description && <p className={`text-xs mt-0.5 ${cc.txt3}`}>{t.description}</p>}
+                  <p className={`text-[10px] mt-0.5 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+                    {t.fields?.length || 0} campo{(t.fields?.length || 0) !== 1 ? 's' : ''}
+                    {t.sections?.length ? ` · ${t.sections.length} sección${t.sections.length !== 1 ? 'es' : ''}` : ''}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button onClick={() => toggleActive(t)}
+                    className={`p-2 rounded-lg text-xs font-bold transition-colors ${cc.hover} ${t.is_active ? 'text-emerald-500' : cc.txt3}`}>
+                    {t.is_active ? '✓' : '○'}
+                  </button>
+                  <button onClick={() => { setEditing(t); setView('edit') }}
+                    className={`p-2 rounded-lg transition-colors ${cc.hover} ${cc.txt3}`}>
+                    <Edit2 size={14} />
+                  </button>
+                  {!t.is_default && (
+                    <button onClick={() => deleteTemplate(t.id)}
+                      className={`p-2 rounded-lg transition-colors text-red-400 ${isDark ? 'hover:bg-red-900/20' : 'hover:bg-red-50'}`}>
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>
@@ -181,372 +202,232 @@ export function GestorPlantillas({ isDark = false }: { isDark?: boolean }) {
   )
 }
 
-// ── Template Editor ──────────────────────────────────────────────────────────
-function PlantillaEditor({
-  isDark, template, onSave, onCancel
-}: {
+// ══════════════════════════════════════════════════════════════════════════════
+// FORM BUILDER — constructor estilo Google Forms
+// ══════════════════════════════════════════════════════════════════════════════
+function FormBuilder({ isDark, template, onSave, onCancel }: {
   isDark: boolean; template?: Template; onSave: () => void; onCancel: () => void
 }) {
   const toast = useToast()
   const [name, setName]         = useState(template?.name || '')
   const [desc, setDesc]         = useState(template?.description || '')
   const [category, setCategory] = useState(template?.category || 'historia_clinica')
-  const [fields, setFields]     = useState<FieldDef[]>(template?.fields || [])
+  const [sections, setSections] = useState<Section[]>(template?.sections || [])
+  const [fields, setFields]     = useState<Field[]>(template?.fields || [])
   const [saving, setSaving]     = useState(false)
+  const [preview, setPreview]   = useState(false)
 
-  const txt1    = isDark ? 'text-slate-100' : 'text-slate-800'
-  const txt3    = isDark ? 'text-slate-500' : 'text-slate-400'
-  const card    = isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'
-  const inputCls = `w-full px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-all ${isDark ? 'bg-[#0d1117] border-[#30363d] text-slate-200 placeholder:text-slate-600 focus:border-indigo-500' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-indigo-400'}`
-
-  const addField = () => {
-    setFields(prev => [...prev, {
-      id: `field_${Date.now()}`, label: '', type: 'text', required: false
-    }])
+  const cc = {
+    card:  isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200',
+    muted: isDark ? 'bg-[#0d1117] border-[#30363d]' : 'bg-slate-50 border-slate-200',
+    txt1:  isDark ? 'text-slate-100' : 'text-slate-800',
+    txt3:  isDark ? 'text-slate-500' : 'text-slate-400',
+    input: isDark
+      ? 'bg-[#0d1117] border-[#30363d] text-slate-200 placeholder:text-slate-600 focus:border-indigo-500'
+      : 'bg-white border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-indigo-400',
   }
+  const inputCls = `w-full px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-all ${cc.input}`
 
-  const updateField = (idx: number, patch: Partial<FieldDef>) => {
-    setFields(prev => prev.map((f, i) => i === idx ? { ...f, ...patch } : f))
-  }
-
-  const removeField = (idx: number) => {
-    setFields(prev => prev.filter((_, i) => i !== idx))
-  }
-
-  const moveField = (idx: number, dir: -1 | 1) => {
-    const arr = [...fields]
-    const target = idx + dir
+  const addSection = () => setSections(prev => [...prev, { id: uid(), title: 'Nueva sección', description: '' }])
+  const updateSection = (id: string, patch: Partial<Section>) => setSections(prev => prev.map(s => s.id === id ? { ...s, ...patch } : s))
+  const removeSection = (id: string) => { setSections(prev => prev.filter(s => s.id !== id)); setFields(prev => prev.map(f => f.section === id ? { ...f, section: undefined } : f)) }
+  const addField = (sectionId?: string) => setFields(prev => [...prev, { id: uid(), label: '', type: 'text', required: false, placeholder: '', section: sectionId }])
+  const updateField = (id: string, patch: Partial<Field>) => setFields(prev => prev.map(f => f.id === id ? { ...f, ...patch } : f))
+  const removeField = (id: string) => setFields(prev => prev.filter(f => f.id !== id))
+  const moveField = (id: string, dir: -1 | 1) => {
+    const arr = [...fields]; const idx = arr.findIndex(f => f.id === id); const target = idx + dir
     if (target < 0 || target >= arr.length) return
-    ;[arr[idx], arr[target]] = [arr[target], arr[idx]]
-    setFields(arr)
+    ;[arr[idx], arr[target]] = [arr[target], arr[idx]]; setFields(arr)
   }
 
   const handleSave = async () => {
     if (!name.trim()) { toast.error('El nombre es obligatorio'); return }
-    if (fields.length === 0) { toast.error('Agrega al menos un campo'); return }
+    const valid = fields.filter(f => f.label.trim())
+    if (valid.length === 0) { toast.error('Agrega al menos un campo'); return }
     setSaving(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      const payload = { name: name.trim(), description: desc.trim() || null, category, fields, is_active: true }
-      if (template) {
-        await supabase.from('clinical_templates').update(payload).eq('id', template.id)
-        toast.success('Plantilla actualizada')
+      const payload = { name: name.trim(), description: desc.trim() || null, category, fields: valid, sections, is_active: true, updated_at: new Date().toISOString() }
+      if (template?.id) {
+        const { error } = await supabase.from('clinical_templates').update(payload).eq('id', template.id)
+        if (error) throw error
+        toast.success('✅ Ficha actualizada')
       } else {
-        await supabase.from('clinical_templates').insert({ ...payload, created_by: user?.id })
-        toast.success('Plantilla creada')
+        const { error } = await supabase.from('clinical_templates').insert({ ...payload, created_by: user?.id })
+        if (error) throw error
+        toast.success('✅ Ficha creada')
       }
       onSave()
-    } catch (e: any) {
-      toast.error('Error: ' + e.message)
-    } finally {
-      setSaving(false)
-    }
+    } catch (e: any) { toast.error('Error: ' + e.message) }
+    finally { setSaving(false) }
   }
 
+  if (preview) return <FormPreview name={name} desc={desc} sections={sections} fields={fields} isDark={isDark} onBack={() => setPreview(false)} />
+
+  const unsectioned = fields.filter(f => !f.section)
+  const bySection = (sid: string) => fields.filter(f => f.section === sid)
+
   return (
-    <div className={`${card} border rounded-2xl p-5 space-y-4`}>
-      <div className="flex items-center justify-between">
-        <p className={`text-sm font-black ${txt1}`}>{template ? 'Editar plantilla' : 'Nueva plantilla'}</p>
-        <button onClick={onCancel} className={`p-1.5 rounded-lg ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-100'}`}>
-          <X size={14} className={txt3} />
+    <div className="space-y-4">
+      {/* Top bar */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <button onClick={onCancel} className={`p-2 rounded-xl ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-100'}`}>
+          <ArrowLeft size={16} className={cc.txt3} />
+        </button>
+        <div className="flex-1">
+          <p className={`font-black text-base ${cc.txt1}`}>{template ? 'Editar ficha' : 'Nueva ficha clínica'}</p>
+          <p className={`text-xs ${cc.txt3}`}>Diseña el formulario con secciones y preguntas</p>
+        </div>
+        <button onClick={() => setPreview(true)}
+          className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border-2 transition-all ${isDark ? 'border-[#30363d] text-slate-400 hover:bg-[#21262d]' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+          <Eye size={13} /> Vista previa
+        </button>
+        <button onClick={handleSave} disabled={saving}
+          className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl disabled:opacity-50">
+          {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+          {saving ? 'Guardando...' : 'Guardar ficha'}
         </button>
       </div>
 
-      {/* Basic info */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {/* Datos básicos */}
+      <div className={`${cc.card} border rounded-2xl p-5 space-y-4`}>
         <div>
-          <label className={`block text-[10px] font-black uppercase tracking-widest mb-1.5 ${txt3}`}>Nombre *</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Historia Clínica General" className={inputCls} />
+          <label className={`block text-[10px] font-black uppercase tracking-widest mb-1.5 ${cc.txt3}`}>Nombre de la ficha *</label>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="Ej: Historia Clínica, Seguimiento Mensual..." className={inputCls} />
         </div>
-        <div>
-          <label className={`block text-[10px] font-black uppercase tracking-widest mb-1.5 ${txt3}`}>Categoría</label>
-          <select value={category} onChange={e => setCategory(e.target.value)}
-            className={`${inputCls} cursor-pointer`}>
-            {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
-          </select>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className={`block text-[10px] font-black uppercase tracking-widest mb-1.5 ${cc.txt3}`}>Descripción</label>
+            <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Para qué se usa esta ficha..." className={inputCls} />
+          </div>
+          <div>
+            <label className={`block text-[10px] font-black uppercase tracking-widest mb-1.5 ${cc.txt3}`}>Categoría</label>
+            <select value={category} onChange={e => setCategory(e.target.value)} className={`${inputCls} cursor-pointer`}>
+              {CATEGORIES.map(cat => <option key={cat.id} value={cat.id}>{cat.label}</option>)}
+            </select>
+          </div>
         </div>
       </div>
 
-      <div>
-        <label className={`block text-[10px] font-black uppercase tracking-widest mb-1.5 ${txt3}`}>Descripción</label>
-        <input value={desc} onChange={e => setDesc(e.target.value)} placeholder="Para qué sirve esta plantilla..." className={inputCls} />
-      </div>
-
-      {/* Fields */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label className={`text-[10px] font-black uppercase tracking-widest ${txt3}`}>Campos ({fields.length})</label>
-          <button onClick={addField}
-            className="text-xs font-bold text-indigo-500 hover:text-indigo-400 flex items-center gap-1">
-            <Plus size={12} /> Añadir campo
+      {/* Campos sin sección */}
+      <div className={`${cc.card} border rounded-2xl overflow-hidden`}>
+        <div className={`px-5 py-3 border-b flex items-center justify-between ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+          <p className={`text-xs font-black uppercase tracking-widest ${cc.txt3}`}>Campos generales</p>
+          <button onClick={() => addField()} className="flex items-center gap-1 text-xs font-bold text-indigo-500 hover:text-indigo-400">
+            <Plus size={13} /> Añadir campo
           </button>
         </div>
-
-        <div className="space-y-2">
-          {fields.map((field, idx) => (
-            <div key={field.id} className={`rounded-xl border p-3 space-y-2.5 ${isDark ? 'bg-[#0d1117] border-[#30363d]' : 'bg-slate-50 border-slate-200'}`}>
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col gap-0.5">
-                  <button onClick={() => moveField(idx, -1)} className={`text-[10px] ${txt3} hover:text-blue-500`}>▲</button>
-                  <button onClick={() => moveField(idx, 1)} className={`text-[10px] ${txt3} hover:text-blue-500`}>▼</button>
-                </div>
-                <input value={field.label} onChange={e => updateField(idx, { label: e.target.value })}
-                  placeholder="Nombre del campo"
-                  className={`flex-1 px-3 py-2 rounded-lg text-sm border outline-none ${isDark ? 'bg-[#161b22] border-[#21262d] text-slate-200' : 'bg-white border-slate-200 text-slate-800'}`} />
-                <select value={field.type} onChange={e => updateField(idx, { type: e.target.value as FieldDef['type'] })}
-                  className={`px-2 py-2 rounded-lg text-xs border outline-none cursor-pointer ${isDark ? 'bg-[#161b22] border-[#21262d] text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}>
-                  {FIELD_TYPES.map(ft => <option key={ft.id} value={ft.id}>{ft.label}</option>)}
-                </select>
-                <label className="flex items-center gap-1 text-xs cursor-pointer">
-                  <input type="checkbox" checked={field.required} onChange={e => updateField(idx, { required: e.target.checked })}
-                    className="rounded" />
-                  <span className={txt3}>*</span>
-                </label>
-                <button onClick={() => removeField(idx)} className="text-red-400 hover:text-red-500">
-                  <X size={14} />
-                </button>
-              </div>
-
-              {/* Options for select/radio/multiselect */}
-              {['select','radio','multiselect'].includes(field.type) && (
-                <div>
-                  <input
-                    value={(field.options || []).join(', ')}
-                    onChange={e => updateField(idx, { options: e.target.value.split(',').map(o => o.trim()).filter(Boolean) })}
-                    placeholder="Opciones separadas por coma: Leve, Moderado, Severo"
-                    className={`w-full px-3 py-1.5 rounded-lg text-xs border outline-none ${isDark ? 'bg-[#161b22] border-[#21262d] text-slate-300 placeholder:text-slate-600' : 'bg-white border-slate-200 text-slate-700'}`}
-                  />
-                </div>
-              )}
-            </div>
+        <div className="p-4 space-y-2">
+          {unsectioned.length === 0 && (
+            <p className={`text-xs text-center py-4 ${cc.txt3}`}>Sin campos — agrega campos aquí o crea secciones abajo</p>
+          )}
+          {unsectioned.map(field => (
+            <FieldEditor key={field.id} field={field} isDark={isDark}
+              onChange={p => updateField(field.id, p)}
+              onDelete={() => removeField(field.id)}
+              onMoveUp={() => moveField(field.id, -1)}
+              onMoveDown={() => moveField(field.id, 1)} />
           ))}
         </div>
       </div>
 
-      <div className="flex gap-2 pt-2">
-        <button onClick={onCancel}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold border-2 transition-all ${isDark ? 'border-[#30363d] text-slate-400 hover:bg-[#21262d]' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-          Cancelar
-        </button>
-        <button onClick={handleSave} disabled={saving}
-          className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
-          {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-          {saving ? 'Guardando...' : 'Guardar plantilla'}
-        </button>
-      </div>
+      {/* Secciones */}
+      {sections.map(section => (
+        <div key={section.id} className={`${cc.card} border rounded-2xl overflow-hidden`}>
+          <div className={`px-5 py-3 border-b ${isDark ? 'border-[#21262d] bg-[#0d1117]' : 'border-slate-100 bg-slate-50'}`}>
+            <div className="flex items-start gap-2">
+              <div className="flex-1 space-y-1.5">
+                <input value={section.title} onChange={e => updateSection(section.id, { title: e.target.value })}
+                  placeholder="Título de la sección"
+                  className={`w-full px-3 py-1.5 rounded-lg text-sm font-black border-2 outline-none ${isDark ? 'bg-[#161b22] border-[#21262d] text-slate-200' : 'bg-white border-slate-200 text-slate-800'}`} />
+                <input value={section.description || ''} onChange={e => updateSection(section.id, { description: e.target.value })}
+                  placeholder="Descripción de la sección (opcional)"
+                  className={`w-full px-3 py-1 rounded-lg text-xs border outline-none ${isDark ? 'bg-[#161b22] border-[#21262d] text-slate-400' : 'bg-white border-slate-200 text-slate-500'}`} />
+              </div>
+              <button onClick={() => addField(section.id)} className="flex items-center gap-1 text-xs font-bold text-indigo-500 hover:text-indigo-400 whitespace-nowrap mt-1">
+                <Plus size={12} /> Campo
+              </button>
+              <button onClick={() => removeSection(section.id)} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 mt-0.5">
+                <Trash2 size={13} />
+              </button>
+            </div>
+          </div>
+          <div className="p-4 space-y-2">
+            {bySection(section.id).length === 0 && (
+              <p className={`text-xs text-center py-3 ${cc.txt3}`}>Sin campos — usa "+ Campo" para agregar</p>
+            )}
+            {bySection(section.id).map(field => (
+              <FieldEditor key={field.id} field={field} isDark={isDark}
+                onChange={p => updateField(field.id, p)}
+                onDelete={() => removeField(field.id)}
+                onMoveUp={() => moveField(field.id, -1)}
+                onMoveDown={() => moveField(field.id, 1)} />
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Agregar sección */}
+      <button onClick={addSection}
+        className={`w-full py-3 rounded-2xl border-2 border-dashed text-xs font-bold transition-all
+          ${isDark ? 'border-[#30363d] text-slate-500 hover:border-indigo-700 hover:text-indigo-400' : 'border-slate-200 text-slate-400 hover:border-indigo-300 hover:text-indigo-500'}`}>
+        + Agregar sección
+      </button>
     </div>
   )
 }
 
-// ── Fill Template Form ───────────────────────────────────────────────────────
-export function RellenarFicha({
-  childId, childName, isDark = false, onSaved
-}: {
-  childId: string; childName: string; isDark?: boolean; onSaved?: () => void
+// ── Field Editor ──────────────────────────────────────────────────────────────
+function FieldEditor({ field, isDark, onChange, onDelete, onMoveUp, onMoveDown }: {
+  field: Field; isDark: boolean
+  onChange: (p: Partial<Field>) => void
+  onDelete: () => void; onMoveUp: () => void; onMoveDown: () => void
 }) {
-  const toast = useToast()
-  const [templates, setTemplates]   = useState<Template[]>([])
-  const [responses, setResponses]   = useState<TemplateResponse[]>([])
-  const [selected, setSelected]     = useState<Template | null>(null)
-  const [answers, setAnswers]       = useState<Record<string, any>>({})
-  const [notes, setNotes]           = useState('')
-  const [saving, setSaving]         = useState(false)
-  const [loading, setLoading]       = useState(true)
-  const [showHistory, setShowHistory] = useState(false)
-
-  const txt1    = isDark ? 'text-slate-100' : 'text-slate-800'
-  const txt3    = isDark ? 'text-slate-500' : 'text-slate-400'
-  const card    = isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'
-  const inputCls = `w-full px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-all ${isDark ? 'bg-[#0d1117] border-[#30363d] text-slate-200 placeholder:text-slate-600 focus:border-blue-500' : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-400'}`
-
-  useEffect(() => {
-    const load = async () => {
-      const [{ data: tmpl }, { data: resp }] = await Promise.all([
-        supabase.from('clinical_templates').select('*').eq('is_active', true).order('name'),
-        supabase.from('clinical_template_responses')
-          .select('*, clinical_templates(name)')
-          .eq('child_id', childId)
-          .order('created_at', { ascending: false }),
-      ])
-      setTemplates(tmpl || [])
-      setResponses(resp || [])
-      setLoading(false)
-    }
-    load()
-  }, [childId])
-
-  const handleSave = async () => {
-    if (!selected) return
-    const missing = selected.fields.filter(f => f.required && !answers[f.id])
-    if (missing.length > 0) { toast.error(`Completa: ${missing.map(f => f.label).join(', ')}`); return }
-
-    setSaving(true)
-    try {
-      const { data: { user } } = await supabase.auth.getUser()
-      const { data: profile } = await supabase.from('profiles').select('full_name,role').eq('id', user!.id).single()
-
-      await supabase.from('clinical_template_responses').insert({
-        template_id: selected.id,
-        child_id:    childId,
-        filled_by:   user!.id,
-        filler_role: profile?.role || 'especialista',
-        filler_name: profile?.full_name || 'Clínico',
-        responses:   answers,
-        notes:       notes.trim() || null,
-      })
-      toast.success('✅ Ficha guardada correctamente')
-      setAnswers({})
-      setNotes('')
-      setSelected(null)
-      onSaved?.()
-      // Reload responses
-      const { data: resp } = await supabase.from('clinical_template_responses')
-        .select('*, clinical_templates(name)').eq('child_id', childId).order('created_at', { ascending: false })
-      setResponses(resp || [])
-    } catch (e: any) {
-      toast.error('Error: ' + e.message)
-    } finally {
-      setSaving(false)
-    }
+  const cc = {
+    border: isDark ? 'border-[#30363d]' : 'border-slate-200',
+    bg:     isDark ? 'bg-[#0d1117]'     : 'bg-slate-50',
+    txt3:   isDark ? 'text-slate-500'   : 'text-slate-400',
+    input:  isDark ? 'bg-[#161b22] border-[#21262d] text-slate-200 placeholder:text-slate-600' : 'bg-white border-slate-200 text-slate-800 placeholder:text-slate-400',
   }
-
-  if (loading) return <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-blue-500" /></div>
-
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className={`font-black text-base ${txt1}`}>
-            <FileText size={16} className="inline mr-2 text-blue-500" />
-            Fichas Clínicas
-          </h3>
-          <p className={`text-xs mt-0.5 ${txt3}`}>Completa una ficha para {childName}</p>
+    <div className={`${cc.bg} border-2 ${cc.border} rounded-xl p-3 space-y-2`}>
+      <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-0.5 flex-shrink-0">
+          <button onClick={onMoveUp} className={`text-[9px] leading-none ${cc.txt3} hover:text-indigo-500`}>▲</button>
+          <button onClick={onMoveDown} className={`text-[9px] leading-none ${cc.txt3} hover:text-indigo-500`}>▼</button>
         </div>
-        <button onClick={() => setShowHistory(!showHistory)}
-          className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all
-            ${isDark ? 'border-[#30363d] text-slate-400 hover:bg-[#21262d]' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
-          {showHistory ? 'Nueva ficha' : `Historial (${responses.length})`}
+        <input value={field.label} onChange={e => onChange({ label: e.target.value })}
+          placeholder="Pregunta o etiqueta del campo"
+          className={`flex-1 px-3 py-2 rounded-lg text-sm border-2 outline-none focus:border-indigo-400 transition-all ${cc.input}`} />
+        <select value={field.type} onChange={e => onChange({ type: e.target.value as Field['type'] })}
+          className={`px-2 py-2 rounded-lg text-xs font-bold border-2 outline-none cursor-pointer ${isDark ? 'bg-[#161b22] border-[#21262d] text-slate-300' : 'bg-white border-slate-200 text-slate-700'}`}>
+          {FIELD_TYPES.map(ft => <option key={ft.id} value={ft.id}>{ft.icon} {ft.label}</option>)}
+        </select>
+        <label className="flex items-center gap-1 cursor-pointer flex-shrink-0" title="Campo obligatorio">
+          <input type="checkbox" checked={field.required} onChange={e => onChange({ required: e.target.checked })} className="rounded accent-indigo-500" />
+          <span className={`text-[10px] font-black ${cc.txt3}`}>*</span>
+        </label>
+        <button onClick={onDelete} className="p-1.5 rounded-lg text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex-shrink-0">
+          <X size={13} />
         </button>
       </div>
-
-      {showHistory ? (
-        /* History view */
-        <div className="space-y-3">
-          {responses.length === 0 ? (
-            <div className={`${card} border rounded-2xl p-8 text-center`}>
-              <FileText size={28} className={`mx-auto mb-2 ${txt3}`} />
-              <p className={`text-sm font-black ${txt3}`}>Sin fichas registradas</p>
-            </div>
-          ) : responses.map(r => (
-            <ResponseCard key={r.id} response={r} templates={templates} isDark={isDark} />
-          ))}
-        </div>
-      ) : (
-        /* Fill form */
-        <div className="space-y-4">
-          {/* Template selector */}
-          {!selected ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {templates.map(t => (
-                <button key={t.id} onClick={() => { setSelected(t); setAnswers({}) }}
-                  className={`${card} border rounded-2xl p-4 text-left hover:border-blue-400 transition-all group`}>
-                  <div className="flex items-start gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center flex-shrink-0">
-                      <FileText size={16} className="text-blue-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`font-black text-sm ${txt1}`}>{t.name}</p>
-                      {t.description && <p className={`text-xs mt-0.5 ${txt3}`}>{t.description}</p>}
-                      <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
-                        {t.fields.length} campos · {CATEGORIES.find(c => c.id === t.category)?.label}
-                      </p>
-                    </div>
-                  </div>
-                </button>
+      {['text', 'textarea', 'number'].includes(field.type) && (
+        <input value={field.placeholder || ''} onChange={e => onChange({ placeholder: e.target.value })}
+          placeholder="Texto de ayuda (opcional)"
+          className={`w-full px-3 py-1.5 rounded-lg text-xs border-2 outline-none ${cc.input}`} />
+      )}
+      {['select', 'radio'].includes(field.type) && (
+        <div className="space-y-1">
+          <p className={`text-[9px] font-black uppercase tracking-widest ${cc.txt3}`}>Opciones separadas por coma</p>
+          <input value={(field.options || []).join(', ')}
+            onChange={e => onChange({ options: e.target.value.split(',').map(o => o.trim()).filter(Boolean) })}
+            placeholder="Ej: Leve, Moderado, Severo"
+            className={`w-full px-3 py-1.5 rounded-lg text-xs border-2 outline-none ${cc.input}`} />
+          {(field.options || []).length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {(field.options || []).map(o => (
+                <span key={o} className={`text-[9px] px-2 py-0.5 rounded-full font-bold ${isDark ? 'bg-[#21262d] text-slate-400' : 'bg-slate-100 text-slate-600'}`}>{o}</span>
               ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <button onClick={() => setSelected(null)}
-                  className={`p-1.5 rounded-lg ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-100'}`}>
-                  <ChevronDown size={16} className="rotate-90 text-slate-400" />
-                </button>
-                <p className={`font-black text-sm ${txt1}`}>{selected.name}</p>
-              </div>
-
-              <div className="space-y-4">
-                {selected.fields.map(field => (
-                  <div key={field.id}>
-                    <label className={`block text-xs font-black mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                      {field.label} {field.required && <span className="text-red-500">*</span>}
-                    </label>
-
-                    {field.type === 'textarea' && (
-                      <textarea rows={3} value={answers[field.id] || ''} placeholder={field.placeholder}
-                        onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))}
-                        className={`${inputCls} resize-none`} />
-                    )}
-                    {field.type === 'text' && (
-                      <input type="text" value={answers[field.id] || ''} placeholder={field.placeholder}
-                        onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))}
-                        className={inputCls} />
-                    )}
-                    {field.type === 'number' && (
-                      <input type="number" value={answers[field.id] || ''} placeholder={field.placeholder}
-                        onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))}
-                        className={inputCls} />
-                    )}
-                    {field.type === 'date' && (
-                      <input type="date" value={answers[field.id] || ''}
-                        onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))}
-                        className={inputCls} />
-                    )}
-                    {field.type === 'select' && (
-                      <select value={answers[field.id] || ''} onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))}
-                        className={`${inputCls} cursor-pointer`}>
-                        <option value="">Seleccionar...</option>
-                        {(field.options || []).map(o => <option key={o} value={o}>{o}</option>)}
-                      </select>
-                    )}
-                    {field.type === 'radio' && (
-                      <div className="flex flex-wrap gap-2">
-                        {(field.options || []).map(o => (
-                          <button key={o} onClick={() => setAnswers(p => ({ ...p, [field.id]: o }))}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all
-                              ${answers[field.id] === o
-                                ? 'bg-blue-600 border-blue-600 text-white'
-                                : isDark ? 'border-[#30363d] text-slate-400 hover:border-blue-700' : 'border-slate-200 text-slate-600 hover:border-blue-300'
-                              }`}>
-                            {o}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {field.type === 'checkbox' && (
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={!!answers[field.id]}
-                          onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.checked }))} />
-                        <span className={`text-sm ${txt1}`}>{field.placeholder || 'Sí'}</span>
-                      </label>
-                    )}
-                  </div>
-                ))}
-
-                {/* Notes */}
-                <div>
-                  <label className={`block text-xs font-black mb-1.5 ${txt3}`}>Observaciones adicionales</label>
-                  <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)}
-                    placeholder="Notas del clínico..."
-                    className={`${inputCls} resize-none`} />
-                </div>
-
-                <button onClick={handleSave} disabled={saving}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
-                  {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
-                  {saving ? 'Guardando...' : 'Guardar ficha'}
-                </button>
-              </div>
             </div>
           )}
         </div>
@@ -555,88 +436,342 @@ export function RellenarFicha({
   )
 }
 
-// ── Response Card ────────────────────────────────────────────────────────────
-function ResponseCard({ response, templates, isDark }: {
-  response: TemplateResponse; templates: Template[]; isDark: boolean
+// ── Form Preview ──────────────────────────────────────────────────────────────
+function FormPreview({ name, desc, sections, fields, isDark, onBack }: {
+  name: string; desc: string; sections: Section[]; fields: Field[]; isDark: boolean; onBack: () => void
 }) {
-  const [open, setOpen]           = useState(false)
-  const [downloading, setDownloading] = useState(false)
-  const template = templates.find(t => t.id === response.template_id)
-  const txt1 = isDark ? 'text-slate-100' : 'text-slate-800'
-  const txt3 = isDark ? 'text-slate-500' : 'text-slate-400'
-  const card = isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'
+  const cc = {
+    card:  isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200',
+    txt1:  isDark ? 'text-slate-100' : 'text-slate-800',
+    txt3:  isDark ? 'text-slate-500' : 'text-slate-400',
+    input: isDark ? 'bg-[#0d1117] border-[#30363d] text-slate-300' : 'bg-slate-50 border-slate-200 text-slate-600',
+  }
+  const renderField = (f: Field) => (
+    <div key={f.id}>
+      <label className={`block text-xs font-black mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+        {f.label || '(Sin nombre)'} {f.required && <span className="text-red-400">*</span>}
+      </label>
+      {f.type === 'textarea' && <textarea rows={3} disabled placeholder={f.placeholder} className={`w-full px-3 py-2 rounded-xl text-sm border-2 resize-none opacity-70 ${cc.input}`} />}
+      {f.type === 'text' && <input type="text" disabled placeholder={f.placeholder} className={`w-full px-3 py-2 rounded-xl text-sm border-2 opacity-70 ${cc.input}`} />}
+      {f.type === 'number' && <input type="number" disabled className={`w-full px-3 py-2 rounded-xl text-sm border-2 opacity-70 ${cc.input}`} />}
+      {f.type === 'date' && <input type="date" disabled className={`w-full px-3 py-2 rounded-xl text-sm border-2 opacity-70 ${cc.input}`} />}
+      {f.type === 'select' && (
+        <select disabled className={`w-full px-3 py-2 rounded-xl text-sm border-2 opacity-70 ${cc.input}`}>
+          <option>Seleccionar...</option>
+          {(f.options || []).map(o => <option key={o}>{o}</option>)}
+        </select>
+      )}
+      {f.type === 'radio' && (
+        <div className="flex flex-wrap gap-2">
+          {(f.options || []).map(o => (
+            <label key={o} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs border-2 opacity-70 ${isDark ? 'border-[#30363d] text-slate-400' : 'border-slate-200 text-slate-600'}`}>
+              <input type="radio" disabled /> {o}
+            </label>
+          ))}
+        </div>
+      )}
+      {f.type === 'checkbox' && (
+        <label className={`flex items-center gap-2 text-sm opacity-70 ${cc.txt1}`}>
+          <input type="checkbox" disabled /> {f.placeholder || 'Sí'}
+        </label>
+      )}
+    </div>
+  )
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <button onClick={onBack} className={`p-2 rounded-xl ${isDark ? 'hover:bg-[#21262d]' : 'hover:bg-slate-100'}`}>
+          <ArrowLeft size={16} className={cc.txt3} />
+        </button>
+        <p className={`font-black text-sm ${cc.txt1}`}>Vista previa — así verán la ficha los especialistas</p>
+      </div>
+      <div className={`${cc.card} border rounded-2xl p-6 space-y-5`}>
+        <div className={`pb-4 border-b ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+          <p className={`font-black text-lg ${cc.txt1}`}>{name || '(Sin nombre)'}</p>
+          {desc && <p className={`text-sm mt-1 ${cc.txt3}`}>{desc}</p>}
+        </div>
+        {fields.filter(f => !f.section).length > 0 && (
+          <div className="space-y-4">{fields.filter(f => !f.section).map(renderField)}</div>
+        )}
+        {sections.map(section => {
+          const sf = fields.filter(f => f.section === section.id)
+          return (
+            <div key={section.id} className={`rounded-xl p-4 border ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-100'}`}>
+              <p className={`font-black text-sm mb-0.5 ${cc.txt1}`}>{section.title}</p>
+              {section.description && <p className={`text-xs mb-3 ${cc.txt3}`}>{section.description}</p>}
+              <div className="space-y-4">{sf.map(renderField)}</div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
-  const handleDownloadWord = async () => {
-    setDownloading(true)
+// ══════════════════════════════════════════════════════════════════════════════
+// RELLENAR FICHA — para especialistas/terapeutas
+// ══════════════════════════════════════════════════════════════════════════════
+export function RellenarFicha({
+  childId, childName, isDark: isDarkProp = false, onSaved
+}: {
+  childId: string; childName: string; isDark?: boolean; onSaved?: () => void
+}) {
+  const { isDark: isDarkCtx } = useTheme()
+  const isDark = isDarkProp ?? isDarkCtx
+  const toast = useToast()
+
+  const [templates, setTemplates]     = useState<Template[]>([])
+  const [responses, setResponses]     = useState<TemplateResponse[]>([])
+  const [selected, setSelected]       = useState<Template | null>(null)
+  const [answers, setAnswers]         = useState<Record<string, any>>({})
+  const [notes, setNotes]             = useState('')
+  const [saving, setSaving]           = useState(false)
+  const [loading, setLoading]         = useState(true)
+  const [showHistory, setShowHistory] = useState(false)
+
+  const cc = {
+    card:  isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200',
+    txt1:  isDark ? 'text-slate-100' : 'text-slate-800',
+    txt3:  isDark ? 'text-slate-500' : 'text-slate-400',
+    input: isDark
+      ? 'bg-[#0d1117] border-[#30363d] text-slate-200 placeholder:text-slate-600 focus:border-blue-500'
+      : 'bg-slate-50 border-slate-200 text-slate-800 focus:border-blue-400',
+  }
+  const inputCls = `w-full px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-all ${cc.input}`
+
+  const loadData = useCallback(async () => {
+    const [{ data: tmpl }, { data: resp }] = await Promise.all([
+      supabase.from('clinical_templates').select('*').eq('is_active', true).order('name'),
+      supabase.from('clinical_template_responses')
+        .select('*, clinical_templates(name,fields,sections)')
+        .eq('child_id', childId)
+        .order('created_at', { ascending: false }),
+    ])
+    setTemplates(tmpl || [])
+    setResponses(resp || [])
+    setLoading(false)
+  }, [childId])
+
+  useEffect(() => { loadData() }, [loadData])
+
+  const handleSave = async () => {
+    if (!selected) return
+    const missing = selected.fields.filter(f => f.required && !answers[f.id] && answers[f.id] !== false)
+    if (missing.length > 0) { toast.error(`Obligatorios: ${missing.map(f => f.label).join(', ')}`); return }
+    setSaving(true)
     try {
-      const res = await fetch('/api/reporte-ficha-clinica', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ responseId: response.id }),
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profile } = await supabase.from('profiles').select('full_name,role').eq('id', user!.id).single()
+      const { error } = await supabase.from('clinical_template_responses').insert({
+        template_id: selected.id, child_id: childId, filled_by: user!.id,
+        filler_role: profile?.role || 'especialista', filler_name: profile?.full_name || 'Clínico',
+        responses: answers, notes: notes.trim() || null,
       })
-      if (!res.ok) throw new Error('Error generando el documento')
-      const blob = await res.blob()
-      const url  = URL.createObjectURL(blob)
-      const a    = document.createElement('a')
-      a.href     = url
-      a.download = `Ficha_${(response as any).clinical_templates?.name || 'Clinica'}_${response.filler_name}.docx`
-      a.click()
-      URL.revokeObjectURL(url)
-    } catch (e: any) {
-      alert('Error: ' + e.message)
-    } finally {
-      setDownloading(false)
-    }
+      if (error) throw error
+      toast.success('✅ Ficha guardada')
+      setAnswers({}); setNotes(''); setSelected(null); onSaved?.(); loadData()
+    } catch (e: any) { toast.error('Error: ' + e.message) }
+    finally { setSaving(false) }
   }
 
+  const renderField = (field: Field) => (
+    <div key={field.id}>
+      <label className={`block text-xs font-black mb-1.5 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+        {field.label} {field.required && <span className="text-red-400">*</span>}
+      </label>
+      {field.type === 'textarea' && <textarea rows={3} value={answers[field.id] || ''} placeholder={field.placeholder} onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))} className={`${inputCls} resize-none`} />}
+      {field.type === 'text'     && <input type="text"   value={answers[field.id] || ''} placeholder={field.placeholder} onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))} className={inputCls} />}
+      {field.type === 'number'   && <input type="number" value={answers[field.id] || ''} placeholder={field.placeholder} onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))} className={inputCls} />}
+      {field.type === 'date'     && <input type="date"   value={answers[field.id] || ''} onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))} className={inputCls} />}
+      {field.type === 'select'   && (
+        <select value={answers[field.id] || ''} onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.value }))} className={`${inputCls} cursor-pointer`}>
+          <option value="">Seleccionar...</option>
+          {(field.options || []).map(o => <option key={o} value={o}>{o}</option>)}
+        </select>
+      )}
+      {field.type === 'radio' && (
+        <div className="flex flex-wrap gap-2">
+          {(field.options || []).map(o => (
+            <button key={o} onClick={() => setAnswers(p => ({ ...p, [field.id]: o }))}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all
+                ${answers[field.id] === o ? 'bg-blue-600 border-blue-600 text-white' : isDark ? 'border-[#30363d] text-slate-400 hover:border-blue-700' : 'border-slate-200 text-slate-600 hover:border-blue-300'}`}>
+              {o}
+            </button>
+          ))}
+        </div>
+      )}
+      {field.type === 'checkbox' && (
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={!!answers[field.id]} onChange={e => setAnswers(p => ({ ...p, [field.id]: e.target.checked }))} />
+          <span className={`text-sm ${cc.txt1}`}>{field.placeholder || 'Sí'}</span>
+        </label>
+      )}
+    </div>
+  )
+
+  if (loading) return <div className="flex justify-center py-8"><Loader2 size={20} className="animate-spin text-blue-500" /></div>
+
   return (
-    <div className={`${card} border rounded-2xl overflow-hidden`}>
-      <div className={`p-4 flex items-center gap-3 ${isDark ? 'hover:bg-[#1c2128]' : 'hover:bg-slate-50'} transition-colors`}>
-        <button onClick={() => setOpen(!open)} className="flex-1 text-left flex items-center gap-3 min-w-0">
-          <FileText size={16} className="text-blue-500 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className={`text-sm font-black ${txt1}`}>{(response as any).clinical_templates?.name || 'Ficha'}</p>
-            <p className={`text-xs ${txt3}`}>
-              {response.filler_name} · {new Date(response.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}
-            </p>
-          </div>
-          {open ? <ChevronUp size={16} className={txt3} /> : <ChevronDown size={16} className={txt3} />}
-        </button>
-        {/* Word download button */}
-        <button
-          onClick={handleDownloadWord}
-          disabled={downloading}
-          title="Descargar Word"
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all flex-shrink-0
-            ${isDark
-              ? 'border-blue-700 text-blue-400 hover:bg-blue-900/20'
-              : 'border-blue-200 text-blue-600 hover:bg-blue-50'
-            } disabled:opacity-50`}>
-          {downloading
-            ? <Loader2 size={13} className="animate-spin" />
-            : <Save size={13} />}
-          {downloading ? 'Generando...' : 'Word'}
-        </button>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h3 className={`font-black text-base flex items-center gap-2 ${cc.txt1}`}>
+            <FileText size={16} className="text-blue-500" /> Fichas Clínicas
+          </h3>
+          <p className={`text-xs mt-0.5 ${cc.txt3}`}>{selected ? selected.name : `Fichas de ${childName}`}</p>
+        </div>
+        {!selected && (
+          <button onClick={() => setShowHistory(!showHistory)}
+            className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all ${isDark ? 'border-[#30363d] text-slate-400 hover:bg-[#21262d]' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+            {showHistory ? 'Nueva ficha' : `Historial (${responses.length})`}
+          </button>
+        )}
+        {selected && (
+          <button onClick={() => { setSelected(null); setAnswers({}) }}
+            className={`text-xs font-bold px-3 py-1.5 rounded-xl border transition-all ${isDark ? 'border-[#30363d] text-slate-400 hover:bg-[#21262d]' : 'border-slate-200 text-slate-500 hover:bg-slate-50'}`}>
+            ← Cambiar ficha
+          </button>
+        )}
       </div>
 
-      {open && template && (
-        <div className={`p-4 border-t space-y-3 ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
-          {template.fields.map(field => {
-            const val = response.responses[field.id]
-            if (!val && val !== 0 && val !== false) return null
+      {/* Historial */}
+      {!selected && showHistory && (
+        <div className="space-y-3">
+          {responses.length === 0 ? (
+            <div className={`${cc.card} border rounded-2xl p-8 text-center`}>
+              <FileText size={28} className={`mx-auto mb-2 ${cc.txt3}`} />
+              <p className={`text-sm font-black ${cc.txt3}`}>Sin fichas registradas</p>
+            </div>
+          ) : responses.map(r => <ResponseCard key={r.id} response={r} isDark={isDark} />)}
+        </div>
+      )}
+
+      {/* Selector de plantilla */}
+      {!selected && !showHistory && (
+        templates.length === 0 ? (
+          <div className={`${cc.card} border rounded-2xl p-10 text-center`}>
+            <LayoutTemplate size={32} className={`mx-auto mb-3 ${cc.txt3}`} />
+            <p className={`font-black text-sm ${cc.txt3}`}>Sin fichas disponibles</p>
+            <p className={`text-xs mt-1 opacity-70 ${cc.txt3}`}>El administrador debe crear fichas primero desde Mi Perfil</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {templates.map(t => (
+              <button key={t.id} onClick={() => { setSelected(t); setAnswers({}) }}
+                className={`${cc.card} border rounded-2xl p-4 text-left hover:border-blue-400 transition-all`}>
+                <div className="flex items-start gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${isDark ? 'bg-blue-900/30' : 'bg-blue-50'}`}>
+                    <FileText size={18} className="text-blue-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`font-black text-sm ${cc.txt1}`}>{t.name}</p>
+                    {t.description && <p className={`text-xs mt-0.5 ${cc.txt3} line-clamp-2`}>{t.description}</p>}
+                    <p className={`text-[10px] mt-1 ${isDark ? 'text-slate-600' : 'text-slate-400'}`}>
+                      {t.fields?.length || 0} campos{t.sections?.length ? ` · ${t.sections.length} secciones` : ''}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )
+      )}
+
+      {/* Rellenar ficha */}
+      {selected && (
+        <div className={`${cc.card} border rounded-2xl p-5 space-y-5`}>
+          <div className={`pb-3 border-b ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+            <p className={`font-black text-base ${cc.txt1}`}>{selected.name}</p>
+            {selected.description && <p className={`text-xs mt-0.5 ${cc.txt3}`}>{selected.description}</p>}
+          </div>
+          {selected.fields.filter(f => !f.section).length > 0 && (
+            <div className="space-y-4">{selected.fields.filter(f => !f.section).map(renderField)}</div>
+          )}
+          {(selected.sections || []).map(section => {
+            const sf = selected.fields.filter(f => f.section === section.id)
+            if (sf.length === 0) return null
             return (
-              <div key={field.id}>
-                <p className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${txt3}`}>{field.label}</p>
-                <p className={`text-sm ${txt1}`}>{String(val)}</p>
+              <div key={section.id} className={`rounded-xl p-4 border ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-100'}`}>
+                <p className={`font-black text-sm mb-0.5 ${cc.txt1}`}>{section.title}</p>
+                {section.description && <p className={`text-xs mb-3 ${cc.txt3}`}>{section.description}</p>}
+                <div className="space-y-4">{sf.map(renderField)}</div>
               </div>
             )
           })}
-          {response.notes && (
-            <div>
-              <p className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${txt3}`}>Observaciones</p>
-              <p className={`text-sm ${txt1}`}>{response.notes}</p>
-            </div>
-          )}
+          <div>
+            <label className={`block text-xs font-black mb-1.5 ${cc.txt3}`}>Observaciones adicionales</label>
+            <textarea rows={3} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notas del clínico..." className={`${inputCls} resize-none`} />
+          </div>
+          <button onClick={handleSave} disabled={saving}
+            className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+            {saving ? 'Guardando...' : 'Guardar ficha'}
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Response Card ─────────────────────────────────────────────────────────────
+function ResponseCard({ response, isDark }: { response: TemplateResponse; isDark: boolean }) {
+  const [open, setOpen]           = useState(false)
+  const [downloading, setDownloading] = useState(false)
+  const template = (response as any).clinical_templates
+  const fields: Field[]    = template?.fields || []
+  const sections: Section[] = template?.sections || []
+  const cc = {
+    card: isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200',
+    txt1: isDark ? 'text-slate-100' : 'text-slate-800',
+    txt3: isDark ? 'text-slate-500' : 'text-slate-400',
+  }
+  const handleWord = async () => {
+    setDownloading(true)
+    try {
+      const res = await fetch('/api/reporte-ficha-clinica', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ responseId: response.id }) })
+      if (!res.ok) throw new Error('Error generando documento')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = `Ficha_${template?.name || 'Clinica'}.docx`; a.click()
+      URL.revokeObjectURL(url)
+    } catch (e: any) { alert('Error: ' + e.message) }
+    finally { setDownloading(false) }
+  }
+  const val = (fid: string) => { const v = response.responses[fid]; if (v === undefined || v === null || v === '') return null; return typeof v === 'boolean' ? (v ? 'Sí' : 'No') : String(v) }
+
+  return (
+    <div className={`${cc.card} border rounded-2xl overflow-hidden`}>
+      <div className="p-4 flex items-center gap-3">
+        <button onClick={() => setOpen(!open)} className="flex-1 flex items-center gap-3 text-left min-w-0">
+          <FileText size={16} className="text-blue-500 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-black ${cc.txt1}`}>{template?.name || 'Ficha'}</p>
+            <p className={`text-xs ${cc.txt3}`}>{response.filler_name} · {new Date(response.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+          </div>
+          {open ? <ChevronUp size={15} className={cc.txt3} /> : <ChevronDown size={15} className={cc.txt3} />}
+        </button>
+        <button onClick={handleWord} disabled={downloading}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all flex-shrink-0 disabled:opacity-50 ${isDark ? 'border-blue-700 text-blue-400 hover:bg-blue-900/20' : 'border-blue-200 text-blue-600 hover:bg-blue-50'}`}>
+          {downloading ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />}
+          {downloading ? '...' : 'Word'}
+        </button>
+      </div>
+      {open && (
+        <div className={`p-4 pt-2 border-t space-y-3 ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+          {fields.filter(f => !f.section).map(f => { const v = val(f.id); if (!v) return null; return <div key={f.id}><p className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${cc.txt3}`}>{f.label}</p><p className={`text-sm ${cc.txt1}`}>{v}</p></div> })}
+          {sections.map(s => {
+            const sf = fields.filter(f => f.section === s.id)
+            if (!sf.some(f => val(f.id))) return null
+            return (
+              <div key={s.id} className={`rounded-xl p-3 border ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-100'}`}>
+                <p className={`text-xs font-black mb-2 ${cc.txt1}`}>{s.title}</p>
+                <div className="space-y-2">
+                  {sf.map(f => { const v = val(f.id); if (!v) return null; return <div key={f.id}><p className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${cc.txt3}`}>{f.label}</p><p className={`text-sm ${cc.txt1}`}>{v}</p></div> })}
+                </div>
+              </div>
+            )
+          })}
+          {response.notes && <div><p className={`text-[10px] font-black uppercase tracking-widest mb-0.5 ${cc.txt3}`}>Observaciones</p><p className={`text-sm ${cc.txt1}`}>{response.notes}</p></div>}
         </div>
       )}
     </div>
