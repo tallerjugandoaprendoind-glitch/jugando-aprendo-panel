@@ -559,24 +559,65 @@ export function RellenarFicha({
 function ResponseCard({ response, templates, isDark }: {
   response: TemplateResponse; templates: Template[]; isDark: boolean
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen]           = useState(false)
+  const [downloading, setDownloading] = useState(false)
   const template = templates.find(t => t.id === response.template_id)
   const txt1 = isDark ? 'text-slate-100' : 'text-slate-800'
   const txt3 = isDark ? 'text-slate-500' : 'text-slate-400'
   const card = isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'
 
+  const handleDownloadWord = async () => {
+    setDownloading(true)
+    try {
+      const res = await fetch('/api/reporte-ficha-clinica', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ responseId: response.id }),
+      })
+      if (!res.ok) throw new Error('Error generando el documento')
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = url
+      a.download = `Ficha_${(response as any).clinical_templates?.name || 'Clinica'}_${response.filler_name}.docx`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e: any) {
+      alert('Error: ' + e.message)
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   return (
     <div className={`${card} border rounded-2xl overflow-hidden`}>
-      <button onClick={() => setOpen(!open)} className={`w-full p-4 text-left flex items-center gap-3 ${isDark ? 'hover:bg-[#1c2128]' : 'hover:bg-slate-50'} transition-colors`}>
-        <FileText size={16} className="text-blue-500 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
-          <p className={`text-sm font-black ${txt1}`}>{(response as any).clinical_templates?.name || 'Ficha'}</p>
-          <p className={`text-xs ${txt3}`}>
-            {response.filler_name} · {new Date(response.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
-        </div>
-        {open ? <ChevronUp size={16} className={txt3} /> : <ChevronDown size={16} className={txt3} />}
-      </button>
+      <div className={`p-4 flex items-center gap-3 ${isDark ? 'hover:bg-[#1c2128]' : 'hover:bg-slate-50'} transition-colors`}>
+        <button onClick={() => setOpen(!open)} className="flex-1 text-left flex items-center gap-3 min-w-0">
+          <FileText size={16} className="text-blue-500 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-black ${txt1}`}>{(response as any).clinical_templates?.name || 'Ficha'}</p>
+            <p className={`text-xs ${txt3}`}>
+              {response.filler_name} · {new Date(response.created_at).toLocaleDateString('es-PE', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+          {open ? <ChevronUp size={16} className={txt3} /> : <ChevronDown size={16} className={txt3} />}
+        </button>
+        {/* Word download button */}
+        <button
+          onClick={handleDownloadWord}
+          disabled={downloading}
+          title="Descargar Word"
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border-2 transition-all flex-shrink-0
+            ${isDark
+              ? 'border-blue-700 text-blue-400 hover:bg-blue-900/20'
+              : 'border-blue-200 text-blue-600 hover:bg-blue-50'
+            } disabled:opacity-50`}>
+          {downloading
+            ? <Loader2 size={13} className="animate-spin" />
+            : <Save size={13} />}
+          {downloading ? 'Generando...' : 'Word'}
+        </button>
+      </div>
 
       {open && template && (
         <div className={`p-4 border-t space-y-3 ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>

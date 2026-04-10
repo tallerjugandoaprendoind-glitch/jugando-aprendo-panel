@@ -80,8 +80,9 @@ export default function DocumentosView({ childId, childName, currentRole, isDark
   const [showUpload, setShowUpload] = useState(false)
 
   // Upload form state
-  const [newCat, setNewCat]   = useState('general')
-  const [newDesc, setNewDesc] = useState('')
+  const [newCat, setNewCat]       = useState('general')
+  const [otroLabel, setOtroLabel] = useState('')
+  const [newDesc, setNewDesc]     = useState('')
   const [visibleParent, setVisibleParent] = useState(true)
   const [selectedFile, setSelectedFile]   = useState<File | null>(null)
 
@@ -148,7 +149,7 @@ export default function DocumentosView({ childId, childName, currentRole, isDark
         file_url:         publicUrl,
         file_type:        fileTypeFromName(selectedFile.name),
         file_size:        selectedFile.size,
-        category:         newCat,
+        category:         newCat === 'otro' && otroLabel.trim() ? otroLabel.trim() : newCat,
         description:      newDesc.trim() || null,
         visible_to_parent: visibleParent,
       })
@@ -159,6 +160,7 @@ export default function DocumentosView({ childId, childName, currentRole, isDark
       setSelectedFile(null)
       setNewDesc('')
       setNewCat('general')
+      setOtroLabel('')
       loadDocs()
     } catch (e: any) {
       toast.error('Error: ' + e.message)
@@ -267,6 +269,16 @@ export default function DocumentosView({ childId, childName, currentRole, isDark
                 </button>
               ))}
             </div>
+            {/* Texto personalizado cuando se selecciona "Otro" */}
+            {newCat === 'otro' && (
+              <input
+                autoFocus
+                value={otroLabel}
+                onChange={e => setOtroLabel(e.target.value)}
+                placeholder="Escribe el nombre de la categoría..."
+                className={`mt-2 w-full px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-all ${inputCls}`}
+              />
+            )}
           </div>
 
           {/* Descripción */}

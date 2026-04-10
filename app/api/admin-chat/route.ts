@@ -197,6 +197,22 @@ export async function POST(req: Request) {
       .order('completed_at', { ascending: false })
       .limit(10);
 
+    // Fichas clínicas completadas (plantillas personalizadas del centro)
+    const { data: fichasClinicas } = await supabase
+      .from('clinical_template_responses')
+      .select('*, clinical_templates(name, category)')
+      .eq('child_id', childId)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    // Documentos subidos al expediente del paciente
+    const { data: documentosPaciente } = await supabase
+      .from('patient_documents')
+      .select('file_name, category, description, uploader_name, uploader_role, file_type, created_at')
+      .eq('child_id', childId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
     // ===========================================================================
     // 6. CONSTRUIR CONTEXTO CLÍNICO COMPLETO
     // ===========================================================================
@@ -403,9 +419,28 @@ ${parentFormsData && parentFormsData.length > 0 ?
 
 5. **PRIORIDAD DE DATOS:**
    - Primero: Evaluaciones estandarizadas (BRIEF-2, ADOS-2, etc.)
-   - Segundo: Evolución en sesiones ABA
-   - Tercero: Contexto del hogar
-   - Cuarto: Anamnesis inicial
+   - Segundo: Fichas clínicas del centro (historia clínica, motivo de consulta)
+   - Tercero: Evolución en sesiones ABA
+   - Cuarto: Contexto del hogar
+   - Quinto: Anamnesis inicial y formularios de padres
+   - Sexto: Documentos del expediente
+
+${fichasClinicas && fichasClinicas.length > 0 ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 FICHAS CLÍNICAS DEL CENTRO (${fichasClinicas.length} registros)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${fichasClinicas.map((f: any) => `
+📄 ${(f as any).clinical_templates?.name || 'Ficha'} — ${new Date(f.created_at).toLocaleDateString('es-PE')} (por ${f.filler_name})
+${Object.entries(f.responses || {}).map(([k, v]) => `  • ${k}: ${v}`).join('\n')}
+${f.notes ? `  📝 Notas: ${f.notes}` : ''}`).join('\n')}
+` : ''}
+
+${documentosPaciente && documentosPaciente.length > 0 ? `
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📁 DOCUMENTOS EN EXPEDIENTE (${documentosPaciente.length} archivos)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+${documentosPaciente.map((d: any) => `  • [${d.category}] ${d.file_name}${d.description ? ` — "${d.description}"` : ''} (subido por ${d.uploader_name}, ${new Date(d.created_at).toLocaleDateString('es-PE')})`).join('\n')}
+` : ''}
 
 RESPONDE AHORA:
 `;
