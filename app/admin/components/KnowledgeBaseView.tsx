@@ -10,6 +10,7 @@ import {
   Sparkles, Cpu, BookMarked, RefreshCw,
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
+import { useTheme } from '@/components/ThemeContext'
 
 type InputMode = 'archivo' | 'url' | 'texto' | 'buscar'
 type Tab = 'aprender' | 'biblioteca' | 'diagnosticos'
@@ -17,6 +18,7 @@ type Tab = 'aprender' | 'biblioteca' | 'diagnosticos'
 export default function KnowledgeBaseView() {
   const toast = useToast()
   const { t } = useI18n()
+  const { isDark } = useTheme()
   const [tab, setTab] = useState<Tab>('aprender')
   const [documentos, setDocumentos] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -324,48 +326,51 @@ export default function KnowledgeBaseView() {
   const totalChunks = documentos.reduce((a, d) => a + (d.total_chunks || 0), 0)
 
   return (
-    <div className="space-y-4 md:space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-4 w-full">
 
       {/* Header */}
-      <div className="bg-gradient-to-br from-violet-600 to-indigo-700 rounded-2xl md:rounded-3xl p-5 md:p-7 text-white shadow-xl">
-        <div className="flex items-start gap-4">
-          <div className="bg-white/20 rounded-2xl p-3">
-            <Brain size={28} className="text-white" />
+      <div className={`rounded-2xl border p-5 flex items-center justify-between gap-4 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200 shadow-sm'}`}>
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+            <Brain size={24} className="text-white" />
           </div>
-          <div className="flex-1">
-            <h2 className="text-xl md:text-2xl font-black">{t('nav.cerebro')}</h2>
-            <p className="text-violet-200 text-sm mt-1">{t('ui.baseConocimiento')}</p>
+          <div>
+            <h2 className={`text-lg font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{t('nav.cerebro')}</h2>
+            <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t('ui.baseConocimiento')}</p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3 mt-5">
-          <div className="bg-white/10 rounded-xl p-3 text-center">
-            <p className="text-2xl font-black">{documentos.length}</p>
-            <p className="text-violet-200 text-xs mt-0.5">{t('ui.documents')}</p>
-          </div>
-          <div className="bg-white/10 rounded-xl p-3 text-center">
-            <p className="text-2xl font-black">{totalChunks.toLocaleString()}</p>
-            <p className="text-violet-200 text-xs mt-0.5">{t('ui.fragments')}</p>
-          </div>
-          <div className="bg-white/10 rounded-xl p-3 text-center">
-            <p className="text-2xl font-black">{docsAuto.length}</p>
-            <p className="text-violet-200 text-xs mt-0.5">Auto-aprendidos</p>
-          </div>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {[
+            { label: t('ui.documents'), value: documentos.length, color: 'text-violet-500' },
+            { label: t('ui.fragments'), value: totalChunks.toLocaleString(), color: 'text-indigo-500' },
+            { label: 'Auto-aprendidos', value: docsAuto.length, color: 'text-blue-500' },
+          ].map(s => (
+            <div key={s.label} className={`text-center px-4 py-2.5 rounded-xl border ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-100'}`}>
+              <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
+              <p className={`text-[10px] font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{s.label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex bg-white dark:bg-slate-800 rounded-2xl p-1 border border-slate-100 dark:border-slate-700 shadow-sm gap-1">
+      <div className={`flex rounded-2xl p-1.5 border gap-1.5 ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-200'}`}>
         <button onClick={() => setTab('aprender')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'aprender' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-black transition-all ${tab === 'aprender'
+            ? isDark ? 'bg-[#161b22] text-violet-400 shadow border border-[#30363d]' : 'bg-white text-violet-700 shadow border border-slate-200'
+            : isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}>
           <Sparkles size={15} /> {t('whatsapp.aprenderInternet')}
         </button>
         <button onClick={() => setTab('diagnosticos')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${tab === 'diagnosticos' ? 'bg-violet-600 text-white' : ''}`}
-          style={tab !== 'diagnosticos' ? { color: 'var(--text-secondary)' } : {}}>
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-black transition-all ${tab === 'diagnosticos'
+            ? isDark ? 'bg-[#161b22] text-violet-400 shadow border border-[#30363d]' : 'bg-white text-violet-700 shadow border border-slate-200'
+            : isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}>
           🏥 CIE-11 / DSM-5
         </button>
         <button onClick={() => setTab('biblioteca')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-sm font-bold transition-all ${tab === 'biblioteca' ? 'bg-violet-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>
+          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-black transition-all ${tab === 'biblioteca'
+            ? isDark ? 'bg-[#161b22] text-violet-400 shadow border border-[#30363d]' : 'bg-white text-violet-700 shadow border border-slate-200'
+            : isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}>
           <BookMarked size={15} /> Biblioteca ({documentos.length})
         </button>
       </div>
@@ -375,10 +380,10 @@ export default function KnowledgeBaseView() {
         <div className="space-y-4">
 
           {/* Cómo funciona */}
-          <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
+          <div className={`rounded-2xl p-4 border ${isDark ? 'bg-violet-900/20 border-violet-800/30' : 'bg-violet-50 border-violet-100'}`}>
             <div className="flex items-center gap-2 mb-3">
               <Cpu size={16} className="text-violet-600" />
-              <span className="font-bold text-violet-800 text-sm">{t('ui.comoFuncAuto')}</span>
+              <span className={`font-bold text-sm ${isDark ? 'text-violet-300' : 'text-violet-800'}`}>{t('ui.comoFuncAuto')}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
               {[
@@ -387,7 +392,7 @@ export default function KnowledgeBaseView() {
                 { icon: '🤖', t: 'Sintetiza con IA', d: 'Genera resumen clínico estructurado para ABA' },
                 { icon: '🧠', t: 'Indexa en el Cerebro', d: 'ARIA y todos los agentes ya saben ese tema' },
               ].map((s, i) => (
-                <div key={i} className="bg-white dark:bg-slate-700 rounded-xl p-3 border border-violet-100 dark:border-violet-900/30">
+                <div key={i} className={`rounded-xl p-3 border ${isDark ? 'bg-[#161b22] border-violet-900/30' : 'bg-white border-violet-100'}`}>
                   <p className="text-xl mb-1">{s.icon}</p>
                   <p className="text-xs font-bold text-violet-700">{s.t}</p>
                   <p className="text-[11px] text-slate-500 mt-0.5">{s.d}</p>
@@ -397,16 +402,16 @@ export default function KnowledgeBaseView() {
           </div>
 
           {/* Input box */}
-          <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-4">
+          <div className={`rounded-2xl border shadow-sm p-5 space-y-4 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
 
             {/* Selector keywords vs URL */}
-            <div className="flex gap-1 p-1 bg-slate-100 rounded-xl">
+            <div className={`flex gap-1 p-1 rounded-xl ${isDark ? 'bg-[#0d1117]' : 'bg-slate-100'}`}>
               <button onClick={() => setModoFuente('keywords')}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'keywords' ? 'bg-white shadow text-violet-700' : 'text-slate-500'}`}>
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'keywords' ? (isDark ? 'bg-[#161b22] shadow text-violet-400' : 'bg-white shadow text-violet-700') : (isDark ? 'text-slate-500' : 'text-slate-500')}`}>
                 🔍 Palabras clave
               </button>
               <button onClick={() => setModoFuente('url')}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'url' ? 'bg-white shadow text-violet-700' : 'text-slate-500'}`}>
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition ${modoFuente === 'url' ? (isDark ? 'bg-[#161b22] shadow text-violet-400' : 'bg-white shadow text-violet-700') : (isDark ? 'text-slate-500' : 'text-slate-500')}`}>
                 🌐 URL de página web
               </button>
             </div>
@@ -537,7 +542,7 @@ export default function KnowledgeBaseView() {
 
           {/* Temas ya aprendidos */}
           {docsAuto.length > 0 && (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-4">
+            <div className={`rounded-2xl border shadow-sm p-4 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
                 Temas ya aprendidos por la IA ({docsAuto.length})
               </p>
@@ -547,7 +552,7 @@ export default function KnowledgeBaseView() {
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-base">🧠</span>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold text-slate-700 truncate">{doc.titulo.replace('[IA] ', '')}</p>
+                        <p className={`text-xs font-semibold truncate ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{doc.titulo.replace('[IA] ', '')}</p>
                         <p className="text-[10px] text-slate-400">{doc.total_chunks || 0} fragmentos · {new Date(doc.created_at).toLocaleDateString('es-ES')}</p>
                       </div>
                     </div>
@@ -568,10 +573,10 @@ export default function KnowledgeBaseView() {
       {/* ══ TAB: CIE-11 / DSM-5 ══ */}
       {tab === 'diagnosticos' && (
         <div className="space-y-4">
-          <div className="bg-violet-50 border border-violet-100 rounded-2xl p-4">
+          <div className={`rounded-2xl p-4 border ${isDark ? 'bg-violet-900/20 border-violet-800/30' : 'bg-violet-50 border-violet-100'}`}>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🏥</span>
-              <span className="font-bold text-violet-800 text-sm">Buscador de Diagnósticos — CIE-11 / DSM-5 / ICD-10</span>
+              <span className={`font-bold text-sm ${isDark ? 'text-violet-300' : 'text-violet-800'}`}>Buscador de Diagnósticos — CIE-11 / DSM-5 / ICD-10</span>
             </div>
             <p className="text-xs text-violet-600">
               Busca por nombre, código CIE-11 (ej: <b>6A02</b>), ICD-10 (ej: <b>F84</b>), DSM-5 o sinónimo. Haz clic en los códigos para copiarlos directamente.
@@ -590,15 +595,15 @@ export default function KnowledgeBaseView() {
           </button>
 
           {showForm && (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-100 dark:border-slate-700 shadow-sm p-5 space-y-4">
-              <p className="font-bold text-slate-700 text-sm">{t('ui.add_document')}</p>
+            <div className={`rounded-2xl border shadow-sm p-5 space-y-4 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
+              <p className={`font-black text-sm ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{t('ui.add_document')}</p>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {(['archivo', 'url', 'texto', 'buscar'] as const).map(m => {
                   const icons: Record<string, string> = { archivo: '📎', url: '🔗', texto: '📝', buscar: '🔍' }
                   const labels: Record<string, string> = { archivo: 'Archivo PDF/TXT', url: 'URL', texto: 'Pegar texto', buscar: 'Buscar libro' }
                   return (
                     <button key={m} onClick={() => { setInputMode(m); setLibroSeleccionado(null) }}
-                      className={`p-2.5 rounded-xl border text-xs font-bold transition text-center ${inputMode === m ? 'bg-violet-100 border-violet-300 text-violet-700' : 'border-slate-200 text-slate-500 hover:border-violet-200'}`}>
+                      className={`p-2.5 rounded-xl border text-xs font-bold transition text-center ${inputMode === m ? (isDark ? 'bg-violet-900/30 border-violet-700 text-violet-400' : 'bg-violet-100 border-violet-300 text-violet-700') : (isDark ? 'border-[#30363d] text-slate-500' : 'border-slate-200 text-slate-500 hover:border-violet-200')}`}>
                       <span className="text-lg block mb-0.5">{icons[m]}</span>{labels[m]}
                     </button>
                   )
@@ -612,7 +617,7 @@ export default function KnowledgeBaseView() {
               <div className="flex gap-2">
                 {['libro', 'articulo', 'guia', 'protocolo'].map(t => (
                   <button key={t} onClick={() => setForm(p => ({ ...p, tipo: t }))}
-                    className={`flex-1 py-1.5 text-xs rounded-lg border font-bold transition capitalize ${form.tipo === t ? 'bg-slate-800 text-white border-slate-800' : 'border-slate-200 text-slate-500'}`}>
+                    className={`flex-1 py-1.5 text-xs rounded-lg border font-bold transition capitalize ${form.tipo === t ? 'bg-violet-600 text-white border-violet-600' : isDark ? 'border-[#30363d] text-slate-500' : 'border-slate-200 text-slate-500'}`}>
                     {t}
                   </button>
                 ))}
@@ -624,7 +629,7 @@ export default function KnowledgeBaseView() {
                   <Upload size={20} className="text-slate-400 mx-auto mb-2" />
                   {selectedFile ? (
                     <div>
-                      <p className="text-sm font-semibold text-slate-700">{selectedFile.name}</p>
+                      <p className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{selectedFile.name}</p>
                       <p className="text-xs text-slate-400 mt-1">
                         {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
                         {selectedFile.size > 10 * 1024 * 1024 && (
@@ -646,7 +651,7 @@ export default function KnowledgeBaseView() {
                 </div>
               )}
               {uploading && uploadProgress && (
-                <div className="bg-violet-50 border border-violet-200 rounded-xl px-4 py-3 mt-2">
+                <div className={`rounded-xl px-4 py-3 mt-2 border ${isDark ? 'bg-violet-900/20 border-violet-800/40' : 'bg-violet-50 border-violet-200'}`}>
                   <div className="flex items-center gap-2">
                     <Loader2 size={14} className="animate-spin text-violet-500 flex-shrink-0" />
                     <p className="text-xs text-violet-700 font-medium">{uploadProgress}</p>
@@ -682,7 +687,7 @@ export default function KnowledgeBaseView() {
                     {resultadosBusqueda.map(libro => (
                       <div key={libro.id}
                         onClick={() => { setLibroSeleccionado(libro); setForm(p => ({ ...p, titulo: libro.titulo })) }}
-                        className={`p-3 rounded-xl border cursor-pointer transition ${libroSeleccionado?.id === libro.id ? 'bg-violet-50 border-violet-300' : 'border-slate-200 hover:border-violet-200'}`}>
+                        className={`p-3 rounded-xl border cursor-pointer transition ${libroSeleccionado?.id === libro.id ? (isDark ? 'bg-violet-900/20 border-violet-700' : 'bg-violet-50 border-violet-300') : (isDark ? 'border-[#21262d] hover:border-violet-800' : 'border-slate-200 hover:border-violet-200')}`}>
                         <p className="font-semibold text-slate-800 text-xs truncate">{libro.titulo}</p>
                         <p className="text-[10px] text-slate-500">{libro.autor} · {libro.fuente} · {libro.formato}</p>
                       </div>
@@ -696,7 +701,7 @@ export default function KnowledgeBaseView() {
                 value={form.descripcion} onChange={e => setForm(p => ({ ...p, descripcion: e.target.value }))} />
 
               <button onClick={handleUpload} disabled={uploading}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50">
+                className="w-full py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white rounded-xl font-black text-sm flex items-center justify-center gap-2 disabled:opacity-50">
                 {uploading
                   ? <><Loader2 size={14} className="animate-spin" /> {uploadProgress || 'Procesando...'}</>
                   : <><Save size={14} /> Indexar en el Cerebro</>}
@@ -707,7 +712,7 @@ export default function KnowledgeBaseView() {
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 size={24} className="animate-spin text-violet-400" /></div>
           ) : documentos.length === 0 ? (
-            <div className="bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-slate-200 dark:border-slate-600 p-10 text-center">
+            <div className={`rounded-2xl border border-dashed p-10 text-center ${isDark ? 'bg-[#161b22] border-[#30363d]' : 'bg-white border-slate-200'}`}>
               <Brain size={32} className="text-slate-200 mx-auto mb-3" />
               <p className="text-slate-400 font-semibold">{t('ui.bibliotecaVacia')}</p>
               <p className="text-slate-400 text-sm mt-1">Usa "{t('whatsapp.aprenderInternet')}" para empezar</p>
@@ -745,9 +750,10 @@ function DocCard({ doc, onDelete, onRetry }: {
   key?: any
 }) {
   const { t } = useI18n()
+  const { isDark } = useTheme()
   const isAuto = doc.source_url?.startsWith('auto:')
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700 p-3.5 flex items-center justify-between gap-3 hover:border-slate-200 transition">
+    <div className={`rounded-xl border p-3.5 flex items-center justify-between gap-3 transition ${isDark ? 'bg-[#161b22] border-[#21262d] hover:border-[#30363d]' : 'bg-white border-slate-200 hover:border-slate-300'}`}>
       <div className="flex items-center gap-3 min-w-0">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isAuto ? 'bg-violet-100' : 'bg-slate-100'}`}>
           {isAuto
@@ -757,7 +763,7 @@ function DocCard({ doc, onDelete, onRetry }: {
         <div className="min-w-0">
           <p className="text-sm font-semibold text-slate-800 truncate">{doc.titulo.replace('[IA] ', '')}</p>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md ${isAuto ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-500'}`}>
+            <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md ${isAuto ? (isDark ? 'bg-violet-900/30 text-violet-400' : 'bg-violet-100 text-violet-600') : (isDark ? 'bg-[#21262d] text-slate-500' : 'bg-slate-100 text-slate-500')}`}>
               {isAuto ? 'auto' : doc.tipo}
             </span>
             <span className="text-[10px] text-slate-400">{doc.total_chunks || 0} fragmentos</span>
