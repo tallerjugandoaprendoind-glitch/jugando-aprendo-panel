@@ -396,10 +396,12 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>Concepto</label>
-                  <select value={form.concept} onChange={e => setForm(f => ({ ...f, concept: e.target.value }))} className={inputCls}>
-                    {rates.map(r => <option key={r.id}>{r.name}</option>)}
-                    <option>Otro</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={form.concept}
+                    onChange={e => setForm(f => ({ ...f, concept: e.target.value }))}
+                    placeholder="Ej: Sesión ABA Individual, Evaluación..."
+                    className={inputCls} />
                 </div>
                 <div>
                   <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>Método</label>
@@ -466,27 +468,36 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                           <Loader2 size={11} className="animate-spin" style={{ color: st.color }} />
                           <span className="text-[10px] font-bold" style={{ color: st.color }}>Guardando…</span>
                         </div>
-                      ) : editingStatus === p.id ? (
-                        <select
-                          autoFocus
-                          defaultValue={p.status}
-                          onBlur={() => setEditingStatus(null)}
-                          onChange={e => handleStatusChange(p.id, e.target.value)}
-                          className="text-[10px] font-bold px-2 py-1 rounded-lg border-2 outline-none cursor-pointer"
-                          style={{ background: st.bg, color: st.color, borderColor: st.color }}>
-                          {Object.entries(STATUS_CFG).map(([k, v]) => (
-                            <option key={k} value={k} style={{ background: '#fff', color: '#1f2937' }}>{v.label}</option>
-                          ))}
-                        </select>
                       ) : (
-                        <button
-                          onClick={() => setEditingStatus(p.id)}
-                          title="Clic para cambiar estado"
-                          className="text-[10px] font-bold px-2 py-1 rounded-lg inline-flex items-center gap-1 group transition-all hover:opacity-80"
-                          style={{ background: st.bg, color: st.color }}>
-                          {st.label}
-                          <Edit2 size={9} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
+                        <>
+                          <button
+                            onClick={() => setEditingStatus(editingStatus === p.id ? null : p.id)}
+                            title="Clic para cambiar estado"
+                            className="text-[10px] font-bold px-2 py-1 rounded-lg inline-flex items-center gap-1 group transition-all hover:opacity-80"
+                            style={{ background: st.bg, color: st.color }}>
+                            {st.label}
+                            <Edit2 size={9} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                          {editingStatus === p.id && (
+                            <>
+                              {/* Overlay to close on outside click */}
+                              <div className="fixed inset-0 z-10" onClick={() => setEditingStatus(null)} />
+                              {/* Floating menu */}
+                              <div className="absolute right-0 top-7 z-20 rounded-xl overflow-hidden shadow-lg py-1"
+                                style={{ background: 'var(--card)', border: '1px solid var(--card-border)', minWidth: 130 }}>
+                                {Object.entries(STATUS_CFG).map(([k, v]) => (
+                                  <button key={k}
+                                    onClick={() => handleStatusChange(p.id, k)}
+                                    className="w-full flex items-center gap-2 px-3 py-2 text-left transition-colors hover:opacity-80"
+                                    style={{ background: p.status === k ? v.bg : 'transparent' }}>
+                                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: v.color }} />
+                                    <span className="text-xs font-semibold" style={{ color: p.status === k ? v.color : 'var(--text-primary)' }}>{v.label}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>
