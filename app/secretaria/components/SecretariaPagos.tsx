@@ -153,21 +153,53 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
     finally { setSaving(false) }
   }
 
-  const exportCSV = () => {
-    const rows = [
-      ['Paciente','Concepto','Monto','Método','Estado','Fecha'],
-      ...filtered.map(p => [
-        p.children?.name || '—', p.concept, p.amount, p.payment_method,
-        STATUS_CFG[p.status]?.label || p.status,
-        new Date(p.created_at).toLocaleDateString('es-PE'),
-      ])
-    ]
-    const csv = rows.map(r => r.join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = `pagos_${new Date().toISOString().slice(0,10)}.csv`; a.click()
-    URL.revokeObjectURL(url)
-    toast.success('CSV exportado')
+  const [editingStatus, setEditingStatus] = useState<string | null>(null)
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+
+  const handleStatusChange = async (paymentId: string, newStatus: string) => {
+    setUpdatingStatus(paymentId)
+    try {
+      const { error } = await supabase.from('payments').update({
+        status: newStatus,
+        paid_at: newStatus === 'paid' ? new Date().toISOString() : undefined,
+      }).eq('id', paymentId)
+      if (error) throw error
+      toast.success('✅ Estado actualizado')
+      setPayments(prev => prev.map(p => p.id === paymentId ? { ...p, status: newStatus } : p))
+    } catch (e: any) {
+      toast.error('Error: ' + e.message)
+    } finally {
+      setUpdatingStatus(null)
+      setEditingStatus(null)
+    }
+  }
+
+  const exportExcel = async () => {
+    try {
+      const now = new Date()
+      let desde: Date
+      if (periodo === 'semana') { desde = new Date(now); desde.setDate(now.getDate() - 7) }
+      else if (periodo === 'mes') { desde = new Date(now.getFullYear(), now.getMonth(), 1) }
+      else { desde = new Date(now.getFullYear(), 0, 1) }
+
+      const params = new URLSearchParams({
+        desde: desde.toISOString(),
+        status: filterStatus,
+        search,
+      })
+      const res = await fetch(`/api/pagos/export?${params}`)
+      if (!res.ok) throw new Error('Error al generar el archivo')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `pagos_${new Date().toISOString().slice(0, 10)}.xlsx`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('✅ Excel exportado')
+    } catch (e: any) {
+      toast.error('Error: ' + e.message)
+    }
   }
 
   const inputCls = "w-full px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-all"
@@ -331,10 +363,10 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
               <option value="all">Todos los estados</option>
               {Object.entries(STATUS_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
             </select>
-            <button onClick={exportCSV}
+            <button onClick={exportExcel}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all"
-              style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)', color: 'var(--text-secondary)' }}>
-              <Download size={13} /> CSV
+              style={{ background: '#16a34a15', borderColor: '#16a34a40', color: '#16a34a' }}>
+              <Download size={13} /> Excel
             </button>
             <button onClick={() => setShowNew(true)}
               className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all">
@@ -427,8 +459,36 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                     <p className="text-xs truncate" style={{ color: 'var(--text-secondary)' }}>{p.concept}</p>
                     <p className="text-sm font-black" style={{ color: '#10b981' }}>S/ {Number(p.amount).toFixed(2)}</p>
                     <p className="text-xs capitalize" style={{ color: 'var(--text-secondary)' }}>{p.payment_method}</p>
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-lg inline-block"
-                      style={{ background: st.bg, color: st.color }}>{st.label}</span>
+                    <div className="relative">
+                      {updatingStatus === p.id ? (
+                        <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg"
+                          style={{ background: st.bg }}>
+                          <Loader2 size={11} className="animate-spin" style={{ color: st.color }} />
+                          <span className="text-[10px] font-bold" style={{ color: st.color }}>Guardando…</span>
+                        </div>
+                      ) : editingStatus === p.id ? (
+                        <select
+                          autoFocus
+                          defaultValue={p.status}
+                          onBlur={() => setEditingStatus(null)}
+                          onChange={e => handleStatusChange(p.id, e.target.value)}
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg border-2 outline-none cursor-pointer"
+                          style={{ background: st.bg, color: st.color, borderColor: st.color }}>
+                          {Object.entries(STATUS_CFG).map(([k, v]) => (
+                            <option key={k} value={k} style={{ background: '#fff', color: '#1f2937' }}>{v.label}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <button
+                          onClick={() => setEditingStatus(p.id)}
+                          title="Clic para cambiar estado"
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg inline-flex items-center gap-1 group transition-all hover:opacity-80"
+                          style={{ background: st.bg, color: st.color }}>
+                          {st.label}
+                          <Edit2 size={9} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )
               })}
