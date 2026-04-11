@@ -12,7 +12,7 @@ import {
   LayoutDashboard, Users, LogOut, Bell, Brain, Calendar, BookOpen, MessageCircle,
   X, User, FileText, Loader2, Key, BarChart3, ShieldCheck, Upload,
   ChevronRight, Settings, Crown, Stethoscope, ShoppingBag, Activity,
-  Database, Sparkles, Zap, Maximize2, Minimize2, Minus
+  Database, Sparkles, Zap, Maximize2, Minimize2, Minus, DollarSign
 } from 'lucide-react'
 
 import AnalyticsDashboard from '@/components/AnalyticsDashboard'
@@ -38,6 +38,8 @@ import WhatsAppQRPanel from './components/WhatsAppQRPanel'
 import ConfiguracionView from './components/ConfiguracionView'
 import ARIAFloatingChat from './components/ARIAFloatingChat'
 import ChatEspecialistas from './components/ChatEspecialistas'
+import AdminPagos from './components/AdminPagos'
+import AdminReportesFinancieros from './components/AdminReportesFinancieros'
 
 // Roles: 'jefe'|'admin' ven todo. 'especialista'/'terapeuta' NO ven agenda ni tienda.
 
@@ -115,6 +117,8 @@ export default function AdminDashboard() {
     { id: 'ninos',        icon: Users,           label: t('nav.pacientes'),       roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'inteligencia', icon: Zap,             label: t('nav.hub'),             roles: ['jefe','admin','especialista'] },
     { id: 'cerebro',      icon: Database,        label: t('nav.cerebro'),         roles: ['jefe','admin'] },
+    { id: 'pagos',        icon: DollarSign,      label: 'Pagos',                  roles: ['jefe','admin'] },
+    { id: 'reportes-financieros', icon: BarChart3, label: 'Reportes Financieros', roles: ['jefe'] },
     { id: 'recursos-adicionales', icon: BookOpen, label: 'Recursos Adicionales',  roles: ['jefe','admin','especialista','terapeuta'] },
     { id: 'chat-especialistas', icon: MessageCircle, label: 'Chat Equipo', roles: ['jefe'] },
   ]
@@ -136,6 +140,7 @@ export default function AdminDashboard() {
     mensajes: t('mensajes.titulo'), usuarios: t('nav.usuarios'),
     importar: 'Importar CSV', vadi: t('nav.aria'),
     cerebro: t('nav.cerebro'), inteligencia: t('nav.hub'),
+    pagos: 'Pagos y Facturación', 'reportes-financieros': 'Reportes Financieros',
     'chat-especialistas': 'Chat Equipo', config: 'Mi Perfil',
   }
 
@@ -507,6 +512,8 @@ export default function AdminDashboard() {
               )}
               {currentView === 'cerebro'      && <KnowledgeBaseView />}
               {currentView === 'inteligencia' && <InteligenciaHubView />}
+              {currentView === 'pagos'        && <AdminPagos profile={userProfile} />}
+              {currentView === 'reportes-financieros' && <AdminReportesFinancieros />}
 
               {currentView === 'mensajes' && <MensajesPendientesPanel />}
               {currentView === 'chat-especialistas' && (
