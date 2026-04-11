@@ -5,21 +5,23 @@ import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
   LayoutDashboard, Calendar, CalendarDays, BarChart3,
-  User, LogOut, Menu, X, Loader2, Settings,
-  ClipboardList, Bell
+  User, Menu, X, Loader2, Settings, Bell,
+  MessageSquare, DollarSign, ClipboardList
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import { useTheme } from '@/components/ThemeContext'
 import LocaleSelector from '@/app/components/LocaleSelector'
 import { ThemeToggleButton } from '@/components/ThemeContext'
-import SecretariaHome from './components/SecretariaHome'
-import SecretariaAgenda from './components/SecretariaAgenda'
+import SecretariaHome      from './components/SecretariaHome'
+import SecretariaAgenda    from './components/SecretariaAgenda'
 import SecretariaCronograma from './components/SecretariaCronograma'
-import SecretariaReportes from './components/SecretariaReportes'
-import SecretariaPerfil from './components/SecretariaPerfil'
+import SecretariaReportes  from './components/SecretariaReportes'
+import SecretariaPagos     from './components/SecretariaPagos'
+import SecretariaComunicacion from './components/SecretariaComunicacion'
+import SecretariaPerfil    from './components/SecretariaPerfil'
 
-function SidebarLink({ icon: Icon, label, active, onClick }: any) {
+function SidebarLink({ icon: Icon, label, active, onClick, badge }: any) {
   const { isDark } = useTheme()
   return (
     <button onClick={onClick}
@@ -30,6 +32,12 @@ function SidebarLink({ icon: Icon, label, active, onClick }: any) {
         }`}>
       <Icon size={17} className={`flex-shrink-0 ${active ? 'text-white' : ''}`} />
       <span className="font-semibold truncate flex-1">{label}</span>
+      {badge && (
+        <span className={`text-[10px] font-black px-1.5 py-0.5 rounded-full min-w-[18px] text-center
+          ${active ? 'bg-white/25 text-white' : 'bg-blue-100 text-blue-700'}`}>
+          {badge}
+        </span>
+      )}
     </button>
   )
 }
@@ -40,25 +48,32 @@ export default function SecretariaDashboard() {
   const { isDark } = useTheme()
 
   const NAV_ITEMS = [
-    { id: 'inicio',     icon: LayoutDashboard, label: 'Inicio' },
-    { id: 'agenda',     icon: Calendar,        label: 'Agenda' },
-    { id: 'cronograma', icon: CalendarDays,    label: 'Cronograma' },
-    { id: 'reportes',   icon: BarChart3,       label: 'Reportes' },
-    { id: 'perfil',     icon: User,            label: 'Mi Perfil' },
+    { id: 'inicio',        icon: LayoutDashboard, label: 'Inicio' },
+    { id: 'agenda',        icon: Calendar,        label: 'Agenda' },
+    { id: 'cronograma',    icon: CalendarDays,    label: 'Cronograma' },
+    { id: 'comunicacion',  icon: MessageSquare,   label: 'Comunicación' },
+    { id: 'pagos',         icon: DollarSign,      label: 'Pagos' },
+    { id: 'reportes',      icon: BarChart3,       label: 'Reportes' },
+    { id: 'perfil',        icon: User,            label: 'Mi Perfil' },
   ]
 
   const PAGE_TITLES: Record<string, string> = {
-    inicio:     'Panel Principal',
-    agenda:     'Agenda de Citas',
-    cronograma: 'Cronograma',
-    reportes:   'Reportes',
-    perfil:     'Mi Perfil',
+    inicio:       'Panel Principal',
+    agenda:       'Agenda',
+    cronograma:   'Cronograma',
+    comunicacion: 'Comunicación',
+    pagos:        'Pagos y Facturación',
+    reportes:     'Reportes',
+    perfil:       'Mi Perfil',
   }
 
-  const [activeView, setActiveView] = useState('inicio')
-  const [profile, setProfile]       = useState<any>(null)
-  const [loading, setLoading]       = useState(true)
+  const NO_PADDING_VIEWS = ['agenda']
+
+  const [activeView, setActiveView]   = useState('inicio')
+  const [profile, setProfile]         = useState<any>(null)
+  const [loading, setLoading]         = useState(true)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [chatUnread, setChatUnread]   = useState(0)
 
   const loadProfile = async () => {
     try {
@@ -77,17 +92,17 @@ export default function SecretariaDashboard() {
 
   useEffect(() => { loadProfile() }, [])
 
-  const handleLogout = async () => { await supabase.auth.signOut(); router.push('/login') }
-
   const renderView = () => {
     if (!profile) return null
     switch (activeView) {
-      case 'inicio':     return <SecretariaHome onNavigate={setActiveView} />
-      case 'agenda':     return <SecretariaAgenda profile={profile} />
-      case 'cronograma': return <SecretariaCronograma />
-      case 'reportes':   return <SecretariaReportes />
-      case 'perfil':     return <SecretariaPerfil profile={profile} onUpdate={loadProfile} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
-      default:           return <SecretariaHome onNavigate={setActiveView} />
+      case 'inicio':        return <SecretariaHome onNavigate={setActiveView} />
+      case 'agenda':        return <SecretariaAgenda profile={profile} />
+      case 'cronograma':    return <SecretariaCronograma />
+      case 'comunicacion':  return <SecretariaComunicacion profile={profile} />
+      case 'pagos':         return <SecretariaPagos profile={profile} />
+      case 'reportes':      return <SecretariaReportes />
+      case 'perfil':        return <SecretariaPerfil profile={profile} onUpdate={loadProfile} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
+      default:              return <SecretariaHome onNavigate={setActiveView} />
     }
   }
 
@@ -105,6 +120,7 @@ export default function SecretariaDashboard() {
 
   const userName    = profile?.full_name || 'Secretaria'
   const userInitial = userName.charAt(0).toUpperCase()
+  const noPadding   = NO_PADDING_VIEWS.includes(activeView)
 
   return (
     <div className="flex h-screen overflow-hidden font-sans" style={{ background: 'var(--bg)' }}>
@@ -141,7 +157,7 @@ export default function SecretariaDashboard() {
 
         {/* User footer */}
         <div className="p-3 flex-shrink-0" style={{ borderTop: '1px solid var(--card-border)' }}>
-          <div className="flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-colors hover:opacity-80"
+          <div className="flex items-center gap-3 p-2 rounded-xl cursor-pointer transition-all hover:opacity-80"
             onClick={() => { setActiveView('perfil'); setSidebarOpen(false) }}>
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-black flex-shrink-0 overflow-hidden">
               {profile?.avatar_url
@@ -174,7 +190,7 @@ export default function SecretariaDashboard() {
             </button>
             <div>
               <h1 className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>{PAGE_TITLES[activeView] || 'Panel'}</h1>
-              <p className="text-[10px] hidden sm:block" style={{ color: 'var(--text-muted)' }}>Jugando Aprendo · Panel Secretaría</p>
+              <p className="text-[10px] hidden sm:block" style={{ color: 'var(--text-muted)' }}>Jugando Aprendo · Gestión Integral</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -187,9 +203,9 @@ export default function SecretariaDashboard() {
         </header>
 
         {/* Content */}
-        <div className={`flex-1 overflow-y-auto admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-[#f8f8fb]'}
-          ${activeView === 'agenda' ? 'p-0 overflow-hidden' : ''}`}>
-          <div className={activeView === 'agenda' ? 'h-full' : 'p-4 md:p-5 pb-24 md:pb-6'}>
+        <div className={`flex-1 admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-[#f8f8fb]'}
+          ${noPadding ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+          <div className={noPadding ? 'h-full' : 'p-4 md:p-5 pb-24 md:pb-6'}>
             {renderView()}
           </div>
         </div>
@@ -201,17 +217,21 @@ export default function SecretariaDashboard() {
         <div className="flex items-center">
           {NAV_ITEMS.map(item => {
             const isActive = activeView === item.id
+            const shortLabel: Record<string, string> = {
+              inicio: 'Inicio', agenda: 'Agenda', cronograma: 'Cronograma',
+              comunicacion: 'Comunic.', pagos: 'Pagos', reportes: 'Reportes', perfil: 'Perfil'
+            }
             return (
               <button key={item.id} onClick={() => setActiveView(item.id)}
                 className="flex flex-col items-center gap-1 py-1 flex-1 min-w-0 transition-all active:scale-95">
                 <div className={`w-8 h-6 rounded-lg flex items-center justify-center transition-all
                   ${isActive ? 'bg-blue-600 text-white shadow-sm' : ''}`}
                   style={{ color: isActive ? undefined : 'var(--text-muted)' }}>
-                  <item.icon size={15} />
+                  <item.icon size={14} />
                 </div>
-                <span className="font-bold truncate w-full text-center px-0.5 transition-colors"
-                  style={{ fontSize: 9, color: isActive ? '#2563eb' : 'var(--text-muted)' }}>
-                  {item.label.replace('Mi ', '')}
+                <span className="font-bold truncate w-full text-center px-0.5"
+                  style={{ fontSize: 8, color: isActive ? '#2563eb' : 'var(--text-muted)' }}>
+                  {shortLabel[item.id]}
                 </span>
               </button>
             )

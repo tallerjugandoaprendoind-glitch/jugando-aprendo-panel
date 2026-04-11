@@ -2,14 +2,40 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import {
-  TrendingUp, BarChart3, Calendar, Users, CheckCircle2, XCircle,
-  Clock, Loader2, RefreshCw, Download, AlertTriangle, CalendarDays
+  BarChart3, Calendar, Users, CheckCircle2, XCircle,
+  Clock, Loader2, RefreshCw, Download, TrendingUp, AlertCircle
 } from 'lucide-react'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, PieChart, Pie, Cell
+} from 'recharts'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
-const MESES_CORTOS = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic']
+const STATUS_COLORS: Record<string, string> = {
+  confirmed: '#3b82f6',
+  completed: '#10b981',
+  cancelled: '#ef4444',
+  pending:   '#f59e0b',
+  realizada: '#10b981',
+}
+
+function KPI({ label, value, sub, icon: Icon, bar }: any) {
+  return (
+    <div className="rounded-xl p-5 relative overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+      <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl" style={{ background: bar }} />
+      <div className="flex items-start justify-between pl-3 mb-2">
+        <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>{label}</p>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${bar}15` }}>
+          <Icon size={14} style={{ color: bar }} />
+        </div>
+      </div>
+      <p className="text-4xl font-black leading-none pl-3 mb-1" style={{ color: 'var(--text-primary)' }}>{value}</p>
+      <p className="text-xs pl-3" style={{ color: 'var(--text-muted)' }}>{sub}</p>
+    </div>
+  )
+}
 
 export default function SecretariaReportes() {
   const toast = useToast()
@@ -17,7 +43,7 @@ export default function SecretariaReportes() {
   const [periodo, setPeriodo] = useState<'semana' | 'mes' | 'trimestre'>('mes')
   const [stats, setStats] = useState({
     total: 0, confirmed: 0, completed: 0, cancelled: 0, pending: 0,
-    porDia: [] as any[], porPaciente: [] as any[], tasaAsistencia: 0
+    porDia: [] as any[], porEstado: [] as any[], porTerapeuta: [] as any[], tasaAsistencia: 0
   })
 
   const cargar = useCallback(async () => {
@@ -29,209 +55,199 @@ export default function SecretariaReportes() {
       else if (periodo === 'mes') { desde = new Date(now.getFullYear(), now.getMonth(), 1) }
       else { desde = new Date(now); desde.setMonth(now.getMonth() - 3) }
 
-      const desdeStr = desde.toISOString().split('T')[0]
-
-      const { data: allApts } = await supabase
+      const { data } = await supabase
         .from('appointments')
-        .select('id, appointment_date, appointment_time, status, service_type, child_id, children(name)')
-        .gte('appointment_date', desdeStr)
+        .select('id, appointment_date, status, therapist_name, appointment_type')
+        .gte('appointment_date', desde.toISOString().split('T')[0])
         .order('appointment_date')
+        .limit(1000)
 
-      const apts = allApts || []
+      const apts = data || []
+      const completed = apts.filter(a => ['completed','realizada'].includes(a.status))
+      const cancelled = apts.filter(a => a.status === 'cancelled')
 
-      // Group by day for chart
-      const byDay: Record<string, { dia: string; confirmadas: number; completadas: number; canceladas: number; pendientes: number }> = {}
-      apts.forEach(a => {
-        const d = a.appointment_date
-        const date = new Date(d + 'T00:00:00')
-        const label = `${date.getDate()} ${MESES_CORTOS[date.getMonth()]}`
-        if (!byDay[d]) byDay[d] = { dia: label, confirmadas: 0, completadas: 0, canceladas: 0, pendientes: 0 }
-        if (a.status === 'confirmed') byDay[d].confirmadas++
-        if (a.status === 'completed') byDay[d].completadas++
-        if (a.status === 'cancelled') byDay[d].canceladas++
-        if (a.status === 'pending')   byDay[d].pendientes++
-      })
+      // Por día (últimos 14 días)
+      const diasMap: Record<string, number> = {}
+      apts.forEach(a => { diasMap[a.appointment_date] = (diasMap[a.appointment_date] || 0) + 1 })
+      const porDia = Object.entries(diasMap).slice(-14).map(([date, count]) => ({
+        dia: new Date(date + 'T00:00').toLocaleDateString('es', { weekday: 'short', day: 'numeric' }),
+        citas: count,
+      }))
 
-      // Group by patient (no clinical data — just name and count)
-      const byPaciente: Record<string, { nombre: string; total: number; asistidas: number }> = {}
-      apts.forEach(a => {
-        const id = a.child_id
-        const nombre = (a.children as any)?.name || 'Sin nombre'
-        if (!byPaciente[id]) byPaciente[id] = { nombre, total: 0, asistidas: 0 }
-        byPaciente[id].total++
-        if (a.status === 'completed' || a.status === 'confirmed') byPaciente[id].asistidas++
-      })
+      // Por estado
+      const porEstado = [
+        { name: 'Completadas', value: completed.length, color: '#10b981' },
+        { name: 'Pendientes',  value: apts.filter(a => a.status === 'pending').length, color: '#f59e0b' },
+        { name: 'Confirmadas', value: apts.filter(a => a.status === 'confirmed').length, color: '#3b82f6' },
+        { name: 'Canceladas',  value: cancelled.length, color: '#ef4444' },
+      ].filter(e => e.value > 0)
 
-      const completed = apts.filter(a => a.status === 'completed').length
-      const confirmed = apts.filter(a => a.status === 'confirmed').length
-      const attended = completed + confirmed
-      const tasaAsistencia = apts.length > 0 ? Math.round((attended / apts.length) * 100) : 0
+      // Por terapeuta
+      const tMap: Record<string, number> = {}
+      apts.forEach(a => { if (a.therapist_name) tMap[a.therapist_name] = (tMap[a.therapist_name] || 0) + 1 })
+      const porTerapeuta = Object.entries(tMap).sort(([,a],[,b]) => b - a).slice(0, 6).map(([name, count]) => ({ name, count }))
 
       setStats({
         total: apts.length,
-        confirmed,
-        completed,
-        cancelled: apts.filter(a => a.status === 'cancelled').length,
-        pending: apts.filter(a => a.status === 'pending').length,
-        porDia: Object.values(byDay).slice(-14),
-        porPaciente: Object.values(byPaciente).sort((a, b) => b.total - a.total).slice(0, 10),
-        tasaAsistencia
+        confirmed: apts.filter(a => a.status === 'confirmed').length,
+        completed: completed.length,
+        cancelled: cancelled.length,
+        pending:   apts.filter(a => a.status === 'pending').length,
+        porDia, porEstado, porTerapeuta,
+        tasaAsistencia: apts.length > 0 ? Math.round((completed.length / apts.length) * 100) : 0,
       })
-    } catch (e: any) {
-      toast.error('Error: ' + e.message)
-    } finally {
-      setLoading(false)
-    }
+    } catch (e: any) { toast.error('Error: ' + e.message) }
+    finally { setLoading(false) }
   }, [periodo])
 
   useEffect(() => { cargar() }, [cargar])
 
-  const pieData = [
-    { name: 'Confirmadas', value: stats.confirmed, color: '#10b981' },
-    { name: 'Completadas', value: stats.completed, color: '#3b82f6' },
-    { name: 'Canceladas',  value: stats.cancelled, color: '#ef4444' },
-    { name: 'Pendientes',  value: stats.pending,   color: '#f59e0b' },
-  ].filter(d => d.value > 0)
+  const exportCSV = async () => {
+    const { data } = await supabase.from('appointments')
+      .select('appointment_date, appointment_time, status, therapist_name, children(name)')
+      .gte('appointment_date', new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
+      .order('appointment_date')
+    const rows = [
+      ['Fecha','Hora','Paciente','Terapeuta','Estado'],
+      ...(data || []).map((a: any) => [a.appointment_date, a.appointment_time?.slice(0,5)||'', a.children?.name||'', a.therapist_name||'', a.status])
+    ]
+    const csv = rows.map(r => r.join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob); const el = document.createElement('a')
+    el.href = url; el.download = `reporte_asistencia_${new Date().toISOString().slice(0,7)}.csv`; el.click()
+    URL.revokeObjectURL(url); toast.success('Reporte exportado')
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
 
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-black text-slate-800">Reportes de Asistencia</h2>
-          <p className="text-sm text-slate-400 mt-0.5">Gráficos generales de programación y asistencia</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={cargar} className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-bold transition-colors">
-            <RefreshCw size={15} /> Actualizar
-          </button>
-        </div>
-      </div>
-
-      {/* Disclaimer */}
-      <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-4">
-        <AlertTriangle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-700 font-medium">
-          Este módulo muestra únicamente estadísticas generales de asistencia y programación.
-          No incluye información clínica, diagnósticos ni datos sensibles de los pacientes.
-        </p>
-      </div>
-
-      {/* Period selector */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-black text-slate-400 uppercase tracking-wide">Período:</span>
-        <div className="flex items-center gap-1 bg-slate-100 rounded-xl p-1">
-          {([['semana','Últimos 7 días'], ['mes','Este mes'], ['trimestre','Último trimestre']] as const).map(([val, label]) => (
-            <button key={val} onClick={() => setPeriodo(val)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${periodo === val ? 'bg-white shadow-sm text-violet-700' : 'text-slate-500 hover:text-slate-700'}`}>
-              {label}
+      <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+        <div className="h-0.5" style={{ background: 'linear-gradient(90deg, #3a68a0, #10b981, #f59e0b)' }} />
+        <div className="px-5 py-4 flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h2 className="text-lg font-black" style={{ color: 'var(--text-primary)' }}>Reportes de Asistencia</h2>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Estadísticas de sesiones y programación</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Período */}
+            <div className="flex rounded-xl overflow-hidden border" style={{ borderColor: 'var(--card-border)' }}>
+              {(['semana','mes','trimestre'] as const).map(p => (
+                <button key={p} onClick={() => setPeriodo(p)}
+                  className="px-3 py-1.5 text-xs font-bold transition-all"
+                  style={{ background: periodo === p ? '#3b82f6' : 'var(--muted-bg)', color: periodo === p ? '#fff' : 'var(--text-muted)' }}>
+                  {p === 'semana' ? 'Semana' : p === 'mes' ? 'Mes' : 'Trimestre'}
+                </button>
+              ))}
+            </div>
+            <button onClick={exportCSV} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all"
+              style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)', color: 'var(--text-secondary)' }}>
+              <Download size={13} /> CSV
             </button>
-          ))}
+            <button onClick={cargar} className="p-2 rounded-xl" style={{ color: 'var(--text-muted)', background: 'var(--muted-bg)' }}>
+              <RefreshCw size={14} />
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KPI label="Total citas"   value={loading ? '—' : stats.total}          sub="Este período"      icon={Calendar}     bar="#3a68a0" />
+        <KPI label="Completadas"   value={loading ? '—' : stats.completed}      sub="Sesiones realizadas" icon={CheckCircle2} bar="#10b981" />
+        <KPI label="Canceladas"    value={loading ? '—' : stats.cancelled}      sub="No realizadas"    icon={XCircle}      bar="#ef4444" />
+        <KPI label="% Asistencia"  value={loading ? '—' : `${stats.tasaAsistencia}%`} sub="Tasa efectividad" icon={TrendingUp}   bar="#f59e0b" />
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16">
-          <Loader2 size={24} className="animate-spin text-violet-400" />
-        </div>
+        <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin" style={{ color: 'var(--text-muted)' }} /></div>
       ) : (
-        <>
-          {/* Summary cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {[
-              { label: 'Total citas', value: stats.total, icon: Calendar, color: 'bg-slate-100 text-slate-700' },
-              { label: 'Confirmadas', value: stats.confirmed, icon: CheckCircle2, color: 'bg-emerald-100 text-emerald-700' },
-              { label: 'Completadas', value: stats.completed, icon: CheckCircle2, color: 'bg-blue-100 text-blue-700' },
-              { label: 'Canceladas', value: stats.cancelled, icon: XCircle, color: 'bg-red-100 text-red-600' },
-              { label: '% Asistencia', value: `${stats.tasaAsistencia}%`, icon: TrendingUp, color: 'bg-violet-100 text-violet-700' },
-            ].map(({ label, value, icon: Icon, color }) => (
-              <div key={label} className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${color.split(' ')[0]}`}>
-                  <Icon size={17} className={color.split(' ')[1]} />
-                </div>
-                <p className="text-2xl font-black text-slate-800">{value}</p>
-                <p className="text-xs font-medium text-slate-400 mt-0.5">{label}</p>
-              </div>
-            ))}
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-          {/* Bar chart — sessions by day */}
-          {stats.porDia.length > 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-              <h3 className="font-black text-sm text-slate-800 mb-4 flex items-center gap-2">
-                <BarChart3 size={16} className="text-violet-500" /> Sesiones por día
-              </h3>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={stats.porDia} barSize={12} barGap={2}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
-                  <XAxis dataKey="dia" tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 700 }} axisLine={false} tickLine={false} interval={Math.ceil(stats.porDia.length / 10) - 1} />
-                  <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <Tooltip contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }} />
-                  <Bar dataKey="confirmadas" name="Confirmadas" fill="#10b981" radius={[4,4,0,0]} />
-                  <Bar dataKey="completadas" name="Completadas" fill="#3b82f6" radius={[4,4,0,0]} />
-                  <Bar dataKey="canceladas"  name="Canceladas"  fill="#ef4444" radius={[4,4,0,0]} />
-                  <Bar dataKey="pendientes"  name="Pendientes"  fill="#f59e0b" radius={[4,4,0,0]} />
+          {/* Citas por día */}
+          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+            <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--card-border)' }}>
+              <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Citas por día</h3>
+              <span className="text-xs font-bold" style={{ color: 'var(--text-muted)' }}>{stats.total} total</span>
+            </div>
+            <div className="p-5">
+              <ResponsiveContainer width="100%" height={180}>
+                <BarChart data={stats.porDia} barSize={20}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
+                  <XAxis dataKey="dia" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} width={20} allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 12, fontSize: 12 }}
+                    labelStyle={{ color: 'var(--text-primary)', fontWeight: 700 }} cursor={{ fill: 'var(--muted-bg)' }} />
+                  <Bar dataKey="citas" name="Citas" fill="#3a68a0" radius={[4,4,0,0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          )}
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Pie chart */}
-            {pieData.length > 0 && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-                <h3 className="font-black text-sm text-slate-800 mb-4">Distribución por estado</h3>
-                <ResponsiveContainer width="100%" height={200}>
-                  <PieChart>
-                    <Pie data={pieData} cx="50%" cy="50%" outerRadius={80} dataKey="value" label={({ name, percent }: any) => `${name ?? ''} ${(((percent as number) ?? 0) * 100).toFixed(0)}%`} labelLine={false}>
-                      {pieData.map((entry, index) => <Cell key={index} fill={entry.color} />)}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            )}
-
-            {/* Patients attendance table */}
-            {stats.porPaciente.length > 0 && (
-              <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
-                <h3 className="font-black text-sm text-slate-800 mb-4 flex items-center gap-2">
-                  <Users size={15} className="text-violet-500" /> Asistencia por paciente
-                </h3>
-                <div className="space-y-2">
-                  {stats.porPaciente.map(({ nombre, total, asistidas }: { nombre: any; total: any; asistidas: any }) => {
-                    const pct = total > 0 ? Math.round((asistidas / total) * 100) : 0
-                    return (
-                      <div key={nombre} className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-full bg-violet-100 flex items-center justify-center text-xs font-black text-violet-600 flex-shrink-0">
-                          {nombre.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between mb-0.5">
-                            <p className="text-xs font-bold text-slate-700 truncate">{nombre}</p>
-                            <span className="text-xs font-black text-slate-500 ml-2">{pct}%</span>
-                          </div>
-                          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                          </div>
-                          <p className="text-[10px] text-slate-400 mt-0.5">{asistidas} de {total} sesiones</p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            )}
           </div>
 
-          {stats.total === 0 && (
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm py-16 text-center text-slate-300">
-              <CalendarDays size={36} className="mx-auto mb-3" />
-              <p className="font-semibold">No hay datos para el período seleccionado</p>
+          {/* Por estado */}
+          <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+            <div className="px-5 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
+              <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Distribución por estado</h3>
             </div>
-          )}
-        </>
+            <div className="p-5 flex items-center gap-4">
+              {stats.porEstado.length > 0 ? (
+                <>
+                  <ResponsiveContainer width="55%" height={160}>
+                    <PieChart>
+                      <Pie data={stats.porEstado} cx="50%" cy="50%" innerRadius={40} outerRadius={65} dataKey="value">
+                        {stats.porEstado.map((e, i) => <Cell key={i} fill={e.color} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 10, fontSize: 11 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex-1 space-y-2">
+                    {stats.porEstado.map(e => (
+                      <div key={e.name} className="flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ background: e.color }} />
+                        <span className="text-xs flex-1" style={{ color: 'var(--text-secondary)' }}>{e.name}</span>
+                        <span className="text-xs font-black" style={{ color: 'var(--text-primary)' }}>{e.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="flex items-center justify-center w-full h-[160px]">
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Sin datos</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Por terapeuta */}
+          <div className="rounded-xl overflow-hidden lg:col-span-2" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+            <div className="px-5 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
+              <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Sesiones por terapeuta</h3>
+            </div>
+            <div className="p-5 space-y-3">
+              {stats.porTerapeuta.length === 0 ? (
+                <p className="text-xs text-center py-4" style={{ color: 'var(--text-muted)' }}>Sin datos para este período</p>
+              ) : stats.porTerapeuta.map((t, i) => {
+                const max = stats.porTerapeuta[0]?.count || 1
+                const pct = Math.round((t.count / max) * 100)
+                return (
+                  <div key={t.name} className="flex items-center gap-3">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black text-white flex-shrink-0"
+                      style={{ background: '#3a68a0' }}>{t.name.charAt(0)}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>{t.name}</span>
+                        <span className="text-xs font-black ml-2" style={{ color: 'var(--text-muted)' }}>{t.count}</span>
+                      </div>
+                      <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--muted-bg)' }}>
+                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: '#3a68a0' }} />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
