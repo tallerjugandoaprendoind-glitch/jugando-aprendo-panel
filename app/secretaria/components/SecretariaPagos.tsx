@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   DollarSign, Plus, Search, Filter, Download, TrendingUp,
   CheckCircle2, Clock, XCircle, RefreshCw, Loader2,
@@ -155,6 +155,13 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
 
   const [editingStatus, setEditingStatus] = useState<string | null>(null)
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null)
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null)
+
+  const openStatusMenu = (e: React.MouseEvent<HTMLButtonElement>, id: string) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    setMenuPos({ top: rect.bottom + window.scrollY + 4, left: rect.left + window.scrollX })
+    setEditingStatus(id)
+  }
 
   const handleStatusChange = async (paymentId: string, newStatus: string) => {
     setUpdatingStatus(paymentId)
@@ -469,35 +476,14 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                           <span className="text-[10px] font-bold" style={{ color: st.color }}>Guardando…</span>
                         </div>
                       ) : (
-                        <>
-                          <button
-                            onClick={() => setEditingStatus(editingStatus === p.id ? null : p.id)}
-                            title="Clic para cambiar estado"
-                            className="text-[10px] font-bold px-2 py-1 rounded-lg inline-flex items-center gap-1 group transition-all hover:opacity-80"
-                            style={{ background: st.bg, color: st.color }}>
-                            {st.label}
-                            <Edit2 size={9} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </button>
-                          {editingStatus === p.id && (
-                            <>
-                              {/* Overlay to close on outside click */}
-                              <div className="fixed inset-0 z-10" onClick={() => setEditingStatus(null)} />
-                              {/* Floating menu */}
-                              <div className="absolute right-0 top-7 z-20 rounded-xl overflow-hidden shadow-lg py-1"
-                                style={{ background: 'var(--card)', border: '1px solid var(--card-border)', minWidth: 130 }}>
-                                {Object.entries(STATUS_CFG).map(([k, v]) => (
-                                  <button key={k}
-                                    onClick={() => handleStatusChange(p.id, k)}
-                                    className="w-full flex items-center gap-2 px-3 py-2 text-left transition-colors hover:opacity-80"
-                                    style={{ background: p.status === k ? v.bg : 'transparent' }}>
-                                    <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: v.color }} />
-                                    <span className="text-xs font-semibold" style={{ color: p.status === k ? v.color : 'var(--text-primary)' }}>{v.label}</span>
-                                  </button>
-                                ))}
-                              </div>
-                            </>
-                          )}
-                        </>
+                        <button
+                          onClick={e => openStatusMenu(e, p.id)}
+                          title="Clic para cambiar estado"
+                          className="text-[10px] font-bold px-2 py-1 rounded-lg inline-flex items-center gap-1 group transition-all hover:opacity-80"
+                          style={{ background: st.bg, color: st.color }}>
+                          {st.label}
+                          <Edit2 size={9} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </button>
                       )}
                     </div>
                   </div>
@@ -506,6 +492,34 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
             </div>
           )}
         </div>
+      )}
+
+      {/* ── Status dropdown portal (fixed, escapes overflow-hidden) ── */}
+      {editingStatus && menuPos && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => { setEditingStatus(null); setMenuPos(null) }} />
+          <div className="fixed z-50 rounded-xl overflow-hidden shadow-xl py-1"
+            style={{
+              top: menuPos.top,
+              left: menuPos.left,
+              background: 'var(--card)',
+              border: '1px solid var(--card-border)',
+              minWidth: 140,
+            }}>
+            {Object.entries(STATUS_CFG).map(([k, v]) => {
+              const isActive = payments.find(p => p.id === editingStatus)?.status === k
+              return (
+                <button key={k}
+                  onClick={() => handleStatusChange(editingStatus, k)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 transition-opacity hover:opacity-70"
+                  style={{ background: isActive ? v.bg : 'transparent' }}>
+                  <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: v.color }} />
+                  <span className="text-xs font-semibold" style={{ color: isActive ? v.color : 'var(--text-primary)' }}>{v.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </>
       )}
     </div>
   )
