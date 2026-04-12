@@ -297,25 +297,37 @@ export default function SecretariaHome({ onNavigate }: Props) {
           <div className="px-5 py-4">
             <WeeklyChart />
           </div>
-          {/* Citas de hoy debajo del gráfico */}
+          {/* Citas de hoy — siempre muestra algo */}
           {(() => {
             const hoyStr = new Date().toISOString().split('T')[0]
             const citasHoy = (proximasCitas.length > 0 ? proximasCitas : citasRecientes)
               .filter(a => a.appointment_date === hoyStr)
-            if (citasHoy.length === 0) return null
             return (
               <div style={{ borderTop: '1px solid var(--card-border)' }}>
-                <div className="px-5 py-2.5 flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                  <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
-                    Hoy · {citasHoy.length} cita{citasHoy.length !== 1 ? 's' : ''}
-                  </p>
+                <div className="px-5 py-2.5 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                      Hoy{citasHoy.length > 0 ? ` · ${citasHoy.length} cita${citasHoy.length !== 1 ? 's' : ''}` : ''}
+                    </p>
+                  </div>
                 </div>
-                <div className="px-2 pb-3 space-y-0.5">
-                  {citasHoy.slice(0, 4).map(apt => (
-                    <AppointmentRow key={apt.id} apt={apt} />
-                  ))}
-                </div>
+                {citasHoy.length > 0 ? (
+                  <div className="px-2 pb-3 space-y-0.5">
+                    {citasHoy.slice(0, 4).map(apt => (
+                      <AppointmentRow key={apt.id} apt={apt} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6 pb-5">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
+                      style={{ background: 'var(--muted-bg)' }}>
+                      <Calendar size={18} style={{ color: 'var(--text-muted)' }} />
+                    </div>
+                    <p className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Sin citas para hoy</p>
+                    <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>Disfruta el día libre 🎉</p>
+                  </div>
+                )}
               </div>
             )
           })()}
@@ -354,10 +366,10 @@ export default function SecretariaHome({ onNavigate }: Props) {
       {/* Acceso rápido */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { icon: Calendar,      label: 'Agenda',        sub: 'Citas y calendario',      action: 'agenda',       color: '#3a68a0' },
-          { icon: MessageSquare, label: 'Comunicación',  sub: 'Recordatorios a familias', action: 'comunicacion', color: '#8b5cf6' },
-          { icon: DollarSign,    label: 'Pagos',         sub: 'Ingresos y facturación',   action: 'pagos',        color: '#10b981' },
-          { icon: BarChart3,     label: 'Reportes',      sub: 'Asistencia y estadísticas', action: 'reportes',    color: '#f59e0b' },
+          { icon: Calendar,      label: 'Agenda',        sub: 'Citas y calendario',   action: 'agenda',       color: '#3a68a0' },
+          { icon: MessageSquare, label: 'Comunicación',  sub: 'Recordatorios',            action: 'comunicacion', color: '#8b5cf6' },
+          { icon: DollarSign,    label: 'Pagos',         sub: 'Facturación',              action: 'pagos',        color: '#10b981' },
+          { icon: BarChart3,     label: 'Reportes',      sub: 'Estadísticas',             action: 'reportes',     color: '#f59e0b' },
         ].map(({ icon: Icon, label, sub, action, color }) => (
           <button key={label} onClick={() => onNavigate?.(action)}
             className="rounded-xl p-4 text-left flex items-center gap-3 hover:shadow-sm transition-all group active:scale-[0.98]"
@@ -367,7 +379,7 @@ export default function SecretariaHome({ onNavigate }: Props) {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>{label}</p>
-              <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{sub}</p>
+              <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{sub}</p>
             </div>
             <ArrowRight size={12} className="flex-shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: 'var(--text-muted)' }} />
           </button>
