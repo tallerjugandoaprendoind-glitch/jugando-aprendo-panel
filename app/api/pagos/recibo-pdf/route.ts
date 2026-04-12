@@ -51,255 +51,257 @@ function generateReceiptHTML(payment: any, center: any, child: any, parentProfil
     cancelled: 'CANCELADO', refunded: 'DEVUELTO',
   }
   const statusColors: Record<string, string> = {
-    paid: '#059669', pending: '#d97706', partial: '#2563eb',
+    paid: '#059669', pending: '#b45309', partial: '#1d4ed8',
     cancelled: '#dc2626', refunded: '#7c3aed',
   }
   const statusBg: Record<string, string> = {
-    paid: '#d1fae5', pending: '#fef3c7', partial: '#dbeafe',
+    paid: '#dcfce7', pending: '#fef9c3', partial: '#dbeafe',
     cancelled: '#fee2e2', refunded: '#ede9fe',
   }
 
   const isPaid    = payment.status === 'paid'
   const statusLbl = statusLabels[payment.status] || payment.status.toUpperCase()
   const statusClr = statusColors[payment.status] || '#374151'
-  const statusBgC = statusBg[payment.status]   || '#f3f4f6'
+  const statusBgC = statusBg[payment.status]     || '#f3f4f6'
+  const paidDate  = payment.paid_at ? fmtDate(payment.paid_at) : fmtDate(payment.created_at)
+  const emitDate  = fmtDate(payment.created_at)
 
-  const payDate = payment.paid_at || payment.created_at
-  const createdDate = fmtDate(payment.created_at)
-  const paidDate    = payDate ? fmtDate(payDate) : '—'
-
-  const methodLabel: Record<string, string> = {
-    efectivo: 'Efectivo', yape: 'Yape', plin: 'Plin',
+  const methodIcon: Record<string, string> = {
+    yape: 'Yape', plin: 'Plin', efectivo: 'Efectivo',
     transferencia: 'Transferencia Bancaria', tarjeta: 'Tarjeta', otro: 'Otro',
   }
+
+  // Logo URL — use public logo if exists
+  const logoUrl = process.env.NEXT_PUBLIC_APP_URL
+    ? `${process.env.NEXT_PUBLIC_APP_URL}/images/logo.png`
+    : null
 
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Recibo ${reciboNum} — ${center.nombre}</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Recibo ${reciboNum}</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f8fafc; display: flex; justify-content: center; padding: 24px 16px; }
-    .page { background: white; width: 100%; max-width: 680px; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 32px rgba(0,0,0,0.10); }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:#eef2f7;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:32px 16px}
+    .wrapper{width:100%;max-width:700px}
+    .doc{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.12)}
 
-    /* Header */
-    .header { background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%); padding: 32px 36px 28px; color: white; }
-    .header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-    .logo-area h1 { font-size: 22px; font-weight: 900; letter-spacing: -0.5px; }
-    .logo-area p  { font-size: 12px; opacity: 0.75; margin-top: 2px; }
-    .recibo-badge { text-align: right; }
-    .recibo-badge .tipo { font-size: 10px; font-weight: 700; letter-spacing: 2px; opacity: 0.7; text-transform: uppercase; }
-    .recibo-badge .num  { font-size: 26px; font-weight: 900; line-height: 1; }
-    .center-info { margin-top: 20px; display: flex; gap: 20px; flex-wrap: wrap; }
-    .center-info span { font-size: 11px; opacity: 0.8; }
-    .center-info span b { opacity: 1; font-weight: 700; }
+    /* ── TOP HEADER: empresa ── */
+    .top{padding:32px 40px 24px;border-bottom:1px solid #e5e7eb;display:flex;align-items:flex-start;justify-content:space-between;gap:24px}
+    .company{display:flex;align-items:center;gap:14px}
+    .company-logo{width:54px;height:54px;border-radius:12px;background:#1e3a5f;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;overflow:hidden}
+    .company-logo img{width:100%;height:100%;object-fit:contain}
+    .company-text h1{font-size:20px;font-weight:900;color:#0f172a;letter-spacing:-0.5px}
+    .company-text p{font-size:11px;color:#6b7280;margin-top:1px}
+    .company-meta{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+    .company-meta span{font-size:11px;color:#374151}
+    .company-meta .ruc{font-weight:800;color:#1e3a5f;font-size:13px}
 
-    /* Status bar */
-    .status-bar { padding: 10px 36px; display: flex; align-items: center; justify-content: space-between; }
-    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; }
-    .status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-    .date-issued { font-size: 11px; color: #6b7280; }
+    .recibo-info{text-align:right;flex-shrink:0}
+    .recibo-info .tipo{font-size:10px;font-weight:700;letter-spacing:2px;color:#9ca3af;text-transform:uppercase}
+    .recibo-info .num{font-size:28px;font-weight:900;color:#1e3a5f;line-height:1.1;margin-top:2px}
+    .recibo-info .emitido{font-size:11px;color:#6b7280;margin-top:4px}
 
-    /* Body */
-    .body { padding: 28px 36px; }
+    /* ── STATUS STRIPE ── */
+    .stripe{padding:10px 40px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #f1f5f9}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:0.5px}
+    .badge::before{content:'';width:7px;height:7px;border-radius:50%;background:currentColor}
+    .stripe-right{font-size:11px;color:#6b7280}
 
-    /* Section */
-    .section { margin-bottom: 24px; }
-    .section-title { font-size: 9px; font-weight: 800; letter-spacing: 2px; color: #9ca3af; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid #f1f5f9; }
+    /* ── BODY ── */
+    .body{padding:32px 40px}
 
-    /* Info grid */
-    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .info-item label { font-size: 10px; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 2px; }
-    .info-item p { font-size: 13px; font-weight: 600; color: #1f2937; }
+    /* Section title */
+    .stitle{font-size:9px;font-weight:800;letter-spacing:2px;color:#9ca3af;text-transform:uppercase;padding-bottom:8px;border-bottom:1px solid #f1f5f9;margin-bottom:14px}
 
-    /* Items table */
-    .items-table { width: 100%; border-collapse: collapse; }
-    .items-table thead th { font-size: 9px; font-weight: 800; color: #9ca3af; letter-spacing: 1.5px; text-transform: uppercase; padding: 0 0 8px; text-align: left; }
-    .items-table thead th:last-child { text-align: right; }
-    .items-table tbody tr { border-top: 1px solid #f1f5f9; }
-    .items-table tbody td { padding: 12px 0; font-size: 13px; color: #374151; vertical-align: top; }
-    .items-table tbody td:last-child { text-align: right; font-weight: 700; color: #059669; }
-    .items-table tfoot tr { border-top: 2px solid #e5e7eb; }
-    .items-table tfoot td { padding: 12px 0 0; }
-    .total-row { display: flex; justify-content: space-between; align-items: center; }
-    .total-label { font-size: 12px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 1px; }
-    .total-value { font-size: 28px; font-weight: 900; color: #059669; line-height: 1; }
+    /* Grid info */
+    .igrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+    .iitem label{font-size:10px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:3px}
+    .iitem p{font-size:13px;font-weight:600;color:#111827}
+    .iitem p.muted{color:#6b7280;font-weight:400}
 
-    /* Payment method */
-    .method-pill { display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border-radius: 8px; padding: 8px 14px; font-size: 12px; font-weight: 700; color: #374151; margin-top: 4px; }
+    /* ── TABLE ── */
+    .tbl{width:100%;border-collapse:collapse;margin-bottom:4px}
+    .tbl thead{background:#f8fafc}
+    .tbl thead th{font-size:9px;font-weight:800;letter-spacing:1.5px;color:#9ca3af;text-transform:uppercase;padding:10px 12px;text-align:left;border-bottom:2px solid #e5e7eb}
+    .tbl thead th.r{text-align:right}
+    .tbl thead th.c{text-align:center}
+    .tbl tbody tr{border-bottom:1px solid #f1f5f9}
+    .tbl tbody tr:last-child{border-bottom:none}
+    .tbl tbody td{padding:14px 12px;font-size:13px;color:#374151;vertical-align:top}
+    .tbl tbody td.r{text-align:right}
+    .tbl tbody td.c{text-align:center}
+    .tbl tbody td strong{color:#111827;display:block;font-weight:700;margin-bottom:2px}
+    .tbl tbody td .sub{font-size:11px;color:#9ca3af}
+    .tbl tbody td .amount{font-size:15px;font-weight:800;color:#059669}
 
-    /* Notes */
-    .notes-box { background: #fafafa; border-radius: 8px; padding: 12px 14px; font-size: 12px; color: #6b7280; margin-top: 8px; border: 1px solid #f0f0f0; }
+    /* ── TOTAL BOX ── */
+    .total-box{background:#f0fdf4;border:1px solid #86efac;border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;margin:20px 0}
+    .total-box .lbl{font-size:12px;font-weight:800;color:#374151;text-transform:uppercase;letter-spacing:1px}
+    .total-box .val{font-size:32px;font-weight:900;color:#059669}
 
-    /* Footer */
-    .footer { background: #f8fafc; border-top: 1px solid #e5e7eb; padding: 20px 36px; display: flex; align-items: center; justify-content: space-between; }
-    .footer-left { font-size: 11px; color: #9ca3af; line-height: 1.7; }
-    .footer-right { font-size: 10px; color: #d1d5db; text-align: right; }
-    .watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) rotate(-35deg); font-size: 80px; font-weight: 900; color: rgba(16,185,129,0.04); pointer-events: none; white-space: nowrap; z-index: 0; }
+    /* ── PAYMENT INFO ── */
+    .pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+    .pay-item label{font-size:9px;font-weight:800;color:#9ca3af;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px}
+    .pill{display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;border-radius:8px;padding:7px 12px;font-size:12px;font-weight:700;color:#374151}
+    .pay-item .date{font-size:14px;font-weight:700;color:#111827}
 
-    /* Divider */
-    .divider { border: none; border-top: 1px dashed #e5e7eb; margin: 20px 0; }
+    /* ── CONFIRM BOX ── */
+    .confirm{background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-top:20px}
+    .confirm p{font-size:12px;color:#166534;font-weight:600}
 
-    @media print {
-      body { background: white; padding: 0; }
-      .page { box-shadow: none; border-radius: 0; max-width: 100%; }
-      .no-print { display: none !important; }
+    /* ── FOOTER ── */
+    .footer{background:#f8fafc;border-top:1px solid #e5e7eb;padding:20px 40px;display:flex;align-items:center;justify-content:space-between}
+    .footer-l{font-size:11px;color:#6b7280;line-height:1.8}
+    .footer-l strong{color:#374151;display:block}
+    .footer-r{font-size:10px;color:#9ca3af;text-align:right;line-height:1.8}
+
+    /* Print button */
+    .actions{margin-top:16px;display:flex;gap:8px;justify-content:center}
+    .btn-print{background:#1e3a5f;color:white;border:none;padding:11px 28px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer}
+    .btn-close{background:#f1f5f9;color:#374151;border:none;padding:11px 20px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer}
+
+    @media print{
+      body{background:white;padding:0}
+      .doc{box-shadow:none;border-radius:0;max-width:100%}
+      .actions{display:none}
+      .wrapper{max-width:100%}
     }
   </style>
 </head>
 <body>
-  <div class="page" style="position:relative;">
-    <div class="watermark">${isPaid ? '✓ PAGADO' : statusLbl}</div>
+  <div class="wrapper">
+    <div class="doc">
 
-    <!-- Header -->
-    <div class="header">
-      <div class="header-top">
-        <div class="logo-area">
-          <h1>🎯 ${center.nombre}</h1>
-          <p>Centro de Terapias ABA Especializado</p>
+      <!-- ── EMPRESA ─────────────────────────────── -->
+      <div class="top">
+        <div class="company">
+          <div class="company-logo">
+            ${logoUrl ? `<img src="${logoUrl}" alt="Logo" onerror="this.style.display='none';this.parentElement.textContent='JA'"/>` : '🎯'}
+          </div>
+          <div class="company-text">
+            <h1>${center.nombre}</h1>
+            <p>Centro de Terapias ABA</p>
+            <div class="company-meta">
+              ${center.ruc ? `<span class="ruc">RUC: ${center.ruc}</span>` : ''}
+              ${center.direccion ? `<span>${center.direccion}</span>` : ''}
+              ${center.telefono ? `<span>Tel: ${center.telefono}</span>` : ''}
+              ${center.email ? `<span>${center.email}</span>` : ''}
+            </div>
+          </div>
         </div>
-        <div class="recibo-badge">
+        <div class="recibo-info">
           <p class="tipo">Recibo de Pago</p>
           <p class="num">#${reciboNum}</p>
+          <p class="emitido">Emitido: ${emitDate}</p>
         </div>
       </div>
-      <div class="center-info">
-        ${center.ruc ? `<span><b>RUC:</b> ${center.ruc}</span>` : ''}
-        ${center.direccion ? `<span><b>📍</b> ${center.direccion}</span>` : ''}
-        ${center.telefono ? `<span><b>📞</b> ${center.telefono}</span>` : ''}
-        ${center.email ? `<span><b>✉️</b> ${center.email}</span>` : ''}
+
+      <!-- ── STATUS ─────────────────────────────── -->
+      <div class="stripe" style="background:${statusBgC}30">
+        <span class="badge" style="background:${statusBgC};color:${statusClr}">${statusLbl}</span>
+        <span class="stripe-right">Fecha de pago: <strong>${paidDate}</strong></span>
       </div>
-    </div>
 
-    <!-- Status bar -->
-    <div class="status-bar" style="background:${statusBgC}20; border-bottom: 1px solid ${statusBgC};">
-      <span class="status-badge" style="background:${statusBgC}; color:${statusClr};">${statusLbl}</span>
-      <span class="date-issued">Emitido: ${createdDate}</span>
-    </div>
+      <!-- ── BODY ──────────────────────────────── -->
+      <div class="body">
 
-    <!-- Body -->
-    <div class="body">
-
-      <!-- Datos del paciente / familia -->
-      <div class="section">
-        <p class="section-title">Datos del Paciente y Familia</p>
-        <div class="info-grid">
-          <div class="info-item">
+        <!-- DATOS CLIENTE -->
+        <p class="stitle">Datos del cliente</p>
+        <div class="igrid">
+          <div class="iitem">
             <label>Paciente</label>
             <p>${child?.name || '—'}</p>
           </div>
-          <div class="info-item">
-            <label>Padre / Tutor</label>
+          <div class="iitem">
+            <label>Responsable / Tutor</label>
             <p>${parentProfile?.full_name || '—'}</p>
           </div>
-          ${parentProfile?.email ? `
-          <div class="info-item">
-            <label>Email</label>
-            <p>${parentProfile.email}</p>
-          </div>` : ''}
-          ${parentProfile?.phone ? `
-          <div class="info-item">
-            <label>Teléfono</label>
-            <p>${parentProfile.phone}</p>
-          </div>` : ''}
+          ${parentProfile?.phone ? `<div class="iitem"><label>Teléfono</label><p>${parentProfile.phone}</p></div>` : ''}
+          ${parentProfile?.email ? `<div class="iitem"><label>Correo</label><p class="muted">${parentProfile.email}</p></div>` : ''}
         </div>
-      </div>
 
-      <hr class="divider" />
-
-      <!-- Detalle del pago -->
-      <div class="section">
-        <p class="section-title">Detalle del Servicio</p>
-        <table class="items-table">
+        <!-- SERVICIOS -->
+        <p class="stitle">Detalle de servicios</p>
+        <table class="tbl">
           <thead>
             <tr>
-              <th style="width:60%">Descripción</th>
-              <th style="width:20%; text-align:center">Cant.</th>
-              <th style="width:20%">Importe</th>
+              <th style="width:55%">Descripción</th>
+              <th class="c" style="width:12%">Cant.</th>
+              <th class="r" style="width:15%">P. Unit.</th>
+              <th class="r" style="width:18%">Total</th>
             </tr>
           </thead>
           <tbody>
             <tr>
               <td>
                 <strong>${payment.concept}</strong>
-                ${payment.notes ? `<br/><span style="font-size:11px;color:#9ca3af;margin-top:2px;display:block">${payment.notes}</span>` : ''}
+                ${payment.notes ? `<span class="sub">${payment.notes}</span>` : ''}
               </td>
-              <td style="text-align:center;">1</td>
-              <td>${fmtCurrency(Number(payment.amount))}</td>
+              <td class="c">1</td>
+              <td class="r"><span class="amount">${fmtCurrency(Number(payment.amount))}</span></td>
+              <td class="r"><span class="amount">${fmtCurrency(Number(payment.amount))}</span></td>
             </tr>
           </tbody>
-          <tfoot>
-            <tr>
-              <td colspan="2">
-                <div class="total-row">
-                  <span class="total-label">Total a pagar</span>
-                  <span class="total-value">${fmtCurrency(Number(payment.amount))}</span>
-                </div>
-              </td>
-            </tr>
-          </tfoot>
         </table>
-      </div>
 
-      <hr class="divider" />
-
-      <!-- Método y fecha -->
-      <div class="section">
-        <p class="section-title">Información de Pago</p>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>Método de pago</label>
-            <div class="method-pill">
-              ${payment.payment_method === 'yape' ? '💜 Yape' :
-                payment.payment_method === 'plin' ? '🟢 Plin' :
-                payment.payment_method === 'efectivo' ? '💵 Efectivo' :
-                payment.payment_method === 'transferencia' ? '🏦 Transferencia' :
-                payment.payment_method === 'tarjeta' ? '💳 Tarjeta' : '💰 Otro'}
-            </div>
+        <!-- TOTAL -->
+        <div class="total-box">
+          <div>
+            <p class="lbl">Total</p>
+            <p style="font-size:11px;color:#6b7280;margin-top:2px">Incluye todos los conceptos</p>
           </div>
-          <div class="info-item">
+          <p class="val">${fmtCurrency(Number(payment.amount))}</p>
+        </div>
+
+        <!-- MÉTODO DE PAGO -->
+        <div class="pay-grid">
+          <div class="pay-item">
+            <label>Método de pago</label>
+            <span class="pill">${methodIcon[payment.payment_method] || payment.payment_method}</span>
+          </div>
+          <div class="pay-item">
             <label>Fecha de pago</label>
-            <p>${paidDate}</p>
+            <p class="date">${paidDate}</p>
           </div>
         </div>
+
+        ${isPaid ? `
+        <div class="confirm">
+          <span style="font-size:12px;font-weight:900;color:#059669;background:#dcfce7;padding:3px 8px;border-radius:4px;font-family:monospace">OK</span>
+          <p>Pago recibido y confirmado. Gracias por confiar en ${center.nombre}.</p>
+        </div>` : ''}
+
       </div>
 
-      ${isPaid ? `
-      <div style="background:#d1fae520;border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-top:8px;">
-        <span style="font-size:20px;">✅</span>
-        <p style="font-size:12px;color:#065f46;font-weight:600;">Pago recibido y confirmado. Gracias por confiar en ${center.nombre}.</p>
-      </div>` : ''}
-
+      <!-- ── FOOTER ─────────────────────────────── -->
+      <div class="footer">
+        <div class="footer-l">
+          <strong>${center.nombre}</strong>
+          ${center.ruc ? `RUC: ${center.ruc}` : 'Centro de Terapias ABA'}
+          ${center.direccion ? `<br/>${center.direccion}` : ''}
+          <br/>Este documento es un recibo interno de pago.
+        </div>
+        <div class="footer-r">
+          Recibo N° ${reciboNum}<br/>
+          ${new Date().toLocaleDateString('es-PE')}<br/>
+          <span style="color:#d1d5db">No válido como comprobante SUNAT</span>
+        </div>
+      </div>
     </div>
 
-    <!-- Footer -->
-    <div class="footer">
-      <div class="footer-left">
-        <strong style="color:#374151;">${center.nombre}</strong><br/>
-        ${center.ruc ? `RUC ${center.ruc} · ` : ''}${center.direccion || 'Centro de Terapias ABA'}<br/>
-        Este documento es un recibo de pago interno.
-      </div>
-      <div class="footer-right">
-        Recibo #${reciboNum}<br/>
-        ${new Date().toLocaleDateString('es-PE')}
-      </div>
-    </div>
-
-    <!-- Print button (no imprime) -->
-    <div class="no-print" style="text-align:center;padding:16px;background:#f8fafc;border-top:1px solid #e5e7eb;">
-      <button onclick="window.print()" style="background:#2563eb;color:white;border:none;padding:10px 28px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-right:8px;">🖨️ Imprimir / Guardar PDF</button>
-      <button onclick="window.close()" style="background:#f1f5f9;color:#374151;border:none;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Cerrar</button>
+    <!-- Botones (no imprimen) -->
+    <div class="actions">
+      <button class="btn-print" onclick="window.print()">Imprimir / Guardar PDF</button>
+      <button class="btn-close" onclick="window.close()">Cerrar</button>
     </div>
   </div>
-
-  <script>
-    // Auto-focus for keyboard shortcut Ctrl+P
-    window.onload = () => { document.title = 'Recibo ${reciboNum} — ${center.nombre}' }
-  </script>
 </body>
 </html>`
 }
+
 
 // ── Route handler ─────────────────────────────────────────────────────────────
 export async function GET(req: NextRequest) {
