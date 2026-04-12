@@ -36,7 +36,7 @@ function KPIBig({ label, value, sub, icon: Icon, bar, delta, deltaLabel }: any) 
           </div>
         )}
       </div>
-      <p className="text-4xl font-black leading-none pl-4 mb-1" style={{ color: 'var(--text-primary)' }}>{value}</p>
+      <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-black leading-tight pl-4 mb-1 break-all" style={{ color: 'var(--text-primary)' }}>{value}</p>
       <p className="text-xs font-bold pl-4 mt-1" style={{ color: 'var(--text-muted)' }}>{label}</p>
       {sub && <p className="text-[10px] pl-4 mt-0.5" style={{ color: 'var(--text-muted)' }}>{sub}</p>}
     </div>

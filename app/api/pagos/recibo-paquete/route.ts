@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
     thead tr{background:#f8fafc;border-bottom:2px solid #e5e7eb}
     thead th{font-size:9px;font-weight:800;letter-spacing:1.5px;color:#9ca3af;text-transform:uppercase;padding:10px 12px;text-align:left}
     th.ac,td.ac{text-align:center}
-    th.ar,td.ar{text-align:right}
+    th.ar,td.ar{text-align:right;white-space:nowrap}
     tbody tr{border-bottom:1px solid #f1f5f9}
     tbody tr:last-child{border-bottom:none}
     tbody td{padding:9px 12px;font-size:12.5px;color:#374151;vertical-align:middle}
@@ -213,11 +213,11 @@ export async function GET(req: NextRequest) {
       <thead>
         <tr>
           <th style="width:8%">Día</th>
-          <th style="width:14%">Fecha</th>
-          <th style="width:38%">Concepto</th>
-          <th class="ac" style="width:16%">Método</th>
+          <th style="width:13%">Fecha</th>
+          <th style="width:35%">Concepto</th>
+          <th class="ac" style="width:14%">Método</th>
           <th class="ac" style="width:12%">Estado</th>
-          <th class="ar" style="width:12%">Monto</th>
+          <th class="ar" style="width:18%">Monto</th>
         </tr>
       </thead>
       <tbody>
