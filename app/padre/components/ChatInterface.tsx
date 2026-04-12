@@ -366,55 +366,31 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
     { icon: '💙', text: 'Necesito apoyo emocional', color: '#fdf2f8', border: '#f9a8d4' },
   ]
   return (
-    <div className="flex flex-col items-center px-4 py-4 text-center" style={{ animation: 'fadeUp .5s ease' }}>
-      {/* Robot grande animado */}
-      <div className="relative mb-3">
-        <div className="absolute inset-0 rounded-full blur-2xl opacity-30 scale-110"
-          style={{ background: 'radial-gradient(circle,#818cf8,#c4b5fd)', animation: 'pulse 2s ease-in-out infinite' }} />
-        <div className="relative w-16 h-16 rounded-full flex items-center justify-center shadow-xl"
-          style={{ background: 'linear-gradient(135deg,#eef2ff,#dbeafe)', animation: 'robotBob 2.5s ease-in-out infinite' }}>
-          <RobotAvatar size={52} animated />
-        </div>
-        {/* Brillo orbital */}
-        <div className="absolute -top-1 -right-1 w-6 h-6 bg-emerald-400 rounded-full flex items-center justify-center shadow-md">
-          <Sparkles size={12} className="text-white" />
-        </div>
+    <div className="flex flex-col items-center justify-center px-5 py-6 text-center h-full" style={{ animation: 'fadeUp .4s ease' }}>
+      {/* Avatar compacto */}
+      <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg"
+        style={{ background: 'linear-gradient(135deg,#6366f1,#4f46e5)', padding: 8 }}>
+        <RobotAvatar size={36} />
       </div>
 
-      <h3 className="text-lg font-black text-slate-800 mb-1">
-        ¡Hola! Soy <span style={{ color: '#6366f1' }}>ARIA</span> 🤖
+      <h3 className="text-xl font-black text-slate-800 mb-1">
+        Hola, soy <span className="text-indigo-600">ARIA</span>
       </h3>
-      <p className="text-sm text-slate-500 font-medium mb-1">
-        Tu asistente clínico de Jugando Aprendo
-      </p>
-      <p className="text-xs text-slate-400 mb-3 leading-relaxed max-w-xs">
-        {t('aria.revisadoHistorial')} <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong> y estoy lista para ayudarte en lo que necesites.
+      <p className="text-sm text-slate-500 mb-1">Asistente clínico de Jugando Aprendo</p>
+      <p className="text-xs text-slate-400 mb-6 leading-relaxed max-w-[280px]">
+        He revisado el historial de <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong>.
+        Puedo explicarte sesiones, tareas para casa y mucho más.
       </p>
 
-      {/* Capacidades */}
-      <div className="grid grid-cols-2 gap-2 w-full max-w-sm mb-6">
-        {[
-          { icon: '📊', label: 'Explico reportes' },
-          { icon: '🏠', label: 'Actividades en casa' },
-          { icon: '💬', label: 'Respondo dudas' },
-          { icon: '💙', label: 'Apoyo emocional' },
-        ].map(({ icon, label }) => (
-          <div key={label} className="flex items-center gap-2 bg-white border border-slate-100 rounded-2xl px-3 py-2.5 shadow-sm">
-            <span className="text-base">{icon}</span>
-            <span className="text-xs font-semibold text-slate-600">{label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Preguntas rápidas */}
-      <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('aria.dondeEmpezamos')}</p>
-      <div className="flex flex-col gap-2 w-full max-w-sm">
+      {/* Quick actions — cleaner */}
+      <div className="flex flex-col gap-2 w-full max-w-[320px]">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">¿Por dónde empezamos?</p>
         {quick.map(({ icon, text, color, border }) => (
           <button key={text} onClick={() => onQuickSend(text)}
-            className="flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 text-left transition-all hover:scale-[1.02] active:scale-[.98] group"
-            style={{ background: color, borderColor: border }}>
-            <span className="text-lg shrink-0">{icon}</span>
-            <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-700 transition-colors">{text}</span>
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all active:scale-[.98] hover:shadow-sm"
+            style={{ background: color, border: `1.5px solid ${border}` }}>
+            <span className="text-base shrink-0">{icon}</span>
+            <span className="text-sm font-semibold text-slate-700">{text}</span>
           </button>
         ))}
       </div>
@@ -629,43 +605,39 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         }
       `}</style>
 
-      <div className="flex flex-col" style={{ background: 'linear-gradient(160deg, #f8f9ff 0%, #f0f0ff 50%, #f8f9ff 100%)', height: '100%', minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="flex flex-col bg-white" style={{ height: '100%', minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
-        {/* ── Header ── */}
-        <div className="shrink-0 px-5 py-4 flex items-center gap-3 border-b border-slate-100"
-          style={{ background: 'rgba(255,255,255,.85)', backdropFilter: 'blur(12px)' }}>
-          <div className="w-11 h-11 rounded-2xl flex items-center justify-center shadow-md shrink-0"
-            style={{ background: 'linear-gradient(135deg,#6366f1,#4f46e5)', padding: 6 }}>
-            <RobotAvatar size={30} />
+        {/* ── Header — clean, professional ── */}
+        <div className="shrink-0 px-4 py-3 flex items-center gap-3 border-b border-slate-100 bg-white">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+            style={{ background: 'linear-gradient(135deg,#6366f1,#4f46e5)', padding: 5 }}>
+            <RobotAvatar size={24} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <p className="font-black text-slate-800 text-base">ARIA</p>
-              <span className="flex items-center gap-1 text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
+            <div className="flex items-center gap-1.5">
+              <p className="font-black text-slate-800 text-sm">ARIA</p>
+              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+                <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
                 En línea
               </span>
               {speaking && (
-                <span className="flex items-center gap-1 text-xs font-bold text-indigo-600 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full"
-                  style={{ animation: 'fadeUp .2s ease' }}>
-                  <Volume2 size={10} />
-                  Hablando...
+                <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
+                  <Volume2 size={9} /> Hablando...
                 </span>
               )}
             </div>
-            <p className="text-xs text-slate-400 font-medium truncate">
-              Asistente clínico IA · {childName ? `Historial de ${childName}` : 'Jugando Aprendo'}
+            <p className="text-[11px] text-slate-400 truncate">
+              {childName ? `Especializada en ${childName}` : 'Asistente clínico IA'}
             </p>
           </div>
-          {/* Botón silenciar voz */}
-          <button onClick={toggleVoice} title={voiceEnabled ? 'Silenciar respuestas de voz' : 'Activar respuestas de voz'}
-            className="p-2.5 rounded-xl hover:bg-slate-100 transition-all"
-            style={{ color: voiceEnabled ? '#6366f1' : '#94a3b8' }}>
-            {voiceEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
+          <button onClick={toggleVoice} title={voiceEnabled ? 'Silenciar' : 'Activar voz'}
+            className="p-2 rounded-xl hover:bg-slate-100 transition-all"
+            style={{ color: voiceEnabled ? '#6366f1' : '#cbd5e1' }}>
+            {voiceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
           </button>
-          <button onClick={handleReset}
-            className="p-2.5 rounded-xl hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-600">
-            <RefreshCw size={16} />
+          <button onClick={handleReset} title="Nueva conversación"
+            className="p-2 rounded-xl hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-600">
+            <RefreshCw size={15} />
           </button>
         </div>
 
@@ -689,7 +661,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         )}
 
         {/* ── Área de mensajes ── */}
-        <div className="overflow-y-auto px-4 py-4" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e2e8f0 transparent', flex: 1, minHeight: 0 }}>
+        <div className="overflow-y-auto px-4 py-4 bg-slate-50" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e2e8f0 transparent', flex: 1, minHeight: 0 }}>
 
           {showWelcome && messages.length === 0 ? (
             <WelcomeScreen childName={childName} onQuickSend={send} />
@@ -708,13 +680,13 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
 
         {/* ── Preguntas rápidas (visible cuando hay mensajes) ── */}
         {!showWelcome && messages.length > 0 && !typing && (
-          <div className="shrink-0 px-4 pb-2">
-            <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {[t('aria.pregSugerida_sesion'), t('aria.pregSugerida_casa'), t('aria.pregSugerida_objetivos'), t('aria.pregSugerida_apoyo')].map((q, i) => {
+          <div className="shrink-0 px-3 pb-1 bg-white border-t border-slate-100">
+            <div className="flex gap-1.5 overflow-x-auto py-2" style={{ scrollbarWidth: 'none' }}>
+              {['📋 Última sesión', '🏠 Tips para casa', '🎯 Objetivos', '💙 Apoyo'].map((q, i) => {
                 const texts = ['¿Cómo le fue en la última sesión?', 'Dame consejos para actividades en casa', '¿Qué objetivos está trabajando?', 'Necesito apoyo emocional']
                 return (
                   <button key={i} onClick={() => send(texts[i])}
-                    className="shrink-0 px-3.5 py-2 bg-white border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-2xl text-xs font-semibold transition-all whitespace-nowrap shadow-sm">
+                    className="shrink-0 px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-full text-xs font-semibold transition-all whitespace-nowrap">
                     {q}
                   </button>
                 )
@@ -724,8 +696,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         )}
 
         {/* ── Input con voz ── */}
-        <div className="shrink-0 p-4 border-t border-slate-100"
-          style={{ background: 'rgba(255,255,255,.9)', backdropFilter: 'blur(12px)' }}>
+        <div className="shrink-0 px-3 py-3 border-t border-slate-100 bg-white">
           <div className="flex gap-2 items-end">
             <div className="flex-1 relative">
               <input
@@ -737,23 +708,23 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
                 disabled={typing || listening}
                 className="w-full text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
                 style={{
-                  background: listening ? '#fef2f2' : '#f1f5f9',
-                  border: `2px solid ${listening ? '#fca5a5' : 'transparent'}`,
-                  borderRadius: 24,
-                  padding: '14px 20px',
+                  background: listening ? '#fef2f2' : '#f8fafc',
+                  border: `1.5px solid ${listening ? '#fca5a5' : '#e2e8f0'}`,
+                  borderRadius: 14,
+                  padding: '11px 16px',
                   fontFamily: 'inherit',
                 }}
                 onFocus={e => {
                   if (!listening) {
                     e.target.style.background = '#fff'
                     e.target.style.borderColor = '#6366f1'
-                    e.target.style.boxShadow = '0 0 0 4px rgba(99,102,241,.1)'
+                    e.target.style.boxShadow = '0 0 0 3px rgba(99,102,241,.08)'
                   }
                 }}
                 onBlur={e => {
                   if (!listening) {
-                    e.target.style.background = '#f1f5f9'
-                    e.target.style.borderColor = 'transparent'
+                    e.target.style.background = '#f8fafc'
+                    e.target.style.borderColor = '#e2e8f0'
                     e.target.style.boxShadow = 'none'
                   }
                 }}
@@ -807,14 +778,11 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
             )}
           </div>
 
-          {/* Hint de voz */}
-          {micSupported && (
-            <p className="text-center text-[10px] text-slate-400 mt-2 font-medium">
-              {listening ? '🔴 Grabando · Habla claro cerca del micrófono' : '🎤 Toca el micrófono para hablar · ⌨️ O escribe tu mensaje'}
-            </p>
+          {listening && (
+            <p className="text-center text-[10px] text-red-400 mt-1.5 font-medium">🔴 Grabando — habla cerca del micrófono</p>
           )}
           <p className="text-center text-[10px] text-slate-300 mt-1 font-medium">
-            ARIA puede cometer errores · Consulta siempre con tu terapeuta
+            ARIA puede cometer errores · Consulta con tu terapeuta
           </p>
         </div>
       </div>
