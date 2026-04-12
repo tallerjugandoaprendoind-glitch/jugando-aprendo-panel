@@ -11,7 +11,7 @@ const supabase = createClient(
 )
 
 const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
-const DAYS  = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 
 const STATUS_LABELS: Record<string, string> = {
   paid: 'Pagado', pending: 'Pendiente', partial: 'Parcial',
@@ -167,7 +167,7 @@ export async function GET(req: NextRequest) {
     // ══════════════════════════════════════════════════════════════════════════
     // HOJA 1 — RESUMEN EJECUTIVO
     // ══════════════════════════════════════════════════════════════════════════
-    const ws1 = wb.addWorksheet('Resumen', { tabColor: { argb: C.navy } })
+    const ws1 = wb.addWorksheet('Resumen', { properties: { tabColor: { argb: C.navy } } })
     ws1.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true, margins: { left: 0.5, right: 0.5, top: 0.75, bottom: 0.75, header: 0.3, footer: 0.3 } }
 
     ws1.columns = [
@@ -328,7 +328,7 @@ export async function GET(req: NextRequest) {
     // ══════════════════════════════════════════════════════════════════════════
     // HOJA 2 — DETALLE DE TRANSACCIONES
     // ══════════════════════════════════════════════════════════════════════════
-    const ws2 = wb.addWorksheet('Transacciones', { tabColor: { argb: 'FF2563EB' } })
+    const ws2 = wb.addWorksheet('Transacciones', { properties: { tabColor: { argb: 'FF2563EB' } } })
     ws2.pageSetup = { paperSize: 9, orientation: 'landscape', fitToPage: true }
 
     ws2.columns = [
@@ -403,7 +403,7 @@ export async function GET(req: NextRequest) {
     // ══════════════════════════════════════════════════════════════════════════
     // HOJA 3 — RESUMEN POR PACIENTE
     // ══════════════════════════════════════════════════════════════════════════
-    const ws3 = wb.addWorksheet('Por Paciente', { tabColor: { argb: 'FF059669' } })
+    const ws3 = wb.addWorksheet('Por Paciente', { properties: { tabColor: { argb: 'FF059669' } } })
     ws3.pageSetup = { paperSize: 9, orientation: 'portrait', fitToPage: true }
 
     ws3.columns = [
