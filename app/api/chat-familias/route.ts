@@ -24,12 +24,13 @@ export async function GET(req: NextRequest) {
 
     // Marcar como leídos en background si viene userId
     if (userId && data?.length) {
-      const unread = data
-        .filter(m => !m.read_by?.includes(userId))
-        .map(m => m.id)
-      if (unread.length > 0) {
-        // Fire and forget — no esperamos
-        supabaseAdmin.rpc('mark_familias_read', { msg_ids: unread, uid: userId }).catch(() => {})
+      const toUpdate = data.filter(m => !m.read_by?.includes(userId))
+      for (const m of toUpdate) {
+        supabaseAdmin
+          .from('chat_familias')
+          .update({ read_by: [...(m.read_by || []), userId] })
+          .eq('id', m.id)
+          .then(() => {}).catch(() => {})
       }
     }
 
