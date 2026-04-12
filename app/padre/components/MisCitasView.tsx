@@ -224,7 +224,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                         padding: '6px 6px 4px', textAlign: 'left', cursor: 'pointer',
                         background: esSel ? '#eff6ff' : esHoy ? '#f0f7ff' : 'transparent',
                         display: 'flex', flexDirection: 'column', gap: 3,
-                        border: 'none', borderBottom: `1px solid ${bord}`, borderRight: `1px solid ${bord}`,
+                        borderTop: 'none', borderLeft: 'none', borderBottom: `1px solid ${bord}`, borderRight: `1px solid ${bord}`,
                         outline: 'none', transition: 'background .12s',
                       }}>
                       {/* Day number */}
@@ -370,7 +370,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                       <button key={c.id}
                         className="mcv-row-btn"
                         onClick={() => { setDiaSeleccionado(c.appointment_date); setMes(fecha) }}
-                        style={{ width: '100%', padding: '10px 14px', borderBottom: `1px solid ${bord}`, display: 'flex', alignItems: 'center', gap: 12, background: 'transparent', border: 'none', borderBottom: `1px solid ${bord}`, cursor: 'pointer', textAlign: 'left', transition: 'background .12s', outline: 'none' }}>
+                        style={{ width: '100%', padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 12, background: 'transparent', borderTop: 'none', borderLeft: 'none', borderRight: 'none', borderBottom: `1px solid ${bord}`, cursor: 'pointer', textAlign: 'left', transition: 'background .12s', outline: 'none' }}>
                         {/* Date badge */}
                         <div style={{ width: 40, height: 44, borderRadius: 12, flexShrink: 0, background: esHoyC ? '#2563eb' : surf, border: `1px solid ${esHoyC ? '#2563eb' : bord}`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                           <span style={{ fontSize: 8, fontWeight: 800, textTransform: 'uppercase', color: esHoyC ? 'rgba(255,255,255,.75)' : t3, lineHeight: 1 }}>{mesC}</span>
