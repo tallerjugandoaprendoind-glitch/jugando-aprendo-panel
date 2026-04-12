@@ -27,15 +27,47 @@ const DAYS_ES   = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
 const DAYS_FULL = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
 
 // ─── Group payments by patient + month ───────────────────────────────────────
+// Packages (concept with "(N/M)" pattern) are grouped by their base concept.
+// Individual payments keep separate entries so they don't mix with packages.
 function groupByPatientMonth(pays: any[]) {
   const g: Record<string, any> = {}
   pays.forEach(p => {
     const d = new Date(p.paid_at || p.created_at)
-    const k = `${p.child_id}_${d.getFullYear()}_${d.getMonth()}`
-    if (!g[k]) g[k] = { key: k, child: p.children?.name || '—', month: `${d.getFullYear()}-${String(d.getMonth()).padStart(2,'0')}`, monthLabel: `${MESES_LARGO[d.getMonth()]} ${d.getFullYear()}`, pays: [], total: 0 }
-    g[k].pays.push(p); g[k].total += Number(p.amount)
+    const year = d.getFullYear()
+    const month = d.getMonth()
+
+    // Detect package session: concept ends with "(N/M)" where M > 1
+    const pkgMatch = p.concept?.match(/^(.+?)\s*\(\d+\/(\d+)\)$/)
+    const isPackage = pkgMatch && Number(pkgMatch[2]) > 1
+
+    let k: string
+    if (isPackage) {
+      // Same package: same base concept + same patient + same month
+      const baseConcept = (pkgMatch[1] as string).trim()
+      k = `pkg_${p.child_id}_${year}_${month}_${baseConcept}`
+    } else {
+      // Individual payments: unique per payment id
+      k = `ind_${p.id}`
+    }
+
+    if (!g[k]) g[k] = {
+      key: k,
+      child: p.children?.name || '—',
+      month: `${year}-${String(month).padStart(2,'0')}`,
+      monthLabel: `${MESES_LARGO[month]} ${year}`,
+      pays: [],
+      total: 0,
+      isPackage: !!isPackage,
+    }
+    g[k].pays.push(p)
+    g[k].total += Number(p.amount)
   })
-  return Object.values(g).sort((a: any, b: any) => b.month.localeCompare(a.month))
+  // Sort: newest month first, then alphabetically by patient
+  return Object.values(g).sort((a: any, b: any) => {
+    const mc = b.month.localeCompare(a.month)
+    if (mc !== 0) return mc
+    return a.child.localeCompare(b.child)
+  })
 }
 
 // ─── KPI ──────────────────────────────────────────────────────────────────────
@@ -48,7 +80,7 @@ function KPI({ label, value, sub, icon: Icon, bar }: any) {
           <Icon size={15} style={{ color: bar }} />
         </div>
       </div>
-      <p className="text-3xl font-black leading-none pl-3 mb-1" style={{ color: 'var(--text-primary)' }}>{value}</p>
+      <p className="text-lg sm:text-2xl md:text-3xl font-black leading-tight pl-3 mb-1 break-all" style={{ color: 'var(--text-primary)' }}>{value}</p>
       <p className="text-xs font-semibold pl-3" style={{ color: 'var(--text-muted)' }}>{label}</p>
       {sub && <p className="text-[10px] pl-3 mt-0.5" style={{ color: 'var(--text-muted)' }}>{sub}</p>}
     </div>
@@ -798,7 +830,12 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black" style={{ background: '#3a68a0' }}>{g.child.charAt(0).toUpperCase()}</div>
                     <div>
                       <p className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>{g.child}</p>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{g.monthLabel} · {g.pays.length} sesión{g.pays.length !== 1 ? 'es' : ''}</p>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        {g.isPackage && (
+                          <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide" style={{ background: 'rgba(59,130,246,0.12)', color: '#3b82f6' }}>Paquete</span>
+                        )}
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{g.monthLabel} · {g.pays.length} sesión{g.pays.length !== 1 ? 'es' : ''}</p>
+                      </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

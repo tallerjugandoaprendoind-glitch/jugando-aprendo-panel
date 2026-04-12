@@ -101,8 +101,14 @@ export async function GET(req: NextRequest) {
   const anio = Number(searchParams.get('anio') || new Date().getFullYear())
   const mes  = Number(searchParams.get('mes')  || new Date().getMonth() + 1) // 1-12
 
-  const inicio = `${anio}-${String(mes).padStart(2,'0')}-01`
-  const fin    = new Date(anio, mes, 0).toISOString().split('T')[0] // last day
+  // mes=0 means full year report
+  const isFullYear = mes === 0
+  const inicio = isFullYear
+    ? `${anio}-01-01`
+    : `${anio}-${String(mes).padStart(2,'0')}-01`
+  const fin = isFullYear
+    ? `${anio}-12-31`
+    : new Date(anio, mes, 0).toISOString().split('T')[0] // last day of month
 
   try {
     const [{ data: pays }, center] = await Promise.all([
@@ -128,7 +134,7 @@ export async function GET(req: NextRequest) {
     const totalAll  = sum(all)
     const tasaCobro = all.length > 0 ? Math.round(paid.length / all.length * 100) : 0
 
-    const mesLabel = `${MESES[mes-1]} ${anio}`
+    const mesLabel = isFullYear ? `Año ${anio}` : `${MESES[mes-1]} ${anio}`
     const emitDate = new Date().toLocaleDateString('es-PE', { day:'2-digit', month:'long', year:'numeric' })
 
     // Group by patient
@@ -206,7 +212,6 @@ export async function GET(req: NextRequest) {
     // ── KPIs ──
     ws1.mergeCells('A5:D5')
     sectionTitle(ws1, 5, 'A5:D5', '  INDICADORES CLAVE DEL MES')
-    ws1.mergeCells('A5:D5')
 
     const kpiHeaders = ['Indicador', 'Importe', 'Cantidad', 'Detalle']
     ws1.getRow(6).values = kpiHeaders
@@ -255,7 +260,6 @@ export async function GET(req: NextRequest) {
     const svcRow = 12
     ws1.mergeCells(`A${svcRow}:D${svcRow}`)
     sectionTitle(ws1, svcRow, `A${svcRow}:D${svcRow}`, '  INGRESOS POR SERVICIO')
-    ws1.mergeCells(`A${svcRow}:D${svcRow}`)
 
     ws1.getRow(svcRow + 1).values = ['Servicio', 'Sesiones', 'Ingreso', '% del Total']
     ws1.getRow(svcRow + 1).eachCell(c => {
@@ -293,7 +297,6 @@ export async function GET(req: NextRequest) {
     const methodStartRow = svcRow + 2 + Object.keys(byService).length + 2
     ws1.mergeCells(`A${methodStartRow}:D${methodStartRow}`)
     sectionTitle(ws1, methodStartRow, `A${methodStartRow}:D${methodStartRow}`, '  INGRESOS POR MÉTODO DE PAGO')
-    ws1.mergeCells(`A${methodStartRow}:D${methodStartRow}`)
 
     ws1.getRow(methodStartRow + 1).values = ['Método', '', 'Ingreso', '% del Total']
     ws1.getRow(methodStartRow + 1).eachCell(c => {
@@ -385,17 +388,27 @@ export async function GET(req: NextRequest) {
     })
 
     // Totals row
-    const totalsRow = ws2.getRow(3 + all.length)
-    ws2.mergeCells(`A${3 + all.length}:E${3 + all.length}`)
-    totalsRow.values = ['TOTAL', '', '', '', '', totalAll, `${all.length} registros`]
+    const totalsRowIdx = 3 + all.length
+    ws2.mergeCells(`A${totalsRowIdx}:E${totalsRowIdx}`)
+    const totalsRow = ws2.getRow(totalsRowIdx)
     totalsRow.height = 22
-    totalsRow.eachCell(c => {
-      c.font = { name: 'Calibri', size: 11, bold: true, color: { argb: C.white } }
-      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navy } }
-      c.alignment = { horizontal: 'center', vertical: 'middle' }
-    })
-    totalsRow.getCell(6).numFmt = '"S/ "#,##0.00'
-    totalsRow.getCell(6).alignment = { horizontal: 'right', vertical: 'middle' }
+    // Set merged cell A and then individual cells F and G
+    const tCellA = totalsRow.getCell(1)
+    tCellA.value = `TOTAL — ${all.length} registros`
+    tCellA.font  = { name: 'Calibri', size: 11, bold: true, color: { argb: C.white } }
+    tCellA.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navy } }
+    tCellA.alignment = { horizontal: 'center', vertical: 'middle' }
+    const tCellF = totalsRow.getCell(6)
+    tCellF.value = totalAll
+    tCellF.numFmt = '"S/ "#,##0.00'
+    tCellF.font  = { name: 'Calibri', size: 11, bold: true, color: { argb: C.white } }
+    tCellF.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navy } }
+    tCellF.alignment = { horizontal: 'right', vertical: 'middle' }
+    const tCellG = totalsRow.getCell(7)
+    tCellG.value = STATUS_LABELS['paid'] + `: S/ ${paid.reduce((a,p)=>a+Number(p.amount),0).toFixed(2)}`
+    tCellG.font  = { name: 'Calibri', size: 10, bold: true, color: { argb: C.white } }
+    tCellG.fill  = { type: 'pattern', pattern: 'solid', fgColor: { argb: C.navy } }
+    tCellG.alignment = { horizontal: 'center', vertical: 'middle' }
 
     // Auto filter
     ws2.autoFilter = { from: 'A2', to: `G${2 + all.length}` }
