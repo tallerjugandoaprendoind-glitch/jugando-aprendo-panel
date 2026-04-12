@@ -8,11 +8,11 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
-// ── KPI card — exact same style as EspecialistaHome ──────────────────────────
+// ── KPI card ──────────────────────────────────────────────────────────────────
 function KPI({ label, value, sub, icon: Icon, bar, onClick }: any) {
   return (
     <div onClick={onClick}
-      className={`rounded-xl p-5 relative overflow-hidden transition-all ${onClick ? 'cursor-pointer hover:shadow-md' : ''}`}
+      className={`rounded-xl p-5 relative overflow-hidden transition-all ${onClick ? 'cursor-pointer hover:shadow-md active:scale-[0.98]' : ''}`}
       style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
       <div className="absolute top-0 left-0 w-1 h-full rounded-l-xl" style={{ background: bar }} />
       <div className="flex items-start justify-between pl-3 mb-2">
@@ -21,7 +21,7 @@ function KPI({ label, value, sub, icon: Icon, bar, onClick }: any) {
           <Icon size={14} style={{ color: bar }} />
         </div>
       </div>
-      <p className="text-4xl font-black leading-none pl-3 mb-1" style={{ color: 'var(--text-primary)' }}>{value ?? '—'}</p>
+      <p className="text-2xl sm:text-3xl font-black leading-none pl-3 mb-1 break-all" style={{ color: 'var(--text-primary)' }}>{value ?? '—'}</p>
       <p className="text-xs pl-3" style={{ color: 'var(--text-muted)' }}>{sub}</p>
     </div>
   )
@@ -33,90 +33,167 @@ function AppointmentRow({ apt }: { apt: any }) {
   const mesCorto = fecha.toLocaleString('es', { month: 'short' }).replace('.', '').toUpperCase()
   const dia = fecha.getDate()
   const esHoy = apt.appointment_date === new Date().toISOString().split('T')[0]
-  const statusCfg: Record<string, { label: string; cls: string }> = {
-    confirmed: { label: 'Confirmada', cls: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-    pending:   { label: 'Pendiente',  cls: 'bg-amber-50 text-amber-700 border border-amber-200' },
-    cancelled: { label: 'Cancelada',  cls: 'bg-red-50 text-red-600 border border-red-200' },
-    completed: { label: 'Completada', cls: 'bg-blue-50 text-blue-700 border border-blue-200' },
-    realizada: { label: 'Realizada',  cls: 'bg-blue-50 text-blue-700 border border-blue-200' },
+  const statusCfg: Record<string, { label: string; color: string; bg: string }> = {
+    confirmed: { label: 'Confirmada', color: '#059669', bg: 'rgba(5,150,105,0.1)' },
+    pending:   { label: 'Pendiente',  color: '#d97706', bg: 'rgba(217,119,6,0.1)' },
+    cancelled: { label: 'Cancelada',  color: '#dc2626', bg: 'rgba(220,38,38,0.1)' },
+    completed: { label: 'Completada', color: '#2563eb', bg: 'rgba(37,99,235,0.1)' },
+    realizada: { label: 'Realizada',  color: '#2563eb', bg: 'rgba(37,99,235,0.1)' },
   }
-  const s = statusCfg[apt.status] || { label: apt.status, cls: 'bg-slate-100 text-slate-600' }
+  const s = statusCfg[apt.status] || { label: apt.status, color: '#6b7280', bg: 'var(--muted-bg)' }
   return (
-    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:opacity-80 transition-opacity"
-      style={{ background: 'transparent' }}>
-      <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0 text-center"
-        style={{ background: esHoy ? 'rgba(58,104,160,0.1)' : 'var(--muted-bg)' }}>
+    <div className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:opacity-80 transition-opacity">
+      <div className="w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0"
+        style={{ background: esHoy ? 'rgba(58,104,160,0.12)' : 'var(--muted-bg)' }}>
         <span className="text-[9px] font-black uppercase leading-none" style={{ color: esHoy ? '#3a68a0' : 'var(--text-muted)' }}>{mesCorto}</span>
         <span className="text-sm font-black leading-tight" style={{ color: esHoy ? '#3a68a0' : 'var(--text-primary)' }}>{dia}</span>
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>{apt.children?.name || apt.patient_name || 'Paciente'}</p>
-        <p className="text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>{apt.appointment_time?.slice(0, 5) || '—'} · {apt.therapist_name || 'Terapeuta'}</p>
+        <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{apt.appointment_time?.slice(0, 5) || '—'} · {apt.therapist_name || 'Terapeuta'}</p>
       </div>
-      <span className={`text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0 ${s.cls}`}>{s.label}</span>
+      <span className="text-[10px] font-bold px-2 py-1 rounded-lg flex-shrink-0"
+        style={{ color: s.color, background: s.bg }}>{s.label}</span>
     </div>
   )
 }
 
-// ── Weekly chart ──────────────────────────────────────────────────────────────
+// ── Weekly chart — rediseñado ─────────────────────────────────────────────────
 function WeeklyChart() {
   const [data, setData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const load = async () => {
-      const days = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
-      const today = new Date()
-      const dow = today.getDay()
-      const monday = new Date(today)
-      monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
-      const weekDates = Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(monday); d.setDate(monday.getDate() + i)
-        return d.toISOString().split('T')[0]
-      })
-      const { data: apts } = await supabase.from('appointments').select('appointment_date, status').in('appointment_date', weekDates)
-      const todayStr = today.toISOString().split('T')[0]
-      setData(weekDates.map((date, i) => {
-        const dayApts = (apts || []).filter(a => a.appointment_date === date)
-        return {
-          day: days[i], date, total: dayApts.length, isToday: date === todayStr,
-          completadas: dayApts.filter(a => ['completed','realizada'].includes(a.status)).length,
-          pendientes:  dayApts.filter(a => a.status === 'pending').length,
-          canceladas:  dayApts.filter(a => a.status === 'cancelled').length,
-        }
-      }))
+      try {
+        const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+        const today = new Date()
+        const dow = today.getDay()
+        const monday = new Date(today)
+        monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
+        const weekDates = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(monday); d.setDate(monday.getDate() + i)
+          return d.toISOString().split('T')[0]
+        })
+        const { data: apts } = await supabase
+          .from('appointments')
+          .select('appointment_date, status')
+          .in('appointment_date', weekDates)
+        const todayStr = today.toISOString().split('T')[0]
+        const rows = weekDates.map((date, i) => {
+          const dayApts = (apts || []).filter(a => a.appointment_date === date)
+          const dayNum = new Date(date + 'T12:00:00').getDate()
+          return {
+            day: DAYS[i], dayNum, date, total: dayApts.length,
+            isToday: date === todayStr,
+            isPast: date < todayStr,
+            completadas: dayApts.filter(a => ['completed', 'realizada'].includes(a.status)).length,
+            pendientes:  dayApts.filter(a => a.status === 'pending').length,
+            canceladas:  dayApts.filter(a => a.status === 'cancelled').length,
+          }
+        })
+        setData(rows)
+      } finally { setLoading(false) }
     }
     load()
   }, [])
 
   const max = Math.max(...data.map(d => d.total), 1)
 
+  if (loading) return (
+    <div className="flex justify-center py-8">
+      <Loader2 size={18} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
+    </div>
+  )
+
   return (
-    <div className="space-y-2">
-      {data.map(d => (
-        <div key={d.day} className="flex items-center gap-3">
-          {/* Day label */}
-          <span className="text-[11px] font-black w-8 flex-shrink-0 text-right"
-            style={{ color: d.isToday ? '#3b82f6' : 'var(--text-muted)' }}>
-            {d.day}
-          </span>
-          {/* Bar */}
-          <div className="flex-1 h-5 rounded-lg overflow-hidden" style={{ background: 'var(--muted-bg)' }}>
-            {d.total > 0 && (
-              <div className="h-full flex rounded-lg overflow-hidden transition-all"
-                style={{ width: `${Math.max((d.total / max) * 100, 6)}%` }}>
-                <div style={{ flex: d.completadas, background: '#10b981', minWidth: d.completadas > 0 ? 4 : 0 }} />
-                <div style={{ flex: d.pendientes,  background: '#f59e0b', minWidth: d.pendientes  > 0 ? 4 : 0 }} />
-                <div style={{ flex: d.canceladas,  background: '#f87171', minWidth: d.canceladas  > 0 ? 4 : 0 }} />
+    <div>
+      {/* Columnas de días */}
+      <div className="grid grid-cols-7 gap-1.5 mb-3">
+        {data.map(d => {
+          const heightPct = d.total > 0 ? Math.max((d.total / max) * 100, 12) : 0
+          return (
+            <div key={d.day} className="flex flex-col items-center gap-1">
+              {/* Etiqueta de conteo */}
+              <span className="text-[11px] font-black h-4"
+                style={{ color: d.total > 0 ? 'var(--text-primary)' : 'transparent' }}>
+                {d.total || '·'}
+              </span>
+              {/* Columna de barra */}
+              <div className="w-full flex flex-col justify-end rounded-lg overflow-hidden"
+                style={{ height: 80, background: 'var(--muted-bg)', position: 'relative' }}>
+                {d.total > 0 ? (
+                  <div className="w-full flex flex-col justify-end rounded-lg overflow-hidden transition-all duration-500"
+                    style={{ height: `${heightPct}%` }}>
+                    {d.canceladas  > 0 && <div style={{ flex: d.canceladas,  background: '#f87171' }} />}
+                    {d.pendientes  > 0 && <div style={{ flex: d.pendientes,  background: '#f59e0b' }} />}
+                    {d.completadas > 0 && <div style={{ flex: d.completadas, background: '#10b981' }} />}
+                  </div>
+                ) : (
+                  /* Día vacío: línea punteada sutil */
+                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-center pb-1">
+                    <div className="w-1 h-1 rounded-full" style={{ background: 'var(--card-border)' }} />
+                  </div>
+                )}
               </div>
-            )}
+              {/* Nombre del día */}
+              <span className="text-[10px] font-black"
+                style={{ color: d.isToday ? '#3b82f6' : d.isPast && d.total === 0 ? 'var(--card-border)' : 'var(--text-muted)' }}>
+                {d.day}
+              </span>
+              {/* Número del día */}
+              <span className="text-[9px] font-medium"
+                style={{
+                  color: d.isToday ? '#fff' : 'transparent',
+                  background: d.isToday ? '#3b82f6' : 'transparent',
+                  borderRadius: 4,
+                  padding: d.isToday ? '0 4px' : 0,
+                  lineHeight: '14px',
+                }}>
+                {d.dayNum}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Leyenda */}
+      <div className="flex items-center gap-4 pt-3 text-[11px]"
+        style={{ borderTop: '1px solid var(--card-border)' }}>
+        {[
+          { color: '#10b981', label: 'Completadas' },
+          { color: '#f59e0b', label: 'Pendientes' },
+          { color: '#f87171', label: 'Canceladas' },
+        ].map(l => (
+          <div key={l.label} className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
+            <span style={{ color: 'var(--text-muted)' }}>{l.label}</span>
           </div>
-          {/* Count */}
-          <span className="text-[11px] font-black w-5 text-right flex-shrink-0"
-            style={{ color: d.total > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
-            {d.total || '—'}
-          </span>
-        </div>
-      ))}
+        ))}
+      </div>
+
+      {/* Resumen de la semana */}
+      {data.some(d => d.total > 0) && (() => {
+        const totalSem  = data.reduce((s, d) => s + d.total, 0)
+        const compSem   = data.reduce((s, d) => s + d.completadas, 0)
+        const pendSem   = data.reduce((s, d) => s + d.pendientes, 0)
+        const cancSem   = data.reduce((s, d) => s + d.canceladas, 0)
+        return (
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {[
+              { val: compSem, label: 'Realizadas', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
+              { val: pendSem, label: 'Pendientes', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
+              { val: cancSem, label: 'Canceladas', color: '#f87171', bg: 'rgba(248,113,113,0.08)' },
+            ].map(item => (
+              <div key={item.label} className="rounded-lg px-2 py-2 text-center"
+                style={{ background: item.bg }}>
+                <p className="text-base font-black" style={{ color: item.color }}>{item.val}</p>
+                <p className="text-[9px] font-semibold" style={{ color: item.color, opacity: 0.8 }}>{item.label}</p>
+              </div>
+            ))}
+          </div>
+        )
+      })()}
     </div>
   )
 }
@@ -158,7 +235,7 @@ export default function SecretariaHome({ onNavigate }: Props) {
         pendientes: allApts.filter(a => a.status === 'pending').length,
         canceladas: allApts.filter(a => a.status === 'cancelled').length,
         pacientes: pacientes?.length || 0,
-        completadas: allApts.filter(a => ['completed','realizada'].includes(a.status)).length,
+        completadas: allApts.filter(a => ['completed', 'realizada'].includes(a.status)).length,
       })
     } catch (e: any) { toast.error('Error: ' + e.message) }
     finally { setLoading(false) }
@@ -177,7 +254,7 @@ export default function SecretariaHome({ onNavigate }: Props) {
   return (
     <div className="space-y-5">
 
-      {/* Hero — igual al especialista */}
+      {/* Hero */}
       <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
         <div className="h-0.5" style={{ background: 'linear-gradient(90deg, #3a68a0, #6355a0, #2e7a56)' }} />
         <div className="p-5 flex items-center justify-between gap-4 flex-wrap">
@@ -208,14 +285,14 @@ export default function SecretariaHome({ onNavigate }: Props) {
         </div>
       </div>
 
-      {/* KPIs — mismo estilo que especialista */}
+      {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-        <KPI label="Citas hoy"        value={loading ? '—' : stats.hoy}         sub="Total del día"       icon={Calendar}     bar="#3a68a0" onClick={() => onNavigate?.('agenda')} />
-        <KPI label="Esta semana"      value={loading ? '—' : stats.semana}      sub="Lunes a domingo"    icon={CalendarDays} bar="#6355a0" onClick={() => onNavigate?.('agenda')} />
-        <KPI label="Pendientes"       value={loading ? '—' : stats.pendientes}  sub="Por confirmar"      icon={AlertCircle}  bar="#b07830" onClick={() => onNavigate?.('agenda')} />
-        <KPI label="Pacientes activos" value={loading ? '—' : stats.pacientes}  sub="Total registrados"  icon={Users}        bar="#2e7a56" />
-        <KPI label="Completadas"      value={loading ? '—' : stats.completadas} sub="Sesiones realizadas" icon={CheckCircle2} bar="#10b981" />
-        <KPI label="Canceladas"       value={loading ? '—' : stats.canceladas}  sub="Este período"       icon={XCircle}      bar="#f87171" />
+        <KPI label="Citas hoy"         value={loading ? '—' : stats.hoy}         sub="Total del día"        icon={Calendar}     bar="#3a68a0" onClick={() => onNavigate?.('agenda')} />
+        <KPI label="Esta semana"       value={loading ? '—' : stats.semana}      sub="Lunes a domingo"     icon={CalendarDays} bar="#6355a0" onClick={() => onNavigate?.('agenda')} />
+        <KPI label="Pendientes"        value={loading ? '—' : stats.pendientes}  sub="Por confirmar"       icon={AlertCircle}  bar="#b07830" onClick={() => onNavigate?.('agenda')} />
+        <KPI label="Pacientes activos" value={loading ? '—' : stats.pacientes}   sub="Total registrados"   icon={Users}        bar="#2e7a56" />
+        <KPI label="Completadas"       value={loading ? '—' : stats.completadas} sub="Sesiones realizadas"  icon={CheckCircle2} bar="#10b981" />
+        <KPI label="Canceladas"        value={loading ? '—' : stats.canceladas}  sub="Este período"        icon={XCircle}      bar="#f87171" />
       </div>
 
       {/* Gráfica + Citas recientes */}
@@ -228,18 +305,13 @@ export default function SecretariaHome({ onNavigate }: Props) {
               <div className="w-2 h-2 rounded-full bg-blue-500" />
               <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Citas esta semana</h3>
             </div>
-            <span className="text-[11px] font-bold" style={{ color: 'var(--text-muted)' }}>{stats.semana} total</span>
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full"
+              style={{ background: 'var(--muted-bg)', color: 'var(--text-muted)' }}>
+              {stats.semana} total
+            </span>
           </div>
           <div className="px-5 py-4">
             <WeeklyChart />
-            <div className="flex items-center gap-4 mt-4 pt-3 text-[11px]" style={{ borderTop: '1px solid var(--card-border)' }}>
-              {[{ color: '#10b981', label: 'Completadas' }, { color: '#f59e0b', label: 'Pendientes' }, { color: '#f87171', label: 'Canceladas' }].map(l => (
-                <div key={l.label} className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
-                  <span style={{ color: 'var(--text-muted)' }}>{l.label}</span>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -253,9 +325,9 @@ export default function SecretariaHome({ onNavigate }: Props) {
               </h3>
             </div>
           </div>
-          <div className="p-3 space-y-0.5 min-h-[180px]">
+          <div className="p-3 space-y-0.5">
             {(proximasCitas.length > 0 ? proximasCitas : citasRecientes).length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10">
+              <div className="flex flex-col items-center justify-center py-12">
                 <Calendar size={28} className="mb-2" style={{ color: 'var(--text-muted)' }} />
                 <p className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>Sin citas registradas</p>
               </div>
@@ -264,20 +336,22 @@ export default function SecretariaHome({ onNavigate }: Props) {
             )}
           </div>
           <div className="px-5 py-2.5" style={{ borderTop: '1px solid var(--card-border)', background: 'var(--muted-bg)' }}>
-            <button onClick={() => onNavigate?.('agenda')} className="text-xs font-bold flex items-center gap-1 transition-opacity hover:opacity-70" style={{ color: '#3a68a0' }}>
+            <button onClick={() => onNavigate?.('agenda')}
+              className="text-xs font-bold flex items-center gap-1 transition-opacity hover:opacity-70"
+              style={{ color: '#3a68a0' }}>
               Ver agenda completa <ArrowRight size={11} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Acceso rápido a módulos */}
+      {/* Acceso rápido */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { icon: Calendar,      label: 'Agenda',       sub: 'Citas y calendario',     action: 'agenda',       color: '#3a68a0' },
-          { icon: MessageSquare, label: 'Comunicación', sub: 'Recordatorios a familias', action: 'comunicacion', color: '#8b5cf6' },
-          { icon: DollarSign,    label: 'Pagos',        sub: 'Ingresos y facturación',  action: 'pagos',        color: '#10b981' },
-          { icon: BarChart3,     label: 'Reportes',     sub: 'Asistencia y estadísticas', action: 'reportes',   color: '#f59e0b' },
+          { icon: Calendar,      label: 'Agenda',        sub: 'Citas y calendario',      action: 'agenda',       color: '#3a68a0' },
+          { icon: MessageSquare, label: 'Comunicación',  sub: 'Recordatorios a familias', action: 'comunicacion', color: '#8b5cf6' },
+          { icon: DollarSign,    label: 'Pagos',         sub: 'Ingresos y facturación',   action: 'pagos',        color: '#10b981' },
+          { icon: BarChart3,     label: 'Reportes',      sub: 'Asistencia y estadísticas', action: 'reportes',    color: '#f59e0b' },
         ].map(({ icon: Icon, label, sub, action, color }) => (
           <button key={label} onClick={() => onNavigate?.(action)}
             className="rounded-xl p-4 text-left flex items-center gap-3 hover:shadow-sm transition-all group active:scale-[0.98]"
