@@ -637,7 +637,7 @@ export default function ParentDashboard() {
                     )}
 
                     {activeView === 'chat' && (
-                          <div className="h-[calc(100vh-130px)] lg:h-[calc(100vh-100px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
+                          <div className="h-[calc(100svh-220px)] sm:h-[calc(100svh-170px)] lg:h-[calc(100vh-100px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
                             <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-white flex justify-between items-center z-10 shadow-lg">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
