@@ -65,7 +65,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 export default function AdminReportesFinancieros() {
   const toast = useToast()
   const [loading, setLoading]         = useState(true)
-  const [tab, setTab]                 = useState<'overview' | 'terapeutas' | 'pacientes' | 'servicios'>('overview')
+  const [tab, setTab]                 = useState<'overview' | 'pacientes' | 'servicios'>('overview')
   const [anio, setAnio]               = useState(new Date().getFullYear())
   const [mesFilter, setMesFilter]     = useState<number | null>(null) // null = todo el año
 
@@ -257,7 +257,6 @@ export default function AdminReportesFinancieros() {
       <div className="flex rounded-2xl p-1.5 border gap-1.5" style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)' }}>
         {[
           { id: 'overview',    label: '📈 Ingresos' },
-          { id: 'terapeutas',  label: '👤 Terapeutas' },
           { id: 'pacientes',   label: '🧒 Pacientes' },
           { id: 'servicios',   label: '🏷️ Servicios' },
         ].map(t => (
@@ -396,14 +395,30 @@ export default function AdminReportesFinancieros() {
 
               {/* Tabla resumen mes a mes */}
               <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                <div className="px-5 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
+                <div className="px-5 py-3.5 flex items-center justify-between" style={{ borderBottom: '1px solid var(--card-border)' }}>
                   <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Resumen mensual {anio}</h3>
+                  <button
+                    onClick={async () => {
+                      const res = await fetch(`/api/pagos/reporte-mensual?anio=${anio}&mes=0`)
+                      if (!res.ok) { toast.error('Error generando reporte'); return }
+                      const blob = await res.blob()
+                      const url  = URL.createObjectURL(blob)
+                      const a    = document.createElement('a')
+                      a.href     = url
+                      a.download = `reporte_financiero_${anio}.xlsx`
+                      a.click(); URL.revokeObjectURL(url)
+                      toast.success('Excel anual exportado')
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all hover:opacity-80"
+                    style={{ background: 'var(--muted-bg)', borderColor: 'var(--card-border)', color: 'var(--text-secondary)' }}>
+                    <Download size={12} /> Excel anual
+                  </button>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr style={{ background: 'var(--muted-bg)', borderBottom: '1px solid var(--card-border)' }}>
-                        {['Mes','Sesiones','Cobrado','Pendiente','Total'].map(h => (
+                        {['Mes','Sesiones','Cobrado','Pendiente','Total',''].map(h => (
                           <th key={h} className="text-left px-5 py-2.5 text-[10px] font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>{h}</th>
                         ))}
                       </tr>
@@ -416,6 +431,26 @@ export default function AdminReportesFinancieros() {
                           <td className="px-5 py-3 font-black" style={{ color: '#10b981' }}>S/ {m.ingresos.toFixed(2)}</td>
                           <td className="px-5 py-3 font-medium" style={{ color: '#f59e0b' }}>S/ {m.pendiente.toFixed(2)}</td>
                           <td className="px-5 py-3 font-black" style={{ color: 'var(--text-primary)' }}>S/ {(m.ingresos + m.pendiente).toFixed(2)}</td>
+                          <td className="px-3 py-3">
+                            {(m.ingresos + m.pendiente) > 0 && (
+                              <button
+                                onClick={async () => {
+                                  const res  = await fetch(`/api/pagos/reporte-mensual?anio=${anio}&mes=${i + 1}`)
+                                  if (!res.ok) { toast.error('Error'); return }
+                                  const blob = await res.blob()
+                                  const url  = URL.createObjectURL(blob)
+                                  const a    = document.createElement('a')
+                                  a.href     = url; a.download = `reporte_${MESES_L[i].toLowerCase()}_${anio}.xlsx`
+                                  a.click(); URL.revokeObjectURL(url)
+                                  toast.success(`Excel de ${MESES_L[i]} exportado`)
+                                }}
+                                title={`Descargar reporte de ${MESES_L[i]}`}
+                                className="p-1.5 rounded-lg transition-all hover:opacity-70"
+                                style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
+                                <Download size={12} />
+                              </button>
+                            )}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -426,6 +461,7 @@ export default function AdminReportesFinancieros() {
                         <td className="px-5 py-3 font-black" style={{ color: '#10b981' }}>S/ {data.totalAnio.toFixed(2)}</td>
                         <td className="px-5 py-3 font-black" style={{ color: '#f59e0b' }}>S/ {data.totalPendiente.toFixed(2)}</td>
                         <td className="px-5 py-3 font-black" style={{ color: 'var(--text-primary)' }}>S/ {(data.totalAnio + data.totalPendiente).toFixed(2)}</td>
+                        <td />
                       </tr>
                     </tfoot>
                   </table>
@@ -435,63 +471,6 @@ export default function AdminReportesFinancieros() {
           )}
 
           {/* ── TERAPEUTAS ── */}
-          {tab === 'terapeutas' && (
-            <div className="space-y-4">
-              {data.porTerapeuta.length === 0 ? (
-                <div className="rounded-2xl p-12 text-center" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                  <Users size={36} className="mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
-                  <p className="font-black" style={{ color: 'var(--text-muted)' }}>Sin datos de terapeutas</p>
-                  <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Los pagos deben estar vinculados a citas con especialista asignado</p>
-                </div>
-              ) : (
-                <>
-                  {/* Horizontal bar chart */}
-                  <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                    <div className="px-5 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
-                      <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Ingresos por terapeuta {anio}</h3>
-                    </div>
-                    <div className="p-5">
-                      <ResponsiveContainer width="100%" height={Math.max(180, data.porTerapeuta.length * 50)}>
-                        <BarChart data={data.porTerapeuta} layout="vertical" barSize={22}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" horizontal={false} />
-                          <XAxis type="number" tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} tickFormatter={v => `S/${v}`} />
-                          <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} width={110} />
-                          <Tooltip content={<CustomTooltip />} />
-                          <Bar dataKey="ingresos" name="Cobrado" radius={[0,6,6,0]}>
-                            {data.porTerapeuta.map((e, i) => <Cell key={i} fill={e.color} />)}
-                          </Bar>
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-
-                  {/* Cards detalle */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {data.porTerapeuta.map((t, i) => {
-                      const pct = data.totalAnio > 0 ? Math.round(t.ingresos / data.totalAnio * 100) : 0
-                      return (
-                        <div key={t.name} className="rounded-xl p-4" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-black text-sm flex-shrink-0"
-                              style={{ background: t.color }}>{t.name.charAt(0).toUpperCase()}</div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-black truncate" style={{ color: 'var(--text-primary)' }}>{t.name}</p>
-                              <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{t.sesiones} cobros · {pct}% del total</p>
-                            </div>
-                          </div>
-                          <div className="h-1.5 rounded-full overflow-hidden mb-1" style={{ background: 'var(--muted-bg)' }}>
-                            <div style={{ width: `${pct}%`, background: t.color, height: '100%', borderRadius: '999px' }} />
-                          </div>
-                          <p className="text-lg font-black mt-2" style={{ color: '#10b981' }}>S/ {t.ingresos.toFixed(2)}</p>
-                        </div>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
           {/* ── PACIENTES ── */}
           {tab === 'pacientes' && (
             <div className="space-y-4">

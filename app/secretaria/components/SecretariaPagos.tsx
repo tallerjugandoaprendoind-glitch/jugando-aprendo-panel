@@ -803,6 +803,18 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                   </div>
                   <div className="flex items-center gap-3">
                     <p className="text-xl font-black" style={{ color: '#10b981' }}>S/ {g.total.toFixed(2)}</p>
+                    {/* Recibo del paquete completo */}
+                    <button
+                      onClick={e => {
+                        e.stopPropagation()
+                        const ids = g.pays.map((p: any) => p.id).join(',')
+                        window.open(`/api/pagos/recibo-paquete?ids=${ids}`, '_blank')
+                      }}
+                      title="Recibo del paquete completo"
+                      className="p-2 rounded-lg transition-all hover:opacity-70 flex-shrink-0"
+                      style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
+                      <FileText size={14} />
+                    </button>
                     {isOpen ? <ChevronUp size={16} style={{ color: 'var(--text-muted)' }} /> : <ChevronDown size={16} style={{ color: 'var(--text-muted)' }} />}
                   </div>
                 </button>
