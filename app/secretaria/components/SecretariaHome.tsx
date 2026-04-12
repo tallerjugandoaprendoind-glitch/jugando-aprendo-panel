@@ -363,28 +363,7 @@ export default function SecretariaHome({ onNavigate }: Props) {
         </div>
       </div>
 
-      {/* Acceso rápido */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { icon: Calendar,      label: 'Agenda',        sub: 'Citas y calendario',   action: 'agenda',       color: '#3a68a0' },
-          { icon: MessageSquare, label: 'Comunicación',  sub: 'Recordatorios',            action: 'comunicacion', color: '#8b5cf6' },
-          { icon: DollarSign,    label: 'Pagos',         sub: 'Facturación',              action: 'pagos',        color: '#10b981' },
-          { icon: BarChart3,     label: 'Reportes',      sub: 'Estadísticas',             action: 'reportes',     color: '#f59e0b' },
-        ].map(({ icon: Icon, label, sub, action, color }) => (
-          <button key={label} onClick={() => onNavigate?.(action)}
-            className="rounded-xl p-4 text-left flex items-center gap-3 hover:shadow-sm transition-all group active:scale-[0.98]"
-            style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: `${color}15` }}>
-              <Icon size={17} style={{ color }} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-black" style={{ color: 'var(--text-primary)' }}>{label}</p>
-              <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{sub}</p>
-            </div>
-            <ArrowRight size={12} className="flex-shrink-0 transition-transform group-hover:translate-x-0.5" style={{ color: 'var(--text-muted)' }} />
-          </button>
-        ))}
-      </div>
+
     </div>
   )
 }
