@@ -58,7 +58,7 @@ function AppointmentRow({ apt }: { apt: any }) {
   )
 }
 
-// ── Weekly chart — rediseñado ─────────────────────────────────────────────────
+// ── Weekly chart — compacto y limpio ─────────────────────────────────────────
 function WeeklyChart() {
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -66,9 +66,9 @@ function WeeklyChart() {
   useEffect(() => {
     const load = async () => {
       try {
-        const DAYS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
+        const DAYS = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
         const today = new Date()
-        const dow = today.getDay()
+        const dow   = today.getDay()
         const monday = new Date(today)
         monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
         const weekDates = Array.from({ length: 7 }, (_, i) => {
@@ -76,20 +76,19 @@ function WeeklyChart() {
           return d.toISOString().split('T')[0]
         })
         const { data: apts } = await supabase
-          .from('appointments')
-          .select('appointment_date, status')
+          .from('appointments').select('appointment_date, status')
           .in('appointment_date', weekDates)
         const todayStr = today.toISOString().split('T')[0]
         const rows = weekDates.map((date, i) => {
-          const dayApts = (apts || []).filter(a => a.appointment_date === date)
-          const dayNum = new Date(date + 'T12:00:00').getDate()
+          const da = (apts || []).filter(a => a.appointment_date === date)
           return {
-            day: DAYS[i], dayNum, date, total: dayApts.length,
-            isToday: date === todayStr,
-            isPast: date < todayStr,
-            completadas: dayApts.filter(a => ['completed', 'realizada'].includes(a.status)).length,
-            pendientes:  dayApts.filter(a => a.status === 'pending').length,
-            canceladas:  dayApts.filter(a => a.status === 'cancelled').length,
+            day: DAYS[i],
+            dayNum: new Date(date + 'T12:00:00').getDate(),
+            date, isToday: date === todayStr, isPast: date < todayStr,
+            total:       da.length,
+            completadas: da.filter(a => ['completed','realizada'].includes(a.status)).length,
+            pendientes:  da.filter(a => a.status === 'pending').length,
+            canceladas:  da.filter(a => a.status === 'cancelled').length,
           }
         })
         setData(rows)
@@ -99,101 +98,86 @@ function WeeklyChart() {
   }, [])
 
   const max = Math.max(...data.map(d => d.total), 1)
+  const total    = data.reduce((s, d) => s + d.total, 0)
+  const compTotal = data.reduce((s, d) => s + d.completadas, 0)
+  const pendTotal = data.reduce((s, d) => s + d.pendientes, 0)
+  const cancTotal = data.reduce((s, d) => s + d.canceladas, 0)
 
   if (loading) return (
-    <div className="flex justify-center py-8">
-      <Loader2 size={18} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
+    <div className="flex justify-center py-6">
+      <Loader2 size={16} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
     </div>
   )
 
   return (
-    <div>
-      {/* Columnas de días */}
-      <div className="grid grid-cols-7 gap-1.5 mb-3">
+    <div className="space-y-4">
+
+      {/* Barras verticales compactas */}
+      <div className="flex items-end gap-1.5" style={{ height: 72 }}>
         {data.map(d => {
-          const heightPct = d.total > 0 ? Math.max((d.total / max) * 100, 12) : 0
+          const barH = d.total > 0 ? Math.max((d.total / max) * 56, 10) : 0
           return (
-            <div key={d.day} className="flex flex-col items-center gap-1">
-              {/* Etiqueta de conteo */}
-              <span className="text-[11px] font-black h-4"
-                style={{ color: d.total > 0 ? 'var(--text-primary)' : 'transparent' }}>
-                {d.total || '·'}
+            <div key={d.day} className="flex-1 flex flex-col items-center gap-1" style={{ minWidth: 0 }}>
+              {/* Número encima solo si tiene citas */}
+              <span className="text-[10px] font-black" style={{ color: 'var(--text-primary)', opacity: d.total > 0 ? 1 : 0 }}>
+                {d.total}
               </span>
-              {/* Columna de barra */}
-              <div className="w-full flex flex-col justify-end rounded-lg overflow-hidden"
-                style={{ height: 80, background: 'var(--muted-bg)', position: 'relative' }}>
+              {/* Barra o línea vacía */}
+              <div className="w-full flex flex-col justify-end" style={{ height: 56 }}>
                 {d.total > 0 ? (
-                  <div className="w-full flex flex-col justify-end rounded-lg overflow-hidden transition-all duration-500"
-                    style={{ height: `${heightPct}%` }}>
-                    {d.canceladas  > 0 && <div style={{ flex: d.canceladas,  background: '#f87171' }} />}
-                    {d.pendientes  > 0 && <div style={{ flex: d.pendientes,  background: '#f59e0b' }} />}
-                    {d.completadas > 0 && <div style={{ flex: d.completadas, background: '#10b981' }} />}
+                  <div className="w-full rounded-md overflow-hidden flex flex-col-reverse transition-all"
+                    style={{ height: barH }}>
+                    <div style={{ flex: d.completadas || 0, background: '#10b981', minHeight: d.completadas > 0 ? 3 : 0 }} />
+                    <div style={{ flex: d.pendientes  || 0, background: '#f59e0b', minHeight: d.pendientes  > 0 ? 3 : 0 }} />
+                    <div style={{ flex: d.canceladas  || 0, background: '#f87171', minHeight: d.canceladas  > 0 ? 3 : 0 }} />
                   </div>
                 ) : (
-                  /* Día vacío: línea punteada sutil */
-                  <div className="absolute inset-x-0 bottom-0 flex items-end justify-center pb-1">
-                    <div className="w-1 h-1 rounded-full" style={{ background: 'var(--card-border)' }} />
-                  </div>
+                  <div className="w-full rounded-sm" style={{
+                    height: 3,
+                    background: d.isToday ? 'rgba(59,130,246,0.3)' : 'var(--card-border)',
+                  }} />
                 )}
               </div>
-              {/* Nombre del día */}
-              <span className="text-[10px] font-black"
-                style={{ color: d.isToday ? '#3b82f6' : d.isPast && d.total === 0 ? 'var(--card-border)' : 'var(--text-muted)' }}>
-                {d.day}
-              </span>
-              {/* Número del día */}
-              <span className="text-[9px] font-medium"
-                style={{
-                  color: d.isToday ? '#fff' : 'transparent',
-                  background: d.isToday ? '#3b82f6' : 'transparent',
-                  borderRadius: 4,
-                  padding: d.isToday ? '0 4px' : 0,
-                  lineHeight: '14px',
-                }}>
-                {d.dayNum}
-              </span>
             </div>
           )
         })}
       </div>
 
-      {/* Leyenda */}
-      <div className="flex items-center gap-4 pt-3 text-[11px]"
-        style={{ borderTop: '1px solid var(--card-border)' }}>
-        {[
-          { color: '#10b981', label: 'Completadas' },
-          { color: '#f59e0b', label: 'Pendientes' },
-          { color: '#f87171', label: 'Canceladas' },
-        ].map(l => (
-          <div key={l.label} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
-            <span style={{ color: 'var(--text-muted)' }}>{l.label}</span>
+      {/* Etiquetas de días */}
+      <div className="flex gap-1.5">
+        {data.map(d => (
+          <div key={d.day} className="flex-1 flex flex-col items-center gap-0.5" style={{ minWidth: 0 }}>
+            <span className="text-[10px] font-black" style={{
+              color: d.isToday ? '#3b82f6' : 'var(--text-muted)',
+            }}>{d.day}</span>
+            {d.isToday && (
+              <span className="text-[9px] font-black px-1 rounded-sm"
+                style={{ background: '#3b82f6', color: '#fff', lineHeight: '13px' }}>
+                {d.dayNum}
+              </span>
+            )}
           </div>
         ))}
       </div>
 
-      {/* Resumen de la semana */}
-      {data.some(d => d.total > 0) && (() => {
-        const totalSem  = data.reduce((s, d) => s + d.total, 0)
-        const compSem   = data.reduce((s, d) => s + d.completadas, 0)
-        const pendSem   = data.reduce((s, d) => s + d.pendientes, 0)
-        const cancSem   = data.reduce((s, d) => s + d.canceladas, 0)
-        return (
-          <div className="grid grid-cols-3 gap-2 mt-3">
-            {[
-              { val: compSem, label: 'Realizadas', color: '#10b981', bg: 'rgba(16,185,129,0.08)' },
-              { val: pendSem, label: 'Pendientes', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)' },
-              { val: cancSem, label: 'Canceladas', color: '#f87171', bg: 'rgba(248,113,113,0.08)' },
-            ].map(item => (
-              <div key={item.label} className="rounded-lg px-2 py-2 text-center"
-                style={{ background: item.bg }}>
-                <p className="text-base font-black" style={{ color: item.color }}>{item.val}</p>
-                <p className="text-[9px] font-semibold" style={{ color: item.color, opacity: 0.8 }}>{item.label}</p>
-              </div>
-            ))}
+      {/* Leyenda + resumen en una fila */}
+      <div className="flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--card-border)' }}>
+        <div className="flex items-center gap-3">
+          {[{ c: '#10b981', l: 'OK' }, { c: '#f59e0b', l: 'Pend' }, { c: '#f87171', l: 'Canc' }].map(x => (
+            <div key={x.l} className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-sm flex-shrink-0" style={{ background: x.c }} />
+              <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>{x.l}</span>
+            </div>
+          ))}
+        </div>
+        {total > 0 && (
+          <div className="flex items-center gap-2 text-[11px] font-black">
+            <span style={{ color: '#10b981' }}>{compTotal} ✓</span>
+            {pendTotal > 0 && <span style={{ color: '#f59e0b' }}>{pendTotal} ⏳</span>}
+            {cancTotal > 0 && <span style={{ color: '#f87171' }}>{cancTotal} ✗</span>}
           </div>
-        )
-      })()}
+        )}
+      </div>
     </div>
   )
 }
