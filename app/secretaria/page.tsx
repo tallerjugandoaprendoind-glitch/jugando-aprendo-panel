@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
-  LayoutDashboard, Calendar, CalendarDays, BarChart3,
+  LayoutDashboard, Calendar, CalendarDays,
   User, Menu, X, Loader2, Settings, Bell,
-  MessageSquare, DollarSign, ClipboardList, TrendingUp
+  DollarSign, ClipboardList, TrendingUp
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
@@ -15,10 +15,8 @@ import LocaleSelector from '@/app/components/LocaleSelector'
 import { ThemeToggleButton } from '@/components/ThemeContext'
 import SecretariaHome      from './components/SecretariaHome'
 import SecretariaAgenda    from './components/SecretariaAgenda'
-import SecretariaReportes  from './components/SecretariaReportes'
 import SecretariaPagos     from './components/SecretariaPagos'
 import AdminReportesFinancieros from '@/app/admin/components/AdminReportesFinancieros'
-import SecretariaComunicacion from './components/SecretariaComunicacion'
 import SecretariaPerfil    from './components/SecretariaPerfil'
 
 function SidebarLink({ icon: Icon, label, active, onClick, badge }: any) {
@@ -50,9 +48,7 @@ export default function SecretariaDashboard() {
   const NAV_ITEMS = [
     { id: 'inicio',        icon: LayoutDashboard, label: 'Inicio' },
     { id: 'agenda',        icon: Calendar,        label: 'Agenda' },
-    { id: 'comunicacion',  icon: MessageSquare,   label: 'Comunicación' },
     { id: 'pagos',                icon: DollarSign,      label: 'Pagos' },
-    { id: 'reportes',             icon: BarChart3,       label: 'Reportes' },
     { id: 'reportes-financieros', icon: TrendingUp,      label: 'Rep. Financieros' },
     { id: 'perfil',        icon: User,            label: 'Mi Perfil' },
   ]
@@ -60,9 +56,7 @@ export default function SecretariaDashboard() {
   const PAGE_TITLES: Record<string, string> = {
     inicio:       'Panel Principal',
     agenda:       'Agenda',
-    comunicacion: 'Comunicación',
     pagos:                'Pagos y Facturación',
-    reportes:             'Reportes de Asistencia',
     'reportes-financieros': 'Reportes Financieros',
     perfil:       'Mi Perfil',
   }
@@ -97,9 +91,7 @@ export default function SecretariaDashboard() {
     switch (activeView) {
       case 'inicio':        return <SecretariaHome onNavigate={setActiveView} />
       case 'agenda':        return <SecretariaAgenda profile={profile} />
-      case 'comunicacion':  return <SecretariaComunicacion profile={profile} />
       case 'pagos':                 return <SecretariaPagos profile={profile} />
-      case 'reportes':              return <SecretariaReportes />
       case 'reportes-financieros':  return <AdminReportesFinancieros />
       case 'perfil':        return <SecretariaPerfil profile={profile} onUpdate={loadProfile} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       default:              return <SecretariaHome onNavigate={setActiveView} />
@@ -219,7 +211,7 @@ export default function SecretariaDashboard() {
             const isActive = activeView === item.id
             const shortLabel: Record<string, string> = {
               inicio: 'Inicio', agenda: 'Agenda', cronograma: 'Cronograma',
-              comunicacion: 'Comunic.', pagos: 'Pagos', reportes: 'Reportes', 'reportes-financieros': 'Financiero', perfil: 'Perfil'
+              pagos: 'Pagos', 'reportes-financieros': 'Financiero', perfil: 'Perfil'
             }
             return (
               <button key={item.id} onClick={() => setActiveView(item.id)}
