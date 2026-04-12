@@ -25,13 +25,17 @@ export async function GET(req: NextRequest) {
     // Marcar como leídos en background si viene userId
     if (userId && data?.length) {
       const toUpdate = data.filter(m => !m.read_by?.includes(userId))
-      for (const m of toUpdate) {
-        supabaseAdmin
-          .from('chat_familias')
-          .update({ read_by: [...(m.read_by || []), userId] })
-          .eq('id', m.id)
-          .then(() => {}).catch(() => {})
-      }
+      // Fire and forget — wrap in async IIFE to avoid blocking
+      ;(async () => {
+        for (const m of toUpdate) {
+          try {
+            await supabaseAdmin
+              .from('chat_familias')
+              .update({ read_by: [...(m.read_by || []), userId] })
+              .eq('id', m.id)
+          } catch {}
+        }
+      })()
     }
 
     return NextResponse.json({ data: data || [] })
