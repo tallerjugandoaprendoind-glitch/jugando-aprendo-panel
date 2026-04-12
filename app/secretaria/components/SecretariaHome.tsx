@@ -21,7 +21,7 @@ function KPI({ label, value, sub, icon: Icon, bar, onClick }: any) {
           <Icon size={14} style={{ color: bar }} />
         </div>
       </div>
-      <p className="text-2xl sm:text-3xl font-black leading-none pl-3 mb-1 break-all" style={{ color: 'var(--text-primary)' }}>{value ?? '—'}</p>
+      <p className="font-black leading-none pl-3 mb-1 whitespace-nowrap overflow-hidden text-ellipsis" style={{ color: 'var(--text-primary)', fontSize: 'clamp(1.1rem, 2.5vw, 1.875rem)' }}>{value ?? '—'}</p>
       <p className="text-xs pl-3" style={{ color: 'var(--text-muted)' }}>{sub}</p>
     </div>
   )
