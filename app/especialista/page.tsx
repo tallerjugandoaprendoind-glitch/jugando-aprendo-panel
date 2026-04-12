@@ -23,6 +23,7 @@ import MisFormularios from './components/MisFormularios'
 import LocaleSelector from '@/app/components/LocaleSelector'
 import { ThemeToggleButton, useTheme } from '@/components/ThemeContext'
 import ARIAAgentChat from '@/app/admin/components/ARIAAgentChat'
+import ChatFamilias from '@/app/admin/components/ChatFamilias'
 import InteligenciaHubView from '@/app/admin/components/InteligenciaHubView'
 
 function SidebarLink({ icon: Icon, label, active, onClick, small, badge }: any) {
@@ -59,6 +60,7 @@ export default function EspecialistaDashboard() {
     { id: 'pacientes',    icon: Users,           label: 'Pacientes' },
     { id: 'prediccion',   icon: Zap,             label: 'Análisis Predictivo' },
     { id: 'evaluaciones', icon: MessageCircle,   label: 'Chat Equipo' },
+    { id: 'chat-familias', icon: MessageCircle,   label: 'Chat Familias' },
     { id: 'perfil',       icon: User,            label: t('nav.miperfil') },
   ]
 
@@ -68,6 +70,7 @@ export default function EspecialistaDashboard() {
     pacientes:    'Pacientes',
     prediccion:   'Análisis Predictivo',
     evaluaciones: 'Chat Equipo',
+    'chat-familias': 'Chat Familias',
     perfil:       'Mi Perfil',
   }
 
@@ -79,6 +82,7 @@ export default function EspecialistaDashboard() {
   const [showNotifications, setShowNotifications]   = useState(false)
   const [citasHoy, setCitasHoy]                     = useState<any[]>([])
   const [chatUnread, setChatUnread]                 = useState(0)
+  const [familiasUnread, setFamiliasUnread]         = useState(0)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [newPassword, setNewPassword]               = useState('')
   const [confirmPassword, setConfirmPassword]       = useState('')
@@ -94,6 +98,9 @@ export default function EspecialistaDashboard() {
   useEffect(() => {
     if (activeView === 'evaluaciones') {
       setChatUnread(0)
+    }
+    if (activeView === 'chat-familias') {
+      setFamiliasUnread(0)
       // Mark all as read in DB
       if (profile?.id) {
         supabase.from('chat_especialista_admin')
@@ -146,7 +153,7 @@ export default function EspecialistaDashboard() {
         .gte('created_at', hace7dias)
       setChatUnread(count || 0)
 
-      // Realtime: new messages → increment badge
+      // Realtime: new messages → increment badge (team chat)
       const channel = supabase
         .channel('esp-chat-unread')
         .on('postgres_changes', {
@@ -158,7 +165,26 @@ export default function EspecialistaDashboard() {
           setChatUnread(prev => prev + 1)
         })
         .subscribe()
-      return () => { supabase.removeChannel(channel) }
+
+      // Familias unread: mensajes de padres no leídos
+      const { count: famCount } = await supabase
+        .from('chat_familias')
+        .select('id', { count: 'exact', head: true })
+        .eq('sender_role', 'padre')
+        .not('read_by', 'cs', `{${session.user.id}}`)
+      setFamiliasUnread(famCount || 0)
+
+      const chFam = supabase
+        .channel('esp-familias-unread')
+        .on('postgres_changes', {
+          event: 'INSERT', schema: 'public', table: 'chat_familias',
+        }, (payload: any) => {
+          if (payload.new.sender_role === 'padre' && payload.new.sender_id !== session.user.id) {
+            setFamiliasUnread(prev => prev + 1)
+          }
+        }).subscribe()
+
+      return () => { supabase.removeChannel(channel); supabase.removeChannel(chFam) }
     }
     fetchCitasHoy()
   }, [])
@@ -194,6 +220,7 @@ export default function EspecialistaDashboard() {
       case 'prediccion':   return <InteligenciaHubView />
       case 'formularios':  return <MisFormularios userId={profile.id} />
       case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
+      case 'chat-familias': return <ChatFamilias profile={profile} />
       case 'agenda':       return <MiAgenda isDark={isDark} />
       case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} onLogout={handleLogout} />
       default:             return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
@@ -263,7 +290,7 @@ export default function EspecialistaDashboard() {
               label={item.label}
               active={activeView === item.id}
               onClick={() => { setActiveView(item.id); setSidebarOpen(false) }}
-              badge={item.id === 'evaluaciones' ? chatUnread : 0}
+              badge={item.id === 'evaluaciones' ? chatUnread : item.id === 'chat-familias' ? familiasUnread : 0}
             />
           ))}
         </nav>
