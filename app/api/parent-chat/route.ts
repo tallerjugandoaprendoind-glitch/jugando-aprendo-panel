@@ -127,39 +127,64 @@ export async function GET(req: NextRequest) {
 
 // ─── CONTEXTO FILTRADO PARA PADRES ───────────────────────────
 async function cargarContextoPadre(childId: string) {
-  // FIX: seleccionar birth_date además de age para calcular edad correctamente
-  const { data: child } = await supabaseAdmin
-    .from('children')
-    .select('name, age, birth_date, diagnosis')
-    .eq('id', childId)
-    .single()
+  const [
+    { data: child },
+    { data: sesiones },
+    { data: tareasPendientes },
+    { data: programas },
+    { data: proximaCita },
+  ] = await Promise.all([
+    supabaseAdmin
+      .from('children')
+      .select('name, age, birth_date, diagnosis')
+      .eq('id', childId)
+      .single(),
 
-  const { data: sesiones } = await supabaseAdmin
-    .from('registro_aba')
-    .select('fecha_sesion, datos')
-    .eq('child_id', childId)
-    .order('fecha_sesion', { ascending: false })
-    .limit(5)
+    // Cargar sesiones con TODOS los campos relevantes para padres
+    supabaseAdmin
+      .from('registro_aba')
+      .select('fecha_sesion, datos')
+      .eq('child_id', childId)
+      .order('fecha_sesion', { ascending: false })
+      .limit(5),
 
-  // FIX: cargar tareas activas Y completadas recientes para mostrar actividades
-  const { data: tareasPendientes } = await supabaseAdmin
-    .from('tareas_hogar')
-    .select('titulo, completada, fecha_asignada, instrucciones, fecha_limite')
-    .eq('child_id', childId)
-    .eq('activa', true)
-    .order('fecha_asignada', { ascending: false })
-    .limit(8)
+    // Tareas del hogar activas con instrucciones completas
+    supabaseAdmin
+      .from('tareas_hogar')
+      .select('titulo, completada, fecha_asignada, instrucciones, fecha_limite')
+      .eq('child_id', childId)
+      .eq('activa', true)
+      .order('fecha_asignada', { ascending: false })
+      .limit(8),
 
-  const { data: proximaCita } = await supabaseAdmin
-    .from('agenda_sesiones')
-    .select('fecha, hora_inicio, tipo')
-    .eq('child_id', childId)
-    .gte('fecha', new Date().toISOString().split('T')[0])
-    .in('estado', ['programada', 'confirmada'])
-    .order('fecha', { ascending: true })
-    .limit(1)
-    .single()
+    // Programas ABA con TODOS los campos de práctica
+    supabaseAdmin
+      .from('programas_aba')
+      .select(\`
+        titulo, area, fase_actual, estado,
+        objetivo_lp, sd_estimulo, generalizacion,
+        reforzadores, materiales, correccion_error,
+        notas_programa,
+        objetivos_cp ( descripcion, estado, numero_set )
+      \`)
+      .eq('child_id', childId)
+      .eq('estado', 'activo')
+      .order('created_at', { ascending: false })
+      .limit(6),
 
+    // Próxima cita
+    supabaseAdmin
+      .from('agenda_sesiones')
+      .select('fecha, hora_inicio, tipo')
+      .eq('child_id', childId)
+      .gte('fecha', new Date().toISOString().split('T')[0])
+      .in('estado', ['programada', 'confirmada'])
+      .order('fecha', { ascending: true })
+      .limit(1)
+      .single(),
+  ])
+
+  // ── Resumen de sesiones — incluye tarea_casa y mensaje_familia ──────────────
   const resumenSesiones = sesiones?.map((s, i) => {
     const d = s.datos || {}
     const nivelLogro = String(d.nivel_logro_objetivos || '')
@@ -168,35 +193,54 @@ async function cargarContextoPadre(childId: string) {
       : (nivelLogro.includes('26') || nivelLogro.includes('Parcialmente') || Number(nivelLogro) >= 26) ? 'en progreso'
       : 'necesita apoyo'
 
-    return `Sesion ${i + 1} (${s.fecha_sesion}): Trabajo en "${d.objetivo_principal || 'objetivos del dia'}". Como estuvo: ${logro}. ${d.avances_observados ? 'Avances: ' + d.avances_observados : ''}`
+    const partes = [
+      \`Sesión \${i + 1} (\${s.fecha_sesion}): Trabajó en "\${d.objetivo_principal || 'objetivos del día'}". Resultado: \${logro}.\`,
+      d.avances_observados ? \`Avances: \${d.avances_observados}\` : '',
+      d.habilidades_objetivo ? \`Habilidades trabajadas: \${Array.isArray(d.habilidades_objetivo) ? d.habilidades_objetivo.join(', ') : d.habilidades_objetivo}\` : '',
+      d.reforzadores_efectivos ? \`Lo que más lo motivó en sesión: \${d.reforzadores_efectivos}\` : '',
+      // ← CRÍTICO: tarea que dejó la terapeuta para casa
+      d.tarea_casa ? \`TAREA PARA CASA (indicada por la terapeuta): \${d.tarea_casa}\` : '',
+      // ← CRÍTICO: mensaje directo de la terapeuta a la familia
+      d.mensaje_familia ? \`MENSAJE DE LA TERAPEUTA A LA FAMILIA: \${d.mensaje_familia}\` : '',
+    ].filter(Boolean)
+
+    return partes.join(' | ')
   }).join('\n') || 'Sin sesiones recientes registradas'
 
-  const proximaCitaTexto = proximaCita
-    ? `Proxima cita: ${(proximaCita as any).fecha} a las ${(proximaCita as any).hora_inicio?.slice(0, 5)}`
-    : 'Sin proxima cita programada'
+  // ── Programas ABA con instrucciones completas para practicar en casa ─────────
+  const programasTexto = programas && programas.length > 0
+    ? programas.map((p: any) => {
+        const pasos = (p.objetivos_cp || [])
+          .sort((a: any, b: any) => (a.numero_set || 0) - (b.numero_set || 0))
+          .filter((o: any) => o.estado !== 'dominado')
+          .slice(0, 5)
+          .map((o: any, i: number) => \`  Paso \${i + 1}: \${o.descripcion}\`)
+          .join('\n')
 
-  // FIX: mostrar instrucciones resumidas de las tareas para que la IA pueda explicarlas
+        return [
+          \`\n📌 PROGRAMA: "\${p.titulo}" | Área: \${p.area} | Fase: \${p.fase_actual || 'inicial'}\`,
+          p.objetivo_lp        ? \`  🎯 Objetivo: \${p.objetivo_lp}\`                             : '',
+          p.sd_estimulo        ? \`  🗣️ Cómo dar la instrucción: \${p.sd_estimulo}\`              : '',
+          p.reforzadores       ? \`  ⭐ Reforzadores/motivadores: \${p.reforzadores}\`            : '',
+          p.materiales         ? \`  🧩 Materiales necesarios: \${p.materiales}\`                 : '',
+          p.correccion_error   ? \`  🔄 Cómo corregir errores: \${p.correccion_error}\`           : '',
+          p.generalizacion     ? \`  🏠 Para practicar en casa: \${p.generalizacion}\`            : '',
+          p.notas_programa     ? \`  📝 Notas del programa: \${p.notas_programa}\`               : '',
+          pasos                ? \`  📋 Pasos actuales a trabajar:\n\${pasos}\`                  : '',
+        ].filter(Boolean).join('\n')
+      }).join('\n')
+    : 'Sin programas ABA activos actualmente'
+
+  // ── Tareas del hogar ──────────────────────────────────────────────────────────
   const tareasTexto = tareasPendientes?.map(t => {
-    const instrResumidas = t.instrucciones
-      ? t.instrucciones.slice(0, 200) + (t.instrucciones.length > 200 ? '...' : '')
-      : ''
-    return `- "${t.titulo}" (${t.completada ? 'COMPLETADA ✅' : 'PENDIENTE ⏳'})${instrResumidas ? '\n  Instrucciones: ' + instrResumidas : ''}`
+    const instrCompletas = t.instrucciones || ''
+    return \`- "\${t.titulo}" (\${t.completada ? 'COMPLETADA ✅' : 'PENDIENTE ⏳'})\n  Instrucciones: \${instrCompletas || 'Ver con la terapeuta'}\`
   }).join('\n') || 'Sin tareas asignadas actualmente'
 
-  // FIX: Programas ABA activos (qué habilidades está trabajando)
-  const { data: programas } = await supabaseAdmin
-    .from('programas_aba')
-    .select('titulo, area, fase_actual, estado')
-    .eq('child_id', childId)
-    .eq('estado', 'activo')
-    .order('created_at', { ascending: false })
-    .limit(6)
+  const proximaCitaTexto = proximaCita
+    ? \`Próxima cita: \${(proximaCita as any).fecha} a las \${(proximaCita as any).hora_inicio?.slice(0, 5)}\`
+    : 'Sin próxima cita programada'
 
-  const programasTexto = programas && programas.length > 0
-    ? programas.map((p: any) => `- "${p.titulo}" (área: ${p.area}, fase: ${p.fase_actual || 'inicial'})`).join('\n')
-    : 'Sin programas ABA registrados actualmente'
-
-  // FIX: edad calculada correctamente
   const edadTexto = calcularEdad((child as any)?.birth_date, (child as any)?.age)
 
   return {
@@ -226,40 +270,54 @@ async function generarRespuestaPadre(
   const localeNamesPC: Record<string,string> = { es:'español', en:'English', pt:'português', fr:'français', de:'Deutsch', it:'italiano' }
   const langNote = userLocale !== 'es' ? `\n\n[RESPONDE SIEMPRE EN: ${localeNamesPC[userLocale] || 'español'}. No uses español si el idioma es diferente.]` : ''
   const systemPrompt = `Eres ARIA, el asistente virtual del Centro Jugando Aprendo para familias.
-Eres cálida, positiva y accesible. Conoces bien el caso de ${contexto.nombre}.
+Eres cálida, paciente, positiva y muy accesible. Conoces en detalle el caso de ${contexto.nombre}.
 
-INFORMACION DEL PACIENTE:
-Nombre: ${contexto.nombre} | Edad: ${contexto.edad} | Diagnostico: ${contexto.diagnostico}
+━━━ INFORMACIÓN DEL PACIENTE ━━━
+Nombre: ${contexto.nombre} | Edad: ${contexto.edad} | Diagnóstico: ${contexto.diagnostico}
 ${contexto.proximaCita}
 
-HABILIDADES QUE ESTÁ TRABAJANDO (programas ABA activos):
+━━━ PROGRAMAS ABA ACTIVOS (con instrucciones completas) ━━━
 ${contexto.programas}
 
-ULTIMAS SESIONES:
+━━━ ÚLTIMAS SESIONES (incluye tareas y mensajes de la terapeuta) ━━━
 ${contexto.resumenSesiones}
 
-ACTIVIDADES Y TAREAS PARA EL HOGAR:
+━━━ TAREAS PARA EL HOGAR ━━━
 ${contexto.tareas}
 
-REGLAS CRITICAS:
-1. Usa lenguaje SIMPLE y CALIDO. Sin términos técnicos clínicos.
-2. Responde SIEMPRE en español.
-3. Se POSITIVO y esperanzador, pero honesto.
-4. Respuestas de 2-4 oraciones (cortas y claras).
-5. USA los datos del contexto — NUNCA digas "no tengo acceso" si la info está arriba.
-6. Si preguntan por el progreso o última sesión, RESPONDE con los datos reales del contexto.
-7. Si preguntan qué está trabajando, menciona los programas ABA en lenguaje simple para padres.
-8. Para preguntas clínicas muy especializadas, recomienda hablar con la terapeuta.
-12. ARIA es un COMPLEMENTO del terapeuta, NUNCA lo reemplaza. Las decisiones clínicas (cambiar objetivos, estrategias, programas) las toma SIEMPRE el especialista. Si el padre pide cambiar algo del programa, derivalo siempre al terapeuta.
-13. NUNCA sugieras modificar el programa terapéutico ni las estrategias definidas por el especialista.
-9. Trata al padre/madre por su nombre: ${nombrePadre}.
-10. Si hay tareas pendientes, recuérdalas con entusiasmo y explica cómo ayudan.
-11. Cuando pregunten "como le fue" usa el resumen de sesiones para dar datos reales.
-CONFIDENCIALIDAD: Comparte avances, logros, actividades y citas. NO compartas notas clínicas detalladas ni comparaciones con otros pacientes.
+━━━ REGLAS DE COMPORTAMIENTO ━━━
+1. LENGUAJE: Usa lenguaje SIMPLE, CÁLIDO y sin términos técnicos. Convierte conceptos clínicos a palabras de todos los días.
+   - "SD" → "la instrucción que le das"
+   - "reforzador" → "lo que más lo motiva o le gusta"
+   - "ensayo discreto" → "practicar paso a paso"
+   - "criterio de dominio" → "cuando ya lo hace bien solo"
+
+2. USA SIEMPRE los datos del contexto. NUNCA digas "no tengo esa información" si está disponible arriba.
+
+3. CÓMO RESPONDER SEGÚN EL TIPO DE PREGUNTA:
+   - "¿Cómo puedo practicar X en casa?" → Da pasos CONCRETOS usando sd_estimulo, materiales, reforzadores y pasos del programa. Sé específico.
+   - "¿Qué tarea dejó la terapeuta?" → Usa tarea_casa y mensaje_familia de las sesiones.
+   - "¿Cómo le fue?" → Usa el resumen de sesiones con datos reales.
+   - "¿En qué está trabajando?" → Explica los programas activos en lenguaje simple.
+   - Preguntas generales → 2-4 oraciones concisas.
+   - Preguntas de PRÁCTICA o CÓMO HACER algo → Responde con pasos claros y ejemplos (puedes usar más espacio).
+
+4. ESTRUCTURA para preguntas de práctica en casa:
+   ✅ Qué necesitas (materiales)
+   ✅ Cómo empezar (instrucción exacta)
+   ✅ Qué hacer si lo hace bien (reforzador)
+   ✅ Qué hacer si se equivoca (corrección)
+   ✅ Cuánto practicar (tiempo/frecuencia sugerida)
+
+5. POSITIVO pero HONESTO. Celebra los avances, reconoce los retos.
+6. Trata a la familia por su nombre: ${nombrePadre}.
+7. Si hay tareas del hogar pendientes, explica CON DETALLE cómo hacerlas.
+8. Cuando una pregunta requiera cambiar el programa o tomar decisiones clínicas, indica amablemente que eso lo decide la terapeuta.
+9. ARIA complementa al terapeuta, nunca lo reemplaza.
 ${knowledgeCtx ? `
 ━━━ CONOCIMIENTO CLÍNICO DE RESPALDO (Cerebro IA) ━━━
 ${knowledgeCtx}
-Cuando sea útil, usa este conocimiento para dar consejos basados en evidencia, explicado en lenguaje simple para padres.
+Usa este conocimiento para enriquecer tus respuestas sobre cómo practicar, siempre en lenguaje simple para padres.
 ━━━ FIN ━━━` : ''}`
 
   // Build chat messages for Groq
@@ -276,7 +334,7 @@ Cuando sea útil, usa este conocimiento para dar consejos basados en evidencia, 
     const respuesta = await callGroq(groqMessages, {
       model: GROQ_MODELS.SMART,
       temperature: 0.5,
-      maxTokens: 600,
+      maxTokens: 1200,
     })
 
     if (respuesta && respuesta.trim().length > 10) return respuesta
@@ -285,7 +343,7 @@ Cuando sea útil, usa este conocimiento para dar consejos basados en evidencia, 
     const fallback = await callGroqSimple(systemPrompt, mensaje, {
       model: GROQ_MODELS.SMART,
       temperature: 0.5,
-      maxTokens: 600,
+      maxTokens: 1200,
     })
 
     return fallback || generarRespuestaFallback(contexto, mensaje)
