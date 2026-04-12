@@ -280,9 +280,9 @@ export default function SecretariaHome({ onNavigate }: Props) {
       </div>
 
       {/* Gráfica + Citas recientes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
 
-        {/* Gráfica semanal */}
+        {/* Gráfica semanal + citas de hoy */}
         <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <div className="flex items-center gap-2.5">
@@ -297,6 +297,28 @@ export default function SecretariaHome({ onNavigate }: Props) {
           <div className="px-5 py-4">
             <WeeklyChart />
           </div>
+          {/* Citas de hoy debajo del gráfico */}
+          {(() => {
+            const hoyStr = new Date().toISOString().split('T')[0]
+            const citasHoy = (proximasCitas.length > 0 ? proximasCitas : citasRecientes)
+              .filter(a => a.appointment_date === hoyStr)
+            if (citasHoy.length === 0) return null
+            return (
+              <div style={{ borderTop: '1px solid var(--card-border)' }}>
+                <div className="px-5 py-2.5 flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  <p className="text-[11px] font-black uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+                    Hoy · {citasHoy.length} cita{citasHoy.length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+                <div className="px-2 pb-3 space-y-0.5">
+                  {citasHoy.slice(0, 4).map(apt => (
+                    <AppointmentRow key={apt.id} apt={apt} />
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
         </div>
 
         {/* Citas recientes */}
