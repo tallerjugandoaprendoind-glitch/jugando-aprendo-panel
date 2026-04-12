@@ -280,10 +280,10 @@ export default function SecretariaHome({ onNavigate }: Props) {
       </div>
 
       {/* Gráfica + Citas recientes */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+      <div className="flex flex-col lg:flex-row gap-4 items-start">
 
         {/* Gráfica semanal + citas de hoy */}
-        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+        <div className="rounded-xl overflow-hidden flex-1" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <div className="flex items-center gap-2.5">
               <div className="w-2 h-2 rounded-full bg-blue-500" />
@@ -322,7 +322,7 @@ export default function SecretariaHome({ onNavigate }: Props) {
         </div>
 
         {/* Citas recientes */}
-        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+        <div className="rounded-xl overflow-hidden flex-1" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
           <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid var(--card-border)' }}>
             <div className="flex items-center gap-2.5">
               <Calendar size={14} style={{ color: 'var(--text-muted)' }} />
