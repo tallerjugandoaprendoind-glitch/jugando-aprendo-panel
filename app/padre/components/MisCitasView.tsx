@@ -220,11 +220,11 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                       onClick={() => setDiaSeleccionado(esSel ? '' : fechaStr)}
                       className="mcv-cell-btn"
                       style={{
-                        minHeight: 80, borderBottom: `1px solid ${bord}`, borderRight: `1px solid ${bord}`,
-                        padding: '6px 6px 4px', textAlign: 'left', cursor: 'pointer',
+                        minHeight: 80, padding: '6px 6px 4px', textAlign: 'left', cursor: 'pointer',
                         background: esSel ? '#eff6ff' : esHoy ? '#f0f7ff' : 'transparent',
                         display: 'flex', flexDirection: 'column', gap: 3,
-                        borderTop: 'none', borderLeft: 'none', borderBottom: `1px solid ${bord}`, borderRight: `1px solid ${bord}`,
+                        borderTop: 'none', borderLeft: 'none',
+                        borderBottom: `1px solid ${bord}`, borderRight: `1px solid ${bord}`,
                         outline: 'none', transition: 'background .12s',
                       }}>
                       {/* Day number */}
