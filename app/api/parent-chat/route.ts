@@ -160,13 +160,13 @@ async function cargarContextoPadre(childId: string) {
     // Programas ABA con TODOS los campos de práctica
     supabaseAdmin
       .from('programas_aba')
-      .select(\`
+      .select(`
         titulo, area, fase_actual, estado,
         objetivo_lp, sd_estimulo, generalizacion,
         reforzadores, materiales, correccion_error,
         notas_programa,
         objetivos_cp ( descripcion, estado, numero_set )
-      \`)
+      `)
       .eq('child_id', childId)
       .eq('estado', 'activo')
       .order('created_at', { ascending: false })
@@ -194,14 +194,14 @@ async function cargarContextoPadre(childId: string) {
       : 'necesita apoyo'
 
     const partes = [
-      \`Sesión \${i + 1} (\${s.fecha_sesion}): Trabajó en "\${d.objetivo_principal || 'objetivos del día'}". Resultado: \${logro}.\`,
-      d.avances_observados ? \`Avances: \${d.avances_observados}\` : '',
-      d.habilidades_objetivo ? \`Habilidades trabajadas: \${Array.isArray(d.habilidades_objetivo) ? d.habilidades_objetivo.join(', ') : d.habilidades_objetivo}\` : '',
-      d.reforzadores_efectivos ? \`Lo que más lo motivó en sesión: \${d.reforzadores_efectivos}\` : '',
+      `Sesión \${i + 1} (\${s.fecha_sesion}): Trabajó en "\${d.objetivo_principal || 'objetivos del día'}". Resultado: \${logro}.`,
+      d.avances_observados ? `Avances: \${d.avances_observados}` : '',
+      d.habilidades_objetivo ? `Habilidades trabajadas: \${Array.isArray(d.habilidades_objetivo) ? d.habilidades_objetivo.join(', ') : d.habilidades_objetivo}` : '',
+      d.reforzadores_efectivos ? `Lo que más lo motivó en sesión: \${d.reforzadores_efectivos}` : '',
       // ← CRÍTICO: tarea que dejó la terapeuta para casa
-      d.tarea_casa ? \`TAREA PARA CASA (indicada por la terapeuta): \${d.tarea_casa}\` : '',
+      d.tarea_casa ? `TAREA PARA CASA (indicada por la terapeuta): \${d.tarea_casa}` : '',
       // ← CRÍTICO: mensaje directo de la terapeuta a la familia
-      d.mensaje_familia ? \`MENSAJE DE LA TERAPEUTA A LA FAMILIA: \${d.mensaje_familia}\` : '',
+      d.mensaje_familia ? `MENSAJE DE LA TERAPEUTA A LA FAMILIA: \${d.mensaje_familia}` : '',
     ].filter(Boolean)
 
     return partes.join(' | ')
@@ -214,19 +214,19 @@ async function cargarContextoPadre(childId: string) {
           .sort((a: any, b: any) => (a.numero_set || 0) - (b.numero_set || 0))
           .filter((o: any) => o.estado !== 'dominado')
           .slice(0, 5)
-          .map((o: any, i: number) => \`  Paso \${i + 1}: \${o.descripcion}\`)
+          .map((o: any, i: number) => `  Paso \${i + 1}: \${o.descripcion}`)
           .join('\n')
 
         return [
-          \`\n📌 PROGRAMA: "\${p.titulo}" | Área: \${p.area} | Fase: \${p.fase_actual || 'inicial'}\`,
-          p.objetivo_lp        ? \`  🎯 Objetivo: \${p.objetivo_lp}\`                             : '',
-          p.sd_estimulo        ? \`  🗣️ Cómo dar la instrucción: \${p.sd_estimulo}\`              : '',
-          p.reforzadores       ? \`  ⭐ Reforzadores/motivadores: \${p.reforzadores}\`            : '',
-          p.materiales         ? \`  🧩 Materiales necesarios: \${p.materiales}\`                 : '',
-          p.correccion_error   ? \`  🔄 Cómo corregir errores: \${p.correccion_error}\`           : '',
-          p.generalizacion     ? \`  🏠 Para practicar en casa: \${p.generalizacion}\`            : '',
-          p.notas_programa     ? \`  📝 Notas del programa: \${p.notas_programa}\`               : '',
-          pasos                ? \`  📋 Pasos actuales a trabajar:\n\${pasos}\`                  : '',
+          `\n📌 PROGRAMA: "\${p.titulo}" | Área: \${p.area} | Fase: \${p.fase_actual || 'inicial'}`,
+          p.objetivo_lp        ? `  🎯 Objetivo: \${p.objetivo_lp}`                             : '',
+          p.sd_estimulo        ? `  🗣️ Cómo dar la instrucción: \${p.sd_estimulo}`              : '',
+          p.reforzadores       ? `  ⭐ Reforzadores/motivadores: \${p.reforzadores}`            : '',
+          p.materiales         ? `  🧩 Materiales necesarios: \${p.materiales}`                 : '',
+          p.correccion_error   ? `  🔄 Cómo corregir errores: \${p.correccion_error}`           : '',
+          p.generalizacion     ? `  🏠 Para practicar en casa: \${p.generalizacion}`            : '',
+          p.notas_programa     ? `  📝 Notas del programa: \${p.notas_programa}`               : '',
+          pasos                ? `  📋 Pasos actuales a trabajar:\n\${pasos}`                  : '',
         ].filter(Boolean).join('\n')
       }).join('\n')
     : 'Sin programas ABA activos actualmente'
@@ -234,11 +234,11 @@ async function cargarContextoPadre(childId: string) {
   // ── Tareas del hogar ──────────────────────────────────────────────────────────
   const tareasTexto = tareasPendientes?.map(t => {
     const instrCompletas = t.instrucciones || ''
-    return \`- "\${t.titulo}" (\${t.completada ? 'COMPLETADA ✅' : 'PENDIENTE ⏳'})\n  Instrucciones: \${instrCompletas || 'Ver con la terapeuta'}\`
+    return `- "\${t.titulo}" (\${t.completada ? 'COMPLETADA ✅' : 'PENDIENTE ⏳'})\n  Instrucciones: \${instrCompletas || 'Ver con la terapeuta'}`
   }).join('\n') || 'Sin tareas asignadas actualmente'
 
   const proximaCitaTexto = proximaCita
-    ? \`Próxima cita: \${(proximaCita as any).fecha} a las \${(proximaCita as any).hora_inicio?.slice(0, 5)}\`
+    ? `Próxima cita: \${(proximaCita as any).fecha} a las \${(proximaCita as any).hora_inicio?.slice(0, 5)}`
     : 'Sin próxima cita programada'
 
   const edadTexto = calcularEdad((child as any)?.birth_date, (child as any)?.age)
