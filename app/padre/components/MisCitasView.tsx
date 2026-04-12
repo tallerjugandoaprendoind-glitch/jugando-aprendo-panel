@@ -113,10 +113,10 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
       )}
 
       {/* ── HEADER ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-row items-center justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 className="font-black text-2xl md:text-3xl tracking-tight flex items-center gap-3 text-slate-800">
-            <div className="p-2.5 rounded-2xl flex-shrink-0 bg-blue-50">
+          <h2 className="font-black text-xl md:text-3xl tracking-tight flex items-center gap-2 sm:gap-3 text-slate-800">
+            <div className="hidden sm:flex p-2.5 rounded-2xl flex-shrink-0 bg-blue-50 items-center justify-center">
               <Calendar className="text-blue-500" size={26}/>
             </div>
             Mis sesiones
@@ -134,9 +134,9 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
             { n: completed,           label: 'Realizadas', cls: 'bg-violet-50 text-violet-600 border border-violet-100' },
             { n: appointments.length, label: 'Total',      cls: 'bg-slate-50 text-slate-500 border border-slate-200' },
           ].map(({ n, label, cls }) => (
-            <div key={label} className={`rounded-2xl px-4 py-2.5 text-center ${cls}`}>
-              <div className="text-xl font-black leading-none">{n}</div>
-              <div className="text-[9px] font-bold uppercase tracking-wide opacity-70 mt-1">{label}</div>
+            <div key={label} className={`rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 text-center ${cls}`}>
+              <div className="text-lg sm:text-xl font-black leading-none">{n}</div>
+              <div className="text-[9px] font-bold uppercase tracking-wide opacity-70 mt-0.5">{label}</div>
             </div>
           ))}
         </div>
@@ -149,7 +149,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         <div className="xl:col-span-8 bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
 
           {/* Month nav */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100">
             <button onClick={() => setMes(new Date(año, mesN - 1, 1))}
               className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
               <ChevronLeft size={18}/>
@@ -181,7 +181,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
             <div className="grid grid-cols-7">
               {/* Empty prefix */}
               {Array.from({ length: primerDia }, (_, i) => (
-                <div key={`e-${i}`} className="min-h-[88px] border-b border-r border-slate-100 bg-slate-50/40"/>
+                <div key={`e-${i}`} className="min-h-[58px] sm:min-h-[88px] border-b border-r border-slate-100 bg-slate-50/40"/>
               ))}
 
               {Array.from({ length: diasEnMes }, (_, i) => {
@@ -195,14 +195,14 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                 return (
                   <button key={dia}
                     onClick={() => setDiaSeleccionado(esSel ? '' : fechaStr)}
-                    className={`min-h-[88px] border-b border-r border-slate-100 p-1.5 text-left flex flex-col gap-1 group transition-colors
+                    className={`min-h-[58px] sm:min-h-[88px] border-b border-r border-slate-100 p-1 sm:p-1.5 text-left flex flex-col gap-0.5 sm:gap-1 group transition-colors
                       ${esSel
                         ? 'bg-blue-50'
                         : esHoy
                           ? 'bg-blue-50/60'
                           : 'hover:bg-slate-50'
                       }`}>
-                    <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black flex-shrink-0 transition-all
+                    <span className={`w-5 h-5 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[10px] sm:text-xs font-black flex-shrink-0 transition-all
                       ${esSel
                         ? 'bg-blue-600 text-white'
                         : esHoy
@@ -219,12 +219,12 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                       {citasDia.slice(0, 2).map((c, idx) => {
                         const s = STATUS_CFG[c.status] || STATUS_CFG.confirmed
                         return (
-                          <div key={idx} className={`w-full px-1.5 py-0.5 rounded-md text-[9px] font-bold truncate flex items-center gap-1 text-white ${s.pill}`}>
+                          <div key={idx} className={`w-full px-1 sm:px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-bold truncate flex items-center gap-0.5 sm:gap-1 text-white ${s.pill}`}>
                             {(c as any).modalidad === 'virtual'
-                              ? <Video size={8} className="flex-shrink-0 opacity-80"/>
-                              : <MapPin size={8} className="flex-shrink-0 opacity-80"/>
+                              ? <Video size={7} className="flex-shrink-0 opacity-80"/>
+                              : <MapPin size={7} className="flex-shrink-0 opacity-80"/>
                             }
-                            {c.appointment_time?.slice(0, 5)} {c.children?.name || selectedChild?.name}
+                            <span className="truncate">{c.appointment_time?.slice(0, 5)}<span className="hidden sm:inline"> {c.children?.name || selectedChild?.name}</span></span>
                           </div>
                         )
                       })}
