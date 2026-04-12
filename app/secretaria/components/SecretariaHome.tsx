@@ -5,9 +5,6 @@ import {
   Calendar, CalendarDays, Users, CheckCircle2, XCircle,
   AlertCircle, Loader2, ArrowRight, DollarSign, MessageSquare, BarChart3, RefreshCw
 } from 'lucide-react'
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
-} from 'recharts'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 
@@ -69,18 +66,19 @@ function WeeklyChart() {
     const load = async () => {
       const days = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom']
       const today = new Date()
-      const dayOfWeek = today.getDay()
+      const dow = today.getDay()
       const monday = new Date(today)
-      monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1))
+      monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1))
       const weekDates = Array.from({ length: 7 }, (_, i) => {
         const d = new Date(monday); d.setDate(monday.getDate() + i)
         return d.toISOString().split('T')[0]
       })
       const { data: apts } = await supabase.from('appointments').select('appointment_date, status').in('appointment_date', weekDates)
+      const todayStr = today.toISOString().split('T')[0]
       setData(weekDates.map((date, i) => {
         const dayApts = (apts || []).filter(a => a.appointment_date === date)
         return {
-          day: days[i],
+          day: days[i], date, total: dayApts.length, isToday: date === todayStr,
           completadas: dayApts.filter(a => ['completed','realizada'].includes(a.status)).length,
           pendientes:  dayApts.filter(a => a.status === 'pending').length,
           canceladas:  dayApts.filter(a => a.status === 'cancelled').length,
@@ -90,19 +88,36 @@ function WeeklyChart() {
     load()
   }, [])
 
+  const max = Math.max(...data.map(d => d.total), 1)
+
   return (
-    <ResponsiveContainer width="100%" height={150}>
-      <BarChart data={data} barSize={10} barGap={2}>
-        <CartesianGrid strokeDasharray="3 3" stroke="var(--card-border)" vertical={false} />
-        <XAxis dataKey="day" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fontSize: 10, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} width={20} allowDecimals={false} />
-        <Tooltip contentStyle={{ background: 'var(--card)', border: '1px solid var(--card-border)', borderRadius: 12, fontSize: 12 }}
-          labelStyle={{ color: 'var(--text-primary)', fontWeight: 700 }} cursor={{ fill: 'var(--muted-bg)' }} />
-        <Bar dataKey="completadas" name="Completadas" fill="#10b981" radius={[4,4,0,0]} />
-        <Bar dataKey="pendientes"  name="Pendientes"  fill="#f59e0b" radius={[4,4,0,0]} />
-        <Bar dataKey="canceladas"  name="Canceladas"  fill="#f87171" radius={[4,4,0,0]} />
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="space-y-2">
+      {data.map(d => (
+        <div key={d.day} className="flex items-center gap-3">
+          {/* Day label */}
+          <span className="text-[11px] font-black w-8 flex-shrink-0 text-right"
+            style={{ color: d.isToday ? '#3b82f6' : 'var(--text-muted)' }}>
+            {d.day}
+          </span>
+          {/* Bar */}
+          <div className="flex-1 h-5 rounded-lg overflow-hidden" style={{ background: 'var(--muted-bg)' }}>
+            {d.total > 0 && (
+              <div className="h-full flex rounded-lg overflow-hidden transition-all"
+                style={{ width: `${Math.max((d.total / max) * 100, 6)}%` }}>
+                <div style={{ flex: d.completadas, background: '#10b981', minWidth: d.completadas > 0 ? 4 : 0 }} />
+                <div style={{ flex: d.pendientes,  background: '#f59e0b', minWidth: d.pendientes  > 0 ? 4 : 0 }} />
+                <div style={{ flex: d.canceladas,  background: '#f87171', minWidth: d.canceladas  > 0 ? 4 : 0 }} />
+              </div>
+            )}
+          </div>
+          {/* Count */}
+          <span className="text-[11px] font-black w-5 text-right flex-shrink-0"
+            style={{ color: d.total > 0 ? 'var(--text-primary)' : 'var(--text-muted)' }}>
+            {d.total || '—'}
+          </span>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -215,12 +230,12 @@ export default function SecretariaHome({ onNavigate }: Props) {
             </div>
             <span className="text-[11px] font-bold" style={{ color: 'var(--text-muted)' }}>{stats.semana} total</span>
           </div>
-          <div className="p-5">
+          <div className="px-5 py-4">
             <WeeklyChart />
-            <div className="flex items-center gap-4 mt-3 text-[11px]">
+            <div className="flex items-center gap-4 mt-4 pt-3 text-[11px]" style={{ borderTop: '1px solid var(--card-border)' }}>
               {[{ color: '#10b981', label: 'Completadas' }, { color: '#f59e0b', label: 'Pendientes' }, { color: '#f87171', label: 'Canceladas' }].map(l => (
                 <div key={l.label} className="flex items-center gap-1.5">
-                  <div className="w-2 h-2 rounded-full" style={{ background: l.color }} />
+                  <div className="w-2.5 h-2.5 rounded-sm" style={{ background: l.color }} />
                   <span style={{ color: 'var(--text-muted)' }}>{l.label}</span>
                 </div>
               ))}
