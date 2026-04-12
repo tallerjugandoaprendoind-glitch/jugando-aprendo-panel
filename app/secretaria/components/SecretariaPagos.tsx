@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import {
   DollarSign, Plus, Search, Download, TrendingUp, CheckCircle2,
   Clock, XCircle, Loader2, Calendar, Save, X, Package, ChevronDown,
-  ChevronUp, Repeat, Pencil, Trash2, Settings2, Check
+  ChevronUp, Repeat, Pencil, Trash2, Settings2, Check, FileText
 } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid } from 'recharts'
 import { supabase } from '@/lib/supabase'
@@ -23,18 +23,22 @@ const MESES        = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct
 const MESES_LARGO  = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre']
 const COLORS       = ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16']
 
-// ─── Helper: generate recurring dates ────────────────────────────────────────
-function generateDates(start: string, freq: 'weekly'|'biweekly'|'monthly', n: number) {
+// ─── Helper: generate dates from day-of-week selection + date range ───────────
+function generateDatesByDays(startDate: string, endDate: string, selectedDays: number[]): string[] {
+  if (!startDate || !endDate || selectedDays.length === 0) return []
   const dates: string[] = []
-  const cur = new Date(start + 'T12:00:00')
-  for (let i = 0; i < n; i++) {
-    dates.push(cur.toISOString().split('T')[0])
-    if (freq === 'weekly')   cur.setDate(cur.getDate() + 7)
-    if (freq === 'biweekly') cur.setDate(cur.getDate() + 14)
-    if (freq === 'monthly')  cur.setMonth(cur.getMonth() + 1)
+  const cur  = new Date(startDate + 'T12:00:00')
+  const end  = new Date(endDate   + 'T12:00:00')
+  while (cur <= end) {
+    const dow = cur.getDay() // 0=Dom, 1=Lun...
+    if (selectedDays.includes(dow)) dates.push(cur.toISOString().split('T')[0])
+    cur.setDate(cur.getDate() + 1)
   }
   return dates
 }
+
+const DAYS_ES = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb']
+const DAYS_FULL = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']
 
 // ─── Group payments by patient + month ───────────────────────────────────────
 function groupByPatientMonth(pays: any[]) {
@@ -177,19 +181,25 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
   }
 
   // ─── Package form ───────────────────────────────────────────────────────────
-  const emptyPkg = { child_id: '', sessions: '4', amount: '', concept: '', method: 'efectivo', status: 'paid', start: new Date().toISOString().split('T')[0], freq: 'weekly' as 'weekly'|'biweekly'|'monthly' }
+  const emptyPkg = {
+    child_id: '', amount: '', concept: '', method: 'efectivo', status: 'paid',
+    start: new Date().toISOString().split('T')[0],
+    end: (() => { const d = new Date(); d.setMonth(d.getMonth() + 1); return d.toISOString().split('T')[0] })(),
+    selectedDays: [] as number[], // days of week: 0=Sun, 1=Mon...
+  }
   const [pkg, setPkg] = useState(emptyPkg)
   const [pkgDates, setPkgDates] = useState<string[]>([])
   const [savingPkg, setSavingPkg] = useState(false)
 
   useEffect(() => {
-    if (pkg.start && Number(pkg.sessions) > 0) setPkgDates(generateDates(pkg.start, pkg.freq, Number(pkg.sessions)))
-  }, [pkg.start, pkg.sessions, pkg.freq])
+    setPkgDates(generateDatesByDays(pkg.start, pkg.end, pkg.selectedDays))
+  }, [pkg.start, pkg.end, pkg.selectedDays])
 
   const handleSavePkg = async () => {
     if (!pkg.child_id) { toast.error('Selecciona el paciente'); return }
     if (!pkg.amount || isNaN(Number(pkg.amount))) { toast.error('Ingresa el monto por sesión'); return }
     if (!pkg.concept.trim()) { toast.error('Ingresa el concepto'); return }
+    if (pkgDates.length === 0) { toast.error('Selecciona al menos un día de sesión'); return }
     setSavingPkg(true)
     try {
       const inserts = pkgDates.map((date, i) => ({
@@ -197,7 +207,8 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
         concept: `${pkg.concept.trim()} (${i+1}/${pkgDates.length})`,
         payment_method: pkg.method, status: pkg.status,
         paid_at: pkg.status === 'paid' ? new Date(date + 'T12:00:00').toISOString() : null,
-        notes: `Paquete de ${pkgDates.length} sesiones`, created_by: profile?.id,
+        notes: `Paquete de ${pkgDates.length} sesiones · ${pkg.selectedDays.map(d => DAYS_FULL[d]).join(', ')}`,
+        created_by: profile?.id,
       }))
       const { error } = await supabase.from('payments').insert(inserts)
       if (error) throw error
@@ -269,12 +280,27 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
 
   const inputCls = "w-full px-3 py-2.5 rounded-xl text-sm border-2 outline-none transition-all bg-[var(--muted-bg)] border-[var(--card-border)] text-[var(--text-primary)] focus:border-blue-500 focus:bg-[var(--card)]"
 
-  // Autocomplete list for concept
-  const ConceptInput = ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
+  // Autocomplete list for concept with price auto-fill
+  const ConceptInput = ({ value, onChange, onPriceMatch }: { value: string; onChange: (v: string) => void; onPriceMatch?: (price: string) => void }) => (
     <div className="relative">
-      <input value={value} onChange={e => onChange(e.target.value)} placeholder="Ej: Sesión ABA, Evaluación, Terapia..." className={inputCls} list="concepts-list" />
+      <input value={value}
+        onChange={e => {
+          onChange(e.target.value)
+          // Auto-detect price from rates
+          if (onPriceMatch) {
+            const matched = rates.find(r => r.name.toLowerCase() === e.target.value.toLowerCase())
+            if (matched) onPriceMatch(String(matched.amount))
+          }
+        }}
+        onBlur={e => {
+          if (onPriceMatch) {
+            const matched = rates.find(r => r.name.toLowerCase() === e.target.value.toLowerCase())
+            if (matched) onPriceMatch(String(matched.amount))
+          }
+        }}
+        placeholder="Ej: Sesión ABA, Evaluación..." className={inputCls} list="concepts-list" />
       <datalist id="concepts-list">
-        {rateNames.map(n => <option key={n} value={n} />)}
+        {rates.map(r => <option key={r.id} value={r.name} />)}
         <option value="Sesión de terapia" />
         <option value="Evaluación inicial" />
         <option value="Consulta de seguimiento" />
@@ -466,7 +492,8 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                   </select>
                 </Field>
                 <Field label="Concepto *">
-                  <ConceptInput value={form.concept} onChange={v => setForm(f => ({ ...f, concept: v }))} />
+                  <ConceptInput value={form.concept} onChange={v => setForm(f => ({ ...f, concept: v }))}
+                    onPriceMatch={price => setForm(f => ({ ...f, amount: price }))} />
                 </Field>
                 <Field label="Monto (S/) *">
                   <input type="number" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} placeholder="0.00" className={inputCls} />
@@ -503,16 +530,18 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
           {/* Package form */}
           {showPkg && (
             <div className="rounded-2xl p-5 space-y-4" style={{ background: 'var(--card)', border: '2px solid #3b82f6' }}>
+              {/* Header */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center"><Package size={15} className="text-blue-600" /></div>
                   <div>
                     <p className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Paquete de sesiones recurrentes</p>
-                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Genera múltiples cobros automáticamente</p>
+                    <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Selecciona días de la semana y rango de fechas</p>
                   </div>
                 </div>
                 <button onClick={() => setShowPkg(false)} className="p-1.5 rounded-lg hover:opacity-70" style={{ color: 'var(--text-muted)' }}><X size={15} /></button>
               </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 <Field label="Paciente *">
                   <select value={pkg.child_id} onChange={e => setPkg(p => ({ ...p, child_id: e.target.value }))} className={inputCls}>
@@ -521,43 +550,79 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                   </select>
                 </Field>
                 <Field label="Concepto *">
-                  <ConceptInput value={pkg.concept} onChange={v => setPkg(p => ({ ...p, concept: v }))} />
+                  <ConceptInput value={pkg.concept}
+                    onChange={v => setPkg(p => ({ ...p, concept: v }))}
+                    onPriceMatch={price => setPkg(p => ({ ...p, amount: price }))} />
                 </Field>
                 <Field label="Monto por sesión (S/) *">
-                  <input type="number" value={pkg.amount} onChange={e => setPkg(p => ({ ...p, amount: e.target.value }))} placeholder="0.00" className={inputCls} />
+                  <div className="relative">
+                    <input type="number" value={pkg.amount} onChange={e => setPkg(p => ({ ...p, amount: e.target.value }))}
+                      placeholder="0.00" className={inputCls} />
+                    {pkg.concept && rates.find(r => r.name.toLowerCase() === pkg.concept.toLowerCase()) && (
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                        style={{ background: 'rgba(16,185,129,0.12)', color: '#059669' }}>✓ Tarifa</span>
+                    )}
+                  </div>
                 </Field>
-                <Field label="N° de sesiones">
-                  <input type="number" min="1" max="52" value={pkg.sessions} onChange={e => setPkg(p => ({ ...p, sessions: e.target.value }))} className={inputCls} />
-                </Field>
-                <Field label="Fecha primera sesión">
+                <Field label="Fecha inicio">
                   <input type="date" value={pkg.start} onChange={e => setPkg(p => ({ ...p, start: e.target.value }))} className={inputCls} />
                 </Field>
-                <Field label="Frecuencia">
-                  <select value={pkg.freq} onChange={e => setPkg(p => ({ ...p, freq: e.target.value as any }))} className={inputCls}>
-                    <option value="weekly">Semanal (cada 7 días)</option>
-                    <option value="biweekly">Quincenal (cada 14 días)</option>
-                    <option value="monthly">Mensual</option>
-                  </select>
+                <Field label="Fecha fin">
+                  <input type="date" value={pkg.end} onChange={e => setPkg(p => ({ ...p, end: e.target.value }))} className={inputCls} />
                 </Field>
                 <Field label="Método de pago">
                   <select value={pkg.method} onChange={e => setPkg(p => ({ ...p, method: e.target.value }))} className={inputCls}>
                     {METHODS.map(m => <option key={m} value={m}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>)}
                   </select>
                 </Field>
-                <Field label="Estado de pagos">
-                  <select value={pkg.status} onChange={e => setPkg(p => ({ ...p, status: e.target.value }))} className={inputCls}>
-                    {Object.entries(STATUS_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-                  </select>
-                </Field>
-                {pkg.amount && pkg.sessions && (
-                  <div className="flex items-center justify-center rounded-xl" style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                    <div className="text-center py-3">
-                      <p className="text-2xl font-black" style={{ color: '#10b981' }}>S/ {(Number(pkg.amount) * Number(pkg.sessions)).toFixed(2)}</p>
-                      <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>Total del paquete</p>
-                    </div>
-                  </div>
+              </div>
+
+              {/* Day picker */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)' }}>
+                  Días de sesión * — selecciona uno o más días
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {DAYS_ES.map((day, i) => {
+                    const selected = pkg.selectedDays.includes(i)
+                    // Count sessions on this day
+                    const count = pkgDates.filter(d => new Date(d + 'T12:00:00').getDay() === i).length
+                    return (
+                      <button key={i} type="button"
+                        onClick={() => setPkg(p => ({
+                          ...p,
+                          selectedDays: p.selectedDays.includes(i)
+                            ? p.selectedDays.filter(d => d !== i)
+                            : [...p.selectedDays, i].sort()
+                        }))}
+                        className="flex flex-col items-center gap-1 px-4 py-2.5 rounded-xl font-black text-sm transition-all"
+                        style={{
+                          background: selected ? '#3b82f6' : 'var(--muted-bg)',
+                          color: selected ? '#fff' : 'var(--text-muted)',
+                          border: `2px solid ${selected ? '#3b82f6' : 'var(--card-border)'}`,
+                        }}>
+                        {day}
+                        {selected && pkgDates.length > 0 && (
+                          <span className="text-[9px] font-bold opacity-80">{count}x</span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+                {pkg.selectedDays.length > 0 && pkg.start && pkg.end && (
+                  <p className="text-xs mt-2 font-medium" style={{ color: 'var(--text-muted)' }}>
+                    {pkg.selectedDays.map(d => DAYS_FULL[d]).join(', ')} · 
+                    <strong style={{ color: 'var(--text-primary)' }}> {pkgDates.length} sesiones en total</strong>
+                    {pkg.amount && <strong style={{ color: '#10b981' }}> · S/ {(Number(pkg.amount) * pkgDates.length).toFixed(2)}</strong>}
+                  </p>
                 )}
               </div>
+
+              <Field label="Estado de los pagos">
+                <select value={pkg.status} onChange={e => setPkg(p => ({ ...p, status: e.target.value }))} className={inputCls}>
+                  {Object.entries(STATUS_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                </select>
+              </Field>
 
               {/* Preview */}
               {pkgDates.length > 0 && pkg.child_id && pkg.amount && pkg.concept && (
@@ -568,14 +633,18 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                     </p>
                     <p className="text-xs font-black" style={{ color: '#10b981' }}>Total: S/ {(Number(pkg.amount) * pkgDates.length).toFixed(2)}</p>
                   </div>
-                  <div className="max-h-52 overflow-y-auto">
+                  <div className="max-h-56 overflow-y-auto">
                     {pkgDates.map((date, i) => {
                       const d = new Date(date + 'T12:00:00')
                       const lbl = `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${String(d.getFullYear()).slice(2)}`
+                      const dayName = DAYS_ES[d.getDay()]
                       return (
-                        <div key={date} className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: i < pkgDates.length-1 ? '1px solid var(--card-border)' : 'none' }}>
-                          <span className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{lbl}</span>
-                          <span className="text-xs flex-1 mx-4 truncate" style={{ color: 'var(--text-secondary)' }}>{pkg.concept} ({i+1}/{pkgDates.length})</span>
+                        <div key={date} className="flex items-center gap-3 px-4 py-2.5"
+                          style={{ borderBottom: i < pkgDates.length-1 ? '1px solid var(--card-border)' : 'none' }}>
+                          <span className="text-[10px] font-black w-8 text-center px-1 py-0.5 rounded-md flex-shrink-0"
+                            style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>{dayName}</span>
+                          <span className="text-xs font-mono flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{lbl}</span>
+                          <span className="text-xs flex-1 truncate" style={{ color: 'var(--text-secondary)' }}>{pkg.concept}</span>
                           <span className="text-sm font-black flex-shrink-0" style={{ color: 'var(--text-primary)' }}>S/ {Number(pkg.amount).toFixed(2)}</span>
                         </div>
                       )
@@ -586,10 +655,10 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
 
               <div className="flex gap-2">
                 <button onClick={() => setShowPkg(false)} className="flex-1 py-3 rounded-xl text-sm font-bold border-2" style={{ borderColor: 'var(--card-border)', color: 'var(--text-muted)' }}>Cancelar</button>
-                <button onClick={handleSavePkg} disabled={savingPkg || !pkg.child_id || !pkg.amount || !pkg.concept}
+                <button onClick={handleSavePkg} disabled={savingPkg || !pkg.child_id || !pkg.amount || !pkg.concept || pkgDates.length === 0}
                   className="flex-1 py-3 rounded-xl text-sm font-black text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2 transition-all">
                   {savingPkg ? <Loader2 size={14} className="animate-spin" /> : <Repeat size={14} />}
-                  {savingPkg ? 'Creando...' : `Crear ${pkgDates.length} cobros`}
+                  {savingPkg ? 'Creando...' : pkgDates.length > 0 ? `Crear ${pkgDates.length} cobros` : 'Selecciona días'}
                 </button>
               </div>
             </div>
@@ -606,14 +675,14 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
             </div>
           ) : (
             <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-              <div className="grid grid-cols-[1fr_1.5fr_auto_auto_auto] gap-4 px-5 py-3 text-[10px] font-black uppercase tracking-widest"
+              <div className="grid grid-cols-[1fr_1.5fr_auto_auto_auto_auto] gap-4 px-5 py-3 text-[10px] font-black uppercase tracking-widest"
                 style={{ borderBottom: '1px solid var(--card-border)', color: 'var(--text-muted)', background: 'var(--muted-bg)' }}>
-                <span>Paciente</span><span>Concepto</span><span>Monto</span><span>Método</span><span>Estado</span>
+                <span>Paciente</span><span>Concepto</span><span>Monto</span><span>Método</span><span>Estado</span><span></span>
               </div>
               {filtered.map(p => {
                 const st = STATUS_CFG[p.status] || { label: p.status, color: '#6b7280', bg: '#f3f4f6' }
                 return (
-                  <div key={p.id} className="grid grid-cols-[1fr_1.5fr_auto_auto_auto] gap-4 px-5 py-3.5 items-center transition-colors hover:bg-[var(--muted-bg)]"
+                  <div key={p.id} className="grid grid-cols-[1fr_1.5fr_auto_auto_auto_auto] gap-4 px-5 py-3.5 items-center transition-colors hover:bg-[var(--muted-bg)]"
                     style={{ borderBottom: '1px solid var(--card-border)' }}>
                     <div>
                       <p className="text-xs font-bold" style={{ color: 'var(--text-primary)' }}>{p.children?.name || '—'}</p>
@@ -623,6 +692,13 @@ export default function SecretariaPagos({ profile }: { profile: any }) {
                     <p className="text-sm font-black whitespace-nowrap" style={{ color: '#10b981' }}>S/ {Number(p.amount).toFixed(2)}</p>
                     <p className="text-xs capitalize whitespace-nowrap" style={{ color: 'var(--text-secondary)' }}>{p.payment_method}</p>
                     <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg whitespace-nowrap" style={{ background: st.bg, color: st.color }}>{st.label}</span>
+                    <button
+                      onClick={() => window.open(`/api/pagos/recibo-pdf?id=${p.id}`, '_blank')}
+                      title="Ver recibo"
+                      className="p-1.5 rounded-lg transition-all hover:opacity-70 flex-shrink-0"
+                      style={{ background: 'var(--muted-bg)', color: '#3b82f6' }}>
+                      <FileText size={13} />
+                    </button>
                   </div>
                 )
               })}
