@@ -615,7 +615,7 @@ export default function ParentDashboard() {
                 </button>
             </div>
 
-            <main className={`flex-1 overflow-y-auto ${activeView === 'chat' ? 'p-0 lg:p-4 lg:p-6' : 'p-4 md:p-6'} pb-20 lg:pb-6`} style={{ minHeight: 0 }}>
+            <main className={`flex-1 overflow-y-auto ${activeView === 'chat' || activeView === 'chat-familias' ? 'p-0 lg:p-4 lg:p-6' : 'p-4 md:p-6'} ${activeView === 'chat' || activeView === 'chat-familias' ? 'pb-16 lg:pb-6' : 'pb-20 lg:pb-6'}`} style={{ minHeight: 0, overflow: activeView === 'chat-familias' ? 'hidden' : undefined }}>
                 <div className="w-full min-h-full">
                     {activeView === 'home' && (
                         <HomeViewInnovative 
@@ -648,7 +648,10 @@ export default function ParentDashboard() {
                     {(activeView === 'misformularios' || activeView === 'tienda' || activeView === 'documentos') && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} initialTab={activeView === 'tienda' ? 'store' : activeView === 'documentos' ? 'documentos' : 'forms'} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
                     {activeView === 'chat-familias' && selectedChild && (
-                      <ChatFamilias childId={selectedChild.id} childName={selectedChild.name} profile={profile} />
+                      <div className="lg:rounded-3xl lg:shadow-xl lg:border lg:border-slate-200/60 overflow-hidden flex flex-col animate-fade-in"
+                        style={{ height: 'calc(100svh - 130px)' }}>
+                        <ChatFamilias childId={selectedChild.id} childName={selectedChild.name} profile={profile} />
+                      </div>
                     )}
                     {activeView === 'chat-familias' && !selectedChild && (
                       <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
