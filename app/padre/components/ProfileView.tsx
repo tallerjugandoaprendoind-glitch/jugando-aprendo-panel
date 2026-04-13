@@ -145,7 +145,7 @@ function WhatsAppSection({ profile, onUpdated }: { profile: any; onUpdated: (p: 
               <p style={{ fontSize:12,color:'#16a34a',margin:'2px 0 0',fontWeight:600 }}>{profile?.phone}</p>
             </div>
             <div style={{ display:'flex',gap:6 }}>
-              <button onClick={() => setEditing(true)} style={{ fontSize:11,fontWeight:700,color:'#6d28d9',background:'#f5f3ff',border:'1px solid #ddd6fe',borderRadius:10,padding:'6px 10px',cursor:'pointer' }}>Cambiar</button>
+              <button onClick={() => setEditing(true)} style={{ fontSize:11,fontWeight:700,color:'#6d28d9',background:'var(--c-stat-purple)',border:'1px solid var(--c-border)',borderRadius:10,padding:'6px 10px',cursor:'pointer' }}>Cambiar</button>
               <button onClick={handleRemove} disabled={saving} style={{ fontSize:11,fontWeight:700,color:'#dc2626',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,padding:'6px 10px',cursor:'pointer' }}>Quitar</button>
             </div>
           </div>

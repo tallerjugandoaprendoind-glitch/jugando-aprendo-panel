@@ -22,17 +22,17 @@ interface Plan {
 }
 
 const AREA_CFG: Record<string,{bg:string;text:string;border:string;emoji:string;grad:string}> = {
-  comunicacion: { bg:'#eff6ff', text:'#1d4ed8', border:'#bfdbfe', emoji:'💬', grad:'linear-gradient(135deg,#3b82f6,#1d4ed8)' },
+  comunicacion: { bg:'var(--c-stat-blue)', text:'#1d4ed8', border:'#bfdbfe', emoji:'💬', grad:'linear-gradient(135deg,#3b82f6,#1d4ed8)' },
   conducta:     { bg:'#fff7ed', text:'#c2410c', border:'#fed7aa', emoji:'⚡', grad:'linear-gradient(135deg,#f97316,#c2410c)' },
   habilidades:  { bg:'#faf5ff', text:'#6d28d9', border:'#ddd6fe', emoji:'🧠', grad:'linear-gradient(135deg,#8b5cf6,#6d28d9)' },
-  socializacion:{ bg:'#f0fdf4', text:'#15803d', border:'#bbf7d0', emoji:'👥', grad:'linear-gradient(135deg,#22c55e,#15803d)' },
-  autonomia:    { bg:'#fffbeb', text:'#b45309', border:'#fde68a', emoji:'⭐', grad:'linear-gradient(135deg,#eab308,#b45309)' },
+  socializacion:{ bg:'var(--c-stat-green)', text:'#15803d', border:'#bbf7d0', emoji:'👥', grad:'linear-gradient(135deg,#22c55e,#15803d)' },
+  autonomia:    { bg:'var(--c-stat-amber)', text:'#b45309', border:'#fde68a', emoji:'⭐', grad:'linear-gradient(135deg,#eab308,#b45309)' },
 }
 const AREA_DEFAULT = { bg:'var(--c-surface)', text:'var(--c-text-muted)', border:'var(--c-border)', emoji:'📌', grad:'linear-gradient(135deg,#94a3b8,#64748b)' }
 
 const DIFF_CFG: Record<string,{label:string;color:string;bg:string;dot:string}> = {
-  facil: { label:'Fácil',   color:'#16a34a', bg:'#f0fdf4', dot:'#4ade80' },
-  media: { label:'Media',   color:'#d97706', bg:'#fffbeb', dot:'#fbbf24' },
+  facil: { label:'Fácil',   color:'#16a34a', bg:'var(--c-stat-green)', dot:'#4ade80' },
+  media: { label:'Media',   color:'#d97706', bg:'var(--c-stat-amber)', dot:'#fbbf24' },
   alta:  { label:'Difícil', color:'#dc2626', bg:'#fef2f2', dot:'#f87171' },
 }
 const DIFF_DEFAULT = { label:'Normal', color:'var(--c-text-muted)', bg:'var(--c-surface)', dot:'var(--c-text-placeholder)' }
@@ -238,7 +238,7 @@ export default function EngagementView({ childId }: { childId: string }) {
       `}</style>
 
       {/* HERO */}
-      <div className="eng-card" style={{ background:'linear-gradient(135deg,#be185d,#9333ea,#7c3aed)',borderRadius:24,padding:'22px 22px 18px',color:'var(--c-card)',boxShadow:'0 16px 50px rgba(147,51,234,.3)',position:'relative',overflow:'hidden' }}>
+      <div className="eng-card" style={{ background:'linear-gradient(135deg,#be185d,#9333ea,#7c3aed)',borderRadius:24,padding:'22px 22px 18px',color:'#ffffff',boxShadow:'0 16px 50px rgba(147,51,234,.3)',position:'relative',overflow:'hidden' }}>
         <div style={{ position:'absolute',top:-20,right:-20,width:130,height:130,background:'rgba(255,255,255,.07)',borderRadius:'50%' }}/>
         <div style={{ position:'relative',zIndex:1 }}>
           <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12 }}>
@@ -250,7 +250,7 @@ export default function EngagementView({ childId }: { childId: string }) {
               <h1 style={{ fontSize:20,fontWeight:900,margin:'0 0 3px' }}>Plan semanal de {plan?.child_name||'tu hijo/a'}</h1>
               <p style={{ fontSize:12,color:'rgba(255,255,255,.6)',margin:0 }}>Actividades diseñadas con IA por tu especialista</p>
             </div>
-            <button onClick={generar} disabled={generando} style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',background:'rgba(255,255,255,.18)',border:'1px solid rgba(255,255,255,.25)',color:'var(--c-card)',borderRadius:12,fontSize:12,fontWeight:700,cursor:generando?'not-allowed':'pointer',flexShrink:0,fontFamily:'inherit' }}>
+            <button onClick={generar} disabled={generando} style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',background:'rgba(255,255,255,.18)',border:'1px solid rgba(255,255,255,.25)',color:'#ffffff',borderRadius:12,fontSize:12,fontWeight:700,cursor:generando?'not-allowed':'pointer',flexShrink:0,fontFamily:'inherit' }}>
               {generando ? <Loader2 size={13} style={{ animation:'spin 1s linear infinite' }}/> : <RefreshCw size={13}/>}
               {generando ? 'Generando...' : 'Nuevo plan'}
             </button>
@@ -282,14 +282,14 @@ export default function EngagementView({ childId }: { childId: string }) {
           </div>
           <p style={{ fontWeight:800,fontSize:16,color:'var(--c-text-primary)',margin:'0 0 8px' }}>Sin plan esta semana</p>
           <p style={{ fontSize:13,color:'var(--c-text-placeholder)',lineHeight:1.6,maxWidth:280,margin:'0 auto 24px' }}>La IA generará actividades personalizadas basadas en el progreso terapéutico.</p>
-          <button onClick={generar} disabled={generando} style={{ display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#be185d,#7c3aed)',color:'var(--c-card)',border:'none',padding:'13px 24px',borderRadius:16,fontSize:14,fontWeight:700,cursor:generando?'not-allowed':'pointer',boxShadow:'0 6px 20px rgba(147,51,234,.3)',fontFamily:'inherit' }}>
+          <button onClick={generar} disabled={generando} style={{ display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#be185d,#7c3aed)',color:'#ffffff',border:'none',padding:'13px 24px',borderRadius:16,fontSize:14,fontWeight:700,cursor:generando?'not-allowed':'pointer',boxShadow:'0 6px 20px rgba(147,51,234,.3)',fontFamily:'inherit' }}>
             <Sparkles size={16}/>{generando ? 'Generando...' : 'Generar actividades con IA'}
           </button>
         </div>
       ) : (
         <>
           {/* Mensaje motivacional */}
-          <div className="eng-card" style={{ background:'linear-gradient(135deg,#faf5ff,#fce7f3)',border:'1.5px solid #ddd6fe',borderRadius:16,padding:'12px 16px',display:'flex',alignItems:'flex-start',gap:10 }}>
+          <div className="eng-card" style={{ background:'linear-gradient(135deg,#faf5ff,#fce7f3)',border:'1.5px solid var(--c-border)',borderRadius:16,padding:'12px 16px',display:'flex',alignItems:'flex-start',gap:10 }}>
             <Sparkles size={16} color="#7c3aed" style={{ flexShrink:0,marginTop:2 }}/>
             <p style={{ fontSize:13,color:'#6d28d9',fontWeight:600,lineHeight:1.6,margin:0 }}>{plan.mensaje_motivacional}</p>
           </div>
@@ -362,7 +362,7 @@ export default function EngagementView({ childId }: { childId: string }) {
                     <div style={{ padding:'0 18px 16px 20px',borderTop:'1px solid var(--c-border-light)' }} onClick={e => e.stopPropagation()}>
                       <p style={{ fontSize:13,color:'var(--c-text-muted)',lineHeight:1.7,margin:'14px 0 12px' }}>{act.descripcion}</p>
 
-                      <div style={{ background:'linear-gradient(135deg,#faf5ff,#f5f3ff)',borderRadius:14,padding:'12px 14px',marginBottom:10,border:'1px solid #ddd6fe' }}>
+                      <div style={{ background:'linear-gradient(135deg,#faf5ff,#f5f3ff)',borderRadius:14,padding:'12px 14px',marginBottom:10,border:'1px solid var(--c-border)' }}>
                         <p style={{ fontSize:11,fontWeight:800,color:'#7c3aed',margin:'0 0 5px',display:'flex',alignItems:'center',gap:5 }}>
                           <Target size={12}/>¿Por qué importa?
                         </p>
@@ -389,7 +389,7 @@ export default function EngagementView({ childId }: { childId: string }) {
                           </p>
                           <div style={{ display:'flex',gap:5,flexWrap:'wrap' }}>
                             {act.dias_recomendados.map((d: string, j: number) => (
-                              <span key={j} style={{ fontSize:11,fontWeight:700,background:'#eff6ff',color:'#2563eb',padding:'4px 10px',borderRadius:20,border:'1px solid #bfdbfe',textTransform:'capitalize' }}>{d}</span>
+                              <span key={j} style={{ fontSize:11,fontWeight:700,background:'var(--c-stat-blue)',color:'#2563eb',padding:'4px 10px',borderRadius:20,border:'1px solid var(--c-border)',textTransform:'capitalize' }}>{d}</span>
                             ))}
                           </div>
                         </div>

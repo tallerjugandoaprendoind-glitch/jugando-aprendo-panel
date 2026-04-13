@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================================
    CSS VARIABLES - LIGHT & DARK
    ============================================================ */
@@ -21,6 +23,21 @@
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #64748b;  /* dark gray — más visible */
+  /* stat card backgrounds */
+  --c-stat-blue: #eff6ff;
+  --c-stat-green: #f0fdf4;
+  --c-stat-purple: #f5f3ff;
+  --c-stat-amber: #fffbeb;
+  /* shared component vars */
+  --c-card: #ffffff;
+  --c-surface: #f8fafc;
+  --c-bg: #f1f5f9;
+  --c-border: #e2e8f0;
+  --c-border-light: #f1f5f9;
+  --c-text-primary: #0f172a;
+  --c-text-secondary: #374151;
+  --c-text-muted: #64748b;
+  --c-text-placeholder: #94a3b8;
 }
 
 .dark {
@@ -40,6 +57,21 @@
   --text-primary: #e2e8f0;
   --text-secondary: #94a3b8;
   --text-muted: #9ca3af;  /* dark mode — más visible */
+  /* stat card backgrounds dark */
+  --c-stat-blue: #1e3a5f;
+  --c-stat-green: #14532d;
+  --c-stat-purple: #2e1065;
+  --c-stat-amber: #451a03;
+  /* shared component vars dark */
+  --c-card: #161b22;
+  --c-surface: #0d1117;
+  --c-bg: #090d12;
+  --c-border: #30363d;
+  --c-border-light: #21262d;
+  --c-text-primary: #f0f6fc;
+  --c-text-secondary: #c9d1d9;
+  --c-text-muted: #8b949e;
+  --c-text-placeholder: #6e7681;
 }
 
 body {
@@ -550,6 +582,19 @@ nav.fixed.bottom-0 {
   color-scheme: dark;
 }
 
+
+/* ── DARK MODE - PORTAL PADRES ───────────────────────────────── */
+.dark .padre-portal .bg-white { background-color: var(--card) !important; }
+.dark .padre-portal .bg-slate-50 { background-color: var(--muted-bg) !important; }
+.dark .padre-portal .bg-slate-100 { background-color: var(--muted-bg) !important; }
+.dark .padre-portal .border-slate-100 { border-color: var(--card-border) !important; }
+.dark .padre-portal .border-slate-200 { border-color: var(--card-border) !important; }
+.dark .padre-portal .text-slate-800 { color: var(--text-primary) !important; }
+.dark .padre-portal .text-slate-900 { color: var(--text-primary) !important; }
+.dark .padre-portal .text-slate-600 { color: var(--text-secondary) !important; }
+.dark .padre-portal .text-slate-700 { color: var(--text-secondary) !important; }
+.dark .padre-portal .text-slate-400 { color: var(--text-muted) !important; }
+.dark .padre-portal .text-slate-500 { color: var(--text-muted) !important; }
 
 /* ── PADRE APP COMPONENT FIXES ───────────────────────────────── */
 @media (max-width: 480px) {

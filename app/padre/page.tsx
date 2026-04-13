@@ -463,7 +463,7 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-[#161b22] font-sans text-slate-700 dark:text-slate-200 overflow-hidden">
+    <div className="padre-portal flex h-screen bg-slate-50 dark:bg-[#161b22] font-sans text-slate-700 dark:text-slate-200 overflow-hidden">
         
         {/* 🔔 PUSH NOTIFICATIONS BANNER */}
         <PushNotificationBanner userId={profile?.id || null} />
@@ -560,6 +560,10 @@ export default function ParentDashboard() {
                         </span>
                     )}
                 </button>
+                <div className="flex items-center justify-between px-1">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Apariencia</span>
+                    <ThemeToggleButton />
+                </div>
             </div>
         </aside>
 

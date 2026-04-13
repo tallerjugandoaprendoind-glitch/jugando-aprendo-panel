@@ -27,10 +27,10 @@ const TYPE_CFG: Record<string,{ icon: any; color: string; bg: string; border: st
 }
 
 const ESTADO_CFG: Record<string,any> = {
-  pendiente:  { label:'Pendiente', Icon:Clock,     color:'#d97706', bg:'#fffbeb', border:'#fde68a' },
-  confirmado: { label:'Confirmado', Icon:CheckCircle, color:'#2563eb', bg:'#eff6ff', border:'#bfdbfe' },
-  listo:      { label:'Listo para recoger', Icon:Package, color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe' },
-  entregado:  { label:'Entregado', Icon:CheckCircle, color:'#059669', bg:'#f0fdf4', border:'#bbf7d0' },
+  pendiente:  { label:'Pendiente', Icon:Clock,     color:'#d97706', bg:'var(--c-stat-amber)', border:'#fde68a' },
+  confirmado: { label:'Confirmado', Icon:CheckCircle, color:'#2563eb', bg:'var(--c-stat-blue)', border:'#bfdbfe' },
+  listo:      { label:'Listo para recoger', Icon:Package, color:'#7c3aed', bg:'var(--c-stat-purple)', border:'#ddd6fe' },
+  entregado:  { label:'Entregado', Icon:CheckCircle, color:'#059669', bg:'var(--c-stat-green)', border:'#bbf7d0' },
   cancelado:  { label:'Cancelado', Icon:XCir,     color:'#dc2626', bg:'#fef2f2', border:'#fecaca' },
 }
 
@@ -52,13 +52,13 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
         <div style={{ display:'flex',alignItems:'center',justifyContent:'space-between',padding:'20px 24px',borderBottom:'1px solid var(--c-border-light)' }}>
           <h3 style={{ fontWeight:900,fontSize:18,color:'var(--c-text-primary)',margin:0,display:'flex',alignItems:'center',gap:8 }}>
             <ShoppingCart size={20} color="#3b82f6"/> Mi carrito
-            {cart.length>0&&<span style={{ background:'#3b82f6',color:'var(--c-card)',fontSize:11,fontWeight:800,padding:'2px 8px',borderRadius:20 }}>{cart.length}</span>}
+            {cart.length>0&&<span style={{ background:'#3b82f6',color:'#ffffff',fontSize:11,fontWeight:800,padding:'2px 8px',borderRadius:20 }}>{cart.length}</span>}
           </h3>
           <button onClick={onClose} style={{ padding:8,background:'var(--c-surface)',border:'none',borderRadius:12,cursor:'pointer' }}><X size={18} color="var(--c-text-muted)"/></button>
         </div>
         {done ? (
           <div style={{ flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:32,textAlign:'center' }}>
-            <div style={{ width:80,height:80,background:'#f0fdf4',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:20 }}><CheckCircle size={40} color="#16a34a"/></div>
+            <div style={{ width:80,height:80,background:'var(--c-stat-green)',borderRadius:'50%',display:'flex',alignItems:'center',justifyContent:'center',marginBottom:20 }}><CheckCircle size={40} color="#16a34a"/></div>
             <h3 style={{ fontWeight:900,fontSize:22,color:'var(--c-text-primary)',marginBottom:8 }}>¡Pedido enviado!</h3>
             <p style={{ fontSize:14,color:'var(--c-text-muted)',lineHeight:1.6 }}>El equipo del centro lo revisará y te contactará.</p>
           </div>
@@ -94,7 +94,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
                   <span style={{ fontSize:14,color:'var(--c-text-muted)' }}>Total</span>
                   <span style={{ fontSize:20,fontWeight:900,color:'var(--c-text-primary)' }}>S/ {total.toFixed(2)}</span>
                 </div>
-                <button onClick={handleCheckout} disabled={placing} style={{ width:'100%',padding:'14px',background:'linear-gradient(135deg,#3b82f6,#2563eb)',color:'var(--c-card)',border:'none',borderRadius:14,fontSize:14,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
+                <button onClick={handleCheckout} disabled={placing} style={{ width:'100%',padding:'14px',background:'linear-gradient(135deg,#3b82f6,#2563eb)',color:'#ffffff',border:'none',borderRadius:14,fontSize:14,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8 }}>
                   {placing?<Loader2 size={16} style={{ animation:'spin 1s linear infinite' }}/>:<ShoppingBag size={16}/>}
                   {placing?'Enviando...':'Confirmar pedido'}
                 </button>
@@ -236,7 +236,7 @@ export default function ResourcesView({ profile }: Props) {
       {showCart&&<CartDrawer cart={cart} onClose={()=>setShowCart(false)} onUpdate={updateCart} onCheckout={checkout}/>}
 
       {/* HERO */}
-      <div className="rv-card" style={{ background:activeTab==='biblioteca'?'linear-gradient(135deg,#7c3aed,#4f46e5,#6366f1)':'linear-gradient(135deg,#2563eb,#3b82f6,#0ea5e9)',borderRadius:28,padding:'22px 24px',color:'var(--c-card)',boxShadow:activeTab==='biblioteca'?'0 16px 50px rgba(124,58,237,.3)':'0 16px 50px rgba(59,130,246,.3)',position:'relative',overflow:'hidden',transition:'background .4s ease' }}>
+      <div className="rv-card" style={{ background:activeTab==='biblioteca'?'linear-gradient(135deg,#7c3aed,#4f46e5,#6366f1)':'linear-gradient(135deg,#2563eb,#3b82f6,#0ea5e9)',borderRadius:28,padding:'22px 24px',color:'#ffffff',boxShadow:activeTab==='biblioteca'?'0 16px 50px rgba(124,58,237,.3)':'0 16px 50px rgba(59,130,246,.3)',position:'relative',overflow:'hidden',transition:'background .4s ease' }}>
         <div style={{ position:'absolute',top:-20,right:-20,width:130,height:130,background:'rgba(255,255,255,.08)',borderRadius:'50%' }}/>
         <div style={{ position:'relative',zIndex:1,display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12 }}>
           <div>
@@ -248,7 +248,7 @@ export default function ResourcesView({ profile }: Props) {
             <p style={{ fontSize:12,color:'rgba(255,255,255,.65)',margin:0 }}>{activeTab==='biblioteca'?`${resources.length} recurso${resources.length!==1?'s':''} disponibles`:`${products.length} producto${products.length!==1?'s':''} en catálogo`}</p>
           </div>
           {activeTab==='tienda'&&cartCount>0&&(
-            <button onClick={()=>setShowCart(true)} style={{ display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,.2)',border:'none',color:'var(--c-card)',borderRadius:14,padding:'8px 14px',cursor:'pointer',fontFamily:'inherit',fontWeight:700,fontSize:13 }}>
+            <button onClick={()=>setShowCart(true)} style={{ display:'flex',alignItems:'center',gap:6,background:'rgba(255,255,255,.2)',border:'none',color:'#ffffff',borderRadius:14,padding:'8px 14px',cursor:'pointer',fontFamily:'inherit',fontWeight:700,fontSize:13 }}>
               <ShoppingCart size={16}/> {cartCount}
             </button>
           )}
@@ -288,7 +288,7 @@ export default function ResourcesView({ profile }: Props) {
             <div style={{ display:'flex',justifyContent:'center',padding:'40px 0' }}><Loader2 size={32} color="#7c3aed" style={{ animation:'spin 1s linear infinite' }}/></div>
           ) : filteredRes.length===0 ? (
             <div style={{ background:'var(--c-card)',borderRadius:24,border:'1.5px solid var(--c-border-light)',padding:'48px 24px',textAlign:'center' }}>
-              <div style={{ width:64,height:64,background:'#f5f3ff',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><Book size={28} color="#c4b5fd"/></div>
+              <div style={{ width:64,height:64,background:'var(--c-stat-purple)',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><Book size={28} color="#c4b5fd"/></div>
               <p style={{ fontWeight:700,fontSize:14,color:'var(--c-text-muted)',margin:'0 0 6px' }}>{resources.length===0?'Sin recursos por ahora':'No se encontraron resultados'}</p>
               <p style={{ fontSize:12,color:'var(--c-text-placeholder)' }}>{resources.length===0?'El equipo terapéutico compartirá materiales pronto':'Prueba con otro término de búsqueda'}</p>
             </div>
@@ -304,7 +304,7 @@ export default function ResourcesView({ profile }: Props) {
                     <div style={{ flex:1,minWidth:0 }}>
                       <div style={{ display:'flex',alignItems:'center',gap:6,marginBottom:2,flexWrap:'wrap' }}>
                         <p style={{ fontWeight:800,fontSize:13,color:'var(--c-text-primary)',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:200 }}>{r.title}</p>
-                        {isPersonal&&<span style={{ fontSize:9,fontWeight:800,padding:'2px 6px',background:'#f5f3ff',color:'#7c3aed',border:'1px solid #ddd6fe',borderRadius:20,display:'flex',alignItems:'center',gap:3,flexShrink:0 }}><Bell size={8}/>Para ti</span>}
+                        {isPersonal&&<span style={{ fontSize:9,fontWeight:800,padding:'2px 6px',background:'var(--c-stat-purple)',color:'#7c3aed',border:'1px solid var(--c-border)',borderRadius:20,display:'flex',alignItems:'center',gap:3,flexShrink:0 }}><Bell size={8}/>Para ti</span>}
                       </div>
                       {r.description&&<p style={{ fontSize:12,color:'var(--c-text-placeholder)',margin:0,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap' }}>{r.description}</p>}
                       <span style={{ fontSize:10,fontWeight:700,padding:'2px 8px',borderRadius:20,background:cfg.bg,color:cfg.color,border:`1px solid ${cfg.border}`,display:'inline-block',marginTop:4 }}>{cfg.label}</span>
@@ -322,7 +322,7 @@ export default function ResourcesView({ profile }: Props) {
             return (
               <div style={{ position:'fixed',inset:0,background:'rgba(15,23,42,.7)',backdropFilter:'blur(6px)',zIndex:50,display:'flex',alignItems:'flex-end',justifyContent:'center',padding:'0 0 0 0' }}>
                 <div style={{ background:'var(--c-card)',width:'100%',maxWidth:600,borderRadius:'24px 24px 0 0',maxHeight:'90vh',overflow:'hidden',display:'flex',flexDirection:'column',boxShadow:'0 -30px 80px rgba(0,0,0,.2)' }}>
-                  <div style={{ background:`linear-gradient(135deg,#7c3aed,#4f46e5)`,padding:'20px 24px',color:'var(--c-card)',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12 }}>
+                  <div style={{ background:`linear-gradient(135deg,#7c3aed,#4f46e5)`,padding:'20px 24px',color:'#ffffff',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12 }}>
                     <div style={{ display:'flex',alignItems:'center',gap:12 }}>
                       <div style={{ padding:10,background:'rgba(255,255,255,.2)',borderRadius:14 }}><Icon size={20}/></div>
                       <div><p style={{ color:'rgba(255,255,255,.7)',fontSize:11,fontWeight:700,textTransform:'uppercase',letterSpacing:1,margin:'0 0 2px' }}>{cfg.label}</p><h3 style={{ fontWeight:900,fontSize:17,margin:0,lineHeight:1.2 }}>{selectedRes.title}</h3></div>
@@ -331,9 +331,9 @@ export default function ResourcesView({ profile }: Props) {
                   </div>
                   <div style={{ overflowY:'auto',flex:1,padding:20,display:'flex',flexDirection:'column',gap:14 }}>
                     {selectedRes.description&&<p style={{ fontSize:13,color:'var(--c-text-muted)',lineHeight:1.6,background:'var(--c-surface)',borderRadius:16,padding:'14px 16px',margin:0 }}>{selectedRes.description}</p>}
-                    {selectedRes.tags?.length>0&&<div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>{selectedRes.tags.map(tg=><span key={tg} style={{ padding:'4px 12px',background:'#f5f3ff',color:'#7c3aed',fontSize:12,fontWeight:700,borderRadius:20,border:'1px solid #ddd6fe' }}>{tg}</span>)}</div>}
+                    {selectedRes.tags?.length>0&&<div style={{ display:'flex',flexWrap:'wrap',gap:6 }}>{selectedRes.tags.map(tg=><span key={tg} style={{ padding:'4px 12px',background:'var(--c-stat-purple)',color:'#7c3aed',fontSize:12,fontWeight:700,borderRadius:20,border:'1px solid var(--c-border)' }}>{tg}</span>)}</div>}
                     {selectedRes.resource_type==='video'&&isYouTube(selectedRes.url)&&<div style={{ aspectRatio:'16/9',background:'var(--c-border-light)',borderRadius:16,overflow:'hidden' }}><iframe width="100%" height="100%" src={getEmbedUrl(selectedRes.url)} title={selectedRes.title} frameBorder="0" allowFullScreen/></div>}
-                    <a href={selectedRes.url} target="_blank" rel="noopener noreferrer" style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'14px',background:'linear-gradient(135deg,#7c3aed,#4f46e5)',color:'var(--c-card)',borderRadius:16,fontWeight:800,fontSize:14,textDecoration:'none' }}><ExternalLink size={16}/>Abrir {cfg.label}</a>
+                    <a href={selectedRes.url} target="_blank" rel="noopener noreferrer" style={{ display:'flex',alignItems:'center',justifyContent:'center',gap:8,padding:'14px',background:'linear-gradient(135deg,#7c3aed,#4f46e5)',color:'#ffffff',borderRadius:16,fontWeight:800,fontSize:14,textDecoration:'none' }}><ExternalLink size={16}/>Abrir {cfg.label}</a>
                   </div>
                 </div>
               </div>
@@ -369,7 +369,7 @@ export default function ResourcesView({ profile }: Props) {
                     {featuredProds.map(p=>{
                       const inCart=cart.some(i=>i.product.id===p.id); const justAdded=addedId===p.id
                       return (
-                        <div key={p.id} style={{ background:'linear-gradient(135deg,#eff6ff,#dbeafe)',borderRadius:20,border:'1.5px solid #bfdbfe',padding:'16px',display:'flex',alignItems:'center',gap:14 }}>
+                        <div key={p.id} style={{ background:'linear-gradient(135deg,#eff6ff,#dbeafe)',borderRadius:20,border:'1.5px solid var(--c-border)',padding:'16px',display:'flex',alignItems:'center',gap:14 }}>
                           <div style={{ width:52,height:52,background:'var(--c-card)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,boxShadow:'0 4px 12px rgba(59,130,246,.15)' }}><ShoppingBag size={24} color="#3b82f6"/></div>
                           <div style={{ flex:1,minWidth:0 }}>
                             <p style={{ fontWeight:800,fontSize:14,color:'var(--c-text-primary)',margin:'0 0 2px' }}>{p.nombre}</p>
@@ -410,7 +410,7 @@ export default function ResourcesView({ profile }: Props) {
               )}
               {filteredProds.length===0&&(
                 <div style={{ background:'var(--c-card)',borderRadius:24,border:'1.5px solid var(--c-border-light)',padding:'48px 24px',textAlign:'center' }}>
-                  <div style={{ width:64,height:64,background:'#eff6ff',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><ShoppingBag size={28} color="#93c5fd"/></div>
+                  <div style={{ width:64,height:64,background:'var(--c-stat-blue)',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><ShoppingBag size={28} color="#93c5fd"/></div>
                   <p style={{ fontWeight:700,fontSize:14,color:'var(--c-text-muted)',margin:'0 0 6px' }}>Sin productos disponibles</p>
                   <p style={{ fontSize:12,color:'var(--c-text-placeholder)' }}>El catálogo se actualizará pronto</p>
                 </div>
@@ -418,7 +418,7 @@ export default function ResourcesView({ profile }: Props) {
               {/* Carrito flotante */}
               {cartCount>0&&(
                 <div style={{ position:'sticky',bottom:16,zIndex:40 }}>
-                  <button onClick={()=>setShowCart(true)} style={{ width:'100%',padding:'14px 20px',background:'linear-gradient(135deg,#2563eb,#3b82f6)',color:'var(--c-card)',border:'none',borderRadius:18,fontSize:14,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 8px 24px rgba(37,99,235,.4)',fontFamily:'inherit' }}>
+                  <button onClick={()=>setShowCart(true)} style={{ width:'100%',padding:'14px 20px',background:'linear-gradient(135deg,#2563eb,#3b82f6)',color:'#ffffff',border:'none',borderRadius:18,fontSize:14,fontWeight:800,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,boxShadow:'0 8px 24px rgba(37,99,235,.4)',fontFamily:'inherit' }}>
                     <ShoppingCart size={18}/> Ver carrito · {cartCount} producto{cartCount!==1?'s':''} · S/ {cart.reduce((s,i)=>s+i.product.precio_soles*i.cantidad,0).toFixed(2)}
                   </button>
                 </div>
@@ -429,7 +429,7 @@ export default function ResourcesView({ profile }: Props) {
             <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
               {orders.length===0 ? (
                 <div style={{ background:'var(--c-card)',borderRadius:24,border:'1.5px solid var(--c-border-light)',padding:'48px 24px',textAlign:'center' }}>
-                  <div style={{ width:64,height:64,background:'#eff6ff',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><Package size={28} color="#93c5fd"/></div>
+                  <div style={{ width:64,height:64,background:'var(--c-stat-blue)',borderRadius:18,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 14px' }}><Package size={28} color="#93c5fd"/></div>
                   <p style={{ fontWeight:700,fontSize:14,color:'var(--c-text-muted)',margin:'0 0 6px' }}>Sin pedidos realizados</p>
                   <p style={{ fontSize:12,color:'var(--c-text-placeholder)' }}>Tus pedidos aparecerán aquí</p>
                 </div>
