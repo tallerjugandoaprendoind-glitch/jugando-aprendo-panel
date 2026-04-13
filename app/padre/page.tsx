@@ -32,6 +32,7 @@ import NotifWhatsAppPanel from './components/NotifWhatsAppPanel'
 import StoreView from './components/StoreView'
 import DocumentosView from '@/app/admin/components/DocumentosView'
 import ChatInterface from './components/ChatInterface'
+import ChatFamilias from './components/ChatFamilias'
 import MensajesView from './components/MensajesView'
 import EngagementView from './components/EngagementView'
 import PushNotificationBanner from '../../components/PushNotificationBanner'
@@ -66,6 +67,7 @@ export default function ParentDashboard() {
     { id: 'perfil',      icon: User,      label: t('nav.miperfil') },
   ]
   const [activeView, setActiveView] = useState('home')
+  const [familiasUnread, setFamiliasUnread] = useState(0)
   const [showMoreMenu, setShowMoreMenu] = useState(false) 
   
   // Auto-navegar a perfil si el padre regresa del OAuth de calendario
@@ -527,6 +529,7 @@ export default function ParentDashboard() {
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                 <NavBtnDesktop icon={<Bell size={17}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
+                <NavBtnDesktop icon={<MessageCircle size={17}/>} label="Chat Equipo" active={activeView==='chat-familias'} onClick={()=>setActiveView('chat-familias')} badge={familiasUnread > 0 ? familiasUnread : null} />
                 <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'||activeView==='tienda'||activeView==='documentos'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
@@ -644,12 +647,22 @@ export default function ParentDashboard() {
 
                     {(activeView === 'misformularios' || activeView === 'tienda' || activeView === 'documentos') && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} initialTab={activeView === 'tienda' ? 'store' : activeView === 'documentos' ? 'documentos' : 'forms'} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
+                    {activeView === 'chat-familias' && selectedChild && (
+                      <ChatFamilias childId={selectedChild.id} childName={selectedChild.name} profile={profile} />
+                    )}
+                    {activeView === 'chat-familias' && !selectedChild && (
+                      <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
+                        <MessageCircle size={32} className="text-slate-300"/>
+                        <p className="font-bold text-slate-500">Selecciona un hijo/a para abrir el chat</p>
+                      </div>
+                    )}
                     {activeView === 'engagement' && <EngagementView childId={selectedChild?.id || ''} />}
                     {activeView === 'profile' && (
                         <div className="animate-fade-in">
                           <ProfileView
                               profile={profile}
-                              onUpdate={() => window.location.reload()}
+                              onLogout={()=>{localStorage.removeItem('padre_email'); supabase.auth.signOut(); router.push('/login')}}
+                              onChangePass={()=>setShowChangePass(true)}
                               onEditProfile={()=>setShowEditProfile(true)}
                               onPrivacy={()=>setShowPrivacy(true)}
                               onHelp={()=>setShowHelp(true)}
@@ -694,6 +707,7 @@ export default function ParentDashboard() {
                     <div className="absolute bottom-14 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 w-52 z-50 flex flex-col gap-1">
                       {[
                         { id: 'engagement', icon: <Zap size={18}/>, label: 'Act. en Casa' },
+                        { id: 'chat-familias', icon: <MessageCircle size={18}/>, label: 'Chat Equipo' },
                         { id: 'chat',        icon: <Sparkles size={18}/>, label: 'Asistente IA' },
                         { id: 'mensajes',    icon: <MessageCircle size={18}/>, label: 'Mensajes' },
                                       ].map(item => (

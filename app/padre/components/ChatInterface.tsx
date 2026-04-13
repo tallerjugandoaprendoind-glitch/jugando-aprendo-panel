@@ -3,7 +3,7 @@
 import { useI18n } from '@/lib/i18n-context'
 import { toBCP47 } from '@/lib/i18n'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Send, Sparkles, Heart, ShoppingBag, Mic, MicOff, Volume2, VolumeX, RefreshCw, StopCircle } from 'lucide-react'
 
@@ -225,6 +225,63 @@ function RobotAvatar({ size = 36, animated = false }: { size?: number; animated?
 }
 
 // ── Burbuja de mensaje ────────────────────────────────────────────────────────
+// ── Simple markdown renderer ─────────────────────────────────────────────────
+function renderMarkdown(text: string) {
+  if (!text) return null
+  const lines = text.split('\n')
+  const elements: ReactNode[] = []
+  let i = 0
+  while (i < lines.length) {
+    const line = lines[i]
+    // Empty line
+    if (!line.trim()) { elements.push(<div key={i} className="h-2"/>); i++; continue }
+    // H3 ### 
+    if (line.startsWith('### ')) {
+      elements.push(<p key={i} className="font-black text-sm text-slate-800 mt-3 mb-1">{parseInline(line.slice(4))}</p>); i++; continue
+    }
+    // Bold line **text** alone
+    if (line.startsWith('**') && line.endsWith('**') && line.length > 4) {
+      elements.push(<p key={i} className="font-black text-sm text-slate-800 mt-2 mb-0.5">{line.slice(2, -2)}</p>); i++; continue
+    }
+    // Bullet
+    if (line.startsWith('- ') || line.startsWith('• ')) {
+      elements.push(
+        <div key={i} className="flex items-start gap-2 text-sm text-slate-700 leading-relaxed">
+          <span className="text-indigo-400 font-black mt-0.5 flex-shrink-0">·</span>
+          <span>{parseInline(line.slice(2))}</span>
+        </div>
+      ); i++; continue
+    }
+    // Numbered list
+    const numMatch = line.match(/^(\d+)\. (.+)/)
+    if (numMatch) {
+      elements.push(
+        <div key={i} className="flex items-start gap-2 text-sm text-slate-700 leading-relaxed">
+          <span className="text-indigo-500 font-black text-xs mt-0.5 flex-shrink-0 w-4">{numMatch[1]}.</span>
+          <span>{parseInline(numMatch[2])}</span>
+        </div>
+      ); i++; continue
+    }
+    // Regular paragraph
+    elements.push(<p key={i} className="text-sm text-slate-700 leading-relaxed">{parseInline(line)}</p>)
+    i++
+  }
+  return <div className="flex flex-col gap-1">{elements}</div>
+}
+
+function parseInline(text: string): ReactNode {
+  // Handle **bold** inline
+  const parts = text.split(/\*\*(.*?)\*\*/g)
+  if (parts.length === 1) return text
+  return (
+    <>
+      {parts.map((p, i) =>
+        i % 2 === 1 ? <strong key={i} className="font-black text-slate-800">{p}</strong> : p
+      )}
+    </>
+  )
+}
+
 function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; onNavigateToStore?: () => void; onWellbeingAnswer?: (opt: string) => void }) {
   const { t } = useI18n()
 
@@ -292,7 +349,7 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
               <span className="text-xs font-black text-blue-500 uppercase tracking-widest">{t('ui.from_therapist')}</span>
             </div>
           )}
-          <p className="whitespace-pre-wrap">{m.text}</p>
+          {renderMarkdown(m.text)}
         </div>
 
         {/* Tarjeta producto sugerido */}
