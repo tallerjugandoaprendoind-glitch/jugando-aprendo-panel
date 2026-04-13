@@ -219,8 +219,8 @@ export default function ChatFamilias({ profile, userId: _userId, userName: _user
       {/* ── LISTA DE FAMILIAS ── */}
       <div style={{
         width: 280, flexShrink: 0, borderRight: '1px solid var(--card-border, #e2e8f0)',
-        display: mobileShowChat ? 'none' : 'flex', flexDirection: 'column',
-      }} className="lg:flex">
+        flexDirection: 'column',
+      }} className={`${mobileShowChat ? 'hidden' : 'flex'} lg:flex`}>
         {/* Header lista */}
         <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--card-border, #e2e8f0)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
@@ -289,7 +289,8 @@ export default function ChatFamilias({ profile, userId: _userId, userName: _user
             {/* Chat header */}
             <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--card-border, #e2e8f0)', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
               <button onClick={() => { setMobileShowChat(false); setSelected(null) }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', display: 'flex' }} className="lg:hidden">
+                className="lg:hidden"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--text-muted)', display: 'flex' }}>
                 <ChevronLeft size={20}/>
               </button>
               <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg,#eff6ff,#dbeafe)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 800, color: '#2563eb', flexShrink: 0 }}>
