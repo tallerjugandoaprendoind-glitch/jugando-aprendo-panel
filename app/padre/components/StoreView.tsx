@@ -296,37 +296,43 @@ export default function StoreView({ profile }: { profile: any }) {
         }
       `}</style>
 
-      {/* Hero */}
-      <div style={{ background: 'linear-gradient(135deg,#2563eb,#3b82f6,#0ea5e9)', borderRadius: 28, padding: '22px 24px', color: '#fff', boxShadow: '0 16px 50px rgba(37,99,235,.3)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -20, right: -20, width: 120, height: 120, background: 'rgba(255,255,255,.08)', borderRadius: '50%' }}/>
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <ShoppingBag size={15} style={{ opacity: .8 }}/>
-              <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2, color: 'rgba(255,255,255,.7)' }}>Tienda</span>
+      {/* ── Clean header with tabs ── */}
+      <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100">
+        <div>
+          <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
+              <ShoppingBag size={15} className="text-blue-600"/>
             </div>
-            <h2 style={{ fontSize: 22, fontWeight: 900, margin: '0 0 4px' }}>Productos y materiales</h2>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,.65)', margin: 0 }}>{t('familias.materialesTerapeuticos')}</p>
-          </div>
-          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-            <button onClick={() => setView(v => v === 'catalogo' ? 'mis-pedidos' : 'catalogo')}
-              style={{ padding: '8px 14px', background: 'rgba(255,255,255,.2)', border: 'none', color: '#fff', borderRadius: 12, fontSize: 12, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-              {view === 'catalogo' ? `📦 Pedidos (${orders.length})` : '← Tienda'}
-            </button>
-            {view === 'catalogo' && cartCount > 0 && (
-              <button onClick={() => setShowCart(true)} style={{ padding: '8px 14px', background: 'rgba(255,255,255,.25)', border: 'none', color: '#fff', borderRadius: 12, fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}>
-                <ShoppingCart size={16}/> {cartCount}
-              </button>
-            )}
-          </div>
+            {view === 'catalogo' ? 'Tienda' : 'Mis pedidos'}
+          </h2>
+          <p className="text-xs text-slate-400 mt-0.5 ml-10">
+            {view === 'catalogo' ? `${products.length} productos disponibles` : `${orders.length} pedido${orders.length !== 1 ? 's' : ''}`}
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
-          {[[products.filter(p=>p.destacado).length,'Destacados'],[products.length,'Productos'],[orders.length,'Mis pedidos']].map(([v,l])=>(
-            <div key={l as string} style={{ background: 'rgba(255,255,255,.15)', backdropFilter: 'blur(8px)', borderRadius: 12, padding: '8px 14px', textAlign: 'center' }}>
-              <div style={{ fontSize: 18, fontWeight: 900, lineHeight: 1 }}>{v}</div>
-              <div style={{ fontSize: 10, color: 'rgba(255,255,255,.7)', fontWeight: 700, marginTop: 1 }}>{l}</div>
-            </div>
-          ))}
+        <div className="flex items-center gap-2">
+          {/* Cart button */}
+          {view === 'catalogo' && cartCount > 0 && (
+            <button onClick={() => setShowCart(true)}
+              className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors">
+              <ShoppingCart size={15}/> {cartCount}
+            </button>
+          )}
+          {/* Toggle view */}
+          <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
+            <button onClick={() => setView('catalogo')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${view === 'catalogo' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>
+              Catálogo
+            </button>
+            <button onClick={() => setView('mis-pedidos')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${view === 'mis-pedidos' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>
+              📦 Pedidos
+              {orders.length > 0 && (
+                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${view === 'mis-pedidos' ? 'bg-blue-600 text-white' : 'bg-slate-300 text-slate-600'}`}>
+                  {orders.length}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
