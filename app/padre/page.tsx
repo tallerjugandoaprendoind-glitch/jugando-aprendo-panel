@@ -645,6 +645,11 @@ export default function ParentDashboard() {
                     {(activeView === 'misformularios' || activeView === 'tienda' || activeView === 'documentos') && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} initialTab={activeView === 'tienda' ? 'store' : activeView === 'documentos' ? 'documentos' : 'forms'} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
                     {activeView === 'engagement' && <EngagementView childId={selectedChild?.id || ''} />}
+                    {activeView === 'profile' && (
+                        <div className="animate-fade-in">
+                          <ProfileView
+                              profile={profile}
+                              onUpdate={() => window.location.reload()}
                               onEditProfile={()=>setShowEditProfile(true)}
                               onPrivacy={()=>setShowPrivacy(true)}
                               onHelp={()=>setShowHelp(true)}
