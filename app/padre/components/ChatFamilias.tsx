@@ -256,12 +256,23 @@ export default function ChatFamilias({ childId, childName, profile }: Props) {
   const audioChunksRef   = useRef<Blob[]>([])
   const recTimerRef      = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const bottomRef  = useRef<HTMLDivElement>(null)
-  const channelRef = useRef<any>(null)
-  const inputRef   = useRef<HTMLTextAreaElement>(null)
+  const bottomRef   = useRef<HTMLDivElement>(null)
+  const channelRef  = useRef<any>(null)
+  const inputRef    = useRef<HTMLTextAreaElement>(null)
+  const avatarCache = useRef<Record<string, string | null>>({})
 
   const userId   = profile?.id || ''
   const userName = profile?.full_name || 'Familia'
+
+  // Resuelve el avatar de un sender_id (con caché)
+  const resolveAvatar = useCallback(async (senderId: string): Promise<string | null> => {
+    if (senderId in avatarCache.current) return avatarCache.current[senderId]
+    try {
+      const { data } = await supabase.from('profiles').select('avatar_url').eq('id', senderId).single()
+      avatarCache.current[senderId] = data?.avatar_url || null
+    } catch { avatarCache.current[senderId] = null }
+    return avatarCache.current[senderId]
+  }, [])
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50)
@@ -295,8 +306,10 @@ export default function ChatFamilias({ childId, childName, profile }: Props) {
     channelRef.current = supabase
       .channel(`chat_familias_${childId}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_familias', filter: `child_id=eq.${childId}` },
-        (payload) => {
+        async (payload) => {
           const newMsg = payload.new as Msg
+          // Resolver avatar desde caché o profiles
+          newMsg.sender_avatar = (await resolveAvatar(newMsg.sender_id)) ?? undefined
           setMessages(prev => prev.find(m => m.id === newMsg.id) ? prev : [...prev, newMsg])
           scrollToBottom()
           if (newMsg.sender_id !== userId)
@@ -304,7 +317,7 @@ export default function ChatFamilias({ childId, childName, profile }: Props) {
         })
       .subscribe()
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
-  }, [childId, userId, scrollToBottom])
+  }, [childId, userId, scrollToBottom, resolveAvatar])
 
   // ── Upload helper ─────────────────────────────────────────────────────────────
   const uploadFile = async (file: File) => {

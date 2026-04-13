@@ -1,13 +1,12 @@
 // app/api/chat-familias/route.ts
-// Chat grupal privado por familia — padre + admin + especialistas
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 
-// GET — cargar mensajes de un child_id
+// GET — cargar mensajes con avatar de cada remitente
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const childId = searchParams.get('child_id')
-  const userId  = searchParams.get('user_id')  // para marcar como leídos
+  const userId  = searchParams.get('user_id')
   const limit   = Number(searchParams.get('limit') || 60)
 
   if (!childId) return NextResponse.json({ error: 'child_id requerido' }, { status: 400 })
@@ -15,18 +14,36 @@ export async function GET(req: NextRequest) {
   try {
     const { data, error } = await supabaseAdmin
       .from('chat_familias')
-      .select('id, content, sender_id, sender_role, sender_name, read_by, message_type, file_url, created_at')
+      .select('id, content, sender_id, sender_role, sender_name, read_by, message_type, file_url, file_name, file_size, created_at')
       .eq('child_id', childId)
       .order('created_at', { ascending: true })
       .limit(limit)
 
     if (error) throw error
 
-    // Marcar como leídos en background si viene userId
-    if (userId && data?.length) {
-      const toUpdate = data.filter(m => !m.read_by?.includes(userId))
-      // Fire and forget — wrap in async IIFE to avoid blocking
-      ;(async () => {
+    const messages = data || []
+
+    // Obtener avatares únicos desde profiles
+    const senderIds = [...new Set(messages.map(m => m.sender_id))]
+    if (senderIds.length > 0) {
+      const { data: profiles } = await supabaseAdmin
+        .from('profiles')
+        .select('id, avatar_url')
+        .in('id', senderIds)
+
+      const avatarMap: Record<string, string | null> = {}
+      profiles?.forEach(p => { avatarMap[p.id] = p.avatar_url })
+
+      // Inyectar sender_avatar en cada mensaje
+      messages.forEach(m => {
+        (m as any).sender_avatar = avatarMap[m.sender_id] || null
+      })
+    }
+
+    // Marcar como leídos en background
+    if (userId && messages.length) {
+      const toUpdate = messages.filter(m => !m.read_by?.includes(userId));
+      (async () => {
         for (const m of toUpdate) {
           try {
             await supabaseAdmin
@@ -38,7 +55,7 @@ export async function GET(req: NextRequest) {
       })()
     }
 
-    return NextResponse.json({ data: data || [] })
+    return NextResponse.json({ data: messages })
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })
   }
@@ -47,7 +64,7 @@ export async function GET(req: NextRequest) {
 // POST — enviar mensaje
 export async function POST(req: NextRequest) {
   try {
-    const { child_id, content, sender_id, sender_role, sender_name, message_type, file_url } = await req.json()
+    const { child_id, content, sender_id, sender_role, sender_name, message_type, file_url, file_name, file_size } = await req.json()
 
     if (!child_id || !content?.trim() || !sender_id || !sender_name) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
@@ -62,8 +79,10 @@ export async function POST(req: NextRequest) {
         sender_role:  sender_role || 'padre',
         sender_name,
         message_type: message_type || 'text',
-        file_url:     file_url || null,
-        read_by:      [sender_id],  // el remitente ya lo "leyó"
+        file_url:     file_url  || null,
+        file_name:    file_name || null,
+        file_size:    file_size || null,
+        read_by:      [sender_id],
       })
       .select()
       .single()
@@ -81,7 +100,6 @@ export async function PATCH(req: NextRequest) {
     const { child_id, user_id } = await req.json()
     if (!child_id || !user_id) return NextResponse.json({ ok: false })
 
-    // Obtener mensajes no leídos por este usuario
     const { data: msgs } = await supabaseAdmin
       .from('chat_familias')
       .select('id, read_by')
