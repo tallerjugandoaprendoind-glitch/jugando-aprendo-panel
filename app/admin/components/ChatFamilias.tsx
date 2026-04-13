@@ -52,9 +52,9 @@ function DayDivider({ date }: { date: string }) {
   )
 }
 
-interface Props { profile: any }
+interface Props { profile?: any; userId?: string; userName?: string; isDark?: boolean }
 
-export default function ChatFamilias({ profile }: Props) {
+export default function ChatFamilias({ profile, userId: _userId, userName: _userName, isDark: _isDark }: Props) {
   const [families, setFamilies]     = useState<Family[]>([])
   const [selected, setSelected]     = useState<Family | null>(null)
   const [messages, setMessages]     = useState<Msg[]>([])
@@ -68,8 +68,8 @@ export default function ChatFamilias({ profile }: Props) {
   const channelRef  = useRef<any>(null)
   const inputRef    = useRef<HTMLTextAreaElement>(null)
 
-  const userId   = profile?.id || ''
-  const userName = profile?.full_name || profile?.name || 'Equipo'
+  const userId   = _userId || profile?.id || ''
+  const userName = _userName || profile?.full_name || profile?.name || 'Equipo'
   const userRole = profile?.role || 'admin'
 
   const scrollToBottom = useCallback(() => {

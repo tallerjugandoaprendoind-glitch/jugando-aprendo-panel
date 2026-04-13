@@ -11,6 +11,7 @@ import {
   Reply, Copy, Forward, Pin, Star, Flag, Trash2,
   MoreVertical, Camera, Smile
 } from 'lucide-react'
+import ChatFamilias from './ChatFamilias'
 
 // ─── Emojis de reacción (estilo WhatsApp) ────────────────────────────────────
 const REACTION_EMOJIS = ['👍', '❤️', '😂', '😮', '😢', '🙏']
@@ -256,6 +257,7 @@ export default function ChatEspecialistas({
 }) {
   const toast = useToast()
   const { isDark } = useTheme()
+  const [activeMainTab, setActiveMainTab] = useState<'equipo' | 'familias'>('equipo')
   const [especialistas, setEspecialistas] = useState<Especialista[]>([])
   const [seleccionado, setSeleccionado] = useState<Especialista | null>(null)
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
@@ -684,7 +686,25 @@ export default function ChatEspecialistas({
         />
       )}
 
-      <div className={`flex h-[calc(100vh-140px)] min-h-[500px] rounded-2xl border overflow-hidden shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
+      {/* ── Main tab selector ── */}
+      <div className={`flex items-center gap-1 mb-3 p-1 rounded-xl w-fit ${isDark ? 'bg-[#21262d]' : 'bg-slate-100'}`}>
+        {(['equipo', 'familias'] as const).map(tab => (
+          <button key={tab} onClick={() => setActiveMainTab(tab)}
+            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeMainTab === tab
+              ? isDark ? 'bg-[#161b22] text-slate-100 shadow-sm' : 'bg-white text-slate-800 shadow-sm'
+              : isDark ? 'text-slate-500' : 'text-slate-500'
+            }`}>
+            {tab === 'equipo' ? '👥 Chat Equipo' : '👨‍👩‍👧 Chat Familias'}
+          </button>
+        ))}
+      </div>
+
+      {activeMainTab === 'familias' ? (
+        <div className={`h-[calc(100vh-185px)] min-h-[450px] rounded-2xl border overflow-hidden shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
+          <ChatFamilias userId={userId} userName={userName} isDark={isDark} />
+        </div>
+      ) : (
+      <div className={`flex h-[calc(100vh-185px)] min-h-[450px] rounded-2xl border overflow-hidden shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
 
         {/* ── Panel izquierdo ── */}
         <div className={`w-[280px] flex-shrink-0 border-r flex flex-col ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50/50 border-slate-100'}`}>
@@ -1236,6 +1256,7 @@ export default function ChatEspecialistas({
           )}
         </div>
       </div>
+      )}
     </>
   )
 }
