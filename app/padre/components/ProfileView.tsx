@@ -189,7 +189,6 @@ function WhatsAppSection({ profile, onUpdated }: { profile: any; onUpdated: (p: 
 function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy, onHelp, onPhoneUpdated }: any) {
   const { t } = useI18n()
   const toast = useToast()
-  const supabase = supabaseClient
   const fileRef = useRef<HTMLInputElement>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null)
   const [uploadingPhoto, setUploadingPhoto] = useState(false)
