@@ -10,6 +10,7 @@ import {
   Download, Eye, Play, Image as ImageIcon, Music, Sparkles, Bell, Gift
 } from 'lucide-react'
 import StoreView from './StoreView'
+import DocumentosView from '@/app/admin/components/DocumentosView'
 import { supabase } from '@/lib/supabase'
 
 // ─── DYNAMIC FORM RENDERER (simplified for parents) ─────────────────────────
@@ -317,10 +318,10 @@ function ResourceCard({ resource }: { resource: any; key?: any }) {
 }
 
 // ─── MAIN PARENT FORMS + RESOURCES VIEW ─────────────────────────────────────
-function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initialTab }: { profile: any; selectedChild: any; onFormsLoaded?: (count: number) => void; initialTab?: 'forms' | 'resources' | 'store' }) {
+function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initialTab }: { profile: any; selectedChild: any; onFormsLoaded?: (count: number) => void; initialTab?: 'forms' | 'resources' | 'store' | 'documentos' }) {
   const { t, locale } = useI18n()
 
-  const [activeTab, setActiveTab] = useState<'forms' | 'resources' | 'store'>(initialTab || 'forms')
+  const [activeTab, setActiveTab] = useState<'forms' | 'resources' | 'store' | 'documentos'>(initialTab || 'forms')
   const [pendingForms, setPendingForms] = useState<any[]>([])
   const [expiredForms, setExpiredForms] = useState<any[]>([])
   const [completedForms, setCompletedForms] = useState<any[]>([])
@@ -478,6 +479,13 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
             boxShadow:activeTab==='store'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
           🛍️ Tienda
         </button>
+        <button onClick={() => setActiveTab('documentos')}
+          style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
+            background:activeTab==='documentos'?'#fff':'transparent',
+            color:activeTab==='documentos'?'#4f46e5':'#94a3b8',
+            boxShadow:activeTab==='documentos'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
+          📁 Documentos
+        </button>
       </div>
 
       {isLoading ? (
@@ -628,9 +636,26 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
             </>
           )}
         </div>
-      ) : (
+      ) : activeTab === 'store' ? (
         /* STORE TAB */
         <StoreView profile={profile} />
+      ) : (
+        /* DOCUMENTOS TAB */
+        <div>
+          {selectedChild ? (
+            <DocumentosView
+              childId={selectedChild.id}
+              childName={selectedChild.name}
+              currentRole="padre"
+            />
+          ) : (
+            <div style={{ textAlign:'center',padding:'60px 20px' }}>
+              <div style={{ fontSize:40,marginBottom:12 }}>📁</div>
+              <p style={{ fontWeight:700,fontSize:14,color:'#64748b',margin:'0 0 6px' }}>Selecciona un hijo/a</p>
+              <p style={{ fontSize:12,color:'#94a3b8' }}>Elige un paciente para ver sus documentos.</p>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Form modal */}

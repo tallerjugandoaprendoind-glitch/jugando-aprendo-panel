@@ -527,8 +527,7 @@ export default function ParentDashboard() {
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                 <NavBtnDesktop icon={<Bell size={17}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
-                <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'||activeView==='tienda'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
-                <NavBtnDesktop icon={<FolderOpen size={17}/>} label="Documentos" active={activeView==='documentos'} onClick={()=>setActiveView('documentos')} />
+                <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'||activeView==='tienda'||activeView==='documentos'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
 
@@ -643,31 +642,9 @@ export default function ParentDashboard() {
                         </div>
                     )}
 
-                    {(activeView === 'misformularios' || activeView === 'tienda') && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} initialTab={activeView === 'tienda' ? 'store' : 'forms'} />}
+                    {(activeView === 'misformularios' || activeView === 'tienda' || activeView === 'documentos') && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} initialTab={activeView === 'tienda' ? 'store' : activeView === 'documentos' ? 'documentos' : 'forms'} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
                     {activeView === 'engagement' && <EngagementView childId={selectedChild?.id || ''} />}
-                    {activeView === 'documentos' && selectedChild && (
-                      <div className="p-4">
-                        <DocumentosView
-                          childId={selectedChild.id}
-                          childName={selectedChild.name}
-                          currentRole="padre"
-                        />
-                      </div>
-                    )}
-                    {activeView === 'documentos' && !selectedChild && (
-                      <div className="p-8 text-center text-slate-400">
-                        <FolderOpen size={36} className="mx-auto mb-3 opacity-40" />
-                        <p className="font-black text-sm">Selecciona un hijo/a para ver sus documentos</p>
-                      </div>
-                    )}
-
-                    {activeView === 'profile' && (
-                        <div className="space-y-4 pb-6">
-                          <ProfileView 
-                              profile={profile} 
-                              onLogout={()=>{localStorage.removeItem('padre_email'); router.push('/login')}} 
-                              onChangePass={()=>setShowChangePass(true)}
                               onEditProfile={()=>setShowEditProfile(true)}
                               onPrivacy={()=>setShowPrivacy(true)}
                               onHelp={()=>setShowHelp(true)}
@@ -700,7 +677,6 @@ export default function ParentDashboard() {
                     </button>
                 </div>
                 <NavBtnMobile icon={<User size={22}/>} label="Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
-                <NavBtnMobile icon={<FolderOpen size={22}/>} label="Docs" active={activeView==='documentos'} onClick={()=>setActiveView('documentos')} />
                 <div className="relative">
                   <button
                     onClick={()=>setShowMoreMenu(v=>!v)}
