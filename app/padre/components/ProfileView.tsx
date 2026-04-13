@@ -1,13 +1,13 @@
 'use client'
 
 import { useI18n } from '@/lib/i18n-context'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/components/Toast'
 import {
   ChevronRight, HelpCircle, Lock, LogOut, Mail, Phone, User,
   Check, Unlink, Loader2, CalendarDays, Shield, Star, Settings,
-  Bell, MessageCircle, Heart, CheckCircle, AlertCircle, X
+  Bell, MessageCircle, Heart, CheckCircle, AlertCircle, X, Camera
 } from 'lucide-react'
 import { InfoRow, HelpItem } from './shared'
 
@@ -188,55 +188,121 @@ function WhatsAppSection({ profile, onUpdated }: { profile: any; onUpdated: (p: 
 
 function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy, onHelp, onPhoneUpdated }: any) {
   const { t } = useI18n()
+  const toast = useToast()
+  const supabase = supabaseClient
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null)
+  const [uploadingPhoto, setUploadingPhoto] = useState(false)
   const initial = profile?.full_name?.charAt(0)||'U'
   const name = profile?.full_name||'Usuario'
   const email = profile?.email||'—'
   const phone = profile?.phone
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !profile?.id) return
+    setUploadingPhoto(true)
+    try {
+      // Convert to base64 and upload via a simple fetch
+      const reader = new FileReader()
+      reader.onload = async () => {
+        try {
+          const ext = file.name.split('.').pop()
+          const path = `avatars/${profile.id}.${ext}`
+          const { error: upErr } = await supabase.storage
+            .from('store-images')
+            .upload(path, file, { upsert: true, contentType: file.type })
+          if (upErr) throw upErr
+          const { data: { publicUrl } } = supabase.storage.from('store-images').getPublicUrl(path)
+          const url = publicUrl + '?t=' + Date.now()
+          await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', profile.id)
+          setAvatarUrl(url)
+          toast.success('Foto actualizada ✅')
+        } catch (err: any) {
+          toast.error('Error: ' + (err.message || 'No se pudo subir la foto'))
+        } finally { setUploadingPhoto(false) }
+      }
+      reader.readAsDataURL(file)
+    } catch { toast.error('Error al leer el archivo'); setUploadingPhoto(false) }
+  }
+
   return (
-    <div className="flex flex-col gap-5 pb-10 w-full">
+    <div className="flex flex-col gap-4 pb-10 w-full max-w-2xl mx-auto">
       <style>{`
-        @keyframes pv-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-        @keyframes pv-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes pv-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
         .pv-card{animation:pv-in .3s ease both}
         .pv-card:nth-child(1){animation-delay:.04s}.pv-card:nth-child(2){animation-delay:.08s}
         .pv-card:nth-child(3){animation-delay:.12s}.pv-card:nth-child(4){animation-delay:.16s}
       `}</style>
 
-      {/* ── HEADER ── */}
-      <div className="pv-card flex items-center justify-between gap-4 pb-4 border-b border-slate-100">
-        <h1 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0">
-            <User size={17} className="text-indigo-600"/>
-          </div>
-          Mi Perfil
-        </h1>
-      </div>
+      {/* ── HERO CARD ── */}
+      <div className="pv-card relative rounded-3xl overflow-hidden"
+        style={{ background: 'linear-gradient(135deg,#1e1b4b 0%,#3730a3 60%,#4f46e5 100%)', minHeight: 180 }}>
+        {/* Decorative circles */}
+        <div style={{ position:'absolute',top:-40,right:-40,width:200,height:200,background:'rgba(255,255,255,.07)',borderRadius:'50%',pointerEvents:'none' }}/>
+        <div style={{ position:'absolute',bottom:-30,left:20,width:120,height:120,background:'rgba(99,102,241,.25)',borderRadius:'50%',pointerEvents:'none' }}/>
 
-      {/* ── PROFILE CARD — specialist style ── */}
-      <div className="pv-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-5 flex items-center gap-5">
-          {/* Avatar */}
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-2xl font-black text-white flex-shrink-0 shadow-lg">
-            {initial}
+        <div className="relative z-10 px-6 pt-8 pb-6 flex items-end gap-5">
+          {/* Avatar upload */}
+          <div className="relative group cursor-pointer flex-shrink-0" onClick={() => fileRef.current?.click()}>
+            <div className="relative">
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Foto" className="w-20 h-20 rounded-2xl object-cover shadow-xl" style={{ border:'3px solid rgba(255,255,255,.3)' }}/>
+              ) : (
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black text-white shadow-xl" style={{ background:'rgba(255,255,255,.2)', border:'3px solid rgba(255,255,255,.3)', backdropFilter:'blur(8px)' }}>
+                  {initial}
+                </div>
+              )}
+              {/* Overlay */}
+              <div className="absolute inset-0 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style={{ background:'rgba(0,0,0,.55)' }}>
+                {uploadingPhoto
+                  ? <Loader2 size={20} className="text-white animate-spin"/>
+                  : <div className="flex flex-col items-center gap-1">
+                      <Camera size={18} className="text-white"/>
+                      <span className="text-white text-[9px] font-bold">Cambiar</span>
+                    </div>
+                }
+              </div>
+              {/* Camera badge */}
+              {!uploadingPhoto && (
+                <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-lg">
+                  <Camera size={13} className="text-indigo-600"/>
+                </div>
+              )}
+            </div>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload}/>
           </div>
-          <div className="flex-1 min-w-0">
-            <h2 className="font-black text-lg text-slate-800 leading-tight">{name}</h2>
-            <p className="text-sm text-slate-400 mt-0.5 flex items-center gap-1.5"><Mail size={12}/>{email}</p>
-            {phone
-              ? <p className="text-sm text-emerald-600 font-semibold mt-0.5 flex items-center gap-1.5"><Phone size={12}/>{phone}</p>
-              : <button onClick={onEditProfile} className="text-xs text-amber-600 font-bold mt-0.5 flex items-center gap-1 hover:text-amber-700 transition-colors bg-none border-none cursor-pointer p-0">📱 Agrega tu WhatsApp</button>
-            }
+
+          {/* Info */}
+          <div className="flex-1 min-w-0 pb-1">
+            <h2 className="font-black text-xl text-white leading-tight tracking-tight">{name}</h2>
+            <p className="text-sm mt-1 flex items-center gap-1.5" style={{ color:'rgba(255,255,255,.65)' }}>
+              <Mail size={12}/>{email}
+            </p>
+            {phone && (
+              <p className="text-sm mt-0.5 flex items-center gap-1.5 font-semibold" style={{ color:'#6ee7b7' }}>
+                <Phone size={12}/>{phone}
+              </p>
+            )}
+            <p className="text-[10px] mt-2 font-bold uppercase tracking-widest" style={{ color:'rgba(255,255,255,.4)' }}>
+              Portal Familias · Jugando Aprendo
+            </p>
           </div>
-          <button onClick={onEditProfile} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500 flex-shrink-0">
-            <Settings size={16}/>
-          </button>
+        </div>
+
+        {/* Tap to change photo hint */}
+        <div className="relative z-10 px-6 py-2.5 flex items-center gap-2" style={{ background:'rgba(0,0,0,.2)', borderTop:'1px solid rgba(255,255,255,.1)' }}>
+          <Camera size={12} style={{ color:'rgba(255,255,255,.5)', flexShrink:0 }}/>
+          <p className="text-[11px] font-medium" style={{ color:'rgba(255,255,255,.5)' }}>
+            {uploadingPhoto ? 'Subiendo foto...' : 'Toca la foto para cambiarla'}
+          </p>
         </div>
       </div>
 
       {/* ── MI CUENTA ── */}
-      <div className="pv-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-100">
+      <div className="pv-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+          <div className="w-1 h-4 bg-indigo-500 rounded-full"/>
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mi cuenta</p>
         </div>
         <MenuItem icon={<User size={17} color="#7c3aed"/>} label="Editar perfil" sub="Nombre y teléfono" onClick={onEditProfile}/>
@@ -246,10 +312,10 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
       </div>
 
       {/* ── CALENDARIOS ── */}
-      <div className="pv-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-slate-100">
+      <div className="pv-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+          <div className="w-1 h-4 bg-blue-500 rounded-full"/>
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Calendarios vinculados</p>
-          <p className="text-xs text-slate-300 mt-0.5">Tus citas aparecerán automáticamente</p>
         </div>
         <CalBtn label="Google Calendar" icon="📅" grad="linear-gradient(135deg,#4285f4,#1a73e8)" profile={profile} apiBase="google-calendar" paramKey="gcal"/>
         <CalBtn label="Outlook Calendar" icon={<svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>} grad="linear-gradient(135deg,#0078d4,#106ebe)" profile={profile} apiBase="microsoft-calendar" paramKey="mscal"/>
@@ -258,18 +324,6 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
       {/* ── WHATSAPP ── */}
       <div className="pv-card">
         <WhatsAppSection profile={profile} onUpdated={onPhoneUpdated || (()=>{})}/>
-      </div>
-
-      {/* ── APP INFO ── */}
-      <div className="pv-card bg-white rounded-2xl border border-slate-200 shadow-sm px-5 py-4 flex items-center justify-between">
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Versión</p>
-          <p className="font-black text-xl text-slate-800 leading-none">2.0.0</p>
-          <p className="text-xs text-slate-400 mt-1">Jugando Aprendo · Portal de familias</p>
-        </div>
-        <div className="w-12 h-12 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center justify-center">
-          <Star size={20} className="text-indigo-500"/>
-        </div>
       </div>
 
       {/* ── CERRAR SESIÓN ── */}
