@@ -560,16 +560,24 @@ export default function ParentDashboard() {
                         </span>
                     )}
                 </button>
-                <div className="flex items-center justify-between px-1">
-                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Apariencia</span>
-                    <ThemeToggleButton />
-                </div>
             </div>
         </aside>
 
         {/* === CONTENIDO PRINCIPAL === */}
         <div className="flex-1 flex flex-col h-full relative">
-            
+
+            {/* 🖥️ HEADER DESKTOP */}
+            <header className="hidden lg:flex bg-white dark:bg-[#0d1117]/95 backdrop-blur-xl px-6 h-[60px] justify-end items-center border-b border-slate-100 dark:border-[#21262d] sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.04)] gap-2">
+                <ThemeToggleButton />
+                <button onClick={handleOpenNotifications} className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-[#161b22] hover:bg-blue-50 dark:bg-blue-900/20 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:text-blue-400 flex items-center justify-center relative transition-colors active:scale-95 border border-slate-200 dark:border-[#30363d]">
+                    <Bell size={16}/>
+                    {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
+                    )}
+                </button>
+                <LocaleSelector compact={true} />
+            </header>
+
             {/* 📱 HEADER MÓVIL */}
             <header className="lg:hidden bg-white dark:bg-[#0d1117]/95 backdrop-blur-xl px-4 h-[60px] flex justify-between items-center border-b border-slate-100 dark:border-[#21262d] sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-3">
