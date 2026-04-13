@@ -62,7 +62,6 @@ export default function ParentDashboard() {
     { id: 'home',        icon: Home,      label: t('nav.inicio') },
     { id: 'citas',       icon: Calendar,  label: t('nav.miscitas') },
     { id: 'actividades', icon: Zap,       label: t('nav.actividades') },
-    { id: 'mensajes',    icon: MessageCircle, label: t('nav.mensajes') },
     { id: 'recursos',    icon: BookOpen,  label: 'Centro de Recursos' },
     { id: 'perfil',      icon: User,      label: t('nav.miperfil') },
   ]
@@ -505,9 +504,17 @@ export default function ParentDashboard() {
 
             {/* Logo header */}
             <div className="flex items-center gap-3 px-5 h-[60px] border-b border-slate-100/80 flex-shrink-0">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-base shadow-md shadow-blue-200/50">
-                    {profile?.full_name?.charAt(0) || 'F'}
-                </div>
+                {profile?.avatar_url ? (
+                    <img
+                        src={profile.avatar_url}
+                        alt="Foto de perfil"
+                        className="w-8 h-8 rounded-xl object-cover shadow-md border border-slate-200 flex-shrink-0"
+                    />
+                ) : (
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-base shadow-md shadow-blue-200/50 flex-shrink-0">
+                        {profile?.full_name?.charAt(0) || 'F'}
+                    </div>
+                )}
                 <div className="min-w-0">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">{t('ui.welcome')}</p>
                     <p className="font-black text-[13px] text-slate-800 truncate">Fam. {profile?.full_name?.split(' ')[0]}</p>
@@ -524,12 +531,11 @@ export default function ParentDashboard() {
 
             {/* Nav */}
             <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
-                <NavBtnDesktop icon={<Home size={17}/>} label={t('familias.inicioProgreso')} active={activeView==='home'} onClick={()=>setActiveView('home')} />
+                <NavBtnDesktop icon={<Home size={17}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                 <NavBtnDesktop icon={<Calendar size={17}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
-                <NavBtnDesktop icon={<Bell size={17}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
-                <NavBtnDesktop icon={<MessageCircle size={17}/>} label="Chat Equipo" active={activeView==='chat-familias'} onClick={()=>setActiveView('chat-familias')} badge={familiasUnread > 0 ? familiasUnread : null} />
+                <NavBtnDesktop icon={<MessageCircle size={17}/>} label="Chat" active={activeView==='chat-familias'} onClick={()=>setActiveView('chat-familias')} badge={familiasUnread > 0 ? familiasUnread : null} />
                 <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'||activeView==='tienda'||activeView==='documentos'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
@@ -563,8 +569,18 @@ export default function ParentDashboard() {
             {/* 📱 HEADER MÓVIL */}
             <header className="lg:hidden bg-white/95 backdrop-blur-xl px-4 h-[60px] flex justify-between items-center border-b border-slate-100 sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-md shadow-blue-200/50 relative">
-                        {profile?.full_name?.charAt(0)}
+                    <div className="relative flex-shrink-0">
+                        {profile?.avatar_url ? (
+                            <img
+                                src={profile.avatar_url}
+                                alt="Foto de perfil"
+                                className="w-8 h-8 rounded-xl object-cover shadow-md border border-slate-200"
+                            />
+                        ) : (
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-md shadow-blue-200/50">
+                                {profile?.full_name?.charAt(0)}
+                            </div>
+                        )}
                         <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white" />
                     </div>
                     <div>
@@ -710,9 +726,8 @@ export default function ParentDashboard() {
                     <div className="absolute bottom-14 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 w-52 z-50 flex flex-col gap-1">
                       {[
                         { id: 'engagement', icon: <Zap size={18}/>, label: 'Act. en Casa' },
-                        { id: 'chat-familias', icon: <MessageCircle size={18}/>, label: 'Chat Equipo' },
+                        { id: 'chat-familias', icon: <MessageCircle size={18}/>, label: 'Chat' },
                         { id: 'chat',        icon: <Sparkles size={18}/>, label: 'Asistente IA' },
-                        { id: 'mensajes',    icon: <MessageCircle size={18}/>, label: 'Mensajes' },
                                       ].map(item => (
                         <button key={item.id} onClick={()=>{setActiveView(item.id);setShowMoreMenu(false)}}
                           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeView===item.id ? 'bg-purple-50 text-purple-700' : 'text-slate-700 hover:bg-slate-50'}`}>
