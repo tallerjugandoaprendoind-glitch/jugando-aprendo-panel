@@ -110,7 +110,7 @@ function NotifCard({ noti, expanded, onToggle, locale }: { noti: Notification; e
   const meta  = noti.metadata || {}
   const key   = meta.source || noti.type || 'parent_message'
   const cfg   = TYPE_CFG[key] || DEFAULT_TYPE
-  const date  = new Date(noti.created_at).toLocaleDateString(toBCP47(locale), { dateStyle: 'medium' })
+  const date  = new Date(noti.created_at).toLocaleDateString(toBCP47(locale as any), { dateStyle: 'medium' })
   const isNew = !noti.is_read
 
   return (

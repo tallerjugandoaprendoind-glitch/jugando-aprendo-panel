@@ -527,8 +527,7 @@ export default function ParentDashboard() {
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                 <NavBtnDesktop icon={<Bell size={17}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
-                <NavBtnDesktop icon={<Book size={17}/>} label="Centro de Recursos" active={activeView==='resources'} onClick={()=>setActiveView('resources')} />
-                <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
+                <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'||activeView==='tienda'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                 <NavBtnDesktop icon={<FolderOpen size={17}/>} label="Documentos" active={activeView==='documentos'} onClick={()=>setActiveView('documentos')} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
@@ -614,7 +613,7 @@ export default function ParentDashboard() {
                 </button>
             </div>
 
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-24 lg:pb-6" style={{ minHeight: 0 }}>
+            <main className={`flex-1 overflow-y-auto ${activeView === 'chat' ? 'p-0 lg:p-4 lg:p-6' : 'p-4 md:p-6'} pb-20 lg:pb-6`} style={{ minHeight: 0 }}>
                 <div className="w-full min-h-full">
                     {activeView === 'home' && (
                         <HomeViewInnovative 
@@ -637,30 +636,14 @@ export default function ParentDashboard() {
                     )}
 
                     {activeView === 'chat' && (
-                          <div className="h-[calc(100svh-220px)] sm:h-[calc(100svh-170px)] lg:h-[calc(100vh-100px)] bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-slate-200/60 overflow-hidden flex flex-col animate-fade-in">
-                            <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 p-6 text-white flex justify-between items-center z-10 shadow-lg">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
-                                        <Sparkles size={24} className="text-white"/>
-                                    </div>
-                                    <div>
-                                        <h3 className="font-bold text-base">{t('familias.asistenteClinico')}</h3>
-                                        <p className="text-xs text-indigo-100 font-semibold flex items-center gap-2">
-                                            <Brain size={12}/> Especializado en {selectedChild?.name || 'Terapia ABA'}
-                                        </p>
-                                    </div>
-                                </div>
-                                <button className="p-2 bg-white/10 rounded-xl backdrop-blur-sm hover:bg-white/20 transition-all hover:rotate-180 duration-300">
-                                    <RefreshCw size={18}/>
-                                </button>
-                            </div>
+                          <div className="lg:rounded-3xl lg:shadow-xl lg:border lg:border-slate-200/60 overflow-hidden flex flex-col animate-fade-in"
+                            style={{ height: 'calc(100svh - 144px)' }}
+                            >
                             <ChatInterface childId={selectedChild?.id} childName={selectedChild?.name} onNavigateToStore={() => setActiveView('tienda')} parentId={profile?.id} />
                         </div>
                     )}
 
-                    {activeView === 'resources' && <ResourcesView profile={profile} />}
-                    {activeView === 'tienda'    && <StoreView profile={profile} />}
-                    {activeView === 'misformularios' && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} />}
+                    {(activeView === 'misformularios' || activeView === 'tienda') && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} initialTab={activeView === 'tienda' ? 'store' : 'forms'} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
                     {activeView === 'engagement' && <EngagementView childId={selectedChild?.id || ''} />}
                     {activeView === 'documentos' && selectedChild && (
@@ -732,8 +715,7 @@ export default function ParentDashboard() {
                         { id: 'engagement', icon: <Zap size={18}/>, label: 'Act. en Casa' },
                         { id: 'chat',        icon: <Sparkles size={18}/>, label: 'Asistente IA' },
                         { id: 'mensajes',    icon: <MessageCircle size={18}/>, label: 'Mensajes' },
-                        { id: 'resources',   icon: <Book size={18}/>, label: 'Centro de Recursos' },
-                      ].map(item => (
+                                      ].map(item => (
                         <button key={item.id} onClick={()=>{setActiveView(item.id);setShowMoreMenu(false)}}
                           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeView===item.id ? 'bg-purple-50 text-purple-700' : 'text-slate-700 hover:bg-slate-50'}`}>
                           {item.icon}{item.label}

@@ -9,6 +9,7 @@ import {
   Send, AlertCircle, Star, Heart, BookOpen, Video, Link as LinkIcon,
   Download, Eye, Play, Image as ImageIcon, Music, Sparkles, Bell, Gift
 } from 'lucide-react'
+import StoreView from './StoreView'
 import { supabase } from '@/lib/supabase'
 
 // ─── DYNAMIC FORM RENDERER (simplified for parents) ─────────────────────────
@@ -316,10 +317,10 @@ function ResourceCard({ resource }: { resource: any; key?: any }) {
 }
 
 // ─── MAIN PARENT FORMS + RESOURCES VIEW ─────────────────────────────────────
-function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { profile: any; selectedChild: any; onFormsLoaded?: (count: number) => void }) {
+function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initialTab }: { profile: any; selectedChild: any; onFormsLoaded?: (count: number) => void; initialTab?: 'forms' | 'resources' | 'store' }) {
   const { t, locale } = useI18n()
 
-  const [activeTab, setActiveTab] = useState<'forms' | 'resources'>('forms')
+  const [activeTab, setActiveTab] = useState<'forms' | 'resources' | 'store'>(initialTab || 'forms')
   const [pendingForms, setPendingForms] = useState<any[]>([])
   const [expiredForms, setExpiredForms] = useState<any[]>([])
   const [completedForms, setCompletedForms] = useState<any[]>([])
@@ -470,6 +471,13 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
           <BookOpen size={15}/> Materiales
           {resourcesCount > 0 && <span style={{ background:'#ede9fe',color:'#7c3aed',fontSize:9,fontWeight:800,padding:'2px 6px',borderRadius:20 }}>{resourcesCount}</span>}
         </button>
+        <button onClick={() => setActiveTab('store')}
+          style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
+            background:activeTab==='store'?'#fff':'transparent',
+            color:activeTab==='store'?'#4f46e5':'#94a3b8',
+            boxShadow:activeTab==='store'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
+          🛍️ Tienda
+        </button>
       </div>
 
       {isLoading ? (
@@ -598,7 +606,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
             </div>
           )}
         </div>
-      ) : (
+      ) : activeTab === 'resources' ? (
         /* RESOURCES TAB */
         <div className="space-y-4">
           {resources.length === 0 ? (
@@ -620,6 +628,9 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded }: { p
             </>
           )}
         </div>
+      ) : (
+        /* STORE TAB */
+        <StoreView profile={profile} />
       )}
 
       {/* Form modal */}
