@@ -700,7 +700,7 @@ export default function ChatEspecialistas({
       </div>
 
       {activeMainTab === 'familias' ? (
-        <div className={`h-[calc(100vh-185px)] min-h-[450px] rounded-2xl border overflow-hidden shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
+        <div className={`h-[calc(100vh-185px)] min-h-[450px] rounded-2xl overflow-hidden shadow-sm`}>
           <ChatFamilias userId={userId} userName={userName} isDark={isDark} />
         </div>
       ) : (

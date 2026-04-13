@@ -214,7 +214,7 @@ export default function ChatFamilias({ profile, userId: _userId, userName: _user
   const filtered = families.filter(f => f.child_name.toLowerCase().includes(search.toLowerCase()))
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 120px)', minHeight: 400, background: 'var(--card, #fff)', borderRadius: 20, border: '1px solid var(--card-border, #e2e8f0)', overflow: 'hidden' }}>
+    <div style={{ display: 'flex', height: '100%', background: 'var(--card, #fff)', borderRadius: 20, border: '1px solid var(--card-border, #e2e8f0)', overflow: 'hidden' }}>
 
       {/* ── LISTA DE FAMILIAS ── */}
       <div style={{
@@ -302,7 +302,7 @@ export default function ChatFamilias({ profile, userId: _userId, userName: _user
             </div>
 
             {/* Messages */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '10px 16px', display: 'flex', flexDirection: 'column', gap: 2, background: 'var(--muted-bg, #f8fafc)' }}>
               {loadingMsgs ? (
                 <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
                   <Loader2 size={20} style={{ color: 'var(--text-muted)', animation: 'spin 1s linear infinite' }}/>
@@ -331,7 +331,7 @@ export default function ChatFamilias({ profile, userId: _userId, userName: _user
                       <div style={{
                         maxWidth: '68%', padding: '8px 12px',
                         borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-                        background: isMe ? 'linear-gradient(135deg,var(--primary,#2563eb),#1d4ed8)' : 'var(--muted-bg, #f8fafc)',
+                        background: isMe ? 'linear-gradient(135deg,var(--primary,#2563eb),#1d4ed8)' : 'var(--card, #fff)',
                         color: isMe ? '#fff' : 'var(--text-primary)',
                         fontSize: 13, lineHeight: 1.55, wordBreak: 'break-word',
                         border: isMe ? 'none' : '1px solid var(--card-border, #e2e8f0)',
