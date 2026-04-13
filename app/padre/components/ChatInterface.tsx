@@ -237,16 +237,16 @@ function renderMarkdown(text: string) {
     if (!line.trim()) { elements.push(<div key={i} className="h-2"/>); i++; continue }
     // H3 ### 
     if (line.startsWith('### ')) {
-      elements.push(<p key={i} className="font-black text-sm text-slate-800 mt-3 mb-1">{parseInline(line.slice(4))}</p>); i++; continue
+      elements.push(<p key={i} className="font-black text-sm text-slate-800 dark:text-slate-100 mt-3 mb-1">{parseInline(line.slice(4))}</p>); i++; continue
     }
     // Bold line **text** alone
     if (line.startsWith('**') && line.endsWith('**') && line.length > 4) {
-      elements.push(<p key={i} className="font-black text-sm text-slate-800 mt-2 mb-0.5">{line.slice(2, -2)}</p>); i++; continue
+      elements.push(<p key={i} className="font-black text-sm text-slate-800 dark:text-slate-100 mt-2 mb-0.5">{line.slice(2, -2)}</p>); i++; continue
     }
     // Bullet
     if (line.startsWith('- ') || line.startsWith('• ')) {
       elements.push(
-        <div key={i} className="flex items-start gap-2 text-sm text-slate-700 leading-relaxed">
+        <div key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
           <span className="text-indigo-400 font-black mt-0.5 flex-shrink-0">·</span>
           <span>{parseInline(line.slice(2))}</span>
         </div>
@@ -256,14 +256,14 @@ function renderMarkdown(text: string) {
     const numMatch = line.match(/^(\d+)\. (.+)/)
     if (numMatch) {
       elements.push(
-        <div key={i} className="flex items-start gap-2 text-sm text-slate-700 leading-relaxed">
+        <div key={i} className="flex items-start gap-2 text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
           <span className="text-indigo-500 font-black text-xs mt-0.5 flex-shrink-0 w-4">{numMatch[1]}.</span>
           <span>{parseInline(numMatch[2])}</span>
         </div>
       ); i++; continue
     }
     // Regular paragraph
-    elements.push(<p key={i} className="text-sm text-slate-700 leading-relaxed">{parseInline(line)}</p>)
+    elements.push(<p key={i} className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">{parseInline(line)}</p>)
     i++
   }
   return <div className="flex flex-col gap-1">{elements}</div>
@@ -276,7 +276,7 @@ function parseInline(text: string): ReactNode {
   return (
     <>
       {parts.map((p, i) =>
-        i % 2 === 1 ? <strong key={i} className="font-black text-slate-800">{p}</strong> : p
+        i % 2 === 1 ? <strong key={i} className="font-black text-slate-800 dark:text-slate-100">{p}</strong> : p
       )}
     </>
   )
@@ -309,7 +309,7 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
           style={{ background: 'linear-gradient(135deg,#fdf2f8,#faf5ff)' }}>
           <div className="px-5 pt-4 pb-2">
             <p className="text-xs font-black text-pink-500 uppercase tracking-widest mb-2">{t('ui.checkBienestar')}</p>
-            <p className="text-sm text-slate-700 font-medium leading-relaxed">
+            <p className="text-sm text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
               ¿Cómo te has sentido tú esta semana acompañando el proceso de tu hijo/a?
             </p>
           </div>
@@ -317,7 +317,7 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
             {['😊 Bien, con energía', '😐 Regular, algo cansado/a', '😔 Difícil, necesito apoyo'].map(opt => (
               <button key={opt}
                 onClick={() => onWellbeingAnswer?.(opt)}
-                className="text-left px-4 py-3 text-sm font-semibold text-slate-700 rounded-2xl border-2 border-purple-100 transition-all hover:border-purple-400 hover:bg-purple-50 bg-white">
+                className="text-left px-4 py-3 text-sm font-semibold text-slate-700 dark:text-slate-200 rounded-2xl border-2 border-purple-100 dark:border-purple-800/50 transition-all hover:border-purple-400 hover:bg-purple-50 dark:bg-purple-900/20 bg-white dark:bg-[#0d1117]">
                 {opt}
               </button>
             ))}
@@ -344,9 +344,9 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
           }`}
           style={{ boxShadow: '0 2px 16px rgba(0,0,0,.06)' }}>
           {m.type === 'emotional' && (
-            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-100">
-              <Heart size={13} className="text-blue-500 fill-blue-500" />
-              <span className="text-xs font-black text-blue-500 uppercase tracking-widest">{t('ui.from_therapist')}</span>
+            <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-100 dark:border-blue-800/50">
+              <Heart size={13} className="text-blue-500 dark:text-blue-400 fill-blue-500" />
+              <span className="text-xs font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest">{t('ui.from_therapist')}</span>
             </div>
           )}
           {renderMarkdown(m.text)}
@@ -371,12 +371,12 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
               <div className="flex-1 min-w-0">
                 <p className="font-black text-amber-900 text-sm leading-tight mb-1">{m.producto.nombre}</p>
                 {(m.producto.razon || m.producto.descripcion) && (
-                  <p className="text-xs text-amber-700 leading-relaxed mb-2 line-clamp-2">
+                  <p className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed mb-2 line-clamp-2">
                     💡 {m.producto.razon || m.producto.descripcion}
                   </p>
                 )}
                 <div className="flex items-center gap-3">
-                  <span className="text-lg font-black text-amber-600">S/ {Number(m.producto.precio_soles).toFixed(2)}</span>
+                  <span className="text-lg font-black text-amber-600 dark:text-amber-400">S/ {Number(m.producto.precio_soles).toFixed(2)}</span>
                   <button onClick={onNavigateToStore}
                     className="px-3.5 py-1.5 text-xs font-black text-white rounded-xl transition-all hover:scale-105 active:scale-95"
                     style={{ background: 'linear-gradient(135deg,#f59e0b,#d97706)', boxShadow: '0 3px 10px rgba(217,119,6,.35)' }}>
@@ -401,12 +401,12 @@ function TypingIndicator() {
         style={{ background: 'linear-gradient(135deg,#eef2ff,#dbeafe)', padding: 4 }}>
         <RobotAvatar size={28} animated />
       </div>
-      <div className="bg-white border border-slate-100 rounded-3xl rounded-tl-lg px-5 py-3.5 shadow-sm flex items-center gap-1.5">
+      <div className="bg-white dark:bg-[#0d1117] border border-slate-100 dark:border-[#21262d] rounded-3xl rounded-tl-lg px-5 py-3.5 shadow-sm flex items-center gap-1.5">
         {[0, .2, .4].map(d => (
           <div key={d} className="w-2 h-2 rounded-full bg-indigo-400"
             style={{ animation: `typingDot 1.2s ease-in-out infinite`, animationDelay: `${d}s` }} />
         ))}
-        <span className="text-xs text-slate-400 font-medium ml-2">{t('common.analizando')}</span>
+        <span className="text-xs text-slate-400 dark:text-slate-500 font-medium ml-2">{t('common.analizando')}</span>
       </div>
     </div>
   )
@@ -430,24 +430,24 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
         <RobotAvatar size={36} />
       </div>
 
-      <h3 className="text-xl font-black text-slate-800 mb-1">
+      <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 mb-1">
         Hola, soy <span className="text-indigo-600">ARIA</span>
       </h3>
-      <p className="text-sm text-slate-500 mb-1">Asistente clínico de Jugando Aprendo</p>
-      <p className="text-xs text-slate-400 mb-6 leading-relaxed max-w-[280px]">
-        He revisado el historial de <strong className="text-slate-600">{childName || 'tu hijo/a'}</strong>.
+      <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500 mb-1">Asistente clínico de Jugando Aprendo</p>
+      <p className="text-xs text-slate-400 dark:text-slate-500 mb-6 leading-relaxed max-w-[280px]">
+        He revisado el historial de <strong className="text-slate-600 dark:text-slate-300">{childName || 'tu hijo/a'}</strong>.
         Puedo explicarte sesiones, tareas para casa y mucho más.
       </p>
 
       {/* Quick actions — cleaner */}
       <div className="flex flex-col gap-2 w-full max-w-[320px]">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">¿Por dónde empezamos?</p>
+        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">¿Por dónde empezamos?</p>
         {quick.map(({ icon, text, color, border }) => (
           <button key={text} onClick={() => onQuickSend(text)}
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all active:scale-[.98] hover:shadow-sm"
             style={{ background: color, border: `1.5px solid ${border}` }}>
             <span className="text-base shrink-0">{icon}</span>
-            <span className="text-sm font-semibold text-slate-700">{text}</span>
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{text}</span>
           </button>
         ))}
       </div>
@@ -662,38 +662,38 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         }
       `}</style>
 
-      <div className="flex flex-col bg-white" style={{ height: '100%', minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="flex flex-col bg-white dark:bg-[#0d1117]" style={{ height: '100%', minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* ── Header — clean, professional ── */}
-        <div className="shrink-0 px-4 py-3 flex items-center gap-3 border-b border-slate-100 bg-white">
+        <div className="shrink-0 px-4 py-3 flex items-center gap-3 border-b border-slate-100 dark:border-[#21262d] bg-white dark:bg-[#0d1117]">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
             style={{ background: 'linear-gradient(135deg,#6366f1,#4f46e5)', padding: 5 }}>
             <RobotAvatar size={24} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <p className="font-black text-slate-800 text-sm">ARIA</p>
-              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+              <p className="font-black text-slate-800 dark:text-slate-100 text-sm">ARIA</p>
+              <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 px-1.5 py-0.5 rounded-full">
                 <span className="w-1 h-1 bg-emerald-400 rounded-full animate-pulse" />
                 En línea
               </span>
               {speaking && (
-                <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded-full">
+                <span className="flex items-center gap-1 text-[10px] font-bold text-indigo-500 bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded-full">
                   <Volume2 size={9} /> Hablando...
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-slate-400 truncate">
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate">
               {childName ? `Especializada en ${childName}` : 'Asistente clínico IA'}
             </p>
           </div>
           <button onClick={toggleVoice} title={voiceEnabled ? 'Silenciar' : 'Activar voz'}
-            className="p-2 rounded-xl hover:bg-slate-100 transition-all"
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] transition-all"
             style={{ color: voiceEnabled ? '#6366f1' : '#cbd5e1' }}>
             {voiceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}
           </button>
           <button onClick={handleReset} title="Nueva conversación"
-            className="p-2 rounded-xl hover:bg-slate-100 transition-all text-slate-400 hover:text-slate-600">
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] transition-all text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:text-slate-300">
             <RefreshCw size={15} />
           </button>
         </div>
@@ -707,18 +707,18 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
               <Mic size={14} className="text-white" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-black text-red-700">Escuchando...</p>
+              <p className="text-sm font-black text-red-700 dark:text-red-300">Escuchando...</p>
               <p className="text-xs text-red-500 font-medium">{t('aria.hablaAhora')}</p>
             </div>
             <button onClick={stopListening}
               className="p-1.5 rounded-xl bg-red-100 hover:bg-red-200 transition-all">
-              <StopCircle size={16} className="text-red-600" />
+              <StopCircle size={16} className="text-red-600 dark:text-red-400" />
             </button>
           </div>
         )}
 
         {/* ── Área de mensajes ── */}
-        <div className="bg-slate-50" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e2e8f0 transparent', flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+        <div className="bg-slate-50 dark:bg-[#161b22]" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e2e8f0 transparent', flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
           {showWelcome && messages.length === 0 ? (
             <WelcomeScreen childName={childName} onQuickSend={send} />
@@ -737,13 +737,13 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
 
         {/* ── Preguntas rápidas (visible cuando hay mensajes) ── */}
         {!showWelcome && messages.length > 0 && !typing && (
-          <div className="shrink-0 px-3 pb-1 bg-white border-t border-slate-100">
+          <div className="shrink-0 px-3 pb-1 bg-white dark:bg-[#0d1117] border-t border-slate-100 dark:border-[#21262d]">
             <div className="flex gap-1.5 overflow-x-auto py-2" style={{ scrollbarWidth: 'none' }}>
               {['📋 Última sesión', '🏠 Tips para casa', '🎯 Objetivos', '💙 Apoyo'].map((q, i) => {
                 const texts = ['¿Cómo le fue en la última sesión?', 'Dame consejos para actividades en casa', '¿Qué objetivos está trabajando?', 'Necesito apoyo emocional']
                 return (
                   <button key={i} onClick={() => send(texts[i])}
-                    className="shrink-0 px-3 py-1.5 bg-slate-50 border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 text-slate-600 hover:text-indigo-700 rounded-full text-xs font-semibold transition-all whitespace-nowrap">
+                    className="shrink-0 px-3 py-1.5 bg-slate-50 dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] hover:border-indigo-300 hover:bg-indigo-50 dark:bg-indigo-900/20 text-slate-600 dark:text-slate-300 hover:text-indigo-700 dark:text-indigo-300 rounded-full text-xs font-semibold transition-all whitespace-nowrap">
                     {q}
                   </button>
                 )
@@ -753,7 +753,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         )}
 
         {/* ── Input con voz ── */}
-        <div className="shrink-0 px-3 py-3 border-t border-slate-100 bg-white">
+        <div className="shrink-0 px-3 py-3 border-t border-slate-100 dark:border-[#21262d] bg-white dark:bg-[#0d1117]">
           <div className="flex gap-2 items-end">
             <div className="flex-1 relative">
               <input
@@ -763,7 +763,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
                 onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
                 placeholder={listening ? '🎤 Escuchando...' : childName ? `Pregúntame sobre ${childName}...` : 'Escribe tu pregunta...'}
                 disabled={typing || listening}
-                className="w-full text-sm font-medium text-slate-800 placeholder-slate-400 outline-none transition-all"
+                className="w-full text-sm font-medium text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none transition-all"
                 style={{
                   background: listening ? '#fef2f2' : '#f8fafc',
                   border: `1.5px solid ${listening ? '#fca5a5' : '#e2e8f0'}`,
@@ -806,7 +806,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
                 }}>
                 {listening
                   ? <MicOff size={18} className="text-white" />
-                  : <Mic size={18} className="text-slate-500" />
+                  : <Mic size={18} className="text-slate-500 dark:text-slate-400 dark:text-slate-500" />
                 }
               </button>
             )}

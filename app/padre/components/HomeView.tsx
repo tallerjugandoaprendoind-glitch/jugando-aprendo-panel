@@ -11,6 +11,7 @@ import {
   Heart, Trophy, PartyPopper, X,
   MessageCircle, Brain
 } from 'lucide-react'
+import { useTheme } from '@/components/ThemeContext'
 
 interface Props {
   child: any
@@ -65,14 +66,37 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,.65)', backdropFilter: 'blur(10px)' }}>
       <div style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5,#0ea5e9)', borderRadius: 32, padding: '48px 40px', textAlign: 'center', maxWidth: 400, width: '90%', boxShadow: '0 0 80px rgba(79,70,229,.6)', position: 'relative', overflow: 'hidden', animation: 'celebIn .5s cubic-bezier(.175,.885,.32,1.275)' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,.2)', border: 'none', borderRadius: 10, padding: '6px 10px', cursor: 'pointer', color: '#fff', fontSize: 18 }}>×</button>
+        <button onClick={onClose} style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,.2)', border: 'none', borderRadius: 10, padding: '6px 10px', cursor: 'pointer', color: 'var(--c-card)', fontSize: 18 }}>×</button>
         <div style={{ fontSize: 64, marginBottom: 16 }}>🏆</div>
-        <h2 style={{ fontWeight: 900, fontSize: 30, color: '#fff', marginBottom: 8 }}>¡Gran logro!</h2>
+        <h2 style={{ fontWeight: 900, fontSize: 30, color: 'var(--c-card)', marginBottom: 8 }}>¡Gran logro!</h2>
         <p style={{ color: 'rgba(255,255,255,.85)', fontSize: 16, lineHeight: 1.6, marginBottom: 24 }}>
           <strong style={{ color: '#fbbf24' }}>{childName}</strong> alcanzó <strong style={{ color: '#fbbf24' }}>{goalsAchieved} objetivo{goalsAchieved !== 1 ? 's' : ''}</strong> con dominio ≥80%.
         </p>
       </div>
-      <style>{`@keyframes celebIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}`}</style>
+      <style>{`
+  :root {
+    --c-card: #ffffff;
+    --c-surface: #f8fafc;
+    --c-bg: #f1f5f9;
+    --c-border: #e2e8f0;
+    --c-border-light: #f1f5f9;
+    --c-text-primary: #0f172a;
+    --c-text-secondary: #374151;
+    --c-text-muted: #64748b;
+    --c-text-placeholder: #94a3b8;
+  }
+  .dark {
+    --c-card: #161b22;
+    --c-surface: #0d1117;
+    --c-bg: #090d12;
+    --c-border: #30363d;
+    --c-border-light: #21262d;
+    --c-text-primary: #f0f6fc;
+    --c-text-secondary: #c9d1d9;
+    --c-text-muted: #8b949e;
+    --c-text-placeholder: #6e7681;
+  }
+@keyframes celebIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}`}</style>
     </div>
   )
 }
@@ -87,20 +111,20 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
   const handleAnswer = () => { setAnswered(true); setTimeout(onClose, 3000) }
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 9998, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', background: 'rgba(0,0,0,.5)', backdropFilter: 'blur(6px)', padding: '0 16px 24px' }}>
-      <div style={{ background: '#fff', borderRadius: '28px 28px 20px 20px', padding: 28, maxWidth: 440, width: '100%', boxShadow: '0 -30px 80px rgba(0,0,0,.15)', animation: 'slideUp .4s cubic-bezier(.175,.885,.32,1.275)' }}>
+      <div style={{ background: 'var(--c-card)', borderRadius: '28px 28px 20px 20px', padding: 28, maxWidth: 440, width: '100%', boxShadow: '0 -30px 80px rgba(0,0,0,.15)', animation: 'slideUp .4s cubic-bezier(.175,.885,.32,1.275)' }}>
         {!answered ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{ width: 42, height: 42, background: 'linear-gradient(135deg,#fce7f3,#ede9fe)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Heart size={18} color="#be185d" /></div>
                 <div>
-                  <p style={{ fontWeight: 800, fontSize: 15, color: '#111827', margin: 0 }}>¿Cómo estás tú?</p>
-                  <p style={{ fontSize: 11, color: '#9ca3af', margin: 0 }}>Chequeo de bienestar mensual</p>
+                  <p style={{ fontWeight: 800, fontSize: 15, color: 'var(--c-text-primary)', margin: 0 }}>¿Cómo estás tú?</p>
+                  <p style={{ fontSize: 11, color: 'var(--c-text-placeholder)', margin: 0 }}>Chequeo de bienestar mensual</p>
                 </div>
               </div>
               <button onClick={onClose} style={{ background: '#f3f4f6', border: 'none', borderRadius: 8, padding: 8, cursor: 'pointer', color: '#6b7280' }}><X size={16} /></button>
             </div>
-            <p style={{ fontSize: 14, color: '#4b5563', lineHeight: 1.6, marginBottom: 16 }}>Acompañar a <strong>{childName || 'tu hijo/a'}</strong> es un trabajo importante. ¿Cómo te has sentido esta semana?</p>
+            <p style={{ fontSize: 14, color: 'var(--c-text-secondary)', lineHeight: 1.6, marginBottom: 16 }}>Acompañar a <strong>{childName || 'tu hijo/a'}</strong> es un trabajo importante. ¿Cómo te has sentido esta semana?</p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {options.map(opt => (
                 <button key={opt.label} onClick={handleAnswer} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: opt.bg, border: `2px solid ${opt.border}`, borderRadius: 14, fontSize: 14, fontWeight: 600, color: opt.color, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}>
@@ -112,7 +136,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
         ) : (
           <div style={{ textAlign: 'center', padding: '16px 0' }}>
             <div style={{ fontSize: 40, marginBottom: 12 }}>💙</div>
-            <h3 style={{ fontWeight: 800, fontSize: 18, color: '#111827', marginBottom: 8 }}>¡Gracias por compartir!</h3>
+            <h3 style={{ fontWeight: 800, fontSize: 18, color: 'var(--c-text-primary)', marginBottom: 8 }}>¡Gracias por compartir!</h3>
             <p style={{ fontSize: 14, color: '#6b7280', lineHeight: 1.6 }}>Tu terapeuta tomará esto en cuenta.</p>
           </div>
         )}
@@ -123,6 +147,7 @@ function WellbeingSurvey({ childName, onClose }: { childName: string; onClose: (
 }
 
 export default function HomeViewInnovative({ child, onChangeView, refreshTrigger, onCancelAppointment }: Props) {
+  const { isDark } = useTheme()
   const { t, locale } = useI18n()
   const supabase = supabaseClient
   const [nextAppt, setNextAppt] = useState<any>(null)
@@ -308,12 +333,12 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         <div className="hv-card" style={{ background:'linear-gradient(135deg,#2563eb,#1d4ed8)', borderRadius:18, padding:'14px 18px', display:'flex', alignItems:'center', gap:12, boxShadow:'0 4px 16px rgba(37,99,235,.25)' }}>
           <span style={{ fontSize:24, flexShrink:0 }}>📅</span>
           <div style={{ flex:1 }}>
-            <p style={{ color:'#fff', fontWeight:700, fontSize:13, margin:0 }}>Recibe tus citas en Google Calendar</p>
+            <p style={{ color:'var(--c-card)', fontWeight:700, fontSize:13, margin:0 }}>Recibe tus citas en Google Calendar</p>
             <p style={{ color:'rgba(255,255,255,.75)', fontSize:11, margin:'2px 0 0' }}>Conecta tu cuenta y las citas aparecerán automáticamente.</p>
           </div>
           <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-            <button onClick={()=>onChangeView('profile')} className="hv-btn" style={{ background:'#fff', color:'#2563eb', border:'none', borderRadius:10, padding:'7px 14px', fontSize:12, fontWeight:700, cursor:'pointer' }}>Conectar</button>
-            <button onClick={()=>{sessionStorage.setItem('gcal_banner_dismissed','1');setGcalBannerDismissed(true)}} style={{ background:'rgba(255,255,255,.2)', color:'#fff', border:'none', borderRadius:10, padding:'7px 10px', fontSize:13, cursor:'pointer', lineHeight:1 }}>✕</button>
+            <button onClick={()=>onChangeView('profile')} className="hv-btn" style={{ background:'var(--c-card)', color:'#2563eb', border:'none', borderRadius:10, padding:'7px 14px', fontSize:12, fontWeight:700, cursor:'pointer' }}>Conectar</button>
+            <button onClick={()=>{sessionStorage.setItem('gcal_banner_dismissed','1');setGcalBannerDismissed(true)}} style={{ background:'rgba(255,255,255,.2)', color:'var(--c-card)', border:'none', borderRadius:10, padding:'7px 10px', fontSize:13, cursor:'pointer', lineHeight:1 }}>✕</button>
           </div>
         </div>
       )}
@@ -328,16 +353,16 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:16 }}>
             <div style={{ flex:1 }}>
               <p style={{ color:'rgba(255,255,255,.65)', fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:1.5, margin:'0 0 4px' }}>Paciente activo</p>
-              <h1 style={{ fontSize:24, fontWeight:900, color:'#fff', margin:'0 0 10px', letterSpacing:'-0.5px', lineHeight:1.15 }}>{child?.name || 'Sin seleccionar'}</h1>
+              <h1 style={{ fontSize:24, fontWeight:900, color:'var(--c-card)', margin:'0 0 10px', letterSpacing:'-0.5px', lineHeight:1.15 }}>{child?.name || 'Sin seleccionar'}</h1>
               <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-                <span style={{ background:'rgba(255,255,255,.15)', backdropFilter:'blur(8px)', color:'#fff', fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(255,255,255,.2)' }}>{age} años</span>
-                {child?.diagnosis && <span style={{ background:'rgba(255,255,255,.15)', backdropFilter:'blur(8px)', color:'#fff', fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(255,255,255,.2)' }}>{child.diagnosis}</span>}
-                <span style={{ background:'rgba(255,255,255,.15)', backdropFilter:'blur(8px)', color:'#fff', fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(255,255,255,.2)' }}>{stats.sessions} sesiones</span>
+                <span style={{ background:'rgba(255,255,255,.15)', backdropFilter:'blur(8px)', color:'var(--c-card)', fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(255,255,255,.2)' }}>{age} años</span>
+                {child?.diagnosis && <span style={{ background:'rgba(255,255,255,.15)', backdropFilter:'blur(8px)', color:'var(--c-card)', fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(255,255,255,.2)' }}>{child.diagnosis}</span>}
+                <span style={{ background:'rgba(255,255,255,.15)', backdropFilter:'blur(8px)', color:'var(--c-card)', fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(255,255,255,.2)' }}>{stats.sessions} sesiones</span>
                 {stats.level !== 'Inicial' && <span style={{ background:'rgba(251,191,36,.25)', color:'#fde68a', fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(251,191,36,.35)' }}>⭐ Nivel {stats.level}</span>}
               </div>
             </div>
             <div style={{ position:'relative', flexShrink:0 }}>
-              <div style={{ width:56, height:56, background:'rgba(255,255,255,.2)', backdropFilter:'blur(10px)', borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:'#fff', border:'2px solid rgba(255,255,255,.3)' }}>
+              <div style={{ width:56, height:56, background:'rgba(255,255,255,.2)', backdropFilter:'blur(10px)', borderRadius:18, display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:900, color:'var(--c-card)', border:'2px solid rgba(255,255,255,.3)' }}>
                 {child?.name?.[0]?.toUpperCase() || '?'}
               </div>
               {stats.sessions > 0 && <div style={{ position:'absolute', bottom:-2, right:-2, width:16, height:16, background:'#10b981', borderRadius:'50%', border:'2.5px solid #4f46e5' }}/>}
@@ -349,7 +374,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             <div>
               <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
                 <span style={{ color:'rgba(255,255,255,.65)', fontSize:11, fontWeight:600 }}>Dominio de objetivos</span>
-                <span style={{ color:'#fff', fontSize:11, fontWeight:800 }}>{stats.masteryRate}%</span>
+                <span style={{ color:'var(--c-card)', fontSize:11, fontWeight:800 }}>{stats.masteryRate}%</span>
               </div>
               <div style={{ height:6, background:'rgba(255,255,255,.2)', borderRadius:10, overflow:'hidden' }}>
                 <div className="hv-prog-bar" style={{ height:'100%', width:`${stats.masteryRate}%`, background:'linear-gradient(90deg,#a5f3fc,#fff)', borderRadius:10 }}/>
@@ -366,7 +391,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
             { label:'📅 Mis citas',        view:'miscitas' },
           ].map(({ label, view }) => (
             <button key={view} onClick={()=>onChangeView(view)} className="hv-btn"
-              style={{ background:'rgba(255,255,255,.15)', color:'#fff', border:'1px solid rgba(255,255,255,.2)', borderRadius:10, padding:'6px 12px', fontSize:11, fontWeight:700, cursor:'pointer', backdropFilter:'blur(6px)', whiteSpace:'nowrap' }}>
+              style={{ background:'rgba(255,255,255,.15)', color:'var(--c-card)', border:'1px solid rgba(255,255,255,.2)', borderRadius:10, padding:'6px 12px', fontSize:11, fontWeight:700, cursor:'pointer', backdropFilter:'blur(6px)', whiteSpace:'nowrap' }}>
               {label}
             </button>
           ))}
@@ -384,10 +409,10 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           <div key={label} style={{ background:bg, borderRadius:18, padding:'14px 14px', border:`1.5px solid ${color}20`, display:'flex', flexDirection:'column', gap:8 }}>
             <div style={{ width:36, height:36, background:`${color}15`, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{emoji}</div>
             <div>
-              <p style={{ fontSize:22, fontWeight:900, color:'#0f172a', margin:0, lineHeight:1, letterSpacing:'-0.5px' }}>{val}</p>
+              <p style={{ fontSize:22, fontWeight:900, color:'var(--c-text-primary)', margin:0, lineHeight:1, letterSpacing:'-0.5px' }}>{val}</p>
               <p style={{ fontSize:10, fontWeight:700, color, textTransform:'uppercase', letterSpacing:0.5, margin:'3px 0 0' }}>{label}</p>
             </div>
-            <p style={{ fontSize:11, color:'#64748b', margin:0, lineHeight:1.4 }}>{sub}</p>
+            <p style={{ fontSize:11, color:'var(--c-text-muted)', margin:0, lineHeight:1.4 }}>{sub}</p>
           </div>
         ))}
       </div>
@@ -413,15 +438,15 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
               <div className="hv-card" style={{ background:'linear-gradient(135deg,#f0f9ff,#e0f2fe)', border:'1.5px solid #bae6fd', borderRadius:22, padding:'18px 20px' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
                   <div style={{ width:38, height:38, background:'linear-gradient(135deg,#0ea5e9,#2563eb)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-                    <Sparkles size={18} color="#fff"/>
+                    <Sparkles size={18} color="var(--c-card)"/>
                   </div>
                   <div>
                     <p style={{ color:'#0369a1', fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:1, margin:0 }}>Resumen de ARIA</p>
-                    <p style={{ color:'#0c4a6e', fontSize:13, fontWeight:700, margin:0 }}>¿Cómo va {firstName}?</p>
+                    <p style={{ color:'var(--c-text-primary)', fontSize:13, fontWeight:700, margin:0 }}>¿Cómo va {firstName}?</p>
                   </div>
                   {prediccion?.confianza > 0 && <span style={{ marginLeft:'auto', background:'#e0f2fe', color:'#0284c7', fontSize:10, fontWeight:700, padding:'3px 9px', borderRadius:20, border:'1px solid #7dd3fc', flexShrink:0 }}>{prediccion.confianza}% confianza</span>}
                 </div>
-                <p style={{ color:'#0c4a6e', fontSize:13, lineHeight:1.65, margin:0, fontStyle: desactualizado ? 'italic' : 'normal', opacity: desactualizado ? 0.7 : 1 }}>
+                <p style={{ color:'var(--c-text-primary)', fontSize:13, lineHeight:1.65, margin:0, fontStyle: desactualizado ? 'italic' : 'normal', opacity: desactualizado ? 0.7 : 1 }}>
                   {desactualizado ? `✨ Actualizando el resumen con las ${stats.sessions} sesiones...` : textoParaPadre || '✨ Preparando el resumen de progreso...'}
                 </p>
                 {prediccion?.areas_fortaleza?.length > 0 && (
@@ -436,10 +461,10 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           })()}
 
           {/* PRÓXIMA CITA */}
-          <div className="hv-card" style={{ background:'#fff', borderRadius:22, border:'1.5px solid #f1f5f9', overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,.04)' }}>
-            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'14px 18px 12px', borderBottom:'1px solid #f8fafc' }}>
+          <div className="hv-card" style={{ background:'var(--c-card)', borderRadius:22, border:'1.5px solid var(--c-border-light)', overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,.04)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'14px 18px 12px', borderBottom:'1px solid var(--c-border-light)' }}>
               <CalendarDays size={15} color="#7c3aed"/>
-              <h2 style={{ fontWeight:800, fontSize:12, color:'#64748b', textTransform:'uppercase', letterSpacing:0.8, margin:0 }}>Próxima sesión</h2>
+              <h2 style={{ fontWeight:800, fontSize:12, color:'var(--c-text-muted)', textTransform:'uppercase', letterSpacing:0.8, margin:0 }}>Próxima sesión</h2>
             </div>
             {loading ? (
               <div style={{ padding:'16px 18px' }}>
@@ -450,7 +475,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
               return (
                 <div style={{ padding:'16px 18px' }}>
                   <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-                    <div style={{ background:'linear-gradient(135deg,#7c3aed,#4f46e5)', color:'#fff', borderRadius:16, padding:'10px 14px', textAlign:'center', flexShrink:0, boxShadow:'0 6px 16px rgba(124,58,237,.28)' }}>
+                    <div style={{ background:'linear-gradient(135deg,#7c3aed,#4f46e5)', color:'var(--c-card)', borderRadius:16, padding:'10px 14px', textAlign:'center', flexShrink:0, boxShadow:'0 6px 16px rgba(124,58,237,.28)' }}>
                       <div style={{ fontSize:26, fontWeight:900, lineHeight:1 }}>{d.day}</div>
                       <div style={{ fontSize:11, fontWeight:700, opacity:.8, marginTop:1, textTransform:'uppercase' }}>{d.month}</div>
                     </div>
@@ -459,39 +484,39 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                         {nextAppt.status==='confirmed' ? <CheckCircle size={9}/> : <AlertCircle size={9}/>}
                         {nextAppt.status==='confirmed' ? 'Confirmada' : 'Pendiente de confirmar'}
                       </span>
-                      <p style={{ fontWeight:800, fontSize:14, color:'#0f172a', margin:'0 0 3px' }}>{nextAppt.service_type || 'Terapia ABA'}</p>
-                      <p style={{ fontSize:12, color:'#64748b', margin:0, display:'flex', alignItems:'center', gap:4 }}><Clock size={11}/>{formatTime(nextAppt.appointment_time)}</p>
+                      <p style={{ fontWeight:800, fontSize:14, color:'var(--c-text-primary)', margin:'0 0 3px' }}>{nextAppt.service_type || 'Terapia ABA'}</p>
+                      <p style={{ fontSize:12, color:'var(--c-text-muted)', margin:0, display:'flex', alignItems:'center', gap:4 }}><Clock size={11}/>{formatTime(nextAppt.appointment_time)}</p>
                     </div>
                   </div>
-                  <div style={{ display:'flex', gap:8, marginTop:14, paddingTop:14, borderTop:'1px solid #f1f5f9' }}>
+                  <div style={{ display:'flex', gap:8, marginTop:14, paddingTop:14, borderTop:'1px solid var(--c-border-light)' }}>
                     <button onClick={()=>onCancelAppointment(nextAppt.id,true)} className="hv-btn" style={{ flex:1, padding:'8px 10px', background:'#f5f3ff', color:'#7c3aed', border:'1.5px solid #ddd6fe', borderRadius:12, fontSize:11, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}><RefreshCw size={12}/>Reprogramar</button>
                     <button onClick={()=>onCancelAppointment(nextAppt.id,false)} className="hv-btn" style={{ flex:1, padding:'8px 10px', background:'#fef2f2', color:'#dc2626', border:'1.5px solid #fecaca', borderRadius:12, fontSize:11, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:4 }}><XCircle size={12}/>Cancelar</button>
-                    <button onClick={()=>onChangeView('miscitas')} className="hv-btn" style={{ padding:'8px 12px', background:'#0f172a', color:'#fff', border:'none', borderRadius:12, fontSize:11, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>Ver todas<ChevronRight size={12}/></button>
+                    <button onClick={()=>onChangeView('miscitas')} className="hv-btn" style={{ padding:'8px 12px', background:'var(--c-text-primary)', color:'var(--c-card)', border:'none', borderRadius:12, fontSize:11, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4 }}>Ver todas<ChevronRight size={12}/></button>
                   </div>
                 </div>
               )
             })() : (
               <div style={{ padding:'24px 18px', textAlign:'center' }}>
                 <div style={{ width:56, height:56, background:'#f5f3ff', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}><CalendarDays size={24} color="#a78bfa"/></div>
-                <p style={{ fontWeight:800, fontSize:14, color:'#1e293b', margin:'0 0 6px' }}>Sin citas programadas</p>
-                <p style={{ fontSize:12, color:'#94a3b8', lineHeight:1.6, margin:'0 auto 14px', maxWidth:260 }}>La constancia es clave. Contacta al centro para agendar la próxima cita.</p>
-                <button onClick={()=>onChangeView('miscitas')} className="hv-btn" style={{ display:'inline-flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#7c3aed,#4f46e5)', color:'#fff', border:'none', padding:'9px 18px', borderRadius:12, fontSize:12, fontWeight:700, cursor:'pointer', boxShadow:'0 4px 14px rgba(124,58,237,.3)' }}><CalendarDays size={14}/>Ver mis citas</button>
+                <p style={{ fontWeight:800, fontSize:14, color:'var(--c-text-primary)', margin:'0 0 6px' }}>Sin citas programadas</p>
+                <p style={{ fontSize:12, color:'var(--c-text-placeholder)', lineHeight:1.6, margin:'0 auto 14px', maxWidth:260 }}>La constancia es clave. Contacta al centro para agendar la próxima cita.</p>
+                <button onClick={()=>onChangeView('miscitas')} className="hv-btn" style={{ display:'inline-flex', alignItems:'center', gap:6, background:'linear-gradient(135deg,#7c3aed,#4f46e5)', color:'var(--c-card)', border:'none', padding:'9px 18px', borderRadius:12, fontSize:12, fontWeight:700, cursor:'pointer', boxShadow:'0 4px 14px rgba(124,58,237,.3)' }}><CalendarDays size={14}/>Ver mis citas</button>
               </div>
             )}
           </div>
 
           {/* MENSAJES DEL TERAPEUTA */}
           {parentMessages.length > 0 && (
-            <div className="hv-card" style={{ background:'#fff', borderRadius:22, border:'1.5px solid #ede9fe', overflow:'hidden', boxShadow:'0 2px 16px rgba(124,58,237,.06)' }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 18px 12px', borderBottom:'1px solid #faf5ff' }}>
-                <div style={{ display:'flex', alignItems:'center', gap:8 }}><MessageCircle size={15} color="#7c3aed"/><h2 style={{ fontWeight:800, fontSize:12, color:'#64748b', textTransform:'uppercase', letterSpacing:0.8, margin:0 }}>Mensajes del terapeuta</h2></div>
+            <div className="hv-card" style={{ background:'var(--c-card)', borderRadius:22, border:'1.5px solid #ede9fe', overflow:'hidden', boxShadow:'0 2px 16px rgba(124,58,237,.06)' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 18px 12px', borderBottom:'1px solid var(--c-border-light)' }}>
+                <div style={{ display:'flex', alignItems:'center', gap:8 }}><MessageCircle size={15} color="#7c3aed"/><h2 style={{ fontWeight:800, fontSize:12, color:'var(--c-text-muted)', textTransform:'uppercase', letterSpacing:0.8, margin:0 }}>Mensajes del terapeuta</h2></div>
                 <span style={{ background:'#f5f3ff', color:'#7c3aed', fontSize:10, fontWeight:700, padding:'3px 9px', borderRadius:20, border:'1px solid #ddd6fe' }}>{parentMessages.length} nuevo{parentMessages.length!==1?'s':''}</span>
               </div>
               {parentMessages.map((msg:any, idx:number) => (
                 <div key={idx} style={{ padding:'12px 18px', borderBottom: idx < parentMessages.length-1 ? '1px solid #faf5ff' : 'none' }}>
-                  <p style={{ fontSize:10, fontWeight:700, color:'#94a3b8', margin:'0 0 2px' }}>{msg.created_at ? new Date(msg.created_at).toLocaleDateString(toBCP47(locale),{dateStyle:'medium'}) : ''}</p>
-                  <p style={{ fontSize:13, fontWeight:700, color:'#1e293b', margin:'0 0 3px' }}>{msg.title || msg.subject || 'Mensaje del terapeuta'}</p>
-                  <p style={{ fontSize:12, color:'#64748b', lineHeight:1.5, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{msg.body || msg.message || msg.content || ''}</p>
+                  <p style={{ fontSize:10, fontWeight:700, color:'var(--c-text-placeholder)', margin:'0 0 2px' }}>{msg.created_at ? new Date(msg.created_at).toLocaleDateString(toBCP47(locale),{dateStyle:'medium'}) : ''}</p>
+                  <p style={{ fontSize:13, fontWeight:700, color:'var(--c-text-primary)', margin:'0 0 3px' }}>{msg.title || msg.subject || 'Mensaje del terapeuta'}</p>
+                  <p style={{ fontSize:12, color:'var(--c-text-muted)', lineHeight:1.5, margin:0, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden' }}>{msg.body || msg.message || msg.content || ''}</p>
                 </div>
               ))}
               <div style={{ padding:'10px 14px' }}>
@@ -507,11 +532,11 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
 
           {/* ¿EN QUÉ ESTÁ TRABAJANDO? */}
           {programas.length > 0 && (
-            <div className="hv-card" style={{ background:'#fff', borderRadius:22, border:'1.5px solid #f1f5f9', overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,.04)' }}>
-              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 18px 12px', borderBottom:'1px solid #f8fafc' }}>
+            <div className="hv-card" style={{ background:'var(--c-card)', borderRadius:22, border:'1.5px solid var(--c-border-light)', overflow:'hidden', boxShadow:'0 2px 16px rgba(0,0,0,.04)' }}>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 18px 12px', borderBottom:'1px solid var(--c-border-light)' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:8 }}>
                   <span style={{ fontSize:16 }}>🎯</span>
-                  <h2 style={{ fontWeight:800, fontSize:12, color:'#64748b', textTransform:'uppercase', letterSpacing:0.8, margin:0 }}>¿En qué está trabajando?</h2>
+                  <h2 style={{ fontWeight:800, fontSize:12, color:'var(--c-text-muted)', textTransform:'uppercase', letterSpacing:0.8, margin:0 }}>¿En qué está trabajando?</h2>
                 </div>
                 <span style={{ background:'#eff6ff', color:'#2563eb', fontSize:10, fontWeight:700, padding:'3px 9px', borderRadius:20, border:'1px solid #bfdbfe' }}>{programas.length} activos</span>
               </div>
@@ -519,11 +544,11 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 {programas.map((prog:any, i:number) => {
                   const emoji = AREA_EMOJI[(prog.area||'').toLowerCase()] || AREA_EMOJI.default
                   return (
-                    <div key={prog.id||i} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', background:'#f8fafc', borderRadius:14, border:'1px solid #f1f5f9' }}>
-                      <div style={{ width:36, height:36, background:'#fff', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0, border:'1px solid #e2e8f0', boxShadow:'0 1px 4px rgba(0,0,0,.05)' }}>{emoji}</div>
+                    <div key={prog.id||i} style={{ display:'flex', alignItems:'center', gap:12, padding:'10px 12px', background:'var(--c-surface)', borderRadius:14, border:'1px solid var(--c-border-light)' }}>
+                      <div style={{ width:36, height:36, background:'var(--c-card)', borderRadius:10, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18, flexShrink:0, border:'1px solid var(--c-border)', boxShadow:'0 1px 4px rgba(0,0,0,.05)' }}>{emoji}</div>
                       <div style={{ flex:1, minWidth:0 }}>
-                        <p style={{ fontWeight:700, fontSize:13, color:'#1e293b', margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{prog.nombre || prog.titulo || 'Programa'}</p>
-                        {prog.area && <p style={{ fontSize:11, color:'#94a3b8', margin:'1px 0 0', textTransform:'capitalize' }}>{prog.area}</p>}
+                        <p style={{ fontWeight:700, fontSize:13, color:'var(--c-text-primary)', margin:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{prog.nombre || prog.titulo || 'Programa'}</p>
+                        {prog.area && <p style={{ fontSize:11, color:'var(--c-text-placeholder)', margin:'1px 0 0', textTransform:'capitalize' }}>{prog.area}</p>}
                       </div>
                       <span style={{ fontSize:10, fontWeight:700, padding:'3px 8px', borderRadius:10, flexShrink:0, ...(prog.estado==='activo'?{background:'#f0fdf4',color:'#16a34a'}:prog.estado==='completado'?{background:'#f5f3ff',color:'#7c3aed'}:{background:'#fffbeb',color:'#d97706'}) }}>{prog.estado||'activo'}</span>
                     </div>
@@ -539,17 +564,17 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           )}
 
           {/* PROGRESO GENERAL */}
-          <div className="hv-card" style={{ background:'#fff', borderRadius:22, border:'1.5px solid #f1f5f9', padding:'16px 18px', boxShadow:'0 2px 16px rgba(0,0,0,.04)' }}>
+          <div className="hv-card" style={{ background:'var(--c-card)', borderRadius:22, border:'1.5px solid var(--c-border-light)', padding:'16px 18px', boxShadow:'0 2px 16px rgba(0,0,0,.04)' }}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:14 }}>
-              <div style={{ display:'flex', alignItems:'center', gap:8 }}><TrendingUp size={15} color="#7c3aed"/><h3 style={{ fontWeight:800, fontSize:12, color:'#64748b', textTransform:'uppercase', letterSpacing:0.8, margin:0 }}>Progreso general</h3></div>
+              <div style={{ display:'flex', alignItems:'center', gap:8 }}><TrendingUp size={15} color="#7c3aed"/><h3 style={{ fontWeight:800, fontSize:12, color:'var(--c-text-muted)', textTransform:'uppercase', letterSpacing:0.8, margin:0 }}>Progreso general</h3></div>
               {stats.goalsAchieved > 0 && <button onClick={()=>setShowCelebration(true)} className="hv-btn" style={{ display:'flex', alignItems:'center', gap:5, background:'#fffbeb', color:'#d97706', border:'1.5px solid #fde68a', borderRadius:20, fontSize:10, fontWeight:700, padding:'4px 10px', cursor:'pointer' }}><Trophy size={11}/>Ver logro 🎉</button>}
             </div>
 
             {stats.sessions === 0 ? (
               <div style={{ textAlign:'center', padding:'16px 0' }}>
                 <div style={{ width:52, height:52, background:'linear-gradient(135deg,#f8fafc,#f5f3ff)', borderRadius:16, display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}><BarChart3 size={24} color="#c4b5fd"/></div>
-                <p style={{ fontWeight:700, fontSize:13, color:'#64748b', margin:'0 0 4px' }}>El progreso aparecerá aquí</p>
-                <p style={{ fontSize:11, color:'#94a3b8', lineHeight:1.6, maxWidth:240, margin:'0 auto' }}>Después de las primeras sesiones verás los avances y objetivos logrados.</p>
+                <p style={{ fontWeight:700, fontSize:13, color:'var(--c-text-muted)', margin:'0 0 4px' }}>El progreso aparecerá aquí</p>
+                <p style={{ fontSize:11, color:'var(--c-text-placeholder)', lineHeight:1.6, maxWidth:240, margin:'0 auto' }}>Después de las primeras sesiones verás los avances y objetivos logrados.</p>
               </div>
             ) : (
               <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
@@ -560,8 +585,8 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 ].map(({ label, value, color, track }) => (
                   <div key={label}>
                     <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5 }}>
-                      <span style={{ fontSize:12, fontWeight:600, color:'#64748b' }}>{label}</span>
-                      <span style={{ fontSize:12, fontWeight:800, color:'#1e293b' }}>{value}%</span>
+                      <span style={{ fontSize:12, fontWeight:600, color:'var(--c-text-muted)' }}>{label}</span>
+                      <span style={{ fontSize:12, fontWeight:800, color:'var(--c-text-primary)' }}>{value}%</span>
                     </div>
                     <div style={{ height:8, background:track, borderRadius:20, overflow:'hidden' }}>
                       <div className="hv-prog-bar" style={{ height:'100%', width:`${value}%`, background:color, borderRadius:20 }}/>

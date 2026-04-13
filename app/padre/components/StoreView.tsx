@@ -60,15 +60,15 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
   return (
     <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      <div className="relative bg-white w-full max-w-md h-full flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="relative bg-white dark:bg-[#0d1117] w-full max-w-md h-full flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
-          <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
-            <ShoppingCart size={20} className="text-blue-600" /> Mi carrito
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-[#21262d]">
+          <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg flex items-center gap-2">
+            <ShoppingCart size={20} className="text-blue-600 dark:text-blue-400" /> Mi carrito
             {cart.length > 0 && <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">{cart.length}</span>}
           </h3>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
-            <X size={20} className="text-slate-500" />
+          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] rounded-xl transition-all">
+            <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-500" />
           </button>
         </div>
 
@@ -77,8 +77,8 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-5">
               <CheckCircle size={40} className="text-emerald-600" />
             </div>
-            <h3 className="text-2xl font-black text-slate-800 mb-2">{t('tienda.pedidoEnviado')}</h3>
-            <p className="text-slate-500 text-sm leading-relaxed mb-6">
+            <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">{t('tienda.pedidoEnviado')}</h3>
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-sm leading-relaxed mb-6">
               Tu pedido fue registrado. Nos pondremos en contacto contigo para confirmar el pago y la entrega.
             </p>
             <a href="https://wa.me/51924807183" target="_blank" rel="noopener noreferrer"
@@ -88,38 +88,38 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
           </div>
         ) : cart.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-20 h-20 bg-slate-100 rounded-2xl flex items-center justify-center mb-4">
+            <div className="w-20 h-20 bg-slate-100 dark:bg-[#21262d] rounded-2xl flex items-center justify-center mb-4">
               <ShoppingCart size={36} className="text-slate-300" />
             </div>
-            <p className="font-bold text-slate-500 mb-1">{t('ui.cart_empty')}</p>
-            <p className="text-sm text-slate-400">{t('ui.add_items')}</p>
+            <p className="font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 mb-1">{t('ui.cart_empty')}</p>
+            <p className="text-sm text-slate-400 dark:text-slate-500">{t('ui.add_items')}</p>
           </div>
         ) : (
           <>
             {/* Items */}
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               {cart.map(({ product: p, cantidad }: CartItem) => (
-                <div key={p.id} className="flex items-center gap-3 bg-slate-50 rounded-2xl p-3 border border-slate-100">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-200 shrink-0">
+                <div key={p.id} className="flex items-center gap-3 bg-slate-50 dark:bg-[#161b22] rounded-2xl p-3 border border-slate-100 dark:border-[#21262d]">
+                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-200 dark:bg-[#30363d] shrink-0">
                     {p.imagen_url
                       ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
                       : <Package size={20} className="text-slate-300 m-auto mt-3.5" />
                     }
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-slate-800 leading-tight truncate">{p.nombre}</p>
-                    <p className="text-xs text-blue-600 font-black mt-0.5">S/ {(p.precio_soles * cantidad).toFixed(2)}</p>
+                    <p className="font-bold text-sm text-slate-800 dark:text-slate-100 leading-tight truncate">{p.nombre}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-black mt-0.5">S/ {(p.precio_soles * cantidad).toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button onClick={() => onUpdate(p.id, cantidad - 1)}
-                      className="w-7 h-7 bg-white border border-slate-200 rounded-lg flex items-center justify-center hover:bg-red-50 hover:border-red-200 transition-all">
-                      <Minus size={12} className="text-slate-500" />
+                      className="w-7 h-7 bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-[#30363d] rounded-lg flex items-center justify-center hover:bg-red-50 dark:bg-red-900/20 hover:border-red-200 transition-all">
+                      <Minus size={12} className="text-slate-500 dark:text-slate-400 dark:text-slate-500" />
                     </button>
-                    <span className="w-6 text-center font-black text-sm text-slate-800">{cantidad}</span>
+                    <span className="w-6 text-center font-black text-sm text-slate-800 dark:text-slate-100">{cantidad}</span>
                     <button onClick={() => onUpdate(p.id, cantidad + 1)}
                       disabled={p.tipo === 'fisico' && cantidad >= p.stock}
-                      className="w-7 h-7 bg-white border border-slate-200 rounded-lg flex items-center justify-center hover:bg-blue-50 hover:border-blue-200 transition-all disabled:opacity-30">
-                      <Plus size={12} className="text-slate-500" />
+                      className="w-7 h-7 bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-[#30363d] rounded-lg flex items-center justify-center hover:bg-blue-50 dark:bg-blue-900/20 hover:border-blue-200 dark:border-blue-800/60 transition-all disabled:opacity-30">
+                      <Plus size={12} className="text-slate-500 dark:text-slate-400 dark:text-slate-500" />
                     </button>
                   </div>
                 </div>
@@ -127,35 +127,35 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
 
               {/* Nota */}
               <div className="pt-2">
-                <label className="block text-xs font-black text-slate-400 uppercase tracking-widest mb-2">{t('familias.notaCentro')}</label>
+                <label className="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">{t('familias.notaCentro')}</label>
                 <textarea
                   value={nota} onChange={e => setNota(e.target.value)}
                   rows={2} placeholder={t("tienda.pedidoGuardar")}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-blue-400 focus:bg-white transition-all resize-none"
+                  className="w-full px-4 py-3 bg-slate-50 dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] rounded-xl text-sm font-medium outline-none focus:border-blue-400 focus:bg-white dark:bg-[#0d1117] transition-all resize-none"
                 />
               </div>
 
               {/* Info pago */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <p className="text-xs font-black text-blue-700 mb-1">{t('tienda.comoPaga')}</p>
-                <p className="text-xs text-blue-600 leading-relaxed">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/60 rounded-xl p-4">
+                <p className="text-xs font-black text-blue-700 dark:text-blue-300 mb-1">{t('tienda.comoPaga')}</p>
+                <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
                   El pago se realiza al recoger el pedido en el centro (efectivo o yape). Para artículos digitales te enviaremos el archivo por WhatsApp tras confirmar el pago.
                 </p>
               </div>
             </div>
 
             {/* Footer con total y botón */}
-            <div className="border-t border-slate-100 p-5 space-y-3">
+            <div className="border-t border-slate-100 dark:border-[#21262d] p-5 space-y-3">
               <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-600">{t('ui.total_to_pay')}</span>
-                <span className="text-2xl font-black text-blue-600">S/ {total.toFixed(2)}</span>
+                <span className="font-bold text-slate-600 dark:text-slate-300">{t('ui.total_to_pay')}</span>
+                <span className="text-2xl font-black text-blue-600 dark:text-blue-400">S/ {total.toFixed(2)}</span>
               </div>
               <button onClick={handleCheckout} disabled={placing}
                 className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-black text-base rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg shadow-blue-200">
                 {placing ? <Loader2 size={18} className="animate-spin" /> : <ShoppingBag size={18} />}
                 {placing ? 'Enviando pedido...' : 'Confirmar pedido'}
               </button>
-              <p className="text-center text-xs text-slate-400">
+              <p className="text-center text-xs text-slate-400 dark:text-slate-500">
                 Al confirmar, el centro recibirá tu pedido y te contactará
               </p>
             </div>
@@ -278,7 +278,7 @@ export default function StoreView({ profile }: { profile: any }) {
 
   if (loading) return (
     <div className="flex items-center justify-center py-32">
-      <Loader2 size={32} className="animate-spin text-blue-600" />
+      <Loader2 size={32} className="animate-spin text-blue-600 dark:text-blue-400" />
     </div>
   )
 
@@ -297,15 +297,15 @@ export default function StoreView({ profile }: { profile: any }) {
       `}</style>
 
       {/* ── Clean header with tabs ── */}
-      <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100">
+      <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#21262d]">
         <div>
-          <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center flex-shrink-0">
-              <ShoppingBag size={15} className="text-blue-600"/>
+          <h2 className="text-lg font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 flex items-center justify-center flex-shrink-0">
+              <ShoppingBag size={15} className="text-blue-600 dark:text-blue-400"/>
             </div>
             {view === 'catalogo' ? 'Tienda' : 'Mis pedidos'}
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5 ml-10">
+          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 ml-10">
             {view === 'catalogo' ? `${products.length} productos disponibles` : `${orders.length} pedido${orders.length !== 1 ? 's' : ''}`}
           </p>
         </div>
@@ -318,7 +318,7 @@ export default function StoreView({ profile }: { profile: any }) {
             </button>
           )}
           {/* Toggle view */}
-          <div className="flex bg-slate-100 rounded-xl p-1 gap-1">
+          <div className="flex bg-slate-100 dark:bg-[#21262d] rounded-xl p-1 gap-1">
             <button onClick={() => setView('catalogo')}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${view === 'catalogo' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>
               Catálogo
@@ -342,9 +342,9 @@ export default function StoreView({ profile }: { profile: any }) {
           {/* Búsqueda y filtros */}
           <div className="space-y-3">
             <div className="relative">
-              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input value={search} onChange={e => setSearch(e.target.value)} {...{placeholder: t('ui.search_material')}}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium outline-none focus:border-blue-400 transition-all shadow-sm"
+                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-[#30363d] rounded-xl text-sm font-medium outline-none focus:border-blue-400 transition-all shadow-sm"
               />
             </div>
             <div className="flex gap-2 flex-wrap">
@@ -354,7 +354,7 @@ export default function StoreView({ profile }: { profile: any }) {
                   {f === 'todos' ? 'Todo' : f === 'fisico' ? '📦 Físicos' : '📄 Digitales'}
                 </button>
               ))}
-              <div className="w-px bg-slate-200 self-stretch mx-1" />
+              <div className="w-px bg-slate-200 dark:bg-[#30363d] self-stretch mx-1" />
               {categorias.map(c => (
                 <button key={c} onClick={() => setFilterCat(c)}
                   className={`px-3.5 py-2 rounded-xl border text-xs font-bold capitalize transition-all ${filterCat === c ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
@@ -367,7 +367,7 @@ export default function StoreView({ profile }: { profile: any }) {
           {/* Destacados */}
           {destacados.length > 0 && search === '' && filterTipo === 'todos' && filterCat === 'todos' && (
             <div>
-              <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                 <Star size={12} className="text-amber-400 fill-amber-400" /> Destacados
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -382,7 +382,7 @@ export default function StoreView({ profile }: { profile: any }) {
           {resto.length > 0 || (filtered.length > 0 && destacados.length === 0) ? (
             <div>
               {destacados.length > 0 && search === '' && filterTipo === 'todos' && filterCat === 'todos' && (
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">{t('ui.all_items')}</p>
+                <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">{t('ui.all_items')}</p>
               )}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {(destacados.length > 0 && search === '' && filterTipo === 'todos' && filterCat === 'todos' ? resto : filtered).map(p => (
@@ -391,24 +391,24 @@ export default function StoreView({ profile }: { profile: any }) {
               </div>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 py-20 text-center">
+            <div className="bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-200 dark:border-[#30363d] py-20 text-center">
               <ShoppingBag size={36} className="text-slate-200 mx-auto mb-3" />
-              <p className="font-bold text-slate-400">{t('ui.no_items_found')}</p>
+              <p className="font-bold text-slate-400 dark:text-slate-500">{t('ui.no_items_found')}</p>
               <button onClick={() => { setSearch(''); setFilterTipo('todos'); setFilterCat('todos') }}
-                className="mt-3 text-xs font-bold text-blue-600 hover:underline">
+                className="mt-3 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline">
                 Limpiar filtros
               </button>
             </div>
           ) : null}
 
           {/* Info tienda */}
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 p-5 flex gap-4 items-start">
-            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
-              <Package size={18} className="text-blue-600" />
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100 dark:border-blue-800/50 p-5 flex gap-4 items-start">
+            <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center shrink-0">
+              <Package size={18} className="text-blue-600 dark:text-blue-400" />
             </div>
             <div>
               <p className="font-bold text-blue-800 text-sm mb-1">{t('tienda.comoFuncTienda')}</p>
-              <p className="text-xs text-blue-600 leading-relaxed">
+              <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
                 {t('ui.physical_items_note')}
                 Los <strong>{t('ui.digitales')}</strong> te los enviamos por WhatsApp tras confirmar el pago.
                 ¿Dudas? Escríbenos al <a href="https://wa.me/51924807183" className="underline font-bold">+51 924 807 183</a>.
@@ -422,10 +422,10 @@ export default function StoreView({ profile }: { profile: any }) {
       {view === 'mis-pedidos' && (
         <div className="space-y-4">
           {orders.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 py-20 text-center">
+            <div className="bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-200 dark:border-[#30363d] py-20 text-center">
               <ShoppingBag size={36} className="text-slate-200 mx-auto mb-3" />
-              <p className="font-bold text-slate-500 mb-1">{t('tienda.sinPedidos')}</p>
-              <p className="text-sm text-slate-400 mb-4">{t('tienda.exploraCompra')}</p>
+              <p className="font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 mb-1">{t('tienda.sinPedidos')}</p>
+              <p className="text-sm text-slate-400 dark:text-slate-500 mb-4">{t('tienda.exploraCompra')}</p>
               <button onClick={() => setView('catalogo')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-all">
                 Ir a la tienda →
@@ -441,32 +441,32 @@ export default function StoreView({ profile }: { profile: any }) {
                     <StatusIcon size={15} className={cfg.color} />
                     <span className={`text-xs font-black ${cfg.color}`}>{cfg.label}</span>
                   </div>
-                  <span className="text-xs text-slate-400">
+                  <span className="text-xs text-slate-400 dark:text-slate-500">
                     {new Date(order.created_at).toLocaleDateString(toBCP47(locale), { day: 'numeric', month: 'long', year: 'numeric' })}
                   </span>
                 </div>
                 <div className="p-5 space-y-3">
                   {(order.store_order_items || []).map((item: any) => (
                     <div key={item.id} className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 shrink-0">
+                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-slate-100 dark:bg-[#21262d] shrink-0">
                         {item.product_imagen
                           ? <img src={item.product_imagen} alt="" className="w-full h-full object-cover" />
                           : <Package size={18} className="text-slate-300 m-auto mt-3" />
                         }
                       </div>
                       <div className="flex-1">
-                        <p className="font-bold text-sm text-slate-800">{item.product_nombre}</p>
-                        <p className="text-xs text-slate-400">x{item.cantidad} · S/ {Number(item.precio_unitario).toFixed(2)} c/u</p>
+                        <p className="font-bold text-sm text-slate-800 dark:text-slate-100">{item.product_nombre}</p>
+                        <p className="text-xs text-slate-400 dark:text-slate-500">x{item.cantidad} · S/ {Number(item.precio_unitario).toFixed(2)} c/u</p>
                       </div>
-                      <p className="font-black text-slate-700">S/ {Number(item.subtotal).toFixed(2)}</p>
+                      <p className="font-black text-slate-700 dark:text-slate-200">S/ {Number(item.subtotal).toFixed(2)}</p>
                     </div>
                   ))}
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-sm text-slate-500 font-medium">Total pagado</span>
-                    <span className="text-xl font-black text-blue-600">S/ {Number(order.total_soles).toFixed(2)}</span>
+                  <div className="pt-3 border-t border-slate-100 dark:border-[#21262d] flex items-center justify-between">
+                    <span className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500 font-medium">Total pagado</span>
+                    <span className="text-xl font-black text-blue-600 dark:text-blue-400">S/ {Number(order.total_soles).toFixed(2)}</span>
                   </div>
                   {order.notas && (
-                    <p className="text-xs text-slate-400 italic">Tu nota: "{order.notas}"</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 italic">Tu nota: "{order.notas}"</p>
                   )}
                 </div>
               </div>
@@ -517,10 +517,10 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
       </div>
 
       <div className="p-4">
-        <p className="font-black text-slate-800 text-sm leading-tight mb-1 line-clamp-2" onClick={() => onDetail(p)}>{p.nombre}</p>
-        <p className="text-xs text-slate-400 line-clamp-2 mb-3 leading-relaxed">{p.descripcion}</p>
+        <p className="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1 line-clamp-2" onClick={() => onDetail(p)}>{p.nombre}</p>
+        <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-2 mb-3 leading-relaxed">{p.descripcion}</p>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-lg font-black text-blue-600">S/ {Number(p.precio_soles).toFixed(2)}</span>
+          <span className="text-lg font-black text-blue-600 dark:text-blue-400">S/ {Number(p.precio_soles).toFixed(2)}</span>
           <button onClick={() => !sinStock && onAdd(p)} disabled={sinStock}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${justAdded ? 'bg-emerald-600 text-white scale-95' : sinStock ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200'}`}>
             {justAdded ? <><CheckCircle size={13} /> {t('ui.added_short')}</> : <><ShoppingCart size={13} /> {inCart > 0 ? `${t('ui.in_cart')} (${inCart})` : t('common.agregar')}</>}
@@ -537,15 +537,15 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
   const sinStock = p.tipo === 'fisico' && p.stock === 0
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-      <div className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#0d1117] w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
         {/* Imagen */}
-        <div className="relative h-56 bg-slate-100 shrink-0">
+        <div className="relative h-56 bg-slate-100 dark:bg-[#21262d] shrink-0">
           {p.imagen_url
             ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
             : <div className="flex items-center justify-center h-full"><ImageIcon size={40} className="text-slate-300" /></div>
           }
-          <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 bg-white/90 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
-            <X size={18} className="text-slate-600" />
+          <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 bg-white dark:bg-[#0d1117]/90 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
+            <X size={18} className="text-slate-600 dark:text-slate-300" />
           </button>
           <div className="absolute top-4 left-4 flex gap-2">
             <span className={`text-xs font-black px-3 py-1 rounded-full text-white ${p.tipo === 'digital' ? 'bg-violet-600' : 'bg-slate-700'}`}>
@@ -557,24 +557,24 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
 
         <div className="p-6 overflow-y-auto flex-1">
           <div className="flex items-start justify-between gap-4 mb-3">
-            <h3 className="text-xl font-black text-slate-800 leading-tight flex-1">{p.nombre}</h3>
-            <span className="text-2xl font-black text-blue-600 shrink-0">S/ {Number(p.precio_soles).toFixed(2)}</span>
+            <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 leading-tight flex-1">{p.nombre}</h3>
+            <span className="text-2xl font-black text-blue-600 dark:text-blue-400 shrink-0">S/ {Number(p.precio_soles).toFixed(2)}</span>
           </div>
 
           <div className="flex gap-2 mb-4">
-            <span className="text-xs font-bold capitalize bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">{p.categoria}</span>
+            <span className="text-xs font-bold capitalize bg-slate-100 dark:bg-[#21262d] text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-full">{p.categoria}</span>
             {p.tipo === 'fisico' && <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-100 text-emerald-700' : p.stock > 0 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
               {p.stock === 0 ? 'Sin stock' : `${p.stock} disponibles`}
             </span>}
-            {p.tipo === 'digital' && <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700">Descarga inmediata</span>}
+            {p.tipo === 'digital' && <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 dark:text-violet-300">Descarga inmediata</span>}
           </div>
 
-          <p className="text-slate-600 text-sm leading-relaxed mb-6">{p.descripcion || 'Sin descripción disponible.'}</p>
+          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6">{p.descripcion || 'Sin descripción disponible.'}</p>
 
           {p.tipo === 'digital' && (
-            <div className="bg-violet-50 border border-violet-200 rounded-xl p-4 mb-4">
-              <p className="text-xs font-black text-violet-700 mb-1">{t('tienda.articuloDigital')}</p>
-              <p className="text-xs text-violet-600">Al confirmar tu pedido y pagar, recibirás el archivo por WhatsApp en menos de 24 horas.</p>
+            <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 rounded-xl p-4 mb-4">
+              <p className="text-xs font-black text-violet-700 dark:text-violet-300 mb-1">{t('tienda.articuloDigital')}</p>
+              <p className="text-xs text-violet-600 dark:text-violet-400">Al confirmar tu pedido y pagar, recibirás el archivo por WhatsApp en menos de 24 horas.</p>
             </div>
           )}
 

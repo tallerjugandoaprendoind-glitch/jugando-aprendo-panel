@@ -12,8 +12,8 @@ export function StatCard({icon, label, value, color, trend}: any) {
                 <div className="text-2xl">{icon}</div>
                 {trend && <span className={`text-xs font-bold px-2 py-1 rounded-full ${trend > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{trend > 0 ? '+' : ''}{trend}%</span>}
             </div>
-            <p className="text-2xl font-black text-slate-800 mb-1">{value}</p>
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">{label}</p>
+            <p className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-1">{value}</p>
+            <p className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wider">{label}</p>
         </div>
     )
 }
@@ -24,10 +24,10 @@ export function ObjectiveBar({ label, progress, color, icon }: any) {
             <div className="text-lg">{icon}</div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-bold text-slate-700 truncate">{label}</p>
-                    <p className="text-xs font-black text-slate-500 ml-2">{progress}%</p>
+                    <p className="text-xs font-bold text-slate-700 dark:text-slate-200 truncate">{label}</p>
+                    <p className="text-xs font-black text-slate-500 dark:text-slate-400 dark:text-slate-500 ml-2">{progress}%</p>
                 </div>
-                <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-2 bg-slate-100 dark:bg-[#21262d] rounded-full overflow-hidden">
                     <div className={`h-full ${color} rounded-full transition-all duration-500`} style={{width: `${progress}%`}}></div>
                 </div>
             </div>
@@ -94,10 +94,10 @@ export function NotificationItem({icon, title, message, time, isNew}: any) {
             <div className="text-xl flex-shrink-0 mt-0.5">{icon}</div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-bold text-slate-800 truncate">{title}</p>
-                    <span className="text-xs text-slate-400 flex-shrink-0">{time}</span>
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate">{title}</p>
+                    <span className="text-xs text-slate-400 dark:text-slate-500 flex-shrink-0">{time}</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-0.5 line-clamp-2">{message}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-0.5 line-clamp-2">{message}</p>
             </div>
         </div>
     )
@@ -105,11 +105,11 @@ export function NotificationItem({icon, title, message, time, isNew}: any) {
 
 export function HelpItem({icon, title, description}: any) {
     return (
-        <div className="flex gap-3 p-4 bg-white rounded-2xl border border-slate-100 hover:border-blue-100 hover:shadow-sm transition-all cursor-pointer group">
+        <div className="flex gap-3 p-4 bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-100 dark:border-[#21262d] hover:border-blue-100 dark:border-blue-800/50 hover:shadow-sm transition-all cursor-pointer group">
             <div className="text-2xl flex-shrink-0">{icon}</div>
             <div>
-                <p className="font-bold text-slate-800 text-sm group-hover:text-blue-700 transition-colors">{title}</p>
-                <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+                <p className="font-bold text-slate-800 dark:text-slate-100 text-sm group-hover:text-blue-700 dark:text-blue-300 transition-colors">{title}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-500 mt-0.5">{description}</p>
             </div>
         </div>
     )
@@ -118,10 +118,10 @@ export function HelpItem({icon, title, description}: any) {
 export function InfoRow({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
     return (
         <div className="flex items-start gap-3 py-3 border-b border-slate-50 last:border-0">
-            {icon && <div className="mt-0.5 text-slate-400 flex-shrink-0">{icon}</div>}
+            {icon && <div className="mt-0.5 text-slate-400 dark:text-slate-500 flex-shrink-0">{icon}</div>}
             <div className="flex-1 min-w-0">
-                <p className="text-xs font-black text-slate-400 uppercase tracking-widest mb-1">{label}</p>
-                <p className="text-sm font-bold text-slate-700 break-words">{value}</p>
+                <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-1">{label}</p>
+                <p className="text-sm font-bold text-slate-700 dark:text-slate-200 break-words">{value}</p>
             </div>
         </div>
     )

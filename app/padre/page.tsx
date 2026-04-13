@@ -333,12 +333,12 @@ export default function ParentDashboard() {
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 gap-4">
       <div className="relative">
-        <Loader2 className="animate-spin text-blue-600" size={56}/>
+        <Loader2 className="animate-spin text-blue-600 dark:text-blue-400" size={56}/>
         <div className="absolute inset-0 animate-ping">
           <Loader2 className="text-blue-300 opacity-40" size={56}/>
         </div>
       </div>
-      <p className="text-slate-500 font-bold text-sm tracking-widest uppercase animate-pulse">{t('familias.cargandoInfo')}</p>
+      <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 font-bold text-sm tracking-widest uppercase animate-pulse">{t('familias.cargandoInfo')}</p>
     </div>
   )
 
@@ -355,22 +355,22 @@ export default function ParentDashboard() {
                   {i + 1}
                 </div>
                 <span className={`text-xs font-bold ${i === 0 ? 'text-violet-600' : 'text-slate-400'}`}>{step}</span>
-                {i < 2 && <div className="w-8 h-px bg-slate-200" />}
+                {i < 2 && <div className="w-8 h-px bg-slate-200 dark:bg-[#30363d]" />}
               </div>
             ))}
           </div>
 
-          <div className="bg-white rounded-3xl p-8 shadow-2xl shadow-violet-100 border border-violet-100 text-center">
+          <div className="bg-white dark:bg-[#0d1117] rounded-3xl p-8 shadow-2xl shadow-violet-100 border border-violet-100 dark:border-violet-800/50 text-center">
             {/* Avatar */}
             <div className="w-20 h-20 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-[22px] flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-violet-200 mx-auto mb-6">
               {profile?.full_name?.charAt(0) || 'F'}
             </div>
 
-            <h1 className="text-2xl font-black text-slate-800 mb-3">
+            <h1 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-3">
               ¡Bienvenido/a, {profile?.full_name?.split(' ')[0]}! 🎉
             </h1>
-            <p className="text-slate-500 text-base leading-relaxed mb-8">
-              Estamos felices de tenerte en <strong className="text-violet-600">Jugando Aprendo</strong>.
+            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-base leading-relaxed mb-8">
+              Estamos felices de tenerte en <strong className="text-violet-600 dark:text-violet-400">Jugando Aprendo</strong>.
               Para comenzar, necesitamos registrar a tu hijo/a y podrás acceder a todo el sistema de seguimiento con IA.
             </p>
 
@@ -381,9 +381,9 @@ export default function ParentDashboard() {
                 { icon: '🤖', label: 'Asistente IA 24/7' },
                 { icon: '📅', label: 'Citas con 1 click' },
               ].map(({ icon, label }) => (
-                <div key={label} className="bg-violet-50 rounded-2xl p-4 border border-violet-100">
+                <div key={label} className="bg-violet-50 dark:bg-violet-900/20 rounded-2xl p-4 border border-violet-100 dark:border-violet-800/50">
                   <div className="text-2xl mb-2">{icon}</div>
-                  <p className="text-xs font-bold text-violet-700 leading-tight">{label}</p>
+                  <p className="text-xs font-bold text-violet-700 dark:text-violet-300 leading-tight">{label}</p>
                 </div>
               ))}
             </div>
@@ -395,15 +395,15 @@ export default function ParentDashboard() {
               <Baby size={20} /> Registrar a mi hijo/a ahora
             </button>
 
-            <p className="text-xs text-slate-400 mt-4">
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-4">
               Solo toma 1 minuto · Tus datos están protegidos
             </p>
           </div>
 
           {/* Help contact */}
-          <p className="text-center text-sm text-slate-400 mt-6">
+          <p className="text-center text-sm text-slate-400 dark:text-slate-500 mt-6">
             ¿Tienes dudas? Escríbenos:{' '}
-            <a href="https://wa.me/51924807183" className="text-violet-600 font-bold hover:underline">
+            <a href="https://wa.me/51924807183" className="text-violet-600 dark:text-violet-400 font-bold hover:underline">
               +51 924 807 183
             </a>
           </p>
@@ -411,8 +411,8 @@ export default function ParentDashboard() {
 
         {/* El modal de agregar hijo ya existe en el código principal */}
         {showAddChild && (
-          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
-            <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl relative overflow-hidden">
+          <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-[#0d1117] p-8 rounded-3xl w-full max-w-md shadow-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50"></div>
               <div className="relative z-10">
                 <div className="flex justify-between items-center mb-6">
@@ -421,34 +421,34 @@ export default function ParentDashboard() {
                       <Baby size={24} className="text-white"/>
                     </div>
                     <div>
-                      <h3 className="font-bold text-2xl text-slate-800">Paso 2: Tu hijo/a</h3>
-                      <p className="text-sm text-slate-400 font-medium">{t('ui.enter_basic_data')}</p>
+                      <h3 className="font-bold text-2xl text-slate-800 dark:text-slate-100">Paso 2: Tu hijo/a</h3>
+                      <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">{t('ui.enter_basic_data')}</p>
                     </div>
                   </div>
-                  <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+                  <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] rounded-xl transition-all">
                     <X size={22}/>
                   </button>
                 </div>
                 <form onSubmit={handleAddChild} className="space-y-4">
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">{t('familias.nombreCompletoStar')}</label>
-                    <input name="name" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder={t('familias.ejNombre')}/>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block">{t('familias.nombreCompletoStar')}</label>
+                    <input name="name" required className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white dark:bg-[#0d1117] focus:border-blue-400 transition-all" placeholder={t('familias.ejNombre')}/>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">{t('familias.fechaNacStar')}</label>
-                    <input name="dob" type="date" required className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all"/>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block">{t('familias.fechaNacStar')}</label>
+                    <input name="dob" type="date" required className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white dark:bg-[#0d1117] focus:border-blue-400 transition-all"/>
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">{t('familias.diagOpcional')}</label>
-                    <input name="diagnosis" className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all" placeholder="Ej: TEA Nivel 2"/>
+                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block">{t('familias.diagOpcional')}</label>
+                    <input name="diagnosis" className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white dark:bg-[#0d1117] focus:border-blue-400 transition-all" placeholder="Ej: TEA Nivel 2"/>
                   </div>
-                  <div className="bg-violet-50 border-2 border-violet-100 rounded-2xl p-4">
-                    <p className="text-xs text-violet-700 font-bold flex items-center gap-2">
+                  <div className="bg-violet-50 dark:bg-violet-900/20 border-2 border-violet-100 dark:border-violet-800/50 rounded-2xl p-4">
+                    <p className="text-xs text-violet-700 dark:text-violet-300 font-bold flex items-center gap-2">
                       <Sparkles size={14}/> La edad se calculará automáticamente
                     </p>
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button type="button" onClick={()=>setShowAddChild(false)} className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all">{t('common.cancelar')}</button>
+                    <button type="button" onClick={()=>setShowAddChild(false)} className="flex-1 py-4 font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-[#161b22] dark:bg-[#161b22] rounded-2xl transition-all">{t('common.cancelar')}</button>
                     <button type="submit" className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
                       <CheckCircle2 size={18}/> {t('familias.guardarContinuar')}
                     </button>
@@ -463,7 +463,7 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-700 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-[#161b22] font-sans text-slate-700 dark:text-slate-200 overflow-hidden">
         
         {/* 🔔 PUSH NOTIFICATIONS BANNER */}
         <PushNotificationBanner userId={profile?.id || null} />
@@ -482,13 +482,13 @@ export default function ParentDashboard() {
         {/* 🎉 ANIMACIÓN DE ÉXITO */}
         {showSuccessAnimation && (
             <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
-                <div className="bg-white/95 backdrop-blur-xl p-12 rounded-[3rem] shadow-2xl border-4 border-green-500 animate-bounce">
+                <div className="bg-white dark:bg-[#0d1117]/95 backdrop-blur-xl p-12 rounded-[3rem] shadow-2xl border-4 border-green-500 animate-bounce">
                     <div className="flex flex-col items-center gap-6">
                         <div className="relative">
                             <PartyPopper size={80} className="text-green-500 animate-pulse"/>
                             <div className="absolute inset-0 bg-green-400 blur-3xl opacity-50 animate-ping"></div>
                         </div>
-                        <h2 className="text-4xl font-black text-slate-800 text-center">{celebrationMessage}</h2>
+                        <h2 className="text-4xl font-black text-slate-800 dark:text-slate-100 text-center">{celebrationMessage}</h2>
                         <div className="flex gap-3">
                             <Star size={32} className="text-yellow-400 animate-spin"/>
                             <Star size={32} className="text-yellow-400 animate-spin" style={{animationDelay: '0.2s'}}/>
@@ -500,15 +500,15 @@ export default function ParentDashboard() {
         )}
 
         {/* === SIDEBAR (PC) === */}
-        <aside className="hidden lg:flex w-[230px] bg-white border-r border-slate-100 flex-col z-20 shadow-[1px_0_3px_rgba(0,0,0,0.04)]">
+        <aside className="hidden lg:flex w-[230px] bg-white dark:bg-[#0d1117] border-r border-slate-100 dark:border-[#21262d] flex-col z-20 shadow-[1px_0_3px_rgba(0,0,0,0.04)]">
 
             {/* Logo header */}
-            <div className="flex items-center gap-3 px-5 h-[60px] border-b border-slate-100/80 flex-shrink-0">
+            <div className="flex items-center gap-3 px-5 h-[60px] border-b border-slate-100 dark:border-[#21262d]/80 flex-shrink-0">
                 {profile?.avatar_url ? (
                     <img
                         src={profile.avatar_url}
                         alt="Foto de perfil"
-                        className="w-8 h-8 rounded-xl object-cover shadow-md border border-slate-200 flex-shrink-0"
+                        className="w-8 h-8 rounded-xl object-cover shadow-md border border-slate-200 dark:border-[#30363d] flex-shrink-0"
                     />
                 ) : (
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-base shadow-md shadow-blue-200/50 flex-shrink-0">
@@ -516,16 +516,16 @@ export default function ParentDashboard() {
                     </div>
                 )}
                 <div className="min-w-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">{t('ui.welcome')}</p>
-                    <p className="font-black text-[13px] text-slate-800 truncate">Fam. {profile?.full_name?.split(' ')[0]}</p>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none mb-0.5">{t('ui.welcome')}</p>
+                    <p className="font-black text-[13px] text-slate-800 dark:text-slate-100 truncate">Fam. {profile?.full_name?.split(' ')[0]}</p>
                 </div>
             </div>
 
             {/* Role badge */}
             <div className="px-4 pt-4 pb-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100/80">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50/80">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Portal Familias</span>
+                    <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest">Portal Familias</span>
                 </div>
             </div>
 
@@ -541,16 +541,16 @@ export default function ParentDashboard() {
             </nav>
 
             {/* Bottom section */}
-            <div className="p-3 border-t border-slate-100 space-y-2 flex-shrink-0">
-                <div className="bg-blue-50 border border-blue-100 px-4 py-3 rounded-xl">
-                    <p className="text-[10px] font-black text-blue-700 flex items-center gap-1.5 mb-1">
+            <div className="p-3 border-t border-slate-100 dark:border-[#21262d] space-y-2 flex-shrink-0">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 px-4 py-3 rounded-xl">
+                    <p className="text-[10px] font-black text-blue-700 dark:text-blue-300 flex items-center gap-1.5 mb-1">
                         <Calendar size={10}/> Tus citas
                     </p>
-                    <p className="text-[10px] text-blue-500 leading-relaxed">Programadas por el equipo del centro. Para cambios contactá a recepción.</p>
+                    <p className="text-[10px] text-blue-500 dark:text-blue-400 leading-relaxed">Programadas por el equipo del centro. Para cambios contactá a recepción.</p>
                 </div>
                 <button
                     onClick={handleOpenNotifications}
-                    className="w-full bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-700 px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 border border-slate-200 hover:border-blue-200 active:scale-95 relative"
+                    className="w-full bg-slate-50 dark:bg-[#161b22] hover:bg-blue-50 dark:bg-blue-900/20 text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:text-blue-300 px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 border border-slate-200 dark:border-[#30363d] hover:border-blue-200 dark:border-blue-800/60 active:scale-95 relative"
                 >
                     <Bell size={14}/>
                     Ver Notificaciones
@@ -567,14 +567,14 @@ export default function ParentDashboard() {
         <div className="flex-1 flex flex-col h-full relative">
             
             {/* 📱 HEADER MÓVIL */}
-            <header className="lg:hidden bg-white/95 backdrop-blur-xl px-4 h-[60px] flex justify-between items-center border-b border-slate-100 sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
+            <header className="lg:hidden bg-white dark:bg-[#0d1117]/95 backdrop-blur-xl px-4 h-[60px] flex justify-between items-center border-b border-slate-100 dark:border-[#21262d] sticky top-0 z-30 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
                 <div className="flex items-center gap-3">
                     <div className="relative flex-shrink-0">
                         {profile?.avatar_url ? (
                             <img
                                 src={profile.avatar_url}
                                 alt="Foto de perfil"
-                                className="w-8 h-8 rounded-xl object-cover shadow-md border border-slate-200"
+                                className="w-8 h-8 rounded-xl object-cover shadow-md border border-slate-200 dark:border-[#30363d]"
                             />
                         ) : (
                             <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-black text-white text-sm shadow-md shadow-blue-200/50">
@@ -584,13 +584,13 @@ export default function ParentDashboard() {
                         <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white" />
                     </div>
                     <div>
-                        <p className="font-black text-slate-800 text-sm leading-tight">{profile?.full_name?.split(' ')[0]}</p>
-                        <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Portal Familias</p>
+                        <p className="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight">{profile?.full_name?.split(' ')[0]}</p>
+                        <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">Portal Familias</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <ThemeToggleButton />
-                    <button onClick={handleOpenNotifications} className="w-8 h-8 rounded-xl bg-slate-50 hover:bg-blue-50 text-slate-500 hover:text-blue-600 flex items-center justify-center relative transition-colors active:scale-95 border border-slate-200">
+                    <button onClick={handleOpenNotifications} className="w-8 h-8 rounded-xl bg-slate-50 dark:bg-[#161b22] hover:bg-blue-50 dark:bg-blue-900/20 text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:text-blue-600 dark:text-blue-400 flex items-center justify-center relative transition-colors active:scale-95 border border-slate-200 dark:border-[#30363d]">
                         <Bell size={16}/>
                         {unreadCount > 0 && (
                             <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
@@ -601,8 +601,8 @@ export default function ParentDashboard() {
             </header>
 
             {/* 👶 SELECTOR DE HIJOS MEJORADO */}
-            <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 py-4 px-4 md:px-8 flex gap-3 overflow-x-auto items-center scrollbar-hide shadow-sm">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0 mr-2 flex items-center gap-2">
+            <div className="bg-white dark:bg-[#0d1117]/80 backdrop-blur-sm border-b border-slate-200 dark:border-[#30363d]/60 py-4 px-4 md:px-8 flex gap-3 overflow-x-auto items-center scrollbar-hide shadow-sm">
+                <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest shrink-0 mr-2 flex items-center gap-2">
                     <User size={12}/> {t('ui.viendo')}
                 </span>
                 {myChildren.length > 0 ? myChildren.map(child => (
@@ -622,10 +622,10 @@ export default function ParentDashboard() {
                             </span>
                         </div>
                     </button>
-                )) : <span className="text-xs text-slate-400 italic">{t('ui.no_patients')}</span>}
+                )) : <span className="text-xs text-slate-400 dark:text-slate-500 italic">{t('ui.no_patients')}</span>}
                 <button 
                     onClick={()=>setShowAddChild(true)} 
-                    className="w-10 h-10 rounded-2xl bg-blue-50 border-2 border-dashed border-blue-200 flex items-center justify-center text-blue-600 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shrink-0 hover:scale-110 active:scale-95 hover:rotate-90"
+                    className="w-10 h-10 rounded-2xl bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-200 dark:border-blue-800/60 flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-all shrink-0 hover:scale-110 active:scale-95 hover:rotate-90"
                 >
                     <Plus size={18}/>
                 </button>
@@ -654,7 +654,7 @@ export default function ParentDashboard() {
                     )}
 
                     {activeView === 'chat' && (
-                          <div className="lg:rounded-3xl lg:shadow-xl lg:border lg:border-slate-200/60 overflow-hidden flex flex-col animate-fade-in"
+                          <div className="lg:rounded-3xl lg:shadow-xl lg:border lg:border-slate-200 dark:border-[#30363d]/60 overflow-hidden flex flex-col animate-fade-in"
                             style={{ height: 'calc(100svh - 144px)' }}
                             >
                             <ChatInterface childId={selectedChild?.id} childName={selectedChild?.name} onNavigateToStore={() => setActiveView('tienda')} parentId={profile?.id} />
@@ -664,7 +664,7 @@ export default function ParentDashboard() {
                     {(activeView === 'misformularios' || activeView === 'tienda' || activeView === 'documentos') && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} initialTab={activeView === 'tienda' ? 'store' : activeView === 'documentos' ? 'documentos' : 'forms'} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
                     {activeView === 'chat-familias' && selectedChild && (
-                      <div className="lg:rounded-3xl lg:shadow-xl lg:border lg:border-slate-200/60 overflow-hidden flex flex-col animate-fade-in"
+                      <div className="lg:rounded-3xl lg:shadow-xl lg:border lg:border-slate-200 dark:border-[#30363d]/60 overflow-hidden flex flex-col animate-fade-in"
                         style={{ height: 'calc(100svh - 130px)' }}>
                         <ChatFamilias childId={selectedChild.id} childName={selectedChild.name} profile={profile} />
                       </div>
@@ -672,7 +672,7 @@ export default function ParentDashboard() {
                     {activeView === 'chat-familias' && !selectedChild && (
                       <div className="flex flex-col items-center justify-center py-20 text-center gap-3">
                         <MessageCircle size={32} className="text-slate-300"/>
-                        <p className="font-bold text-slate-500">Selecciona un hijo/a para abrir el chat</p>
+                        <p className="font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500">Selecciona un hijo/a para abrir el chat</p>
                       </div>
                     )}
                     {activeView === 'engagement' && <EngagementView childId={selectedChild?.id || ''} />}
@@ -693,7 +693,7 @@ export default function ParentDashboard() {
             </main>
 
             {/* 📱 NAVEGACIÓN INFERIOR MÓVIL MEJORADA */}
-            <nav className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-around items-center fixed bottom-0 w-full z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+            <nav className="lg:hidden bg-white dark:bg-[#0d1117]/95 backdrop-blur-xl border-t border-slate-200 dark:border-[#30363d]/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-around items-center fixed bottom-0 w-full z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
                 <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                 <NavBtnMobile icon={<Calendar size={22}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} badge={null} />
                 <div className="relative -top-5">
@@ -723,7 +723,7 @@ export default function ParentDashboard() {
                     <span className="text-[10px] font-medium">Más</span>
                   </button>
                   {showMoreMenu && (
-                    <div className="absolute bottom-14 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 w-52 z-50 flex flex-col gap-1">
+                    <div className="absolute bottom-14 right-0 bg-white dark:bg-[#0d1117] rounded-2xl shadow-2xl border border-slate-100 dark:border-[#21262d] p-2 w-52 z-50 flex flex-col gap-1">
                       {[
                         { id: 'engagement', icon: <Zap size={18}/>, label: 'Act. en Casa' },
                         { id: 'chat-familias', icon: <MessageCircle size={18}/>, label: 'Chat' },
@@ -742,8 +742,8 @@ export default function ParentDashboard() {
 
         {/* 🎨 MODAL - AGREGAR HIJO MEJORADO */}
         {showAddChild && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in relative overflow-hidden">
+            <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+                <div className="bg-white dark:bg-[#0d1117] p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in relative overflow-hidden">
                     {/* Decoración de fondo */}
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full blur-3xl opacity-50"></div>
                     <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-pink-100 to-yellow-100 rounded-full blur-3xl opacity-50"></div>
@@ -755,53 +755,53 @@ export default function ParentDashboard() {
                                     <Baby size={24} className="text-white"/>
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-2xl text-slate-800">{t('pacientes.nuevo')}</h3>
-                                    <p className="text-sm text-slate-400 font-medium">{t('familias.agendaInfoNino')}</p>
+                                    <h3 className="font-bold text-2xl text-slate-800 dark:text-slate-100">{t('pacientes.nuevo')}</h3>
+                                    <p className="text-sm text-slate-400 dark:text-slate-500 font-medium">{t('familias.agendaInfoNino')}</p>
                                 </div>
                             </div>
-                            <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
+                            <button onClick={()=>setShowAddChild(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] rounded-xl transition-all hover:rotate-90">
                                 <X size={22}/>
                             </button>
                         </div>
 
                         <form onSubmit={handleAddChild} className="space-y-4">
                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
                                     <User size={14}/> Nombre Completo <span className="text-red-500">*</span>
                                 </label>
                                 <input 
                                     name="name" 
                                     required 
-                                    className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all hover:bg-white" 
+                                    className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white dark:bg-[#0d1117] focus:border-blue-400 transition-all hover:bg-white dark:bg-[#0d1117]" 
                                     placeholder="Ej: María Fernanda López"
                                 />
                             </div>
                             
                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
                                     <Calendar size={14}/> Fecha de Nacimiento <span className="text-red-500">*</span>
                                 </label>
                                 <input 
                                     name="dob" 
                                     type="date" 
                                     required 
-                                    className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all hover:bg-white"
+                                    className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white dark:bg-[#0d1117] focus:border-blue-400 transition-all hover:bg-white dark:bg-[#0d1117]"
                                 />
                             </div>
                             
                             <div>
-                                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
                                     <Stethoscope size={14}/> Diagnóstico (Opcional)
                                 </label>
                                 <input 
                                     name="diagnosis" 
-                                    className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-blue-400 transition-all hover:bg-white" 
+                                    className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white dark:bg-[#0d1117] focus:border-blue-400 transition-all hover:bg-white dark:bg-[#0d1117]" 
                                     placeholder="Ej: TEA Nivel 2"
                                 />
                             </div>
 
-                            <div className="bg-blue-50 border-2 border-blue-100 rounded-2xl p-4">
-                                <p className="text-xs text-blue-700 font-bold flex items-center gap-2">
+                            <div className="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-100 dark:border-blue-800/50 rounded-2xl p-4">
+                                <p className="text-xs text-blue-700 dark:text-blue-300 font-bold flex items-center gap-2">
                                     <Sparkles size={14}/> La edad se calculará automáticamente
                                 </p>
                             </div>
@@ -810,7 +810,7 @@ export default function ParentDashboard() {
                                 <button 
                                     type="button" 
                                     onClick={()=>setShowAddChild(false)} 
-                                    className="flex-1 py-4 font-bold text-slate-500 hover:bg-slate-50 rounded-2xl transition-all hover:scale-105 active:scale-95"
+                                    className="flex-1 py-4 font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-[#161b22] dark:bg-[#161b22] rounded-2xl transition-all hover:scale-105 active:scale-95"
                                 >
                                     Cancelar
                                 </button>
@@ -829,25 +829,25 @@ export default function ParentDashboard() {
 
         {/* 🔐 MODAL - CAMBIAR CONTRASEÑA */}
         {showChangePass && (
-             <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white p-8 rounded-3xl w-full max-w-sm shadow-2xl animate-scale-in">
+             <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+                <div className="bg-white dark:bg-[#0d1117] p-8 rounded-3xl w-full max-w-sm shadow-2xl animate-scale-in">
                     <div className="flex justify-between items-center mb-6">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
                                 <Lock size={24} className="text-white"/>
                             </div>
                             <div>
-                                <h3 className="font-bold text-2xl text-slate-800">{t('familias.cambiarPass2')}</h3>
-                                <p className="text-sm text-slate-400">{t('ui.new_access_key')}</p>
+                                <h3 className="font-bold text-2xl text-slate-800 dark:text-slate-100">{t('familias.cambiarPass2')}</h3>
+                                <p className="text-sm text-slate-400 dark:text-slate-500">{t('ui.new_access_key')}</p>
                             </div>
                         </div>
-                        <button onClick={()=>setShowChangePass(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
+                        <button onClick={()=>setShowChangePass(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] rounded-xl transition-all hover:rotate-90">
                             <X size={22}/>
                         </button>
                     </div>
                     <form onSubmit={handleChangePassword} className="space-y-4">
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block">
                                 Nueva Contraseña
                             </label>
                             <input 
@@ -855,12 +855,12 @@ export default function ParentDashboard() {
                                 type="password" 
                                 required 
                                 minLength={6}
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white transition-all" 
+                                className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white dark:bg-[#0d1117] transition-all" 
                                 placeholder={t('familias.minimo6')}
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block">
                                 Confirmar Contraseña
                             </label>
                             <input 
@@ -868,7 +868,7 @@ export default function ParentDashboard() {
                                 type="password" 
                                 required 
                                 minLength={6}
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white transition-all" 
+                                className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:border-purple-400 focus:bg-white dark:bg-[#0d1117] transition-all" 
                                 placeholder={t('familias.repitePass')}
                             />
                         </div>
@@ -876,7 +876,7 @@ export default function ParentDashboard() {
                             <button 
                                 type="button" 
                                 onClick={()=>setShowChangePass(false)} 
-                                className="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl transition-all hover:scale-105 active:scale-95"
+                                className="flex-1 py-4 font-bold text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-[#161b22] dark:bg-[#161b22] rounded-2xl transition-all hover:scale-105 active:scale-95"
                             >
                                 Cancelar
                             </button>
@@ -894,40 +894,40 @@ export default function ParentDashboard() {
 
         {/* ✏️ MODAL - EDITAR PERFIL */}
         {showEditProfile && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in">
+            <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+                <div className="bg-white dark:bg-[#0d1117] p-8 rounded-3xl w-full max-w-md shadow-2xl animate-scale-in">
                     <div className="flex justify-between items-center mb-6">
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
                                 <User size={24} className="text-white"/>
                             </div>
                             <div>
-                                <h3 className="font-bold text-2xl text-slate-800">{t('familias.editarPerfil2')}</h3>
-                                <p className="text-sm text-slate-400">{t('familias.actualizaInfo')}</p>
+                                <h3 className="font-bold text-2xl text-slate-800 dark:text-slate-100">{t('familias.editarPerfil2')}</h3>
+                                <p className="text-sm text-slate-400 dark:text-slate-500">{t('familias.actualizaInfo')}</p>
                             </div>
                         </div>
-                        <button onClick={()=>setShowEditProfile(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all hover:rotate-90">
+                        <button onClick={()=>setShowEditProfile(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] rounded-xl transition-all hover:rotate-90">
                             <X size={22}/>
                         </button>
                     </div>
                     <form onSubmit={handleUpdateProfile} className="space-y-4">
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
                                 <User size={14}/> Nombre Completo
                             </label>
                             <input 
                                 name="fullName" 
                                 defaultValue={profile?.full_name}
                                 required 
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-green-400 transition-all hover:bg-white" 
+                                className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white dark:bg-[#0d1117] focus:border-green-400 transition-all hover:bg-white dark:bg-[#0d1117]" 
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block">
                                 <span className="flex items-center gap-2">
                                   <span>📱</span> Número WhatsApp
                                 </span>
-                                <span className="text-[10px] font-normal text-green-600 mt-0.5 block">
+                                <span className="text-[10px] font-normal text-green-600 dark:text-green-400 mt-0.5 block">
                                   Recibirás alertas de citas, informes y mensajes del terapeuta
                                 </span>
                             </label>
@@ -935,25 +935,25 @@ export default function ParentDashboard() {
                                 name="phone" 
                                 type="tel"
                                 defaultValue={profile?.phone}
-                                className="w-full p-4 bg-slate-50 rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white focus:border-green-400 transition-all hover:bg-white" 
+                                className="w-full p-4 bg-slate-50 dark:bg-[#161b22] rounded-2xl font-semibold outline-none border-2 border-transparent focus:bg-white dark:bg-[#0d1117] focus:border-green-400 transition-all hover:bg-white dark:bg-[#0d1117]" 
                                 placeholder="+51 999 888 777"
                             />
                         </div>
                         <div>
-                            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
+                            <label className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-2 block flex items-center gap-2">
                                 <Mail size={14}/> Email (no editable)
                             </label>
                             <input 
                                 value={profile?.email}
                                 disabled
-                                className="w-full p-4 bg-slate-100 rounded-2xl font-semibold text-slate-400 cursor-not-allowed" 
+                                className="w-full p-4 bg-slate-100 dark:bg-[#21262d] rounded-2xl font-semibold text-slate-400 dark:text-slate-500 cursor-not-allowed" 
                             />
                         </div>
                         <div className="flex gap-3 pt-2">
                             <button 
                                 type="button" 
                                 onClick={()=>setShowEditProfile(false)} 
-                                className="flex-1 py-4 font-bold text-slate-400 hover:bg-slate-50 rounded-2xl transition-all hover:scale-105 active:scale-95"
+                                className="flex-1 py-4 font-bold text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-[#161b22] dark:bg-[#161b22] rounded-2xl transition-all hover:scale-105 active:scale-95"
                             >
                                 Cancelar
                             </button>
@@ -971,11 +971,11 @@ export default function ParentDashboard() {
 
         {/* 🔔 MODAL - NOTIFICACIONES (FIXED: iconos + modal detalle) */}
         {showNotifications && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" onClick={()=>{ setShowNotifications(false); setSelectedNoti(null) }}>
-                <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden max-h-[85vh] flex flex-col" onClick={e=>e.stopPropagation()}>
+            <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in" onClick={()=>{ setShowNotifications(false); setSelectedNoti(null) }}>
+                <div className="bg-white dark:bg-[#0d1117] rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden max-h-[85vh] flex flex-col" onClick={e=>e.stopPropagation()}>
                     <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                            <div className="w-12 h-12 bg-white dark:bg-[#0d1117]/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
                                 <Bell size={24}/>
                             </div>
                             <div>
@@ -983,7 +983,7 @@ export default function ParentDashboard() {
                                 <p className="text-xs text-blue-100">{notifications.length} notificacion{notifications.length!==1?'es':''} · {unreadCount > 0 ? `${unreadCount} sin leer` : 'todas leídas'}</p>
                             </div>
                         </div>
-                        <button onClick={()=>{ setShowNotifications(false); setSelectedNoti(null) }} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
+                        <button onClick={()=>{ setShowNotifications(false); setSelectedNoti(null) }} className="p-2 hover:bg-white dark:bg-[#0d1117]/10 rounded-xl transition-all hover:rotate-90">
                             <X size={20}/>
                         </button>
                     </div>
@@ -991,7 +991,7 @@ export default function ParentDashboard() {
                     {/* Detalle de notificación seleccionada */}
                     {selectedNoti ? (
                         <div className="flex-1 overflow-y-auto p-5 space-y-4">
-                            <button onClick={()=>setSelectedNoti(null)} className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 transition-colors">
+                            <button onClick={()=>setSelectedNoti(null)} className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 dark:text-slate-200 transition-colors">
                                 <ChevronRight size={14} className="rotate-180"/> Volver
                             </button>
                             {(()=>{
@@ -1012,12 +1012,12 @@ export default function ParentDashboard() {
                                         <div className={`flex items-center gap-3 p-4 rounded-2xl border ${cfg.border}`}>
                                             <div className={`${cfg.bg} ${cfg.text} p-3 rounded-xl`}>{cfg.icon}</div>
                                             <div>
-                                                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide">{cfg.label}</p>
-                                                <p className="font-bold text-slate-800 text-sm">{selectedNoti.title}</p>
+                                                <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wide">{cfg.label}</p>
+                                                <p className="font-bold text-slate-800 dark:text-slate-100 text-sm">{selectedNoti.title}</p>
                                             </div>
                                         </div>
-                                        <div className="bg-slate-50 rounded-2xl p-5">
-                                            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{selectedNoti.message}</p>
+                                        <div className="bg-slate-50 dark:bg-[#161b22] rounded-2xl p-5">
+                                            <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">{selectedNoti.message}</p>
                                         </div>
                                         {/* ── Botón unirse a videollamada ── */}
                                         {selectedNoti.type === 'video_call' && selectedNoti.metadata?.room_url && (
@@ -1035,15 +1035,15 @@ export default function ParentDashboard() {
                                         )}
 
                                         {selectedNoti.metadata?.source_title && (
-                                            <div className="bg-blue-50 rounded-xl p-3 flex items-center gap-2">
-                                                <FileText size={14} className="text-blue-500 flex-shrink-0"/>
+                                            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 flex items-center gap-2">
+                                                <FileText size={14} className="text-blue-500 dark:text-blue-400 flex-shrink-0"/>
                                                 <div>
                                                     <p className="text-xs text-blue-400">{t('familias.generadoPor')}</p>
-                                                    <p className="text-sm font-semibold text-blue-700">{selectedNoti.metadata.source_title}</p>
+                                                    <p className="text-sm font-semibold text-blue-700 dark:text-blue-300">{selectedNoti.metadata.source_title}</p>
                                                 </div>
                                             </div>
                                         )}
-                                        <p className="text-xs text-slate-400 flex items-center gap-1">
+                                        <p className="text-xs text-slate-400 dark:text-slate-500 flex items-center gap-1">
                                             <Clock size={11}/> {new Date(selectedNoti.created_at).toLocaleDateString(toBCP47(locale),{day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}
                                         </p>
                                     </div>
@@ -1062,7 +1062,7 @@ export default function ParentDashboard() {
                               <Video size={20} className="text-white"/>
                             </div>
                             <div className="flex-1 text-left">
-                              <p className="font-black text-indigo-700 text-sm">📹 Videollamada activa</p>
+                              <p className="font-black text-indigo-700 dark:text-indigo-300 text-sm">📹 Videollamada activa</p>
                               <p className="text-xs text-indigo-500 font-semibold">{t('familias.terapeutaEspera')}</p>
                             </div>
                             <ChevronRight size={18} className="text-indigo-400 shrink-0"/>
@@ -1070,10 +1070,10 @@ export default function ParentDashboard() {
                         ))}
                         {notifications.length === 0 ? (
                             <div className="text-center py-16">
-                                <div className="w-20 h-20 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto mb-4">
+                                <div className="w-20 h-20 bg-slate-100 dark:bg-[#21262d] rounded-3xl flex items-center justify-center mx-auto mb-4">
                                     <Bell size={40} className="text-slate-300"/>
                                 </div>
-                                <p className="font-bold text-slate-400 text-base">{t('familias.sinNotificaciones')}</p>
+                                <p className="font-bold text-slate-400 dark:text-slate-500 text-base">{t('familias.sinNotificaciones')}</p>
                                 <p className="text-slate-300 text-sm mt-1">{t('familias.verasMensajes')}</p>
                             </div>
                         ) : (
@@ -1099,11 +1099,11 @@ export default function ParentDashboard() {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex items-center justify-between gap-2">
-                                                    <p className="font-bold text-slate-800 text-sm leading-snug">{noti.title}</p>
+                                                    <p className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-snug">{noti.title}</p>
                                                     <ChevronRight size={14} className="text-slate-300 flex-shrink-0"/>
                                                 </div>
-                                                <p className="text-xs font-medium text-slate-400 mb-1">{iconConfig.label}</p>
-                                                <p className="text-slate-500 text-xs leading-relaxed line-clamp-2">{noti.message}</p>
+                                                <p className="text-xs font-medium text-slate-400 dark:text-slate-500 mb-1">{iconConfig.label}</p>
+                                                <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-xs leading-relaxed line-clamp-2">{noti.message}</p>
                                                 <p className="text-slate-300 text-[10px] font-bold mt-2 flex items-center gap-1">
                                                     <Clock size={10}/> {new Date(noti.created_at).toLocaleDateString(toBCP47(locale),{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
                                                     <span className="ml-1 text-blue-400">{t('familias.tocaParaLeer')}</span>
@@ -1122,11 +1122,11 @@ export default function ParentDashboard() {
 
         {/* 🔒 MODAL - PRIVACIDAD */}
         {showPrivacy && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+                <div className="bg-white dark:bg-[#0d1117] rounded-3xl w-full max-w-2xl shadow-2xl animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
                     <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                            <div className="w-12 h-12 bg-white dark:bg-[#0d1117]/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
                                 <Lock size={24}/>
                             </div>
                             <div>
@@ -1134,35 +1134,35 @@ export default function ParentDashboard() {
                                 <p className="text-xs text-purple-100">Tus datos están protegidos</p>
                             </div>
                         </div>
-                        <button onClick={()=>setShowPrivacy(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
+                        <button onClick={()=>setShowPrivacy(false)} className="p-2 hover:bg-white dark:bg-[#0d1117]/10 rounded-xl transition-all hover:rotate-90">
                             <X size={20}/>
                         </button>
                     </div>
                     <div className="p-6 space-y-4 overflow-y-auto">
-                        <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100">
+                        <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-2xl border border-purple-100 dark:border-purple-800/50">
                             <h4 className="font-bold text-purple-900 mb-2 flex items-center gap-2">
                                 <Lock size={16}/> Protección de Datos
                             </h4>
-                            <p className="text-sm text-purple-700 leading-relaxed">
+                            <p className="text-sm text-purple-700 dark:text-purple-300 leading-relaxed">
                                 Toda la información de tu familia está cifrada y protegida según estándares internacionales. Solo tú y los profesionales autorizados pueden acceder a los datos clínicos.
                             </p>
                         </div>
                         
-                        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+                        <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-800/50">
                             <h4 className="font-bold text-blue-900 mb-2">Compartir Información</h4>
-                            <p className="text-sm text-blue-700 leading-relaxed mb-3">
+                            <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed mb-3">
                                 Puedes compartir acceso temporal con:
                             </p>
-                            <ul className="text-sm text-blue-700 space-y-1 ml-4">
+                            <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 ml-4">
                                 <li>• Familiares cercanos</li>
                                 <li>• Otros profesionales de salud</li>
                                 <li>• Instituciones educativas (con tu autorización)</li>
                             </ul>
                         </div>
 
-                        <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
+                        <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-2xl border border-green-100 dark:border-green-800/50">
                             <h4 className="font-bold text-green-900 mb-2">Control Total</h4>
-                            <p className="text-sm text-green-700 leading-relaxed">
+                            <p className="text-sm text-green-700 dark:text-green-300 leading-relaxed">
                                 Puedes exportar, eliminar o modificar cualquier información en cualquier momento. Tienes control absoluto sobre tus datos.
                             </p>
                         </div>
@@ -1177,11 +1177,11 @@ export default function ParentDashboard() {
 
         {/* ❓ MODAL - AYUDA */}
         {showHelp && (
-            <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
-                <div className="bg-white rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
+            <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/70 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fade-in">
+                <div className="bg-white dark:bg-[#0d1117] rounded-3xl w-full max-w-lg shadow-2xl animate-scale-in overflow-hidden max-h-[90vh] flex flex-col">
                     <div className="bg-gradient-to-r from-green-600 to-teal-600 p-6 text-white flex justify-between items-center">
                         <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
+                            <div className="w-12 h-12 bg-white dark:bg-[#0d1117]/20 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg">
                                 <HelpCircle size={24}/>
                             </div>
                             <div>
@@ -1189,23 +1189,23 @@ export default function ParentDashboard() {
                                 <p className="text-xs text-green-100">Estamos aquí para ti</p>
                             </div>
                         </div>
-                        <button onClick={()=>setShowHelp(false)} className="p-2 hover:bg-white/10 rounded-xl transition-all hover:rotate-90">
+                        <button onClick={()=>setShowHelp(false)} className="p-2 hover:bg-white dark:bg-[#0d1117]/10 rounded-xl transition-all hover:rotate-90">
                             <X size={20}/>
                         </button>
                     </div>
                     <div className="p-6 space-y-3 overflow-y-auto">
                         <HelpItem 
-                            icon={<Calendar className="text-blue-600"/>}
+                            icon={<Calendar className="text-blue-600 dark:text-blue-400"/>}
                             title="¿Cómo ver mis citas?"
                             description="En la sección 'Mis Citas' podés ver todas las citas programadas por el centro. Para cambios o cancelaciones, contactá a recepción directamente."
                         />
                         <HelpItem 
-                            icon={<MessageCircle className="text-purple-600"/>}
+                            icon={<MessageCircle className="text-purple-600 dark:text-purple-400"/>}
                             title="¿Cómo usar el Asistente IA?"
                             description="El asistente puede responder dudas sobre el progreso de tu hijo/a, dar consejos y explicar los reportes de las sesiones."
                         />
                         <HelpItem 
-                            icon={<Book className="text-green-600"/>}
+                            icon={<Book className="text-green-600 dark:text-green-400"/>}
                             title="¿Dónde encuentro recursos?"
                             description="En la sección 'Biblioteca' encontrarás guías, videos y artículos sobre terapia ABA y desarrollo infantil."
                         />
@@ -1214,14 +1214,14 @@ export default function ParentDashboard() {
                             <h4 className="font-bold text-green-900 mb-3 flex items-center gap-2">
                                 <Phone size={18}/> Contacto Directo
                             </h4>
-                            <div className="space-y-2 text-sm text-green-700">
+                            <div className="space-y-2 text-sm text-green-700 dark:text-green-300">
                                 <p className="flex items-center gap-2">
                                     <Mail size={14}/> <a href="mailto:tallerjugandoaprendoind@gmail.com" className="hover:underline">tallerjugandoaprendoind@gmail.com</a>
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <Phone size={14}/> <a href="tel:+51924807183" className="hover:underline">+51 924 807 183</a>
                                 </p>
-                                <p className="text-xs text-green-600 mt-2">Horario: Lun-Vie 8:00 AM - 6:00 PM</p>
+                                <p className="text-xs text-green-600 dark:text-green-400 mt-2">Horario: Lun-Vie 8:00 AM - 6:00 PM</p>
                             </div>
                         </div>
                     </div>

@@ -465,7 +465,7 @@ export default function ChatFamilias({ childId, childName, profile }: Props) {
   // ─── Render ───────────────────────────────────────────────────────────────────
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#fff', overflow: 'hidden' }}
-      className="lg:rounded-[20px] lg:border lg:border-slate-200 lg:shadow-sm">
+      className="lg:rounded-[20px] lg:border lg:border-slate-200 dark:border-[#30363d] lg:shadow-sm">
 
       {/* HEADER */}
       <div style={{ padding: '12px 18px', borderBottom: '1px solid #e5e7eb', display: 'flex',

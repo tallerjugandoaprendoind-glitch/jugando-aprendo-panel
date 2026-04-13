@@ -8,6 +8,7 @@ import {
   Sparkles, Heart, Target, Loader2, RefreshCw, TrendingUp, Trophy,
   Zap, Star
 } from 'lucide-react'
+import { useTheme } from '@/components/ThemeContext'
 
 interface Actividad {
   titulo: string; descripcion: string; duracion_minutos: number
@@ -27,14 +28,14 @@ const AREA_CFG: Record<string,{bg:string;text:string;border:string;emoji:string;
   socializacion:{ bg:'#f0fdf4', text:'#15803d', border:'#bbf7d0', emoji:'👥', grad:'linear-gradient(135deg,#22c55e,#15803d)' },
   autonomia:    { bg:'#fffbeb', text:'#b45309', border:'#fde68a', emoji:'⭐', grad:'linear-gradient(135deg,#eab308,#b45309)' },
 }
-const AREA_DEFAULT = { bg:'#f8fafc', text:'#64748b', border:'#e2e8f0', emoji:'📌', grad:'linear-gradient(135deg,#94a3b8,#64748b)' }
+const AREA_DEFAULT = { bg:'var(--c-surface)', text:'var(--c-text-muted)', border:'var(--c-border)', emoji:'📌', grad:'linear-gradient(135deg,#94a3b8,#64748b)' }
 
 const DIFF_CFG: Record<string,{label:string;color:string;bg:string;dot:string}> = {
   facil: { label:'Fácil',   color:'#16a34a', bg:'#f0fdf4', dot:'#4ade80' },
   media: { label:'Media',   color:'#d97706', bg:'#fffbeb', dot:'#fbbf24' },
   alta:  { label:'Difícil', color:'#dc2626', bg:'#fef2f2', dot:'#f87171' },
 }
-const DIFF_DEFAULT = { label:'Normal', color:'#64748b', bg:'#f8fafc', dot:'#94a3b8' }
+const DIFF_DEFAULT = { label:'Normal', color:'var(--c-text-muted)', bg:'var(--c-surface)', dot:'var(--c-text-placeholder)' }
 
 // Clave de localStorage para guardar estado de completadas por plan
 function lsKey(childId: string, planId: string|null) {
@@ -42,6 +43,7 @@ function lsKey(childId: string, planId: string|null) {
 }
 
 export default function EngagementView({ childId }: { childId: string }) {
+  const { isDark } = useTheme()
   const { t } = useI18n()
   const [plan, setPlan] = useState<Plan|null>(null)
   const [planId, setPlanId] = useState<string|null>(null)
@@ -187,8 +189,31 @@ export default function EngagementView({ childId }: { childId: string }) {
       <div style={{ width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#fce7f3,#ede9fe)',display:'flex',alignItems:'center',justifyContent:'center' }}>
         <Loader2 size={28} color="#9333ea" style={{ animation:'spin 1s linear infinite' }}/>
       </div>
-      <p style={{ fontSize:13,color:'#94a3b8',fontWeight:600 }}>Cargando plan semanal...</p>
-      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+      <p style={{ fontSize:13,color:'var(--c-text-placeholder)',fontWeight:600 }}>Cargando plan semanal...</p>
+      <style>{`
+  :root {
+    --c-card: #ffffff;
+    --c-surface: #f8fafc;
+    --c-bg: #f1f5f9;
+    --c-border: #e2e8f0;
+    --c-border-light: #f1f5f9;
+    --c-text-primary: #0f172a;
+    --c-text-secondary: #374151;
+    --c-text-muted: #64748b;
+    --c-text-placeholder: #94a3b8;
+  }
+  .dark {
+    --c-card: #161b22;
+    --c-surface: #0d1117;
+    --c-bg: #090d12;
+    --c-border: #30363d;
+    --c-border-light: #21262d;
+    --c-text-primary: #f0f6fc;
+    --c-text-secondary: #c9d1d9;
+    --c-text-muted: #8b949e;
+    --c-text-placeholder: #6e7681;
+  }
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
     </div>
   )
 
@@ -213,7 +238,7 @@ export default function EngagementView({ childId }: { childId: string }) {
       `}</style>
 
       {/* HERO */}
-      <div className="eng-card" style={{ background:'linear-gradient(135deg,#be185d,#9333ea,#7c3aed)',borderRadius:24,padding:'22px 22px 18px',color:'#fff',boxShadow:'0 16px 50px rgba(147,51,234,.3)',position:'relative',overflow:'hidden' }}>
+      <div className="eng-card" style={{ background:'linear-gradient(135deg,#be185d,#9333ea,#7c3aed)',borderRadius:24,padding:'22px 22px 18px',color:'var(--c-card)',boxShadow:'0 16px 50px rgba(147,51,234,.3)',position:'relative',overflow:'hidden' }}>
         <div style={{ position:'absolute',top:-20,right:-20,width:130,height:130,background:'rgba(255,255,255,.07)',borderRadius:'50%' }}/>
         <div style={{ position:'relative',zIndex:1 }}>
           <div style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:12 }}>
@@ -225,7 +250,7 @@ export default function EngagementView({ childId }: { childId: string }) {
               <h1 style={{ fontSize:20,fontWeight:900,margin:'0 0 3px' }}>Plan semanal de {plan?.child_name||'tu hijo/a'}</h1>
               <p style={{ fontSize:12,color:'rgba(255,255,255,.6)',margin:0 }}>Actividades diseñadas con IA por tu especialista</p>
             </div>
-            <button onClick={generar} disabled={generando} style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',background:'rgba(255,255,255,.18)',border:'1px solid rgba(255,255,255,.25)',color:'#fff',borderRadius:12,fontSize:12,fontWeight:700,cursor:generando?'not-allowed':'pointer',flexShrink:0,fontFamily:'inherit' }}>
+            <button onClick={generar} disabled={generando} style={{ display:'flex',alignItems:'center',gap:6,padding:'8px 14px',background:'rgba(255,255,255,.18)',border:'1px solid rgba(255,255,255,.25)',color:'var(--c-card)',borderRadius:12,fontSize:12,fontWeight:700,cursor:generando?'not-allowed':'pointer',flexShrink:0,fontFamily:'inherit' }}>
               {generando ? <Loader2 size={13} style={{ animation:'spin 1s linear infinite' }}/> : <RefreshCw size={13}/>}
               {generando ? 'Generando...' : 'Nuevo plan'}
             </button>
@@ -251,13 +276,13 @@ export default function EngagementView({ childId }: { childId: string }) {
       </div>
 
       {!plan ? (
-        <div className="eng-card" style={{ background:'#fff',borderRadius:24,border:'1.5px solid #f1f5f9',padding:'48px 24px',textAlign:'center',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+        <div className="eng-card" style={{ background:'var(--c-card)',borderRadius:24,border:'1.5px solid var(--c-border-light)',padding:'48px 24px',textAlign:'center',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
           <div style={{ width:72,height:72,background:'linear-gradient(135deg,#fce7f3,#ede9fe)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
             <Brain size={32} color="#9333ea"/>
           </div>
-          <p style={{ fontWeight:800,fontSize:16,color:'#1e293b',margin:'0 0 8px' }}>Sin plan esta semana</p>
-          <p style={{ fontSize:13,color:'#94a3b8',lineHeight:1.6,maxWidth:280,margin:'0 auto 24px' }}>La IA generará actividades personalizadas basadas en el progreso terapéutico.</p>
-          <button onClick={generar} disabled={generando} style={{ display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#be185d,#7c3aed)',color:'#fff',border:'none',padding:'13px 24px',borderRadius:16,fontSize:14,fontWeight:700,cursor:generando?'not-allowed':'pointer',boxShadow:'0 6px 20px rgba(147,51,234,.3)',fontFamily:'inherit' }}>
+          <p style={{ fontWeight:800,fontSize:16,color:'var(--c-text-primary)',margin:'0 0 8px' }}>Sin plan esta semana</p>
+          <p style={{ fontSize:13,color:'var(--c-text-placeholder)',lineHeight:1.6,maxWidth:280,margin:'0 auto 24px' }}>La IA generará actividades personalizadas basadas en el progreso terapéutico.</p>
+          <button onClick={generar} disabled={generando} style={{ display:'inline-flex',alignItems:'center',gap:8,background:'linear-gradient(135deg,#be185d,#7c3aed)',color:'var(--c-card)',border:'none',padding:'13px 24px',borderRadius:16,fontSize:14,fontWeight:700,cursor:generando?'not-allowed':'pointer',boxShadow:'0 6px 20px rgba(147,51,234,.3)',fontFamily:'inherit' }}>
             <Sparkles size={16}/>{generando ? 'Generando...' : 'Generar actividades con IA'}
           </button>
         </div>
@@ -286,7 +311,7 @@ export default function EngagementView({ childId }: { childId: string }) {
 
               return (
                 <div key={i} className="eng-act"
-                  style={{ background: done ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : '#fff', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', position:'relative', borderColor: done ? '#86efac' : '#f1f5f9', cursor:'default', ...(open ? { gridColumn:'1 / -1' } : {}) }}>
+                  style={{ background: done ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : 'var(--c-card)', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', position:'relative', borderColor: done ? '#86efac' : 'var(--c-border-light)', cursor:'default', ...(open ? { gridColumn:'1 / -1' } : {}) }}>
 
                   {/* Barra lateral de color por área */}
                   <div style={{ position:'absolute',left:0,top:0,bottom:0,width:4,background:aCol.grad,borderRadius:'20px 0 0 20px' }}/>
@@ -298,9 +323,9 @@ export default function EngagementView({ childId }: { childId: string }) {
                         onClick={e => { e.stopPropagation(); toggle(i) }}
                         disabled={isSaving}
                         title={done ? 'Marcar como pendiente' : 'Marcar como completada'}
-                        style={{ flexShrink:0,width:42,height:42,borderRadius:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',background:done?'#dcfce7':isSaving?'#f1f5f9':'#f8fafc',boxShadow:done?'0 2px 8px rgba(16,185,129,.2)':'0 1px 3px rgba(0,0,0,.08)' }}>
+                        style={{ flexShrink:0,width:42,height:42,borderRadius:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',background:done?'#dcfce7':isSaving?'var(--c-border-light)':'var(--c-surface)',boxShadow:done?'0 2px 8px rgba(16,185,129,.2)':'0 1px 3px rgba(0,0,0,.08)' }}>
                         {isSaving
-                          ? <Loader2 size={20} color="#94a3b8" style={{ animation:'spin 1s linear infinite' }}/>
+                          ? <Loader2 size={20} color="var(--c-text-placeholder)" style={{ animation:'spin 1s linear infinite' }}/>
                           : done
                             ? <CheckCircle size={24} color="#10b981" style={{ animation:'checkPop .4s ease' }}/>
                             : <Circle size={24} color="#d1d5db"/>
@@ -310,12 +335,12 @@ export default function EngagementView({ childId }: { childId: string }) {
                       <div style={{ flex:1,minWidth:0 }}>
                         <button onClick={() => setExpanded(open ? null : i)}
                           style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8,marginBottom:6,width:'100%',background:'none',border:'none',cursor:'pointer',padding:0,fontFamily:'inherit',textAlign:'left' }}>
-                          <p style={{ fontWeight:800,fontSize:14,color:done?'#6ee7b7':'#0f172a',margin:0,lineHeight:1.3,textDecoration:done?'line-through':'none',textDecorationColor:'#86efac' }}>
+                          <p style={{ fontWeight:800,fontSize:14,color:done?'#6ee7b7':'var(--c-text-primary)',margin:0,lineHeight:1.3,textDecoration:done?'line-through':'none',textDecorationColor:'#86efac' }}>
                             {act.titulo}
                           </p>
                           <div style={{ display:'flex',alignItems:'center',gap:4,flexShrink:0 }}>
                             <span style={{ fontSize:16 }}>{aCol.emoji}</span>
-                            <ChevronDown size={14} color="#94a3b8" style={{ transition:'transform .2s',transform:open?'rotate(180deg)':'rotate(0)' }}/>
+                            <ChevronDown size={14} color="var(--c-text-placeholder)" style={{ transition:'transform .2s',transform:open?'rotate(180deg)':'rotate(0)' }}/>
                           </div>
                         </button>
                         <div style={{ display:'flex',flexWrap:'wrap',gap:5,alignItems:'center' }}>
@@ -324,7 +349,7 @@ export default function EngagementView({ childId }: { childId: string }) {
                             <div style={{ width:5,height:5,borderRadius:'50%',background:dCol.dot }}/>
                             {dCol.label}
                           </span>
-                          <span style={{ fontSize:10,color:'#94a3b8',display:'flex',alignItems:'center',gap:3 }}>
+                          <span style={{ fontSize:10,color:'var(--c-text-placeholder)',display:'flex',alignItems:'center',gap:3 }}>
                             <Clock size={10}/>{act.duracion_minutos} min
                           </span>
                         </div>
@@ -334,8 +359,8 @@ export default function EngagementView({ childId }: { childId: string }) {
 
                   {/* Panel expandido */}
                   {open && (
-                    <div style={{ padding:'0 18px 16px 20px',borderTop:'1px solid #f1f5f9' }} onClick={e => e.stopPropagation()}>
-                      <p style={{ fontSize:13,color:'#475569',lineHeight:1.7,margin:'14px 0 12px' }}>{act.descripcion}</p>
+                    <div style={{ padding:'0 18px 16px 20px',borderTop:'1px solid var(--c-border-light)' }} onClick={e => e.stopPropagation()}>
+                      <p style={{ fontSize:13,color:'var(--c-text-muted)',lineHeight:1.7,margin:'14px 0 12px' }}>{act.descripcion}</p>
 
                       <div style={{ background:'linear-gradient(135deg,#faf5ff,#f5f3ff)',borderRadius:14,padding:'12px 14px',marginBottom:10,border:'1px solid #ddd6fe' }}>
                         <p style={{ fontSize:11,fontWeight:800,color:'#7c3aed',margin:'0 0 5px',display:'flex',alignItems:'center',gap:5 }}>
@@ -346,12 +371,12 @@ export default function EngagementView({ childId }: { childId: string }) {
 
                       {act.materiales_necesarios?.length > 0 && (
                         <div style={{ marginBottom:10 }}>
-                          <p style={{ fontSize:11,fontWeight:700,color:'#94a3b8',margin:'0 0 6px',display:'flex',alignItems:'center',gap:5 }}>
+                          <p style={{ fontSize:11,fontWeight:700,color:'var(--c-text-placeholder)',margin:'0 0 6px',display:'flex',alignItems:'center',gap:5 }}>
                             <Zap size={11}/>Materiales
                           </p>
                           <div style={{ display:'flex',flexWrap:'wrap',gap:5 }}>
                             {act.materiales_necesarios.map((m: string, j: number) => (
-                              <span key={j} style={{ fontSize:11,background:'#fff',border:'1px solid #e2e8f0',color:'#475569',padding:'4px 10px',borderRadius:20 }}>{m}</span>
+                              <span key={j} style={{ fontSize:11,background:'var(--c-card)',border:'1px solid var(--c-border)',color:'var(--c-text-muted)',padding:'4px 10px',borderRadius:20 }}>{m}</span>
                             ))}
                           </div>
                         </div>
@@ -359,7 +384,7 @@ export default function EngagementView({ childId }: { childId: string }) {
 
                       {act.dias_recomendados?.length > 0 && (
                         <div style={{ marginBottom:14 }}>
-                          <p style={{ fontSize:11,fontWeight:700,color:'#94a3b8',margin:'0 0 6px',display:'flex',alignItems:'center',gap:5 }}>
+                          <p style={{ fontSize:11,fontWeight:700,color:'var(--c-text-placeholder)',margin:'0 0 6px',display:'flex',alignItems:'center',gap:5 }}>
                             <Star size={11}/>Días recomendados
                           </p>
                           <div style={{ display:'flex',gap:5,flexWrap:'wrap' }}>
@@ -372,7 +397,7 @@ export default function EngagementView({ childId }: { childId: string }) {
 
                       {/* Botón de acción principal en panel expandido */}
                       <button onClick={e => { e.stopPropagation(); toggle(i) }}
-                        style={{ width:'100%',padding:'11px',background:done?'#f8fafc':'linear-gradient(135deg,#be185d,#7c3aed)',color:done?'#64748b':'#fff',border:done?'1.5px solid #e2e8f0':'none',borderRadius:14,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontFamily:'inherit',transition:'all .2s' }}>
+                        style={{ width:'100%',padding:'11px',background:done?'var(--c-surface)':'linear-gradient(135deg,#be185d,#7c3aed)',color:done?'var(--c-text-muted)':'var(--c-card)',border:done?'1.5px solid var(--c-border)':'none',borderRadius:14,fontSize:13,fontWeight:700,cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontFamily:'inherit',transition:'all .2s' }}>
                         {done
                           ? <><Circle size={15}/>Marcar como pendiente</>
                           : <><CheckCircle size={15}/>Marcar como completada</>
@@ -398,15 +423,15 @@ export default function EngagementView({ childId }: { childId: string }) {
 
           {/* Historial */}
           {historial.length > 1 && (
-            <div className="eng-card" style={{ background:'#fff',borderRadius:20,border:'1.5px solid #f1f5f9',padding:'16px 18px',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
-              <p style={{ fontSize:11,fontWeight:800,color:'#475569',margin:'0 0 14px',display:'flex',alignItems:'center',gap:6,textTransform:'uppercase',letterSpacing:.5 }}>
+            <div className="eng-card" style={{ background:'var(--c-card)',borderRadius:20,border:'1.5px solid var(--c-border-light)',padding:'16px 18px',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+              <p style={{ fontSize:11,fontWeight:800,color:'var(--c-text-muted)',margin:'0 0 14px',display:'flex',alignItems:'center',gap:6,textTransform:'uppercase',letterSpacing:.5 }}>
                 <TrendingUp size={13} color="#7c3aed"/>Historial de semanas
               </p>
               <div style={{ display:'flex',flexDirection:'column',gap:10 }}>
                 {historial.slice(0, 5).map((h: any, i: number) => (
                   <div key={i} style={{ display:'flex',alignItems:'center',gap:12 }}>
-                    <span style={{ fontSize:11,color:'#94a3b8',width:72,flexShrink:0,fontWeight:600 }}>Sem. {h.semana}</span>
-                    <div style={{ flex:1,height:8,background:'#f1f5f9',borderRadius:20,overflow:'hidden' }}>
+                    <span style={{ fontSize:11,color:'var(--c-text-placeholder)',width:72,flexShrink:0,fontWeight:600 }}>Sem. {h.semana}</span>
+                    <div style={{ flex:1,height:8,background:'var(--c-border-light)',borderRadius:20,overflow:'hidden' }}>
                       <div style={{ height:'100%',width:`${h.completadas_pct||0}%`,background:'linear-gradient(90deg,#be185d,#7c3aed)',borderRadius:20,transition:'width .8s ease' }}/>
                     </div>
                     <span style={{ fontSize:12,fontWeight:800,color:h.completadas_pct===100?'#16a34a':'#7c3aed',width:38,textAlign:'right' }}>{h.completadas_pct||0}%</span>

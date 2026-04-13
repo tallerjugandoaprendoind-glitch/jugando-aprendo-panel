@@ -123,22 +123,22 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
   }
 
   if (formError) return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl p-8 text-center max-w-sm w-full shadow-2xl">
+    <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-[#0d1117] rounded-3xl p-8 text-center max-w-sm w-full shadow-2xl">
         <div className="text-5xl mb-4">⚠️</div>
-        <h3 className="font-black text-slate-800 text-lg mb-2">{t('ui.form_not_available')}</h3>
-        <p className="text-slate-500 text-sm mb-2">El tipo <strong className="text-red-500">"{form.form_type}"</strong> {t('familias.noEncontradoSist')}</p>
-        <p className="text-slate-400 text-xs mb-6">{t('evaluaciones.administradorAsigne')}</p>
-        <button onClick={onClose} className="w-full py-3 bg-slate-800 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">{t('common.cerrar')}</button>
+        <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg mb-2">{t('ui.form_not_available')}</h3>
+        <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-sm mb-2">El tipo <strong className="text-red-500">"{form.form_type}"</strong> {t('familias.noEncontradoSist')}</p>
+        <p className="text-slate-400 dark:text-slate-500 text-xs mb-6">{t('evaluaciones.administradorAsigne')}</p>
+        <button onClick={onClose} className="w-full py-3 bg-slate-800 dark:bg-slate-200 text-white rounded-xl font-bold text-sm hover:bg-slate-700 transition-all">{t('common.cerrar')}</button>
       </div>
     </div>
   )
 
   if (!formDef) return (
-    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl p-8 text-center">
-        <Loader2 className="animate-spin text-blue-600 mx-auto mb-3" size={32}/>
-        <p className="text-slate-500 text-sm">{t('common.cargandoFormulario')}</p>
+    <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-[#0d1117] rounded-3xl p-8 text-center">
+        <Loader2 className="animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-3" size={32}/>
+        <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-sm">{t('common.cargandoFormulario')}</p>
       </div>
     </div>
   )
@@ -148,11 +148,11 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
   const progress = ((currentStep + 1) / total) * 100
 
   return (
-    <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
-      <div className="bg-white w-full md:max-w-xl md:rounded-3xl rounded-t-3xl shadow-2xl max-h-[92vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/70 backdrop-blur-sm z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+      <div className="bg-white dark:bg-[#0d1117] w-full md:max-w-xl md:rounded-3xl rounded-t-3xl shadow-2xl max-h-[92vh] overflow-hidden flex flex-col">
         {/* Header */}
         <div className={`bg-gradient-to-r ${formDef.color} p-5 text-white relative`}>
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-white/20 rounded-full hover:bg-white/30 transition-all">
+          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-white dark:bg-[#0d1117]/20 rounded-full hover:bg-white dark:bg-[#0d1117]/30 transition-all">
             <X size={18}/>
           </button>
           <div className="flex items-center gap-3 mb-3">
@@ -162,8 +162,8 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
               <p className="text-white/80 text-xs">{form.message_to_parent || formDef.description}</p>
             </div>
           </div>
-          <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
-            <div className="h-full bg-white rounded-full transition-all duration-500" style={{ width: `${progress}%` }}/>
+          <div className="h-1.5 bg-white dark:bg-[#0d1117]/20 rounded-full overflow-hidden">
+            <div className="h-full bg-white dark:bg-[#0d1117] rounded-full transition-all duration-500" style={{ width: `${progress}%` }}/>
           </div>
           <p className="text-white/70 text-xs mt-1.5">Paso {currentStep + 1} de {total}</p>
         </div>
@@ -171,13 +171,13 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
         {/* Questions */}
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
           <div>
-            <h4 className="font-black text-slate-800 text-lg mb-1">{section.title}</h4>
-            {section.description && <p className="text-slate-500 text-sm mb-5">{section.description}</p>}
+            <h4 className="font-black text-slate-800 dark:text-slate-100 text-lg mb-1">{section.title}</h4>
+            {section.description && <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-sm mb-5">{section.description}</p>}
           </div>
 
           {section.questions.map((q: any) => (
             <div key={q.id}>
-              <label className="text-sm font-bold text-slate-700 block mb-3">{q.label}</label>
+              <label className="text-sm font-bold text-slate-700 dark:text-slate-200 block mb-3">{q.label}</label>
 
               {(q.type === 'select' || q.type === 'frequency') && (
                 <div className="space-y-2">
@@ -208,13 +208,13 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
               {q.type === 'textarea' && (
                 <textarea rows={4} value={responses[q.id] || ''} onChange={e => answer(q.id, e.target.value)}
                   placeholder={q.placeholder}
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm outline-none focus:border-blue-400 transition-all resize-none"/>
+                  className="w-full p-4 bg-slate-50 dark:bg-[#161b22] border-2 border-slate-200 dark:border-[#30363d] rounded-xl text-sm outline-none focus:border-blue-400 transition-all resize-none"/>
               )}
 
               {(q.type === 'text' || q.type === 'number') && (
                 <input type={q.type} value={responses[q.id] || ''} onChange={e => answer(q.id, e.target.value)}
                   placeholder={q.placeholder}
-                  className="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all"/>
+                  className="w-full p-4 bg-slate-50 dark:bg-[#161b22] border-2 border-slate-200 dark:border-[#30363d] rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all"/>
               )}
 
               {q.type === 'boolean' && (
@@ -232,9 +232,9 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
         </div>
 
         {/* Footer nav */}
-        <div className="p-5 border-t border-slate-100 flex gap-3 bg-white">
+        <div className="p-5 border-t border-slate-100 dark:border-[#21262d] flex gap-3 bg-white dark:bg-[#0d1117]">
           {currentStep > 0 && (
-            <button onClick={() => setCurrentStep(s => s - 1)} className="px-5 py-4 border-2 border-slate-200 text-slate-600 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all flex items-center gap-2">
+            <button onClick={() => setCurrentStep(s => s - 1)} className="px-5 py-4 border-2 border-slate-200 dark:border-[#30363d] text-slate-600 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-[#161b22] dark:bg-[#161b22] transition-all flex items-center gap-2">
               <ChevronLeft size={16}/> Atrás
             </button>
           )}
@@ -273,7 +273,7 @@ function ResourceCard({ resource }: { resource: any; key?: any }) {
 
   return (
     <>
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 p-5 shadow-sm hover:shadow-lg transition-all hover:-translate-y-0.5 group">
+      <div className="bg-white dark:bg-[#0d1117]/80 backdrop-blur-sm rounded-2xl border border-slate-200 dark:border-[#30363d]/60 p-5 shadow-sm hover:shadow-lg transition-all hover:-translate-y-0.5 group">
         <div className="flex items-start gap-4">
           <div className={`p-3 rounded-2xl ${typeInfo.bg} flex-shrink-0 group-hover:scale-110 transition-transform`}>
             <span className={typeInfo.color}>{typeInfo.icon}</span>
@@ -281,10 +281,10 @@ function ResourceCard({ resource }: { resource: any; key?: any }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${typeInfo.bg} ${typeInfo.color}`}>{typeInfo.label}</span>
-              {resource.is_global && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 uppercase tracking-wider">{t('ui.for_everyone')}</span>}
+              {resource.is_global && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 uppercase tracking-wider">{t('ui.for_everyone')}</span>}
             </div>
-            <h4 className="font-bold text-slate-800 text-sm leading-tight">{resource.title}</h4>
-            {resource.description && <p className="text-xs text-slate-400 font-medium mt-0.5 line-clamp-2">{resource.description}</p>}
+            <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">{resource.title}</h4>
+            {resource.description && <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5 line-clamp-2">{resource.description}</p>}
             <div className="flex gap-2 mt-3">
               {resource.url && (
                 <button onClick={() => resource.resource_type === 'video' ? setShowPreview(true) : window.open(resource.url, '_blank')}
@@ -303,7 +303,7 @@ function ResourceCard({ resource }: { resource: any; key?: any }) {
           <div className="w-full max-w-2xl">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-white font-bold">{resource.title}</h3>
-              <button onClick={() => setShowPreview(false)} className="p-2 bg-white/20 rounded-full text-white hover:bg-white/30">
+              <button onClick={() => setShowPreview(false)} className="p-2 bg-white dark:bg-[#0d1117]/20 rounded-full text-white hover:bg-white dark:bg-[#0d1117]/30">
                 <X size={20}/>
               </button>
             </div>
@@ -425,7 +425,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
       `}</style>
       {/* Success message */}
       {successMsg && (
-        <div className="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
+        <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
           <CheckCircle2 size={20} className="text-emerald-600 flex-shrink-0 mt-0.5"/>
           <p className="text-emerald-800 font-semibold text-sm">{successMsg}</p>
         </div>
@@ -497,30 +497,30 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
           {/* Pending forms */}
           {pendingForms.length > 0 && (
             <div>
-              <h3 className="font-black text-slate-700 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h3 className="font-black text-slate-700 dark:text-slate-200 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
                 <Bell size={14} className="text-amber-500 animate-pulse"/>
                 Pendientes de completar ({pendingForms.length})
               </h3>
               <div className="space-y-3">
                 {pendingForms.map(form => (
-                  <div key={form.id} className="bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-amber-200 shadow-sm overflow-hidden">
+                  <div key={form.id} className="bg-white dark:bg-[#0d1117]/90 backdrop-blur-sm rounded-2xl border-2 border-amber-200 shadow-sm overflow-hidden">
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[9px] font-black px-2 py-1 bg-amber-100 text-amber-700 border border-amber-200 rounded-full uppercase tracking-wider animate-pulse">
+                            <span className="text-[9px] font-black px-2 py-1 bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 rounded-full uppercase tracking-wider animate-pulse">
                               ● Pendiente
                             </span>
                             {form.deadline && (
-                              <span className="text-[9px] font-black px-2 py-1 bg-red-50 text-red-600 border border-red-100 rounded-full flex items-center gap-1">
+                              <span className="text-[9px] font-black px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-full flex items-center gap-1">
                                 <Clock size={9}/> {t('common.hasta')} {new Date(form.deadline).toLocaleDateString(toBCP47(locale))}
                               </span>
                             )}
                           </div>
-                          <h4 className="font-black text-slate-800 text-base">{form.form_title}</h4>
+                          <h4 className="font-black text-slate-800 dark:text-slate-100 text-base">{form.form_title}</h4>
                           {form.message_to_parent && (
-                            <div className="mt-2 bg-indigo-50 rounded-xl p-3 border border-indigo-100">
-                              <p className="text-xs text-indigo-700 font-medium flex items-start gap-2">
+                            <div className="mt-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl p-3 border border-indigo-100 dark:border-indigo-800/50">
+                              <p className="text-xs text-indigo-700 dark:text-indigo-300 font-medium flex items-start gap-2">
                                 <Sparkles size={12} className="flex-shrink-0 mt-0.5"/>
                                 {form.message_to_parent}
                               </p>
@@ -542,31 +542,31 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
           {/* Expired forms */}
           {expiredForms.length > 0 && (
             <div>
-              <h3 className="font-black text-slate-700 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
-                <AlertCircle size={14} className="text-slate-400"/>
+              <h3 className="font-black text-slate-700 dark:text-slate-200 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
+                <AlertCircle size={14} className="text-slate-400 dark:text-slate-500"/>
                 Expirados ({expiredForms.length})
               </h3>
               <div className="space-y-3">
                 {expiredForms.map(form => (
-                  <div key={form.id} className="bg-slate-50 rounded-2xl border border-slate-200 shadow-sm overflow-hidden opacity-70">
+                  <div key={form.id} className="bg-slate-50 dark:bg-[#161b22] rounded-2xl border border-slate-200 dark:border-[#30363d] shadow-sm overflow-hidden opacity-70">
                     <div className="p-5">
                       <div className="flex items-start gap-3">
-                        <div className="p-2 bg-slate-100 rounded-xl flex-shrink-0">
-                          <AlertCircle size={18} className="text-slate-400"/>
+                        <div className="p-2 bg-slate-100 dark:bg-[#21262d] rounded-xl flex-shrink-0">
+                          <AlertCircle size={18} className="text-slate-400 dark:text-slate-500"/>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <span className="text-[9px] font-black px-2 py-1 bg-slate-200 text-slate-500 rounded-full uppercase tracking-wider">
+                            <span className="text-[9px] font-black px-2 py-1 bg-slate-200 dark:bg-[#30363d] text-slate-500 dark:text-slate-400 dark:text-slate-500 rounded-full uppercase tracking-wider">
                               ⏱ Expirado
                             </span>
                             {form.deadline && (
-                              <span className="text-[9px] font-black px-2 py-1 bg-slate-100 text-slate-400 rounded-full flex items-center gap-1">
+                              <span className="text-[9px] font-black px-2 py-1 bg-slate-100 dark:bg-[#21262d] text-slate-400 dark:text-slate-500 rounded-full flex items-center gap-1">
                                 <Clock size={9}/> Venció el {new Date(form.deadline).toLocaleDateString('es-PE')}
                               </span>
                             )}
                           </div>
-                          <h4 className="font-black text-slate-500 text-base">{form.form_title}</h4>
-                          <p className="text-xs text-slate-400 mt-1">Este formulario ya no está disponible. Si necesitás completarlo, pedile al equipo que te lo reenvíe.</p>
+                          <h4 className="font-black text-slate-500 dark:text-slate-400 dark:text-slate-500 text-base">{form.form_title}</h4>
+                          <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Este formulario ya no está disponible. Si necesitás completarlo, pedile al equipo que te lo reenvíe.</p>
                         </div>
                       </div>
                     </div>
@@ -579,23 +579,23 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
           {/* Completed forms */}
           {completedForms.length > 0 && (
             <div>
-              <h3 className="font-black text-slate-700 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h3 className="font-black text-slate-700 dark:text-slate-200 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
                 <CheckCircle2 size={14} className="text-emerald-500"/>
                 Completados ({completedForms.length})
               </h3>
               <div className="space-y-2">
                 {completedForms.map(form => (
-                  <div key={form.id} className="bg-white/60 backdrop-blur-sm rounded-2xl border border-emerald-200 p-4 flex items-center gap-3">
+                  <div key={form.id} className="bg-white dark:bg-[#0d1117]/60 backdrop-blur-sm rounded-2xl border border-emerald-200 p-4 flex items-center gap-3">
                     <div className="p-2 bg-emerald-100 rounded-xl flex-shrink-0">
                       <CheckCircle2 size={18} className="text-emerald-600"/>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-700 text-sm">{form.form_title}</p>
-                      <p className="text-xs text-slate-400 mt-0.5">
+                      <p className="font-bold text-slate-700 dark:text-slate-200 text-sm">{form.form_title}</p>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
                         {t('common.completadoEl')} {form.completed_at ? new Date(form.completed_at).toLocaleDateString(toBCP47(locale)) : 'N/A'}
                       </p>
                     </div>
-                    <span className="text-[9px] font-black px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full uppercase">
+                    <span className="text-[9px] font-black px-2 py-1 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 rounded-full uppercase">
                       ✓ Listo
                     </span>
                   </div>
@@ -606,11 +606,11 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
 
           {pendingForms.length === 0 && completedForms.length === 0 && (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="p-6 bg-indigo-50 rounded-3xl mb-4">
+              <div className="p-6 bg-indigo-50 dark:bg-indigo-900/20 rounded-3xl mb-4">
                 <FileText size={40} className="text-indigo-300"/>
               </div>
-              <h3 className="font-bold text-slate-600 text-lg mb-1">{t('ui.no_forms_yet')}</h3>
-              <p className="text-slate-400 text-sm max-w-xs">{t('familias.equipoEnviara')}</p>
+              <h3 className="font-bold text-slate-600 dark:text-slate-300 text-lg mb-1">{t('ui.no_forms_yet')}</h3>
+              <p className="text-slate-400 dark:text-slate-500 text-sm max-w-xs">{t('familias.equipoEnviara')}</p>
             </div>
           )}
         </div>
@@ -619,15 +619,15 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
         <div className="space-y-4">
           {resources.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
-              <div className="p-6 bg-violet-50 rounded-3xl mb-4">
+              <div className="p-6 bg-violet-50 dark:bg-violet-900/20 rounded-3xl mb-4">
                 <BookOpen size={40} className="text-violet-300"/>
               </div>
-              <h3 className="font-bold text-slate-600 text-lg mb-1">{t('ui.no_materials')}</h3>
-              <p className="text-slate-400 text-sm max-w-xs">{t('familias.recursosAparecen')}</p>
+              <h3 className="font-bold text-slate-600 dark:text-slate-300 text-lg mb-1">{t('ui.no_materials')}</h3>
+              <p className="text-slate-400 dark:text-slate-500 text-sm max-w-xs">{t('familias.recursosAparecen')}</p>
             </div>
           ) : (
             <>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+              <p className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 {resources.length} material{resources.length !== 1 ? 'es' : ''} disponible{resources.length !== 1 ? 's' : ''}
               </p>
               <div className="space-y-3">

@@ -264,7 +264,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
               </div>
               {/* Camera badge */}
               {!uploadingPhoto && (
-                <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-white rounded-full flex items-center justify-center shadow-lg">
+                <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-white dark:bg-[#0d1117] rounded-full flex items-center justify-center shadow-lg">
                   <Camera size={13} className="text-indigo-600"/>
                 </div>
               )}
@@ -299,10 +299,10 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
       </div>
 
       {/* ── MI CUENTA ── */}
-      <div className="pv-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+      <div className="pv-card bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-100 dark:border-[#21262d] shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-100 dark:border-[#21262d] flex items-center gap-2">
           <div className="w-1 h-4 bg-indigo-500 rounded-full"/>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mi cuenta</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Mi cuenta</p>
         </div>
         <MenuItem icon={<User size={17} color="#7c3aed"/>} label="Editar perfil" sub="Nombre y teléfono" onClick={onEditProfile}/>
         <MenuItem icon={<Lock size={17} color="#3b82f6"/>} label="Cambiar contraseña" sub="Actualizar acceso" onClick={onChangePass}/>
@@ -311,10 +311,10 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
       </div>
 
       {/* ── CALENDARIOS ── */}
-      <div className="pv-card bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2">
+      <div className="pv-card bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-100 dark:border-[#21262d] shadow-sm overflow-hidden">
+        <div className="px-5 py-3 border-b border-slate-100 dark:border-[#21262d] flex items-center gap-2">
           <div className="w-1 h-4 bg-blue-500 rounded-full"/>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Calendarios vinculados</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Calendarios vinculados</p>
         </div>
         <CalBtn label="Google Calendar" icon="📅" grad="linear-gradient(135deg,#4285f4,#1a73e8)" profile={profile} apiBase="google-calendar" paramKey="gcal"/>
         <CalBtn label="Outlook Calendar" icon={<svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>} grad="linear-gradient(135deg,#0078d4,#106ebe)" profile={profile} apiBase="microsoft-calendar" paramKey="mscal"/>
@@ -326,7 +326,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
       </div>
 
       {/* ── CERRAR SESIÓN ── */}
-      <div className="pv-card bg-white rounded-2xl border border-red-100 overflow-hidden">
+      <div className="pv-card bg-white dark:bg-[#0d1117] rounded-2xl border border-red-100 dark:border-red-800/50 overflow-hidden">
         <MenuItem icon={<LogOut size={17} color="#ef4444"/>} label="Cerrar sesión" danger onClick={onLogout}/>
       </div>
     </div>
