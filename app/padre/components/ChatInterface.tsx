@@ -366,7 +366,7 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
     { icon: '💙', text: 'Necesito apoyo emocional', color: '#fdf2f8', border: '#f9a8d4' },
   ]
   return (
-    <div className="flex flex-col items-center justify-center px-5 py-8 text-center" style={{ animation: 'fadeUp .4s ease', flex: 1, minHeight: 0, overflowY: 'auto' }}>
+    <div className="flex flex-col items-center justify-center px-5 py-8 text-center" style={{ animation: 'fadeUp .4s ease', flex: 1 }}>
       {/* Avatar compacto */}
       <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4 shadow-lg"
         style={{ background: 'linear-gradient(135deg,#6366f1,#4f46e5)', padding: 8 }}>
@@ -661,7 +661,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         )}
 
         {/* ── Área de mensajes ── */}
-        <div className="overflow-y-auto px-4 py-4 bg-slate-50" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e2e8f0 transparent', flex: 1, minHeight: 0 }}>
+        <div className="bg-slate-50" style={{ scrollbarWidth: 'thin', scrollbarColor: '#e2e8f0 transparent', flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
 
           {showWelcome && messages.length === 0 ? (
             <WelcomeScreen childName={childName} onQuickSend={send} />
