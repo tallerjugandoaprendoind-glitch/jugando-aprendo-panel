@@ -194,94 +194,87 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
   const phone = profile?.phone
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,minHeight:'calc(100vh - 180px)' }}>
+    <div className="flex flex-col gap-5 pb-10 w-full">
       <style>{`
-        @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-        .pv-card{animation:fadeUp .4s ease both}
+        @keyframes pv-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+        @keyframes pv-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        .pv-card{animation:pv-in .3s ease both}
         .pv-card:nth-child(1){animation-delay:.04s}.pv-card:nth-child(2){animation-delay:.08s}
         .pv-card:nth-child(3){animation-delay:.12s}.pv-card:nth-child(4){animation-delay:.16s}
-        .pv-card:nth-child(5){animation-delay:.2s}.pv-card:nth-child(6){animation-delay:.24s}
-
-        @media(max-width:380px){
-          .pv-hero-name{font-size:17px!important}
-          .pv-hero-pad{padding:20px 16px!important}
-        }
       `}</style>
 
-      {/* ── HERO ── */}
-      <div className="pv-card" style={{ background:'linear-gradient(135deg,#1e1b4b,#3730a3,#4f46e5)',borderRadius:28,overflow:'hidden',boxShadow:'0 20px 60px rgba(79,70,229,.3)',position:'relative' }}>
-        <div style={{ position:'absolute',top:-30,right:-30,width:160,height:160,background:'rgba(255,255,255,.06)',borderRadius:'50%' }}/>
-        <div style={{ position:'absolute',bottom:-20,left:20,width:100,height:100,background:'rgba(99,102,241,.3)',borderRadius:'50%' }}/>
-        {/* Info principal */}
-        <div style={{ position:'relative',zIndex:1,padding:'28px 24px 24px',display:'flex',alignItems:'center',gap:18 }}>
-          <div style={{ width:72,height:72,background:'rgba(255,255,255,.2)',backdropFilter:'blur(10px)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',fontSize:28,fontWeight:900,color:'#fff',flexShrink:0,border:'2px solid rgba(255,255,255,.3)' }}>
+      {/* ── HEADER ── */}
+      <div className="pv-card flex items-center justify-between gap-4 pb-4 border-b border-slate-100">
+        <h1 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center flex-shrink-0">
+            <User size={17} className="text-indigo-600"/>
+          </div>
+          Mi Perfil
+        </h1>
+      </div>
+
+      {/* ── PROFILE CARD — specialist style ── */}
+      <div className="pv-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-6 py-5 flex items-center gap-5">
+          {/* Avatar */}
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-2xl font-black text-white flex-shrink-0 shadow-lg">
             {initial}
           </div>
-          <div style={{ flex:1,minWidth:0 }}>
-            <h2 style={{ fontSize:20,fontWeight:900,color:'#fff',margin:'0 0 4px',letterSpacing:'-0.3px' }}>{name}</h2>
-            <p style={{ fontSize:12,color:'rgba(255,255,255,.65)',margin:'0 0 2px',display:'flex',alignItems:'center',gap:5 }}><Mail size={11}/>{email}</p>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-black text-lg text-slate-800 leading-tight">{name}</h2>
+            <p className="text-sm text-slate-400 mt-0.5 flex items-center gap-1.5"><Mail size={12}/>{email}</p>
             {phone
-              ? <p style={{ fontSize:12,color:'#6ee7b7',margin:0,display:'flex',alignItems:'center',gap:5 }}><Phone size={11}/>{phone}</p>
-              : <button onClick={onEditProfile} style={{ fontSize:12,color:'#fbbf24',margin:0,background:'none',border:'none',cursor:'pointer',padding:0,fontFamily:'inherit',display:'flex',alignItems:'center',gap:5 }}>📱 Agrega tu número de WhatsApp</button>
+              ? <p className="text-sm text-emerald-600 font-semibold mt-0.5 flex items-center gap-1.5"><Phone size={12}/>{phone}</p>
+              : <button onClick={onEditProfile} className="text-xs text-amber-600 font-bold mt-0.5 flex items-center gap-1 hover:text-amber-700 transition-colors bg-none border-none cursor-pointer p-0">📱 Agrega tu WhatsApp</button>
             }
           </div>
-        </div>
-        {/* Stats rápidos */}
-        <div style={{ background:'rgba(0,0,0,.2)',backdropFilter:'blur(8px)',padding:'14px 24px',display:'flex',gap:0 }}>
-          {[
-            { icon:'📅', label:'Calendario', sublabel:'Vinculado', action:() => {} },
-            { icon:'🔔', label:'Notificaciones', sublabel:'Activas', action:() => {} },
-            { icon:'💙', label:'Soporte', sublabel:'Centro de ayuda', action:onHelp },
-          ].map((item,i)=>(
-            <button key={i} onClick={item.action} style={{ flex:1,background:'none',border:'none',cursor:'pointer',padding:'4px 0',fontFamily:'inherit',borderRight:i<2?'1px solid rgba(255,255,255,.1)':'none' }}>
-              <div style={{ fontSize:18,marginBottom:2 }}>{item.icon}</div>
-              <p style={{ fontSize:11,fontWeight:800,color:'#fff',margin:'0 0 1px' }}>{item.label}</p>
-              <p style={{ fontSize:10,color:'rgba(255,255,255,.5)',margin:0 }}>{item.sublabel}</p>
-            </button>
-          ))}
+          <button onClick={onEditProfile} className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500 flex-shrink-0">
+            <Settings size={16}/>
+          </button>
         </div>
       </div>
 
       {/* ── MI CUENTA ── */}
-      <div className="pv-card" style={{ background:'#fff',borderRadius:22,border:'1.5px solid #f1f5f9',overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
-        <div style={{ padding:'14px 20px 8px' }}>
-          <p style={{ fontSize:10,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:0 }}>Mi cuenta</p>
+      <div className="pv-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-100">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mi cuenta</p>
         </div>
-        <MenuItem icon={<User size={18} color="#7c3aed"/>} label="Editar perfil" sub="Nombre y teléfono" onClick={onEditProfile}/>
-        <MenuItem icon={<Lock size={18} color="#3b82f6"/>} label="Cambiar contraseña" sub="Actualizar acceso" onClick={onChangePass}/>
-        <MenuItem icon={<Shield size={18} color="#8b5cf6"/>} label="Privacidad y seguridad" sub="Gestión de datos" onClick={onPrivacy}/>
-        <MenuItem icon={<HelpCircle size={18} color="#10b981"/>} label="Centro de ayuda" sub="Guías y soporte" onClick={onHelp}/>
+        <MenuItem icon={<User size={17} color="#7c3aed"/>} label="Editar perfil" sub="Nombre y teléfono" onClick={onEditProfile}/>
+        <MenuItem icon={<Lock size={17} color="#3b82f6"/>} label="Cambiar contraseña" sub="Actualizar acceso" onClick={onChangePass}/>
+        <MenuItem icon={<Shield size={17} color="#8b5cf6"/>} label="Privacidad y seguridad" sub="Gestión de datos" onClick={onPrivacy}/>
+        <MenuItem icon={<HelpCircle size={17} color="#10b981"/>} label="Centro de ayuda" sub="Guías y soporte" onClick={onHelp}/>
       </div>
 
       {/* ── CALENDARIOS ── */}
-      <div className="pv-card" style={{ background:'#fff',borderRadius:22,border:'1.5px solid #f1f5f9',overflow:'hidden',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
-        <div style={{ padding:'14px 20px 8px' }}>
-          <p style={{ fontSize:10,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:0 }}>Calendarios vinculados</p>
-          <p style={{ fontSize:11,color:'#cbd5e1',margin:'2px 0 0' }}>Tus citas aparecerán automáticamente</p>
+      <div className="pv-card bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-slate-100">
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Calendarios vinculados</p>
+          <p className="text-xs text-slate-300 mt-0.5">Tus citas aparecerán automáticamente</p>
         </div>
         <CalBtn label="Google Calendar" icon="📅" grad="linear-gradient(135deg,#4285f4,#1a73e8)" profile={profile} apiBase="google-calendar" paramKey="gcal"/>
         <CalBtn label="Outlook Calendar" icon={<svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>} grad="linear-gradient(135deg,#0078d4,#106ebe)" profile={profile} apiBase="microsoft-calendar" paramKey="mscal"/>
       </div>
 
       {/* ── WHATSAPP ── */}
-      <WhatsAppSection profile={profile} onUpdated={onPhoneUpdated || (()=>{})}/>
+      <div className="pv-card">
+        <WhatsAppSection profile={profile} onUpdated={onPhoneUpdated || (()=>{})}/>
+      </div>
 
-      {/* ── VERSIÓN ── */}
-      <div className="pv-card" style={{ background:'linear-gradient(135deg,#f8fafc,#f1f5f9)',borderRadius:22,border:'1.5px solid #e2e8f0',padding:'16px 20px',display:'flex',alignItems:'center',justifyContent:'space-between' }}>
+      {/* ── APP INFO ── */}
+      <div className="pv-card bg-white rounded-2xl border border-slate-200 shadow-sm px-5 py-4 flex items-center justify-between">
         <div>
-          <p style={{ fontSize:10,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:'0 0 4px' }}>Versión de la app</p>
-          <p style={{ fontSize:22,fontWeight:900,color:'#1e293b',margin:0 }}>2.0.0</p>
-          <p style={{ fontSize:11,color:'#94a3b8',margin:'2px 0 0' }}>Jugando Aprendo · Portal de padres</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Versión</p>
+          <p className="font-black text-xl text-slate-800 leading-none">2.0.0</p>
+          <p className="text-xs text-slate-400 mt-1">Jugando Aprendo · Portal de familias</p>
         </div>
-        <div style={{ width:48,height:48,background:'linear-gradient(135deg,#7c3aed,#4f46e5)',borderRadius:14,display:'flex',alignItems:'center',justifyContent:'center',boxShadow:'0 4px 12px rgba(124,58,237,.3)' }}>
-          <Star size={22} color="#fff"/>
+        <div className="w-12 h-12 bg-indigo-50 rounded-2xl border border-indigo-100 flex items-center justify-center">
+          <Star size={20} className="text-indigo-500"/>
         </div>
       </div>
 
       {/* ── CERRAR SESIÓN ── */}
-      <div className="pv-card" style={{ background:'#fff',borderRadius:22,border:'1.5px solid #fecaca',overflow:'hidden' }}>
-        <MenuItem icon={<LogOut size={18} color="#ef4444"/>} label="Cerrar sesión" danger onClick={onLogout}/>
+      <div className="pv-card bg-white rounded-2xl border border-red-100 overflow-hidden">
+        <MenuItem icon={<LogOut size={17} color="#ef4444"/>} label="Cerrar sesión" danger onClick={onLogout}/>
       </div>
     </div>
   )
