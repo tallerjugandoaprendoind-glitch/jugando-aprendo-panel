@@ -8,7 +8,7 @@ import { supabase } from '@/lib/supabase'
 
 interface Msg {
   id: string; content: string; sender_id: string; sender_role: string
-  sender_name: string; read_by: string[]; created_at: string
+  sender_name: string; sender_avatar?: string | null; read_by: string[]; created_at: string
 }
 interface Family {
   child_id: string; child_name: string; lastMsg: string
@@ -323,12 +323,21 @@ export default function ChatFamilias({ profile, userId: _userId, userName: _user
                   <div key={msg.id}>
                     {showDay && <DayDivider date={msg.created_at}/>}
                     {!isMe && (i === 0 || messages[i-1]?.sender_id !== msg.sender_id) && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3, marginTop: 8, paddingLeft: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3, marginTop: 8, paddingLeft: 42 }}>
                         <span style={{ fontSize: 11, fontWeight: 700, color: cfg.color }}>{msg.sender_name}</span>
                         <span style={{ fontSize: 10, fontWeight: 600, background: cfg.bg, color: cfg.color, padding: '1px 7px', borderRadius: 20, border: `1px solid ${cfg.color}25` }}>{cfg.label}</span>
                       </div>
                     )}
-                    <div style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', marginBottom: 2 }}>
+                    <div style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', alignItems: 'flex-end', gap: 8, marginBottom: 2 }}>
+                      {/* Avatar lado izquierdo (mensajes de otros) */}
+                      {!isMe && (
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, overflow: 'hidden', border: `2px solid ${cfg.color}40`, background: cfg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end', marginBottom: 2 }}>
+                          {msg.sender_avatar
+                            ? <img src={msg.sender_avatar} alt={msg.sender_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : <span style={{ fontSize: 13, fontWeight: 800, color: cfg.color }}>{msg.sender_name?.[0]?.toUpperCase() || '?'}</span>
+                          }
+                        </div>
+                      )}
                       <div style={{
                         maxWidth: '68%', padding: '8px 12px',
                         borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
@@ -347,6 +356,15 @@ export default function ChatFamilias({ profile, userId: _userId, userName: _user
                           )}
                         </div>
                       </div>
+                      {/* Avatar lado derecho (mis mensajes) */}
+                      {isMe && (
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', flexShrink: 0, overflow: 'hidden', border: '2px solid rgba(37,99,235,.3)', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', alignSelf: 'flex-end', marginBottom: 2 }}>
+                          {msg.sender_avatar
+                            ? <img src={msg.sender_avatar} alt={msg.sender_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            : <span style={{ fontSize: 13, fontWeight: 800, color: '#2563eb' }}>{msg.sender_name?.[0]?.toUpperCase() || '?'}</span>
+                          }
+                        </div>
+                      )}
                     </div>
                   </div>
                 )

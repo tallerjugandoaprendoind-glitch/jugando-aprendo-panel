@@ -9,7 +9,7 @@ import {
   Search, RefreshCw, Users, Circle, Paperclip, Mic,
   MicOff, X, FileText, Play, Pause, Square,
   Reply, Copy, Forward, Pin, Star, Flag, Trash2,
-  MoreVertical, Camera, Smile
+  MoreVertical, Camera, Smile, ChevronLeft
 } from 'lucide-react'
 import ChatFamilias from './ChatFamilias'
 
@@ -260,6 +260,7 @@ export default function ChatEspecialistas({
   const [activeMainTab, setActiveMainTab] = useState<'equipo' | 'familias'>('equipo')
   const [especialistas, setEspecialistas] = useState<Especialista[]>([])
   const [seleccionado, setSeleccionado] = useState<Especialista | null>(null)
+  const [mobileShowChat, setMobileShowChat] = useState(false)
   const [mensajes, setMensajes] = useState<Mensaje[]>([])
   const [loadingEsp, setLoadingEsp] = useState(true)
   const [loadingMsg, setLoadingMsg] = useState(false)
@@ -704,10 +705,10 @@ export default function ChatEspecialistas({
           <ChatFamilias userId={userId} userName={userName} isDark={isDark} />
         </div>
       ) : (
-      <div className={`flex h-[calc(100vh-185px)] min-h-[450px] rounded-2xl border overflow-hidden shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
+      <div className={`flex h-[calc(100vh-120px)] md:h-[calc(100vh-185px)] min-h-[500px] rounded-2xl border overflow-hidden shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
 
         {/* ── Panel izquierdo ── */}
-        <div className={`w-[280px] flex-shrink-0 border-r flex flex-col ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50/50 border-slate-100'}`}>
+        <div className={`${mobileShowChat ? 'hidden md:flex' : 'flex'} w-full md:w-[280px] flex-shrink-0 border-r flex-col ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50/50 border-slate-100'}`}>
 
           {/* Header del panel con avatar propio */}
           <div className={`px-4 py-4 border-b ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
@@ -771,7 +772,7 @@ export default function ChatEspecialistas({
                     {filtradosAdmins.map((esp) => (
                       <button
                         key={esp.id}
-                        onClick={() => setSeleccionado(esp)}
+                        onClick={() => { setSeleccionado(esp); setMobileShowChat(true) }}
                         className={`w-full text-left px-4 py-3.5 border-b transition-colors relative
                           ${seleccionado?.id === esp.id
                             ? isDark ? 'bg-violet-900/30 border-l-[3px] border-l-violet-500 border-[#21262d]' : 'bg-violet-50 border-l-[3px] border-l-violet-500 border-slate-100/70'
@@ -823,7 +824,7 @@ export default function ChatEspecialistas({
                     {filtradosEspecialistas.map((esp) => (
                       <button
                         key={esp.id}
-                        onClick={() => setSeleccionado(esp)}
+                        onClick={() => { setSeleccionado(esp); setMobileShowChat(true) }}
                         className={`w-full text-left px-4 py-3.5 border-b transition-colors relative
                           ${seleccionado?.id === esp.id
                             ? isDark ? 'bg-blue-900/30 border-l-[3px] border-l-blue-500 border-[#21262d]' : 'bg-blue-50 border-l-[3px] border-l-blue-500 border-slate-100/70'
@@ -868,7 +869,7 @@ export default function ChatEspecialistas({
         </div>
 
         {/* ── Panel derecho ── */}
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className={`${mobileShowChat ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-w-0`}>
           {!seleccionado ? (
             <div className={`flex-1 flex flex-col items-center justify-center gap-5 text-center px-8 ${isDark ? 'bg-[#0d1117]' : 'bg-gradient-to-br from-slate-50 to-blue-50/30'}`}>
               <div className={`w-24 h-24 rounded-3xl flex items-center justify-center shadow-sm border ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
@@ -885,6 +886,13 @@ export default function ChatEspecialistas({
             <>
               {/* Header conversación */}
               <div className={`px-5 py-3.5 border-b flex items-center gap-3 shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-100'}`}>
+                {/* Botón volver en móvil */}
+                <button
+                  onClick={() => setMobileShowChat(false)}
+                  className={`md:hidden p-1.5 rounded-lg mr-1 transition-colors ${isDark ? 'hover:bg-[#21262d] text-slate-400' : 'hover:bg-slate-100 text-slate-500'}`}
+                >
+                  <ChevronLeft size={20} />
+                </button>
                 {/* Avatar del especialista seleccionado (también actualizable) */}
                 <AvatarUpload
                   userId={seleccionado.id}
