@@ -241,7 +241,7 @@ export default function SecretariaHome({ onNavigate }: Props) {
 
         {/* Mini stats strip */}
         <div className="grid grid-cols-3 divide-x"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.12)', divideColor: 'rgba(255,255,255,0.12)' }}>
+          style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}>
           {[
             { label: 'Esta semana', value: stats.semana, icon: '📅' },
             { label: 'Completadas', value: stats.completadas, icon: '✅' },
