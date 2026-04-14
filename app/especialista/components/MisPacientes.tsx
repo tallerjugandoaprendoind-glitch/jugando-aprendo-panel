@@ -18,7 +18,8 @@ import ProgramasABAView from '@/app/admin/components/ProgramasABAView'
 import EvaluacionesUnificadas from '@/app/admin/components/EvaluacionesUnificadas'
 import AIReportView from '@/app/admin/components/AIReportView'
 import DocumentosView from '@/app/admin/components/DocumentosView'
-import { RellenarFicha } from '@/app/admin/components/PlantillasClinicas'
+import { RellenarFicha, GestorPlantillas } from '@/app/admin/components/PlantillasClinicas'
+import { useTheme } from '@/components/ThemeContext'
 
 function calcularEdad(fecha: string) {
   if (!fecha) return 'N/D'
@@ -780,6 +781,78 @@ function PatientInfoViewEspecialista({ paciente, onRefresh }: { paciente: any; o
   )
 }
 
+// ── FichasTabEspecialista — dos sub-tabs: gestionar + rellenar ─────────────────
+function FichasTabEspecialista({ childId, childName }: { childId: string; childName: string }) {
+  const { isDark } = useTheme()
+  const toast = useToast()
+  const [subTab, setSubTab] = useState<'plantillas' | 'rellenar'>('rellenar')
+
+  const cc = {
+    active:   isDark ? 'bg-[#161b22] text-slate-100 shadow border border-[#30363d]' : 'bg-white text-slate-800 shadow border border-slate-200',
+    inactive: isDark ? 'text-slate-500 hover:text-slate-300 border border-transparent' : 'text-slate-400 hover:text-slate-600 border border-transparent',
+    bar:      isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-200',
+  }
+
+  const handleSaved = async (responseId: string) => {
+    try {
+      const res = await fetch('/api/reporte-ficha-clinica', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ responseId }),
+      })
+      if (!res.ok) return
+      const blob = await res.blob()
+      const { data: { user } } = await supabase.auth.getUser()
+      const { data: profile } = await supabase.from('profiles').select('full_name,role').eq('id', user!.id).single()
+      const fileName = `Ficha_${childName.replace(/\s+/g,'_')}_${new Date().toISOString().slice(0,10)}.docx`
+      const path = `${childId}/${Date.now()}_${fileName}`
+      const file = new File([blob], fileName, { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' })
+      const { error: upErr } = await supabase.storage.from('patient-documents').upload(path, file, { upsert: false })
+      if (upErr) throw upErr
+      const { data: { publicUrl } } = supabase.storage.from('patient-documents').getPublicUrl(path)
+      await supabase.from('patient_documents').insert({
+        child_id:          childId,
+        uploaded_by:       user!.id,
+        uploader_role:     profile?.role || 'especialista',
+        uploader_name:     profile?.full_name || 'Clínico',
+        file_name:         fileName,
+        file_url:          publicUrl,
+        file_type:         'word',
+        file_size:         blob.size,
+        category:          'informe',
+        description:       'Ficha clínica generada automáticamente',
+        visible_to_parent: false,
+      })
+      toast.success('📄 Word generado y guardado en Documentos del paciente')
+    } catch (e: any) {
+      console.error('Error auto-generando Word:', e)
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Sub-tabs */}
+      <div className={`flex-shrink-0 px-5 pt-4 pb-3 border-b ${isDark ? 'border-[#21262d]' : 'border-slate-100'}`}>
+        <div className={`flex rounded-2xl p-1.5 gap-1.5 border ${cc.bar}`}>
+          <button onClick={() => setSubTab('plantillas')}
+            className={`flex-1 py-3 rounded-xl text-sm font-black transition-all ${subTab === 'plantillas' ? cc.active : cc.inactive}`}>
+            ⚙️ Gestionar fichas
+          </button>
+          <button onClick={() => setSubTab('rellenar')}
+            className={`flex-1 py-3 rounded-xl text-sm font-black transition-all ${subTab === 'rellenar' ? cc.active : cc.inactive}`}>
+            📋 Fichas del paciente
+          </button>
+        </div>
+      </div>
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-5">
+        {subTab === 'plantillas' && <GestorPlantillas isDark={isDark} />}
+        {subTab === 'rellenar' && <RellenarFicha childId={childId} childName={childName} isDark={isDark} onSaved={handleSaved} />}
+      </div>
+    </div>
+  )
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────────
 export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (id: string | null, name: string | null) => void }) {
   const toast = useToast()
@@ -1049,9 +1122,10 @@ export default function MisPacientes({ onPatientSelect }: { onPatientSelect?: (i
             </div>
           )}
           {detailTab === 'fichas' && (
-            <div style={{ padding: '20px 24px' }}>
-              <RellenarFicha childId={seleccionado.id} childName={seleccionado.name} />
-            </div>
+            <FichasTabEspecialista
+              childId={seleccionado.id}
+              childName={seleccionado.name}
+            />
           )}
           {detailTab === 'documentos' && (
             <div style={{ padding: '20px 24px' }}>

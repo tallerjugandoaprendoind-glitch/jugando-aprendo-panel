@@ -481,7 +481,7 @@ function FichasTab({ childId, childName, currentRole }: {
 }) {
   const { isDark } = useTheme()
   const [subTab, setSubTab] = useState<'plantillas' | 'rellenar'>('rellenar')
-  const canManage = ['jefe', 'admin'].includes(currentRole)
+  const canManage = ['jefe', 'admin', 'especialista'].includes(currentRole)
 
   const cc = {
     active:   isDark ? 'bg-[#161b22] text-slate-100 shadow border border-[#30363d]' : 'bg-white text-slate-800 shadow border border-slate-200',
