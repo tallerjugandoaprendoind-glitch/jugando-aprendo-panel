@@ -17,6 +17,7 @@ import MisPacientes from './components/MisPacientes'
 import DashboardHome from '@/app/admin/components/DashboardHome'
 import PatientsView from '@/app/admin/components/PatientsView'
 import ChatConAdmin from './components/ChatConAdmin'
+import ChatEspecialistas from '@/app/admin/components/ChatEspecialistas'
 import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
 import MisFormularios from './components/MisFormularios'
@@ -59,8 +60,7 @@ export default function EspecialistaDashboard() {
     { id: 'agenda',       icon: Calendar,        label: 'Agenda' },
     { id: 'pacientes',    icon: Users,           label: 'Pacientes' },
     { id: 'prediccion',   icon: Zap,             label: 'Análisis Predictivo' },
-    { id: 'evaluaciones', icon: MessageCircle,   label: 'Chat Equipo' },
-    { id: 'chat-familias', icon: MessageCircle,   label: 'Chat Familias' },
+    { id: 'evaluaciones', icon: MessageCircle,   label: 'Chat' },
     { id: 'perfil',       icon: User,            label: t('nav.miperfil') },
   ]
 
@@ -69,8 +69,7 @@ export default function EspecialistaDashboard() {
     agenda:       'Agenda',
     pacientes:    'Pacientes',
     prediccion:   'Análisis Predictivo',
-    evaluaciones: 'Chat Equipo',
-    'chat-familias': 'Chat Familias',
+    evaluaciones: 'Chat',
     perfil:       'Mi Perfil',
   }
 
@@ -98,8 +97,6 @@ export default function EspecialistaDashboard() {
   useEffect(() => {
     if (activeView === 'evaluaciones') {
       setChatUnread(0)
-    }
-    if (activeView === 'chat-familias') {
       setFamiliasUnread(0)
       // Mark all as read in DB
       if (profile?.id) {
@@ -219,8 +216,8 @@ export default function EspecialistaDashboard() {
       case 'pacientes':    return <PatientsView onPatientSelect={(id, name) => id && name ? setActiveChild({ id, name }) : setActiveChild(null)} />
       case 'prediccion':   return <InteligenciaHubView />
       case 'formularios':  return <MisFormularios userId={profile.id} />
-      case 'evaluaciones': return <ChatConAdmin userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
-      case 'chat-familias': return <ChatFamilias profile={profile} />
+      case 'evaluaciones': return <ChatEspecialistas userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
+      case 'chat-familias': return <ChatEspecialistas userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       case 'agenda':       return <MiAgenda isDark={isDark} />
       case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} onLogout={handleLogout} />
       default:             return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
