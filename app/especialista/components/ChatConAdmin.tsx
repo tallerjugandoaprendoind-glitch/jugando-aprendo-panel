@@ -360,6 +360,16 @@ export default function ChatConAdmin({
     setGrabando(false)
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
   }
+  // En móvil usamos tap-toggle en lugar de press-and-hold
+  const handleMicTouch = (e: React.TouchEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (grabando) {
+      detenerGrabacion()
+    } else {
+      iniciarGrabacion()
+    }
+  }
   const cancelarAudio = () => { setAudioBlob(null); setAudioUrl(null); setTiempoGrabacion(0) }
   const enviarAudio = async () => {
     if (!audioBlob || !seleccionado) return
@@ -697,10 +707,10 @@ export default function ChatConAdmin({
                       className="w-full bg-transparent text-sm text-slate-800 resize-none focus:outline-none placeholder:text-slate-400 max-h-32 disabled:opacity-50"
                       style={{ lineHeight: '1.5' }} />
                   </div>
-                  <button onMouseDown={iniciarGrabacion} onMouseUp={detenerGrabacion} onTouchStart={iniciarGrabacion} onTouchEnd={detenerGrabacion}
+                  <button onMouseDown={iniciarGrabacion} onMouseUp={detenerGrabacion} onTouchStart={handleMicTouch}
                     disabled={subiendo || !!audioUrl}
                     className={`w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center transition-all disabled:opacity-40 ${grabando ? 'bg-red-500 text-white animate-pulse' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'}`}
-                    title="Mantén presionado para grabar">
+                    title={grabando ? 'Toca para detener' : 'Mantén (PC) o toca (móvil) para grabar'}>
                     {grabando ? <MicOff size={16} /> : <Mic size={16} />}
                   </button>
                   {texto.trim() && (

@@ -532,6 +532,17 @@ export default function ChatEspecialistas({
     }
   }
 
+  // En móvil usamos tap-toggle en lugar de press-and-hold
+  const handleMicTouch = (e: React.TouchEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (grabando) {
+      detenerGrabacion()
+    } else {
+      iniciarGrabacion()
+    }
+  }
+
   const cancelarAudio = () => {
     setAudioBlob(null)
     setAudioUrl(null)
@@ -1229,15 +1240,14 @@ export default function ChatEspecialistas({
                   <button
                     onMouseDown={iniciarGrabacion}
                     onMouseUp={detenerGrabacion}
-                    onTouchStart={iniciarGrabacion}
-                    onTouchEnd={detenerGrabacion}
+                    onTouchStart={handleMicTouch}
                     disabled={subiendo || !!audioUrl}
                     className={`w-9 h-9 flex-shrink-0 rounded-xl flex items-center justify-center transition-all disabled:opacity-40
                       ${grabando
                         ? 'bg-red-500 text-white animate-pulse'
                         : isDark ? 'hover:bg-[#21262d] text-slate-500 hover:text-slate-300' : 'hover:bg-slate-100 text-slate-400 hover:text-slate-600'
                       }`}
-                    title="Mantén presionado para grabar"
+                    title={grabando ? 'Toca para detener' : 'Mantén (PC) o toca (móvil) para grabar'}
                   >
                     {grabando ? <MicOff size={16} /> : <Mic size={16} />}
                   </button>
