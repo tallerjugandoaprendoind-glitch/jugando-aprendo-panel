@@ -196,8 +196,8 @@ export default function SecretariaDashboard() {
 
         {/* Content */}
         <div className={`flex-1 admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-[#f8f8fb]'}
-          ${noPadding ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-          <div className={noPadding ? 'h-full' : 'p-4 md:p-5 pb-24 md:pb-6'}>
+          overflow-y-auto`}>
+          <div className={noPadding ? 'h-full pb-16 md:pb-0' : 'p-4 md:p-5 pb-24 md:pb-6'}>
             {renderView()}
           </div>
         </div>
