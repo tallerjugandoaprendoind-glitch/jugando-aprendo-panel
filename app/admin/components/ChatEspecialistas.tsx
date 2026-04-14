@@ -712,11 +712,11 @@ export default function ChatEspecialistas({
       </div>
 
       {activeMainTab === 'familias' ? (
-        <div className={`h-[calc(100vh-185px)] min-h-[450px] rounded-2xl overflow-hidden shadow-sm`}>
+        <div className={`h-[calc(100vh-248px)] md:h-[calc(100vh-185px)] min-h-[400px] rounded-2xl overflow-hidden shadow-sm`}>
           <ChatFamilias userId={userId} userName={userName} isDark={isDark} />
         </div>
       ) : (
-      <div className={`flex h-[calc(100vh-120px)] md:h-[calc(100vh-185px)] min-h-[500px] rounded-2xl border overflow-hidden shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
+      <div className={`flex h-[calc(100vh-248px)] md:h-[calc(100vh-185px)] min-h-[400px] rounded-2xl border overflow-hidden shadow-sm ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200'}`}>
 
         {/* ── Panel izquierdo ── */}
         <div className={`${mobileShowChat ? 'hidden md:flex' : 'flex'} w-full md:w-[280px] flex-shrink-0 border-r flex-col ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50/50 border-slate-100'}`}>

@@ -13,10 +13,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/Toast'
 import EspecialistaHome from './components/EspecialistaHome'
-import MisPacientes from './components/MisPacientes'
-import DashboardHome from '@/app/admin/components/DashboardHome'
 import PatientsView from '@/app/admin/components/PatientsView'
-import ChatConAdmin from './components/ChatConAdmin'
 import ChatEspecialistas from '@/app/admin/components/ChatEspecialistas'
 import MiAgenda from './components/MiAgenda'
 import MiPerfil from './components/MiPerfil'
@@ -24,7 +21,6 @@ import MisFormularios from './components/MisFormularios'
 import LocaleSelector from '@/app/components/LocaleSelector'
 import { ThemeToggleButton, useTheme } from '@/components/ThemeContext'
 import ARIAAgentChat from '@/app/admin/components/ARIAAgentChat'
-import ChatFamilias from '@/app/admin/components/ChatFamilias'
 import InteligenciaHubView from '@/app/admin/components/InteligenciaHubView'
 
 function SidebarLink({ icon: Icon, label, active, onClick, small, badge }: any) {
@@ -217,7 +213,6 @@ export default function EspecialistaDashboard() {
       case 'prediccion':   return <InteligenciaHubView />
       case 'formularios':  return <MisFormularios userId={profile.id} />
       case 'evaluaciones': return <ChatEspecialistas userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
-      case 'chat-familias': return <ChatEspecialistas userId={profile.id} userName={profile.full_name || 'Especialista'} userAvatarUrl={profile.avatar_url} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} />
       case 'agenda':       return <MiAgenda isDark={isDark} />
       case 'perfil':       return <MiPerfil profile={profile} onUpdate={loadProfile} onAvatarUpdate={(url: string) => setProfile((p: any) => ({ ...p, avatar_url: url }))} onLogout={handleLogout} />
       default:             return <EspecialistaHome userId={profile.id} profile={profile} setActiveView={setActiveView} />
@@ -287,7 +282,7 @@ export default function EspecialistaDashboard() {
               label={item.label}
               active={activeView === item.id}
               onClick={() => { setActiveView(item.id); setSidebarOpen(false) }}
-              badge={item.id === 'evaluaciones' ? chatUnread : item.id === 'chat-familias' ? familiasUnread : 0}
+              badge={item.id === 'evaluaciones' ? chatUnread + familiasUnread : 0}
             />
           ))}
         </nav>
@@ -409,8 +404,13 @@ export default function EspecialistaDashboard() {
 
         {/* Content */}
         {activeView === 'evaluaciones' ? (
-          <div className={`flex-1 overflow-hidden p-3 md:p-4 admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
-            {renderView()}
+          <div className={`flex-1 overflow-hidden p-0 md:p-4 admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
+            <div className="md:hidden h-full px-2 pt-2">
+              {renderView()}
+            </div>
+            <div className="hidden md:block h-full">
+              {renderView()}
+            </div>
           </div>
         ) : activeView === 'pacientes' ? (
           <div className={`flex-1 overflow-hidden flex flex-col admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-slate-50'}`}>
@@ -434,7 +434,7 @@ export default function EspecialistaDashboard() {
         <div className="flex items-center">
           {NAV_ITEMS.map(item => {
             const isActive = activeView === item.id
-            const unread = item.id === 'evaluaciones' ? chatUnread : 0
+            const unread = item.id === 'evaluaciones' ? chatUnread + familiasUnread : 0
             return (
               <button key={item.id} onClick={() => setActiveView(item.id)}
                 className="flex flex-col items-center gap-1 py-1 flex-1 min-w-0 transition-all active:scale-95">
