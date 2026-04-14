@@ -199,159 +199,156 @@ export default function SecretariaHome({ onNavigate }: Props) {
     .filter(a => a.appointment_date === hoyStr)
   const listaCitas = proximasCitas.length > 0 ? proximasCitas : citasRecientes
 
+  const fechaStr = new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' }).replace(/^\w/, c => c.toUpperCase())
+
   return (
-    <div className="pb-6 space-y-4">
+    <div className="pb-8 space-y-5">
 
-      {/* ── HERO CARD ── */}
-      <div className="mx-4 mt-4 rounded-2xl overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)' }}>
-        <div className="px-5 pt-5 pb-4">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-blue-200 mb-1">
-            {new Date().toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' })
-              .replace(/^\w/, c => c.toUpperCase())}
+      {/* ── HEADER ── */}
+      <div className="flex items-center justify-between gap-4 pb-4 border-b"
+        style={{ borderColor: 'var(--card-border)', padding: '20px 20px 16px' }}>
+        <div>
+          <h1 className="text-xl font-black tracking-tight flex items-center gap-2"
+            style={{ color: 'var(--text-primary)' }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: 'rgba(59,130,246,0.12)' }}>
+              <Calendar size={18} style={{ color: '#3b82f6' }}/>
+            </div>
+            Panel Principal
+          </h1>
+          <p className="text-xs mt-1 ml-11" style={{ color: 'var(--text-muted)' }}>
+            {fechaStr}
           </p>
-          <div className="flex items-end justify-between">
-            <div>
-              <h2 className="text-[22px] font-black text-white leading-tight">
-                {saludo} 👋
-              </h2>
-              <div className="flex items-center gap-2 mt-2.5">
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full"
-                  style={{ background: 'rgba(255,255,255,0.15)', color: '#fff' }}>
-                  {loading ? '—' : stats.hoy} citas hoy
-                </span>
-                {!loading && stats.pendientes > 0 && (
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full"
-                    style={{ background: 'rgba(251,191,36,0.25)', color: '#fde68a' }}>
-                    ⚠ {stats.pendientes} pendientes
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-4xl font-black tabular-nums text-white leading-none">
-                {horaActual ? horaActual.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-              </p>
-              <p className="text-[11px] text-blue-300 mt-0.5 tabular-nums">
-                {horaActual ? String(horaActual.getSeconds()).padStart(2, '0') + 's' : ''}
-              </p>
-            </div>
-          </div>
         </div>
-
-        {/* Mini stats strip */}
-        <div className="grid grid-cols-3 divide-x"
-          style={{ borderTop: '1px solid rgba(255,255,255,0.12)' }}>
-          {[
-            { label: 'Esta semana', value: stats.semana, icon: '📅' },
-            { label: 'Completadas', value: stats.completadas, icon: '✅' },
-            { label: 'Pacientes',   value: stats.pacientes,   icon: '👥' },
-          ].map(({ label, value, icon }) => (
-            <div key={label} className="flex flex-col items-center py-3 px-2">
-              <span className="text-lg leading-none">{icon}</span>
-              <span className="text-lg font-black text-white tabular-nums mt-0.5">
-                {loading ? '—' : value}
-              </span>
-              <span className="text-[10px] text-blue-200 mt-0.5 text-center leading-tight">{label}</span>
-            </div>
-          ))}
+        <div className="text-right flex-shrink-0">
+          <p className="text-2xl font-black tabular-nums leading-none" style={{ color: 'var(--text-primary)' }}>
+            {horaActual ? horaActual.toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+          </p>
+          <p className="text-[10px] tabular-nums mt-0.5" style={{ color: 'var(--text-muted)' }}>
+            {horaActual ? horaActual.toLocaleTimeString('es-PE', { second: '2-digit' }).replace(/.*:/, '') + 's' : ''}
+          </p>
         </div>
       </div>
 
-      {/* ── KPI GRID 2x2 ── */}
+      {/* ── KPI GRID ── */}
       <div className="px-4 grid grid-cols-2 gap-3">
         {[
-          { label: 'Citas hoy',   value: stats.hoy,         icon: Calendar,     color: '#3b82f6', bg: 'rgba(59,130,246,0.08)',  nav: 'agenda' },
-          { label: 'Pendientes',  value: stats.pendientes,  icon: AlertCircle,  color: '#f59e0b', bg: 'rgba(245,158,11,0.08)',  nav: 'agenda' },
-          { label: 'Canceladas',  value: stats.canceladas,  icon: XCircle,      color: '#ef4444', bg: 'rgba(239,68,68,0.08)',   nav: undefined },
-          { label: 'Completadas', value: stats.completadas, icon: CheckCircle2, color: '#10b981', bg: 'rgba(16,185,129,0.08)',  nav: undefined },
+          { label: 'Citas hoy',   value: stats.hoy,         icon: Calendar,     color: '#3b82f6', bg: 'rgba(59,130,246,0.1)',  nav: 'agenda' },
+          { label: 'Pendientes',  value: stats.pendientes,  icon: AlertCircle,  color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  nav: 'agenda' },
+          { label: 'Canceladas',  value: stats.canceladas,  icon: XCircle,      color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   nav: undefined },
+          { label: 'Completadas', value: stats.completadas, icon: CheckCircle2, color: '#10b981', bg: 'rgba(16,185,129,0.1)',  nav: undefined },
         ].map(({ label, value, icon: Icon, color, bg, nav }) => (
           <button key={label}
             onClick={() => nav && onNavigate?.(nav)}
-            className="rounded-2xl p-4 text-left transition-all active:scale-95"
+            className="rounded-2xl p-4 text-left transition-all active:scale-95 shadow-sm"
             style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: bg }}>
-              <Icon size={18} style={{ color }} />
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: bg }}>
+              <Icon size={20} style={{ color }}/>
             </div>
-            <p className="text-2xl font-black tabular-nums" style={{ color: loading ? 'var(--text-muted)' : color }}>
+            <p className="text-3xl font-black tabular-nums leading-none" style={{ color: loading ? 'var(--text-muted)' : color }}>
               {loading ? '—' : value}
             </p>
-            <p className="text-[11px] font-semibold mt-0.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
+            <p className="text-[12px] font-semibold mt-1.5" style={{ color: 'var(--text-muted)' }}>{label}</p>
           </button>
+        ))}
+      </div>
+
+      {/* ── STATS STRIP ── */}
+      <div className="mx-4 grid grid-cols-3 rounded-2xl overflow-hidden"
+        style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+        {[
+          { label: 'Esta semana', value: stats.semana,   icon: '📅' },
+          { label: 'Pacientes',   value: stats.pacientes, icon: '👥' },
+          { label: 'Total citas', value: stats.completadas + stats.canceladas + stats.pendientes + stats.hoy, icon: '📊' },
+        ].map(({ label, value, icon }, i) => (
+          <div key={label} className="flex flex-col items-center py-4 px-2"
+            style={{ borderRight: i < 2 ? '1px solid var(--card-border)' : 'none' }}>
+            <span className="text-lg leading-none">{icon}</span>
+            <span className="text-xl font-black tabular-nums mt-1" style={{ color: 'var(--text-primary)' }}>
+              {loading ? '—' : value}
+            </span>
+            <span className="text-[10px] font-semibold mt-0.5 text-center leading-tight" style={{ color: 'var(--text-muted)' }}>
+              {label}
+            </span>
+          </div>
         ))}
       </div>
 
       {/* ── GRÁFICA SEMANAL ── */}
       <div className="mx-4 rounded-2xl overflow-hidden"
         style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-        <div className="flex items-center justify-between px-4 pt-4 pb-3">
+        <div className="flex items-center justify-between px-5 pt-4 pb-3"
+          style={{ borderBottom: '1px solid var(--card-border)' }}>
           <div className="flex items-center gap-2">
-            <Activity size={15} style={{ color: '#3b82f6' }} />
-            <h3 className="text-[13px] font-black" style={{ color: 'var(--text-primary)' }}>
-              Actividad semanal
-            </h3>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'rgba(59,130,246,0.1)' }}>
+              <Activity size={13} style={{ color: '#3b82f6' }}/>
+            </div>
+            <h3 className="text-[13px] font-black" style={{ color: 'var(--text-primary)' }}>Actividad semanal</h3>
           </div>
-          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+          <span className="text-[11px] font-bold px-2.5 py-1 rounded-full"
             style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
             {loading ? '—' : stats.semana} citas
           </span>
         </div>
-        <div className="px-4 pb-4">
-          <WeeklyMiniChart />
+        <div className="px-5 py-4">
+          <WeeklyMiniChart/>
         </div>
       </div>
 
       {/* ── CITAS DE HOY ── */}
       <div className="mx-4 rounded-2xl overflow-hidden"
         style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-        <div className="flex items-center justify-between px-4 py-3.5"
+        <div className="flex items-center justify-between px-5 py-3.5"
           style={{ borderBottom: '1px solid var(--card-border)' }}>
           <div className="flex items-center gap-2">
-            <Clock size={14} style={{ color: '#3b82f6' }} />
-            <h3 className="text-[13px] font-black" style={{ color: 'var(--text-primary)' }}>
-              Hoy
-            </h3>
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'rgba(59,130,246,0.1)' }}>
+              <Clock size={13} style={{ color: '#3b82f6' }}/>
+            </div>
+            <h3 className="text-[13px] font-black" style={{ color: 'var(--text-primary)' }}>Hoy</h3>
             {citasHoy.length > 0 && (
-              <span className="text-[10px] font-black px-1.5 py-0.5 rounded-full"
+              <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
                 style={{ background: '#3b82f6', color: '#fff' }}>
                 {citasHoy.length}
               </span>
             )}
           </div>
           <button onClick={() => onNavigate?.('agenda')}
-            className="flex items-center gap-1 text-[11px] font-bold"
+            className="flex items-center gap-1 text-[11px] font-bold transition-opacity hover:opacity-70"
             style={{ color: '#3b82f6' }}>
-            Ver agenda <ChevronRight size={12} />
+            Ver agenda <ChevronRight size={12}/>
           </button>
         </div>
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <Loader2 size={20} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
+            <Loader2 size={18} className="animate-spin" style={{ color: 'var(--text-muted)' }}/>
           </div>
         ) : citasHoy.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
             <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
               style={{ background: 'var(--muted-bg)' }}>
-              <Calendar size={22} style={{ color: 'var(--text-muted)' }} />
+              <Calendar size={22} style={{ color: 'var(--text-muted)' }}/>
             </div>
             <p className="text-sm font-bold" style={{ color: 'var(--text-muted)' }}>Sin citas para hoy</p>
             <p className="text-xs" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>Disfruta el día libre 🎉</p>
           </div>
         ) : (
-          <div>
-            {citasHoy.slice(0, 5).map(apt => <AppointmentRow key={apt.id} apt={apt} />)}
-          </div>
+          <div>{citasHoy.slice(0, 5).map(apt => <AppointmentRow key={apt.id} apt={apt}/>)}</div>
         )}
       </div>
 
       {/* ── PRÓXIMAS / RECIENTES ── */}
       <div className="mx-4 rounded-2xl overflow-hidden"
         style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
-        <div className="flex items-center justify-between px-4 py-3.5"
+        <div className="flex items-center justify-between px-5 py-3.5"
           style={{ borderBottom: '1px solid var(--card-border)' }}>
           <div className="flex items-center gap-2">
-            <CalendarDays size={14} style={{ color: 'var(--text-muted)' }} />
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+              style={{ background: 'var(--muted-bg)' }}>
+              <CalendarDays size={13} style={{ color: 'var(--text-muted)' }}/>
+            </div>
             <h3 className="text-[13px] font-black" style={{ color: 'var(--text-primary)' }}>
               {proximasCitas.length > 0 ? 'Próximas citas' : 'Citas recientes'}
             </h3>
@@ -360,28 +357,26 @@ export default function SecretariaHome({ onNavigate }: Props) {
 
         {loading ? (
           <div className="flex justify-center py-8">
-            <Loader2 size={20} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
+            <Loader2 size={18} className="animate-spin" style={{ color: 'var(--text-muted)' }}/>
           </div>
         ) : listaCitas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 gap-2">
-            <Calendar size={28} style={{ color: 'var(--text-muted)' }} />
+            <Calendar size={26} style={{ color: 'var(--text-muted)' }}/>
             <p className="text-sm font-bold" style={{ color: 'var(--text-muted)' }}>Sin citas registradas</p>
           </div>
         ) : (
-          <div>
-            {listaCitas.slice(0, 6).map(apt => <AppointmentRow key={apt.id} apt={apt} />)}
-          </div>
+          <div>{listaCitas.slice(0, 6).map(apt => <AppointmentRow key={apt.id} apt={apt}/>)}</div>
         )}
 
-        <div className="px-4 py-3 flex items-center justify-between"
+        <div className="px-5 py-3 flex items-center justify-between"
           style={{ borderTop: '1px solid var(--card-border)', background: 'var(--muted-bg)' }}>
           <span className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
             {listaCitas.length > 6 ? `+${listaCitas.length - 6} más` : `${listaCitas.length} citas`}
           </span>
           <button onClick={() => onNavigate?.('agenda')}
-            className="flex items-center gap-1 text-[12px] font-bold transition-opacity hover:opacity-70"
+            className="flex items-center gap-1 text-[12px] font-bold hover:opacity-70 transition-opacity"
             style={{ color: '#3b82f6' }}>
-            Ver agenda completa <ArrowRight size={12} />
+            Ver agenda <ArrowRight size={12}/>
           </button>
         </div>
       </div>
