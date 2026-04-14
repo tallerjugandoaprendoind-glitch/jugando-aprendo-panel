@@ -131,7 +131,7 @@ export default function SecretariaDashboard() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-black text-[13px] leading-tight" style={{ color: 'var(--text-primary)' }}>Jugando Aprendo</p>
-            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Panel Clínico</p>
+            <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>Panel Secretaría</p>
           </div>
           <button onClick={() => setSidebarOpen(false)} className="md:hidden p-1" style={{ color: 'var(--text-muted)' }}>
             <X size={16} />
