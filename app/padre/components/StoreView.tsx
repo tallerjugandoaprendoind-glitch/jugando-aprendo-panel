@@ -285,17 +285,12 @@ export default function StoreView({ profile }: { profile: any }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 32, width: '100%', minHeight: 'calc(100vh - 180px)' }}>
       <style>{`
-        @media(min-width:640px){
-          .sv-products-grid{display:grid!important;grid-template-columns:repeat(1,1fr)!important;gap:12px!important}
-          .sv-featured-grid{display:grid!important;grid-template-columns:repeat(1,1fr)!important;gap:12px!important}
-          .sv-orders-grid{display:grid!important;grid-template-columns:repeat(1,1fr)!important;gap:12px!important}
-          @media(min-width:480px){
-            .sv-products-grid,.sv-featured-grid,.sv-orders-grid{grid-template-columns:repeat(2,1fr)!important}
-          }
+        .sv-products-grid,.sv-featured-grid,.sv-orders-grid{display:grid!important;grid-template-columns:repeat(1,1fr)!important;gap:12px!important}
+        @media(min-width:480px){
+          .sv-products-grid,.sv-featured-grid,.sv-orders-grid{grid-template-columns:repeat(2,1fr)!important}
         }
         @media(min-width:1024px){
-          .sv-products-grid{grid-template-columns:repeat(3,1fr)!important}
-          .sv-featured-grid{grid-template-columns:repeat(3,1fr)!important}
+          .sv-products-grid,.sv-featured-grid{grid-template-columns:repeat(3,1fr)!important}
         }
       `}</style>
 
