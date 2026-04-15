@@ -711,28 +711,44 @@ export default function ParentDashboard() {
             </main>
 
             {/* 📱 NAVEGACIÓN INFERIOR MÓVIL MEJORADA */}
-            <nav className="lg:hidden backdrop-blur-xl border-t px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-around items-center fixed bottom-0 w-full z-30" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
-                <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
-                <NavBtnMobile icon={<Calendar size={22}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} badge={null} />
-                <div className="relative -top-5">
-                    <button 
-                        onClick={()=>setActiveView('chat')} 
-                        className={`w-14 h-14 rounded-[1.75rem] flex items-center justify-center shadow-xl border-4 border-white transition-all active:scale-95 relative group ${
-                            activeView==='chat'
-                            ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-purple-300' 
-                            : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-indigo-300'
-                        }`}
-                    >
-                        <Sparkles size={24} className="group-hover:animate-spin"/>
-                        {activeView !== 'chat' && (
-                            <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full animate-bounce">
-                                IA
-                            </span>
-                        )}
-                    </button>
+            <nav className="lg:hidden backdrop-blur-xl border-t fixed bottom-0 w-full z-30" style={{ background: "var(--card)", borderColor: "var(--card-border)", paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}>
+              <div className="grid grid-cols-5 items-end px-1 pt-1">
+                {/* Inicio */}
+                <div className="flex justify-center">
+                  <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                 </div>
-                <NavBtnMobile icon={<User size={22}/>} label="Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
-                <div className="relative">
+                {/* Mis Citas */}
+                <div className="flex justify-center">
+                  <NavBtnMobile icon={<Calendar size={22}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} badge={null} />
+                </div>
+                {/* Botón IA central flotante */}
+                <div className="flex justify-center">
+                  <div className="relative" style={{ marginBottom: "0.75rem" }}>
+                    <button 
+                      onClick={()=>setActiveView('chat')} 
+                      className={`w-14 h-14 rounded-[1.75rem] flex items-center justify-center shadow-xl border-4 transition-all active:scale-95 relative group ${
+                          activeView==='chat'
+                          ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white shadow-purple-300' 
+                          : 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-indigo-300'
+                      }`}
+                      style={{ borderColor: "var(--card)", marginTop: "-1.75rem" }}
+                    >
+                      <Sparkles size={24} className="group-hover:animate-spin"/>
+                      {activeView !== 'chat' && (
+                          <span className="absolute -top-1.5 -right-1.5 px-1.5 py-0.5 bg-red-500 text-white text-[9px] font-black rounded-full animate-bounce">
+                              IA
+                          </span>
+                      )}
+                    </button>
+                    <span className="block text-center text-[10px] font-medium mt-0.5" style={{ color: activeView==='chat' ? '#7c3aed' : 'var(--text-muted)' }}>Asistente</span>
+                  </div>
+                </div>
+                {/* Perfil */}
+                <div className="flex justify-center">
+                  <NavBtnMobile icon={<User size={22}/>} label="Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
+                </div>
+                {/* Más */}
+                <div className="flex justify-center relative">
                   <button
                     onClick={()=>setShowMoreMenu(v=>!v)}
                     className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition-all ${showMoreMenu ? 'text-purple-600' : 'text-slate-500'}`}
@@ -741,21 +757,29 @@ export default function ParentDashboard() {
                     <span className="text-[10px] font-medium">Más</span>
                   </button>
                   {showMoreMenu && (
-                    <div className="absolute bottom-14 right-0 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 w-52 z-50 flex flex-col gap-1">
+                    <div className="absolute bottom-14 right-0 rounded-2xl shadow-2xl border p-2 w-56 z-50 flex flex-col gap-1" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                       {[
-                        { id: 'engagement', icon: <Zap size={18}/>, label: 'Act. en Casa' },
-                        { id: 'chat-familias', icon: <MessageCircle size={18}/>, label: 'Chat Equipo' },
-                        { id: 'chat',        icon: <Sparkles size={18}/>, label: 'Asistente IA' },
-                        { id: 'mensajes',    icon: <MessageCircle size={18}/>, label: 'Mensajes' },
-                                      ].map(item => (
+                        { id: 'engagement',    icon: <Zap size={18}/>,            label: 'Act. en Casa' },
+                        { id: 'chat-familias', icon: <MessageCircle size={18}/>,  label: 'Chat', badge: familiasUnread > 0 ? familiasUnread : null },
+                        { id: 'mensajes',      icon: <Bell size={18}/>,           label: 'Notificaciones', badge: unreadCount > 0 ? unreadCount : null },
+                        { id: 'programas',     icon: <BookOpen size={18}/>,       label: 'Programas ABA' },
+                        { id: 'misformularios',icon: <FileText size={18}/>,       label: 'Mi Centro', badge: pendingFormsCount > 0 ? pendingFormsCount : null },
+                      ].map(item => (
                         <button key={item.id} onClick={()=>{setActiveView(item.id);setShowMoreMenu(false)}}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeView===item.id ? 'bg-purple-50 text-purple-700' : 'text-slate-700 hover:bg-slate-50'}`}>
-                          {item.icon}{item.label}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all relative ${activeView===item.id ? 'bg-purple-50 text-purple-700' : 'text-slate-700 hover:bg-slate-50'}`}>
+                          {item.icon}
+                          <span className="flex-1 text-left">{item.label}</span>
+                          {(item as any).badge && (
+                            <span className="ml-auto min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-black rounded-full flex items-center justify-center">
+                              {(item as any).badge}
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
+              </div>
             </nav>
         </div>
 
