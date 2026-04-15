@@ -517,7 +517,7 @@ export default function ParentDashboard() {
                 </div>
                 <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-widest leading-none mb-0.5" style={{ color: "var(--text-muted)" }}>Bienvenido/a</p>
-                    <p className="font-black text-[13px] truncate" style={{ color: "var(--text-primary)" }}>{profile?.full_name?.split(' ')[0] || 'Usuario'}</p>
+                    <p className="font-black text-[13px] truncate" style={{ color: "var(--text-primary)", fontSize: "12px", fontWeight: 700 }}>Portal Familias</p>
                 </div>
             </div>
 
@@ -535,7 +535,7 @@ export default function ParentDashboard() {
                 <NavBtnDesktop icon={<Calendar size={17}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
-                <NavBtnDesktop icon={<Bell size={17}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
+                <NavBtnDesktop icon={<Bell size={17}/>} label="Notificaciones" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label="Chat" active={activeView==='chat-familias'} onClick={()=>setActiveView('chat-familias')} badge={familiasUnread > 0 ? familiasUnread : null} />
                 <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'||activeView==='tienda'||activeView==='documentos'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
