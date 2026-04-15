@@ -18,13 +18,13 @@ interface Notification {
 
 // ── Source type config ──────────────────────────────────────────────────────
 const TYPE_CFG: Record<string, { label: string; icon: React.ReactNode; color: string; bg: string; border: string }> = {
-  session_report: { label: 'Reporte de sesión',    icon: <FileText size={14}/>,     color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-  evaluacion:     { label: 'Evaluación clínica',   icon: <ClipboardList size={14}/>, color: '#0891b2', bg: '#f0f9ff', border: '#bae6fd' },
-  parent_form:    { label: 'Formulario',            icon: <CheckCircle2 size={14}/>,  color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe' },
-  neuroforma:     { label: 'NeuroForma',            icon: <Brain size={14}/>,         color: '#6366f1', bg: '#eef2ff', border: '#c7d2fe' },
-  entorno_hogar:  { label: 'Entorno del hogar',     icon: <Home size={14}/>,          color: '#059669', bg: '#f0fdf4', border: '#a7f3d0' },
-  parent_message: { label: 'Mensaje del terapeuta', icon: <MessageCircle size={14}/>, color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe' },
-  video_call:     { label: 'Videollamada',          icon: <Video size={14}/>,         color: '#dc2626', bg: '#fef2f2', border: '#fecaca' },
+  session_report: { label: 'Reporte de sesión',    icon: <FileText size={14}/>,     color: '#8b5cf6', bg: 'var(--c-stat-purple)', border: 'var(--c-border)' },
+  evaluacion:     { label: 'Evaluación clínica',   icon: <ClipboardList size={14}/>, color: '#0891b2', bg: 'var(--c-stat-blue)',   border: 'var(--c-border)' },
+  parent_form:    { label: 'Formulario',            icon: <CheckCircle2 size={14}/>,  color: '#2563eb', bg: 'var(--c-stat-blue)',   border: 'var(--c-border)' },
+  neuroforma:     { label: 'NeuroForma',            icon: <Brain size={14}/>,         color: '#6366f1', bg: 'var(--c-stat-purple)', border: 'var(--c-border)' },
+  entorno_hogar:  { label: 'Entorno del hogar',     icon: <Home size={14}/>,          color: '#059669', bg: 'var(--c-stat-green)',  border: 'var(--c-border)' },
+  parent_message: { label: 'Mensaje del terapeuta', icon: <MessageCircle size={14}/>, color: '#8b5cf6', bg: 'var(--c-stat-purple)', border: 'var(--c-border)' },
+  video_call:     { label: 'Videollamada',          icon: <Video size={14}/>,         color: '#ef4444', bg: 'rgba(239,68,68,0.1)',  border: 'var(--c-border)' },
 }
 const DEFAULT_TYPE = TYPE_CFG.parent_message
 
@@ -114,8 +114,7 @@ function NotifCard({ noti, expanded, onToggle, locale }: { noti: Notification; e
   const isNew = !noti.is_read
 
   return (
-    <div className={`bg-white rounded-2xl border overflow-hidden transition-shadow hover:shadow-sm ${isNew ? 'border-violet-200' : 'border-slate-100'}`}
-      style={{ animation: 'nfadeUp .3s ease both' }}>
+    <div className="rounded-2xl border overflow-hidden transition-shadow hover:shadow-sm" style={{ background: "var(--c-card)", borderColor: isNew ? "rgba(139,92,246,0.4)" : "var(--c-border)", animation: "nfadeUp .3s ease both" }}>
 
       {/* Card header — clickable */}
       <button onClick={onToggle} className="w-full text-left px-4 py-4 flex items-start gap-3 transition-colors" style={{ background: "var(--c-card)" }}>
