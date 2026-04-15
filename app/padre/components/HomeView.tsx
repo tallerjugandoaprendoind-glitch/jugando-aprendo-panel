@@ -403,18 +403,18 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       {/* ── STATS ROW ── */}
       <div className="hv-card" style={{ display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:10 }}>
         {[
-          { val: loading ? '…' : stats.sessions,                    label:'Sesiones',        sub: stats.monthSessions > 0 ? `+${stats.monthSessions} este mes` : 'Total realizadas', emoji:'🎯', color:'#2563eb', bg:'var(--c-stat-blue)' },
-          { val: loading ? '…' : `${stats.goalsAchieved}/${stats.totalGoals||'?'}`, label:'Objetivos logrados', sub:'Con dominio ≥80%', emoji:'✅', color:'#059669', bg:'var(--c-stat-green)' },
-          { val: loading ? '…' : `${stats.hoursTotal}h`,             label:'Horas de terapia', sub: stats.sessions > 0 ? `~${Math.round(stats.hoursTotal/Math.max(stats.sessions,1)*10)/10}h por sesión` : 'Sin sesiones', emoji:'⏱️', color:'#7c3aed', bg:'var(--c-stat-purple)' },
-          { val: loading ? '…' : `${stats.masteryRate}%`,              label:'Dominio',          sub:'Promedio de objetivos', emoji:'📈', color:'#d97706', bg:'var(--c-stat-amber)' },
-        ].map(({ val, label, sub, emoji, color, bg }) => (
-          <div key={label} style={{ background:bg, borderRadius:18, padding:'14px 14px', border:`1.5px solid ${color}20`, display:'flex', flexDirection:'column', gap:8 }}>
-            <div style={{ width:36, height:36, background:`${color}15`, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{emoji}</div>
-            <div>
-              <p style={{ fontSize:22, fontWeight:900, color:'var(--c-text-primary)', margin:0, lineHeight:1, letterSpacing:'-0.5px' }}>{val}</p>
-              <p style={{ fontSize:10, fontWeight:700, color, textTransform:'uppercase', letterSpacing:0.5, margin:'3px 0 0' }}>{label}</p>
+          { val: loading ? '…' : stats.sessions,                    label:'Sesiones',        sub: stats.monthSessions > 0 ? `+${stats.monthSessions} este mes` : 'Total realizadas', color:'#2563eb' },
+          { val: loading ? '…' : `${stats.goalsAchieved}/${stats.totalGoals||'?'}`, label:'Objetivos logrados', sub:'Con dominio ≥80%', color:'#059669' },
+          { val: loading ? '…' : `${stats.hoursTotal}h`,             label:'Horas de terapia', sub: stats.sessions > 0 ? `~${Math.round(stats.hoursTotal/Math.max(stats.sessions,1)*10)/10}h por sesión` : 'Sin sesiones', color:'#7c3aed' },
+          { val: loading ? '…' : `${stats.masteryRate}%`,              label:'Dominio',          sub:'Promedio de objetivos', color:'#d97706' },
+        ].map(({ val, label, sub, color }) => (
+          <div key={label} style={{ background:'var(--c-card)', borderRadius:18, padding:'18px 16px', border:`1px solid var(--c-border)`, display:'flex', flexDirection:'column', gap:6, position:'relative', overflow:'hidden' }}>
+            <div style={{ position:'absolute', top:0, left:0, width:4, height:'100%', borderRadius:'18px 0 0 18px', background:color }}/>
+            <div style={{ paddingLeft:10 }}>
+              <p style={{ fontSize:11, fontWeight:700, color:'var(--c-text-muted)', textTransform:'uppercase', letterSpacing:0.5, margin:'0 0 6px' }}>{label}</p>
+              <p style={{ fontSize:26, fontWeight:900, color:'var(--c-text-primary)', margin:0, lineHeight:1, letterSpacing:'-0.5px' }}>{val}</p>
+              <p style={{ fontSize:11, color:'var(--c-text-muted)', margin:'5px 0 0', lineHeight:1.4 }}>{sub}</p>
             </div>
-            <p style={{ fontSize:11, color:'var(--c-text-muted)', margin:0, lineHeight:1.4 }}>{sub}</p>
           </div>
         ))}
       </div>
