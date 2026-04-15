@@ -471,7 +471,7 @@ export default function ParentDashboard() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50 font-sans text-slate-700 overflow-hidden">
+    <div className="flex h-screen font-sans overflow-hidden" style={{ background: "var(--background)", color: "var(--foreground)" }}>
         
         {/* 🔔 PUSH NOTIFICATIONS BANNER */}
         <PushNotificationBanner userId={profile?.id || null} />
@@ -508,7 +508,7 @@ export default function ParentDashboard() {
         )}
 
         {/* === SIDEBAR (PC) === */}
-        <aside className="hidden lg:flex w-[230px] bg-white border-r border-slate-100 flex-col z-20 shadow-[1px_0_3px_rgba(0,0,0,0.04)]">
+        <aside className="hidden lg:flex w-[230px] border-r flex-col z-20" style={{ background: "var(--sidebar-bg)", borderColor: "var(--sidebar-border)" }}>
 
             {/* Logo header */}
             <div className="flex items-center gap-3 px-5 h-[60px] border-b border-slate-100/80 flex-shrink-0">
@@ -568,7 +568,7 @@ export default function ParentDashboard() {
         <div className="flex-1 flex flex-col h-full relative">
             
             {/* 🖥️ HEADER DESKTOP */}
-            <header className="hidden lg:flex h-14 items-center justify-between px-6 flex-shrink-0 border-b bg-white border-slate-200">
+            <header className="hidden lg:flex h-14 items-center justify-between px-6 flex-shrink-0 border-b" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                 <div>
                     <h1 className="text-sm font-black text-slate-800">
                         {PAGE_TITLES_MOBILE[activeView as keyof typeof PAGE_TITLES_MOBILE] || 'Inicio'}
@@ -591,7 +591,7 @@ export default function ParentDashboard() {
             </header>
 
             {/* 📱 HEADER MÓVIL — mismo estilo admin */}
-            <header className="lg:hidden h-14 flex items-center justify-between px-3 flex-shrink-0 border-b bg-white border-slate-200">
+            <header className="lg:hidden h-14 flex items-center justify-between px-3 flex-shrink-0 border-b" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                 <div className="flex items-center gap-2">
                     <div>
                         <h1 className="text-sm font-black text-slate-800">
@@ -616,7 +616,7 @@ export default function ParentDashboard() {
             </header>
 
             {/* 👶 SELECTOR DE HIJOS MEJORADO */}
-            <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 py-4 px-4 md:px-8 flex gap-3 overflow-x-auto items-center scrollbar-hide shadow-sm">
+            <div className="backdrop-blur-sm border-b py-4 px-4 md:px-8 flex gap-3 overflow-x-auto items-center scrollbar-hide" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0 mr-2 flex items-center gap-2">
                     <User size={12}/> {t('ui.viendo')}
                 </span>
@@ -646,7 +646,7 @@ export default function ParentDashboard() {
                 </button>
             </div>
 
-            <main className={`flex-1 overflow-y-auto ${activeView === 'chat' || activeView === 'chat-familias' ? 'p-0 lg:p-4 lg:p-6' : 'p-4 md:p-6'} ${activeView === 'chat' || activeView === 'chat-familias' ? 'pb-16 lg:pb-6' : 'pb-20 lg:pb-6'}`} style={{ minHeight: 0, overflow: activeView === 'chat-familias' ? 'hidden' : undefined }}>
+            <main className={`flex-1 overflow-y-auto ${activeView === 'chat' || activeView === 'chat-familias' ? 'p-0 lg:p-4 lg:p-6' : 'p-4 md:p-6'} ${activeView === 'chat' || activeView === 'chat-familias' ? 'pb-16 lg:pb-6' : 'pb-20 lg:pb-6'}`} style={{ minHeight: 0, overflow: activeView === 'chat-familias' ? 'hidden' : undefined, background: "var(--background)" }}>
                 <div className="w-full min-h-full">
                     {activeView === 'home' && (
                         <HomeViewInnovative 
