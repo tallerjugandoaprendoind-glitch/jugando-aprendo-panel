@@ -34,6 +34,7 @@ import DocumentosView from '@/app/admin/components/DocumentosView'
 import ChatInterface from './components/ChatInterface'
 import ChatFamilias from './components/ChatFamilias'
 import MensajesView from './components/MensajesView'
+import ProgramasABAView from './components/ProgramasABAView'
 import EngagementView from './components/EngagementView'
 import PushNotificationBanner from '../../components/PushNotificationBanner'
 import { TIME_SLOTS, calculateAge } from './utils/helpers'
@@ -467,7 +468,7 @@ export default function ParentDashboard() {
     home: 'Inicio', miscitas: 'Mis Citas', engagement: 'Act. en Casa',
     chat: 'Asistente IA', mensajes: 'Notificaciones', misformularios: 'Mi Centro',
     tienda: 'Tienda', documentos: 'Documentos', profile: 'Mi Perfil',
-    'chat-familias': 'Chat',
+    'chat-familias': 'Chat', 'programas': 'Programas ABA',
   }
 
   return (
@@ -536,6 +537,7 @@ export default function ParentDashboard() {
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                 <NavBtnDesktop icon={<Bell size={17}/>} label="Notificaciones" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
+                <NavBtnDesktop icon={<BookOpen size={17}/>} label="Programas ABA" active={activeView==='programas'} onClick={()=>setActiveView('programas')} />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label="Chat" active={activeView==='chat-familias'} onClick={()=>setActiveView('chat-familias')} badge={familiasUnread > 0 ? familiasUnread : null} />
                 <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'||activeView==='tienda'||activeView==='documentos'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
@@ -679,6 +681,7 @@ export default function ParentDashboard() {
 
                     {(activeView === 'misformularios' || activeView === 'tienda' || activeView === 'documentos') && <ParentFormsView profile={profile} selectedChild={selectedChild} onFormsLoaded={(count: number) => setPendingFormsCount(count)} initialTab={activeView === 'tienda' ? 'store' : activeView === 'documentos' ? 'documentos' : 'forms'} />}
                     {activeView === 'mensajes' && <MensajesView profile={profile} />}
+                    {activeView === 'programas' && selectedChild && <ProgramasABAView childId={selectedChild.id} childName={selectedChild.name} />}
                     {activeView === 'chat-familias' && selectedChild && (
                       <div className="overflow-hidden flex flex-col rounded-2xl lg:rounded-3xl" style={{ height: "calc(100svh - 200px)", border: "1px solid var(--card-border)", background: "var(--card)" }}>
                         <ChatFamilias childId={selectedChild.id} childName={selectedChild.name} profile={profile} />
