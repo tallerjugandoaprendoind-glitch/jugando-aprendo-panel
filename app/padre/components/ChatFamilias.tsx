@@ -134,7 +134,7 @@ export default function ChatFamilias({ childId, childName, profile }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: 'var(--c-card)',
-      overflow: 'hidden' }} className="lg:rounded-[20px] lg:border lg:shadow-sm">
+      overflow: 'hidden' }}>
 
       {/* ── HEADER ── */}
       <div style={{ padding: '12px 18px', borderBottom: '1px solid var(--c-border)', display: 'flex', alignItems: 'center', gap: 12, background: 'var(--c-card)', flexShrink: 0 }}>
