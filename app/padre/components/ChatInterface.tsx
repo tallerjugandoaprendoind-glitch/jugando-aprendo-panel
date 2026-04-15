@@ -663,7 +663,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         }
       `}</style>
 
-      <div className="flex flex-col" style={{ background: "var(--card)", height: "100%", minHeight: 0, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }} style={{ height: '100%', minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="flex flex-col" style={{ background: "var(--card)", height: "100%", minHeight: 0, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* ── Header — clean, professional ── */}
         <div className="shrink-0 px-4 py-3 flex items-center gap-3 border-b" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
