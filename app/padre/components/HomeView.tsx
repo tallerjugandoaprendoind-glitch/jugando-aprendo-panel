@@ -366,7 +366,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 <span style={{ background:'rgba(255,255,255,.15)', backdropFilter:'blur(8px)', color:'#ffffff', fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(255,255,255,.2)' }}>{age} años</span>
                 {child?.diagnosis && <span style={{ background:'rgba(255,255,255,.15)', backdropFilter:'blur(8px)', color:'#ffffff', fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(255,255,255,.2)' }}>{child.diagnosis}</span>}
                 <span style={{ background:'rgba(255,255,255,.15)', backdropFilter:'blur(8px)', color:'#ffffff', fontSize:11, fontWeight:600, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(255,255,255,.2)' }}>{stats.sessions} sesiones</span>
-                {stats.level !== 'Inicial' && <span style={{ background:'rgba(251,191,36,.25)', color:'#fde68a', fontSize:11, fontWeight:700, padding:'4px 12px', borderRadius:20, border:'1px solid rgba(251,191,36,.35)' }}>⭐ Nivel {stats.level}</span>}
+                
               </div>
             </div>
             <div style={{ position:'relative', flexShrink:0 }}>
@@ -412,7 +412,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
           { val: loading ? '…' : stats.sessions,                    label:'Sesiones',        sub: stats.monthSessions > 0 ? `+${stats.monthSessions} este mes` : 'Total realizadas', emoji:'🎯', color:'#2563eb', bg:'var(--c-stat-blue)' },
           { val: loading ? '…' : `${stats.goalsAchieved}/${stats.totalGoals||'?'}`, label:'Objetivos logrados', sub:'Con dominio ≥80%', emoji:'✅', color:'#059669', bg:'var(--c-stat-green)' },
           { val: loading ? '…' : `${stats.hoursTotal}h`,             label:'Horas de terapia', sub: stats.sessions > 0 ? `~${Math.round(stats.hoursTotal/Math.max(stats.sessions,1)*10)/10}h por sesión` : 'Sin sesiones', emoji:'⏱️', color:'#7c3aed', bg:'var(--c-stat-purple)' },
-          { val: loading ? '…' : stats.level,                        label:'Nivel actual',     sub:'Basado en progreso', emoji:'🌟', color:'#d97706', bg:'var(--c-stat-amber)' },
+
         ].map(({ val, label, sub, emoji, color, bg }) => (
           <div key={label} style={{ background:bg, borderRadius:18, padding:'14px 14px', border:`1.5px solid ${color}20`, display:'flex', flexDirection:'column', gap:8 }}>
             <div style={{ width:36, height:36, background:`${color}15`, borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', fontSize:18 }}>{emoji}</div>
