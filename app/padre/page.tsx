@@ -516,8 +516,8 @@ export default function ParentDashboard() {
                     {profile?.full_name?.charAt(0) || 'F'}
                 </div>
                 <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-widest leading-none mb-0.5" style={{ color: "var(--text-muted)" }}>{t('ui.welcome')}</p>
-                    <p className="font-black text-[13px] truncate" style={{ color: "var(--text-primary)" }}>Fam. {profile?.full_name?.split(' ')[0]}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest leading-none mb-0.5" style={{ color: "var(--text-muted)" }}>Bienvenido/a</p>
+                    <p className="font-black text-[13px] truncate" style={{ color: "var(--text-primary)" }}>{profile?.full_name?.split(' ')[0] || 'Usuario'}</p>
                 </div>
             </div>
 
@@ -542,16 +542,17 @@ export default function ParentDashboard() {
             </nav>
 
             {/* Bottom section */}
-            <div className="p-3 border-t border-slate-100 space-y-2 flex-shrink-0">
-                <div className="bg-blue-50 border border-blue-100 px-4 py-3 rounded-xl">
-                    <p className="text-[10px] font-black text-blue-700 flex items-center gap-1.5 mb-1">
+            <div className="p-3 space-y-2 flex-shrink-0" style={{ borderTop: "1px solid var(--sidebar-border)" }}>
+                <div className="px-4 py-3 rounded-xl" style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.15)" }}>
+                    <p className="text-[10px] font-black flex items-center gap-1.5 mb-1" style={{ color: "#2563eb" }}>
                         <Calendar size={10}/> Tus citas
                     </p>
-                    <p className="text-[10px] text-blue-500 leading-relaxed">Programadas por el equipo del centro. Para cambios contactá a recepción.</p>
+                    <p className="text-[10px] leading-relaxed" style={{ color: "var(--text-muted)" }}>Programadas por el equipo del centro. Para cambios contactá a recepción.</p>
                 </div>
                 <button
                     onClick={handleOpenNotifications}
-                    className="w-full bg-slate-50 hover:bg-blue-50 text-slate-600 hover:text-blue-700 px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 border border-slate-200 hover:border-blue-200 active:scale-95 relative"
+                    className="w-full px-4 py-2.5 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-2 active:scale-95 relative"
+                    style={{ background: "var(--muted-bg)", border: "1px solid var(--card-border)", color: "var(--text-secondary)" }}
                 >
                     <Bell size={14}/>
                     Ver Notificaciones
