@@ -342,7 +342,8 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                       onClick={() => { setDiaSeleccionado(c.appointment_date); setMes(fecha) }}
                       className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-slate-50 transition-colors">
                       <div className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0
-                        ${esHoyC ? 'bg-blue-600 text-white' : 'text-slate-600' style={{ background: 'var(--muted-bg)' }}}`}>
+                        ${esHoyC ? 'bg-blue-600 text-white' : ''}`}
+                        style={{ background: esHoyC ? undefined : 'var(--muted-bg)', color: esHoyC ? undefined : 'var(--text-secondary)' }}>
                         <span className="text-[8px] font-bold leading-none uppercase">
                           {MESES_S[fecha.getMonth()]}
                         </span>
