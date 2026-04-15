@@ -58,7 +58,7 @@ export function NavBtnDesktop({icon, label, active, onClick, badge}: any) {
     return (
         <button
             onClick={onClick}
-            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl transition-all relative ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}`}
+            className={`flex items-center gap-3 w-full px-4 py-3 rounded-2xl transition-all relative ${active ? 'bg-blue-600 text-white shadow-lg shadow-blue-200' : 'hover:bg-slate-50 hover:text-slate-800'}`} style={{ color: active ? undefined : 'var(--text-muted)' }}
             style={{ textAlign: 'left' }}
         >
             <span style={{ flexShrink: 0 }}>{icon}</span>
@@ -72,10 +72,10 @@ export function NavBtnMobile({icon, label, active, onClick, badge}: any) {
     return (
         <button
             onClick={onClick}
-            className={`flex flex-col items-center gap-0.5 flex-1 py-1 rounded-xl transition-all relative active:scale-95 ${active ? 'text-blue-600' : 'text-slate-400'}`}
+            className={`flex flex-col items-center gap-0.5 flex-1 py-1 rounded-xl transition-all relative active:scale-95 ${active ? 'text-blue-500' : ''}`} style={{ color: active ? undefined : 'var(--text-muted)' }}
             style={{ minWidth: 0 }}
         >
-            <div className={`relative p-1.5 rounded-xl transition-all ${active ? 'bg-blue-50' : ''}`}>
+            <div className={`relative p-1.5 rounded-xl transition-all ${active ? 'bg-blue-500/10' : ''}`}>
                 {icon}
                 {badge > 0 && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-white text-[8px] font-black flex items-center justify-center">

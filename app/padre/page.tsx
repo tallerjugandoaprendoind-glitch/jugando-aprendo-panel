@@ -570,10 +570,10 @@ export default function ParentDashboard() {
             {/* 🖥️ HEADER DESKTOP */}
             <header className="hidden lg:flex h-14 items-center justify-between px-6 flex-shrink-0 border-b" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                 <div>
-                    <h1 className="text-sm font-black text-slate-800">
+                    <h1 className="text-sm font-black" style={{ color: "var(--text-primary)" }}>
                         {PAGE_TITLES_MOBILE[activeView as keyof typeof PAGE_TITLES_MOBILE] || 'Inicio'}
                     </h1>
-                    <p className="text-[10px] text-slate-400">Jugando Aprendo · Portal Familias</p>
+                    <p style={{ fontSize: "10px", color: "var(--text-muted)" }}>Jugando Aprendo · Portal Familias</p>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <LocaleSelector compact={true} />
@@ -594,10 +594,10 @@ export default function ParentDashboard() {
             <header className="lg:hidden h-14 flex items-center justify-between px-3 flex-shrink-0 border-b" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                 <div className="flex items-center gap-2">
                     <div>
-                        <h1 className="text-sm font-black text-slate-800">
+                        <h1 className="text-sm font-black" style={{ color: "var(--text-primary)" }}>
                             {PAGE_TITLES_MOBILE[activeView as keyof typeof PAGE_TITLES_MOBILE] || 'Inicio'}
                         </h1>
-                        <p className="text-[10px] text-slate-400">Portal Familias</p>
+                        <p style={{ fontSize: "10px", color: "var(--text-muted)" }}>Portal Familias</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-1">
@@ -708,7 +708,7 @@ export default function ParentDashboard() {
             </main>
 
             {/* 📱 NAVEGACIÓN INFERIOR MÓVIL MEJORADA */}
-            <nav className="lg:hidden bg-white/95 backdrop-blur-xl border-t border-slate-200/60 px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-around items-center fixed bottom-0 w-full z-30 shadow-[0_-10px_30px_rgba(0,0,0,0.05)]">
+            <nav className="lg:hidden backdrop-blur-xl border-t px-3 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex justify-around items-center fixed bottom-0 w-full z-30" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
                 <NavBtnMobile icon={<Home size={22}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                 <NavBtnMobile icon={<Calendar size={22}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} badge={null} />
                 <div className="relative -top-5">
