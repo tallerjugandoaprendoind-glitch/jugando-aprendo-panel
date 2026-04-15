@@ -511,27 +511,27 @@ export default function ParentDashboard() {
         <aside className="hidden lg:flex w-[230px] border-r flex-col z-20" style={{ background: "var(--sidebar-bg)", borderColor: "var(--sidebar-border)" }}>
 
             {/* Logo header */}
-            <div className="flex items-center gap-3 px-5 h-[60px] border-b border-slate-100/80 flex-shrink-0">
+            <div className="flex items-center gap-3 px-5 h-[60px] flex-shrink-0" style={{ borderBottom: "1px solid var(--sidebar-border)" }}>
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-base shadow-md shadow-blue-200/50">
                     {profile?.full_name?.charAt(0) || 'F'}
                 </div>
                 <div className="min-w-0">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-0.5">{t('ui.welcome')}</p>
-                    <p className="font-black text-[13px] text-slate-800 truncate">Fam. {profile?.full_name?.split(' ')[0]}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest leading-none mb-0.5" style={{ color: "var(--text-muted)" }}>{t('ui.welcome')}</p>
+                    <p className="font-black text-[13px] truncate" style={{ color: "var(--text-primary)" }}>Fam. {profile?.full_name?.split(' ')[0]}</p>
                 </div>
             </div>
 
             {/* Role badge */}
             <div className="px-4 pt-4 pb-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100/80">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(37,99,235,0.1)", border: "1px solid rgba(37,99,235,0.2)" }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse flex-shrink-0" />
-                    <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Portal Familias</span>
+                    <span className="text-[10px] font-black uppercase tracking-widest" style={{ color: "#2563eb" }}>Portal Familias</span>
                 </div>
             </div>
 
             {/* Nav */}
             <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
-                <NavBtnDesktop icon={<Home size={17}/>} label={t('familias.inicioProgreso')} active={activeView==='home'} onClick={()=>setActiveView('home')} />
+                <NavBtnDesktop icon={<Home size={17}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                 <NavBtnDesktop icon={<Calendar size={17}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
