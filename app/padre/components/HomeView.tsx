@@ -99,10 +99,10 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
     --c-text-secondary: #c9d1d9;
     --c-text-muted: #8b949e;
     --c-text-placeholder: #6e7681;
-    --c-stat-blue: #1e3a5f;
-    --c-stat-green: #14532d;
-    --c-stat-purple: #2e1065;
-    --c-stat-amber: #451a03;
+    --c-stat-blue: rgba(59,130,246,0.12);
+    --c-stat-green: rgba(16,185,129,0.12);
+    --c-stat-purple: rgba(139,92,246,0.12);
+    --c-stat-amber: rgba(245,158,11,0.12);
   }
 @keyframes celebIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}`}</style>
     </div>
@@ -443,7 +443,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 ?.replace(/\*\*(.*?)\*\*/g, '$1').trim()
 
             return (
-              <div className="hv-card" style={{ background:'linear-gradient(135deg,#f0f9ff,#e0f2fe)', border:'1.5px solid #bae6fd', borderRadius:22, padding:'18px 20px' }}>
+              <div className="hv-card" style={{ background:'var(--c-surface)', border:'1.5px solid var(--c-border)', borderRadius:22, padding:'18px 20px' }}>
                 <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:12 }}>
                   <div style={{ width:38, height:38, background:'linear-gradient(135deg,#0ea5e9,#2563eb)', borderRadius:12, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
                     <Sparkles size={18} color="var(--c-card)"/>
@@ -452,7 +452,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                     <p style={{ color:'#0369a1', fontSize:10, fontWeight:700, textTransform:'uppercase', letterSpacing:1, margin:0 }}>Resumen de ARIA</p>
                     <p style={{ color:'var(--c-text-primary)', fontSize:13, fontWeight:700, margin:0 }}>¿Cómo va {firstName}?</p>
                   </div>
-                  {prediccion?.confianza > 0 && <span style={{ marginLeft:'auto', background:'#e0f2fe', color:'#0284c7', fontSize:10, fontWeight:700, padding:'3px 9px', borderRadius:20, border:'1px solid #7dd3fc', flexShrink:0 }}>{prediccion.confianza}% confianza</span>}
+                  {prediccion?.confianza > 0 && <span style={{ marginLeft:'auto', background:'var(--c-stat-blue)', color:'#0284c7', fontSize:10, fontWeight:700, padding:'3px 9px', borderRadius:20, border:'1px solid var(--c-border)', flexShrink:0 }}>{prediccion.confianza}% confianza</span>}
                 </div>
                 <p style={{ color:'var(--c-text-primary)', fontSize:13, lineHeight:1.65, margin:0, fontStyle: desactualizado ? 'italic' : 'normal', opacity: desactualizado ? 0.7 : 1 }}>
                   {desactualizado ? `✨ Actualizando el resumen con las ${stats.sessions} sesiones...` : textoParaPadre || '✨ Preparando el resumen de progreso...'}
@@ -564,7 +564,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 })}
               </div>
               <div style={{ padding:'10px 14px', paddingTop:4 }}>
-                <button onClick={()=>onChangeView('chat')} className="hv-btn" style={{ width:'100%', padding:'9px', background:'linear-gradient(135deg,#eff6ff,#f0f9ff)', color:'#2563eb', border:'1.5px solid var(--c-border)', borderRadius:12, fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                <button onClick={()=>onChangeView('chat')} className="hv-btn" style={{ width:'100%', padding:'9px', background:'var(--c-stat-blue)', color:'#2563eb', border:'1.5px solid var(--c-border)', borderRadius:12, fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
                   <Sparkles size={13}/>Pregúntale a ARIA cómo practicarlos
                 </button>
               </div>
@@ -588,7 +588,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
               <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
                 {[
                   { label:'Dominio de objetivos', value:stats.masteryRate, color:'#059669', track:'#dcfce7' },
-                  { label:'Asistencia este mes',  value:Math.min(100,stats.monthSessions*25), color:'#2563eb', track:'#dbeafe' },
+                  { label:'Asistencia este mes',  value:Math.min(100,stats.monthSessions*25), color:'#2563eb', track:'var(--c-border)' },
                   { label:'Horas de terapia',     value:Math.min(100,Math.round(stats.hoursTotal/20*100)), color:'#7c3aed', track:'#ede9fe' },
                 ].map(({ label, value, color, track }) => (
                   <div key={label}>
