@@ -417,10 +417,10 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
   const { t } = useI18n()
 
   const quick = [
-    { icon: '📋', text: '¿Cómo le fue en la última sesión?', color: '#eef2ff', border: '#c7d2fe' },
-    { icon: '🏠', text: 'Dame consejos para casa', color: 'var(--c-stat-green)', border: 'var(--c-border)' },
-    { icon: '🎯', text: '¿Qué objetivos está trabajando?', color: 'var(--c-stat-amber)', border: 'var(--c-border)' },
-    { icon: '💙', text: 'Necesito apoyo emocional', color: 'var(--c-stat-purple)', border: 'var(--c-border)' },
+    { icon: '📋', text: '¿Cómo le fue en la última sesión?', accent: '#6366f1' },
+    { icon: '🏠', text: 'Dame consejos para casa',             accent: '#10b981' },
+    { icon: '🎯', text: '¿Qué objetivos está trabajando?',    accent: '#f59e0b' },
+    { icon: '💙', text: 'Necesito apoyo emocional',           accent: '#ec4899' },
   ]
   return (
     <div className="flex flex-col items-center justify-center px-5 py-8 text-center" style={{ animation: 'fadeUp .4s ease', flex: 1 }}>
@@ -442,12 +442,13 @@ function WelcomeScreen({ childName, onQuickSend }: { childName: string; onQuickS
       {/* Quick actions — cleaner */}
       <div className="flex flex-col gap-2 w-full max-w-[320px]">
         <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "var(--c-text-muted)" }}>¿Por dónde empezamos?</p>
-        {quick.map(({ icon, text, color, border }) => (
+        {(quick as any[]).map(({ icon, text, accent }: any) => (
           <button key={text} onClick={() => onQuickSend(text)}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all active:scale-[.98] hover:shadow-sm"
-            style={{ background: color, border: `1.5px solid ${border}` }}>
-            <span className="text-base shrink-0">{icon}</span>
-            <span className="text-sm font-semibold" style={{ color: "var(--c-text-primary)" }}>{text}</span>
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all active:scale-[.98] relative overflow-hidden"
+            style={{ background: 'var(--c-card)', border: '1px solid var(--c-border)' }}>
+            <div style={{ position:'absolute', left:0, top:0, bottom:0, width:3, background:accent, borderRadius:'8px 0 0 8px' }}/>
+            <span className="text-base shrink-0 ml-1">{icon}</span>
+            <span className="text-sm font-semibold" style={{ color: 'var(--c-text-primary)' }}>{text}</span>
           </button>
         ))}
       </div>
@@ -662,7 +663,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         }
       `}</style>
 
-      <div className="flex flex-col" style={{ height: '100%', minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div className="flex flex-col" style={{ background: "var(--card)", height: "100%", minHeight: 0, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }} style={{ height: '100%', minHeight: 0, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* ── Header — clean, professional ── */}
         <div className="shrink-0 px-4 py-3 flex items-center gap-3 border-b" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
@@ -717,7 +718,7 @@ function ChatInterface({ childId, childName, onNavigateToStore, parentId }: any)
         )}
 
         {/* ── Área de mensajes ── */}
-        <div className="" style={{ scrollbarWidth: "thin", scrollbarColor: "var(--card-border) transparent", flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", background: "var(--muted-bg)" }}>
+        <div className="" style={{ scrollbarWidth: "thin", scrollbarColor: "var(--card-border) transparent", flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", background: "var(--background)" }}>
 
           {showWelcome && messages.length === 0 ? (
             <WelcomeScreen childName={childName} onQuickSend={send} />
