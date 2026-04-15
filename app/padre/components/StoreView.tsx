@@ -495,7 +495,7 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
   return (
     <div className="rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer" style={{ background: "var(--c-card)", borderColor: featured ? "rgba(251,191,36,0.4)" : "var(--c-border)" }}>
       {/* Imagen */}
-      <div className="relative h-44 bg-gradient-to-br from-slate-50 to-slate-100" onClick={() => onDetail(p)}>
+      <div className="relative h-36 sm:h-44" style={{ background: "var(--muted-bg)" }} onClick={() => onDetail(p)}>
         {p.imagen_url
           ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
           : <div className="flex items-center justify-center h-full"><ImageIcon size={28} className="text-slate-300" /></div>
@@ -516,11 +516,11 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
         )}
       </div>
 
-      <div className="p-4">
-        <p className="font-black text-slate-800 dark:text-slate-100 text-sm leading-tight mb-1 line-clamp-2" onClick={() => onDetail(p)}>{p.nombre}</p>
-        <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-2 mb-3 leading-relaxed">{p.descripcion}</p>
+      <div className="p-3 sm:p-4">
+        <p className="font-black text-xs sm:text-sm leading-tight mb-1 line-clamp-2" style={{ color: "var(--c-text-primary)" }} onClick={() => onDetail(p)}>{p.nombre}</p>
+        <p className="text-[10px] sm:text-xs line-clamp-2 mb-2 sm:mb-3 leading-relaxed" style={{ color: "var(--c-text-muted)" }}>{p.descripcion}</p>
         <div className="flex items-center justify-between gap-2">
-          <span className="text-lg font-black text-blue-600 dark:text-blue-400">S/ {Number(p.precio_soles).toFixed(2)}</span>
+          <span className="text-sm sm:text-lg font-black text-blue-500">S/ {Number(p.precio_soles).toFixed(2)}</span>
           <button onClick={() => !sinStock && onAdd(p)} disabled={sinStock}
             className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${justAdded ? 'bg-emerald-600 text-white scale-95' : sinStock ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-sm shadow-blue-200'}`}>
             {justAdded ? <><CheckCircle size={13} /> {t('ui.added_short')}</> : <><ShoppingCart size={13} /> {inCart > 0 ? `${t('ui.in_cart')} (${inCart})` : t('common.agregar')}</>}
