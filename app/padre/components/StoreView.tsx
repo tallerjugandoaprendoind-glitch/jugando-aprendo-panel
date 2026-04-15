@@ -534,51 +534,54 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
   const { t } = useI18n()
   const sinStock = p.tipo === 'fisico' && p.stock === 0
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-      <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col" style={{ background: "var(--c-card)", maxHeight: "85vh" }} onClick={e => e.stopPropagation()}>
-        {/* Imagen */}
-        <div className="relative shrink-0" style={{ height: 180, background: "var(--c-surface)" }}>
+    <div style={{ position:'fixed', inset:0, zIndex:50, background:'rgba(0,0,0,0.65)', backdropFilter:'blur(4px)', display:'flex', alignItems:'flex-end', justifyContent:'center', padding:0 }} onClick={onClose}>
+      <div style={{ background:'var(--c-card)', width:'100%', maxWidth:480, borderRadius:'24px 24px 0 0', maxHeight:'82vh', display:'flex', flexDirection:'column', overflow:'hidden' }} onClick={e => e.stopPropagation()}>
+        
+        {/* Imagen compacta */}
+        <div style={{ position:'relative', height:160, flexShrink:0, background:'var(--c-surface)', overflow:'hidden' }}>
           {p.imagen_url
-            ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
-            : <div className="flex items-center justify-center h-full"><ImageIcon size={40} className="text-slate-300" /></div>
+            ? <img src={p.imagen_url} alt={p.nombre} style={{ width:'100%', height:'100%', objectFit:'cover', display:'block' }} />
+            : <div style={{ height:'100%', display:'flex', alignItems:'center', justifyContent:'center' }}><ImageIcon size={36} color="var(--c-text-muted)" /></div>
           }
-          <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: "var(--c-card)" }}>
-            <X size={18} style={{ color: "var(--c-text-primary)" }} />
+          <button onClick={onClose} style={{ position:'absolute', top:12, right:12, width:36, height:36, borderRadius:10, border:'none', cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', background:'var(--c-card)' }}>
+            <X size={16} color="var(--c-text-primary)" />
           </button>
-          <div className="absolute top-4 left-4 flex gap-2">
-            <span className={`text-xs font-black px-3 py-1 rounded-full text-white ${p.tipo === 'digital' ? 'bg-violet-600' : 'bg-slate-700'}`}>
+          <div style={{ position:'absolute', top:12, left:12, display:'flex', gap:6 }}>
+            <span style={{ fontSize:10, fontWeight:800, padding:'3px 10px', borderRadius:20, color:'#fff', background: p.tipo === 'digital' ? '#7c3aed' : '#475569' }}>
               {p.tipo === 'digital' ? '📄 Digital' : '📦 Físico'}
             </span>
-            {p.destacado && <span className="text-xs font-black px-3 py-1 rounded-full bg-amber-400 text-white">⭐ Destacado</span>}
           </div>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1">
-          <div className="flex items-start justify-between gap-4 mb-3">
-            <h3 className="text-xl font-black leading-tight flex-1" style={{ color: "var(--c-text-primary)" }}>{p.nombre}</h3>
-            <span className="text-2xl font-black text-blue-500 shrink-0">S/ {Number(p.precio_soles).toFixed(2)}</span>
+        {/* Contenido scrolleable */}
+        <div style={{ padding:'16px 20px 20px', overflowY:'auto', flex:1 }}>
+          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, marginBottom:8 }}>
+            <h3 style={{ fontWeight:900, fontSize:17, color:'var(--c-text-primary)', margin:0, lineHeight:1.3, flex:1 }}>{p.nombre}</h3>
+            <span style={{ fontWeight:900, fontSize:20, color:'#2563eb', flexShrink:0 }}>S/ {Number(p.precio_soles).toFixed(2)}</span>
           </div>
 
-          <div className="flex gap-2 mb-4">
-            <span className="text-xs font-bold capitalize px-2.5 py-1 rounded-full" style={{ background: "var(--c-surface)", color: "var(--c-text-secondary)" }}>{p.categoria}</span>
-            {p.tipo === 'fisico' && <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-100 text-emerald-700' : p.stock > 0 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:12 }}>
+            <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, background:'var(--c-surface)', color:'var(--c-text-secondary)', textTransform:'capitalize' }}>{p.categoria}</span>
+            {p.tipo === 'fisico' && <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, background: p.stock > 3 ? 'rgba(16,185,129,0.12)' : p.stock > 0 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)', color: p.stock > 3 ? '#10b981' : p.stock > 0 ? '#f59e0b' : '#ef4444' }}>
               {p.stock === 0 ? 'Sin stock' : `${p.stock} disponibles`}
             </span>}
-            {p.tipo === 'digital' && <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: "var(--c-stat-purple)", color: "#8b5cf6" }}>Descarga inmediata</span>}
+            {p.tipo === 'digital' && <span style={{ fontSize:11, fontWeight:700, padding:'3px 10px', borderRadius:20, background:'var(--c-stat-purple)', color:'#8b5cf6' }}>Descarga inmediata</span>}
           </div>
 
-          <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--c-text-secondary)" }}>{p.descripcion || 'Sin descripción disponible.'}</p>
+          <p style={{ fontSize:13, color:'var(--c-text-secondary)', lineHeight:1.6, marginBottom:14 }}>{p.descripcion || 'Sin descripción disponible.'}</p>
 
           {p.tipo === 'digital' && (
-            <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 rounded-xl p-4 mb-4">
-              <p className="text-xs font-black text-violet-700 dark:text-violet-300 mb-1">{t('tienda.articuloDigital')}</p>
-              <p className="text-xs text-violet-600 dark:text-violet-400">Al confirmar tu pedido y pagar, recibirás el archivo por WhatsApp en menos de 24 horas.</p>
+            <div style={{ background:'var(--c-stat-purple)', border:'1px solid var(--c-border)', borderRadius:12, padding:'10px 14px', marginBottom:14 }}>
+              <p style={{ fontSize:11, fontWeight:800, color:'#8b5cf6', margin:'0 0 4px' }}>📄 {t('tienda.articuloDigital')}</p>
+              <p style={{ fontSize:11, color:'var(--c-text-muted)', margin:0, lineHeight:1.5 }}>Al confirmar tu pedido y pagar, recibirás el archivo por WhatsApp en menos de 24 horas.</p>
             </div>
           )}
 
           <button onClick={() => !sinStock && onAdd(p)} disabled={sinStock}
-            className={`w-full py-4 rounded-2xl font-black text-base transition-all flex items-center justify-center gap-2 ${justAdded ? 'bg-emerald-600 text-white' : sinStock ? 'bg-slate-100 text-slate-300 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200'}`}>
-            {justAdded ? <><CheckCircle size={18} /> {t('ui.added_to_cart')}</> : sinStock ? t('ui.out_of_stock') : <><ShoppingCart size={18} /> {inCart > 0 ? `${t('ui.add_another')} (${inCart} ${t('ui.in_cart_count')})` : t('ui.add_to_cart')}</>}
+            style={{ width:'100%', padding:'14px', borderRadius:16, border:'none', cursor: sinStock ? 'not-allowed' : 'pointer', fontWeight:900, fontSize:15, display:'flex', alignItems:'center', justifyContent:'center', gap:8, transition:'all .2s',
+              background: justAdded ? '#10b981' : sinStock ? 'var(--c-surface)' : '#2563eb',
+              color: sinStock ? 'var(--c-text-muted)' : '#fff' }}>
+            {justAdded ? <><CheckCircle size={16} /> {t('ui.added_to_cart')}</> : sinStock ? t('ui.out_of_stock') : <><ShoppingCart size={16} /> {inCart > 0 ? `${t('ui.add_another')} (${inCart})` : t('ui.add_to_cart')}</>}
           </button>
         </div>
       </div>
