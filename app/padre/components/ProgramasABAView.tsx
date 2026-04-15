@@ -18,9 +18,12 @@ interface Programa {
   fase_actual: string
   instrucciones_casa: string
   materiales: string
+  sd_estimulo: string
+  reforzadores: string
+  ayudas: string
   criterio_dominio_pct: number
   estado: string
-  objetivos_cp: { id: string; nombre: string; estado: string; numero_set: number }[]
+  objetivos_cp: { id: string; nombre?: string; descripcion?: string; estado: string; numero_set: number }[]
   sesiones_datos_aba: { fecha: string; porcentaje_exito: number }[]
 }
 
@@ -177,37 +180,70 @@ function ProgramCard({ prog, childId }: { prog: Programa; childId: string }) {
             <p style={{ fontSize: 13, color: 'var(--c-text-secondary)', lineHeight: 1.6, margin: '14px 0 12px' }}>{prog.descripcion}</p>
           )}
 
-          {/* How to practice at home */}
-          {prog.instrucciones_casa && (
-            <div style={{ background: 'var(--c-stat-blue)', border: '1px solid var(--c-border)', borderRadius: 14, padding: '12px 14px', marginBottom: 12 }}>
-              <p style={{ fontSize: 11, fontWeight: 800, color: '#2563eb', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <BookOpen size={12} /> Cómo practicar en casa
-              </p>
-              <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0, lineHeight: 1.6 }}>{prog.instrucciones_casa}</p>
-            </div>
-          )}
+          {/* Cómo aplicar el programa */}
+          <div style={{ background: 'var(--c-stat-blue)', border: '1px solid var(--c-border)', borderRadius: 14, padding: '14px 16px', marginTop: 14, marginBottom: 12 }}>
+            <p style={{ fontSize: 12, fontWeight: 800, color: '#2563eb', margin: '0 0 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <BookOpen size={13} /> Cómo practicarlo en casa
+            </p>
 
-          {/* Materials */}
-          {prog.materiales && (
-            <div style={{ marginBottom: 12 }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text-muted)', margin: '0 0 6px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Star size={11} /> Materiales necesarios
-              </p>
-              <p style={{ fontSize: 12, color: 'var(--c-text-secondary)', margin: 0 }}>{prog.materiales}</p>
-            </div>
-          )}
+            {prog.sd_estimulo && (
+              <div style={{ marginBottom: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5 }}>📍 Qué decir o hacer (Sd)</span>
+                <p style={{ fontSize: 12, color: 'var(--c-text-primary)', margin: '4px 0 0', lineHeight: 1.6 }}>{prog.sd_estimulo}</p>
+              </div>
+            )}
 
-          {/* Current objectives */}
+            {prog.instrucciones_casa && (
+              <div style={{ marginBottom: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5 }}>📋 Instrucciones</span>
+                <p style={{ fontSize: 12, color: 'var(--c-text-primary)', margin: '4px 0 0', lineHeight: 1.6 }}>{prog.instrucciones_casa}</p>
+              </div>
+            )}
+
+            {prog.ayudas && (
+              <div style={{ marginBottom: 8 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5 }}>🤝 Ayudas / Prompts</span>
+                <p style={{ fontSize: 12, color: 'var(--c-text-primary)', margin: '4px 0 0', lineHeight: 1.6 }}>{prog.ayudas}</p>
+              </div>
+            )}
+
+            {prog.reforzadores && (
+              <div style={{ marginBottom: 0 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5 }}>🎁 Reforzadores</span>
+                <p style={{ fontSize: 12, color: 'var(--c-text-primary)', margin: '4px 0 0', lineHeight: 1.6 }}>{prog.reforzadores}</p>
+              </div>
+            )}
+
+            {prog.materiales && (
+              <div style={{ marginTop: prog.reforzadores ? 8 : 0 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#2563eb', textTransform: 'uppercase', letterSpacing: 0.5 }}>🧸 Materiales</span>
+                <p style={{ fontSize: 12, color: 'var(--c-text-primary)', margin: '4px 0 0', lineHeight: 1.6 }}>{prog.materiales}</p>
+              </div>
+            )}
+
+            {!prog.sd_estimulo && !prog.instrucciones_casa && !prog.ayudas && !prog.reforzadores && (
+              <p style={{ fontSize: 12, color: 'var(--c-text-muted)', margin: 0, fontStyle: 'italic' }}>
+                Tu terapeuta aún no ha agregado instrucciones para casa. Consúltale en la próxima sesión.
+              </p>
+            )}
+          </div>
+
+          {/* Sets / Objetivos actuales */}
           {prog.objetivos_cp && prog.objetivos_cp.filter(o => o.estado !== 'dominado').length > 0 && (
             <div style={{ marginBottom: 14 }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text-muted)', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Target size={11} /> Objetivos actuales
+                <Target size={11} /> Qué está practicando ahora
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {prog.objetivos_cp.filter(o => o.estado !== 'dominado').slice(0, 3).map(obj => (
-                  <div key={obj.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', background: 'var(--c-surface)', borderRadius: 10, border: '1px solid var(--c-border)' }}>
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: area.color, flexShrink: 0 }} />
-                    <span style={{ fontSize: 12, color: 'var(--c-text-primary)' }}>{obj.nombre}</span>
+                {prog.objetivos_cp.filter(o => o.estado !== 'dominado').map(obj => (
+                  <div key={obj.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--c-surface)', borderRadius: 10, border: '1px solid var(--c-border)' }}>
+                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: area.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: area.color }}>{obj.numero_set || '•'}</span>
+                    </div>
+                    <span style={{ fontSize: 12, color: 'var(--c-text-primary)', lineHeight: 1.4 }}>{obj.descripcion || obj.nombre || `Set ${obj.numero_set}`}</span>
+                    {obj.estado === 'en_progreso' && (
+                      <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: 'rgba(37,99,235,0.1)', color: '#2563eb', flexShrink: 0 }}>EN CURSO</span>
+                    )}
                   </div>
                 ))}
               </div>
