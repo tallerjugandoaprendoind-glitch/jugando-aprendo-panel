@@ -463,6 +463,13 @@ export default function ParentDashboard() {
     )
   }
 
+  const PAGE_TITLES_MOBILE: Record<string, string> = {
+    home: 'Inicio', miscitas: 'Mis Citas', engagement: 'Act. en Casa',
+    chat: 'Asistente IA', mensajes: 'Notificaciones', misformularios: 'Mi Centro',
+    tienda: 'Tienda', documentos: 'Documentos', profile: 'Mi Perfil',
+    'chat-familias': 'Chat Equipo',
+  }
+
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-700 overflow-hidden">
         
