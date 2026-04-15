@@ -13,7 +13,7 @@ import {
   Brain, Shield, TrendingUp, TrendingDown, Minus,
   AlertTriangle, CheckCircle, RefreshCw, Users, Target,
   Lock, Eye, BarChart3, Zap, ArrowUp, ArrowDown,
-  ChevronRight, Activity, Sparkles, Clock, Star, Heart,
+  ChevronRight, ChevronLeft, Activity, Sparkles, Clock, Star, Heart,
   MessageCircle, BookOpen, Award, UserCheck
 } from 'lucide-react'
 
@@ -264,11 +264,13 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
     const [selectedPaciente, setSelectedPaciente] = useState<Paciente | null>(null)
   const [prediccion, setPrediccion] = useState<Prediccion | null>(null)
   const [loading, setLoading] = useState(false)
+  const [showMobileDetail, setShowMobileDetail] = useState(false)
 
   const generarPrediccion = async (p: Paciente) => {
     setSelectedPaciente(p)
     setLoading(true)
     setPrediccion(null)
+    setShowMobileDetail(true)
     try {
       const res = await fetch('/api/agente-prediccion', {
         method: 'POST',
@@ -292,50 +294,30 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
     : prediccion?.tendencia === 'negativa' ? 'red' : 'blue'
 
   return (
-    <div className="flex h-full min-h-0 gap-0 rounded-2xl border overflow-hidden" style={{ border: '1px solid var(--card-border)', background: 'var(--card)' }}>
+    <div className="rounded-2xl border overflow-hidden" style={{ border: '1px solid var(--card-border)', background: 'var(--card)' }}>
 
-      {/* ── Lista de pacientes — panel fijo izquierdo ── */}
-      <div className="w-64 flex-shrink-0 flex flex-col border-r" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
-        <div className="px-4 py-3.5 border-b flex-shrink-0" style={{ borderColor: 'var(--card-border)' }}>
-          <h3 className="font-black text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <Users size={15} className="text-blue-500" /> {t('ui.generarPrediccion2')}
-          </h3>
-          <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('hub.iaAnalizara')}</p>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {pacientes.length === 0 && (
-            <p className="p-4 text-sm text-center" style={{ color: 'var(--text-muted)' }}>{t('ui.no_patients')}</p>
-          )}
-          {pacientes.map(p => (
-            <button key={p.id} onClick={() => generarPrediccion(p)}
-              className="w-full text-left px-3.5 py-3 transition-colors flex items-center gap-3 border-b"
-              style={{
-                borderColor: 'var(--card-border)',
-                borderLeft: selectedPaciente?.id === p.id ? '3px solid #3b82f6' : '3px solid transparent',
-                background: selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.12)' : 'transparent',
-              }}
-              onMouseEnter={e => { if (selectedPaciente?.id !== p.id) (e.currentTarget as HTMLElement).style.background = 'var(--card)' }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.12)' : 'transparent' }}
+      {/* ── MÓVIL: Vista detalle (aparece encima de la lista) ── */}
+      {showMobileDetail && (
+        <div className="lg:hidden flex flex-col" style={{ minHeight: 'calc(100vh - 260px)' }}>
+          {/* Barra superior con botón volver */}
+          <div className="flex items-center gap-2 px-4 py-3 border-b flex-shrink-0" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
+            <button
+              onClick={() => { setShowMobileDetail(false); setSelectedPaciente(null); setPrediccion(null) }}
+              className="flex items-center gap-1.5 text-xs font-bold text-blue-500 active:text-blue-700 transition-colors"
             >
-              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-white font-black text-xs">{(p.name || p.nombre || '?').charAt(0).toUpperCase()}</span>
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="font-bold text-xs truncate" style={{ color: 'var(--text-primary)' }}>{p.name}</p>
-                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{p.diagnosis || 'Sin diagnóstico'}</p>
-              </div>
-              {selectedPaciente?.id === p.id && (
-                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0" />
-              )}
+              <ChevronLeft size={16} /> Pacientes
             </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Panel de predicciones — scrollable derecho ── */}
-      <div className="flex-1 overflow-y-auto min-h-0">
+            {selectedPaciente && (
+              <span className="text-xs font-bold truncate ml-1" style={{ color: 'var(--text-primary)' }}>
+                · {selectedPaciente.name}
+              </span>
+            )}
+          </div>
+          {/* Panel resultados móvil */}
+          <div className="flex-1 overflow-y-auto">
+            
         {!selectedPaciente && !loading && (
-          <div className="flex flex-col items-center justify-center h-full p-12 text-center">
+          <div className="flex flex-col items-center justify-center h-full p-12 text-center" style={{ minHeight: '200px' }}>
             <Brain size={48} className="text-slate-300 mb-4" style={{ opacity: 0.4 }} />
             <p className="font-black text-base" style={{ color: 'var(--text-muted)' }}>Selecciona un paciente</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>La IA analizará sus últimas 12 semanas</p>
@@ -343,7 +325,7 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
         )}
 
         {loading && (
-          <div className="flex flex-col items-center justify-center h-full p-12 text-center">
+          <div className="flex flex-col items-center justify-center h-full p-12 text-center" style={{ minHeight: '200px' }}>
             <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
             <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>{t('hub.analizandoPatrones')}</p>
             <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{t('ui.calculating')}</p>
@@ -351,18 +333,18 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
         )}
 
         {prediccion && !loading && selectedPaciente && (
-          <div className="p-5 space-y-4">
+          <div className="p-4 md:p-5 space-y-4">
             {/* Header paciente */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-5 text-white">
-              <div className="flex items-center justify-between">
-                <div>
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 md:p-5 text-white">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
                   <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">{t('hub.analisPorPrograma')}</p>
-                  <h3 className="text-xl font-black">{selectedPaciente.name}</h3>
+                  <h3 className="text-lg md:text-xl font-black truncate">{selectedPaciente.name}</h3>
                   <p className="text-blue-200 text-sm mt-0.5">
                     {(prediccion as any).programas_analizados || 0} programas · {(prediccion as any).total_sesiones_unificado ?? (prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) ?? 0} sesiones totales
                   </p>
                 </div>
-                <div className="bg-white/15 rounded-xl px-3 py-2 text-center">
+                <div className="bg-white/15 rounded-xl px-3 py-2 text-center flex-shrink-0">
                   <p className="text-white/70 text-[10px] uppercase tracking-wide">{t('ui.criteria')}</p>
                   <p className="text-white font-black text-sm">≥90% × 2</p>
                   <p className="text-white/70 text-[10px]">sesiones consecutivas</p>
@@ -386,19 +368,16 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             {/* Análisis IA general */}
             {(prediccion as any).resumen_general && (
               <div className="rounded-2xl border overflow-hidden" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
-                {/* Header */}
                 <div className="px-5 py-3 border-b flex items-center gap-2" style={{ background: "linear-gradient(135deg, #1e1b4b, #312e81)", borderColor: "var(--card-border)" }}>
                   <Sparkles size={14} className="text-violet-300" />
                   <p className="text-xs font-black uppercase tracking-wider text-violet-200">Análisis Clínico IA — Analista Conductual ABA</p>
                   <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-violet-500/30 text-violet-300 font-bold border border-violet-500/30">IA</span>
                 </div>
-                {/* Contenido renderizado */}
-                <div className="p-5 space-y-4">
+                <div className="p-4 md:p-5 space-y-4">
                   {(prediccion as any).resumen_general
                     .split(/\n\n+/)
                     .filter((block: string) => block.trim())
                     .map((block: string, i: number) => {
-                      // Detectar si es un encabezado tipo **TEXTO**
                       const isHeader = /^\*\*[^*]+\*\*$/.test(block.trim())
                       if (isHeader) {
                         const label = block.trim().replace(/\*\*/g, '')
@@ -422,7 +401,6 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                           </div>
                         )
                       }
-                      // Detectar si tiene numeración (1. 2. 3.)
                       const isNumbered = /^\d+\.\s/.test(block.trim())
                       if (isNumbered) {
                         const lines = block.trim().split('\n').filter(Boolean)
@@ -454,7 +432,6 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
                           </div>
                         )
                       }
-                      // Párrafo normal — renderizar **bold**
                       const parts = block.trim().split(/\*\*(.*?)\*\*/g)
                       return (
                         <p key={i} className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
@@ -471,6 +448,235 @@ function TabPredicciones({ pacientes }: { pacientes: Paciente[] }) {
             )}
           </div>
         )}
+
+          </div>
+        </div>
+      )}
+
+      {/* ── MÓVIL: Lista de pacientes (se oculta cuando hay detalle) ── */}
+      {!showMobileDetail && (
+        <div className="lg:hidden flex flex-col">
+          <div className="px-4 py-3.5 border-b flex-shrink-0" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
+            <h3 className="font-black text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <Users size={15} className="text-blue-500" /> {t('ui.generarPrediccion2')}
+            </h3>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('hub.iaAnalizara')}</p>
+          </div>
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
+            
+          {pacientes.length === 0 && (
+            <p className="p-4 text-sm text-center" style={{ color: 'var(--text-muted)' }}>{t('ui.no_patients')}</p>
+          )}
+          {pacientes.map(p => (
+            <button key={p.id} onClick={() => generarPrediccion(p)}
+              className="w-full text-left px-3.5 py-3 transition-colors flex items-center gap-3 border-b"
+              style={{
+                borderColor: 'var(--card-border)',
+                borderLeft: selectedPaciente?.id === p.id ? '3px solid #3b82f6' : '3px solid transparent',
+                background: selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.12)' : 'transparent',
+              }}
+              onMouseEnter={e => { if (selectedPaciente?.id !== p.id) (e.currentTarget as HTMLElement).style.background = 'var(--card)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.12)' : 'transparent' }}
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-black text-xs">{(p.name || p.nombre || '?').charAt(0).toUpperCase()}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-xs truncate" style={{ color: 'var(--text-primary)' }}>{p.name}</p>
+                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{p.diagnosis || 'Sin diagnóstico'}</p>
+              </div>
+              {selectedPaciente?.id === p.id && (
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 hidden lg:block" />
+              )}
+              <ChevronRight size={14} className="text-slate-400 lg:hidden flex-shrink-0" />
+            </button>
+          ))}
+
+          </div>
+        </div>
+      )}
+
+      {/* ── DESKTOP: Layout lado a lado ── */}
+      <div className="hidden lg:flex h-full min-h-0 gap-0" style={{ minHeight: 'calc(100vh - 260px)' }}>
+
+        {/* Lista de pacientes — panel fijo izquierdo */}
+        <div className="w-64 flex-shrink-0 flex flex-col border-r" style={{ borderColor: 'var(--card-border)', background: 'var(--muted-bg)' }}>
+          <div className="px-4 py-3.5 border-b flex-shrink-0" style={{ borderColor: 'var(--card-border)' }}>
+            <h3 className="font-black text-sm flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+              <Users size={15} className="text-blue-500" /> {t('ui.generarPrediccion2')}
+            </h3>
+            <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('hub.iaAnalizara')}</p>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            
+          {pacientes.length === 0 && (
+            <p className="p-4 text-sm text-center" style={{ color: 'var(--text-muted)' }}>{t('ui.no_patients')}</p>
+          )}
+          {pacientes.map(p => (
+            <button key={p.id} onClick={() => generarPrediccion(p)}
+              className="w-full text-left px-3.5 py-3 transition-colors flex items-center gap-3 border-b"
+              style={{
+                borderColor: 'var(--card-border)',
+                borderLeft: selectedPaciente?.id === p.id ? '3px solid #3b82f6' : '3px solid transparent',
+                background: selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.12)' : 'transparent',
+              }}
+              onMouseEnter={e => { if (selectedPaciente?.id !== p.id) (e.currentTarget as HTMLElement).style.background = 'var(--card)' }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = selectedPaciente?.id === p.id ? 'rgba(37,99,235,0.12)' : 'transparent' }}
+            >
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center flex-shrink-0">
+                <span className="text-white font-black text-xs">{(p.name || p.nombre || '?').charAt(0).toUpperCase()}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="font-bold text-xs truncate" style={{ color: 'var(--text-primary)' }}>{p.name}</p>
+                <p className="text-[10px] truncate" style={{ color: 'var(--text-muted)' }}>{p.diagnosis || 'Sin diagnóstico'}</p>
+              </div>
+              {selectedPaciente?.id === p.id && (
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 flex-shrink-0 hidden lg:block" />
+              )}
+              <ChevronRight size={14} className="text-slate-400 lg:hidden flex-shrink-0" />
+            </button>
+          ))}
+
+          </div>
+        </div>
+
+        {/* Panel de predicciones — scrollable derecho */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          
+        {!selectedPaciente && !loading && (
+          <div className="flex flex-col items-center justify-center h-full p-12 text-center" style={{ minHeight: '200px' }}>
+            <Brain size={48} className="text-slate-300 mb-4" style={{ opacity: 0.4 }} />
+            <p className="font-black text-base" style={{ color: 'var(--text-muted)' }}>Selecciona un paciente</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)', opacity: 0.6 }}>La IA analizará sus últimas 12 semanas</p>
+          </div>
+        )}
+
+        {loading && (
+          <div className="flex flex-col items-center justify-center h-full p-12 text-center" style={{ minHeight: '200px' }}>
+            <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4" />
+            <p className="font-medium" style={{ color: 'var(--text-secondary)' }}>{t('hub.analizandoPatrones')}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>{t('ui.calculating')}</p>
+          </div>
+        )}
+
+        {prediccion && !loading && selectedPaciente && (
+          <div className="p-4 md:p-5 space-y-4">
+            {/* Header paciente */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-4 md:p-5 text-white">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-blue-200 text-xs font-bold uppercase tracking-wider mb-1">{t('hub.analisPorPrograma')}</p>
+                  <h3 className="text-lg md:text-xl font-black truncate">{selectedPaciente.name}</h3>
+                  <p className="text-blue-200 text-sm mt-0.5">
+                    {(prediccion as any).programas_analizados || 0} programas · {(prediccion as any).total_sesiones_unificado ?? (prediccion as any).analisis_por_programa?.reduce((a: number, p: any) => a + p.total_sesiones, 0) ?? 0} sesiones totales
+                  </p>
+                </div>
+                <div className="bg-white/15 rounded-xl px-3 py-2 text-center flex-shrink-0">
+                  <p className="text-white/70 text-[10px] uppercase tracking-wide">{t('ui.criteria')}</p>
+                  <p className="text-white font-black text-sm">≥90% × 2</p>
+                  <p className="text-white/70 text-[10px]">sesiones consecutivas</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Sin programas */}
+            {((prediccion as any).programas_analizados === 0) && (
+              <div className="rounded-xl p-6 text-center border-2 border-dashed" style={{ borderColor: "var(--card-border)", background: "var(--muted-bg)" }}>
+                <p className="font-bold text-sm mb-1" style={{ color: "var(--text-primary)" }}>Sin programas ABA con datos</p>
+                <p className="text-xs" style={{ color: "var(--text-muted)" }}>{(prediccion as any).mensaje || 'Crea programas ABA en la ficha del paciente y registra al menos una sesión para generar análisis.'}</p>
+              </div>
+            )}
+
+            {/* Por programa — colapsables */}
+            {((prediccion as any).analisis_por_programa || []).map((prog: any) => (
+              <ProgramaCard key={prog.programa_id} prog={prog} t={t} />
+            ))}
+
+            {/* Análisis IA general */}
+            {(prediccion as any).resumen_general && (
+              <div className="rounded-2xl border overflow-hidden" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
+                <div className="px-5 py-3 border-b flex items-center gap-2" style={{ background: "linear-gradient(135deg, #1e1b4b, #312e81)", borderColor: "var(--card-border)" }}>
+                  <Sparkles size={14} className="text-violet-300" />
+                  <p className="text-xs font-black uppercase tracking-wider text-violet-200">Análisis Clínico IA — Analista Conductual ABA</p>
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-violet-500/30 text-violet-300 font-bold border border-violet-500/30">IA</span>
+                </div>
+                <div className="p-4 md:p-5 space-y-4">
+                  {(prediccion as any).resumen_general
+                    .split(/\n\n+/)
+                    .filter((block: string) => block.trim())
+                    .map((block: string, i: number) => {
+                      const isHeader = /^\*\*[^*]+\*\*$/.test(block.trim())
+                      if (isHeader) {
+                        const label = block.trim().replace(/\*\*/g, '')
+                        const colors: Record<string, string> = {
+                          'EVALUACIÓN DEL ESTADO CLÍNICO ACTUAL': '10B981',
+                          'ANÁLISIS POR PROGRAMA DE INTERVENCIÓN': '3B82F6',
+                          'HIPÓTESIS CLÍNICA Y VARIABLES EN JUEGO': 'F59E0B',
+                          'INDICACIONES TERAPÉUTICAS PRIORITARIAS': 'EF4444',
+                          'CRITERIOS DE AVANCE Y MONITOREO': '8B5CF6',
+                          'ESTADO GENERAL': '10B981',
+                          'POR PROGRAMA': '3B82F6',
+                          'PRIORIDADES': 'F59E0B',
+                          'PRÓXIMOS PASOS CLÍNICOS': '8B5CF6',
+                        }
+                        const color = Object.entries(colors).find(([k]) => label.includes(k))?.[1] || '64748B'
+                        return (
+                          <div key={i} className="flex items-center gap-2 pt-2">
+                            <div className="h-0.5 w-3 rounded-full" style={{ background: `#${color}` }}/>
+                            <p className="text-[11px] font-black uppercase tracking-widest" style={{ color: `#${color}` }}>{label}</p>
+                            <div className="flex-1 h-px" style={{ background: `#${color}30` }}/>
+                          </div>
+                        )
+                      }
+                      const isNumbered = /^\d+\.\s/.test(block.trim())
+                      if (isNumbered) {
+                        const lines = block.trim().split('\n').filter(Boolean)
+                        return (
+                          <div key={i} className="space-y-2">
+                            {lines.map((line: string, j: number) => {
+                              const num = line.match(/^(\d+)\.\s/)
+                              const text = line.replace(/^\d+\.\s/, '').replace(/\*\*(.*?)\*\*/g, '$1')
+                              const [title, ...rest] = text.split(':')
+                              return (
+                                <div key={j} className="flex gap-3 items-start">
+                                  <span className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0 mt-0.5"
+                                    style={{ background: 'rgba(139,92,246,0.15)', color: '#8B5CF6' }}>
+                                    {num?.[1]}
+                                  </span>
+                                  <div>
+                                    {rest.length > 0 ? (
+                                      <>
+                                        <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{title}:</span>
+                                        <span className="text-sm" style={{ color: 'var(--text-secondary)' }}> {rest.join(':')}</span>
+                                      </>
+                                    ) : (
+                                      <span className="text-sm" style={{ color: 'var(--text-primary)' }}>{text}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )
+                      }
+                      const parts = block.trim().split(/\*\*(.*?)\*\*/g)
+                      return (
+                        <p key={i} className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
+                          {parts.map((part: string, j: number) =>
+                            j % 2 === 1
+                              ? <strong key={j} style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{part}</strong>
+                              : part
+                          )}
+                        </p>
+                      )
+                    })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        </div>
       </div>
     </div>
   )
@@ -1498,7 +1704,7 @@ export default function InteligenciaHubView() {
 
       {/* Tab Content */}
       {tab === 'predicciones' && (
-        <div className="flex-1 min-h-0" style={{ height: 'calc(100vh - 220px)' }}>
+        <div className="flex-1 min-h-0">
           <TabPredicciones pacientes={pacientes} />
         </div>
       )}
