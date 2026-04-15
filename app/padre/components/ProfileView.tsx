@@ -48,24 +48,24 @@ function CalBtn({ label, icon, grad, profile, apiBase, paramKey, role='padre' }:
 
   if (status==='loading') return null
   return status==='connected' ? (
-    <div style={{ display:'flex',alignItems:'center',gap:14,padding:'14px 20px',borderBottom:'1px solid #f1f5f9' }}>
+    <div style={{ display:'flex',alignItems:'center',gap:14,padding:'14px 20px',borderBottom:'1px solid var(--c-border)' }}>
       <div style={{ width:42,height:42,background:grad,borderRadius:13,display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:18,boxShadow:'0 4px 12px rgba(0,0,0,.15)',flexShrink:0 }}>{icon}</div>
       <div style={{ flex:1,minWidth:0 }}>
-        <p style={{ fontWeight:700,fontSize:14,color:'#1e293b',margin:0 }}>{label}</p>
-        <p style={{ fontSize:12,color:'#10b981',display:'flex',alignItems:'center',gap:4,margin:'2px 0 0' }}><Check size={11}/>Conectado · <span style={{ color:'#64748b' }}>{email}</span></p>
+        <p style={{ fontWeight:700,fontSize:14,color:'var(--c-text-primary)',margin:0 }}>{label}</p>
+        <p style={{ fontSize:12,color:'#10b981',display:'flex',alignItems:'center',gap:4,margin:'2px 0 0' }}><Check size={11}/>Conectado · <span style={{ color:'var(--c-text-muted)' }}>{email}</span></p>
       </div>
-      <button onClick={disconnect} style={{ fontSize:12,fontWeight:700,color:'#ef4444',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,padding:'6px 12px',cursor:'pointer',flexShrink:0 }}>Quitar</button>
+      <button onClick={disconnect} style={{ fontSize:12,fontWeight:700,color:'#ef4444',background:'#fef2f2',border:'1px solid rgba(239,68,68,0.25)',borderRadius:10,padding:'6px 12px',cursor:'pointer',flexShrink:0 }}>Quitar</button>
     </div>
   ) : (
-    <button onClick={connect} disabled={connecting} style={{ width:'100%',display:'flex',alignItems:'center',gap:14,padding:'14px 20px',borderBottom:'1px solid #f1f5f9',background:'none',border:'none',cursor:'pointer',transition:'background .15s',fontFamily:'inherit' }}
+    <button onClick={connect} disabled={connecting} style={{ width:'100%',display:'flex',alignItems:'center',gap:14,padding:'14px 20px',borderBottom:'1px solid var(--c-border)',background:'none',border:'none',cursor:'pointer',transition:'background .15s',fontFamily:'inherit' }}
       onMouseEnter={e=>(e.currentTarget as any).style.background='#f8fafc'}
       onMouseLeave={e=>(e.currentTarget as any).style.background='transparent'}>
       <div style={{ width:42,height:42,background:`${grad.replace('linear-gradient(135deg,','').split(',')[0]}18`,borderRadius:13,display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,flexShrink:0 }}>
         {connecting?<Loader2 size={18} style={{ animation:'spin 1s linear infinite' }} color="#64748b"/>:icon}
       </div>
       <div style={{ textAlign:'left',flex:1,minWidth:0 }}>
-        <p style={{ fontWeight:700,fontSize:14,color:'#1e293b',margin:0 }}>{connecting?'Conectando...':label}</p>
-        <p style={{ fontSize:12,color:'#94a3b8',margin:'2px 0 0' }}>Sincronizá tus citas automáticamente</p>
+        <p style={{ fontWeight:700,fontSize:14,color:'var(--c-text-primary)',margin:0 }}>{connecting?'Conectando...':label}</p>
+        <p style={{ fontSize:12,color:'var(--c-text-muted)',margin:'2px 0 0' }}>Sincronizá tus citas automáticamente</p>
       </div>
       {!connecting&&<ChevronRight size={18} color="#cbd5e1" style={{ flexShrink:0 }}/>}
     </button>
@@ -74,13 +74,13 @@ function CalBtn({ label, icon, grad, profile, apiBase, paramKey, role='padre' }:
 
 function MenuItem({ icon, label, sub, onClick, danger=false, badge='' }: any) {
   return (
-    <button onClick={onClick} style={{ width:'100%',display:'flex',alignItems:'center',gap:14,padding:'14px 20px',background:'none',border:'none',borderBottom:'1px solid #f1f5f9',cursor:'pointer',transition:'background .15s',fontFamily:'inherit' }}
+    <button onClick={onClick} style={{ width:'100%',display:'flex',alignItems:'center',gap:14,padding:'14px 20px',background:'none',border:'none',borderBottom:'1px solid var(--c-border)',cursor:'pointer',transition:'background .15s',fontFamily:'inherit' }}
       onMouseEnter={e=>(e.currentTarget as any).style.background=danger?'#fff5f5':'#f8fafc'}
       onMouseLeave={e=>(e.currentTarget as any).style.background='transparent'}>
       <div style={{ width:42,height:42,borderRadius:13,background:danger?'#fef2f2':'#f8fafc',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0 }}>{icon}</div>
       <div style={{ flex:1,textAlign:'left' }}>
         <p style={{ fontWeight:700,fontSize:14,color:danger?'#ef4444':'#1e293b',margin:0 }}>{label}</p>
-        {sub&&<p style={{ fontSize:12,color:'#94a3b8',margin:'2px 0 0' }}>{sub}</p>}
+        {sub&&<p style={{ fontSize:12,color:'var(--c-text-muted)',margin:'2px 0 0' }}>{sub}</p>}
       </div>
       <div style={{ display:'flex',alignItems:'center',gap:6 }}>
         {badge&&<span style={{ background:'#7c3aed',color:'#fff',fontSize:10,fontWeight:800,padding:'2px 8px',borderRadius:20 }}>{badge}</span>}
@@ -128,9 +128,9 @@ function WhatsAppSection({ profile, onUpdated }: { profile: any; onUpdated: (p: 
   const hasPhone = !!profile?.phone && !editing
 
   return (
-    <div style={{ background:'#fff', borderRadius:22, border:'1.5px solid #f1f5f9', overflow:'hidden', boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
+    <div style={{ background:'var(--c-card)', borderRadius:22, border:'1px solid var(--c-border)', overflow:'hidden', boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
       <div style={{ padding:'14px 20px 10px' }}>
-        <p style={{ fontSize:10,fontWeight:800,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1,margin:0 }}>Notificaciones WhatsApp</p>
+        <p style={{ fontSize:10,fontWeight:800,color:'var(--c-text-muted)',textTransform:'uppercase',letterSpacing:1,margin:0 }}>Notificaciones WhatsApp</p>
       </div>
 
       {hasPhone ? (
@@ -146,13 +146,13 @@ function WhatsAppSection({ profile, onUpdated }: { profile: any; onUpdated: (p: 
             </div>
             <div style={{ display:'flex',gap:6 }}>
               <button onClick={() => setEditing(true)} style={{ fontSize:11,fontWeight:700,color:'#6d28d9',background:'var(--c-stat-purple)',border:'1px solid var(--c-border)',borderRadius:10,padding:'6px 10px',cursor:'pointer' }}>Cambiar</button>
-              <button onClick={handleRemove} disabled={saving} style={{ fontSize:11,fontWeight:700,color:'#dc2626',background:'#fef2f2',border:'1px solid #fecaca',borderRadius:10,padding:'6px 10px',cursor:'pointer' }}>Quitar</button>
+              <button onClick={handleRemove} disabled={saving} style={{ fontSize:11,fontWeight:700,color:'#dc2626',background:'#fef2f2',border:'1px solid rgba(239,68,68,0.25)',borderRadius:10,padding:'6px 10px',cursor:'pointer' }}>Quitar</button>
             </div>
           </div>
           {/* Qué recibirá */}
           <div style={{ display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:6 }}>
             {['📅 Nueva cita agendada','❌ Cita cancelada','📊 Informe disponible','💬 Mensaje del terapeuta'].map(item => (
-              <div key={item} style={{ fontSize:11,color:'#64748b',fontWeight:600,padding:'6px 10px',background:'#f8fafc',borderRadius:10,display:'flex',alignItems:'center',gap:6 }}>
+              <div key={item} style={{ fontSize:11,color:'var(--c-text-muted)',fontWeight:600,padding:'6px 10px',background:'#f8fafc',borderRadius:10,display:'flex',alignItems:'center',gap:6 }}>
                 {item}
               </div>
             ))}
@@ -160,7 +160,7 @@ function WhatsAppSection({ profile, onUpdated }: { profile: any; onUpdated: (p: 
         </div>
       ) : (
         <div style={{ padding:'4px 20px 16px' }}>
-          <p style={{ fontSize:12,color:'#64748b',lineHeight:1.5,margin:'0 0 12px' }}>
+          <p style={{ fontSize:12,color:'var(--c-text-muted)',lineHeight:1.5,margin:'0 0 12px' }}>
             Ingresá tu número con código de país para recibir alertas importantes.
           </p>
           <div style={{ display:'flex',gap:8,marginBottom:error?8:0 }}>
@@ -169,7 +169,7 @@ function WhatsAppSection({ profile, onUpdated }: { profile: any; onUpdated: (p: 
               value={phone}
               onChange={e => { setPhone(e.target.value); setError('') }}
               placeholder="+51 924 807 183"
-              style={{ flex:1,padding:'11px 14px',borderRadius:14,border:`1.5px solid ${error?'#fca5a5':'#e2e8f0'}`,fontSize:13,fontWeight:600,color:'#1e293b',outline:'none',fontFamily:'inherit',background:'#f8fafc' }}
+              style={{ flex:1,padding:'11px 14px',borderRadius:14,border:`1.5px solid ${error?'#fca5a5':'#e2e8f0'}`,fontSize:13,fontWeight:600,color:'var(--c-text-primary)',outline:'none',fontFamily:'inherit',background:'#f8fafc' }}
               onKeyDown={e => e.key==='Enter' && handleSave()}
             />
             <button onClick={handleSave} disabled={saving} style={{ padding:'11px 18px',borderRadius:14,border:'none',background:'linear-gradient(135deg,#22c55e,#16a34a)',color:'#fff',fontWeight:700,fontSize:13,cursor:saving?'not-allowed':'pointer',flexShrink:0,display:'flex',alignItems:'center',gap:6,fontFamily:'inherit',boxShadow:'0 4px 12px rgba(34,197,94,.3)' }}>
@@ -300,9 +300,9 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
 
       {/* ── MI CUENTA ── */}
       <div className="pv-card bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-100 dark:border-[#21262d] shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 dark:border-[#21262d] flex items-center gap-2">
+        <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid var(--c-border)" }}>
           <div className="w-1 h-4 bg-indigo-500 rounded-full"/>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Mi cuenta</p>
+          <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--c-text-muted)" }}>Mi cuenta</p>
         </div>
         <MenuItem icon={<User size={17} color="#7c3aed"/>} label="Editar perfil" sub="Nombre y teléfono" onClick={onEditProfile}/>
         <MenuItem icon={<Lock size={17} color="#3b82f6"/>} label="Cambiar contraseña" sub="Actualizar acceso" onClick={onChangePass}/>
@@ -312,9 +312,9 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
 
       {/* ── CALENDARIOS ── */}
       <div className="pv-card bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-100 dark:border-[#21262d] shadow-sm overflow-hidden">
-        <div className="px-5 py-3 border-b border-slate-100 dark:border-[#21262d] flex items-center gap-2">
+        <div className="px-5 py-3 flex items-center gap-2" style={{ borderBottom: "1px solid var(--c-border)" }}>
           <div className="w-1 h-4 bg-blue-500 rounded-full"/>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">Calendarios vinculados</p>
+          <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--c-text-muted)" }}>Calendarios vinculados</p>
         </div>
         <CalBtn label="Google Calendar" icon="📅" grad="linear-gradient(135deg,#4285f4,#1a73e8)" profile={profile} apiBase="google-calendar" paramKey="gcal"/>
         <CalBtn label="Outlook Calendar" icon={<svg width="16" height="16" viewBox="0 0 21 21"><rect x="1" y="1" width="9" height="9" fill="#f25022"/><rect x="11" y="1" width="9" height="9" fill="#7fba00"/><rect x="1" y="11" width="9" height="9" fill="#00a4ef"/><rect x="11" y="11" width="9" height="9" fill="#ffb900"/></svg>} grad="linear-gradient(135deg,#0078d4,#106ebe)" profile={profile} apiBase="microsoft-calendar" paramKey="mscal"/>
@@ -326,7 +326,7 @@ function ProfileView({ profile, onLogout, onChangePass, onEditProfile, onPrivacy
       </div>
 
       {/* ── CERRAR SESIÓN ── */}
-      <div className="pv-card bg-white dark:bg-[#0d1117] rounded-2xl border border-red-100 dark:border-red-800/50 overflow-hidden">
+      <div className="pv-card rounded-2xl overflow-hidden" style={{ background: "var(--c-card)", border: "1px solid rgba(239,68,68,0.25)" }}>
         <MenuItem icon={<LogOut size={17} color="#ef4444"/>} label="Cerrar sesión" danger onClick={onLogout}/>
       </div>
     </div>
