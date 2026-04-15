@@ -115,13 +115,13 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
       {/* ── HEADER ── */}
       <div className="flex flex-row items-center justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 className="font-black text-xl md:text-3xl tracking-tight flex items-center gap-2 sm:gap-3 text-slate-800 dark:text-slate-100">
-            <div className="hidden sm:flex p-2.5 rounded-2xl flex-shrink-0 bg-blue-50 dark:bg-blue-900/20 items-center justify-center">
-              <Calendar className="text-blue-500 dark:text-blue-400" size={26}/>
+          <h2 className="font-black text-xl md:text-3xl tracking-tight flex items-center gap-2 sm:gap-3 text-slate-800">
+            <div className="hidden sm:flex p-2.5 rounded-2xl flex-shrink-0 bg-blue-50 items-center justify-center">
+              <Calendar className="text-blue-500" size={26}/>
             </div>
             Mis sesiones
           </h2>
-          <p className="text-sm font-medium mt-1 ml-1 text-slate-400 dark:text-slate-500">
+          <p className="text-sm font-medium mt-1 ml-1 text-slate-400">
             {selectedChild?.name ? `${selectedChild.name.split(' ')[0]} · ` : ''}
             {appointments.length} citas · {upcoming} próximas · {completed} realizadas
           </p>
@@ -130,9 +130,9 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         {/* Stats */}
         <div className="flex gap-2 flex-shrink-0">
           {[
-            { n: upcoming,            label: 'Próximas',   cls: 'bg-blue-50 text-blue-600 border border-blue-100' },
-            { n: completed,           label: 'Realizadas', cls: 'bg-violet-50 text-violet-600 border border-violet-100' },
-            { n: appointments.length, label: 'Total',      cls: 'bg-slate-50 text-slate-500 border border-slate-200' },
+            { n: upcoming,            label: 'Próximas',   cls: 'border border-blue-200 text-blue-500', bg: 'var(--c-stat-blue)' },
+            { n: completed,           label: 'Realizadas', cls: 'border border-violet-200 text-violet-500', bg: 'var(--c-stat-purple)' },
+            { n: appointments.length, label: 'Total',      cls: '' },
           ].map(({ n, label, cls }) => (
             <div key={label} className={`rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 text-center ${cls}`}>
               <div className="text-lg sm:text-xl font-black leading-none">{n}</div>
@@ -146,25 +146,25 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-5">
 
         {/* ══ CALENDAR ══ */}
-        <div className="xl:col-span-8 bg-white dark:bg-[#0d1117] rounded-3xl border border-slate-200 dark:border-[#30363d] shadow-sm overflow-hidden">
+        <div className="xl:col-span-8 rounded-3xl border overflow-hidden shadow-sm" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
 
           {/* Month nav */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-100 dark:border-[#21262d]">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b">
             <button onClick={() => setMes(new Date(año, mesN - 1, 1))}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] transition-colors">
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
               <ChevronLeft size={18}/>
             </button>
-            <h3 className="font-black text-lg text-slate-800 dark:text-slate-100">
-              {MESES[mesN]} <span className="font-semibold text-slate-400 dark:text-slate-500">{año}</span>
+            <h3 className="font-black text-lg " style={{ color: "var(--text-primary)" }}>
+              {MESES[mesN]} <span className="font-semibold text-slate-400">{año}</span>
             </h3>
             <button onClick={() => setMes(new Date(año, mesN + 1, 1))}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] transition-colors">
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-colors">
               <ChevronRight size={18}/>
             </button>
           </div>
 
           {/* Day headers */}
-          <div className="grid grid-cols-7 border-b border-slate-100 dark:border-[#21262d]">
+          <div className="grid grid-cols-7 border-b">
             {DIAS.map((d, i) => (
               <div key={d} className={`text-center py-3 text-[10px] font-black uppercase tracking-widest ${i === 0 || i === 6 ? 'text-slate-300' : 'text-slate-400'}`}>
                 {d}
@@ -175,13 +175,13 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           {/* Calendar cells */}
           {loading ? (
             <div className="flex justify-center py-16">
-              <Loader2 size={22} className="animate-spin text-blue-500 dark:text-blue-400"/>
+              <Loader2 size={22} className="animate-spin text-blue-500"/>
             </div>
           ) : (
             <div className="grid grid-cols-7">
               {/* Empty prefix */}
               {Array.from({ length: primerDia }, (_, i) => (
-                <div key={`e-${i}`} className="min-h-[58px] sm:min-h-[88px] border-b border-r border-slate-100 dark:border-[#21262d] bg-slate-50 dark:bg-[#161b22]/40"/>
+                <div key={`e-${i}`} className="min-h-[58px] sm:min-h-[88px] border-b border-r" style={{ background: "var(--muted-bg)" }}/>
               ))}
 
               {Array.from({ length: diasEnMes }, (_, i) => {
@@ -195,7 +195,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                 return (
                   <button key={dia}
                     onClick={() => setDiaSeleccionado(esSel ? '' : fechaStr)}
-                    className={`min-h-[58px] sm:min-h-[88px] border-b border-r border-slate-100 p-1 sm:p-1.5 text-left flex flex-col gap-0.5 sm:gap-1 group transition-colors
+                    className={`min-h-[58px] sm:min-h-[88px] border-b border-r p-1 sm:p-1.5 text-left flex flex-col gap-0.5 sm:gap-1 group transition-colors
                       ${esSel
                         ? 'bg-blue-50'
                         : esHoy
@@ -229,7 +229,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                         )
                       })}
                       {citasDia.length > 2 && (
-                        <span className="text-[9px] font-bold px-1 text-slate-400 dark:text-slate-500">+{citasDia.length - 2} más</span>
+                        <span className="text-[9px] font-bold px-1 text-slate-400">+{citasDia.length - 2} más</span>
                       )}
                     </div>
                   </button>
@@ -243,36 +243,36 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
         <div className="xl:col-span-4 flex flex-col gap-4">
 
           {/* Day detail */}
-          <div className="bg-white dark:bg-[#0d1117] rounded-3xl border border-slate-200 dark:border-[#30363d] shadow-sm overflow-hidden flex flex-col">
-            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#21262d] flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-50 dark:bg-blue-900/20">
-                <Calendar size={15} className="text-blue-500 dark:text-blue-400"/>
+          <div className="rounded-3xl border overflow-hidden shadow-sm flex flex-col" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
+            <div className="px-5 py-4 border-b flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-50">
+                <Calendar size={15} className="text-blue-500"/>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
+                <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: "var(--text-muted)" }}>
                   {diaSeleccionado === hoy ? 'HOY' : 'DÍA SELECCIONADO'}
                 </p>
-                <p className="text-sm font-black capitalize truncate text-slate-800 dark:text-slate-100">
+                <p className="text-sm font-black capitalize truncate text-slate-800">
                   {diaSeleccionado
                     ? new Date(diaSeleccionado + 'T00:00:00').toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long' })
                     : 'Selecciona un día'}
                 </p>
               </div>
-              <span className="text-xs font-black px-2.5 py-1 rounded-full bg-slate-100 dark:bg-[#21262d] text-slate-500 dark:text-slate-400 dark:text-slate-500 flex-shrink-0">
+              <span className="text-xs font-black px-2.5 py-1 rounded-full flex-shrink-0" style={{ background: "var(--muted-bg)", color: "var(--text-muted)" }}>
                 {citasDelDia.length} citas
               </span>
             </div>
 
             {citasDelDia.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 px-5 text-center">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 bg-slate-50 dark:bg-[#161b22]">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ background: "var(--muted-bg)" }}>
                   <CalendarDays size={22} className="text-slate-300"/>
                 </div>
-                <p className="text-sm font-black text-slate-400 dark:text-slate-500">Sin sesiones este día</p>
+                <p className="text-sm font-black text-slate-400">Sin sesiones este día</p>
                 <p className="text-xs mt-1 text-slate-300">Selecciona un día con citas</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-[#21262d] max-h-56 overflow-y-auto">
+              <div className="divide-y divide-y max-h-56 overflow-y-auto">
                 {citasDelDia
                   .sort((a, b) => (a.appointment_time || '').localeCompare(b.appointment_time || ''))
                   .map(c => {
@@ -283,8 +283,8 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                         <div className="flex items-center gap-3">
                           <div className="w-0.5 h-10 rounded-full flex-shrink-0" style={{ background: s.bar }}/>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-black truncate text-slate-800 dark:text-slate-100">{c.service_type || c.type || 'Terapia ABA'}</p>
-                            <p className="text-xs flex items-center gap-1.5 mt-0.5 text-slate-400 dark:text-slate-500">
+                            <p className="text-sm font-black truncate" style={{ color: "var(--text-primary)" }}>{c.service_type || c.type || 'Terapia ABA'}</p>
+                            <p className="text-xs flex items-center gap-1.5 mt-0.5 text-slate-400">
                               <Clock size={9}/> {fmt(c.appointment_time)}
                               {c.children?.name && <><Baby size={9}/> {c.children.name}</>}
                             </p>
@@ -308,31 +308,31 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           </div>
 
           {/* Upcoming */}
-          <div className="bg-white dark:bg-[#0d1117] rounded-3xl border border-slate-200 dark:border-[#30363d] shadow-sm overflow-hidden flex-1">
-            <div className="px-5 py-4 border-b border-slate-100 dark:border-[#21262d] flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-emerald-50 dark:bg-emerald-900/20">
+          <div className="rounded-3xl border overflow-hidden shadow-sm flex-1" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>
+            <div className="px-5 py-4 border-b flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 bg-emerald-50">
                 <Clock size={15} className="text-emerald-600"/>
               </div>
-              <h3 className="font-black text-sm flex-1 text-slate-800 dark:text-slate-100">Próximas sesiones</h3>
-              <span className="text-xs font-black px-2 py-0.5 rounded-full border bg-slate-50 dark:bg-[#161b22] text-slate-400 dark:text-slate-500 border-slate-100 dark:border-[#21262d]">
+              <h3 className="font-black text-sm flex-1" style={{ color: "var(--text-primary)" }}>Próximas sesiones</h3>
+              <span className="text-xs font-black px-2 py-0.5 rounded-full border" style={{ background: "var(--muted-bg)", color: "var(--text-muted)", borderColor: "var(--card-border)" }}>
                 {proximasCitas.length}
               </span>
             </div>
 
             {loading ? (
               <div className="flex justify-center py-10">
-                <Loader2 size={18} className="animate-spin text-blue-500 dark:text-blue-400"/>
+                <Loader2 size={18} className="animate-spin text-blue-500"/>
               </div>
             ) : proximasCitas.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 px-5 text-center">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 bg-slate-50 dark:bg-[#161b22]">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3" style={{ background: "var(--muted-bg)" }}>
                   <Users size={22} className="text-slate-300"/>
                 </div>
-                <p className="text-sm font-black text-slate-400 dark:text-slate-500">Sin sesiones próximas</p>
+                <p className="text-sm font-black text-slate-400">Sin sesiones próximas</p>
                 <p className="text-xs mt-1 text-slate-300">Las citas las programa el centro</p>
               </div>
             ) : (
-              <div className="divide-y divide-slate-100 dark:divide-[#21262d] max-h-72 overflow-y-auto">
+              <div className="divide-y divide-y max-h-72 overflow-y-auto">
                 {proximasCitas.map(c => {
                   const s      = STATUS_CFG[c.status] || STATUS_CFG.confirmed
                   const fecha  = new Date(c.appointment_date + 'T00:00:00')
@@ -340,19 +340,19 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
                   return (
                     <button key={c.id}
                       onClick={() => { setDiaSeleccionado(c.appointment_date); setMes(fecha) }}
-                      className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-slate-50 dark:hover:bg-[#161b22] dark:bg-[#161b22] transition-colors">
+                      className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-slate-50 transition-colors">
                       <div className={`w-10 h-10 rounded-xl flex flex-col items-center justify-center flex-shrink-0
-                        ${esHoyC ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                        ${esHoyC ? 'bg-blue-600 text-white' : 'text-slate-600' style={{ background: 'var(--muted-bg)' }}}`}>
                         <span className="text-[8px] font-bold leading-none uppercase">
                           {MESES_S[fecha.getMonth()]}
                         </span>
                         <span className="text-sm font-black leading-tight">{fecha.getDate()}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-black truncate text-slate-800 dark:text-slate-100">{c.service_type || c.type || 'Terapia ABA'}</p>
-                        <p className="text-xs flex items-center gap-1 mt-0.5 text-slate-400 dark:text-slate-500">
+                        <p className="text-sm font-black truncate" style={{ color: "var(--text-primary)" }}>{c.service_type || c.type || 'Terapia ABA'}</p>
+                        <p className="text-xs flex items-center gap-1 mt-0.5 text-slate-400">
                           <Clock size={9}/> {fmt(c.appointment_time)}
-                          {esHoyC && <span className="font-black text-blue-500 dark:text-blue-400">· Hoy</span>}
+                          {esHoyC && <span className="font-black text-blue-500">· Hoy</span>}
                         </p>
                       </div>
                       <div className={`w-2 h-2 rounded-full flex-shrink-0 ${s.dot}`}/>
@@ -366,7 +366,7 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
           {/* Contact card */}
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-5 text-white shadow-xl">
             <div className="flex items-center gap-3 mb-3">
-              <div className="w-9 h-9 rounded-xl bg-white dark:bg-[#0d1117]/10 flex items-center justify-center flex-shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center flex-shrink-0">
                 <MessageSquare size={16} className="text-white"/>
               </div>
               <div>
@@ -379,12 +379,12 @@ export default function MisCitasView({ profile, selectedChild, onCancelAppointme
             </p>
             <div className="flex flex-col gap-2">
               <a href="tel:+51924807183"
-                className="flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-[#0d1117]/10 hover:bg-white dark:bg-[#0d1117]/20 rounded-xl text-sm font-bold transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors"
                 style={{ textDecoration: 'none', color: 'white' }}>
                 <Phone size={14}/> +51 924 807 183
               </a>
               <a href="mailto:tallerjugandoaprendoind@gmail.com"
-                className="flex items-center gap-3 px-4 py-2.5 bg-white dark:bg-[#0d1117]/10 hover:bg-white dark:bg-[#0d1117]/20 rounded-xl text-sm font-bold transition-colors"
+                className="flex items-center gap-3 px-4 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-bold transition-colors"
                 style={{ textDecoration: 'none', color: 'white' }}>
                 <Mail size={14}/> Escribir al centro
               </a>
