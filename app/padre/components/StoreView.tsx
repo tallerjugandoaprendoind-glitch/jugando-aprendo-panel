@@ -368,7 +368,7 @@ export default function StoreView({ profile }: { profile: any }) {
               <p className="text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "var(--c-text-muted)" }}>
                 <Star size={12} className="text-amber-400 fill-amber-400" /> Destacados
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="sv-featured-grid">
                 {destacados.map(p => (
                   <ProductCard key={p.id} product={p} onAdd={addToCart} onDetail={setSelectedProduct} justAdded={addedId === p.id} inCart={cart.find(i => i.product.id === p.id)?.cantidad || 0} featured />
                 ))}
@@ -382,7 +382,7 @@ export default function StoreView({ profile }: { profile: any }) {
               {destacados.length > 0 && search === '' && filterTipo === 'todos' && filterCat === 'todos' && (
                 <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">{t('ui.all_items')}</p>
               )}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="sv-products-grid">
                 {(destacados.length > 0 && search === '' && filterTipo === 'todos' && filterCat === 'todos' ? resto : filtered).map(p => (
                   <ProductCard key={p.id} product={p} onAdd={addToCart} onDetail={setSelectedProduct} justAdded={addedId === p.id} inCart={cart.find(i => i.product.id === p.id)?.cantidad || 0} />
                 ))}
@@ -493,10 +493,10 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
   return (
     <div className="rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer" style={{ background: "var(--c-card)", borderColor: featured ? "rgba(251,191,36,0.4)" : "var(--c-border)" }}>
       {/* Imagen */}
-      <div className="relative" style={{ background: "var(--muted-bg)", aspectRatio: "16/9", minHeight: 120 }} onClick={() => onDetail(p)}>
+      <div style={{ background: "var(--muted-bg)", height: 160, overflow: 'hidden', position: 'relative' }} onClick={() => onDetail(p)}>
         {p.imagen_url
-          ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
-          : <div className="flex items-center justify-center h-full"><ImageIcon size={28} className="text-slate-300" /></div>
+          ? <img src={p.imagen_url} alt={p.nombre} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          : <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ImageIcon size={28} className="text-slate-300" /></div>
         }
         <div className="absolute top-3 left-3 flex gap-1.5">
           <span className={`text-xs font-black px-2 py-0.5 rounded-full text-white ${p.tipo === 'digital' ? 'bg-violet-600' : 'bg-slate-700'}`}>
