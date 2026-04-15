@@ -102,7 +102,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
                 <div key={p.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "var(--c-surface)", border: "1px solid var(--c-border)" }}>
                   <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "var(--c-surface)" }}>
                     {p.imagen_url
-                      ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
+                      ? <img src={p.imagen_url} alt={p.nombre} className="absolute inset-0 w-full h-full object-cover" />
                       : <Package size={20} className="text-slate-300 m-auto mt-3.5" />
                     }
                   </div>
@@ -286,9 +286,12 @@ export default function StoreView({ profile }: { profile: any }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 32, width: '100%', minHeight: 'calc(100vh - 180px)' }}>
       <style>{`
         @media(min-width:640px){
-          .sv-products-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
-          .sv-featured-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
-          .sv-orders-grid{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:12px!important}
+          .sv-products-grid{display:grid!important;grid-template-columns:repeat(1,1fr)!important;gap:12px!important}
+          .sv-featured-grid{display:grid!important;grid-template-columns:repeat(1,1fr)!important;gap:12px!important}
+          .sv-orders-grid{display:grid!important;grid-template-columns:repeat(1,1fr)!important;gap:12px!important}
+          @media(min-width:480px){
+            .sv-products-grid,.sv-featured-grid,.sv-orders-grid{grid-template-columns:repeat(2,1fr)!important}
+          }
         }
         @media(min-width:1024px){
           .sv-products-grid{grid-template-columns:repeat(3,1fr)!important}
@@ -495,7 +498,7 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
   return (
     <div className="rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer" style={{ background: "var(--c-card)", borderColor: featured ? "rgba(251,191,36,0.4)" : "var(--c-border)" }}>
       {/* Imagen */}
-      <div className="relative h-36 sm:h-44" style={{ background: "var(--muted-bg)" }} onClick={() => onDetail(p)}>
+      <div className="relative" style={{ background: "var(--muted-bg)", aspectRatio: "16/9", minHeight: 120 }} onClick={() => onDetail(p)}>
         {p.imagen_url
           ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
           : <div className="flex items-center justify-center h-full"><ImageIcon size={28} className="text-slate-300" /></div>
