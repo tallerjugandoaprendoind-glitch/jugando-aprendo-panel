@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import StoreView from './StoreView'
 import DocumentosView from '@/app/admin/components/DocumentosView'
+import { useTheme } from '@/components/ThemeContext'
 import { supabase } from '@/lib/supabase'
 
 // ─── DYNAMIC FORM RENDERER (simplified for parents) ─────────────────────────
@@ -323,6 +324,7 @@ function ResourceCard({ resource }: { resource: any; key?: any }) {
 function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initialTab }: { profile: any; selectedChild: any; onFormsLoaded?: (count: number) => void; initialTab?: 'forms' | 'resources' | 'store' | 'documentos' }) {
   const { t, locale } = useI18n()
 
+  const { isDark } = useTheme()
   const [activeTab, setActiveTab] = useState<'forms' | 'resources' | 'store' | 'documentos'>(initialTab || 'forms')
   const [pendingForms, setPendingForms] = useState<any[]>([])
   const [expiredForms, setExpiredForms] = useState<any[]>([])
@@ -649,6 +651,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
               childId={selectedChild.id}
               childName={selectedChild.name}
               currentRole="padre"
+              isDark={isDark}
             />
           ) : (
             <div style={{ textAlign:'center',padding:'60px 20px' }}>

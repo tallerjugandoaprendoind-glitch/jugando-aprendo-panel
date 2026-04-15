@@ -60,7 +60,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
   return (
     <div className="fixed inset-0 z-50 flex justify-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
-      <div className="relative bg-white dark:bg-[#0d1117] w-full max-w-md h-full flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+      <div className="relative w-full max-w-md h-full flex flex-col shadow-2xl" style={{ background: "var(--c-card)" }} onClick={e => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: "1px solid var(--c-border)" }}>
           <h3 className="font-black text-lg flex items-center gap-2" style={{ color: "var(--c-text-primary)" }}>
@@ -297,15 +297,15 @@ export default function StoreView({ profile }: { profile: any }) {
       `}</style>
 
       {/* ── Clean header with tabs ── */}
-      <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#21262d]">
+      <div className="flex items-center justify-between gap-3 pb-4" style={{ borderBottom: "1px solid var(--c-border)" }}>
         <div>
           <h2 className="text-lg font-black flex items-center gap-2" style={{ color: "var(--c-text-primary)" }}>
-            <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "var(--c-stat-blue)", border: "1px solid var(--c-border)" }}>
               <ShoppingBag size={15} className="text-blue-600 dark:text-blue-400"/>
             </div>
             {view === 'catalogo' ? 'Tienda' : 'Mis pedidos'}
           </h2>
-          <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5 ml-10">
+          <p className="text-xs mt-0.5 ml-10" style={{ color: "var(--c-text-muted)" }}>
             {view === 'catalogo' ? `${products.length} productos disponibles` : `${orders.length} pedido${orders.length !== 1 ? 's' : ''}`}
           </p>
         </div>
@@ -318,16 +318,16 @@ export default function StoreView({ profile }: { profile: any }) {
             </button>
           )}
           {/* Toggle view */}
-          <div className="flex bg-slate-100 dark:bg-[#21262d] rounded-xl p-1 gap-1">
+          <div className="flex rounded-xl p-1 gap-1" style={{ background: "var(--c-surface)" }}>
             <button onClick={() => setView('catalogo')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${view === 'catalogo' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all`} style={{ background: view === "catalogo" ? "var(--c-card)" : "transparent", color: view === "catalogo" ? "var(--c-text-primary)" : "var(--c-text-muted)" }}>
               Catálogo
             </button>
             <button onClick={() => setView('mis-pedidos')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${view === 'mis-pedidos' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5`} style={{ background: view === "mis-pedidos" ? "var(--c-card)" : "transparent", color: view === "mis-pedidos" ? "var(--c-text-primary)" : "var(--c-text-muted)" }}>
               📦 Pedidos
               {orders.length > 0 && (
-                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${view === 'mis-pedidos' ? 'bg-blue-600 text-white' : 'bg-slate-300 text-slate-600'}`}>
+                <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full" style={{ background: view === 'mis-pedidos' ? '#2563eb' : 'var(--c-surface)', color: view === 'mis-pedidos' ? '#fff' : 'var(--c-text-muted)' }}>
                   {orders.length}
                 </span>
               )}
@@ -344,20 +344,20 @@ export default function StoreView({ profile }: { profile: any }) {
             <div className="relative">
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
               <input value={search} onChange={e => setSearch(e.target.value)} {...{placeholder: t('ui.search_material')}}
-                className="w-full pl-10 pr-4 py-3 bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-[#30363d] rounded-xl text-sm font-medium outline-none focus:border-blue-400 transition-all shadow-sm"
+                className="w-full pl-10 pr-4 py-3 rounded-xl text-sm font-medium outline-none focus:border-blue-400 transition-all shadow-sm" style={{ background: "var(--c-card)", border: "1px solid var(--c-border)", color: "var(--c-text-primary)" }}
               />
             </div>
             <div className="flex gap-2 flex-wrap">
               {['todos', 'fisico', 'digital'].map(f => (
                 <button key={f} onClick={() => setFilterTipo(f)}
-                  className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition-all ${filterTipo === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300'}`}>
+                  className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition-all ${filterTipo === f ? 'bg-blue-600 text-white border-blue-600' : 'hover:border-blue-300'}`} style={filterTipo === f ? {} : { background: 'var(--c-card)', color: 'var(--c-text-muted)', borderColor: 'var(--c-border)' }}>
                   {f === 'todos' ? 'Todo' : f === 'fisico' ? '📦 Físicos' : '📄 Digitales'}
                 </button>
               ))}
-              <div className="w-px bg-slate-200 dark:bg-[#30363d] self-stretch mx-1" />
+              <div className="w-px self-stretch mx-1" style={{ background: "var(--c-border)" }} />
               {categorias.map(c => (
                 <button key={c} onClick={() => setFilterCat(c)}
-                  className={`px-3.5 py-2 rounded-xl border text-xs font-bold capitalize transition-all ${filterCat === c ? 'bg-slate-700 text-white border-slate-700' : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'}`}>
+                  className={`px-3.5 py-2 rounded-xl border text-xs font-bold capitalize transition-all ${filterCat === c ? 'bg-slate-700 text-white border-slate-700' : 'hover:border-slate-300'}`} style={filterCat === c ? {} : { background: 'var(--c-card)', color: 'var(--c-text-muted)', borderColor: 'var(--c-border)' }}>
                   {c === 'todos' ? 'Categorías' : c}
                 </button>
               ))}
@@ -367,7 +367,7 @@ export default function StoreView({ profile }: { profile: any }) {
           {/* Destacados */}
           {destacados.length > 0 && search === '' && filterTipo === 'todos' && filterCat === 'todos' && (
             <div>
-              <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+              <p className="text-xs font-black uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "var(--c-text-muted)" }}>
                 <Star size={12} className="text-amber-400 fill-amber-400" /> Destacados
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -391,7 +391,7 @@ export default function StoreView({ profile }: { profile: any }) {
               </div>
             </div>
           ) : filtered.length === 0 ? (
-            <div className="bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-200 dark:border-[#30363d] py-20 text-center">
+            <div className="rounded-2xl py-20 text-center" style={{ background: "var(--c-card)", border: "1px solid var(--c-border)" }}>
               <ShoppingBag size={36} className="text-slate-200 mx-auto mb-3" />
               <p className="font-bold text-slate-400 dark:text-slate-500">{t('ui.no_items_found')}</p>
               <button onClick={() => { setSearch(''); setFilterTipo('todos'); setFilterCat('todos') }}
@@ -422,7 +422,7 @@ export default function StoreView({ profile }: { profile: any }) {
       {view === 'mis-pedidos' && (
         <div className="space-y-4">
           {orders.length === 0 ? (
-            <div className="bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-200 dark:border-[#30363d] py-20 text-center">
+            <div className="rounded-2xl py-20 text-center" style={{ background: "var(--c-card)", border: "1px solid var(--c-border)" }}>
               <ShoppingBag size={36} className="text-slate-200 mx-auto mb-3" />
               <p className="font-bold mb-1" style={{ color: "var(--c-text-muted)" }}>{t('tienda.sinPedidos')}</p>
               <p className="text-sm text-slate-400 dark:text-slate-500 mb-4">{t('tienda.exploraCompra')}</p>
@@ -435,7 +435,7 @@ export default function StoreView({ profile }: { profile: any }) {
             const cfg = ESTADO_CFG[order.estado] || ESTADO_CFG.pendiente
             const StatusIcon = cfg.icon
             return (
-              <div key={order.id} className={`bg-white rounded-2xl border-2 overflow-hidden ${cfg.border}`}>
+              <div key={order.id} className={`rounded-2xl border-2 overflow-hidden ${cfg.border}`} style={{ background: "var(--c-card)" }}>
                 <div className={`${cfg.bg} px-5 py-3 flex items-center justify-between`}>
                   <div className="flex items-center gap-2">
                     <StatusIcon size={15} className={cfg.color} />
@@ -493,7 +493,7 @@ function ProductCard({ product: p, onAdd, onDetail, justAdded, inCart, featured 
   const { t } = useI18n()
   const sinStock = p.tipo === 'fisico' && p.stock === 0
   return (
-    <div className={`bg-white rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer ${featured ? 'border-amber-200' : 'border-slate-200'}`}>
+    <div className="rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer" style={{ background: "var(--c-card)", borderColor: featured ? "rgba(251,191,36,0.4)" : "var(--c-border)" }}>
       {/* Imagen */}
       <div className="relative h-44 bg-gradient-to-br from-slate-50 to-slate-100" onClick={() => onDetail(p)}>
         {p.imagen_url
