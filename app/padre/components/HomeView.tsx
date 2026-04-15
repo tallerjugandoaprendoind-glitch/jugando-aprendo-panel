@@ -394,8 +394,8 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         {/* Quick access strip */}
         <div style={{ background:'rgba(0,0,0,.2)', borderTop:'1px solid rgba(255,255,255,.1)', padding:'10px 20px', display:'flex', gap:8 }}>
           {[
-            { label:'💬 Preguntar a ARIA', view:'aria' },
-            { label:'🏃 Actividades',      view:'actencasa' },
+            { label:'💬 Preguntar a ARIA', view:'chat' },
+            { label:'🏃 Actividades',      view:'engagement' },
             { label:'📅 Mis citas',        view:'miscitas' },
           ].map(({ label, view }) => (
             <button key={view} onClick={()=>onChangeView(view)} className="hv-btn"
