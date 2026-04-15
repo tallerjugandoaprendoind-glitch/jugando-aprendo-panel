@@ -2,7 +2,7 @@
 // app/padre/components/ChatFamilias.tsx
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Send, Loader2, MessageCircle, CheckCheck, Check, Users } from 'lucide-react'
+import { Send, Loader2, MessageCircle, CheckCheck, Check, Users, Mic, MicOff, Paperclip, X, FileAudio, File as FileIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 interface Msg {
@@ -66,7 +66,16 @@ export default function ChatFamilias({ childId, childName, profile }: Props) {
   const [input, setInput]       = useState('')
   const [loading, setLoading]   = useState(true)
   const [sending, setSending]   = useState(false)
-  const bottomRef  = useRef<HTMLDivElement>(null)
+  const bottomRef   = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const mediaRecRef  = useRef<MediaRecorder | null>(null)
+  const audioChunks  = useRef<Blob[]>([])
+  const [recording, setRecording]     = useState(false)
+  const [recordSecs, setRecordSecs]   = useState(0)
+  const [audioBlob, setAudioBlob]     = useState<Blob | null>(null)
+  const [attachFile, setAttachFile]   = useState<File | null>(null)
+  const [uploading, setUploading]     = useState(false)
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const channelRef = useRef<any>(null)
   const inputRef   = useRef<HTMLTextAreaElement>(null)
 
@@ -115,6 +124,61 @@ export default function ChatFamilias({ childId, childName, profile }: Props) {
       .subscribe()
     return () => { if (channelRef.current) supabase.removeChannel(channelRef.current) }
   }, [childId, userId, scrollToBottom])
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const mr = new MediaRecorder(stream)
+      mediaRecRef.current = mr
+      audioChunks.current = []
+      mr.ondataavailable = e => audioChunks.current.push(e.data)
+      mr.onstop = () => {
+        const blob = new Blob(audioChunks.current, { type: 'audio/webm' })
+        setAudioBlob(blob)
+        stream.getTracks().forEach(t => t.stop())
+      }
+      mr.start()
+      setRecording(true)
+      setRecordSecs(0)
+      timerRef.current = setInterval(() => setRecordSecs(s => s + 1), 1000)
+    } catch { alert('No se pudo acceder al micrófono') }
+  }
+
+  const stopRecording = () => {
+    mediaRecRef.current?.stop()
+    setRecording(false)
+    if (timerRef.current) clearInterval(timerRef.current)
+  }
+
+  const cancelRecording = () => {
+    mediaRecRef.current?.stop()
+    setRecording(false)
+    setAudioBlob(null)
+    audioChunks.current = []
+    if (timerRef.current) clearInterval(timerRef.current)
+  }
+
+  const uploadAndSend = async (file: File | Blob, type: 'audio' | 'file', fileName?: string) => {
+    setUploading(true)
+    try {
+      const ext  = type === 'audio' ? 'webm' : (fileName?.split('.').pop() || 'bin')
+      const name = `${Date.now()}.${ext}`
+      const path = `chat-familias/${childId}/${name}`
+      const { error } = await supabase.storage.from('store-images').upload(path, file, { upsert: true })
+      if (error) throw error
+      const { data } = supabase.storage.from('store-images').getPublicUrl(path)
+      const url = data.publicUrl
+      const text = type === 'audio'
+        ? `🎤 [Audio] ${url}`
+        : `📎 [${fileName || 'archivo'}] ${url}`
+      await fetch('/api/chat-familias', { method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ child_id: childId, content: text, sender_id: userId, sender_role: 'padre', sender_name: userName }) })
+      setAudioBlob(null); setAttachFile(null)
+      scrollToBottom()
+    } catch (e: any) { alert('Error al enviar: ' + e.message) }
+    finally { setUploading(false) }
+  }
 
   const sendMessage = async () => {
     const text = input.trim()
@@ -220,7 +284,14 @@ export default function ChatFamilias({ childId, childName, profile }: Props) {
                       border: isMe ? 'none' : '1px solid var(--c-border)',
                       boxShadow: isMe ? '0 2px 12px rgba(37,99,235,.25)' : '0 1px 4px rgba(0,0,0,.06)',
                     }}>
-                      <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{msg.content}</p>
+                      {msg.content.startsWith('🎤 [Audio] ') ? (
+                        <audio controls src={msg.content.replace('🎤 [Audio] ','')} style={{ maxWidth:'200px', height:32 }}/>
+                      ) : msg.content.startsWith('📎 [') ? (() => {
+                        const m = msg.content.match(/^📎 \[(.+?)\] (.+)$/)
+                        return m ? <a href={m[2]} target="_blank" rel="noopener noreferrer" style={{ color: isMe ? '#bfdbfe' : '#2563eb', fontSize:12, display:'flex', alignItems:'center', gap:6 }}><FileIcon size={13}/>{m[1]}</a> : <p style={{ margin:0 }}>{msg.content}</p>
+                      })() : (
+                        <p style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{msg.content}</p>
+                      )}
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4, marginTop: 4 }}>
                         <span style={{ fontSize: 10, opacity: isMe ? .7 : undefined, color: isMe ? '#fff' : 'var(--c-text-muted)' }}>{formatTime(msg.created_at)}</span>
                         {isMe && (isRead
@@ -239,26 +310,81 @@ export default function ChatFamilias({ childId, childName, profile }: Props) {
       </div>
 
       {/* ── INPUT ── */}
-      <div style={{ padding: '10px 16px 14px', borderTop: '1px solid var(--c-border)', background: 'var(--c-card)', flexShrink: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8, background: 'var(--c-surface)', borderRadius: 18, padding: '8px 8px 8px 14px', border: '1.5px solid var(--c-border)' }}>
+      <input ref={fileInputRef} type="file" style={{ display:'none' }} accept="image/*,application/pdf,.doc,.docx,.txt"
+        onChange={e => { const f = e.target.files?.[0]; if (f) setAttachFile(f); e.target.value = '' }}/>
+
+      <div style={{ padding: '10px 14px 12px', borderTop: '1px solid var(--c-border)', background: 'var(--c-card)', flexShrink: 0 }}>
+
+        {/* Preview: audio or file */}
+        {(audioBlob || attachFile) && (
+          <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', marginBottom:8, background:'var(--c-surface)', borderRadius:12, border:'1px solid var(--c-border)' }}>
+            {audioBlob
+              ? <><FileAudio size={16} color="#2563eb"/><span style={{ flex:1, fontSize:12, color:'var(--c-text-secondary)' }}>Audio listo para enviar</span></>
+              : <><FileIcon size={16} color="#2563eb"/><span style={{ flex:1, fontSize:12, color:'var(--c-text-secondary)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{attachFile?.name}</span></>
+            }
+            <button onClick={cancelRecording} style={{ background:'none', border:'none', cursor:'pointer', padding:2 }}>
+              <X size={14} color="var(--c-text-muted)"/>
+            </button>
+          </div>
+        )}
+
+        {/* Recording indicator */}
+        {recording && (
+          <div style={{ display:'flex', alignItems:'center', gap:10, padding:'8px 12px', marginBottom:8, background:'rgba(239,68,68,0.1)', borderRadius:12, border:'1px solid rgba(239,68,68,0.25)' }}>
+            <div style={{ width:8, height:8, borderRadius:'50%', background:'#ef4444', animation:'cfspin 1s ease infinite' }}/>
+            <span style={{ flex:1, fontSize:12, fontWeight:700, color:'#ef4444' }}>Grabando... {recordSecs}s</span>
+            <button onClick={stopRecording} style={{ fontSize:11, fontWeight:700, color:'#2563eb', background:'var(--c-card)', border:'1px solid var(--c-border)', borderRadius:8, padding:'4px 10px', cursor:'pointer' }}>
+              Detener
+            </button>
+            <button onClick={cancelRecording} style={{ background:'none', border:'none', cursor:'pointer', padding:2 }}>
+              <X size={14} color="var(--c-text-muted)"/>
+            </button>
+          </div>
+        )}
+
+        <div style={{ display:'flex', alignItems:'flex-end', gap:6, background:'var(--c-surface)', borderRadius:18, padding:'8px 8px 8px 6px', border:'1.5px solid var(--c-border)' }}>
+          {/* Attach file */}
+          <button onClick={() => fileInputRef.current?.click()}
+            style={{ width:34, height:34, borderRadius:10, border:'none', background:'transparent', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', flexShrink:0, color:'var(--c-text-muted)' }}>
+            <Paperclip size={17}/>
+          </button>
+
           <textarea ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={handleKeyDown}
             placeholder="Escribe un mensaje al equipo..." rows={1}
-            style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', fontSize: 13, color: 'var(--c-text-primary)', resize: 'none', maxHeight: 100, lineHeight: 1.5, fontFamily: 'inherit', paddingTop: 2 }}
-            onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 100) + 'px' }}
+            style={{ flex:1, background:'transparent', border:'none', outline:'none', fontSize:13, color:'var(--c-text-primary)', resize:'none', maxHeight:100, lineHeight:1.5, fontFamily:'inherit', paddingTop:2 }}
+            onInput={e => { const t = e.target as HTMLTextAreaElement; t.style.height='auto'; t.style.height=Math.min(t.scrollHeight,100)+'px' }}
           />
-          <button onClick={sendMessage} disabled={!input.trim() || sending}
-            style={{ width: 38, height: 38, borderRadius: 12, border: 'none', cursor: input.trim() ? 'pointer' : 'default',
-              background: input.trim() ? 'linear-gradient(135deg,#2563eb,#1d4ed8)' : '#e2e8f0',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all .2s', flexShrink: 0,
-              boxShadow: input.trim() ? '0 2px 8px rgba(37,99,235,.3)' : 'none' }}>
-            {sending
-              ? <Loader2 size={16} color={input.trim() ? '#fff' : '#94a3b8'} style={{ animation: 'cfspin 1s linear infinite' }}/>
-              : <Send size={16} color={input.trim() ? '#fff' : '#94a3b8'}/>
-            }
-          </button>
+
+          {/* Mic button */}
+          {!input.trim() && !audioBlob && !attachFile && (
+            <button onClick={recording ? stopRecording : startRecording}
+              style={{ width:34, height:34, borderRadius:10, border:'none', cursor:'pointer', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
+                background: recording ? 'rgba(239,68,68,0.15)' : 'transparent', color: recording ? '#ef4444' : 'var(--c-text-muted)' }}>
+              {recording ? <MicOff size={17}/> : <Mic size={17}/>}
+            </button>
+          )}
+
+          {/* Send button */}
+          {(input.trim() || audioBlob || attachFile) && (
+            <button
+              onClick={() => {
+                if (audioBlob) uploadAndSend(audioBlob, 'audio')
+                else if (attachFile) uploadAndSend(attachFile, 'file', attachFile.name)
+                else sendMessage()
+              }}
+              disabled={sending || uploading}
+              style={{ width:36, height:36, borderRadius:12, border:'none', cursor:'pointer', flexShrink:0,
+                background:'linear-gradient(135deg,#2563eb,#1d4ed8)', display:'flex', alignItems:'center', justifyContent:'center',
+                boxShadow:'0 2px 8px rgba(37,99,235,.3)' }}>
+              {(sending || uploading)
+                ? <Loader2 size={16} color="#fff" style={{ animation:'cfspin 1s linear infinite' }}/>
+                : <Send size={16} color="#fff"/>
+              }
+            </button>
+          )}
         </div>
-        <p style={{ fontSize: 10, color: '#94a3b8', textAlign: 'center', margin: '6px 0 0' }}>
-          Enter para enviar · Shift+Enter para nueva línea
+        <p style={{ fontSize:10, color:'var(--c-text-muted)', textAlign:'center', margin:'5px 0 0' }}>
+          Enter para enviar · Shift+Enter nueva línea · 🎤 mantén para grabar
         </p>
       </div>
 
