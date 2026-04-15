@@ -22,18 +22,18 @@ interface Plan {
 }
 
 const AREA_CFG: Record<string,{bg:string;text:string;border:string;emoji:string;grad:string}> = {
-  comunicacion: { bg:'var(--c-stat-blue)', text:'#1d4ed8', border:'#bfdbfe', emoji:'💬', grad:'linear-gradient(135deg,#3b82f6,#1d4ed8)' },
-  conducta:     { bg:'#fff7ed', text:'#c2410c', border:'#fed7aa', emoji:'⚡', grad:'linear-gradient(135deg,#f97316,#c2410c)' },
-  habilidades:  { bg:'#faf5ff', text:'#6d28d9', border:'#ddd6fe', emoji:'🧠', grad:'linear-gradient(135deg,#8b5cf6,#6d28d9)' },
-  socializacion:{ bg:'var(--c-stat-green)', text:'#15803d', border:'#bbf7d0', emoji:'👥', grad:'linear-gradient(135deg,#22c55e,#15803d)' },
-  autonomia:    { bg:'var(--c-stat-amber)', text:'#b45309', border:'#fde68a', emoji:'⭐', grad:'linear-gradient(135deg,#eab308,#b45309)' },
+  comunicacion: { bg:'var(--c-stat-blue)',   text:'#3b82f6', border:'var(--c-border)', emoji:'💬', grad:'linear-gradient(135deg,#3b82f6,#1d4ed8)' },
+  conducta:     { bg:'rgba(249,115,22,0.1)', text:'#f97316', border:'var(--c-border)', emoji:'⚡', grad:'linear-gradient(135deg,#f97316,#c2410c)' },
+  habilidades:  { bg:'var(--c-stat-purple)', text:'#8b5cf6', border:'var(--c-border)', emoji:'🧠', grad:'linear-gradient(135deg,#8b5cf6,#6d28d9)' },
+  socializacion:{ bg:'var(--c-stat-green)',  text:'#10b981', border:'var(--c-border)', emoji:'👥', grad:'linear-gradient(135deg,#22c55e,#15803d)' },
+  autonomia:    { bg:'var(--c-stat-amber)',   text:'#f59e0b', border:'var(--c-border)', emoji:'⭐', grad:'linear-gradient(135deg,#eab308,#b45309)' },
 }
 const AREA_DEFAULT = { bg:'var(--c-surface)', text:'var(--c-text-muted)', border:'var(--c-border)', emoji:'📌', grad:'linear-gradient(135deg,#94a3b8,#64748b)' }
 
 const DIFF_CFG: Record<string,{label:string;color:string;bg:string;dot:string}> = {
   facil: { label:'Fácil',   color:'#16a34a', bg:'var(--c-stat-green)', dot:'#4ade80' },
   media: { label:'Media',   color:'#d97706', bg:'var(--c-stat-amber)', dot:'#fbbf24' },
-  alta:  { label:'Difícil', color:'#dc2626', bg:'#fef2f2', dot:'#f87171' },
+  alta:  { label:'Difícil', color:'#dc2626', bg:'rgba(239,68,68,0.1)', dot:'#f87171' },
 }
 const DIFF_DEFAULT = { label:'Normal', color:'var(--c-text-muted)', bg:'var(--c-surface)', dot:'var(--c-text-placeholder)' }
 
@@ -186,7 +186,7 @@ export default function EngagementView({ childId }: { childId: string }) {
 
   if (loading) return (
     <div style={{ display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'80px 20px',gap:16 }}>
-      <div style={{ width:56,height:56,borderRadius:'50%',background:'linear-gradient(135deg,#fce7f3,#ede9fe)',display:'flex',alignItems:'center',justifyContent:'center' }}>
+      <div style={{ width:56,height:56,borderRadius:'50%',background:'var(--c-stat-purple)',display:'flex',alignItems:'center',justifyContent:'center' }}>
         <Loader2 size={28} color="#9333ea" style={{ animation:'spin 1s linear infinite' }}/>
       </div>
       <p style={{ fontSize:13,color:'var(--c-text-placeholder)',fontWeight:600 }}>Cargando plan semanal...</p>
@@ -267,7 +267,7 @@ export default function EngagementView({ childId }: { childId: string }) {
                 </div>
               </div>
               <div style={{ height:8,background:'rgba(255,255,255,.18)',borderRadius:20,overflow:'hidden' }}>
-                <div style={{ height:'100%',width:`${pct}%`,background:'linear-gradient(90deg,#fce7f3,#fff)',borderRadius:20,transition:'width .6s cubic-bezier(.22,1,.36,1)' }}/>
+                <div style={{ height:'100%',width:`${pct}%`,background:'linear-gradient(90deg,rgba(255,255,255,0.6),#fff)',borderRadius:20,transition:'width .6s cubic-bezier(.22,1,.36,1)' }}/>
               </div>
               <p style={{ fontSize:11,color:'rgba(255,255,255,.55)',margin:'5px 0 0',textAlign:'right' }}>{pct}% completado · {plan.semana}</p>
             </div>
@@ -277,7 +277,7 @@ export default function EngagementView({ childId }: { childId: string }) {
 
       {!plan ? (
         <div className="eng-card" style={{ background:'var(--c-card)',borderRadius:24,border:'1.5px solid var(--c-border-light)',padding:'48px 24px',textAlign:'center',boxShadow:'0 4px 20px rgba(0,0,0,.04)' }}>
-          <div style={{ width:72,height:72,background:'linear-gradient(135deg,#fce7f3,#ede9fe)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
+          <div style={{ width:72,height:72,background:'var(--c-stat-purple)',borderRadius:20,display:'flex',alignItems:'center',justifyContent:'center',margin:'0 auto 16px' }}>
             <Brain size={32} color="#9333ea"/>
           </div>
           <p style={{ fontWeight:800,fontSize:16,color:'var(--c-text-primary)',margin:'0 0 8px' }}>Sin plan esta semana</p>
@@ -289,15 +289,15 @@ export default function EngagementView({ childId }: { childId: string }) {
       ) : (
         <>
           {/* Mensaje motivacional */}
-          <div className="eng-card" style={{ background:'linear-gradient(135deg,#faf5ff,#fce7f3)',border:'1.5px solid var(--c-border)',borderRadius:16,padding:'12px 16px',display:'flex',alignItems:'flex-start',gap:10 }}>
+          <div className="eng-card" style={{ background:'var(--c-surface)',border:'1.5px solid var(--c-border)',borderRadius:16,padding:'12px 16px',display:'flex',alignItems:'flex-start',gap:10 }}>
             <Sparkles size={16} color="#7c3aed" style={{ flexShrink:0,marginTop:2 }}/>
-            <p style={{ fontSize:13,color:'#6d28d9',fontWeight:600,lineHeight:1.6,margin:0 }}>{plan.mensaje_motivacional}</p>
+            <p style={{ fontSize:13,color:'var(--c-text-primary)',fontWeight:600,lineHeight:1.6,margin:0 }}>{plan.mensaje_motivacional}</p>
           </div>
 
           {/* Disclaimer */}
-          <div className="eng-card" style={{ background:'#f0f9ff',border:'1.5px solid #bae6fd',borderRadius:12,padding:'9px 14px',display:'flex',alignItems:'center',gap:8 }}>
+          <div className="eng-card" style={{ background:'var(--c-stat-blue)',border:'1.5px solid var(--c-border)',borderRadius:12,padding:'9px 14px',display:'flex',alignItems:'center',gap:8 }}>
             <span style={{ fontSize:15,flexShrink:0 }}>📋</span>
-            <p style={{ fontSize:12,color:'#0284c7',margin:0,lineHeight:1.5 }}>Plan diseñado con IA. Consultá con el terapeuta ante cualquier duda.</p>
+            <p style={{ fontSize:12,color:'var(--c-text-muted)',margin:0,lineHeight:1.5 }}>Plan diseñado con IA. Consultá con el terapeuta ante cualquier duda.</p>
           </div>
 
           {/* ACTIVIDADES */}
@@ -311,7 +311,7 @@ export default function EngagementView({ childId }: { childId: string }) {
 
               return (
                 <div key={i} className="eng-act"
-                  style={{ background: done ? 'linear-gradient(135deg,#f0fdf4,#dcfce7)' : 'var(--c-card)', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', position:'relative', borderColor: done ? '#86efac' : 'var(--c-border-light)', cursor:'default', ...(open ? { gridColumn:'1 / -1' } : {}) }}>
+                  style={{ background: done ? 'rgba(16,185,129,0.1)' : 'var(--c-card)', borderRadius:20, overflow:'hidden', boxShadow:'0 2px 12px rgba(0,0,0,.04)', position:'relative', borderColor: done ? 'rgba(16,185,129,0.3)' : 'var(--c-border-light)', cursor:'default', ...(open ? { gridColumn:'1 / -1' } : {}) }}>
 
                   {/* Barra lateral de color por área */}
                   <div style={{ position:'absolute',left:0,top:0,bottom:0,width:4,background:aCol.grad,borderRadius:'20px 0 0 20px' }}/>
@@ -323,7 +323,7 @@ export default function EngagementView({ childId }: { childId: string }) {
                         onClick={e => { e.stopPropagation(); toggle(i) }}
                         disabled={isSaving}
                         title={done ? 'Marcar como pendiente' : 'Marcar como completada'}
-                        style={{ flexShrink:0,width:42,height:42,borderRadius:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',background:done?'#dcfce7':isSaving?'var(--c-border-light)':'var(--c-surface)',boxShadow:done?'0 2px 8px rgba(16,185,129,.2)':'0 1px 3px rgba(0,0,0,.08)' }}>
+                        style={{ flexShrink:0,width:42,height:42,borderRadius:13,border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',background:done?'rgba(16,185,129,0.15)':isSaving?'var(--c-border-light)':'var(--c-surface)',boxShadow:done?'0 2px 8px rgba(16,185,129,.2)':'0 1px 3px rgba(0,0,0,.08)' }}>
                         {isSaving
                           ? <Loader2 size={20} color="var(--c-text-placeholder)" style={{ animation:'spin 1s linear infinite' }}/>
                           : done
@@ -335,7 +335,7 @@ export default function EngagementView({ childId }: { childId: string }) {
                       <div style={{ flex:1,minWidth:0 }}>
                         <button onClick={() => setExpanded(open ? null : i)}
                           style={{ display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:8,marginBottom:6,width:'100%',background:'none',border:'none',cursor:'pointer',padding:0,fontFamily:'inherit',textAlign:'left' }}>
-                          <p style={{ fontWeight:800,fontSize:14,color:done?'#6ee7b7':'var(--c-text-primary)',margin:0,lineHeight:1.3,textDecoration:done?'line-through':'none',textDecorationColor:'#86efac' }}>
+                          <p style={{ fontWeight:800,fontSize:14,color:done?'#10b981':'var(--c-text-primary)',margin:0,lineHeight:1.3,textDecoration:done?'line-through':'none',textDecorationColor:'#86efac' }}>
                             {act.titulo}
                           </p>
                           <div style={{ display:'flex',alignItems:'center',gap:4,flexShrink:0 }}>
@@ -362,11 +362,11 @@ export default function EngagementView({ childId }: { childId: string }) {
                     <div style={{ padding:'0 18px 16px 20px',borderTop:'1px solid var(--c-border-light)' }} onClick={e => e.stopPropagation()}>
                       <p style={{ fontSize:13,color:'var(--c-text-muted)',lineHeight:1.7,margin:'14px 0 12px' }}>{act.descripcion}</p>
 
-                      <div style={{ background:'linear-gradient(135deg,#faf5ff,#f5f3ff)',borderRadius:14,padding:'12px 14px',marginBottom:10,border:'1px solid var(--c-border)' }}>
-                        <p style={{ fontSize:11,fontWeight:800,color:'#7c3aed',margin:'0 0 5px',display:'flex',alignItems:'center',gap:5 }}>
+                      <div style={{ background:'var(--c-stat-purple)',borderRadius:14,padding:'12px 14px',marginBottom:10,border:'1px solid var(--c-border)' }}>
+                        <p style={{ fontSize:11,fontWeight:800,color:'var(--c-text-muted)',margin:'0 0 5px',display:'flex',alignItems:'center',gap:5 }}>
                           <Target size={12}/>¿Por qué importa?
                         </p>
-                        <p style={{ fontSize:12,color:'#6d28d9',margin:0,lineHeight:1.6 }}>{act.por_que_importa}</p>
+                        <p style={{ fontSize:12,color:'var(--c-text-secondary)',margin:0,lineHeight:1.6 }}>{act.por_que_importa}</p>
                       </div>
 
                       {act.materiales_necesarios?.length > 0 && (
@@ -412,11 +412,11 @@ export default function EngagementView({ childId }: { childId: string }) {
 
           {/* Celebración */}
           {pct === 100 && all > 0 && (
-            <div className="eng-card" style={{ background:'linear-gradient(135deg,#f0fdf4,#dcfce7)',border:'1.5px solid #86efac',borderRadius:22,padding:'20px 22px',display:'flex',alignItems:'center',gap:16,boxShadow:'0 8px 24px rgba(16,185,129,.15)' }}>
+            <div className="eng-card" style={{ background:'rgba(16,185,129,0.1)',border:'1.5px solid rgba(16,185,129,0.3)',borderRadius:22,padding:'20px 22px',display:'flex',alignItems:'center',gap:16,boxShadow:'0 8px 24px rgba(16,185,129,.1)' }}>
               <div style={{ fontSize:40,flexShrink:0 }}>🏆</div>
               <div>
-                <p style={{ fontWeight:900,fontSize:16,color:'#15803d',margin:'0 0 4px' }}>¡Semana completada!</p>
-                <p style={{ fontSize:13,color:'#16a34a',lineHeight:1.5,margin:0 }}>Excelente trabajo acompañando a {plan.child_name||'tu hijo/a'} esta semana. 🌱</p>
+                <p style={{ fontWeight:900,fontSize:16,color:'var(--c-text-primary)',margin:'0 0 4px' }}>¡Semana completada!</p>
+                <p style={{ fontSize:13,color:'var(--c-text-secondary)',lineHeight:1.5,margin:0 }}>Excelente trabajo acompañando a {plan.child_name||'tu hijo/a'} esta semana. 🌱</p>
               </div>
             </div>
           )}
