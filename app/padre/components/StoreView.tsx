@@ -535,15 +535,15 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
   const sinStock = p.tipo === 'fisico' && p.stock === 0
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-[#0d1117] w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+      <div className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl overflow-hidden shadow-2xl flex flex-col" style={{ background: "var(--c-card)", maxHeight: "85vh" }} onClick={e => e.stopPropagation()}>
         {/* Imagen */}
-        <div className="relative h-56 bg-slate-100 dark:bg-[#21262d] shrink-0">
+        <div className="relative shrink-0" style={{ height: 180, background: "var(--c-surface)" }}>
           {p.imagen_url
             ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
             : <div className="flex items-center justify-center h-full"><ImageIcon size={40} className="text-slate-300" /></div>
           }
-          <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 bg-white dark:bg-[#0d1117]/90 backdrop-blur-sm rounded-xl flex items-center justify-center shadow-lg">
-            <X size={18} className="text-slate-600 dark:text-slate-300" />
+          <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ background: "var(--c-card)" }}>
+            <X size={18} style={{ color: "var(--c-text-primary)" }} />
           </button>
           <div className="absolute top-4 left-4 flex gap-2">
             <span className={`text-xs font-black px-3 py-1 rounded-full text-white ${p.tipo === 'digital' ? 'bg-violet-600' : 'bg-slate-700'}`}>
@@ -555,19 +555,19 @@ function ProductDetail({ product: p, onClose, onAdd, inCart, justAdded }: any) {
 
         <div className="p-6 overflow-y-auto flex-1">
           <div className="flex items-start justify-between gap-4 mb-3">
-            <h3 className="text-xl font-black text-slate-800 dark:text-slate-100 leading-tight flex-1">{p.nombre}</h3>
-            <span className="text-2xl font-black text-blue-600 dark:text-blue-400 shrink-0">S/ {Number(p.precio_soles).toFixed(2)}</span>
+            <h3 className="text-xl font-black leading-tight flex-1" style={{ color: "var(--c-text-primary)" }}>{p.nombre}</h3>
+            <span className="text-2xl font-black text-blue-500 shrink-0">S/ {Number(p.precio_soles).toFixed(2)}</span>
           </div>
 
           <div className="flex gap-2 mb-4">
-            <span className="text-xs font-bold capitalize bg-slate-100 dark:bg-[#21262d] text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-full">{p.categoria}</span>
+            <span className="text-xs font-bold capitalize px-2.5 py-1 rounded-full" style={{ background: "var(--c-surface)", color: "var(--c-text-secondary)" }}>{p.categoria}</span>
             {p.tipo === 'fisico' && <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${p.stock > 3 ? 'bg-emerald-100 text-emerald-700' : p.stock > 0 ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
               {p.stock === 0 ? 'Sin stock' : `${p.stock} disponibles`}
             </span>}
-            {p.tipo === 'digital' && <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-violet-100 text-violet-700 dark:text-violet-300">Descarga inmediata</span>}
+            {p.tipo === 'digital' && <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: "var(--c-stat-purple)", color: "#8b5cf6" }}>Descarga inmediata</span>}
           </div>
 
-          <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed mb-6">{p.descripcion || 'Sin descripción disponible.'}</p>
+          <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--c-text-secondary)" }}>{p.descripcion || 'Sin descripción disponible.'}</p>
 
           {p.tipo === 'digital' && (
             <div className="bg-violet-50 dark:bg-violet-900/20 border border-violet-200 rounded-xl p-4 mb-4">
