@@ -62,12 +62,12 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       <div className="relative bg-white dark:bg-[#0d1117] w-full max-w-md h-full flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-[#21262d]">
-          <h3 className="font-black text-slate-800 dark:text-slate-100 text-lg flex items-center gap-2">
+        <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: "1px solid var(--c-border)" }}>
+          <h3 className="font-black text-lg flex items-center gap-2" style={{ color: "var(--c-text-primary)" }}>
             <ShoppingCart size={20} className="text-blue-600 dark:text-blue-400" /> Mi carrito
             {cart.length > 0 && <span className="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full">{cart.length}</span>}
           </h3>
-          <button onClick={onClose} className="p-2 hover:bg-slate-100 dark:hover:bg-[#21262d] dark:bg-[#21262d] rounded-xl transition-all">
+          <button onClick={onClose} className="p-2 rounded-xl transition-all" style={{ background: "var(--c-surface)" }}>
             <X size={20} className="text-slate-500 dark:text-slate-400 dark:text-slate-500" />
           </button>
         </div>
@@ -77,8 +77,8 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-5">
               <CheckCircle size={40} className="text-emerald-600" />
             </div>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-slate-100 mb-2">{t('tienda.pedidoEnviado')}</h3>
-            <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-sm leading-relaxed mb-6">
+            <h3 className="text-2xl font-black mb-2" style={{ color: "var(--c-text-primary)" }}>{t('tienda.pedidoEnviado')}</h3>
+            <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--c-text-muted)" }}>
               Tu pedido fue registrado. Nos pondremos en contacto contigo para confirmar el pago y la entrega.
             </p>
             <a href="https://wa.me/51924807183" target="_blank" rel="noopener noreferrer"
@@ -88,37 +88,37 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
           </div>
         ) : cart.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-20 h-20 bg-slate-100 dark:bg-[#21262d] rounded-2xl flex items-center justify-center mb-4">
+            <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4" style={{ background: "var(--c-surface)" }}>
               <ShoppingCart size={36} className="text-slate-300" />
             </div>
-            <p className="font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 mb-1">{t('ui.cart_empty')}</p>
-            <p className="text-sm text-slate-400 dark:text-slate-500">{t('ui.add_items')}</p>
+            <p className="font-bold mb-1" style={{ color: "var(--c-text-muted)" }}>{t('ui.cart_empty')}</p>
+            <p className="text-sm" style={{ color: "var(--c-text-muted)" }}>{t('ui.add_items')}</p>
           </div>
         ) : (
           <>
             {/* Items */}
             <div className="flex-1 overflow-y-auto p-5 space-y-3">
               {cart.map(({ product: p, cantidad }: CartItem) => (
-                <div key={p.id} className="flex items-center gap-3 bg-slate-50 dark:bg-[#161b22] rounded-2xl p-3 border border-slate-100 dark:border-[#21262d]">
-                  <div className="w-14 h-14 rounded-xl overflow-hidden bg-slate-200 dark:bg-[#30363d] shrink-0">
+                <div key={p.id} className="flex items-center gap-3 rounded-2xl p-3" style={{ background: "var(--c-surface)", border: "1px solid var(--c-border)" }}>
+                  <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0" style={{ background: "var(--c-surface)" }}>
                     {p.imagen_url
                       ? <img src={p.imagen_url} alt={p.nombre} className="w-full h-full object-cover" />
                       : <Package size={20} className="text-slate-300 m-auto mt-3.5" />
                     }
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm text-slate-800 dark:text-slate-100 leading-tight truncate">{p.nombre}</p>
+                    <p className="font-bold text-sm leading-tight truncate" style={{ color: "var(--c-text-primary)" }}>{p.nombre}</p>
                     <p className="text-xs text-blue-600 dark:text-blue-400 font-black mt-0.5">S/ {(p.precio_soles * cantidad).toFixed(2)}</p>
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     <button onClick={() => onUpdate(p.id, cantidad - 1)}
-                      className="w-7 h-7 bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-[#30363d] rounded-lg flex items-center justify-center hover:bg-red-50 dark:bg-red-900/20 hover:border-red-200 transition-all">
+                      className="w-7 h-7 rounded-lg flex items-center justify-center transition-all" style={{ background: "var(--c-card)", border: "1px solid var(--c-border)" }}>
                       <Minus size={12} className="text-slate-500 dark:text-slate-400 dark:text-slate-500" />
                     </button>
-                    <span className="w-6 text-center font-black text-sm text-slate-800 dark:text-slate-100">{cantidad}</span>
+                    <span className="w-6 text-center font-black text-sm" style={{ color: "var(--c-text-primary)" }}>{cantidad}</span>
                     <button onClick={() => onUpdate(p.id, cantidad + 1)}
                       disabled={p.tipo === 'fisico' && cantidad >= p.stock}
-                      className="w-7 h-7 bg-white dark:bg-[#0d1117] border border-slate-200 dark:border-[#30363d] rounded-lg flex items-center justify-center hover:bg-blue-50 dark:bg-blue-900/20 hover:border-blue-200 dark:border-blue-800/60 transition-all disabled:opacity-30">
+                      className="w-7 h-7 rounded-lg flex items-center justify-center transition-all disabled:opacity-30" style={{ background: "var(--c-card)", border: "1px solid var(--c-border)" }}>
                       <Plus size={12} className="text-slate-500 dark:text-slate-400 dark:text-slate-500" />
                     </button>
                   </div>
@@ -127,27 +127,27 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
 
               {/* Nota */}
               <div className="pt-2">
-                <label className="block text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-2">{t('familias.notaCentro')}</label>
+                <label className="block text-xs font-black uppercase tracking-widest mb-2" style={{ color: "var(--c-text-muted)" }}>{t('familias.notaCentro')}</label>
                 <textarea
                   value={nota} onChange={e => setNota(e.target.value)}
                   rows={2} placeholder={t("tienda.pedidoGuardar")}
-                  className="w-full px-4 py-3 bg-slate-50 dark:bg-[#161b22] border border-slate-200 dark:border-[#30363d] rounded-xl text-sm font-medium outline-none focus:border-blue-400 focus:bg-white dark:bg-[#0d1117] transition-all resize-none"
+                  className="w-full px-4 py-3 rounded-xl text-sm font-medium outline-none transition-all resize-none" style={{ background: "var(--c-surface)", border: "1px solid var(--c-border)", color: "var(--c-text-primary)" }}
                 />
               </div>
 
               {/* Info pago */}
-              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/60 rounded-xl p-4">
-                <p className="text-xs font-black text-blue-700 dark:text-blue-300 mb-1">{t('tienda.comoPaga')}</p>
-                <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
+              <div className="rounded-xl p-4" style={{ background: "var(--c-stat-blue)", border: "1px solid var(--c-border)" }}>
+                <p className="text-xs font-black text-blue-500 mb-1">{t('tienda.comoPaga')}</p>
+                <p className="text-xs text-blue-500 leading-relaxed">
                   El pago se realiza al recoger el pedido en el centro (efectivo o yape). Para artículos digitales te enviaremos el archivo por WhatsApp tras confirmar el pago.
                 </p>
               </div>
             </div>
 
             {/* Footer con total y botón */}
-            <div className="border-t border-slate-100 dark:border-[#21262d] p-5 space-y-3">
+            <div className="p-5 space-y-3" style={{ borderTop: "1px solid var(--c-border)" }}>
               <div className="flex justify-between items-center">
-                <span className="font-bold text-slate-600 dark:text-slate-300">{t('ui.total_to_pay')}</span>
+                <span className="font-bold" style={{ color: "var(--c-text-secondary)" }}>{t('ui.total_to_pay')}</span>
                 <span className="text-2xl font-black text-blue-600 dark:text-blue-400">S/ {total.toFixed(2)}</span>
               </div>
               <button onClick={handleCheckout} disabled={placing}
@@ -155,7 +155,7 @@ function CartDrawer({ cart, onClose, onUpdate, onCheckout }: any) {
                 {placing ? <Loader2 size={18} className="animate-spin" /> : <ShoppingBag size={18} />}
                 {placing ? 'Enviando pedido...' : 'Confirmar pedido'}
               </button>
-              <p className="text-center text-xs text-slate-400 dark:text-slate-500">
+              <p className="text-center text-xs" style={{ color: "var(--c-text-muted)" }}>
                 Al confirmar, el centro recibirá tu pedido y te contactará
               </p>
             </div>
@@ -299,7 +299,7 @@ export default function StoreView({ profile }: { profile: any }) {
       {/* ── Clean header with tabs ── */}
       <div className="flex items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-[#21262d]">
         <div>
-          <h2 className="text-lg font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
+          <h2 className="text-lg font-black flex items-center gap-2" style={{ color: "var(--c-text-primary)" }}>
             <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/50 flex items-center justify-center flex-shrink-0">
               <ShoppingBag size={15} className="text-blue-600 dark:text-blue-400"/>
             </div>
@@ -408,7 +408,7 @@ export default function StoreView({ profile }: { profile: any }) {
             </div>
             <div>
               <p className="font-bold text-blue-800 text-sm mb-1">{t('tienda.comoFuncTienda')}</p>
-              <p className="text-xs text-blue-600 dark:text-blue-400 leading-relaxed">
+              <p className="text-xs text-blue-500 leading-relaxed">
                 {t('ui.physical_items_note')}
                 Los <strong>{t('ui.digitales')}</strong> te los enviamos por WhatsApp tras confirmar el pago.
                 ¿Dudas? Escríbenos al <a href="https://wa.me/51924807183" className="underline font-bold">+51 924 807 183</a>.
@@ -424,7 +424,7 @@ export default function StoreView({ profile }: { profile: any }) {
           {orders.length === 0 ? (
             <div className="bg-white dark:bg-[#0d1117] rounded-2xl border border-slate-200 dark:border-[#30363d] py-20 text-center">
               <ShoppingBag size={36} className="text-slate-200 mx-auto mb-3" />
-              <p className="font-bold text-slate-500 dark:text-slate-400 dark:text-slate-500 mb-1">{t('tienda.sinPedidos')}</p>
+              <p className="font-bold mb-1" style={{ color: "var(--c-text-muted)" }}>{t('tienda.sinPedidos')}</p>
               <p className="text-sm text-slate-400 dark:text-slate-500 mb-4">{t('tienda.exploraCompra')}</p>
               <button onClick={() => setView('catalogo')}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 transition-all">

@@ -136,7 +136,7 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
 
   if (!formDef) return (
     <div className="fixed inset-0 bg-slate-900 dark:bg-slate-100/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-[#0d1117] rounded-3xl p-8 text-center">
+      <div className="rounded-3xl p-8 text-center" style={{ background: "var(--c-card)" }}>
         <Loader2 className="animate-spin text-blue-600 dark:text-blue-400 mx-auto mb-3" size={32}/>
         <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-sm">{t('common.cargandoFormulario')}</p>
       </div>
@@ -171,13 +171,13 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
         {/* Questions */}
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
           <div>
-            <h4 className="font-black text-slate-800 dark:text-slate-100 text-lg mb-1">{section.title}</h4>
-            {section.description && <p className="text-slate-500 dark:text-slate-400 dark:text-slate-500 text-sm mb-5">{section.description}</p>}
+            <h4 className="font-black text-lg mb-1" style={{ color: "var(--c-text-primary)" }}>{section.title}</h4>
+            {section.description && <p className="text-sm mb-5" style={{ color: "var(--c-text-muted)" }}>{section.description}</p>}
           </div>
 
           {section.questions.map((q: any) => (
             <div key={q.id}>
-              <label className="text-sm font-bold text-slate-700 dark:text-slate-200 block mb-3">{q.label}</label>
+              <label className="text-sm font-bold block mb-3" style={{ color: "var(--c-text-primary)" }}>{q.label}</label>
 
               {(q.type === 'select' || q.type === 'frequency') && (
                 <div className="space-y-2">
@@ -197,7 +197,8 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
                     return (
                       <button key={opt} type="button"
                         onClick={() => answer(q.id, sel.includes(opt) ? sel.filter((x: string) => x !== opt) : [...sel, opt])}
-                        className={`px-4 py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${sel.includes(opt) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'}`}>
+                        className={`px-4 py-2.5 rounded-xl border-2 text-sm font-bold transition-all ${sel.includes(opt) ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'hover:border-blue-300'}`}
+                        style={sel.includes(opt) ? {} : { background: 'var(--c-card)', borderColor: 'var(--c-border)', color: 'var(--c-text-secondary)' }}>
                         {opt}
                       </button>
                     )
@@ -208,20 +209,21 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
               {q.type === 'textarea' && (
                 <textarea rows={4} value={responses[q.id] || ''} onChange={e => answer(q.id, e.target.value)}
                   placeholder={q.placeholder}
-                  className="w-full p-4 bg-slate-50 dark:bg-[#161b22] border-2 border-slate-200 dark:border-[#30363d] rounded-xl text-sm outline-none focus:border-blue-400 transition-all resize-none"/>
+                  className="w-full p-4 rounded-xl text-sm outline-none transition-all resize-none" style={{ background: "var(--c-surface)", border: "2px solid var(--c-border)", color: "var(--c-text-primary)" }}/>
               )}
 
               {(q.type === 'text' || q.type === 'number') && (
                 <input type={q.type} value={responses[q.id] || ''} onChange={e => answer(q.id, e.target.value)}
                   placeholder={q.placeholder}
-                  className="w-full p-4 bg-slate-50 dark:bg-[#161b22] border-2 border-slate-200 dark:border-[#30363d] rounded-xl text-sm font-bold outline-none focus:border-blue-400 transition-all"/>
+                  className="w-full p-4 rounded-xl text-sm font-bold outline-none transition-all" style={{ background: "var(--c-surface)", border: "2px solid var(--c-border)", color: "var(--c-text-primary)" }}/>
               )}
 
               {q.type === 'boolean' && (
                 <div className="flex gap-3">
                   {['Sí ✅', 'No ❌'].map(opt => (
                     <button key={opt} type="button" onClick={() => answer(q.id, opt)}
-                      className={`flex-1 py-4 rounded-xl border-2 font-bold text-sm transition-all ${responses[q.id] === opt ? (opt.includes('Sí') ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-600 text-white border-slate-600') : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'}`}>
+                      className={`flex-1 py-4 rounded-xl border-2 font-bold text-sm transition-all ${responses[q.id] === opt ? (opt.includes('Sí') ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-600 text-white border-slate-600') : 'hover:border-blue-300'}`}
+                      style={responses[q.id] === opt ? {} : { background: 'var(--c-card)', borderColor: 'var(--c-border)', color: 'var(--c-text-secondary)' }}>
                       {opt}
                     </button>
                   ))}
@@ -232,9 +234,9 @@ function ParentFormRenderer({ form, onSubmit, onClose }: { form: any; onSubmit: 
         </div>
 
         {/* Footer nav */}
-        <div className="p-5 border-t border-slate-100 dark:border-[#21262d] flex gap-3 bg-white dark:bg-[#0d1117]">
+        <div className="p-5 flex gap-3" style={{ borderTop: "1px solid var(--c-border)", background: "var(--c-card)" }}>
           {currentStep > 0 && (
-            <button onClick={() => setCurrentStep(s => s - 1)} className="px-5 py-4 border-2 border-slate-200 dark:border-[#30363d] text-slate-600 dark:text-slate-300 rounded-xl font-bold text-sm hover:bg-slate-50 dark:hover:bg-[#161b22] dark:bg-[#161b22] transition-all flex items-center gap-2">
+            <button onClick={() => setCurrentStep(s => s - 1)} className="px-5 py-4 rounded-xl font-bold text-sm transition-all flex items-center gap-2" style={{ border: "2px solid var(--c-border)", background: "var(--c-card)", color: "var(--c-text-secondary)" }}>
               <ChevronLeft size={16}/> Atrás
             </button>
           )}
@@ -281,10 +283,10 @@ function ResourceCard({ resource }: { resource: any; key?: any }) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className={`text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider ${typeInfo.bg} ${typeInfo.color}`}>{typeInfo.label}</span>
-              {resource.is_global && <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 uppercase tracking-wider">{t('ui.for_everyone')}</span>}
+              {resource.is_global && <span className="text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider" style={{ background: "var(--c-stat-amber)", color: "#d97706" }}>{t('ui.for_everyone')}</span>}
             </div>
-            <h4 className="font-bold text-slate-800 dark:text-slate-100 text-sm leading-tight">{resource.title}</h4>
-            {resource.description && <p className="text-xs text-slate-400 dark:text-slate-500 font-medium mt-0.5 line-clamp-2">{resource.description}</p>}
+            <h4 className="font-bold text-sm leading-tight" style={{ color: "var(--c-text-primary)" }}>{resource.title}</h4>
+            {resource.description && <p className="text-xs font-medium mt-0.5 line-clamp-2" style={{ color: "var(--c-text-muted)" }}>{resource.description}</p>}
             <div className="flex gap-2 mt-3">
               {resource.url && (
                 <button onClick={() => resource.resource_type === 'video' ? setShowPreview(true) : window.open(resource.url, '_blank')}
@@ -425,7 +427,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
       `}</style>
       {/* Success message */}
       {successMsg && (
-        <div className="bg-emerald-50 dark:bg-emerald-900/20 border-2 border-emerald-200 rounded-2xl p-4 flex items-start gap-3">
+        <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: "var(--c-stat-green)", border: "2px solid rgba(16,185,129,0.3)" }}>
           <CheckCircle2 size={20} className="text-emerald-600 flex-shrink-0 mt-0.5"/>
           <p className="text-emerald-800 font-semibold text-sm">{successMsg}</p>
         </div>
@@ -455,10 +457,10 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
       </div>
 
       {/* Tab navigation */}
-      <div style={{ display:'flex',background:'#f1f5f9',padding:4,borderRadius:18,gap:4 }}>
+      <div style={{ display:'flex',background:'var(--c-surface)',padding:4,borderRadius:18,gap:4 }}>
         <button onClick={() => setActiveTab('forms')}
           style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
-            background:activeTab==='forms'?'#fff':'transparent',
+            background:activeTab==='forms'?'var(--c-card)':'transparent',
             color:activeTab==='forms'?'#4f46e5':'#94a3b8',
             boxShadow:activeTab==='forms'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
           <FileText size={15}/> Formularios
@@ -466,7 +468,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
         </button>
         <button onClick={() => setActiveTab('resources')}
           style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
-            background:activeTab==='resources'?'#fff':'transparent',
+            background:activeTab==='resources'?'var(--c-card)':'transparent',
             color:activeTab==='resources'?'#4f46e5':'#94a3b8',
             boxShadow:activeTab==='resources'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
           <BookOpen size={15}/> Materiales
@@ -474,14 +476,14 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
         </button>
         <button onClick={() => setActiveTab('store')}
           style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
-            background:activeTab==='store'?'#fff':'transparent',
+            background:activeTab==='store'?'var(--c-card)':'transparent',
             color:activeTab==='store'?'#4f46e5':'#94a3b8',
             boxShadow:activeTab==='store'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
           🛍️ Tienda
         </button>
         <button onClick={() => setActiveTab('documentos')}
           style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
-            background:activeTab==='documentos'?'#fff':'transparent',
+            background:activeTab==='documentos'?'var(--c-card)':'transparent',
             color:activeTab==='documentos'?'#4f46e5':'#94a3b8',
             boxShadow:activeTab==='documentos'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
           📁 Documentos
@@ -497,7 +499,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
           {/* Pending forms */}
           {pendingForms.length > 0 && (
             <div>
-              <h3 className="font-black text-slate-700 dark:text-slate-200 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h3 className="font-black text-sm uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "var(--c-text-secondary)" }}>
                 <Bell size={14} className="text-amber-500 animate-pulse"/>
                 Pendientes de completar ({pendingForms.length})
               </h3>
@@ -508,11 +510,11 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-[9px] font-black px-2 py-1 bg-amber-100 text-amber-700 dark:text-amber-300 border border-amber-200 rounded-full uppercase tracking-wider animate-pulse">
+                            <span className="text-[9px] font-black px-2 py-1 rounded-full uppercase tracking-wider animate-pulse" style={{ background: "var(--c-stat-amber)", color: "#d97706", border: "1px solid rgba(217,119,6,0.3)" }}>
                               ● Pendiente
                             </span>
                             {form.deadline && (
-                              <span className="text-[9px] font-black px-2 py-1 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-800/50 rounded-full flex items-center gap-1">
+                              <span className="text-[9px] font-black px-2 py-1 rounded-full flex items-center gap-1" style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }}>
                                 <Clock size={9}/> {t('common.hasta')} {new Date(form.deadline).toLocaleDateString(toBCP47(locale))}
                               </span>
                             )}
@@ -542,7 +544,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
           {/* Expired forms */}
           {expiredForms.length > 0 && (
             <div>
-              <h3 className="font-black text-slate-700 dark:text-slate-200 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h3 className="font-black text-sm uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "var(--c-text-secondary)" }}>
                 <AlertCircle size={14} className="text-slate-400 dark:text-slate-500"/>
                 Expirados ({expiredForms.length})
               </h3>
@@ -579,7 +581,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
           {/* Completed forms */}
           {completedForms.length > 0 && (
             <div>
-              <h3 className="font-black text-slate-700 dark:text-slate-200 text-sm uppercase tracking-widest mb-3 flex items-center gap-2">
+              <h3 className="font-black text-sm uppercase tracking-widest mb-3 flex items-center gap-2" style={{ color: "var(--c-text-secondary)" }}>
                 <CheckCircle2 size={14} className="text-emerald-500"/>
                 Completados ({completedForms.length})
               </h3>
