@@ -564,7 +564,7 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
                 })}
               </div>
               <div style={{ padding:'10px 14px', paddingTop:4 }}>
-                <button onClick={()=>onChangeView('aria')} className="hv-btn" style={{ width:'100%', padding:'9px', background:'linear-gradient(135deg,#eff6ff,#f0f9ff)', color:'#2563eb', border:'1.5px solid var(--c-border)', borderRadius:12, fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
+                <button onClick={()=>onChangeView('chat')} className="hv-btn" style={{ width:'100%', padding:'9px', background:'linear-gradient(135deg,#eff6ff,#f0f9ff)', color:'#2563eb', border:'1.5px solid var(--c-border)', borderRadius:12, fontSize:12, fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center', gap:6 }}>
                   <Sparkles size={13}/>Pregúntale a ARIA cómo practicarlos
                 </button>
               </div>
