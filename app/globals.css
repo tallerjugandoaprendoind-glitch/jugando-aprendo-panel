@@ -58,10 +58,10 @@
   --text-secondary: #94a3b8;
   --text-muted: #9ca3af;  /* dark mode — más visible */
   /* stat card backgrounds dark */
-  --c-stat-blue: #1e3a5f;
-  --c-stat-green: #14532d;
-  --c-stat-purple: #2e1065;
-  --c-stat-amber: #451a03;
+  --c-stat-blue: rgba(59,130,246,0.12);
+  --c-stat-green: rgba(16,185,129,0.12);
+  --c-stat-purple: rgba(139,92,246,0.12);
+  --c-stat-amber: rgba(245,158,11,0.12);
   /* shared component vars dark */
   --c-card: #161b22;
   --c-surface: #0d1117;

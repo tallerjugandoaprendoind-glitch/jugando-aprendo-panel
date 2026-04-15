@@ -84,10 +84,7 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
     --c-text-secondary: #374151;
     --c-text-muted: #64748b;
     --c-text-placeholder: #94a3b8;
-    --c-stat-blue: #eff6ff;
-    --c-stat-green: #f0fdf4;
-    --c-stat-purple: #f5f3ff;
-    --c-stat-amber: #fffbeb;
+
   }
   .dark {
     --c-card: #161b22;
@@ -99,10 +96,7 @@ function GoalCelebration({ childName, goalsAchieved, onClose }: { childName: str
     --c-text-secondary: #c9d1d9;
     --c-text-muted: #8b949e;
     --c-text-placeholder: #6e7681;
-    --c-stat-blue: rgba(59,130,246,0.12);
-    --c-stat-green: rgba(16,185,129,0.12);
-    --c-stat-purple: rgba(139,92,246,0.12);
-    --c-stat-amber: rgba(245,158,11,0.12);
+
   }
 @keyframes celebIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}`}</style>
     </div>
