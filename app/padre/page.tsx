@@ -467,7 +467,7 @@ export default function ParentDashboard() {
     home: 'Inicio', miscitas: 'Mis Citas', engagement: 'Act. en Casa',
     chat: 'Asistente IA', mensajes: 'Notificaciones', misformularios: 'Mi Centro',
     tienda: 'Tienda', documentos: 'Documentos', profile: 'Mi Perfil',
-    'chat-familias': 'Chat Equipo',
+    'chat-familias': 'Chat',
   }
 
   return (
@@ -536,7 +536,7 @@ export default function ParentDashboard() {
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
                 <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                 <NavBtnDesktop icon={<Bell size={17}/>} label={t('familias.mensajesTerapeuta')} active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
-                <NavBtnDesktop icon={<MessageCircle size={17}/>} label="Chat Equipo" active={activeView==='chat-familias'} onClick={()=>setActiveView('chat-familias')} badge={familiasUnread > 0 ? familiasUnread : null} />
+                <NavBtnDesktop icon={<MessageCircle size={17}/>} label="Chat" active={activeView==='chat-familias'} onClick={()=>setActiveView('chat-familias')} badge={familiasUnread > 0 ? familiasUnread : null} />
                 <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'||activeView==='tienda'||activeView==='documentos'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
