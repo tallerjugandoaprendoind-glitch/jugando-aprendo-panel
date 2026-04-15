@@ -615,29 +615,6 @@ export default function ParentDashboard() {
                 </div>
             </header>
 
-            {/* 🖥 DESKTOP TOP BAR */}
-            <div className="hidden lg:flex h-14 items-center justify-between px-6 flex-shrink-0 border-b bg-white border-slate-200">
-                <div>
-                    <h1 className="text-sm font-black text-slate-800">
-                        {PAGE_TITLES_MOBILE[activeView as keyof typeof PAGE_TITLES_MOBILE] || 'Inicio'}
-                    </h1>
-                    <p className="text-[10px] text-slate-400">Jugando Aprendo · Portal Familias</p>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <LocaleSelector compact={true} />
-                    <ThemeToggleButton className="!w-8 !h-8 !rounded-lg" />
-                    <div className="relative">
-                        <button onClick={handleOpenNotifications}
-                            className="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500 flex items-center justify-center relative transition-colors">
-                            <Bell size={16}/>
-                            {unreadCount > 0 && (
-                                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"/>
-                            )}
-                        </button>
-                    </div>
-                </div>
-            </div>
-
             {/* 👶 SELECTOR DE HIJOS MEJORADO */}
             <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 py-4 px-4 md:px-8 flex gap-3 overflow-x-auto items-center scrollbar-hide shadow-sm">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest shrink-0 mr-2 flex items-center gap-2">
