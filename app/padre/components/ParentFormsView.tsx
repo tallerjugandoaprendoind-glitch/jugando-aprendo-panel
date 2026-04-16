@@ -356,7 +356,8 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
         setPendingForms(pending)
         setExpiredForms(expired)
         setCompletedForms(completed)
-        if (onFormsLoaded) onFormsLoaded(pending.length)
+        // Badge solo muestra formularios estrictamente pendientes (no completados ni expirados)
+        if (onFormsLoaded) onFormsLoaded(forms.filter(f => f.status === 'pending').length)
       }
 
       // Load resources
