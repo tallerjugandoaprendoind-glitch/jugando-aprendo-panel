@@ -459,32 +459,32 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
       </div>
 
       {/* Tab navigation */}
-      <div style={{ display:'flex',background:'var(--c-surface)',padding:4,borderRadius:18,gap:4 }}>
+      <div style={{ display:'flex',background:'var(--c-surface)',padding:4,borderRadius:18,gap:4,overflowX:'auto',WebkitOverflowScrolling:'touch' as any }}>
         <button onClick={() => setActiveTab('forms')}
-          style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
+          style={{ flex:'0 0 auto',padding:'10px 14px',borderRadius:14,border:'none',fontWeight:700,fontSize:12,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:5,fontFamily:'inherit',whiteSpace:'nowrap',
             background:activeTab==='forms'?'var(--c-card)':'transparent',
             color:activeTab==='forms'?'#4f46e5':'#94a3b8',
             boxShadow:activeTab==='forms'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
-          <FileText size={15}/> Formularios
+          <FileText size={14}/> Formularios
           {pendingCount > 0 && <span style={{ background:'#ef4444',color:'#fff',fontSize:9,fontWeight:800,padding:'2px 6px',borderRadius:20 }}>{pendingCount}</span>}
         </button>
         <button onClick={() => setActiveTab('resources')}
-          style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
+          style={{ flex:'0 0 auto',padding:'10px 14px',borderRadius:14,border:'none',fontWeight:700,fontSize:12,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:5,fontFamily:'inherit',whiteSpace:'nowrap',
             background:activeTab==='resources'?'var(--c-card)':'transparent',
             color:activeTab==='resources'?'#4f46e5':'#94a3b8',
             boxShadow:activeTab==='resources'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
-          <BookOpen size={15}/> Materiales
+          <BookOpen size={14}/> Materiales
           {resourcesCount > 0 && <span style={{ background:'#ede9fe',color:'#7c3aed',fontSize:9,fontWeight:800,padding:'2px 6px',borderRadius:20 }}>{resourcesCount}</span>}
         </button>
         <button onClick={() => setActiveTab('store')}
-          style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
+          style={{ flex:'0 0 auto',padding:'10px 14px',borderRadius:14,border:'none',fontWeight:700,fontSize:12,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:5,fontFamily:'inherit',whiteSpace:'nowrap',
             background:activeTab==='store'?'var(--c-card)':'transparent',
             color:activeTab==='store'?'#4f46e5':'#94a3b8',
             boxShadow:activeTab==='store'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
           🛍️ Tienda
         </button>
         <button onClick={() => setActiveTab('documentos')}
-          style={{ flex:1,padding:'11px 16px',borderRadius:14,border:'none',fontWeight:700,fontSize:13,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:6,fontFamily:'inherit',
+          style={{ flex:'0 0 auto',padding:'10px 14px',borderRadius:14,border:'none',fontWeight:700,fontSize:12,cursor:'pointer',transition:'all .15s',display:'flex',alignItems:'center',justifyContent:'center',gap:5,fontFamily:'inherit',whiteSpace:'nowrap',
             background:activeTab==='documentos'?'var(--c-card)':'transparent',
             color:activeTab==='documentos'?'#4f46e5':'#94a3b8',
             boxShadow:activeTab==='documentos'?'0 2px 8px rgba(0,0,0,.08)':'none' }}>
