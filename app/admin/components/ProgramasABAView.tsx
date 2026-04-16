@@ -939,15 +939,29 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string; programaNombre: string }) {
   const [registros, setRegistros] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const load = async () => {
+      setLoading(true)
+      setError(null)
       try {
-        const res = await fetch(`/api/practica-casa?programa_id=${programaId}&dias=56`)
-        const json = await res.json()
-        setRegistros(json.data || [])
-      } catch { /* silent */ }
-      finally { setLoading(false) }
+        const desde = new Date()
+        desde.setDate(desde.getDate() - 56)
+        const { data, error: sbError } = await supabase
+          .from('programa_practica_casa')
+          .select('fecha, objetivo_id')
+          .eq('programa_id', programaId)
+          .gte('fecha', desde.toISOString().split('T')[0])
+          .order('fecha', { ascending: false })
+        if (sbError) throw new Error(sbError.message)
+        // Cualquier registro existente = practicado ese día
+        setRegistros((data || []).map((r: any) => ({ ...r, practicado: true })))
+      } catch (e: any) {
+        setError(e.message)
+      } finally {
+        setLoading(false)
+      }
     }
     load()
   }, [programaId])
@@ -965,7 +979,7 @@ function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string;
       const reg = registros.find(r => r.fecha === fechaStr)
       dias.push({
         fecha: fechaStr,
-        practicado: reg?.practicado === true,
+        practicado: !!reg, // si existe el registro = practicado
         label: ['D','L','M','X','J','V','S'][date.getDay()],
       })
     }
@@ -974,10 +988,8 @@ function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string;
     weeks.push({ label: `${semanaLabel} · ${count}/7 días`, days: dias })
   }
 
-  const totalDias = registros.filter(r => r.practicado).length
-  const adherencia = registros.length > 0
-    ? Math.round((totalDias / Math.min(registros.length, 56)) * 100)
-    : 0
+  const totalDias = registros.length
+  const adherencia = totalDias > 0 ? Math.round((totalDias / 56) * 100) : 0
 
   const adherenciaColor = adherencia >= 70 ? '#059669' : adherencia >= 40 ? '#d97706' : '#dc2626'
   const adherenciaLabel = adherencia >= 70 ? 'Buena adherencia' : adherencia >= 40 ? 'Adherencia moderada' : 'Baja adherencia'
@@ -999,6 +1011,11 @@ function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string;
         <div className="flex items-center gap-2 py-3">
           <Loader2 size={14} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
           <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Cargando registros...</span>
+        </div>
+      ) : error ? (
+        <div className="rounded-xl p-4 text-center" style={{ background: 'var(--card)', border: '1px solid #fca5a5' }}>
+          <p className="text-xs font-medium text-red-500">Error al cargar: {error}</p>
+          <p className="text-[10px] text-red-400 mt-1">Tabla: programa_practica_casa · ID: {programaId?.slice(0,8)}...</p>
         </div>
       ) : registros.length === 0 ? (
         <div className="rounded-xl p-4 text-center" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
