@@ -2,6 +2,7 @@
 
 import { useI18n } from '@/lib/i18n-context'
 import { useState, useEffect, useCallback } from 'react'
+import { supabase } from '@/lib/supabase'
 import GraficoProgramaABA from '@/components/graficos/GraficoProgramaABA'
 import {
   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -923,8 +924,118 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                   </div>
                 </div>
               )}
+              {/* Práctica en casa del padre */}
+              <PracticaCasaPanel programaId={programa.id} programaNombre={programa.titulo} />
+
             </>
           ) : null}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Panel de práctica en casa registrada por el padre ──────────────────────────
+function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string; programaNombre: string }) {
+  const [registros, setRegistros] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const desde = new Date()
+        desde.setDate(desde.getDate() - 56)
+        const { data } = await supabase
+          .from('programa_practica_casa')
+          .select('fecha, practicado')
+          .eq('programa_id', programaId)
+          .gte('fecha', desde.toISOString().split('T')[0])
+          .order('fecha', { ascending: false })
+        setRegistros(data || [])
+      } catch { /* silent */ }
+      finally { setLoading(false) }
+    }
+    load()
+  }, [programaId])
+
+  // Agrupar por semana (lun-dom)
+  const weeks: { label: string; days: { fecha: string; practicado: boolean; label: string }[] }[] = []
+  const hoy = new Date()
+
+  for (let w = 0; w < 4; w++) {
+    const dias: { fecha: string; practicado: boolean; label: string }[] = []
+    for (let d = 6; d >= 0; d--) {
+      const date = new Date(hoy)
+      date.setDate(hoy.getDate() - w * 7 - d)
+      const fechaStr = date.toISOString().split('T')[0]
+      const reg = registros.find(r => r.fecha === fechaStr)
+      dias.push({
+        fecha: fechaStr,
+        practicado: reg?.practicado === true,
+        label: ['D','L','M','X','J','V','S'][date.getDay()],
+      })
+    }
+    const semanaLabel = w === 0 ? 'Esta semana' : w === 1 ? 'Semana pasada' : `Hace ${w} semanas`
+    const count = dias.filter(d => d.practicado).length
+    weeks.push({ label: `${semanaLabel} · ${count}/7 días`, days: dias })
+  }
+
+  const totalDias = registros.filter(r => r.practicado).length
+  const adherencia = registros.length > 0
+    ? Math.round((totalDias / Math.min(registros.length, 56)) * 100)
+    : 0
+
+  const adherenciaColor = adherencia >= 70 ? '#059669' : adherencia >= 40 ? '#d97706' : '#dc2626'
+  const adherenciaLabel = adherencia >= 70 ? 'Buena adherencia' : adherencia >= 40 ? 'Adherencia moderada' : 'Baja adherencia'
+
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        <p className="text-xs font-black uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+          🏠 Práctica en casa (padre)
+        </p>
+        {!loading && (
+          <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: `${adherenciaColor}18`, color: adherenciaColor, border: `1px solid ${adherenciaColor}30` }}>
+            {adherenciaLabel} · {adherencia}%
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex items-center gap-2 py-3">
+          <Loader2 size={14} className="animate-spin" style={{ color: 'var(--text-muted)' }} />
+          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Cargando registros...</span>
+        </div>
+      ) : registros.length === 0 ? (
+        <div className="rounded-xl p-4 text-center" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+          <p className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+            El padre aún no ha registrado práctica en casa para este programa.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {weeks.map((week, wi) => (
+            <div key={wi} className="rounded-xl p-3" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
+              <p className="text-[10px] font-bold mb-2.5" style={{ color: 'var(--text-muted)' }}>{week.label}</p>
+              <div className="grid grid-cols-7 gap-1">
+                {week.days.map((day, di) => (
+                  <div key={di} className="flex flex-col items-center gap-1">
+                    <span className="text-[9px] font-bold" style={{ color: 'var(--text-muted)' }}>{day.label}</span>
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                      style={{
+                        background: day.practicado ? 'rgba(5,150,105,0.15)' : 'var(--muted-bg)',
+                        border: `1.5px solid ${day.practicado ? '#059669' : 'var(--card-border)'}`,
+                      }}>
+                      {day.practicado
+                        ? <CheckCircle2 size={14} color="#059669" />
+                        : <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--card-border)', display: 'block' }} />
+                      }
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
