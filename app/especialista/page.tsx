@@ -418,7 +418,7 @@ export default function EspecialistaDashboard() {
           </div>
         ) : (
           <div className={`flex-1 overflow-y-auto admin-content ${isDark ? 'bg-[#0d1117]' : 'bg-[#f8f8fb]'}`}>
-            <div className="px-5 pt-5 pb-20 md:pb-6">
+            <div className="px-5 pt-5 pb-6">
               {renderView()}
             </div>
           </div>
@@ -426,42 +426,6 @@ export default function EspecialistaDashboard() {
       </main>
 
       {/* ── MOBILE BOTTOM NAV ── */}
-      <nav className={`md:hidden fixed bottom-0 left-0 right-0 z-30 backdrop-blur-md border-t px-2 py-1.5
-        ${isDark
-          ? 'bg-[#161b22]/95 border-[#21262d]'
-          : 'bg-white/95 border-slate-100'
-        }`}>
-        <div className="flex items-center">
-          {NAV_ITEMS.map(item => {
-            const isActive = activeView === item.id
-            const unread = item.id === 'evaluaciones' ? chatUnread + familiasUnread : 0
-            return (
-              <button key={item.id} onClick={() => setActiveView(item.id)}
-                className="flex flex-col items-center gap-1 py-1 flex-1 min-w-0 transition-all active:scale-95">
-                <div className={`relative w-8 h-6 rounded-lg flex items-center justify-center transition-all
-                  ${isActive
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-300'
-                    : isDark ? 'text-slate-500' : 'text-slate-400'
-                  }`}>
-                  <item.icon size={15} />
-                  {unread > 0 && (
-                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-white text-[8px] font-black flex items-center justify-center">
-                      {unread > 9 ? '9+' : unread}
-                    </span>
-                  )}
-                </div>
-                <span className={`font-bold truncate w-full text-center px-0.5 transition-colors
-                  ${isActive
-                    ? 'text-blue-600'
-                    : isDark ? 'text-slate-500' : 'text-slate-400'
-                  }`} style={{ fontSize: 9 }}>
-                  {item.label.replace('Mi ', '').replace('Mis ', '')}
-                </span>
-              </button>
-            )
-          })}
-        </div>
-      </nav>
 
       {/* Password Modal */}
       {showChangePassword && (
