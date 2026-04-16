@@ -16,15 +16,15 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await supabaseAdmin
       .from('programa_practica_casa')
-      .select('fecha, practicado, child_id')
+      .select('fecha, objetivo_id')
       .eq('programa_id', programaId)
       .gte('fecha', desde.toISOString().split('T')[0])
       .order('fecha', { ascending: false })
 
     if (error) throw error
 
-    // Si practicado es null (registros viejos), tratar como true
-    const registros = (data || []).map(r => ({ ...r, practicado: r.practicado !== false }))
+    // Cualquier registro existente = practicado ese día
+    const registros = (data || []).map((r: any) => ({ ...r, practicado: true }))
 
     return NextResponse.json({ data: registros })
   } catch (error: any) {

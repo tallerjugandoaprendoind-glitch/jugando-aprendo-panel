@@ -47,9 +47,10 @@ const FASE_CFG: Record<string, { label: string; color: string }> = {
   'dominado':     { label: 'Dominado ✓',    color: '#059669' },
 }
 
-function WeekTracker({ programaId, childId }: { programaId: string; childId: string }) {
+function WeekTracker({ programaId, childId, objetivos }: { programaId: string; childId: string; objetivos?: { id: string; numero_set: number; descripcion?: string; nombre?: string }[] }) {
   const [practiced, setPracticed] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
+  const [showSetPicker, setShowSetPicker] = useState<string | null>(null) // fecha seleccionada para elegir set
 
   const DAYS = ['L','M','X','J','V','S','D']
   const today = new Date()
@@ -74,23 +75,25 @@ function WeekTracker({ programaId, childId }: { programaId: string; childId: str
     load()
   }, [programaId, childId])
 
-  const toggle = async (fecha: string) => {
-    if (fecha > today.toISOString().split('T')[0]) return // no future days
+  const toggle = async (fecha: string, objetivoId?: string) => {
+    if (fecha > today.toISOString().split('T')[0]) return
     setSaving(true)
+    setShowSetPicker(null)
     if (practiced.has(fecha)) {
       await supabase.from('programa_practica_casa').delete()
         .eq('programa_id', programaId).eq('child_id', childId).eq('fecha', fecha)
       setPracticed(prev => { const s = new Set(prev); s.delete(fecha); return s })
     } else {
-      await supabase.from('programa_practica_casa').upsert({
-        programa_id: programaId, child_id: childId, fecha, practicado: true
-      })
+      const record: any = { programa_id: programaId, child_id: childId, fecha }
+      if (objetivoId) record.objetivo_id = objetivoId
+      await supabase.from('programa_practica_casa').upsert(record)
       setPracticed(prev => new Set([...prev, fecha]))
     }
     setSaving(false)
   }
 
   const todayStr = today.toISOString().split('T')[0]
+  const hasObjetos = objetivos && objetivos.length > 0
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -105,13 +108,19 @@ function WeekTracker({ programaId, childId }: { programaId: string; childId: str
           return (
             <button
               key={date}
-              onClick={() => isPast && toggle(date)}
-              disabled={!isPast || saving}
+              onClick={() => {
+                if (!isPast || saving) return
+                if (done) { toggle(date); return }
+                if (hasObjetos) setShowSetPicker(date)
+                else toggle(date)
+              }}
+              disabled={saving}
               style={{
                 flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-                padding: '6px 4px', borderRadius: 10, border: 'none', cursor: isPast ? 'pointer' : 'default',
+                padding: '6px 4px', borderRadius: 10, border: 'none',
+                cursor: isPast ? 'pointer' : 'default',
                 background: done ? 'rgba(16,185,129,0.15)' : isToday ? 'rgba(37,99,235,0.1)' : 'var(--c-surface)',
-                transition: 'all .15s'
+                transition: 'all .15s', opacity: isPast ? 1 : 0.4
               }}>
               <span style={{ fontSize: 9, fontWeight: 700, color: isToday ? '#2563eb' : 'var(--c-text-muted)' }}>{DAYS[i]}</span>
               {done
@@ -122,6 +131,32 @@ function WeekTracker({ programaId, childId }: { programaId: string; childId: str
           )
         })}
       </div>
+
+      {/* Set picker popup */}
+      {showSetPicker && hasObjetos && (
+        <div style={{ background: 'var(--c-card)', border: '1.5px solid var(--c-border)', borderRadius: 14, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text-muted)', margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: 0.8 }}>
+            ¿Qué set practicaste?
+          </p>
+          {objetivos!.map(obj => (
+            <button key={obj.id} onClick={() => toggle(showSetPicker, obj.id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: 'var(--c-surface)', borderRadius: 10, border: '1.5px solid var(--c-border)', cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left' }}>
+              <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(37,99,235,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <span style={{ fontSize: 10, fontWeight: 900, color: '#2563eb' }}>{obj.numero_set}</span>
+              </div>
+              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--c-text-primary)' }}>{obj.descripcion || obj.nombre || `Set ${obj.numero_set}`}</span>
+            </button>
+          ))}
+          <button onClick={() => toggle(showSetPicker)}
+            style={{ padding: '8px', borderRadius: 10, border: '1px dashed var(--c-border)', background: 'transparent', color: 'var(--c-text-muted)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Marcar sin especificar set
+          </button>
+          <button onClick={() => setShowSetPicker(null)}
+            style={{ padding: '6px', borderRadius: 10, border: 'none', background: 'transparent', color: 'var(--c-text-muted)', fontSize: 11, cursor: 'pointer', fontFamily: 'inherit' }}>
+            Cancelar
+          </button>
+        </div>
+      )}
     </div>
   )
 }
@@ -303,7 +338,11 @@ function ProgramCard({ prog, childId }: { prog: Programa; childId: string }) {
           {/* Weekly tracker */}
           {!isDone && (
             <div style={{ background: 'var(--c-surface)', borderRadius: 14, padding: '12px 14px', border: '1px solid var(--c-border)' }}>
-              <WeekTracker programaId={prog.id} childId={childId} />
+              <WeekTracker
+                programaId={prog.id}
+                childId={childId}
+                objetivos={prog.objetivos_cp?.filter(o => o.estado !== 'dominado')}
+              />
             </div>
           )}
 
