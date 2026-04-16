@@ -568,7 +568,7 @@ export default function ParentDashboard() {
         </aside>
 
         {/* === CONTENIDO PRINCIPAL === */}
-        <div className="flex-1 flex flex-col h-full relative">
+        <div className="flex-1 flex flex-col h-full relative min-w-0 overflow-x-hidden">
             
             {/* 🖥️ HEADER DESKTOP */}
             <header className="hidden lg:flex h-14 items-center justify-between px-6 flex-shrink-0 border-b" style={{ background: "var(--card)", borderColor: "var(--card-border)" }}>

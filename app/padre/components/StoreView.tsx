@@ -295,7 +295,7 @@ export default function StoreView({ profile }: { profile: any }) {
       `}</style>
 
       {/* ── Clean header with tabs ── */}
-      <div className="flex items-center justify-between gap-3 pb-4" style={{ borderBottom: "1px solid var(--c-border)" }}>
+      <div className="flex flex-wrap items-center justify-between gap-2 pb-4" style={{ borderBottom: "1px solid var(--c-border)" }}>
         <div>
           <h2 className="text-lg font-black flex items-center gap-2" style={{ color: "var(--c-text-primary)" }}>
             <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "var(--c-stat-blue)", border: "1px solid var(--c-border)" }}>
@@ -307,7 +307,7 @@ export default function StoreView({ profile }: { profile: any }) {
             {view === 'catalogo' ? `${products.length} productos disponibles` : `${orders.length} pedido${orders.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           {/* Cart button */}
           {view === 'catalogo' && cartCount > 0 && (
             <button onClick={() => setShowCart(true)}
