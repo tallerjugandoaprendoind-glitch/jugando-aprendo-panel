@@ -453,7 +453,7 @@ export default function UserManagementView() {
   )
 
   return (
-    <div className="space-y-5 animate-fade-in h-full flex flex-col overflow-hidden">
+    <div className="space-y-5 animate-fade-in pb-6">
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -474,7 +474,7 @@ export default function UserManagementView() {
       </div>
 
       {/* Tabs por rol */}
-      <div className="flex gap-1 border-b" style={{ borderColor: 'var(--card-border)' }}>
+      <div className="flex gap-1 border-b overflow-x-auto scrollbar-hide" style={{ borderColor: 'var(--card-border)' }}>
         {[
           { id: 'todos',       label: t('common.todos'),        count: users.length,        icon: Users,       color: 'text-slate-500' },
           { id: 'jefe',        label: 'Directores',   count: totalJefes,          icon: Crown,       color: 'text-purple-600' },
@@ -486,11 +486,11 @@ export default function UserManagementView() {
           const isActive = activeTab === tab.id
           return (
             <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 py-2.5 text-sm font-bold rounded-t-xl border-b-2 transition-all ${
+              className={`flex items-center gap-1.5 px-3 py-2.5 text-xs md:text-sm font-bold rounded-t-xl border-b-2 transition-all whitespace-nowrap flex-shrink-0 ${
                 isActive ? `border-blue-600 ${tab.color}` : 'border-transparent'
               }`}
               style={{ color: isActive ? undefined : 'var(--text-muted)', background: isActive ? 'rgba(37,99,235,0.07)' : 'transparent' }}>
-              <Icon size={14} />
+              <Icon size={13} />
               {tab.label}
               <span className="px-1.5 py-0.5 rounded-full text-[10px] font-black"
                 style={{ background: isActive ? '#2563eb' : 'var(--muted-bg)', color: isActive ? '#fff' : 'var(--text-muted)' }}>
@@ -520,7 +520,7 @@ export default function UserManagementView() {
       </div>
 
       {/* Lista de usuarios */}
-      <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+      <div className="space-y-2">
         {filteredUsers.length === 0 && (
           <div className="p-12 text-center rounded-2xl" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
             <Users size={36} className="mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
