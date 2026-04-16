@@ -331,18 +331,22 @@ function MessageBubble({ m, onNavigateToStore, onWellbeingAnswer }: { m: any; on
     <div className="flex gap-3 mb-4 items-start">
       {/* Avatar del robot */}
       <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center shadow-md"
-        style={{ background: 'linear-gradient(135deg,#eef2ff,#dbeafe)', padding: 4 }}>
+        style={{ background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', padding: 4 }}>
         <RobotAvatar size={28} />
       </div>
 
       <div className="max-w-[82%] flex flex-col gap-2">
         {/* Burbuja principal */}
-        <div className={`rounded-3xl rounded-tl-lg px-5 py-4 shadow-sm text-sm font-medium leading-relaxed text-slate-700
+        <div className={`rounded-3xl rounded-tl-lg px-5 py-4 shadow-sm text-sm font-medium leading-relaxed
           ${m.type === 'emotional'
-            ? 'border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50'
-            : ''
+            ? 'border-2 border-blue-200 dark:border-blue-700 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 text-slate-700 dark:text-slate-200'
+            : 'text-slate-700 dark:text-slate-100'
           }`}
-          style={{ boxShadow: '0 2px 16px rgba(0,0,0,.06)' }}>
+          style={{
+            background: m.type === 'emotional' ? undefined : 'var(--c-card)',
+            border: m.type === 'emotional' ? undefined : '1px solid var(--c-border)',
+            boxShadow: '0 2px 16px rgba(0,0,0,.06)'
+          }}>
           {m.type === 'emotional' && (
             <div className="flex items-center gap-2 mb-3 pb-2 border-b border-blue-100 dark:border-blue-800/50">
               <Heart size={13} className="text-blue-500 dark:text-blue-400 fill-blue-500" />
@@ -398,7 +402,7 @@ function TypingIndicator() {
   return (
     <div className="flex gap-3 mb-4 items-center">
       <div className="shrink-0 w-9 h-9 rounded-full flex items-center justify-center shadow-md"
-        style={{ background: 'linear-gradient(135deg,#eef2ff,#dbeafe)', padding: 4 }}>
+        style={{ background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', padding: 4 }}>
         <RobotAvatar size={28} animated />
       </div>
       <div className="rounded-3xl rounded-tl-lg px-5 py-3.5 shadow-sm flex items-center gap-1.5" style={{ background: "var(--c-card)", border: "1px solid var(--c-border)" }}>
