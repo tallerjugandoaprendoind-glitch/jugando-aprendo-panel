@@ -15,7 +15,7 @@ import {
   Award, Target, Smile, Book, Star, Zap, Bell, Download, Share2, Eye, Mail, Phone,
   Settings, HelpCircle, FileText, Video, Headphones, Image as ImageIcon, ExternalLink,
   Camera, Upload, Gift, PartyPopper, Flame, TrendingDown, Baby, Stethoscope, PlayCircle,
-  CalendarDays, ShoppingBag, BookOpen, MoreHorizontal, FolderOpen
+  CalendarDays, ShoppingBag, BookOpen, MoreHorizontal, FolderOpen, Users
 } from 'lucide-react'
 
 import { NavBtnDesktop, NavBtnMobile, NotificationItem, HelpItem } from './components/shared'
@@ -539,10 +539,10 @@ export default function ParentDashboard() {
                 <NavBtnDesktop icon={<Home size={17}/>} label="Inicio" active={activeView==='home'} onClick={()=>setActiveView('home')} />
                 <NavBtnDesktop icon={<Calendar size={17}/>} label="Mis Citas" active={activeView==='miscitas'} onClick={()=>setActiveView('miscitas')} />
                 <NavBtnDesktop icon={<Heart size={17}/>} label="Act. en Casa" active={activeView==='engagement'} onClick={()=>setActiveView('engagement')} badge="IA" />
-                <NavBtnDesktop icon={<MessageCircle size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
+                <NavBtnDesktop icon={<Sparkles size={17}/>} label={t('familias.asistente')} active={activeView==='chat'} onClick={()=>setActiveView('chat')} badge="NUEVO" />
                 <NavBtnDesktop icon={<Bell size={17}/>} label="Notificaciones" active={activeView==='mensajes'} onClick={()=>setActiveView('mensajes')} badge={unreadCount > 0 ? unreadCount : null} />
                 <NavBtnDesktop icon={<BookOpen size={17}/>} label="Programas ABA" active={activeView==='programas'} onClick={()=>setActiveView('programas')} />
-                <NavBtnDesktop icon={<MessageCircle size={17}/>} label="Chat" active={activeView==='chat-familias'} onClick={()=>setActiveView('chat-familias')} badge={familiasUnread > 0 ? familiasUnread : null} />
+                <NavBtnDesktop icon={<Users size={17}/>} label="Chat" active={activeView==='chat-familias'} onClick={()=>setActiveView('chat-familias')} badge={familiasUnread > 0 ? familiasUnread : null} />
                 <NavBtnDesktop icon={<FileText size={17}/>} label="Mi Centro" active={activeView==='misformularios'||activeView==='tienda'||activeView==='documentos'} onClick={()=>setActiveView('misformularios')} badge={pendingFormsCount > 0 ? pendingFormsCount : null} />
                 <NavBtnDesktop icon={<User size={17}/>} label="Mi Perfil" active={activeView==='profile'} onClick={()=>setActiveView('profile')} />
             </nav>
