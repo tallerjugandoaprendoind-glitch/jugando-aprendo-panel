@@ -85,6 +85,7 @@ function WeekTracker({ programaId, childId, objetivos }: { programaId: string; c
       setPracticed(prev => { const s = new Set(prev); s.delete(fecha); return s })
     } else {
       const record: any = { programa_id: programaId, child_id: childId, fecha }
+      if (objetivoId) record.objetivo_id = objetivoId
       await supabase.from('programa_practica_casa').upsert(record)
       setPracticed(prev => new Set([...prev, fecha]))
     }
@@ -165,7 +166,7 @@ function ProgramCard({ prog, childId }: { prog: Programa; childId: string }) {
   const [expandedObj, setExpandedObj] = useState<string | null>(null)
   const area = AREA_CFG[prog.area?.toLowerCase()] || AREA_DEFAULT
   const fase = FASE_CFG[prog.fase_actual] || FASE_CFG.intervencion
-  const isDone = prog.fase_actual === 'dominado'
+  const isDone = prog.fase_actual === 'dominado' || prog.estado === 'dominado'
 
   // Last 3 sessions avg
   const lastSessions = (prog.sesiones_datos_aba || []).slice(0, 3)
@@ -377,7 +378,11 @@ export default function ProgramasABAView({ childId, childName }: Props) {
 
   useEffect(() => { load() }, [load])
 
-  const activos = programas.filter(p => p.estado !== 'dominado' && p.estado !== 'archivado')
+  const activos = programas.filter(p => 
+    p.estado !== 'dominado' && 
+    p.estado !== 'archivado' && 
+    p.fase_actual !== 'dominado'
+  )
   const filtered = filtro === 'activos' ? activos : programas.filter(p => p.estado !== 'archivado')
   const totalPracticadosSemana = 0 // Could be computed from WeekTracker data
 

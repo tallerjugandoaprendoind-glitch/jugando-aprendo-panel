@@ -925,7 +925,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
                 </div>
               )}
               {/* Práctica en casa del padre */}
-              <PracticaCasaPanel programaId={programa.id} programaNombre={programa.titulo} />
+              <PracticaCasaPanel programaId={programa.id} programaNombre={programa.titulo} objetivos={detalle?.objetivos_cp || []} />
 
             </>
           ) : null}
@@ -936,7 +936,7 @@ function ProgramaCard({ programa, onRegistrarSesion, onReload, tipoGrafico = 'li
 }
 
 // ── Panel de práctica en casa registrada por el padre ──────────────────────────
-function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string; programaNombre: string }) {
+function PracticaCasaPanel({ programaId, programaNombre, objetivos = [] }: { programaId: string; programaNombre: string; objetivos?: any[] }) {
   const [registros, setRegistros] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -950,7 +950,7 @@ function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string;
         desde.setDate(desde.getDate() - 56)
         const { data, error: sbError } = await supabase
           .from('programa_practica_casa')
-          .select('fecha')
+          .select('fecha, objetivo_id')
           .eq('programa_id', programaId)
           .gte('fecha', desde.toISOString().split('T')[0])
           .order('fecha', { ascending: false })
@@ -967,20 +967,21 @@ function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string;
   }, [programaId])
 
   // Agrupar por semana (lun-dom)
-  const weeks: { label: string; days: { fecha: string; practicado: boolean; label: string }[] }[] = []
+  const weeks: { label: string; days: { fecha: string; practicado: boolean; label: string; objetivoId?: string }[] }[] = []
   const hoy = new Date()
 
   for (let w = 0; w < 4; w++) {
-    const dias: { fecha: string; practicado: boolean; label: string }[] = []
+    const dias: { fecha: string; practicado: boolean; label: string; objetivoId?: string }[] = []
     for (let d = 6; d >= 0; d--) {
       const date = new Date(hoy)
       date.setDate(hoy.getDate() - w * 7 - d)
       const fechaStr = date.toISOString().split('T')[0]
-      const reg = registros.find(r => r.fecha === fechaStr)
+      const reg = registros.find((r: any) => r.fecha === fechaStr)
       dias.push({
         fecha: fechaStr,
-        practicado: !!reg, // si existe el registro = practicado
+        practicado: !!reg,
         label: ['D','L','M','X','J','V','S'][date.getDay()],
+        objetivoId: reg?.objetivo_id || undefined,
       })
     }
     const semanaLabel = w === 0 ? 'Esta semana' : w === 1 ? 'Semana pasada' : `Hace ${w} semanas`
@@ -1029,21 +1030,29 @@ function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string;
             <div key={wi} className="rounded-xl p-3" style={{ background: 'var(--card)', border: '1px solid var(--card-border)' }}>
               <p className="text-[10px] font-bold mb-2.5" style={{ color: 'var(--text-muted)' }}>{week.label}</p>
               <div className="grid grid-cols-7 gap-1">
-                {week.days.map((day, di) => (
-                  <div key={di} className="flex flex-col items-center gap-1">
-                    <span className="text-[9px] font-bold" style={{ color: 'var(--text-muted)' }}>{day.label}</span>
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center"
-                      style={{
-                        background: day.practicado ? 'rgba(5,150,105,0.15)' : 'var(--muted-bg)',
-                        border: `1.5px solid ${day.practicado ? '#059669' : 'var(--card-border)'}`,
-                      }}>
-                      {day.practicado
-                        ? <CheckCircle2 size={14} color="#059669" />
-                        : <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--card-border)', display: 'block' }} />
-                      }
+                {week.days.map((day, di) => {
+                  const obj = day.objetivoId ? objetivos.find((o: any) => o.id === day.objetivoId) : null
+                  return (
+                    <div key={di} className="flex flex-col items-center gap-1">
+                      <span className="text-[9px] font-bold" style={{ color: 'var(--text-muted)' }}>{day.label}</span>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                        style={{
+                          background: day.practicado ? 'rgba(5,150,105,0.15)' : 'var(--muted-bg)',
+                          border: `1.5px solid ${day.practicado ? '#059669' : 'var(--card-border)'}`,
+                        }}>
+                        {day.practicado
+                          ? <CheckCircle2 size={14} color="#059669" />
+                          : <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--card-border)', display: 'block' }} />
+                        }
+                      </div>
+                      {obj && (
+                        <span className="text-[8px] font-black text-center leading-tight" style={{ color: '#059669' }}>
+                          Set {obj.numero_set}
+                        </span>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           ))}

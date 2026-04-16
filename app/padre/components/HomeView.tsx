@@ -247,7 +247,11 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
       else level = 'Inicial'
     }
 
-    if (apiStats?.programas?.length) setProgramas(apiStats.programas)
+    if (apiStats?.programas?.length) setProgramas(
+      apiStats.programas.filter((p: any) => 
+        p.estado !== 'dominado' && p.fase_actual !== 'dominado'
+      )
+    )
 
     // Si hay sesiones reales, regenerar prediccion si está desactualizada
     const sesionesEnPrediccion = pred?.sesiones_analizadas ?? pred?.total_sesiones_unificado ?? 0
