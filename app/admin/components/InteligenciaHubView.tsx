@@ -1680,24 +1680,35 @@ export default function InteligenciaHubView() {
         </div>
       </div>
 
-      {/* Tabs scrollable */}
-      <div className="flex gap-1.5 rounded-xl p-1.5 overflow-x-auto" style={{ background: 'var(--muted-bg)' }}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap ${
-              tab === t.id
-                ? `bg-white shadow-sm ${
-                    t.color === 'blue' ? 'text-blue-700' :
-                    t.color === 'violet' ? 'text-violet-700' :
-                    t.color === 'amber' ? 'text-amber-700' :
-                    t.color === 'orange' ? 'text-orange-700' :
-                    t.color === 'teal' ? 'text-teal-700' :
+      {/* Tabs scrollable — mobile: solo icono + label corto, scroll horizontal */}
+      <div
+        className="flex gap-1 rounded-xl p-1.5 overflow-x-auto scrollbar-hide"
+        style={{ background: 'var(--muted-bg)', WebkitOverflowScrolling: 'touch' }}
+      >
+        {tabs.map(tab_ => (
+          <button key={tab_.id} onClick={() => setTab(tab_.id)}
+            className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg font-bold transition-all whitespace-nowrap flex-shrink-0 ${
+              tab === tab_.id
+                ? `bg-white shadow-sm text-sm ${
+                    tab_.color === 'blue' ? 'text-blue-700' :
+                    tab_.color === 'violet' ? 'text-violet-700' :
+                    tab_.color === 'amber' ? 'text-amber-700' :
+                    tab_.color === 'orange' ? 'text-orange-700' :
+                    tab_.color === 'teal' ? 'text-teal-700' :
                     'text-emerald-700'
                   }`
-                : 'text-slate-500 hover:text-slate-700'
+                : 'text-slate-500 hover:text-slate-700 text-xs'
             }`}>
-            <t.icon size={13} />
-            {t.label}
+            <tab_.icon size={tab === tab_.id ? 14 : 13} />
+            {/* En móvil, acortar etiquetas largas */}
+            <span className="hidden sm:inline">{tab_.label}</span>
+            <span className="sm:hidden">
+              {tab_.label === 'Alertas Proactivas' ? 'Alertas' :
+               tab_.label === 'Patrones ABA' ? 'Patrones' :
+               tab_.label === 'Objetivos IA' ? 'Objetivos' :
+               tab_.label === 'Reportes IA' ? 'Reportes' :
+               tab_.label}
+            </span>
           </button>
         ))}
       </div>
