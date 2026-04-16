@@ -943,16 +943,9 @@ function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string;
   useEffect(() => {
     const load = async () => {
       try {
-        const desde = new Date()
-        desde.setDate(desde.getDate() - 56)
-        const { data } = await supabase
-          .from('programa_practica_casa')
-          .select('fecha, practicado')
-          .eq('programa_id', programaId)
-          .gte('fecha', desde.toISOString().split('T')[0])
-          .order('fecha', { ascending: false })
-        // Considerar practicado si existe el registro (con o sin campo practicado)
-        setRegistros((data || []).map((r: any) => ({ ...r, practicado: r.practicado !== false })))
+        const res = await fetch(`/api/practica-casa?programa_id=${programaId}&dias=56`)
+        const json = await res.json()
+        setRegistros(json.data || [])
       } catch { /* silent */ }
       finally { setLoading(false) }
     }
