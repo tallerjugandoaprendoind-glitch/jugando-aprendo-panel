@@ -329,49 +329,57 @@ export default function KnowledgeBaseView() {
     <div className="space-y-4 w-full">
 
       {/* Header */}
-      <div className={`rounded-2xl border p-5 flex items-center justify-between gap-4 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200 shadow-sm'}`}>
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
-            <Brain size={24} className="text-white" />
+      <div className={`rounded-2xl border p-4 md:p-5 ${isDark ? 'bg-[#161b22] border-[#21262d]' : 'bg-white border-slate-200 shadow-sm'}`}>
+        {/* Top row: icon + title */}
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
+            <Brain size={22} className="text-white" />
           </div>
           <div>
-            <h2 className={`text-lg font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{t('nav.cerebro')}</h2>
+            <h2 className={`text-base md:text-lg font-black ${isDark ? 'text-slate-100' : 'text-slate-800'}`}>{t('nav.cerebro')}</h2>
             <p className={`text-xs mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{t('ui.baseConocimiento')}</p>
           </div>
         </div>
-        <div className="flex items-center gap-3 flex-shrink-0">
+        {/* Stats row: 3 equal columns */}
+        <div className="grid grid-cols-3 gap-2">
           {[
             { label: t('ui.documents'), value: documentos.length, color: 'text-violet-500' },
             { label: t('ui.fragments'), value: totalChunks.toLocaleString(), color: 'text-indigo-500' },
             { label: 'Auto-aprendidos', value: docsAuto.length, color: 'text-blue-500' },
           ].map(s => (
-            <div key={s.label} className={`text-center px-4 py-2.5 rounded-xl border ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-100'}`}>
-              <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
-              <p className={`text-[10px] font-bold ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{s.label}</p>
+            <div key={s.label} className={`text-center px-2 py-2 rounded-xl border ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-100'}`}>
+              <p className={`text-lg md:text-xl font-black ${s.color}`}>{s.value}</p>
+              <p className={`text-[9px] md:text-[10px] font-bold leading-tight mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>{s.label}</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Tabs */}
-      <div className={`flex rounded-2xl p-1.5 border gap-1.5 ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-200'}`}>
+      <div className={`flex rounded-2xl p-1.5 border gap-1.5 overflow-x-auto scrollbar-hide ${isDark ? 'bg-[#0d1117] border-[#21262d]' : 'bg-slate-50 border-slate-200'}`}>
         <button onClick={() => setTab('aprender')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-black transition-all ${tab === 'aprender'
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 md:px-4 rounded-xl text-xs md:text-sm font-black transition-all whitespace-nowrap flex-shrink-0 ${tab === 'aprender'
             ? isDark ? 'bg-[#161b22] text-violet-400 shadow border border-[#30363d]' : 'bg-white text-violet-700 shadow border border-slate-200'
             : isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}>
-          <Sparkles size={15} /> {t('whatsapp.aprenderInternet')}
+          <Sparkles size={13} />
+          <span className="hidden sm:inline">{t('whatsapp.aprenderInternet')}</span>
+          <span className="sm:hidden">Aprender</span>
         </button>
         <button onClick={() => setTab('diagnosticos')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-black transition-all ${tab === 'diagnosticos'
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 md:px-4 rounded-xl text-xs md:text-sm font-black transition-all whitespace-nowrap flex-shrink-0 ${tab === 'diagnosticos'
             ? isDark ? 'bg-[#161b22] text-violet-400 shadow border border-[#30363d]' : 'bg-white text-violet-700 shadow border border-slate-200'
             : isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}>
-          🏥 CIE-11 / DSM-5
+          <span>🏥</span>
+          <span className="hidden sm:inline">CIE-11 / DSM-5</span>
+          <span className="sm:hidden">CIE-11</span>
         </button>
         <button onClick={() => setTab('biblioteca')}
-          className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-black transition-all ${tab === 'biblioteca'
+          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 px-2 md:px-4 rounded-xl text-xs md:text-sm font-black transition-all whitespace-nowrap flex-shrink-0 ${tab === 'biblioteca'
             ? isDark ? 'bg-[#161b22] text-violet-400 shadow border border-[#30363d]' : 'bg-white text-violet-700 shadow border border-slate-200'
             : isDark ? 'text-slate-500 hover:text-slate-300' : 'text-slate-400 hover:text-slate-600'}`}>
-          <BookMarked size={15} /> Biblioteca ({documentos.length})
+          <BookMarked size={13} />
+          <span className="hidden sm:inline">Biblioteca ({documentos.length})</span>
+          <span className="sm:hidden">Biblio ({documentos.length})</span>
         </button>
       </div>
 
