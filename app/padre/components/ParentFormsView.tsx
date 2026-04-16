@@ -420,7 +420,7 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
   const resourcesCount = resources.length
 
   return (
-    <div style={{ display:"flex",flexDirection:"column",gap:14,paddingBottom:32,width:"100%",paddingBottom:'32px' }}>
+    <div style={{ display:"flex",flexDirection:"column",gap:14,paddingBottom:32,width:"100%" }}>
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         @media(min-width:640px){
