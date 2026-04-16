@@ -347,17 +347,28 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
       
       if (forms) {
         const now = new Date()
+        const today = now.toISOString().split('T')[0]
         const pending = forms.filter(f => 
           ['pending', 'assigned', 'enviado'].includes(f.status) && 
-          !(f.deadline && new Date(f.deadline) < now)
+          !(f.deadline && f.deadline < today)
         )
-        const expired = forms.filter(f => f.status !== 'completed' && f.deadline && new Date(f.deadline) < now)
+        const expired = forms.filter(f => f.status !== 'completed' && f.deadline && f.deadline < today)
         const completed = forms.filter(f => f.status === 'completed')
         setPendingForms(pending)
         setExpiredForms(expired)
         setCompletedForms(completed)
-        // Badge solo muestra formularios estrictamente pendientes (no completados ni expirados)
-        if (onFormsLoaded) onFormsLoaded(forms.filter(f => f.status === 'pending').length)
+
+        // Auto-marcar expirados en BD para que el badge no los cuente
+        const expiredPending = expired.filter(f => f.status === 'pending')
+        if (expiredPending.length > 0) {
+          await supabase
+            .from('parent_forms')
+            .update({ status: 'expired' })
+            .in('id', expiredPending.map((f: any) => f.id))
+        }
+
+        // Badge: solo pendientes reales (sin expirados)
+        if (onFormsLoaded) onFormsLoaded(pending.length)
       }
 
       // Load resources

@@ -134,11 +134,10 @@ export default function ParentDashboard() {
           const today = new Date().toISOString().split('T')[0]
           const { data: pendingForms } = await supabase
             .from('parent_forms')
-            .select('id, deadline')
+            .select('id, deadline, status')
             .eq('parent_id', parent.id)
-            .eq('status', 'pending')
-          // Excluir expirados (deadline pasado)
-          const count = (pendingForms || []).filter(f =>
+            .not('status', 'in', '("completed","expired")')
+          const count = (pendingForms || []).filter((f: any) =>
             !f.deadline || f.deadline >= today
           ).length
           setPendingFormsCount(count)
