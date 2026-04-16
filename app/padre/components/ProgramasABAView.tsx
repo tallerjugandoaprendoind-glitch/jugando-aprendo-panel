@@ -83,7 +83,7 @@ function WeekTracker({ programaId, childId }: { programaId: string; childId: str
       setPracticed(prev => { const s = new Set(prev); s.delete(fecha); return s })
     } else {
       await supabase.from('programa_practica_casa').upsert({
-        programa_id: programaId, child_id: childId, fecha
+        programa_id: programaId, child_id: childId, fecha, practicado: true
       })
       setPracticed(prev => new Set([...prev, fecha]))
     }

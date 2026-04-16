@@ -951,7 +951,8 @@ function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string;
           .eq('programa_id', programaId)
           .gte('fecha', desde.toISOString().split('T')[0])
           .order('fecha', { ascending: false })
-        setRegistros(data || [])
+        // Considerar practicado si existe el registro (con o sin campo practicado)
+        setRegistros((data || []).map((r: any) => ({ ...r, practicado: r.practicado !== false })))
       } catch { /* silent */ }
       finally { setLoading(false) }
     }
