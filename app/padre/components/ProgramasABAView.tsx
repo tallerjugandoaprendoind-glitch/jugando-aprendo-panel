@@ -128,6 +128,7 @@ function WeekTracker({ programaId, childId }: { programaId: string; childId: str
 
 function ProgramCard({ prog, childId }: { prog: Programa; childId: string }) {
   const [open, setOpen] = useState(false)
+  const [expandedObj, setExpandedObj] = useState<string | null>(null)
   const area = AREA_CFG[prog.area?.toLowerCase()] || AREA_DEFAULT
   const fase = FASE_CFG[prog.fase_actual] || FASE_CFG.intervencion
   const isDone = prog.fase_actual === 'dominado'
@@ -234,18 +235,67 @@ function ProgramCard({ prog, childId }: { prog: Programa; childId: string }) {
               <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--c-text-muted)', margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Target size={11} /> Qué está practicando ahora
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-                {prog.objetivos_cp.filter(o => o.estado !== 'dominado').map(obj => (
-                  <div key={obj.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'var(--c-surface)', borderRadius: 10, border: '1px solid var(--c-border)' }}>
-                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: area.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <span style={{ fontSize: 10, fontWeight: 800, color: area.color }}>{obj.numero_set || '•'}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {prog.objetivos_cp.filter(o => o.estado !== 'dominado').map(obj => {
+                  const isExpObj = expandedObj === obj.id
+                  const hasDetail = !!(obj.descripcion || obj.nombre)
+                  return (
+                    <div key={obj.id} style={{ borderRadius: 12, overflow: 'hidden', border: `1.5px solid ${isExpObj ? area.color : 'var(--c-border)'}`, transition: 'border-color .2s' }}>
+                      {/* Row — always clickable */}
+                      <button
+                        onClick={() => setExpandedObj(isExpObj ? null : obj.id)}
+                        style={{
+                          width: '100%', background: isExpObj ? area.bg : 'var(--c-surface)',
+                          border: 'none', cursor: 'pointer', padding: '11px 12px',
+                          display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left',
+                          transition: 'background .2s', fontFamily: 'inherit'
+                        }}>
+                        {/* Number badge */}
+                        <div style={{ width: 26, height: 26, borderRadius: '50%', background: isExpObj ? area.color : area.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background .2s' }}>
+                          <span style={{ fontSize: 10, fontWeight: 900, color: isExpObj ? '#fff' : area.color }}>{obj.numero_set || '•'}</span>
+                        </div>
+                        {/* Label */}
+                        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--c-text-primary)', flex: 1, lineHeight: 1.4, textAlign: 'left' }}>
+                          {obj.descripcion || obj.nombre || `Set ${obj.numero_set}`}
+                        </span>
+                        {/* Status badge */}
+                        {obj.estado === 'en_progreso' && (
+                          <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: 'rgba(37,99,235,0.12)', color: '#2563eb', flexShrink: 0, border: '1px solid rgba(37,99,235,0.2)' }}>EN CURSO</span>
+                        )}
+                        {/* Expand chevron */}
+                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', marginLeft: 4, color: 'var(--c-text-muted)', transform: isExpObj ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform .2s' }}>
+                          <ChevronDown size={15} />
+                        </div>
+                      </button>
+                      {/* Expanded detail */}
+                      {isExpObj && (
+                        <div style={{ padding: '10px 14px 12px', background: 'var(--c-card)', borderTop: `1px solid ${area.color}30` }}>
+                          {hasDetail ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '8px 10px', background: area.bg, borderRadius: 10 }}>
+                                <Target size={13} color={area.color} style={{ flexShrink: 0, marginTop: 2 }} />
+                                <div>
+                                  <p style={{ fontSize: 10, fontWeight: 700, color: area.color, margin: '0 0 3px', textTransform: 'uppercase', letterSpacing: 0.5 }}>Objetivo</p>
+                                  <p style={{ fontSize: 12, color: 'var(--c-text-primary)', margin: 0, lineHeight: 1.6 }}>{obj.descripcion || obj.nombre}</p>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 10px', background: 'rgba(16,185,129,0.08)', borderRadius: 10, border: '1px solid rgba(16,185,129,0.15)' }}>
+                                <span style={{ fontSize: 11 }}>💡</span>
+                                <p style={{ fontSize: 11, color: '#065f46', margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
+                                  Practica este objetivo en casa según las instrucciones del programa. Si tienes dudas, consulta con el terapeuta.
+                                </p>
+                              </div>
+                            </div>
+                          ) : (
+                            <p style={{ fontSize: 12, color: 'var(--c-text-muted)', margin: 0, fontStyle: 'italic' }}>
+                              Consulta con el terapeuta para más detalles sobre este objetivo.
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
-                    <span style={{ fontSize: 12, color: 'var(--c-text-primary)', lineHeight: 1.4 }}>{obj.descripcion || obj.nombre || `Set ${obj.numero_set}`}</span>
-                    {obj.estado === 'en_progreso' && (
-                      <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 700, padding: '2px 7px', borderRadius: 20, background: 'rgba(37,99,235,0.1)', color: '#2563eb', flexShrink: 0 }}>EN CURSO</span>
-                    )}
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )}
