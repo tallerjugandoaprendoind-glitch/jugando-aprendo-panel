@@ -131,12 +131,17 @@ export default function ParentDashboard() {
 
         // --- CONTAR FORMULARIOS PENDIENTES ---
         if (parent?.id) {
-          const { count } = await supabase
+          const today = new Date().toISOString().split('T')[0]
+          const { data: pendingForms } = await supabase
             .from('parent_forms')
-            .select('*', { count: 'exact', head: true })
+            .select('id, deadline')
             .eq('parent_id', parent.id)
             .eq('status', 'pending')
-          setPendingFormsCount(count || 0)
+          // Excluir expirados (deadline pasado)
+          const count = (pendingForms || []).filter(f =>
+            !f.deadline || f.deadline >= today
+          ).length
+          setPendingFormsCount(count)
         }
         // -------------------------------------
 
