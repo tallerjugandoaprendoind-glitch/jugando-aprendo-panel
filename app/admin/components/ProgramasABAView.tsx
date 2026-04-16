@@ -950,7 +950,7 @@ function PracticaCasaPanel({ programaId, programaNombre }: { programaId: string;
         desde.setDate(desde.getDate() - 56)
         const { data, error: sbError } = await supabase
           .from('programa_practica_casa')
-          .select('fecha, objetivo_id')
+          .select('fecha')
           .eq('programa_id', programaId)
           .gte('fecha', desde.toISOString().split('T')[0])
           .order('fecha', { ascending: false })
