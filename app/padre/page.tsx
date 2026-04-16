@@ -135,7 +135,7 @@ export default function ParentDashboard() {
             .from('parent_forms')
             .select('*', { count: 'exact', head: true })
             .eq('parent_id', parent.id)
-            .neq('status', 'completed')
+            .in('status', ['pending', 'assigned', 'enviado'])
           setPendingFormsCount(count || 0)
         }
         // -------------------------------------

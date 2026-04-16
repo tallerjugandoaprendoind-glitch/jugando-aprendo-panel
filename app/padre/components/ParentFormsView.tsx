@@ -347,7 +347,10 @@ function ParentFormsResourcesView({ profile, selectedChild, onFormsLoaded, initi
       
       if (forms) {
         const now = new Date()
-        const pending = forms.filter(f => f.status !== 'completed' && !(f.deadline && new Date(f.deadline) < now))
+        const pending = forms.filter(f => 
+          ['pending', 'assigned', 'enviado'].includes(f.status) && 
+          !(f.deadline && new Date(f.deadline) < now)
+        )
         const expired = forms.filter(f => f.status !== 'completed' && f.deadline && new Date(f.deadline) < now)
         const completed = forms.filter(f => f.status === 'completed')
         setPendingForms(pending)
