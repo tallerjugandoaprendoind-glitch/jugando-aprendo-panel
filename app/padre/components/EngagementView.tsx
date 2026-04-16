@@ -218,7 +218,7 @@ export default function EngagementView({ childId }: { childId: string }) {
   )
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,width:'100%',minHeight:'calc(100vh - 180px)' }}>
+    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,width:'100%' }}>
       <style>{`
         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}

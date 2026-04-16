@@ -283,7 +283,7 @@ export default function StoreView({ profile }: { profile: any }) {
   )
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 32, width: '100%', minHeight: 'calc(100vh - 180px)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, paddingBottom: 32, width: '100%' }}>
       <style>{`
         .sv-products-grid,.sv-featured-grid,.sv-orders-grid{display:grid!important;grid-template-columns:repeat(1,1fr)!important;gap:12px!important}
         @media(min-width:480px){

@@ -218,7 +218,7 @@ export default function ResourcesView({ profile }: Props) {
   const cartCount = cart.reduce((s,i)=>s+i.cantidad,0)
 
   return (
-    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,width:'100%',minHeight:'calc(100vh - 180px)' }}>
+    <div style={{ display:'flex',flexDirection:'column',gap:14,paddingBottom:32,width:'100%',paddingBottom:'32px' }}>
       <style>{`
         @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
         @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}

@@ -386,14 +386,14 @@ export default function HomeViewInnovative({ child, onChangeView, refreshTrigger
         </div>
 
         {/* Quick access strip */}
-        <div style={{ background:'rgba(0,0,0,.2)', borderTop:'1px solid rgba(255,255,255,.1)', padding:'10px 20px', display:'flex', gap:8 }}>
+        <div style={{ background:'rgba(0,0,0,.2)', borderTop:'1px solid rgba(255,255,255,.1)', padding:'10px 16px', display:'flex', gap:8, overflowX:'auto', WebkitOverflowScrolling:'touch' as any }}>
           {[
             { label:'💬 Preguntar a ARIA', view:'chat' },
             { label:'🏃 Actividades',      view:'engagement' },
             { label:'📅 Mis citas',        view:'miscitas' },
           ].map(({ label, view }) => (
             <button key={view} onClick={()=>onChangeView(view)} className="hv-btn"
-              style={{ background:'rgba(255,255,255,.15)', color:'#ffffff', border:'1px solid rgba(255,255,255,.2)', borderRadius:10, padding:'6px 12px', fontSize:11, fontWeight:700, cursor:'pointer', backdropFilter:'blur(6px)', whiteSpace:'nowrap' }}>
+              style={{ background:'rgba(255,255,255,.15)', color:'#ffffff', border:'1px solid rgba(255,255,255,.2)', borderRadius:10, padding:'6px 12px', fontSize:11, fontWeight:700, cursor:'pointer', backdropFilter:'blur(6px)', whiteSpace:'nowrap', flexShrink:0 }}>
               {label}
             </button>
           ))}
